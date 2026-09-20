@@ -696,6 +696,14 @@ export const CUSTOM_DEFAULT_MODE = {
    that lies open when the shelf is first opened, so the front of the list has to be the one
    that explains what a bonus game IS in a single glance. And the back cover's keepsake reads
    the roster straight, so a run's record card walks the same ladder the shelf does. */
+/* THE BLURB IS THREE LINES ON THE OPEN SPREAD AND EVERY ONE OF THEM IS THE SAME LENGTH BY
+   AGREEMENT: 121 to 133 characters, which is the band the first nine were written into. It is
+   not a style rule. The shelf's open zine sizes its right leaf off this text, so a blurb 50%
+   over the band pushes the Play sticker down and makes one game's spread visibly taller than
+   its neighbours' -- which reads as that game being more important rather than as it being
+   wordier. Aaron or Jack (171) and Track by Track (197) both broke it and were cut back on
+   2026-09-21. Count the characters before adding a game; the copy is what gives, not the
+   layout. */
 export const BONUS_GAMES = [
   // Tap: the whole line is in front of you and nothing has to be recalled, only heard.
   { id: "spot-the-slip", name: "Spot the Slip", ready: true, sweep: true, endless: true,
@@ -754,7 +762,7 @@ export const BONUS_GAMES = [
   { id: "aaron-or-jack", name: "Aaron or Jack", ready: true, dealMax: true, sweep: true, endless: true,
     kicker: "whose record is this?", tint: "#3f9fb5",
     line: "Name the producer: Aaron, Jack, or both.",
-    blurb: "A song from one of the four records the two of them share, and nothing else on the page. Say whether Aaron Dessner made it, Jack Antonoff made it, or the pair of them did." },
+    blurb: "A song from one of the four records the two of them share, and nothing else on the page. Aaron Dessner, Jack Antonoff, or both?" },
   // The hinge of the shelf: the song is still named, but the answer is now written rather than
   // pointed at, which is the last page before every game below asks for a title.
   { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true, endless: true,
@@ -810,7 +818,7 @@ export const BONUS_GAMES = [
   { id: "track-by-track", name: "Track by Track", ready: true, timed: true,
     kicker: "the whole record, in order", tint: "#5e3184",
     line: "One album, top to bottom, against the clock.",
-    blurb: "Pick a record and write its running order out from track one, in order, with the clock running the whole way. No suggestions and no skipping: the only way past track nine is to remember track nine." },
+    blurb: "Pick a record and write its running order out from track one against the clock. The only way past track nine is to know track nine." },
 ];
 /* ---------- The Ruthless run descriptor ----------
    NOT a bonus game and no longer in the roster above (2026-08-18). It is the object the Ruthless
