@@ -582,6 +582,11 @@ export function initDev(api) {
           readout.textContent = `album board: ${albumBeatenNum.value} beaten · open Album Focus`;
         }),
         btn("clear board", () => { api.albumBoard.clear(); readout.textContent = "album board cleared"; }, "warn")),
+    // The snapshots themselves, every record at every print level over the live board. The
+    // rows above can only ever show the board in ONE state, and the whole drawing is how a
+    // picture gains ink, so this is the only view that catches a scene which reads beaten
+    // and dissolves into dirt at four pages.
+    row(btn("snapshots", () => { readout.textContent = (api.album.pictures() || []).join(" · "); })),
     row(btn("reset board", () => { api.album.reset(); readout.textContent = "album focus board reset"; }, "warn"))));
 
   // ---- Word / Era / Mode -----------------------------------------------------

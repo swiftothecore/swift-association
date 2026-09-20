@@ -5579,12 +5579,18 @@
     position: relative; display: block; aspect-ratio: 1 / 1; border-radius: 2px;
     background: #f7f1e2; box-shadow: inset 0 0 0 1px rgba(43,39,34,0.1);
   }
-  .af-crayon { display: block; width: 100%; height: 100%; }
-  .af-crayon-ink { stroke: var(--era, #999); }
-  .af-crayon-box { stroke: rgba(43,39,34,0.3); stroke-width: 1.1; }
-  /* An unplayed square is a blank box, so its pencil line is the only thing in the
+  /* The halftone print itself. Its inks are literals written by js/albumdots.js off the
+     live era palette, so there is nothing to colour from here — only the pencilled box it
+     is printed inside, which is graphite and stays graphite in both themes. */
+  .af-pic { display: block; width: 100%; height: 100%; }
+  /* The box is the square somebody ruled before printing in it, so it recedes as the print
+     arrives: on a beaten album a graphite line at full strength reads as a second frame
+     inside the snapshot's own edge, and the picture ends up matted twice. */
+  .af-pic-box { stroke: rgba(43,39,34,0.13); stroke-width: 1.1; }
+  :is(.af-tile, .af-detail-pic).is-played .af-pic-box { stroke: rgba(43,39,34,0.26); }
+  /* An unplayed square is an empty box, so its pencil line is the only thing in the
      window and carries the whole tile. It gets to be a shade darker for that. */
-  .af-tile.is-fresh .af-crayon-box { stroke: rgba(43,39,34,0.4); }
+  :is(.af-tile, .af-detail-pic).is-fresh .af-pic-box { stroke: rgba(43,39,34,0.42); }
   .af-tile-cap {
     font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1.02;
     color: var(--ink); padding: 7px 3px 9px; min-height: 1.8em;

@@ -71,6 +71,7 @@ import {
 } from "./config.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
+import { albumDots, sceneOf, hasScene } from "./albumdots.js";
 import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
 import { TUMBLR_POSTS, TUMBLR_BY_ID, redactionRows } from "./tumblr.js";
 import { showCover, placeCoverStickers } from "./stickercover.js";
@@ -10796,106 +10797,11 @@ function difficultyTabs(list, selected) {
   }).join("");
 }
 
-/* ---------- The album picture: a square coloured in by hand ----------
-   The snapshot on an Album Focus tile is not a printed swatch of the era colour. It is a
-   pencilled box that somebody is colouring in with a crayon, and how far they have got IS
-   the record: a blank box has never been played, a half-filled one is a best score, a
-   square filled corner to corner is a beaten album.
-
-   That is the whole reason this is drawn rather than washed. A flat fill can only say
-   "more saturated" as you improve, which nobody can read; strokes can be counted. So the
-   fill level is the score over the thirteen pages, and `beaten` forces it to the brim
-   however it was won.
-
-   Every square is seeded off the album's own name, so the slant of the hand, the wobble of
-   the box and the place each stroke starts are stable for that album forever and different
-   from all eleven others — twelve squares coloured by the same person on twelve days, not
-   one drawing tinted twelve times. The rng is deliberately advanced for strokes that are
-   NOT drawn yet, so a square gains strokes as you improve instead of being re-coloured.
-
-   Colour and mood only: there is no album imagery here and there is not meant to be. The
-   only thing on the paper is graphite and one era colour. */
-const AF_STROKES = 44;                 // strokes in a square filled to the brim
-
-function albumCrayon(album, level) {
-  const rng = mulberry32(fnv1a("af-crayon:" + album));
-  const f = (v) => Math.round(v * 10) / 10;
-  const jit = (n) => (rng() * 2 - 1) * n;
-  const uid = "afc" + (fnv1a("af-clip:" + album) % 1000000);
-
-  // the pencilled box being coloured within — four jittered corners joined by edges that
-  // bow, because nobody rules a square freehand and gets four straight sides
-  const b = 3.4;
-  const pts = [[b + jit(1), b + jit(1)], [100 - b + jit(1), b + jit(1)],
-               [100 - b + jit(1), 100 - b + jit(1)], [b + jit(1), 100 - b + jit(1)]];
-  let box = `M${f(pts[0][0])} ${f(pts[0][1])}`;
-  for (let i = 0; i < 4; i++) {
-    const [x1, y1] = pts[i], [x2, y2] = pts[(i + 1) % 4];
-    const nx = (y2 - y1) / 100, ny = -(x2 - x1) / 100, bow = jit(1.6);
-    box += ` Q${f((x1 + x2) / 2 + nx * bow)} ${f((y1 + y2) / 2 + ny * bow)} ${f(x2)} ${f(y2)}`;
-  }
-  box += " Z";
-
-  // The strokes themselves: a hand colouring a box in, left to right on a slant. Three
-  // things are doing the work here and all three were arrived at by drawing the wrong
-  // thing first.
-  //
-  // SHAPE: each stroke is a back-and-forth, down the paper and part of the way up again
-  // with a rounded turn at the bottom, because that is what colouring in looks like. The
-  // first version drew parallel bars, and parallel bars of one colour are hatching with a
-  // coloured pencil, not wax. The turn is the tell: it is the only mark on the square that
-  // could not have been made by a ruler.
-  //
-  // WIDTH: a crayon is blunt, so the strokes are broad and heavily overlapped, and the
-  // pressure varies stroke to stroke with roughly one in seven a skip — the light pass the
-  // wax leaves when it does not catch. Coverage is nearly solid at the brim; what keeps it
-  // off being a printed swatch is the grain, not gaps between strokes.
-  //
-  // FRONTIER: the reveal order is jittered, so a half-coloured square does not end on a
-  // clean vertical line. A few strokes past the frontier got done early, a few before it
-  // got missed, and the last ones in go lighter. That is somebody who stopped, rather than
-  // somebody who cut the colour off with a ruler.
-  //
-  // The wax texture itself is not here: it is the #afWax filter in index.html, which chews
-  // the edges of these strokes up and punches the paper's tooth through them. Take the
-  // filter off and this goes straight back to being neat felt-tip.
-  const tilt = -9 + rng() * 7;
-  // A single page scored is 3 strokes of 44, which with the frontier fade on top of it comes
-  // out as bare paper. Any score at all has to leave a mark, so a played square gets a floor.
-  const lv = Math.max(0, Math.min(1, level));
-  const n = level >= 1 ? AF_STROKES : Math.max(lv > 0 ? 4 : 0, Math.round(lv * AF_STROKES));
-  let strokes = "";
-  for (let i = 0; i < AF_STROKES; i++) {
-    const t = i / (AF_STROKES - 1);
-    const x = -10 + t * 120 + jit(1.6);
-    const order = i + jit(3.6);
-    const short = rng();
-    const top = short < 0.2 ? 5 + rng() * 12 : -3 + rng() * 6;
-    const bot = short > 0.8 ? 95 - rng() * 12 : 103 - rng() * 6;
-    const bow1 = jit(2.6), bow2 = jit(2.6);
-    const dx = 2.6 + rng() * 2.2;              // how far the return leg lands from the down leg
-    const xb = x + bow1, rx = xb + dx, rt = x + dx + jit(1.2);
-    const up = top + 4 + rng() * 22;           // the return leg dies out before the top
-    const w = 4.4 + rng() * 2.8;
-    const light = rng() < 0.15;
-    let o = (0.52 + rng() * 0.24) * (light ? 0.45 : 1);
-    if (level < 1 && order >= n) continue;   // geometry already drawn from the rng: see above
-    if (level < 1 && n - order < 4) o *= 0.35 + 0.65 * ((n - order) / 4);
-    strokes += `<path d="M${f(x)} ${f(top)}` +
-      ` C${f(x + bow1)} ${f(top + 32)} ${f(xb + bow1 * 0.4)} ${f(bot - 32)} ${f(xb)} ${f(bot)}` +
-      ` Q${f(xb + dx * 0.6)} ${f(bot + 3.4)} ${f(rx)} ${f(bot - 7)}` +
-      ` C${f(rx + bow2)} ${f(bot - 40)} ${f(rt + bow2 * 0.4)} ${f(up + 26)} ${f(rt)} ${f(up)}"` +
-      ` stroke-width="${f(w)}" opacity="${o.toFixed(2)}"/>`;
-  }
-
-  return `<svg class="af-crayon" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">` +
-    `<clipPath id="${uid}"><rect x="0" y="0" width="100" height="100"/></clipPath>` +
-    `<g clip-path="url(#${uid})">` +
-      `<g class="af-crayon-ink" filter="url(#afWax)" transform="rotate(${f(tilt)} 50 50)"` +
-      ` fill="none" stroke-linecap="round" stroke-linejoin="round">${strokes}</g>` +
-      `<path class="af-crayon-box" d="${box}" fill="none"/>` +
-    `</g></svg>`;
-}
+/* ---------- The album picture ----------
+   The snapshot on an Album Focus tile is a halftone print of an abstract scene, and how much
+   of the screen has actually printed IS the record: bare paper inside a pencilled box has
+   never been played, a sparse ghost is a best score, a full press run is a beaten album.
+   The drawing itself, and the reasoning behind all of it, lives in js/albumdots.js. */
 
 /* ---------- Ruthless: the lens picker ----------
    The page is a LYRIC SHEET, not a board. One song is typed down the paper in the order a song
@@ -11602,10 +11508,10 @@ function renderAlbumFocusPage() {
   const beaten = STUDIO_ALBUMS.filter((a) => board[a] && board[a].beaten).length;
   const perfected = STUDIO_ALBUMS.filter((a) => board[a] && board[a].perfected).length;
 
-  // The board — 12 pinned snapshots, each a pencilled square being coloured in with the
-  // era colour (see albumCrayon): empty when fresh, part-coloured once played (with the
-  // best score pencilled in beside it), filled to the brim when beaten, and gold-leafed
-  // when perfected. The era colour reaches the drawing as --era on the tile.
+  // The board — 12 pinned snapshots, each an abstract scene printed as a halftone in the
+  // era colour (see js/albumdots.js): bare paper in a pencilled box when fresh, a sparse
+  // ghost of the picture once played (with the best score pencilled in beside it), the full
+  // press run when beaten, and gold-leafed when perfected.
   let tiles = "";
   STUDIO_ALBUMS.forEach((a) => {
     const rec = albumFocusRecord(a);
@@ -11617,9 +11523,9 @@ function renderAlbumFocusPage() {
     // how far the square is coloured in: the best score over the thirteen pages, with a
     // beaten album filled to the brim whatever it was beaten on
     const level = rec.beaten ? 1 : Math.max(0, rec.best || 0) / TOTAL_ROUNDS;
-    tiles += `<button type="button" class="af-tile ${state}" data-album="${escapeHtml(a)}" style="--era:${albumColor(a) || "#999"}" aria-label="${escapeHtml(a)}: ${stateWord}">` +
+    tiles += `<button type="button" class="af-tile ${state}" data-album="${escapeHtml(a)}" aria-label="${escapeHtml(a)}: ${stateWord}">` +
       `<span class="af-pin" aria-hidden="true"></span>${gold}` +
-      `<span class="af-tile-win">${albumCrayon(a, level)}${score}</span>` +
+      `<span class="af-tile-win">${albumDots(a, albumColor(a) || "#999999", level)}${score}</span>` +
       `<span class="af-tile-cap">${escapeHtml(albumTileName(a))}</span>` +
       `</button>`;
   });
@@ -11915,7 +11821,7 @@ function renderAlbumDetail(album) {
       // object, and said nothing the album's name had not already said. The snapshot says how
       // far this one is coloured in — the record — and it is the same drawing the player just
       // tapped, so the turn from board to menu keeps hold of the thing they picked.
-      `<span class="af-detail-pic" style="--era:${col}" aria-hidden="true">${albumCrayon(album, level)}</span>` +
+      `<span class="af-detail-pic ${rec.beaten ? "is-beaten" : rec.best > 0 ? "is-played" : "is-fresh"}" aria-hidden="true">${albumDots(album, col || "#999999", level)}</span>` +
       `<span class="chall-detail-name">${escapeHtml(album)}</span>${stamp}` +
     `</div>` +
     `<div class="chall-sec">` +
@@ -30789,6 +30695,28 @@ function buildDevApi() {
       },
       play: (a, diff) => startAlbumFocus(a, diff || "medium"),
       open: () => openAlbumFocus("start"),
+      /* The twelve halftone snapshots, every record against every print level, laid over the
+         board itself. `fill` can only ever show one state at a time and the whole design is
+         how a picture GAINS ink, so the states have to be seen side by side or a scene that
+         reads at 13/13 and dissolves into dirt at 4/13 ships unnoticed. The bottom row is the
+         64px thumbnail from an album's own menu, which is where a composition with anything
+         small in it falls apart. It also names any record drawing off its own hash instead of
+         an authored scene — the tell that STUDIO_ALBUMS has grown and albumdots.js has not. */
+      pictures: () => {
+        if (!$("albumFocusBody")) return "open the board first";
+        renderAlbumFocusPage();
+        const strip = document.createElement("div");
+        strip.style.cssText = "display:flex;flex-direction:column;gap:10px;margin-bottom:20px";
+        const row = (level, px) => `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">` +
+          STUDIO_ALBUMS.map((a) =>
+            `<span style="display:block;width:${px}px;height:${px}px;background:#f7f1e2;box-shadow:inset 0 0 0 1px rgba(43,39,34,0.1)">` +
+            albumDots(a, albumColor(a) || "#999999", level) + `</span>`).join("") +
+          `<span style="font:11px var(--type);color:var(--ink-soft)">${level === 0 ? "fresh" : level >= 1 ? "beaten" : Math.round(level * TOTAL_ROUNDS) + "/" + TOTAL_ROUNDS}</span></div>`;
+        strip.innerHTML = [[0, 112], [4 / TOTAL_ROUNDS, 112], [9 / TOTAL_ROUNDS, 112], [1, 112], [1, 64]]
+          .map(([lv, px]) => row(lv, px)).join("");
+        $("albumFocusBody").prepend(strip);
+        return STUDIO_ALBUMS.map((a) => `${a}: ${hasScene(a) ? sceneOf(a) : "NO SCENE — borrowing " + sceneOf(a)}`);
+      },
       reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
       /* Winning one, rather than writing one down. `set` and `fill` above forge the BOARD,
          which is all the pinned snapshot needs — but the board is the last thing an album run
