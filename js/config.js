@@ -833,9 +833,20 @@ export const BONUS_GAMES = [
      THE DEAL MUST BE ERA-BOUNDED ON BOTH SIDES, and this is a fairness rule rather than a
      tidiness one: if her titles span a wider stretch of years than the decoys do, then a player
      who cannot place a title can still smell the later one, and the spread hands over the answer
-     for free. A title outside the band the decoys cover does not get dealt, however well
-     verified it is — the ruthlessBar pattern, where a song can exist in the data and still be
-     undealable.
+     for free.
+     BUT IT IS NOT ENFORCED BY A YEAR FIELD, AND MUST NOT BE GIVEN ONE. The decoy side is dated
+     and verified, 2002 to 2006. Her side is not datable: most of these were never released, so
+     the years either do not exist or are the internet's guesses, and a guessed year used as a
+     bar would silently throw out good titles on bad evidence. What is enforced instead is the
+     thing the rule was always actually about — no title may READ as later than the window. A
+     player has no dates either; what leaks is a title that sounds modern beside a 2004 album
+     cut, and that is caught by looking, not by a table. The scan was run over the pool on
+     2026-09-21 and nothing failed it; the cultural markers in there (Britney, Brad Pitt, a six
+     pack, a cowboy) all sit mid-decade.
+     So the honest statement of this rule is: nothing in the pool obviously breaks the bound,
+     which is weaker than proving it holds. Anything ADDED to her side later gets read against
+     the decoys before it is let in, and a title that cannot pass that read does not get dealt —
+     the ruthlessBar pattern, where a song can exist in the data and still be undealable.
 
      ITS ENDLESS SIDE DROPS BOTH THE PASS DOOR AND THE PENALTY: a wrong page ends the run, so
      there is nothing left for a minus to do and nothing to protect by passing. Ten pages is the

@@ -1,0 +1,491 @@
+{
+ "note": [
+  "Nashville's two pools. `hers` is a song Taylor wrote and never released; `decoys` are real",
+  "country songs by other people from the same few years. The page prints one title and asks",
+  "which it is, so EVERY rule below exists to keep the answer in the player's memory of her",
+  "rather than in the shape of the words.",
+  "",
+  "NOTHING HERE IS INVENTED. A made-up title can only be written in a register, and a register",
+  "is a tell a player learns instead of learning the songs. Every decoy is a real track on the",
+  "record named beside it.",
+  "",
+  "NO DECOY WAS A CHARTING SINGLE. Recognising a hit is general 2000s radio memory, not",
+  "knowledge of her, and a recognised decoy is a free page. Singles were checked against each",
+  "ARTIST'S DISCOGRAPHY rather than the album's page: Kellie Pickler's \"Didn't You Know How",
+  "Much I Loved You\" is an album cut on Small Town Girl and was re-recorded as a #14 single in",
+  "2009, which only the discography says. Album singles lists disagree with discographies more",
+  "often than you would think — two of the fifteen did.",
+  "",
+  "NOTHING ON EITHER SIDE HAS A DOMINANT OWNER. A title that is also a famous song by somebody",
+  "else breaks the page in the direction that matters most: the player who knows more gets it",
+  "wrong. \"Need You Now\", \"Stupid Boy\", \"By The Way\" and \"That's Life\" all came out of `hers`",
+  "for that reason, and two more came out because they are Ariana Grande tracks sitting on this",
+  "app's own guest shelf. The test is RECOGNITION, not existence: many songs are called \"Tell",
+  "Me\" and none of them owns it, so that one stays.",
+  "",
+  "THE TWO SIDES MUST NOT SHARE A TITLE, or near enough to one. \"Tennessee\" was on both lists",
+  "(Sugarland, 2004) and \"Firefly\" sat one letter from Faith Hill's \"Fireflies\", which is still",
+  "a decoy here. Both came out of `hers`. Nothing here collides with her released catalogue or",
+  "with any guest shelf either — Lee Ann Womack's album alone offered \"The Last Time\" and",
+  "\"Happiness\", and both were caught on the way in.",
+  "",
+  "`hers` CARRIES NO YEARS AND MUST NOT BE GIVEN ANY. Most of these were never released, so the",
+  "dates either do not exist or are guesses, and a guessed year used as a bar would throw out",
+  "good titles on bad evidence. The era bound is enforced by reading instead — see the roster",
+  "entry in js/config.js. The decoys ARE dated, because theirs are real release years, and that",
+  "is what a reveal can print.",
+  "",
+  "THE DEAL IS KEPT NEAR EVEN. At these counts neither \"always say hers\" nor \"always say not",
+  "hers\" pays, which is the same fairness argument that set Aaron or Jack's four-record pool.",
+  "Adding to one side without the other reopens it.",
+  "",
+  "ANYTHING ADDED LATER RUNS THE WHOLE SWEEP AGAIN: released catalogue, every guest shelf, the",
+  "other pool, singles by discography, and a dominant-owner read."
+ ],
+ "hers": [
+  "All Night Diner",
+  "Angelina",
+  "Battle",
+  "Being With My Baby",
+  "Brand New World",
+  "Brought Up That Way",
+  "Can I Go With You?",
+  "Check Out This View",
+  "Closest To A Cowboy",
+  "Cross My Heart",
+  "Dark Blue Tennessee",
+  "Didn't They",
+  "Don't Hate Me For Loving You",
+  "Drive All Night (Just South of Knowing Why)",
+  "Fall Back On You",
+  "For You",
+  "Her",
+  "Honey Baby",
+  "I Know What I Want",
+  "I Used To Fly",
+  "I Wished On A Plane",
+  "In The Pouring Rain",
+  "Live For The Little Things",
+  "Long Time Coming",
+  "Look At You Like That",
+  "Love They Haven't Thought Of Yet",
+  "Love To Lose",
+  "Lucky You",
+  "Made Up You",
+  "Making Up For Lost Love",
+  "Mandolin",
+  "Matches",
+  "Me And Britney",
+  "My Cure",
+  "My Turn To Be Me",
+  "Never Fade",
+  "Never Mind",
+  "Perfect Have I Loved",
+  "Point Of View",
+  "R-E-V-E-N-G-E",
+  "Rain Song",
+  "Smokey Black Nights",
+  "Sweet Tea And God's Graces",
+  "Tell Me",
+  "Ten Dollars And A Six Pack",
+  "The Diary Of Me",
+  "Thirteen Blocks (Can't Call It Love)",
+  "This Here Guitar",
+  "Till Brad Pitt Comes Along",
+  "Under My Head",
+  "Wait For Me",
+  "What Do You Say",
+  "What To Wear",
+  "Who I've Always Been",
+  "Writing Songs About You",
+  "You Do",
+  "Your Anything",
+  "Your Face"
+ ],
+ "decoys": [
+  {
+   "title": "Beautiful",
+   "artist": "Faith Hill",
+   "album": "Cry",
+   "year": 2002
+  },
+  {
+   "title": "If This Is the End",
+   "artist": "Faith Hill",
+   "album": "Cry",
+   "year": 2002
+  },
+  {
+   "title": "If You're Gonna Fly Away",
+   "artist": "Faith Hill",
+   "album": "Cry",
+   "year": 2002
+  },
+  {
+   "title": "Whenever I Run",
+   "artist": "Keith Urban",
+   "album": "Golden Road",
+   "year": 2002
+  },
+  {
+   "title": "You're Not Alone Tonight",
+   "artist": "Keith Urban",
+   "album": "Golden Road",
+   "year": 2002
+  },
+  {
+   "title": "Dreams",
+   "artist": "Kenny Chesney",
+   "album": "No Shoes, No Shirt, No Problems",
+   "year": 2002
+  },
+  {
+   "title": "Never Gonna Feel Like That Again",
+   "artist": "Kenny Chesney",
+   "album": "No Shoes, No Shirt, No Problems",
+   "year": 2002
+  },
+  {
+   "title": "On the Coast of Somewhere Beautiful",
+   "artist": "Kenny Chesney",
+   "album": "No Shoes, No Shirt, No Problems",
+   "year": 2002
+  },
+  {
+   "title": "Distant Shore",
+   "artist": "Dierks Bentley",
+   "album": "Dierks Bentley",
+   "year": 2003
+  },
+  {
+   "title": "Forget About You",
+   "artist": "Dierks Bentley",
+   "album": "Dierks Bentley",
+   "year": 2003
+  },
+  {
+   "title": "Is Anybody Loving You These Days",
+   "artist": "Dierks Bentley",
+   "album": "Dierks Bentley",
+   "year": 2003
+  },
+  {
+   "title": "Whiskey Tears",
+   "artist": "Dierks Bentley",
+   "album": "Dierks Bentley",
+   "year": 2003
+  },
+  {
+   "title": "Wish It Would Break",
+   "artist": "Dierks Bentley",
+   "album": "Dierks Bentley",
+   "year": 2003
+  },
+  {
+   "title": "Learning to Fall",
+   "artist": "Martina McBride",
+   "album": "Martina",
+   "year": 2003
+  },
+  {
+   "title": "She's a Butterfly",
+   "artist": "Martina McBride",
+   "album": "Martina",
+   "year": 2003
+  },
+  {
+   "title": "I Give In",
+   "artist": "Sara Evans",
+   "album": "Restless",
+   "year": 2003
+  },
+  {
+   "title": "Niagara",
+   "artist": "Sara Evans",
+   "album": "Restless",
+   "year": 2003
+  },
+  {
+   "title": "To Be Happy",
+   "artist": "Sara Evans",
+   "album": "Restless",
+   "year": 2003
+  },
+  {
+   "title": "Almost Gone",
+   "artist": "Terri Clark",
+   "album": "Pain to Kill",
+   "year": 2003
+  },
+  {
+   "title": "Better Than You",
+   "artist": "Terri Clark",
+   "album": "Pain to Kill",
+   "year": 2003
+  },
+  {
+   "title": "The First to Fall",
+   "artist": "Terri Clark",
+   "album": "Pain to Kill",
+   "year": 2003
+  },
+  {
+   "title": "Holdin' You",
+   "artist": "Gretchen Wilson",
+   "album": "Here for the Party",
+   "year": 2004
+  },
+  {
+   "title": "What Happened",
+   "artist": "Gretchen Wilson",
+   "album": "Here for the Party",
+   "year": 2004
+  },
+  {
+   "title": "The Hard Way",
+   "artist": "Keith Urban",
+   "album": "Be Here",
+   "year": 2004
+  },
+  {
+   "title": "These Are the Days",
+   "artist": "Keith Urban",
+   "album": "Be Here",
+   "year": 2004
+  },
+  {
+   "title": "The Day Before You",
+   "artist": "Rascal Flatts",
+   "album": "Feels Like Today",
+   "year": 2004
+  },
+  {
+   "title": "Then I Did",
+   "artist": "Rascal Flatts",
+   "album": "Feels Like Today",
+   "year": 2004
+  },
+  {
+   "title": "When the Sand Runs Out",
+   "artist": "Rascal Flatts",
+   "album": "Feels Like Today",
+   "year": 2004
+  },
+  {
+   "title": "Where You Are",
+   "artist": "Rascal Flatts",
+   "album": "Feels Like Today",
+   "year": 2004
+  },
+  {
+   "title": "Fly Away",
+   "artist": "Sugarland",
+   "album": "Twice the Speed of Life",
+   "year": 2004
+  },
+  {
+   "title": "Small Town Jericho",
+   "artist": "Sugarland",
+   "album": "Twice the Speed of Life",
+   "year": 2004
+  },
+  {
+   "title": "Tennessee",
+   "artist": "Sugarland",
+   "album": "Twice the Speed of Life",
+   "year": 2004
+  },
+  {
+   "title": "Time, Time, Time",
+   "artist": "Sugarland",
+   "album": "Twice the Speed of Life",
+   "year": 2004
+  },
+  {
+   "title": "Blank Sheet of Paper",
+   "artist": "Tim McGraw",
+   "album": "Live Like You Were Dying",
+   "year": 2004
+  },
+  {
+   "title": "Old Town New",
+   "artist": "Tim McGraw",
+   "album": "Live Like You Were Dying",
+   "year": 2004
+  },
+  {
+   "title": "Open Season on My Heart",
+   "artist": "Tim McGraw",
+   "album": "Live Like You Were Dying",
+   "year": 2004
+  },
+  {
+   "title": "Something's Broken",
+   "artist": "Tim McGraw",
+   "album": "Live Like You Were Dying",
+   "year": 2004
+  },
+  {
+   "title": "Lessons Learned",
+   "artist": "Carrie Underwood",
+   "album": "Some Hearts",
+   "year": 2005
+  },
+  {
+   "title": "Starts with Goodbye",
+   "artist": "Carrie Underwood",
+   "album": "Some Hearts",
+   "year": 2005
+  },
+  {
+   "title": "Whenever You Remember",
+   "artist": "Carrie Underwood",
+   "album": "Some Hearts",
+   "year": 2005
+  },
+  {
+   "title": "Dearly Beloved",
+   "artist": "Faith Hill",
+   "album": "Fireflies",
+   "year": 2005
+  },
+  {
+   "title": "Fireflies",
+   "artist": "Faith Hill",
+   "album": "Fireflies",
+   "year": 2005
+  },
+  {
+   "title": "I Wear My Life",
+   "artist": "Jo Dee Messina",
+   "album": "Delicious Surprise",
+   "year": 2005
+  },
+  {
+   "title": "Someone Else's Life",
+   "artist": "Jo Dee Messina",
+   "album": "Delicious Surprise",
+   "year": 2005
+  },
+  {
+   "title": "You Were Just Here",
+   "artist": "Jo Dee Messina",
+   "album": "Delicious Surprise",
+   "year": 2005
+  },
+  {
+   "title": "One's a Couple",
+   "artist": "Lee Ann Womack",
+   "album": "There's More Where That Came From",
+   "year": 2005
+  },
+  {
+   "title": "What I Miss About Heaven",
+   "artist": "Lee Ann Womack",
+   "album": "There's More Where That Came From",
+   "year": 2005
+  },
+  {
+   "title": "When You Get to Me",
+   "artist": "Lee Ann Womack",
+   "album": "There's More Where That Came From",
+   "year": 2005
+  },
+  {
+   "title": "Looking for a Reason",
+   "artist": "Little Big Town",
+   "album": "The Road to Here",
+   "year": 2005
+  },
+  {
+   "title": "Wounded",
+   "artist": "Little Big Town",
+   "album": "The Road to Here",
+   "year": 2005
+  },
+  {
+   "title": "Greyhound Bound for Nowhere",
+   "artist": "Miranda Lambert",
+   "album": "Kerosene",
+   "year": 2005
+  },
+  {
+   "title": "Love Is Looking for You",
+   "artist": "Miranda Lambert",
+   "album": "Kerosene",
+   "year": 2005
+  },
+  {
+   "title": "There's a Wall",
+   "artist": "Miranda Lambert",
+   "album": "Kerosene",
+   "year": 2005
+  },
+  {
+   "title": "What About Georgia?",
+   "artist": "Miranda Lambert",
+   "album": "Kerosene",
+   "year": 2005
+  },
+  {
+   "title": "River of You",
+   "artist": "Trisha Yearwood",
+   "album": "Jasper County",
+   "year": 2005
+  },
+  {
+   "title": "Standing Out in a Crowd",
+   "artist": "Trisha Yearwood",
+   "album": "Jasper County",
+   "year": 2005
+  },
+  {
+   "title": "Who Invented the Wheel",
+   "artist": "Trisha Yearwood",
+   "album": "Jasper County",
+   "year": 2005
+  },
+  {
+   "title": "Hope for Me Yet",
+   "artist": "Dierks Bentley",
+   "album": "Long Trip Alone",
+   "year": 2006
+  },
+  {
+   "title": "The Heaven I'm Headed To",
+   "artist": "Dierks Bentley",
+   "album": "Long Trip Alone",
+   "year": 2006
+  },
+  {
+   "title": "Girls Like Me",
+   "artist": "Kellie Pickler",
+   "album": "Small Town Girl",
+   "year": 2006
+  },
+  {
+   "title": "Wild Ponies",
+   "artist": "Kellie Pickler",
+   "album": "Small Town Girl",
+   "year": 2006
+  },
+  {
+   "title": "Ellsworth",
+   "artist": "Rascal Flatts",
+   "album": "Me and My Gang",
+   "year": 2006
+  },
+  {
+   "title": "Pieces",
+   "artist": "Rascal Flatts",
+   "album": "Me and My Gang",
+   "year": 2006
+  },
+  {
+   "title": "Words I Couldn't Say",
+   "artist": "Rascal Flatts",
+   "album": "Me and My Gang",
+   "year": 2006
+  }
+ ]
+}

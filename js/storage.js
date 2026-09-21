@@ -539,7 +539,16 @@ export function recordBonusRun(id, score, max = Infinity, lower = false, sweepSe
     return { ...bonusRecord(id), isBest, isSweepBest };
   }
   if (e.best > max) e.best = max;
-  const isBest = score > (e.best || 0);
+  /* THE FIRST RUN IS THE BEST RUN OUTRIGHT, exactly as the `lower` branch above takes it, and
+     for the same reason turned the other way up: a game may score BELOW ZERO. Nashville's page
+     costs a point when it is called wrong, which is what makes a guess worth nothing on average
+     — so a first run of -2 compared against `e.best || 0` asked whether -2 beats 0, answered no,
+     and banked no best at all. A player whose every run went negative would have kept a board
+     that said they had played and never scored. Comparing against `e.plays` rather than against
+     a stand-in zero is the only version that is true for every direction a game can run in, and
+     it also fixes a live one-liner on the games already here: a first run of exactly 0 used to
+     leave `best` undefined beside a `plays` of 1. */
+  const isBest = !e.plays || score > e.best;
   if (isBest) e.best = score;
   e.plays = (e.plays || 0) + 1;
   e.last = score;
