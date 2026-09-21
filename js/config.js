@@ -851,6 +851,48 @@ export const BONUS_GAMES = [
     kicker: "name it from its number", tint: "#9c6b21",
     line: "An album and a track number. Name the song, fast.",
     blurb: "Track eight on Fearless. Track five on folklore. The album and the number are all you get, and ten seconds to put a name to it." },
+  /* THE CAPITALS — the message hidden in the lyric booklet, and which song it was printed under.
+     The only game on the shelf whose question was never on the record at all: a secret message
+     is printed matter, not audio, so a player who has heard every song a thousand times and
+     never opened a booklet cannot reach a single page of this by listening harder.
+
+     It sits AFTER Running Order and before Track by Track, which is the title ramp's own sort
+     key rather than the arrival date. The ramp is each game taking away what the last was
+     leaning on: a clean line, a verse bought a word at a time, the words with the order and the
+     singing stripped out, then no words at all — only a fact about the record. This is the step
+     past that, a fact about the PAPER the record came in, and the album is not handed over with
+     it the way Running Order hands one over. Track by Track still ends the shelf, because
+     asking for a whole running order is further than asking for one title however deep.
+
+     SEVENTY-TWO PAGES IN THE POOL, AND THAT IS THE WHOLE DESIGN CONSTRAINT. Five records carry
+     messages (the debut through 1989) and nothing after, because she stopped hiding them — so
+     unlike every other zine here the pages are AUTHORED DATA and they run out. The file holds
+     seventy-three and the shelf deals seventy-two: "Forever & Always (Piano Version)" carries a
+     message of its own and is barred shelf-wide as a second cut (RUTHLESS_SKIP_TITLES), which is
+     the right answer here as well as everywhere else — the album's other Forever & Always is in
+     the pool too, and a page whose honest answer is a variant of another page's is the trap
+     TRACK_ALT_TAKES exists to keep out of Running Order. At ten a run it takes seven runs to see
+     the pool, which on any other game would be the exhaustion bug that makes a generated puzzle
+     worthless. Here it is the point: this is the one game whose
+     answers are a finite set of facts, and learning all seventy-three is called knowing them.
+     The run is therefore built to be PERFECTED rather than survived — `sweep` for the reachable
+     ceiling's reason exactly as Running Order takes it, so that once 10/10 stops being the
+     question the clock is what is left to beat. Do not price it as though the pool were deep.
+
+     NO ALBUM ON THE PAGE, decided rather than inherited. Naming the record cuts the field from
+     seventy-two to at most eighteen and turns the deepest ask on the shelf into a placement
+     exercise, which is Aaron or Jack's rule and Nashville's for the same reason: the album is
+     the answer in a hint's clothes. It goes into the meta at the reveal, where it is free.
+
+     THE PAGE IS THE MESSAGE AND NOTHING ELSE, in the `bg-sheet`'s title slot where Running
+     Order stands its question, so the reveal writes the real title over it and the page finishes
+     as the lyric-sheet heading every reveal here ends on. That is also why it needs no answer
+     card: the heading names the song and the album an inch above where a card would repeat them.
+     Four of them are a single proper noun ("Toby.", "SAG.") and one runs to twelve words, so the slot has to hold both without being laid out around either. */
+  { id: "the-capitals", name: "The Capitals", ready: true, sweep: true, endless: true,
+    kicker: "which song hid this?", tint: "#8c745b",
+    line: "A message from the liner notes. Name the song.",
+    blurb: "The first five records hid a message in the lyric booklet, spelled out in capitals song after song. Here is one, and nothing else." },
   /* THE END OF THE SHELF AND THE END OF THE RAMP: every other game hands you something of the
      song's, and Running Order takes even the words away but still asks for one title at a time.
      This one asks for a whole record in order and is the only game here scored purely in
@@ -952,6 +994,16 @@ export const CHAIN_EASY_PAGES = 3;
    sentence of chrome to carry it, and a charm priced in a currency the game did not need. The
    page is right or wrong now, and the clock is the only thing on it that moves. */
 export const BONUS_TRACK_SECONDS = 10;
+/* The Capitals' clock, and it is Name That Song's fifteen rather than Running Order's ten even
+   though this page is by far the shortest thing to READ on the shelf — four of the messages are
+   one word. The number is not paying for reading time, it is paying for the one route the page
+   leaves open. With no album printed there is nothing to place the message against except its
+   own voice, and the honest play is to hear which record talks like that and then walk its
+   running order; a ten-second page cuts that off and leaves only the pages you already had cold,
+   which is Only Here's warning exactly — a clock set below the thinking DELETES the thinking
+   rather than adding pressure to it. Fifteen is long enough to take that walk once and far too
+   short to take it twice, so a message you cannot place is still a decision to let go of. */
+export const BONUS_CAPS_SECONDS = 15;
 /* ---------- The endless side of a game ----------
    A second way to play a game carrying `endless`: the same pages off the same clock, dealt
    until one is missed. There is no last page, so a run is not out of anything — the score is
@@ -4297,6 +4349,18 @@ export const ACHIEVEMENTS = [
   // flex — knowing a song off less of it. Priced in something on screen, like everything else
   // on this shelf: the cloud you are looking at and the page number above it.
   { id: "clear-every-spare-word-cloud-page", name: "You Saw Enough", desc: "Clear all five of a Word Cloud run's spare pages", tier: 2, secret: false, icon: "spectacles", sitting: true, earn: { cat: "bonus" } },
+  /* The Capitals' two. The sweep is the ordinary one and takes the reachable ceiling's shape,
+     but the PAGE charm is the interesting half and it is Both Ways' argument almost exactly:
+     four of the seventy-two messages are a single proper noun ("Toby.", "SAG.", "Adam.",
+     "Tay."), which is the one page in the pool that cannot be reasoned towards at all — there
+     is no register to hear and no era to place, only whether you have read that booklet. It is
+     a page and not a run because a ten-page deal can contain none of them, and a charm you
+     cannot work towards on the page in front of you is a lottery wearing a collection's clothes.
+     Named off "Say my name and everything just stops" (Dress), which the shelf can deal, and
+     the sweep off "I didn't read between the lines" (The Outside), which is the game itself.
+     Both on the dashed placeholder while their marks are drawn, like Track by Track's three. */
+  { id: "sweep-the-capitals", name: "Between The Lines", desc: "Sweep The Capitals", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "name-a-one-word-capitals-message", name: "Say My Name", desc: "Place a secret message that is nothing but a name", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   /* ---- The endless side (2026-09-13) ----
      Two rungs and a pratfall, and all three are shelf-wide rather than Running Order's: the
      feat is how far an endless run got, which is the same feat out of whichever zine it was
@@ -4727,6 +4791,7 @@ export const ACH_GROUP_OF = {
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
+  "sweep-the-capitals": "bonus", "name-a-one-word-capitals-message": "bonus",
   "clear-13-pages-in-an-endless-bonus-run": "bonus", "clear-25-pages-in-an-endless-bonus-run": "bonus",
   "end-an-endless-bonus-run-on-its-first-page": "bonus",
   "name-ruthless-page-off-one-word": "ruthless", "finish-ruthless-run-naming-all-ten": "ruthless",

@@ -4506,6 +4506,36 @@
      fact is the clutter this page was rebuilt to lose. */
   .bg-sheet-title.is-answer { color: var(--red-pen); }
 
+  /* ---------- THE CAPITALS: the booklet's line, quoted ----------
+     The question stands in the `bg-sheet--ask` heading slot Running Order's does, so it inherits
+     the size and the balance and needs nothing but its quotation marks — which are the page's
+     only furniture and are load-bearing rather than decorative. Four of the seventy-two
+     messages are a single proper noun ("Toby.", "SAG.") and a bare word in a heading slot reads
+     as a TITLE, which is the one thing this page must never look like it is handing over. The
+     marks say the line is quoted from somewhere else.
+     They are drawn HERE rather than typed into the string so that a message already ending in a
+     full stop — most of them do — is never re-punctuated by the markup, and so the reveal can
+     drop the claim by dropping one class when the slot stops holding a quote. */
+  .bg-caps-note::before { content: "\201C"; }
+  .bg-caps-note::after  { content: "\201D"; }
+  .bg-caps-note::before, .bg-caps-note::after { color: var(--margin); font-weight: 400; }
+  /* NO SIZE STEP FOR A LONG MESSAGE, and it is not an omission — see renderBonusRound. The
+     longest in the pool balances to two lines here and four on a phone with the writing line
+     still well above the fold, so the only thing a shrink would buy is a smaller page for the
+     best message on the record. */
+  /* Where the message goes once the reveal has taken its slot: under the finished heading, in
+     the same quoted hand but small and soft, so the page ends as a lyric sheet with the
+     booklet's line noted beneath it. Running Order had nothing to keep here — a track number is
+     a coordinate — but a message and its song are a PAIR, and the pairing is the thing the game
+     is teaching, so it must not leave the screen at the moment it is finally worth reading. */
+  .bg-caps-said {
+    font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1.25;
+    color: var(--ink-soft); text-align: center; max-width: 34ch; margin: -8px auto 18px;
+  }
+  .bg-caps-said:empty { display: none; margin: 0; }
+  .bg-caps-said::before { content: "\201C"; }
+  .bg-caps-said::after  { content: "\201D"; }
+
   .bg-reject {
     opacity: 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.8px;
     color: var(--margin); text-align: center; pointer-events: none;

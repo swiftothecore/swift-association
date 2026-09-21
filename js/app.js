@@ -28,7 +28,7 @@ import {
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
-  BONUS_TRACK_SECONDS, BONUS_ENDLESS_RUNGS,
+  BONUS_TRACK_SECONDS, BONUS_CAPS_SECONDS, BONUS_ENDLESS_RUNGS,
   BONUS_WHO_SECONDS, PRODUCER_ALBUMS, WHO_PAY_ONE, WHO_PAY_BOTH,
   BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
@@ -98,6 +98,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
          buildTrackIndex, buildTrackPuzzle,
+         buildCapitalsPuzzle, capitalsDealCount,
          buildProducerPuzzle, producerDealCount,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
@@ -7443,6 +7444,10 @@ function bonusSeconds() {
   // track one, which is the whole game (see BONUS_TRACK_SECONDS).
   if (bonusGame.id === "running-order") return BONUS_TRACK_SECONDS;
   if (bonusGame.id === "aaron-or-jack") return BONUS_WHO_SECONDS;
+  // Not a reading budget — four of the messages are a single word. See BONUS_CAPS_SECONDS:
+  // the fifteen pays for the one route the page leaves open, which is hearing which record
+  // talks like that and then walking its running order.
+  if (bonusGame.id === "the-capitals") return BONUS_CAPS_SECONDS;
   // A cloud is READ rather than scanned — the eye has to cross the whole page and weigh what
   // it finds — so it gets the reading budget the lyric games get rather than a title game's.
   if (bonusGame.id === "word-cloud") return BONUS_CLOUD_SECONDS;
@@ -7485,6 +7490,8 @@ function buildBonusPuzzle() {
                             { words: bonusRound > CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
   if (bonusGame.id === "aaron-or-jack")
     return buildProducerPuzzle(songs, producerCredits, Math.random, 120, new Set(bonusRecentSongs));
+  if (bonusGame.id === "the-capitals")
+    return buildCapitalsPuzzle(songs, secretMessages, Math.random, 120, new Set(bonusRecentSongs));
   if (isRuthlessRun())
     return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
   return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
@@ -7505,7 +7512,28 @@ function bonusDealCount() {
   // rather than twelve, and only the songs on them that either man is credited on.
   if (bonusGame && bonusGame.id === "aaron-or-jack")
     return producerDealCount(songs, producerCredits);
+  // And again, and the narrowest pool on the shelf: five records out of the twelve, and only
+  // the songs on them that carried a message. Seventy-two pages, which an endless run can
+  // genuinely reach the end of — see the roster note on why that is the design, not a bug.
+  if (bonusGame && bonusGame.id === "the-capitals")
+    return capitalsDealCount(songs, secretMessages);
   return songs.length;
+}
+
+/* Does this game bar a song it has already dealt? Everything whose page IS a song does, which
+   is all of them but Spot the Slip — its pages are lines rather than songs, and two lines off one
+   song are two different puzzles. Ruthless plays on this loop and bars too.
+
+   IT IS A FUNCTION BECAUSE THERE WERE TWO COPIES OF IT and they drifted. `nextBonusRound` had
+   this list and `__dev.bonus.fill` had its own, which was written when the shelf was smaller and
+   never grew: four games were missing from the dev one, so a fabricated run dealt the same song
+   twice and the back cover printed it twice — a bug that looks exactly like the real repeat bug
+   this rule exists to prevent, on a tool whose whole job is letting that card be eyeballed. A
+   second list of game ids is the trap this shelf keeps setting (see the shelf-wide charm walks);
+   the answer is always one place to ask. */
+function bonusBansRepeats() {
+  if (!bonusGame) return false;
+  return bonusGame.id !== "spot-the-slip";
 }
 
 /* Everything an endless run has been barring, handed back at once. Only Here keeps a SECOND
@@ -7567,11 +7595,7 @@ function nextBonusRound(options = {}) {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
   }
-  if (bonusGame.id === "name-that-song" || bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
-      bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
-      bonusGame.id === "running-order" || bonusGame.id === "word-cloud" ||
-      bonusGame.id === "aaron-or-jack" || isRuthlessRun())
-    bonusRecentSongs.push(bonusPuzzle.song.title);
+  if (bonusBansRepeats()) bonusRecentSongs.push(bonusPuzzle.song.title);
   // Only the last two, and a preference rather than a bar: over ten pages and twelve albums a
   // repeat is honest, a hat-trick looks like the shuffle broke.
   if (bonusGame.id === "running-order") {
@@ -7898,6 +7922,47 @@ function renderBonusRound() {
         `<div class="bg-sheet-meta" id="bonusTrackMeta"></div>` +
       `</div>` +
       bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
+                         hint: "Enter accepts the top match", dropdown: true });
+    const input = $("bonusInput");
+    input.addEventListener("input", updateBonusDropdown);
+    input.addEventListener("keydown", (e) => {
+      if (bonusDropdownKey(e)) return;
+      if (e.key === "Enter") { e.preventDefault(); judgeName(); }
+    });
+    if (!bonusLocked) focusRoundInput(input);
+  } else if (bonusGame.id === "the-capitals") {
+    /* THE PAGE IS THE MESSAGE AND NOTHING ELSE, standing in Running Order's slot for Running
+       Order's reason: the `bg-sheet`'s TITLE is the one thing this page does not know, so the
+       question goes there and the reveal writes the real title over it. The meta line under the
+       rule is left empty while the page is live — it is where the album lands afterwards, and
+       the album on a live page would cut the field from seventy-two to eighteen (see the
+       roster note). What is left is one centred block, and nothing is laid out around it.
+
+       IN QUOTATION MARKS, which is the only piece of furniture the page gets and is load-bearing
+       rather than decorative. Four of them are a single proper noun — "Toby.",
+       "SAG." — and a bare word sitting in a heading slot reads as a TITLE, which is the one
+       thing this page must never look like it is telling you. The marks say the line is quoted
+       from somewhere else. They are outside the escaped text and drawn in the stylesheet's own
+       quote characters rather than typed into the string, so a message that already ends in a
+       full stop (most of them do) is never re-punctuated.
+
+       NOTHING SIZES THE MESSAGE DOWN, and that is measured rather than assumed. The obvious
+       guard is a class that shrinks the long pages, and it was written and then deleted: the
+       worst message in the pool is twelve words and 828px of Caveat at the heading's full size,
+       which `text-wrap: balance` sets as two even lines on a desktop and four on a phone, and
+       the writing line still lands at 493px of an 812px viewport. So the page already holds its
+       own worst case at both widths, and a shrink would only have made the longest and best
+       message on the record read as a footnote. Re-measure before adding one back. */
+    body.innerHTML =
+      `<p class="bg-ask">name the song it was printed under</p>` +
+      `<div class="bg-sheet bg-sheet--ask">` +
+        `<h3 class="bg-sheet-title bg-caps-note" id="bonusSlot">` +
+          `${escapeHtml(p.message)}</h3>` +
+        `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
+        `<div class="bg-sheet-meta" id="bonusCapsMeta"></div>` +
+      `</div>` +
+      `<div class="bg-caps-said" id="bonusCapsSaid"></div>` +
+      bonusWritingLine({ placeholder: "type the title\u2026", aria: "Type the song title",
                          hint: "Enter accepts the top match", dropdown: true });
     const input = $("bonusInput");
     input.addEventListener("input", updateBonusDropdown);
@@ -8823,7 +8888,8 @@ function bonusAnswerCard() {
      showed the player a word of the song. */
   if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
       bonusGame.id === "then-what" || bonusGame.id === "running-order" ||
-      bonusGame.id === "aaron-or-jack" || isRuthlessRun()) return "";
+      bonusGame.id === "aaron-or-jack" || bonusGame.id === "the-capitals" ||
+      isRuthlessRun()) return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
   if (bonusGame.id === "name-that-song") {
@@ -8899,6 +8965,12 @@ function bonusBannerText(correct, isTimeout) {
     return correct ? (bonusPuzzle.by === "both" ? "both of them, and you knew it" : "that's his")
          : isTimeout ? "the page ran out"
          : bonusPuzzle.by === "both" ? "it was the two of them" : "the other one";
+  /* Running Order's problem again: the page holds no song, only a line lifted out of a booklet,
+     so "not this one" would be pointing at something that is not there. The good banner says
+     where the message was FOUND rather than that a title was matched, because what the page
+     actually tested is whether you could place a sentence nobody sang. */
+  if (bonusGame && bonusGame.id === "the-capitals")
+    return correct ? "that's where it was hidden" : isTimeout ? "the page ran out" : "not that one";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -9033,6 +9105,33 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     }
     const meta = $("bonusTrackMeta");
     if (meta) meta.textContent = `${pressingName(bonusPuzzle.album)} · track ${bonusPuzzle.track}`;
+
+  } else if (bonusGame.id === "the-capitals") {
+    /* The sheet finishes itself, the same way Running Order's does — but with one more move,
+       because this page's question is worth keeping on screen and Running Order's was not. A
+       track number is a coordinate and the listing prints it; a secret message is the other half
+       of a PAIR, and the pairing is the whole thing the game is teaching. So the title is written
+       over the question in the heading slot it was standing in, the album drops into the meta
+       under the rule, and the message moves DOWN into a quoted line of its own beneath the
+       sheet. What is left is an ordinary lyric-sheet heading with the booklet's line noted under
+       it, which is what the page would have looked like if it had never been a question.
+
+       That is also why there is no answer card: the heading an inch above names the song and the
+       record, and a card would write both out again.
+
+       The heading sheds `bg-caps-note` on the way, quotation marks and all. The marks are there
+       to say "this line is quoted from somewhere else", and the moment the slot holds the title
+       that claim is false — a title in quotes reads as a title being doubted. */
+    const slot = $("bonusSlot");
+    if (slot) {
+      slot.textContent = bonusPuzzle.song.title;
+      slot.classList.remove("bg-caps-note");
+      if (!correct) slot.classList.add("is-answer");
+    }
+    const capsMeta = $("bonusCapsMeta");
+    if (capsMeta) capsMeta.textContent = bonusPuzzle.song.album;
+    const said = $("bonusCapsSaid");
+    if (said) said.textContent = bonusPuzzle.message;
 
   } else if (bonusGame.id === "aaron-or-jack") {
     /* The sheet finishes itself, the same way Running Order's does. The title has been in the
@@ -9242,6 +9341,16 @@ function foldBonusPageCharms(correct, isTimeout) {
     // rule: the page took under five, so five were still showing when they hit Enter.
     if (correct && !isTimeout && trackSecs <= BONUS_TRACK_SECONDS / 2)
       unlock("name-running-order-page-with-half-the-clock-left");
+  } else if (bonusGame.id === "the-capitals") {
+    /* Say My Name. Four of the seventy-two messages are a single proper noun and nothing else,
+       which is the only page in this pool with no route into it but having read the booklet —
+       there is no register to hear and no era to place in one word. A page rather than a run,
+       for Both Ways' reason: a ten-page deal can contain none of them.
+       Counted off the MESSAGE rather than off a list of the four titles, so the charm stays true
+       to the data if secret-messages.json ever gains a record. Split on whitespace, because a
+       message is a written line and "Maple Latte." is two words however short it looks. */
+    if (correct && !isTimeout && bonusPuzzle.message.trim().split(/\s+/).length === 1)
+      unlock("name-a-one-word-capitals-message");
   } else if (bonusGame.id === "word-cloud") {
     // Counted here rather than at the end, because whether a page was a spare one is a fact
     // about the page and the run fold has no page left to ask.
@@ -9299,7 +9408,8 @@ function foldBonusRunCharms(perfect, cleared) {
     // is in this table.
     const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
                          "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain",
-                         "running-order": "sweep-running-order", "word-cloud": "sweep-word-cloud" }[bonusGame.id];
+                         "running-order": "sweep-running-order", "word-cloud": "sweep-word-cloud",
+                         "the-capitals": "sweep-the-capitals" }[bonusGame.id];
     if (sweepCharm) unlock(sweepCharm);
     if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
   }
@@ -9330,11 +9440,23 @@ function foldBonusRunCharms(perfect, cleared) {
    pages, so there is no run of it that would ever satisfy the test. The charm's wording says so
    rather than leaving the shelf quietly meaning eight of nine. */
 function foldShelfLedgerCharms() {
+  /* BOTH WALKS SKIP AN UNWRITTEN GAME (2026-09-21). They used to walk the whole roster, which
+     was right while every entry on it was playable and became a trap the moment one was not:
+     Nashville sits in BONUS_GAMES behind `ready: false` so the shelf can show its cover and say
+     in words that it is not written yet, and a zine with no Play button can never be played or
+     swept — so both charms were unwinnable on every notebook, silently, with nothing failing.
+     The filter is what the charms have always MEANT. "Every bonus game" is every game there is
+     to play, which is the same set the shelf counts in its own header, and a zine joining the
+     shelf still makes both harder the day it becomes playable rather than the day it appears.
+     This is the same trap Track by Track sprang from the other direction (it banks somewhere
+     other than BONUS_KEY, hence `played`'s branch below), and the rule that catches both is the
+     one to keep: a walk over this roster must ask the question its charm actually means. */
+  const shelf = BONUS_GAMES.filter((g) => g.ready);
   const played = (g) => g.id === "track-by-track"
     ? Object.values(loadTracks()).some((e) => e && e.plays > 0)
     : bonusRecord(g.id).plays > 0;
-  if (BONUS_GAMES.every(played)) unlock("play-every-bonus-game");
-  if (BONUS_GAMES.filter((g) => !bonusTimed(g)).every((g) => bonusRecord(g.id).swept))
+  if (shelf.every(played)) unlock("play-every-bonus-game");
+  if (shelf.filter((g) => !bonusTimed(g)).every((g) => bonusRecord(g.id).swept))
     unlock("clean-sweep-every-bonus-game");
 }
 
@@ -13796,11 +13918,47 @@ function installProducerCredits(doc, grouped) {
   return map;
 }
 
+/* The liner-note secret messages, for The Capitals. data/secret-messages.json is keyed
+   { album: { title: message } } over the five records that carried them, and is flattened here
+   to title -> { album, message }, which is the shape both the game and the bottle egg want.
+
+   VALIDATED AGAINST songs.json ON ALBUM AND TITLE TOGETHER, not on title alone, and the misses
+   are counted and warned about loudly with the titles named. This is `installProducerCredits`'s
+   guard for its reason: neither file joins to the other on anything but a string, so a title
+   spelled even slightly differently does not throw — it silently drops that song out of the
+   pool, and a page that quietly stops existing is a bug nobody ever sees. The two files agree
+   on all seventy-three today; the check is here so that they still have to. */
+let secretMessages = new Map();
+/* What the join threw away, kept rather than only warned about. The dev tool cannot recompute
+   this from `secretMessages` — a dropped row is precisely the row that is not in there — and a
+   check that can only ever answer "none" is worse than no check, because it reads as a clean
+   bill of health. Both files agreed on all seventy-three the day this shipped, and they agreed
+   only after two titles in secret-messages.json were corrected to songs.json's spelling ("Tied
+   Together with a Smile" and "I Knew You Were Trouble", which carried a full stop). Those two
+   dropped silently and cost two pages, which is exactly the failure this list exists to show. */
+let secretMessageOrphans = [];
+function installSecretMessages(byAlbum, grouped) {
+  const known = new Set();
+  grouped.forEach((a) => a.songs.forEach((song) => known.add(a.album + "\u0000" + song.title)));
+  const map = new Map();
+  const orphans = [];
+  Object.keys(byAlbum || {}).forEach((album) => Object.keys(byAlbum[album] || {}).forEach((title) => {
+    if (!known.has(album + "\u0000" + title)) { orphans.push(`${album} / ${title}`); return; }
+    map.set(title, { album, message: byAlbum[album][title] });
+  }));
+  if (orphans.length)
+    console.warn(`secret-messages.json: ${orphans.length} title(s) do not match songs.json and were dropped`, orphans);
+  secretMessageOrphans = orphans;
+  secretMessages = map;
+  return map;
+}
+
 async function loadData() {
-  const [wordsRes, songsRes, credsRes] = await Promise.all([
+  const [wordsRes, songsRes, credsRes, secretsRes] = await Promise.all([
     fetch("data/words.json"),
     fetch("data/songs.json"),
     fetch("data/producers.json"),
+    fetch("data/secret-messages.json"),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
@@ -13816,6 +13974,18 @@ async function loadData() {
     try { installProducerCredits(await credsRes.json(), grouped); }
     catch (e) { console.warn("producer credits failed to load", e); }
   } else console.warn("producer credits missing: Aaron or Jack will have nothing to deal");
+  /* The secret messages, for The Capitals, and installed beside the corpus rather than inside it
+     for the credits' reason exactly: it is a fact about Taylor's booklets keyed by her titles, it
+     is never swapped for a guest's, and a guest run cannot reach the bonus shelf anyway. So
+     snapshotCorpus does not and must not carry it. It is 4KB against songs.json's megabyte, and
+     it is fetched eagerly rather than on demand because a run must not open on a pool that has
+     not arrived — the bottle egg could be lazy about it precisely because a flourish that does
+     not surface costs nothing. A failure here is survivable on purpose: the file is one zine's
+     data, and the notebook should not refuse to open because a zine cannot be dealt. */
+  if (secretsRes.ok) {
+    try { installSecretMessages(await secretsRes.json(), grouped); }
+    catch (e) { console.warn("secret messages failed to load", e); }
+  } else console.warn("secret messages missing: The Capitals will have nothing to deal");
   // Kept for the blended lineup corpus, which needs Taylor's catalogue in its ORIGINAL
   // grouped shape (installCorpus flattens); re-fetching a precached file would work but
   // would be a second copy of the same bytes.
@@ -25592,6 +25762,21 @@ let secretMessagePromise = null;
 const SECRET_MESSAGE_FALLBACK = { song: "Clean", album: "1989",
   message: "She lost him, but she found herself, and somehow, that was everything." };
 function loadSecretMessages() {
+  /* The Capitals installs the same file at boot (installSecretMessages), so once that has
+     landed there is nothing to fetch: the flat pool is folded straight out of the installed map.
+     The lazy fetch stays underneath as the fallback for the one case it still covers — the
+     notebook opened while that request failed — because a caught bottle must never unroll to a
+     blank scroll, and the egg was written to survive exactly that. */
+  if (!secretMessagePromise && secretMessages.size) {
+    const pool = [];
+    for (const [song, row] of secretMessages) {
+      // The debut is titled "Taylor Swift"; fans (and the notebook) call it the Self-Titled
+      // record, so credit it that way to avoid "Song · Taylor Swift".
+      pool.push({ song, album: row.album === "Taylor Swift" ? "Self-Titled" : row.album,
+                  message: row.message });
+    }
+    secretMessagePromise = Promise.resolve(pool.length ? pool : [SECRET_MESSAGE_FALLBACK]);
+  }
   if (!secretMessagePromise) {
     secretMessagePromise = fetch("data/secret-messages.json")
       .then((r) => { if (!r.ok) throw new Error("secret-messages " + r.status); return r.json(); })
@@ -29672,6 +29857,11 @@ function buildDevApi() {
             if (p) recent.push(p.song.title);
             out.push(p ? { ask: `track ${p.track} from ${pressingName(p.album)}`,
                            answer: p.song.title, of: p.total } : null);
+          } else if (id === "the-capitals") {
+            const p = buildCapitalsPuzzle(songs, secretMessages, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
+            out.push(p ? { ask: p.message, answer: p.song.title, album: p.album,
+                           words: p.message.trim().split(/\s+/).length } : null);
           } else if (id === "word-cloud") {
             // Dealt as a run deals it, wide pages then spare ones, so a sample shows both.
             const p = buildCloudPuzzle(songs, bonusIndexes().wordIndex, Math.random, 120, new Set(recent),
@@ -29721,6 +29911,7 @@ function buildDevApi() {
             : id === "then-what" ? buildChainPuzzle(songs)
             : id === "aaron-or-jack" ? buildProducerPuzzle(songs, producerCredits)
             : id === "running-order" ? buildTrackPuzzle(songs, bonusIndexes().trackIndex)
+            : id === "the-capitals" ? buildCapitalsPuzzle(songs, secretMessages)
             : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
             : buildSlipPuzzle(songs, playableWords, lineIndex, ctx);
           if (p) ok++;
@@ -29745,6 +29936,43 @@ function buildDevApi() {
                  pays: bonusPuzzle.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE,
                  picked: whoPlayed, ceiling: whoCeiling,
                  spent: +((performance.now() - bonusPageStart) / 1000).toFixed(2) };
+      },
+      /* The Capitals. `caps()` reads the live page for `who()`'s reason exactly — the player is
+         shown a sentence and nothing else, so there is no way to check a page against the data
+         by looking at it.
+
+         `messages()` is the one to run before shipping a data change, and it answers the two
+         questions this game's pool can go wrong on. `dealable` is how many pages really exist:
+         the pool is authored rather than generated, so it is a number that can silently FALL if
+         a title is respelled in either file, and a game whose pool quietly halves plays exactly
+         the same as one that did not. `orphans` is the other half, reported by
+         installSecretMessages at load and re-counted here — rows in secret-messages.json that
+         match nothing in songs.json, which do not throw and would otherwise only ever show up as
+         songs that mysteriously never come round. `oneWord` is the Say My Name charm's pool: if
+         it ever reaches zero, that charm has become unwinnable without anything failing. */
+      caps: () => {
+        if (!bonusGame || bonusGame.id !== "the-capitals" || !bonusPuzzle) return "no Capitals page live";
+        return { ask: bonusPuzzle.message, answer: bonusPuzzle.song.title, album: bonusPuzzle.album,
+                 words: bonusPuzzle.message.trim().split(/\s+/).length,
+                 left: +(bonusSeconds() - (performance.now() - bonusPageStart) / 1000).toFixed(2) };
+      },
+      messages: () => {
+        const songs = bonusSongs();
+        const dealable = songs.filter((x) => secretMessages.has(x.title));
+        const byAlbum = {};
+        dealable.forEach((x) => { byAlbum[x.album] = (byAlbum[x.album] || 0) + 1; });
+        /* The orphans are the ones the LOAD dropped, read back from what it kept. Recomputing
+           them from `secretMessages` here was the first version and it was worse than useless: a
+           dropped row is by definition not in that map, so the check could only ever answer
+           "none" — which is what it answered on the day two titles really were being dropped. */
+        const orphans = secretMessageOrphans.slice();
+        const barred = [];
+        for (const [title] of secretMessages)
+          if (!dealable.some((x) => x.title === title)) barred.push(title);
+        const words = dealable.map((x) => secretMessages.get(x.title).message.trim().split(/\s+/).length);
+        return { loaded: secretMessages.size, dealable: dealable.length, byAlbum, orphans, barred,
+                 oneWord: words.filter((n) => n === 1).length,
+                 longest: Math.max(...words), median: words.sort((a, b) => a - b)[words.length >> 1] };
       },
       credits: () => {
         const pool = bonusSongs().filter((x) => PRODUCER_ALBUMS.includes(x.album) && producerCredits.has(x.title));
@@ -30202,10 +30430,8 @@ function buildDevApi() {
         for (let n = 1; n <= BONUS_ROUNDS; n++) {
           const p = buildBonusPuzzle();
           if (!p) continue;
-          if (bonusGame.id === "sing-it-back" || bonusGame.id === "redacted" ||
-              bonusGame.id === "only-here" || bonusGame.id === "then-what" ||
-              bonusGame.id === "aaron-or-jack")
-            bonusRecentSongs.push(p.song.title);
+          // The SAME question the real page turn asks, never a second list — see bonusBansRepeats.
+          if (bonusBansRepeats()) bonusRecentSongs.push(p.song.title);
           const ok = n <= wins;
           // Points games get a plausible spread rather than a flat number, so the track
           // listing is eyeballed with the column it will really carry.

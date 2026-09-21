@@ -1343,6 +1343,45 @@ export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, a
   return pick(true) || pick(false);
 }
 
+/* ---------- The Capitals ----------
+   One page: a liner-note secret message, and the song it was printed under. Like Aaron or Jack
+   there is no puzzle to construct — the question is AUTHORED DATA (data/secret-messages.json)
+   and the builder's whole job is deciding what may be dealt.
+
+   `messages` is a Map of title -> { album, message } and is the only thing that decides an
+   answer. A song not in it hid no message and is not dealable, so the pool is the intersection
+   of the shelf's own songs with that file: five records out of the twelve, seventy-two pages —
+   the file holds seventy-three and `ruthlessBar` bars one of them as a second cut, which is why
+   the pool is computed against `bonusSongs()` rather than counted out of the file.
+
+   IT DEALS THE ALBUM AND THE PAGE MUST NOT PRINT IT (see the roster note) — it rides on the
+   puzzle because the REVEAL and the back cover's listing both want it, and both happen after
+   the page has been answered.
+
+   No fairness guard beyond `avoid`, and none is needed. Every other builder here has to prove
+   its page has exactly one honest answer; this one's answer is a sentence somebody printed in a
+   booklet under one song's lyrics. The only thing that can go wrong is a title spelled
+   differently in the two files, and that is caught at load rather than here (see
+   `installSecretMessages`) for the reason the credits are: a page that quietly stops existing
+   is the kind of bug nobody ever sees. */
+export function buildCapitalsPuzzle(songs, messages, rng = Math.random, tries = 120, avoid = null) {
+  const pool = songs.filter((song) => messages.has(song.title));
+  if (!pool.length) return null;
+  for (let t = 0; t < tries; t++) {
+    const song = pool[Math.floor(rng() * pool.length)];
+    if (avoid && avoid.has(song.title)) continue;
+    const row = messages.get(song.title);
+    return { song, album: row.album, message: row.message };
+  }
+  return null;
+}
+
+/* What the pool really is, asked the same way the builder asks it, so `bonusDealCount` and the
+   dev tools can never drift from what a page can actually be dealt. */
+export function capitalsDealCount(songs, messages) {
+  return songs.filter((song) => messages.has(song.title)).length;
+}
+
 /* ---------- Aaron or Jack ----------
    One page: a song title, and which of the two produced it. There is no puzzle to construct
    here, so this builder does almost nothing — the whole game is in the DATA (data/producers.json)
