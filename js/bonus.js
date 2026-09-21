@@ -1479,6 +1479,52 @@ export function penDealCount(songs, credits) {
   return penEligible(songs, credits).length;
 }
 
+/* ---------- Nashville ----------
+   A title on the page and three doors: hers, not hers, or pass. The first game on the shelf that
+   deals NOTHING FROM THE CATALOGUE — Aaron or Jack and Who Held The Pen ask a question about a
+   song from `bonusSongs()`, where this one's pages are songs she never released and songs by
+   other people entirely, so its whole pool is data/nashville.json and `songs` is never consulted.
+   That is also why it takes its own ban list rather than leaning on `bonusRecentSongs`, which is
+   keyed on catalogue titles that mean nothing here.
+
+   THE SIDE IS PICKED FIRST AND THE TITLE SECOND, which is buildPenPuzzle's rule for
+   buildPenPuzzle's reason, and on a two-door page it does more work than it does there. The
+   pools are 58 and 64; dealing one title at random from the 122 would put "not hers" at 52.5%
+   before the player had read a word, and every title barred from a long endless run would move
+   that number again as the run went on. Choosing the SIDE first pins a blind guess at exactly
+   half whatever the pools are doing, and it keeps doing so on page three hundred. The counts
+   still matter for variety — a side that is running short repeats sooner — but they no longer
+   have to be kept level to keep the game honest.
+
+   NO DIFFICULTY RAMP, and the constant that used to promise one is gone. It was specified as
+   "the easy end of both pools first, then both sides tighten" and there is no such end in the
+   data: which of her titles are fan-famous and which of the decoys sit slightly off her register
+   are both judgements nobody has written down, and inventing a `hard: true` flag by feel would
+   be the era-tell coming back in as a field. Who Held The Pen has no ramp either and balances
+   its deal instead, which is what this does. */
+export function buildNashvillePuzzle(pool, rng = Math.random, avoid = null) {
+  const live = [["hers", pool.hers], ["decoy", pool.decoys]]
+    .map(([side, list]) => [side, avoid ? list.filter((e) => !avoid.has(e.title)) : list])
+    .filter(([, list]) => list.length);
+  if (!live.length) return null;
+  const [side, list] = live[Math.floor(rng() * live.length)];
+  const pick = list[Math.floor(rng() * list.length)];
+  /* `song` is the shelf's own shape and is not a pretence: the page's subject IS a song, it is
+     simply not one in songs.json — half of them are other people's records. Carrying it means
+     the repeat bar and the back cover's listing read this game with no branch of their own,
+     which is the trap this file keeps setting (see bonusBansRepeats). `album` is null on her
+     side because there is no record, which is the whole answer. */
+  return { song: { title: pick.title, album: pick.album || null },
+           title: pick.title, side, hers: side === "hers",
+           artist: pick.artist || null, album: pick.album || null, year: pick.year || null };
+}
+
+// Every title the game can deal, which is what an endless run's no-repeat list is measured
+// against. Both sides, because either can be dealt on any page.
+export function nashvilleDealCount(pool) {
+  return pool ? pool.hers.length + pool.decoys.length : 0;
+}
+
 /* ---------- Track by Track ----------
    One album, its whole running order, and a clock that does not stop until the last blank is
    filled. The run IS the time and LOW WINS, which is the Ruthless Game's scoring rather than

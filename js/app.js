@@ -30,6 +30,7 @@ import {
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   BONUS_TRACK_SECONDS, BONUS_CAPS_SECONDS, BONUS_ENDLESS_RUNGS,
   BONUS_WHO_SECONDS, PRODUCER_ALBUMS, WHO_PAY_ONE, WHO_PAY_BOTH,
+  BONUS_NASHVILLE_SECONDS, NASHVILLE_WRONG,
   BONUS_PEN_SECONDS, PEN_ALBUMS, PEN_GUESTS,
   BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
@@ -102,6 +103,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildCapitalsPuzzle, capitalsDealCount,
          buildProducerPuzzle, producerDealCount,
          buildPenPuzzle, penDealCount, penEligible,
+         buildNashvillePuzzle, nashvilleDealCount,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
@@ -6953,6 +6955,12 @@ let whoPlayed = null;
 // whoPlayed: the two games have different card values and a single variable would only be
 // telling them apart by which game is live, which is what two names already do.
 let penPlayed = null;
+/* Which door was tapped, and it is a THIRD state rather than a boolean beside `correct`: a
+   passed page is not a wrong one, and the scoring, the banner and the listing all three have
+   to be able to tell them apart. Null means nothing was tapped, which is what an expired clock
+   leaves behind — and an expired clock is a wrong answer here, not a free pass. */
+let nashvilleDoor = null;
+let nashvillePassed = false;
 /* WHAT THIS RUN COULD HAVE PAID. Aaron or Jack has no fixed maximum (see `dealMax`): a page is
    worth two, or five on the four joint productions, and which of those you are dealt is not
    something a player did. So the run is scored against the ceiling of its OWN deal, accumulated
@@ -7132,6 +7140,11 @@ function bonusBest(g) {
 }
 function bonusScoreText() {
   if (bonusTimed(bonusGame)) return `${fmtTimeFine(bonusScore)} so far`;
+  /* "correct" is the wrong noun for a score that can fall, and "-3 correct" is the sentence it
+     would otherwise print. A Nashville run counts POINTS, and it says so on the way down as
+     well as on the way up. */
+  if (!bonusEndless && bonusGame && bonusGame.id === "nashville")
+    return `${bonusScore} ${Math.abs(bonusScore) === 1 ? "point" : "points"}`;
   /* Before the per-game lines below, all of which are about a total out of something. An endless
      run is a streak and nothing else: there is no total for it to be out of, and "7 correct" is
      a scoreboard's way of saying a number that is really a distance. */
@@ -7451,6 +7464,10 @@ function bonusSeconds() {
   if (bonusGame.id === "running-order") return BONUS_TRACK_SECONDS;
   if (bonusGame.id === "aaron-or-jack") return BONUS_WHO_SECONDS;
   if (bonusGame.id === "who-held-the-pen") return BONUS_PEN_SECONDS;
+  /* The tightest budget on the shelf, and tighter than Aaron or Jack's twelve on purpose:
+     there is no slow path here. You place the title or you do not, and every second past
+     recognition goes on hunting a tell in the writing rather than on remembering a song. */
+  if (bonusGame.id === "nashville") return BONUS_NASHVILLE_SECONDS;
   // Not a reading budget — four of the messages are a single word. See BONUS_CAPS_SECONDS:
   // the fifteen pays for the one route the page leaves open, which is hearing which record
   // talks like that and then walking its running order.
@@ -7499,6 +7516,10 @@ function buildBonusPuzzle() {
     return buildProducerPuzzle(songs, producerCredits, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "who-held-the-pen")
     return buildPenPuzzle(songs, writerCredits, Math.random, 120, new Set(bonusRecentSongs));
+  // The one builder handed no catalogue at all: its pools are its own file, and `songs` would
+  // mean nothing to it. See buildNashvillePuzzle.
+  if (bonusGame.id === "nashville")
+    return buildNashvillePuzzle(nashvillePool, Math.random, new Set(bonusRecentSongs));
   if (bonusGame.id === "the-capitals")
     return buildCapitalsPuzzle(songs, secretMessages, Math.random, 120, new Set(bonusRecentSongs));
   if (isRuthlessRun())
@@ -7530,6 +7551,8 @@ function bonusDealCount() {
   // genuinely reach the end of — see the roster note on why that is the design, not a bug.
   if (bonusGame && bonusGame.id === "the-capitals")
     return capitalsDealCount(songs, secretMessages);
+  // Both sides, since either can be dealt on any page — and none of them is in `songs`.
+  if (bonusGame && bonusGame.id === "nashville") return nashvilleDealCount(nashvillePool);
   return songs.length;
 }
 
@@ -7622,6 +7645,8 @@ function nextBonusRound(options = {}) {
   onlyPlayed = null;
   whoPlayed = null;
   penPlayed = null;
+  nashvilleDoor = null;
+  nashvillePassed = false;
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
   // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
@@ -7946,6 +7971,38 @@ function renderBonusRound() {
       `<div class="bg-pen-row" role="group" aria-label="Who wrote this song">${cards}</div>`;
     body.querySelectorAll(".bg-pen").forEach((b) =>
       b.addEventListener("click", () => judgePen(b.dataset.v)));
+  } else if (bonusGame.id === "nashville") {
+    /* THE SAME SHEET AGAIN, for the reason the pen game gives: three games on this shelf ask one
+       question about one title and inventing a third set of furniture would be inventing a
+       difference that is not there. The title stands in the heading and the meta under the rule
+       is empty while the page is live — it takes the record at the reveal, where it costs
+       nothing, which is Aaron or Jack's rule and matters more here than anywhere: the artist IS
+       the answer.
+
+       THE THIRD DOOR IS THE GAME and it is drawn as the odd one out rather than as a third of
+       three. Hers and not-hers are a matched pair of cards; PASS is a smaller, quieter thing set
+       apart from them, because it is not a third guess — it is the decision to make none. Drawn
+       as one of three equal cards it would read as a shrug with the same weight as a call, and
+       the whole point of the door is that using it well is a skill. */
+    const doors = [
+      ["hers", "hers", "This is a Taylor Swift song she never released"],
+      ["not", "not hers", "This is somebody else's song"],
+    ].map(([v, label, full]) =>
+      `<button type="button" class="bg-nash" data-v="${v}" aria-label="${escapeHtml(full)}">` +
+        `<span class="bg-nash-card"><span class="bg-nash-word">${escapeHtml(label)}</span></span>` +
+      `</button>`).join("");
+    body.innerHTML =
+      `<p class="bg-ask">did this one ever come out?</p>` +
+      `<div class="bg-sheet bg-sheet--ask">` +
+        `<h3 class="bg-sheet-title">${escapeHtml(p.title)}</h3>` +
+        `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
+        `<div class="bg-sheet-meta" id="bonusNashMeta"></div>` +
+      `</div>` +
+      `<div class="bg-nash-row" role="group" aria-label="Is this one of hers?">${doors}</div>` +
+      `<button type="button" class="bg-nash-pass" data-v="pass"` +
+        ` aria-label="Pass: score nothing rather than risk a point">pass</button>`;
+    body.querySelectorAll(".bg-nash, .bg-nash-pass").forEach((b) =>
+      b.addEventListener("click", () => judgeNashville(b.dataset.v)));
   } else if (bonusGame.id === "running-order") {
     /* THE PAGE IS A LYRIC SHEET WITH ITS TITLE MISSING, and it is the shelf's own `bg-sheet`
        rather than any furniture of its own: the heading in pen, the red rule, the album noted
@@ -8373,6 +8430,15 @@ function bonusTimeout() {
   if (bonusGame && bonusGame.id === "who-held-the-pen") {
     markPenCards(null);
     settleBonusRound(false, penDetail(), true);
+    return;
+  }
+  /* AN EXPIRED CLOCK IS A WRONG ANSWER HERE, and it has to be: a timeout scored as a pass would
+     be the cheapest pass on the page, and the eight seconds would stop meaning anything on
+     exactly the pages they were put there for. `nashvillePassed` is left false, so the page
+     charges. */
+  if (bonusGame && bonusGame.id === "nashville") {
+    markNashvilleDoors(null);
+    settleBonusRound(false, nashvilleDetail(), true);
     return;
   }
   const detail = bonusGame && bonusGame.id === "spot-the-slip"
@@ -8922,6 +8988,58 @@ function markPenCards(choice) {
   });
 }
 
+/* One tap and the page is answered, on any of the three doors. A pass settles as NOT CORRECT,
+   which is right — nothing was called — and `nashvillePassed` is what stops the rest of the
+   page treating it as a miss: the score pays nothing instead of charging, and the banner says
+   so in its own words. */
+function judgeNashville(choice) {
+  if (bonusLocked || !bonusPuzzle) return;
+  nashvilleDoor = choice;
+  nashvillePassed = choice === "pass";
+  const called = choice === "hers" ? true : choice === "not" ? false : null;
+  markNashvilleDoors(choice);
+  settleBonusRound(called !== null && called === bonusPuzzle.hers, nashvilleDetail());
+}
+
+/* The two doors turned over: the true one takes the ink and the other is left as an
+   impression. That is Aaron or Jack's "this one printed" again, and it is deliberately the same
+   gesture rather than a new one — three neighbouring games reveal by inking the true answer,
+   and a fourth way of saying it would be decoration. A passed page still turns them over: you
+   chose not to call it, and you are still told. */
+function markNashvilleDoors(choice) {
+  $("bonusPlayBody").querySelectorAll(".bg-nash").forEach((b) => {
+    const v = b.dataset.v;
+    b.disabled = true;
+    const isTrue = (v === "hers") === bonusPuzzle.hers;
+    b.classList.add(isTrue ? "is-answer" : "is-blank");
+    if (choice && v === choice) b.classList.add(isTrue ? "is-got" : "is-missed");
+  });
+  const pass = $("bonusPlayBody").querySelector(".bg-nash-pass");
+  if (pass) { pass.disabled = true; if (choice === "pass") pass.classList.add("is-took"); }
+  /* THE RECORD DROPS INTO THE META, and the two sides say different amounts on purpose. A decoy
+     names the artist, the record and the year, which is the fact the player was missing and the
+     only thing that makes the next page easier. Hers says NEVER RELEASED and stops, because
+     that is the whole truth about it — there is no record to name and no year that is not a
+     guess (see data/nashville.json). It is not left blank: an empty slot where the other side
+     prints three fields reads as a rendering fault rather than as an absence, which is the same
+     reason Who Held The Pen ghosts its wrong cards instead of removing them. */
+  const meta = $("bonusNashMeta");
+  // A self-titled record would otherwise print the artist twice with a dot between — true, and
+  // it reads as a rendering fault, which is the one thing a reveal cannot afford.
+  const rec = [bonusPuzzle.artist,
+               bonusPuzzle.album === bonusPuzzle.artist ? null : bonusPuzzle.album,
+               bonusPuzzle.year].filter(Boolean).join(" \u00b7 ");
+  if (meta) meta.textContent = bonusPuzzle.hers ? "never released" : rec;
+}
+
+// The verdict line takes the plain fact and the meta takes the record, which is whoDetail's
+// rule: two lines an inch apart saying one thing is the failure every reveal here avoids.
+function nashvilleDetail() {
+  return bonusPuzzle.hers
+    ? `<b>hers</b> — written and never released`
+    : `<b>${escapeHtml(bonusPuzzle.artist)}</b>`;
+}
+
 /* What the verdict says: the credit line as the sleeve prints it, which is the whole teaching
    moment and the reason data/writers.json keeps names instead of a count. "alone" is a right
    answer; "Taylor Swift, Liz Rose" is the thing the player actually wanted to know, and on a
@@ -9017,7 +9135,7 @@ function bonusAnswerCard() {
   if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
       bonusGame.id === "then-what" || bonusGame.id === "running-order" ||
       bonusGame.id === "aaron-or-jack" || bonusGame.id === "who-held-the-pen" ||
-      bonusGame.id === "the-capitals" ||
+      bonusGame.id === "the-capitals" || bonusGame.id === "nashville" ||
       isRuthlessRun()) return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
@@ -9060,6 +9178,17 @@ function bonusPageScore(correct) {
      other — it is the price of a call you can only make deliberately, since four songs out of
      87 are joint and tapping that card on a hunch loses the page outright. See WHO_PAY_BOTH for
      why five and not eleven. */
+  /* THE ONLY PAGE ON THE SHELF THAT CAN CHARGE. A wrong call costs NASHVILLE_WRONG and a pass
+     scores nothing, which together put a guess at nothing on average and make zero — rather
+     than five — the score for knowing nothing on a two-door page. A run may therefore finish
+     below zero, which is legal everywhere it is banked (see the note at recordBonusRun) and is
+     the reason nothing here is floored. A PASS IS NOT A WRONG ANSWER: it is the third door and
+     the whole reason the penalty is not simply a tax on not-knowing. An expired clock IS one,
+     or letting the eight seconds run out would be the cheapest pass on the page.
+     The endless branch above has already returned by here, so neither the penalty nor the pass
+     exists on that side — a wrong page ends the run, which leaves a minus nothing to do. */
+  if (bonusGame && bonusGame.id === "nashville")
+    return correct ? 1 : nashvillePassed ? 0 : NASHVILLE_WRONG;
   if (bonusGame && bonusGame.id === "aaron-or-jack")
     return !correct ? 0 : bonusPuzzle.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
   if (!correct) return 0;
@@ -9110,6 +9239,13 @@ function bonusBannerText(correct, isTimeout) {
      actually tested is whether you could place a sentence nobody sang. */
   if (bonusGame && bonusGame.id === "the-capitals")
     return correct ? "that's where it was hidden" : isTimeout ? "the page ran out" : "not that one";
+  /* A passed page is neither won nor lost and must not be told it was wrong — the door exists
+     so that not knowing is a decision, and a banner reading "not this one" over a deliberate
+     pass would take that back. */
+  if (bonusGame && bonusGame.id === "nashville")
+    return correct ? (bonusPuzzle.hers ? "never came out, and you knew" : "somebody else's, and you knew")
+         : nashvillePassed ? "left it alone"
+         : isTimeout ? "the page ran out" : "not this one";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -9158,6 +9294,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     ruthlessShown >= bonusPuzzle.titleAt && ruthlessShown <= bonusPuzzle.titleAt + RUTHLESS_HANDOUT_WORDS;
   bonusLog.push({
     n: bonusRound, ok: correct,
+    // Nashville alone: a page nobody called. It is NOT `ok`, because nothing was got right, and
+    // it must not be drawn as a miss either — see BG_DASH.
+    passed: bonusGame.id === "nashville" && nashvillePassed,
     title: bonusPuzzle.song.title,
     album: bonusPuzzle.song.album,
     words: ruthlessShown,
@@ -9170,6 +9309,11 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         // worth one page however much tape came off it, so "1 pts" would be the truth about
         // nothing — but how much of the verse you had to buy is still the story of the page,
         // and now it is the whole of it.
+        // Who it turned out to belong to, which is the one thing the listing's title column
+        // cannot say. "hers" on her side rather than her name: the column clips at 10ch and the
+        // run is all about her anyway, so the short word carries more.
+        : bonusGame.id === "nashville"
+          ? (nashvillePassed ? "passed" : bonusPuzzle.hers ? "hers" : bonusPuzzle.artist)
         : bonusGame.id === "redacted"
           ? (bonusEndless ? (redactPeeled ? `${redactPeeled} peeled` : "untouched") : `${gained} pts`)
         // Every other game notes the answer it was hiding; this one never hid an answer, so
@@ -9320,10 +9464,18 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     : `<button type="button" id="bonusNextBtn" class="btn-ghost">${last ? "the back cover" : "next page"} →</button>`;
   resetLyricReveals();
   const fb = $("bonusFeedback");
-  fb.className = "bg-feedback show " + (correct ? "ok" : "no");
+  /* A PASSED PAGE IS THE THIRD STATE HERE TOO, and it is the last place on the shelf that had
+     to learn it. The verdict is drawn from `correct`, so a pass came up as a red cross over
+     the words "left it alone" — the banner contradicting its own sentence, and taking back the
+     one thing the third door exists to say. It gets the pencilled dash the listing uses, and
+     the neutral class, because nothing about the page was right or wrong. */
+  const passed = bonusGame && bonusGame.id === "nashville" && nashvillePassed;
+  fb.className = "bg-feedback show " + (correct ? "ok" : passed ? "pass" : "no");
   fb.innerHTML =
     (correct
       ? `<div class="banner good">✓ ${escapeHtml(bonusBannerText(true, isTimeout))}</div>`
+      : passed
+        ? `<div class="banner pass">— ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`
       : `<div class="banner bad">✗ ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`) +
     (detail ? `<p class="bg-detail">${detail}</p>` : "") +
     bonusAnswerCard() +
@@ -9399,6 +9551,12 @@ const BG_TICK = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"
 const BG_ARROW_L = `<svg viewBox="0 0 16 16" class="bg-arrow-svg" aria-hidden="true"><path d="M10.2 3.2 L5.1 8.1 L10.0 12.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const BG_ARROW_R = `<svg viewBox="0 0 16 16" class="bg-arrow-svg" aria-hidden="true"><path d="M6.0 3.1 L11.0 7.9 L5.9 12.9" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/></svg>`;
+/* A THIRD MARK, AND ONLY NASHVILLE CAN EARN IT: a page that was passed was not missed, and a
+   red cross beside it takes back the only thing the third door was built to say. It is a
+   pencilled dash rather than a tick or a cross because it is neither — nobody called the page,
+   so nothing about it was right or wrong. Drawn like the other two, since everything inside
+   that card is ink. */
+const BG_DASH = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 8.2 L12 7.8" fill="none" stroke="rgba(60,40,18,0.5)" stroke-width="2" stroke-linecap="round"/></svg>`;
 
 /* The mark on the back cover's copy button: a second sheet slipped out from behind the first,
    ruled with the two lines every card on this desk is written on, and the gold tick the run
@@ -9866,8 +10024,9 @@ function endBonusRun() {
       // Running Order's column is marked to hold its width (see .bg-track-note.is-time).
       (t.note ? `<span class="bg-track-note${listGame.id === "running-order" ? " is-time" : ""}">` +
                   `${escapeHtml(t.note)}</span>` : "") +
-      `<span class="bg-track-mark" aria-hidden="true">${t.ok ? BG_TICK : BG_CROSS}</span>` +
-      `<span class="sr-only">${t.ok ? "correct" : "missed"}</span>` +
+      `<span class="bg-track-mark" aria-hidden="true">` +
+        `${t.ok ? BG_TICK : t.passed ? BG_DASH : BG_CROSS}</span>` +
+      `<span class="sr-only">${t.ok ? "correct" : t.passed ? "passed" : "missed"}</span>` +
     `</li>`;
   const tracks = shown.map(trackRow).join("");
 
@@ -14120,6 +14279,23 @@ function installProducerCredits(doc, grouped) {
    THE AUTHORED POOL IS CHECKED THE SAME WAY, separately, and it is the check that matters more:
    PEN_GUESTS is thirty hand-typed titles and a typo in one of them is a page that silently stops
    existing. `writerPoolOrphans` is what the dev tool reads back. */
+/* Nashville's pools, normalised to one shape at load so the builder never has to ask which
+   side it is holding: `hers` rows are a title and nothing else (that is the whole point — see
+   the note in data/nashville.json about why they carry no year and must not be given one), and
+   `decoys` carry the record a reveal can print. */
+let nashvillePool = null;
+function installNashvillePool(doc) {
+  const hers = (doc.hers || []).map((t) => ({ title: t }));
+  const decoys = (doc.decoys || []).map((r) => ({
+    title: r.title, artist: r.artist, album: r.album, year: r.year }));
+  // A title on both sides is a page with no correct answer. The data file is swept for this
+  // when it is edited, but a silent collision here would be unplayable rather than untidy.
+  const seen = new Set(hers.map((e) => e.title.toLowerCase()));
+  const clash = decoys.filter((e) => seen.has(e.title.toLowerCase())).map((e) => e.title);
+  if (clash.length) console.warn(`nashville.json: ${clash.length} title(s) are on BOTH sides`, clash);
+  nashvillePool = { hers, decoys };
+}
+
 let writerCredits = new Map();
 let writerCreditOrphans = [];
 let writerPoolOrphans = [];
@@ -14185,12 +14361,13 @@ function installSecretMessages(byAlbum, grouped) {
 }
 
 async function loadData() {
-  const [wordsRes, songsRes, credsRes, secretsRes, writersRes] = await Promise.all([
+  const [wordsRes, songsRes, credsRes, secretsRes, writersRes, nashRes] = await Promise.all([
     fetch("data/words.json"),
     fetch("data/songs.json"),
     fetch("data/producers.json"),
     fetch("data/secret-messages.json"),
     fetch("data/writers.json"),
+    fetch("data/nashville.json"),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
@@ -14227,6 +14404,14 @@ async function loadData() {
     try { installWriterCredits(await writersRes.json(), grouped); }
     catch (e) { console.warn("writer credits failed to load", e); }
   } else console.warn("writer credits missing: Who Held The Pen will have nothing to deal");
+  /* Nashville's two pools. Installed beside the other zine data for their reason, and it is
+     even clearer here: NONE of this is Taylor's catalogue — half of it is other people's
+     records — so it could not live inside the corpus even if somebody wanted it to, and a guest
+     swap must never see it. Survivable on failure like the rest. */
+  if (nashRes.ok) {
+    try { installNashvillePool(await nashRes.json()); }
+    catch (e) { console.warn("Nashville pools failed to load", e); }
+  } else console.warn("Nashville pools missing: Nashville will have nothing to deal");
   // Kept for the blended lineup corpus, which needs Taylor's catalogue in its ORIGINAL
   // grouped shape (installCorpus flattens); re-fetching a precached file would work but
   // would be a second copy of the same bytes.

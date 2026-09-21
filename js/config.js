@@ -848,11 +848,19 @@ export const BONUS_GAMES = [
      the decoys before it is let in, and a title that cannot pass that read does not get dealt —
      the ruthlessBar pattern, where a song can exist in the data and still be undealable.
 
+     NO RAMP, AND THE CONSTANT THAT PROMISED ONE IS GONE (2026-09-21). It was specified as the
+     easy end of both pools first and both sides tightening after, and there is no such end in
+     the data: which of her titles are fan-famous, and which decoys sit slightly off her
+     register, are judgements nobody has written down, and adding a `hard` flag by feel would be
+     the era-tell coming back as a field. What the page balances instead is its DEAL — the side
+     is chosen before the title (buildNashvillePuzzle), which pins a blind guess at exactly half
+     whatever the two pools happen to be doing, on page three hundred as much as on page one.
+
      ITS ENDLESS SIDE DROPS BOTH THE PASS DOOR AND THE PENALTY: a wrong page ends the run, so
      there is nothing left for a minus to do and nothing to protect by passing. Ten pages is the
      calibration game and the endless side is the nerve game — the Only Here relationship, two
      questions off one hand, rather than the same game with the lid off. */
-  { id: "nashville", name: "Nashville", ready: false, sweep: true, endless: true,
+  { id: "nashville", name: "Nashville", ready: true, sweep: true, endless: true,
     kicker: "which one never came out?", tint: "#a8642c",
     line: "One title. Hers, not hers, or pass.",
     blurb: "A song she wrote and never released, or somebody else's record from the same few years. Wrong costs a point. Passing costs nothing." },
@@ -1003,11 +1011,6 @@ export const BONUS_NASHVILLE_SECONDS = 8;
 // What a wrong page costs, and the reason a guess is worth nothing on average. See the roster
 // entry: a run is NOT floored at zero, and a pass scores 0 rather than this.
 export const NASHVILLE_WRONG = -1;
-// Pages 1 to NASHVILLE_EASY_PAGES take the easy end of BOTH pools — her fan-famous titles
-// against decoys that are era-correct but a little off her register. After that the two sides
-// tighten toward each other. Proximity is the only ramp a three-door page has, and three is
-// already the shelf's number in ONLY_WIDE_PAGES and CHAIN_EASY_PAGES.
-export const NASHVILLE_EASY_PAGES = 3;
 export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
 // Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
 // the strips you peel while you think, so a tight clock would charge you twice for the same
