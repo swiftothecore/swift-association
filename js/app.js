@@ -7263,7 +7263,7 @@ function renderBonusPage() {
             /* Track by Track's sticker opens the album board instead of starting a run, so it
                says `pick an album` — pressing it never promised a clock, which is what makes
                going in for a look at the twelve records obviously allowed. */
-            `<button type="button" id="bonusPlayBtn" class="bonus-play">${PLAY_NIB}` +
+            `<button type="button" id="bonusPlayBtn" class="bonus-play" data-tear="${g.id}">${PLAY_NIB}` +
             `<span>${g.id === "track-by-track" ? "Pick an album"
               : bonusRecord(g.id).plays ? "Play again" : "Play"}</span></button>` +
             /* THE RULE RIDES ON THE STICKER, not under it. A line of explanation beneath the
@@ -7272,7 +7272,7 @@ function renderBonusPage() {
                one miss ends it — is on the tooltip and in the button's own accessible name, so
                the pointer and the screen reader both get it and the leaf stays a leaf. */
             (bonusHasEndless(g)
-              ? `<button type="button" id="bonusEndlessBtn" class="bonus-play is-endless"` +
+              ? `<button type="button" id="bonusEndlessBtn" class="bonus-play is-endless" data-tear="${g.id}"` +
                 ` data-tip="No last page: it deals until you miss one">${ENDLESS_LOOP}` +
                 `<span>Endless</span><span class="sr-only"> — no last page: it deals until you miss one</span>` +
                 `</button>` : "") +
