@@ -765,6 +765,44 @@ export const BONUS_GAMES = [
     kicker: "whose record is this?", tint: "#3f9fb5",
     line: "Name the producer: Aaron, Jack, or both.",
     blurb: "A song from one of the four records the two of them share, and nothing else on the page. Aaron Dessner, Jack Antonoff, or both?" },
+  /* WHO HELD THE PEN — Aaron or Jack's sibling, one axis over: that game asks which of two men
+     made the record, this one asks how many people were in the room when the song was written.
+     A title and nothing else again, and three cards: she wrote it ALONE, she wrote it with ONE
+     other person, or a room of three or more put their names on it.
+
+     It sits immediately after Aaron or Jack because the sort key puts it there and not because
+     it arrived next. Both are taps, both ask for something that is not in the songs, and inside
+     a family the order is how much you must already be carrying — that one is two names over
+     four records, this one is the shape of a whole credit line over eight. Nashville still ends
+     the family, because it steps off the records altogether.
+
+     SHE IS A CREDITED WRITER ON ALL 255 SONGS, so the question is only ever how many names are
+     beside hers, and the three cards are the only three answers there are. That is also why the
+     data is stored as names rather than as a solo flag — see data/writers.json.
+
+     THE POOL IS THE THREE COUNTRY RECORDS PLUS AN AUTHORED HANDFUL (PEN_ALBUMS + PEN_GUESTS),
+     and it is Aaron or Jack's fairness decision in a different disguise. Solo writing is
+     clustered by era far harder than production is: Speak Now is 22 songs for 22, reputation
+     and The Life of a Showgirl are none out of 15 and 12. Deal the whole catalogue and a player
+     who knows nothing but each record's habit scores 61% against a blind 33% — the game answered
+     without being played. On this pool that falls to 38% — five points of edge for having
+     learned every record's habit perfectly, against sixty-one on the open catalogue, which is
+     the shortcut gone. `__dev.bonus.penPool()` re-measures it, and anything much above 38 means
+     a record has been added that had already made its mind up.
+
+     THE PAGE NEVER PRINTS THE ALBUM, for the reason above and for Aaron or Jack's. The record is
+     most of the answer, and it goes into the meta at the reveal where it costs nothing.
+
+     A FLAT PAGE, NO SCALE AND NO `dealMax`. Aaron or Jack needs both because a "both" page pays
+     more and only four songs can ever be one; here the DEAL is balanced instead of the payout
+     (see buildPenPuzzle — a page picks its bucket first and its song second), so all three
+     answers come up equally often and there is nothing for a premium to correct. Right or wrong
+     out of ten, and `sweep` for Running Order's reason: the ceiling is reachable, so once 10/10
+     stops being the question the clock is what is left to beat. */
+  { id: "who-held-the-pen", name: "Who Held The Pen", ready: true, sweep: true, endless: true,
+    kicker: "how many names?", tint: "#7a2230",
+    line: "Alone, with one, or with a room?",
+    blurb: "A title, and the question of who was in the room. She wrote it by herself, with one other person, or with three or more." },
   /* NASHVILLE — NOT WRITTEN YET (`ready: false`): the desk opens it and says so in words, and
      there is no Play sticker until the branch exists. What follows is the spec it gets built to.
 
@@ -938,6 +976,13 @@ export const BONUS_NAME_SECONDS = 15;
    answer arrives long before fifteen seconds do. Long enough to picture the record and talk
    yourself out of the wrong one, short enough that the page is a recall rather than a study. */
 export const BONUS_WHO_SECONDS = 12;
+/* Who Held The Pen gets the same twelve, and for the same reason rather than by copying the
+   number: three cards, no reading, and a title you either place or you do not. It is if
+   anything the slower of the two to think through — "how many names" has no single famous
+   person to reach for the way "Jack or Aaron" does — but the extra time would be spent
+   second-guessing a recognition that already happened, which is the deliberation the clock is
+   here to cut off. */
+export const BONUS_PEN_SECONDS = 12;
 /* Nashville's clock is the tightest on the shelf, and deliberately tighter than Aaron or Jack's
    twelve. Twelve is bought there by a real slow path: picture the record, and the record implies
    the producer. There is no such path here — you place the title or you do not — so every second
@@ -1062,6 +1107,50 @@ export const PRODUCER_ALBUMS = ["folklore", "evermore", "Midnights", "The Tortur
    down to it, and never when you are guessing. Raising it past eleven inverts that. */
 export const WHO_PAY_ONE = 2;
 export const WHO_PAY_BOTH = 5;
+
+/* ---------- Who Held The Pen ----------
+   THE THREE RECORDS SHE ACTUALLY WENT BOTH WAYS ON. Measured over data/writers.json: the debut
+   is 35% solo, Fearless 44%, Red 47%. Everything else in the catalogue has made its mind up —
+   Speak Now is 22 of 22, and reputation, 1989, folklore, evermore, Midnights and The Life of a
+   Showgirl are between 0% and 6%. A pool of decided records is a pool where the album IS the
+   answer, which is the meta this game has to survive (see the roster note for the 61%). */
+export const PEN_ALBUMS = ["Taylor Swift", "Fearless", "Red"];
+
+/* THE OUTSIDERS, and they are authored rather than filtered because the filter is the problem.
+   Three records alone would make the pool itself a tell in reverse: every title on the page
+   would be a country-era one, and a player would stop reading the catalogue and start reading
+   the pool. So a handful come from further up the catalogue.
+
+   THEY ARE CHOSEN IN BOTH DIRECTIONS AND THAT IS THE WHOLE RULE. Taking only the surprising late
+   solos — the five on The Tortured Poets Department, Vigilante Shit, my tears ricochet — would
+   hand over a worse shortcut than the one it fixed: any title you did not recognise as country
+   would be solo. So every record here brings co-writes and rooms along with its solos, and four
+   of them bring exactly one of each. Measured, the outsiders run 41% solo against the three
+   records' 43%, so recognising a title as late tells you nothing at all.
+
+   A RECORD CAN ONLY JOIN IF IT CAN ANSWER BOTH WAYS. Speak Now is absent for that reason and not
+   by an oversight: it has no co-writes to pair its solos with, so any Speak Now page is a solo
+   page and a player who knows one fact about her catalogue knows it. reputation and The Life of
+   a Showgirl are absent from the other side, having no solos at all.
+
+   Spelled exactly as songs.json spells them, and validated at load (see installWriterCredits) —
+   a title that does not match does not throw, it silently stops being a page. */
+export const PEN_GUESTS = [
+  // one of each, from a record that made its mind up: the solo, a co-write, a room.
+  "This Love", "Out Of The Woods", "Blank Space",
+  "my tears ricochet", "cardigan", "exile",
+  "no body, no crime", "champagne problems", "coney island",
+  "Vigilante Shit", "Anti-Hero", "Lavender Haze",
+  // Lover carries three solos, so it brings four others to sit beside them.
+  "Lover", "Cornelia Street", "Daylight",
+  "The Archer", "You Need To Calm Down", "Cruel Summer", "ME!",
+  // The Tortured Poets Department is the one late record with a real spread of its own: five
+  // songs she signed alone, which are the pages most likely to be got wrong for the right
+  // reasons, and five more so that a Poets title is not a tell by itself.
+  "My Boy Only Breaks His Favorite Toys", "Who's Afraid of Little Old Me?", "The Black Dog",
+  "Peter", "The Manuscript",
+  "Down Bad", "Florida!!!", "So Long, London", "Fortnight", "I Look in People's Windows",
+];
 
 /* ---------- Ruthless Game ----------
    The one game here with no clock to beat, because the clock IS the score: a page runs until
@@ -4379,6 +4468,19 @@ export const ACHIEVEMENTS = [
      Named off "The knife cuts both ways" (long story short), which is on evermore and so is a
      song this very game can deal. */
   { id: "name-a-joint-production",             name: "Both Ways",        desc: "Name a song both Aaron and Jack produced", secret: true, icon: "overprint" },
+  /* Who Held The Pen's two, and they are Aaron or Jack's pair in shape: one ordinary sweep, and
+     one PAGE that asks for the thing the game was built around. The page charm is the solo
+     credit on a record that almost never carried one — the twelve titles PEN_GUESTS brings up
+     from 1989 onward, where "she wrote this by herself" is the call nobody makes by default.
+     It has to be a page rather than a run: a ten-page deal can contain none of them, and a
+     charm you cannot work towards on the page in front of you is a lottery in a collection's
+     clothes. Secret for Both Ways' reason too — saying it out loud would hand over half of what
+     the pool is hiding, which is that the late records have solos on them at all.
+     Named off "Watched as you signed your name" (marjorie) and "I'm alone, on my own" (A Place
+     In This World), which this game can itself deal. Both on the dashed placeholder until their
+     marks are drawn, like Track by Track's three and The Capitals' pair. */
+  { id: "sweep-who-held-the-pen", name: "Signed Your Name", desc: "Sweep Who Held The Pen", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "call-a-late-solo-credit", name: "On My Own", desc: "Call a song she wrote alone on a record where she almost never did", secret: true, icon: "placeholder" },
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
   { id: "name-redacted-song-after-buying-all-strips",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "peeled" },
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
@@ -4624,6 +4726,8 @@ export const ACH_ID_MIGRATIONS = {
   "follow-the-sparks": "finish-then-what-unbroken-chain",
   "i-bought-it": "take-commonest-only-here-card",
   "both-ways": "name-a-joint-production",
+  "signed-your-name": "sweep-who-held-the-pen",
+  "on-my-own": "call-a-late-solo-credit",
   "knew-the-price": "name-redacted-song-after-buying-all-strips",
   "never-heard-silence": "time-out-all-10-only-here-pages",
   "almost-had-it": "finish-bonus-run-one-page-short-of-sweep",
@@ -4792,6 +4896,7 @@ export const ACH_GROUP_OF = {
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
   "sweep-the-capitals": "bonus", "name-a-one-word-capitals-message": "bonus",
+  "sweep-who-held-the-pen": "bonus", "call-a-late-solo-credit": "bonus",
   "clear-13-pages-in-an-endless-bonus-run": "bonus", "clear-25-pages-in-an-endless-bonus-run": "bonus",
   "end-an-endless-bonus-run-on-its-first-page": "bonus",
   "name-ruthless-page-off-one-word": "ruthless", "finish-ruthless-run-naming-all-ten": "ruthless",

@@ -545,6 +545,39 @@ const COVERS = {
       { amp: 0.55, step: 4, shadow: false });
   },
 
+  /* WHO HELD THE PEN — the blot. One enormous spill of oxblood ink on bone stock, with three
+     drips running out of the bottom of it. The most abstract card on the shelf and the one
+     that survives smallest, which is why it beat the nib it replaced: a blot is a MASS, and a
+     mass is the only thing that still reads at 24px. Six other candidates were drawn and
+     measured against that row (scripts/bonus/pen-covers.html); the ones that said the game
+     best — a signature written across the card — were all STROKES, and every one of them
+     turned to a scratch at tile size. The idea that reads is not always the drawing that
+     survives, and this shelf decides that argument at 24px.
+
+     THE INK IS OXBLOOD AND NOT BLACK, and the reason is the shelf rather than realism. Deep
+     red is a colour no card here owns: Spot the Slip's vermillion is a stripe on navy, Sing It
+     Back's plum is a surround, and Ruthless is off the grid. Bone stock behind it keeps the
+     value contrast at its maximum, which is what the small sizes are living on.
+
+     THE POOL IS DARKER, NOT LIGHTER. A pale disc inside the spill was drawn first and reads as
+     a bubble or a hole punched through — ink gathers where it is deepest, so the second tone
+     goes DOWN from the first. It is off-centre and it is not a circle anybody would call
+     placed, for the same reason nothing else here is symmetrical.
+
+     THE DRIPS ARE THREE, ALL DIFFERENT LENGTHS, and they are what stops the card being a
+     roundel. A blot with no drips is a dot; the runs are what say this is wet and that it came
+     off a pen. Their tips are torn harder than the body, which is what a drip does. */
+  "who-held-the-pen": (r) => {
+    const GROUND = "#e8dec7", INK = "#7a2230", POOL = "#5a1622";
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], GROUND, r, { shadow: false, crisp: true });
+    s += sheet(circlePts(58, 64, 40, r, 26, 3.2), INK, r, { amp: 2.6, step: 7 });
+    s += sheet([[36, 94], [45, 94], [44, 130], [39, 136], [35, 128]], INK, r, { amp: 1.0, step: 5 });
+    s += sheet([[62, 98], [69, 98], [68, 120], [64, 124], [61, 116]], INK, r, { amp: 0.9, step: 4.5 });
+    s += sheet([[82, 90], [88, 90], [87, 110], [84, 114], [81, 106]], INK, r, { amp: 0.8, step: 4.5 });
+    s += sheet(circlePts(48, 54, 13, r, 18, 1.4), POOL, r, { amp: 1.2, step: 5, shadow: false });
+    return s;
+  },
+
   /* NASHVILLE — the tape. A cassette with two words written on its label, and nothing else
      said about it. The only cover on the shelf that draws an object you could pick up.
 
@@ -636,6 +669,10 @@ const LABELS = {
   "track-by-track": { x: 14, y: 130, w: 92, h: 21, rot: -1.1 },
   "aaron-or-jack":  { x: 14, y: 14,  w: 94, h: 23, rot: 1.6 },
   "nashville":      { x: 13, y: 126, w: 94, h: 22, rot: -1.4 },
+  // The bottom band. The spill is centred high and its longest drip stops at y=136, so the
+  // label lands over the tail of one run and nothing else — which is the right amount of
+  // overlap: a label floating clear of the art is a caption, one pasted over it is a label.
+  "who-held-the-pen": { x: 12, y: 130, w: 96, h: 22, rot: -1.4 },
   // The top band is the quiet one here: the type block starts at y=52 and the risers stand up
   // into it, so a label anywhere lower would sit on the four things the cover is about.
   "the-capitals":   { x: 13, y: 14,  w: 94, h: 23, rot: 1.5, fill: "#e9e0cb" },

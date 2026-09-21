@@ -1,0 +1,1921 @@
+{
+  "note": [
+    "Songwriting credits for the 255 songs on the twelve studio albums, as data/songs.json",
+    "groups and spells them. `writers` is the full credited songwriter line in credit order,",
+    "Taylor first. She is a credited writer on all 255, so a one-name list means she wrote it",
+    "alone and the list's length is the co-writer count — there is no separate solo flag, and",
+    "nothing here is reduced to a yes/no.",
+    "",
+    "WRITER ONLY. This says nothing about who produced or who sang. A featured artist is not a",
+    "co-writer unless the credit sheet says so (Sabrina Carpenter is not a writer on The Life of",
+    "a Showgirl, Phoebe Bridgers not on Nothing New, Chris Stapleton not on I Bet You Think",
+    "About Me), and an interpolation adds writers who never touched the record (Right Said",
+    "Fred's three on Look What You Made Me Do, George Michael on Father Figure). Production is",
+    "a different axis and lives in data/producers.json — a song can be Aaron Dessner's",
+    "production and not his co-write.",
+    "",
+    "`aka` carries the person behind a credited pseudonym. The credited name is what the",
+    "sleeve prints and what `writers` holds; William Bowery is the entry that matters, being",
+    "how Joe Alwyn is credited across folklore and evermore.",
+    "",
+    "Alternate versions keep the underlying composition's credit, which is why Forever & Always",
+    "(Piano Version) and State Of Grace (Acoustic Version) stay Swift-alone. A remix only gains",
+    "writers where genuinely new writing was cut into it: Kendrick Lamar on Bad Blood (Remix),",
+    "Ice Spice and RiotUSA on Karma (Remix). Snow On The Beach (Remix) keeps its trio.",
+    "",
+    "`unconfirmed` marks the one entry without an authoritative commercial credit sheet: Need,",
+    "a Lover-session song whose attribution is widely circulated rather than documented. Treat",
+    "it as the row to drop first, not as evidence.",
+    "",
+    "The twelve groups fold in EP songs, vault tracks, standalone singles, remixes and one",
+    "unreleased composition (I'd Lie), because songs.json's era grouping does. This file is not",
+    "a claim about original track listings.",
+    "",
+    "Album and track order mirror data/songs.json exactly, so the two files diff against each",
+    "other. Every title here is spelled as songs.json spells it and matches it on a straight",
+    "lookup — no normalising needed at the call site."
+  ],
+  "aka": {
+    "Adam King Feeney": "Frank Dukes",
+    "Annie Clark": "St. Vincent",
+    "Austin Post": "Post Malone",
+    "Ephrem Lopez Jr.": "RiotUSA",
+    "Isis Gaston": "Ice Spice",
+    "Joshua Karpeh": "Cautious Clay",
+    "Keanu Torres": "Keanu Beats",
+    "Mark Anthony Spears": "Sounwave",
+    "Nayvadius Wilburn": "Future",
+    "William Bowery": "Joe Alwyn"
+  },
+  "albums": [
+    {
+      "album": "Taylor Swift",
+      "songs": [
+        {
+          "title": "Tim McGraw",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "Picture To Burn",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "Teardrops On My Guitar",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "A Place In This World",
+          "writers": [
+            "Taylor Swift",
+            "Robert Ellis Orrall",
+            "Angelo Petraglia"
+          ]
+        },
+        {
+          "title": "Cold As You",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "The Outside",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Tied Together with a Smile",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "Stay Beautiful",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "Should've Said No",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Mary's Song (Oh My My My)",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose",
+            "Brian Maher"
+          ]
+        },
+        {
+          "title": "Our Song",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "I'm Only Me When I'm With You",
+          "writers": [
+            "Taylor Swift",
+            "Robert Ellis Orrall",
+            "Angelo Petraglia"
+          ]
+        },
+        {
+          "title": "Invisible",
+          "writers": [
+            "Taylor Swift",
+            "Robert Ellis Orrall"
+          ]
+        },
+        {
+          "title": "A Perfectly Good Heart",
+          "writers": [
+            "Taylor Swift",
+            "Brett James",
+            "Troy Verges"
+          ]
+        },
+        {
+          "title": "Beautiful Eyes",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "I Heart ?",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "I'd Lie",
+          "writers": [
+            "Taylor Swift"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Fearless",
+      "songs": [
+        {
+          "title": "Fearless",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose",
+            "Hillary Lindsey"
+          ]
+        },
+        {
+          "title": "Fifteen",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Love Story",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Hey Stephen",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "White Horse",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "You Belong With Me",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "Breathe",
+          "writers": [
+            "Taylor Swift",
+            "Colbie Caillat"
+          ]
+        },
+        {
+          "title": "Tell Me Why",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "You're Not Sorry",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Way I Loved You",
+          "writers": [
+            "Taylor Swift",
+            "John Rich"
+          ]
+        },
+        {
+          "title": "Forever & Always",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Best Day",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Change",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Jump Then Fall",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Untouchable",
+          "writers": [
+            "Taylor Swift",
+            "Cary Barlowe",
+            "Nathan Barlowe",
+            "Tommy Lee James"
+          ]
+        },
+        {
+          "title": "Forever & Always (Piano Version)",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Come In With The Rain",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "Superstar",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "The Other Side Of The Door",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Today Was A Fairytale",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "You All Over Me",
+          "writers": [
+            "Taylor Swift",
+            "Scooter Carusoe"
+          ]
+        },
+        {
+          "title": "Mr. Perfectly Fine",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "We Were Happy",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "That's When",
+          "writers": [
+            "Taylor Swift",
+            "Brad Warren",
+            "Brett Warren"
+          ]
+        },
+        {
+          "title": "Don't You",
+          "writers": [
+            "Taylor Swift",
+            "Tommy Lee James"
+          ]
+        },
+        {
+          "title": "Bye Bye Baby",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "If This Was A Movie",
+          "writers": [
+            "Taylor Swift",
+            "Martin Johnson"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Speak Now",
+      "songs": [
+        {
+          "title": "Mine",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Sparks Fly",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Back To December",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Speak Now",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Dear John",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Mean",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Story Of Us",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Never Grow Up",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Enchanted",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Better Than Revenge",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Innocent",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Haunted",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Last Kiss",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Long Live",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Ours",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Superman",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Electric Touch",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "When Emma Falls In Love",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "I Can See You",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Castles Crumbling",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Foolish One",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Timeless",
+          "writers": [
+            "Taylor Swift"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Red",
+      "songs": [
+        {
+          "title": "State Of Grace",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Red",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Treacherous",
+          "writers": [
+            "Taylor Swift",
+            "Dan Wilson"
+          ]
+        },
+        {
+          "title": "I Knew You Were Trouble",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "All Too Well",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        },
+        {
+          "title": "22",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "I Almost Do",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "We Are Never Ever Getting Back Together",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Stay Stay Stay",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Last Time",
+          "writers": [
+            "Taylor Swift",
+            "Gary Lightbody",
+            "Jacknife Lee"
+          ]
+        },
+        {
+          "title": "Holy Ground",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Sad Beautiful Tragic",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Lucky One",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Everything Has Changed",
+          "writers": [
+            "Taylor Swift",
+            "Ed Sheeran"
+          ]
+        },
+        {
+          "title": "Starlight",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Begin Again",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Moment I Knew",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Come Back...Be Here",
+          "writers": [
+            "Taylor Swift",
+            "Dan Wilson"
+          ]
+        },
+        {
+          "title": "Girl At Home",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "State Of Grace (Acoustic Version)",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Ronan",
+          "writers": [
+            "Taylor Swift",
+            "Maya Thompson"
+          ]
+        },
+        {
+          "title": "Better Man",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Nothing New",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Babe",
+          "writers": [
+            "Taylor Swift",
+            "Patrick Monahan"
+          ]
+        },
+        {
+          "title": "Message In A Bottle",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "I Bet You Think About Me",
+          "writers": [
+            "Taylor Swift",
+            "Lori McKenna"
+          ]
+        },
+        {
+          "title": "Forever Winter",
+          "writers": [
+            "Taylor Swift",
+            "Mark Foster"
+          ]
+        },
+        {
+          "title": "Run",
+          "writers": [
+            "Taylor Swift",
+            "Ed Sheeran"
+          ]
+        },
+        {
+          "title": "The Very First Night",
+          "writers": [
+            "Taylor Swift",
+            "Amund Bjørklund",
+            "Espen Lind"
+          ]
+        },
+        {
+          "title": "All Too Well (10 Minute Version)",
+          "writers": [
+            "Taylor Swift",
+            "Liz Rose"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "1989",
+      "songs": [
+        {
+          "title": "Welcome To New York",
+          "writers": [
+            "Taylor Swift",
+            "Ryan Tedder"
+          ]
+        },
+        {
+          "title": "Blank Space",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Style",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback",
+            "Ali Payami"
+          ]
+        },
+        {
+          "title": "Out Of The Woods",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "All You Had To Do Was Stay",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin"
+          ]
+        },
+        {
+          "title": "Shake It Off",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "I Wish You Would",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Bad Blood",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Wildest Dreams",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "How You Get The Girl",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "This Love",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "I Know Places",
+          "writers": [
+            "Taylor Swift",
+            "Ryan Tedder"
+          ]
+        },
+        {
+          "title": "Clean",
+          "writers": [
+            "Taylor Swift",
+            "Imogen Heap"
+          ]
+        },
+        {
+          "title": "Wonderland",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "You Are In Love",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "New Romantics",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "\"Slut!\"",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Patrik Berger"
+          ]
+        },
+        {
+          "title": "Say Don't Go",
+          "writers": [
+            "Taylor Swift",
+            "Diane Warren"
+          ]
+        },
+        {
+          "title": "Now That We Don't Talk",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Suburban Legends",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Is It Over Now?",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Bad Blood (Remix)",
+          "writers": [
+            "Taylor Swift",
+            "Kendrick Lamar",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Sweeter Than Fiction",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "reputation",
+      "songs": [
+        {
+          "title": "...Ready For It?",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback",
+            "Ali Payami"
+          ]
+        },
+        {
+          "title": "End Game",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback",
+            "Ed Sheeran",
+            "Nayvadius Wilburn"
+          ]
+        },
+        {
+          "title": "I Did Something Bad",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Don't Blame Me",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Delicate",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Look What You Made Me Do",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Richard Fairbrass",
+            "Fred Fairbrass",
+            "Rob Manzoli"
+          ]
+        },
+        {
+          "title": "So It Goes...",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback",
+            "Oscar Görres"
+          ]
+        },
+        {
+          "title": "Gorgeous",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Getaway Car",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "King Of My Heart",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Dancing With Our Hands Tied",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback",
+            "Oscar Holter"
+          ]
+        },
+        {
+          "title": "Dress",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "This Is Why We Can't Have Nice Things",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Call It What You Want",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "New Year's Day",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Lover",
+      "songs": [
+        {
+          "title": "I Forgot That You Existed",
+          "writers": [
+            "Taylor Swift",
+            "Louis Bell",
+            "Adam King Feeney"
+          ]
+        },
+        {
+          "title": "Cruel Summer",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Annie Clark"
+          ]
+        },
+        {
+          "title": "Lover",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Man",
+          "writers": [
+            "Taylor Swift",
+            "Joel Little"
+          ]
+        },
+        {
+          "title": "The Archer",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "I Think He Knows",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Miss Americana & The Heartbreak Prince",
+          "writers": [
+            "Taylor Swift",
+            "Joel Little"
+          ]
+        },
+        {
+          "title": "Paper Rings",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Cornelia Street",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Death By A Thousand Cuts",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "London Boy",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Joshua Karpeh",
+            "Mark Anthony Spears"
+          ]
+        },
+        {
+          "title": "Soon You'll Get Better",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "False God",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "You Need To Calm Down",
+          "writers": [
+            "Taylor Swift",
+            "Joel Little"
+          ]
+        },
+        {
+          "title": "Afterglow",
+          "writers": [
+            "Taylor Swift",
+            "Louis Bell",
+            "Adam King Feeney"
+          ]
+        },
+        {
+          "title": "ME!",
+          "writers": [
+            "Taylor Swift",
+            "Joel Little",
+            "Brendon Urie"
+          ]
+        },
+        {
+          "title": "It's Nice To Have A Friend",
+          "writers": [
+            "Taylor Swift",
+            "Louis Bell",
+            "Adam King Feeney"
+          ]
+        },
+        {
+          "title": "Daylight",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "All Of The Girls You Loved Before",
+          "writers": [
+            "Taylor Swift",
+            "Louis Bell",
+            "Adam King Feeney"
+          ]
+        },
+        {
+          "title": "Need",
+          "writers": [
+            "Taylor Swift",
+            "Louis Bell",
+            "Adam King Feeney"
+          ],
+          "unconfirmed": true
+        }
+      ]
+    },
+    {
+      "album": "folklore",
+      "songs": [
+        {
+          "title": "the 1",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "cardigan",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "the last great american dynasty",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "exile",
+          "writers": [
+            "Taylor Swift",
+            "William Bowery",
+            "Justin Vernon"
+          ]
+        },
+        {
+          "title": "my tears ricochet",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "mirrorball",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "seven",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "august",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "this is me trying",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "illicit affairs",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "invisible string",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "mad woman",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "epiphany",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "betty",
+          "writers": [
+            "Taylor Swift",
+            "William Bowery"
+          ]
+        },
+        {
+          "title": "peace",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "hoax",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "the lakes",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "evermore",
+      "songs": [
+        {
+          "title": "willow",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "champagne problems",
+          "writers": [
+            "Taylor Swift",
+            "William Bowery"
+          ]
+        },
+        {
+          "title": "gold rush",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "'tis the damn season",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "tolerate it",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "no body, no crime",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "happiness",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "dorothea",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "coney island",
+          "writers": [
+            "Taylor Swift",
+            "William Bowery",
+            "Aaron Dessner",
+            "Bryce Dessner"
+          ]
+        },
+        {
+          "title": "ivy",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "cowboy like me",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "long story short",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "marjorie",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "closure",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "evermore",
+          "writers": [
+            "Taylor Swift",
+            "William Bowery",
+            "Justin Vernon"
+          ]
+        },
+        {
+          "title": "right where you left me",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "it's time to go",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Midnights",
+      "songs": [
+        {
+          "title": "Lavender Haze",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Zoë Kravitz",
+            "Mark Anthony Spears",
+            "Jahaan Sweet",
+            "Sam Dew"
+          ]
+        },
+        {
+          "title": "Maroon",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Anti-Hero",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Snow On The Beach",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Lana Del Rey"
+          ]
+        },
+        {
+          "title": "You're On Your Own, Kid",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Midnight Rain",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Question...?",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Vigilante Shit",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Bejeweled",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Labyrinth",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Karma",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Mark Anthony Spears",
+            "Jahaan Sweet",
+            "Keanu Torres"
+          ]
+        },
+        {
+          "title": "Sweet Nothing",
+          "writers": [
+            "Taylor Swift",
+            "William Bowery"
+          ]
+        },
+        {
+          "title": "Mastermind",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "The Great War",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Bigger Than The Whole Sky",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Paris",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "High Infidelity",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Glitch",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Mark Anthony Spears",
+            "Sam Dew"
+          ]
+        },
+        {
+          "title": "Would've, Could've, Should've",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Dear Reader",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Hits Different",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Snow On The Beach (Remix)",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Lana Del Rey"
+          ]
+        },
+        {
+          "title": "Karma (Remix)",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Mark Anthony Spears",
+            "Jahaan Sweet",
+            "Keanu Torres",
+            "Isis Gaston",
+            "Ephrem Lopez Jr."
+          ]
+        },
+        {
+          "title": "You're Losing Me",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "The Tortured Poets Department",
+      "songs": [
+        {
+          "title": "Fortnight",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Austin Post"
+          ]
+        },
+        {
+          "title": "The Tortured Poets Department",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "My Boy Only Breaks His Favorite Toys",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Down Bad",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "So Long, London",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "But Daddy I Love Him",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Fresh Out The Slammer",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Florida!!!",
+          "writers": [
+            "Taylor Swift",
+            "Florence Welch"
+          ]
+        },
+        {
+          "title": "Guilty as Sin?",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Who's Afraid of Little Old Me?",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "I Can Fix Him (No Really I Can)",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "loml",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "I Can Do It With a Broken Heart",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "The Smallest Man Who Ever Lived",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "The Alchemy",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "Clara Bow",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "The Black Dog",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "imgonnagetyouback",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff"
+          ]
+        },
+        {
+          "title": "The Albatross",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Chloe or Sam or Sophia or Marcus",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "How Did It End?",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "So High School",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "I Hate It Here",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "thanK you aIMee",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "I Look in People's Windows",
+          "writers": [
+            "Taylor Swift",
+            "Jack Antonoff",
+            "Patrik Berger"
+          ]
+        },
+        {
+          "title": "The Prophecy",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Cassandra",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Peter",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "The Bolter",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "Robin",
+          "writers": [
+            "Taylor Swift",
+            "Aaron Dessner"
+          ]
+        },
+        {
+          "title": "The Manuscript",
+          "writers": [
+            "Taylor Swift"
+          ]
+        }
+      ]
+    },
+    {
+      "album": "The Life of a Showgirl",
+      "songs": [
+        {
+          "title": "The Fate of Ophelia",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Elizabeth Taylor",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Opalite",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Father Figure",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback",
+            "George Michael"
+          ]
+        },
+        {
+          "title": "Eldest Daughter",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Ruin The Friendship",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Actually Romantic",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Wi$h Li$t",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Wood",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "CANCELLED!",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Honey",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "The Life of a Showgirl",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        }
+      ]
+    }
+  ]
+}

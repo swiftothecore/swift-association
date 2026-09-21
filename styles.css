@@ -3557,8 +3557,18 @@
      on one shelf line and lets the score lines hang below at whatever height they need. Bottom
      alignment instead lifts a zine whose record has wrapped to two lines, which reads as a
      shorter book rather than as a longer caption. */
+  /* THIRTEEN, AND BACK TO FIVE ACROSS (2026-09-21). Twelve stood as a clean 6+6, and Who Held
+     The Pen would have made that 6+6+1 — the lonely tile the two-row rule was written to avoid.
+     Thirteen is prime, so no column count divides it and the job is picking the least bad
+     remainder. Six leaves one on its own. Seven is the most even (7+6) and was rejected on
+     size: the page gives the row 572px, so seven tiles measure 73px, inside the dead zone
+     between a picture and a mark that the 62px floor is guarding. Five leaves 5+5+3, which is
+     a short last row rather than an orphan, and it puts the tiles BACK to the 106px they were
+     drawn and audited at when the shelf stood at ten. Five is also even again at fifteen,
+     which is two games away rather than one — Nashville is already on the roster and already
+     has a tile, so the next NEW zine makes fourteen, and fourteen reads 5+5+4. */
   .zine-row {
-    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); justify-content: center;
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-content: center;
     align-items: start; gap: 14px 10px; padding-bottom: 10px;
   }
   .zine-tile {
@@ -3744,6 +3754,13 @@
     /* Three across on a phone: a 375px page divided six ways gives a cover 55px, which is
        below the size its collage still reads at. */
     .zine-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    /* THIRTEEN LEAVES A LONE TILE ON A PHONE AND NO COLUMN COUNT FIXES IT: thirteen is prime,
+       and the only width that divides it evenly is five, which gives a 55px cover here. So the
+       orphan is centred instead of removed — a single tile in the middle column reads as the
+       end of a shelf, where the same tile hard against the left margin reads as a row that
+       failed to fill. It only fires on a last tile that is really alone (`3n + 1`), so the
+       clean counts are untouched and this quietly stops applying at fourteen. */
+    .zine-tile:last-child:nth-child(3n + 1) { grid-column: 2; }
   }
 
 
@@ -4354,6 +4371,103 @@
   /* Dark stock takes the inks up, or two mid-tone inks on a near-black page go muddy. */
   :root[data-theme="dark"] .bg-who-row { --who-teal: #5fb6cc; --who-verm: #e97a4d; }
   :root[data-theme="dark"] .bg-who[data-v="both"].is-answer .bg-who-stamp { border-color: #9a7f6a; }
+
+  /* ---- Who Held The Pen: one, two or three pens ----
+     NOT A STAMP AND NOT A SCRAP. Aaron or Jack's three cards are rubber stamps and Only Here's
+     are torn scraps, and those two games sit within one tile of this one on the shelf — a third
+     set borrowing either silhouette would turn three neighbours into one object drawn three
+     times. So these cards are the instruments themselves: one, two or three pens standing on
+     the card, each a different kind. The picture carries the question on its own, so the word
+     underneath is a caption and is set small.
+
+     WHY NOT MARKS. The first build drew one, two or three written flourishes, and the count was
+     a tally of three near-identical squiggles — "and one" and "a room" took a beat to tell
+     apart, which is the one thing a three-card page cannot afford. Three UNLIKE objects are
+     read instead of counted. Two other families reached the last round and were ruled out on
+     collisions rather than taste, and both are worth remembering before anybody reopens this:
+     three ruled lines with one, two or all three signed made an empty line mean two different
+     things, since a blank line is already how the reveal says "not the answer"; and tally
+     strokes, which are the most legible marks of the lot, are exactly `.life-mark`, the round
+     screen's lives tally standing in the margin. The board is at scripts/bonus/pen-cards.html.
+
+     See penHandMarkup in app.js for the drawing and for why the first pen never changes. */
+  .bg-pen-row {
+    /* The cover's own ink, so the page and the collage agree — Aaron or Jack's rule, where the
+       three tap cards carry the arithmetic of the venn so the page teaches what the picture
+       meant. A signature here is written in the same oxblood the blot is. */
+    --pen-ink: #7a2230;
+    --pen-pencil: rgba(60, 40, 18, 0.42);
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    max-width: 460px; margin: 4px auto 8px;
+  }
+  .bg-pen {
+    background: none; border: 0; padding: 0; min-height: 78px; cursor: pointer;
+    display: grid; place-items: stretch; transition: opacity 0.14s;
+  }
+  /* Three slips laid down by hand, so three different tilts — and none of them the negative of
+     another, which is the ornament rule everywhere else in the notebook. */
+  .bg-pen[data-v="solo"] { transform: rotate(-1.3deg); }
+  .bg-pen[data-v="one"]  { transform: rotate(0.6deg); }
+  .bg-pen[data-v="room"] { transform: rotate(1.5deg); }
+  /* THE THREE SLIPS ARE ONE WIDTH, and it has to be forced: the row is three equal grid
+     columns, but a shrink-to-fit slip inside them came out 57px, 79px and 111px, because a
+     card with three pens on it is wider than a card with one. Three different-sized cards do
+     not read as a set of three answers — they read as three unrelated things, and the widest
+     one looks like the important one. So the slip fills its column and the pens centre in it. */
+  .bg-pen-slip {
+    width: 100%; box-sizing: border-box;
+    display: grid; justify-items: center; gap: 2px; padding: 8px 8px 6px;
+    border: 1.5px solid rgba(60, 40, 18, 0.22); border-radius: 2px;
+    background: rgba(255, 252, 243, 0.5); transition: transform 0.1s, border-color 0.14s;
+  }
+  :root[data-theme="dark"] .bg-pen-slip { background: rgba(255, 252, 243, 0.05); }
+  /* The glyphs are the main game's own pens (PEN_SVG), so these rules mirror `.pen-glyph`'s
+     with two changes. Everything is `currentColor` instead of `--ink-soft`, so one property
+     moves the whole row from pencil to ink at the reveal; and the band, grip and the gel pen's
+     sparks come in on that same colour rather than on `--ink-accent` and `--bead`. The colour
+     is dropped deliberately: a gold spark on the third card only would pull the eye to "a room"
+     before the player had read the title, which is the leak the page avoids everywhere else. */
+  .bg-pen-hand {
+    display: flex; justify-content: center; align-items: center; gap: 3px;
+    width: 100%; height: 34px; color: var(--pen-pencil);
+  }
+  .bg-pen-glyph { display: block; width: 28px; height: 28px; }
+  .bg-pen-glyph svg { width: 100%; height: 100%; overflow: visible; }
+  .bg-pen-hand .barrel, .bg-pen-hand .vane {
+    fill: var(--paper); stroke: currentColor; stroke-width: 1.2; stroke-linejoin: round;
+  }
+  .bg-pen-hand .nib, .bg-pen-hand .tip,
+  .bg-pen-hand .band, .bg-pen-hand .grip, .bg-pen-hand .glitter-spark { fill: currentColor; stroke: none; }
+  .bg-pen-hand .spine { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; }
+  .bg-pen-hand .barb { fill: none; stroke: currentColor; stroke-width: 0.7; stroke-linecap: round; opacity: 0.75; }
+  .bg-pen-hand .slit { fill: none; stroke: var(--paper); stroke-width: 0.7; stroke-linecap: round; }
+  .bg-pen-hand .hole { fill: var(--paper); stroke: none; }
+  .bg-pen-word {
+    font-family: var(--type); text-transform: uppercase; letter-spacing: 0.13em;
+    font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); line-height: 1;
+  }
+
+  /* THE REVEAL: the true line is the one that got SIGNED, and the other two are left blank.
+     That is Aaron or Jack's "this one printed" said in this game's own object instead of
+     borrowed from it — there the true stamp is the one that took the ink, here the true line is
+     the one somebody wrote on. It needs no gold and no cross for the same reason that one
+     doesn't: the mark is the answer, so the answer needs no second mark on top of it. */
+  .bg-pen.is-answer .bg-pen-slip { border-color: var(--pen-ink); }
+  .bg-pen.is-answer .bg-pen-hand { color: var(--pen-ink); }
+  .bg-pen.is-answer .bg-pen-word { color: var(--pen-ink); font-weight: 700; }
+  /* GHOSTED, NOT EMPTIED. The pens that were not picked up fade almost out rather than
+     vanishing: an empty card with no object on it reads as a rendering fault, where a faint
+     pen reads as the answer it wasn't. It is also why nothing is crossed through — the inked
+     card is right beside it, and two marks competing on one row is noise. */
+  .bg-pen.is-blank .bg-pen-ink { opacity: 0.2; }
+  .bg-pen.is-missed { opacity: 0.55; }
+  .bg-pen:disabled { cursor: default; }
+  .bg-pen:disabled:not(.is-answer):not(.is-missed) { opacity: 0.6; }
+  .bg-pen:active:not(:disabled) .bg-pen-slip { transform: translateY(1px); }
+  .bg-pen:not(:disabled):hover .bg-pen-slip { border-color: rgba(60, 40, 18, 0.45); }
+
+  /* Oxblood on near-black stock goes to a dusty rose, or the signed line is a hole in the page. */
+  :root[data-theme="dark"] .bg-pen-row { --pen-ink: #d4808a; --pen-pencil: rgba(240, 232, 214, 0.38); }
 
   /* The reveal's line: where the rarest word actually sits in the song. It goes under the hand
      rather than under the heading, because by then the hand is the answer key and the line is

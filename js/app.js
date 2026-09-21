@@ -30,6 +30,7 @@ import {
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   BONUS_TRACK_SECONDS, BONUS_CAPS_SECONDS, BONUS_ENDLESS_RUNGS,
   BONUS_WHO_SECONDS, PRODUCER_ALBUMS, WHO_PAY_ONE, WHO_PAY_BOTH,
+  BONUS_PEN_SECONDS, PEN_ALBUMS, PEN_GUESTS,
   BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
@@ -100,6 +101,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildTrackIndex, buildTrackPuzzle,
          buildCapitalsPuzzle, capitalsDealCount,
          buildProducerPuzzle, producerDealCount,
+         buildPenPuzzle, penDealCount, penEligible,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
@@ -2927,7 +2929,7 @@ const HIDDEN_ACH_IDS = [
   // The bonus shelf's six. Added deliberately, which is what this list is for: each one makes
   // Is It Over Now? cost a little more, and three of them are failures you have to go and
   // commit on purpose once you know they exist.
-  "take-commonest-only-here-card", "name-a-joint-production", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
+  "take-commonest-only-here-card", "name-a-joint-production", "call-a-late-solo-credit", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
   // The shelf's sixth, and the endless side's own: a run that ended on the page it opened on.
   "end-an-endless-bonus-run-on-its-first-page",
   /* The Core batch's twenty-three secrets, the scarf first. Listing them roughly two-thirds
@@ -6947,6 +6949,10 @@ let onlyPlayed = null;
    took. Read by the reveal and by the back cover's note column, so it has to survive the settle
    and is cleared with the rest of the page state in nextBonusRound. */
 let whoPlayed = null;
+// The same, for Who Held The Pen's three lines, and kept separate rather than shared with
+// whoPlayed: the two games have different card values and a single variable would only be
+// telling them apart by which game is live, which is what two names already do.
+let penPlayed = null;
 /* WHAT THIS RUN COULD HAVE PAID. Aaron or Jack has no fixed maximum (see `dealMax`): a page is
    worth two, or five on the four joint productions, and which of those you are dealt is not
    something a player did. So the run is scored against the ceiling of its OWN deal, accumulated
@@ -7444,6 +7450,7 @@ function bonusSeconds() {
   // track one, which is the whole game (see BONUS_TRACK_SECONDS).
   if (bonusGame.id === "running-order") return BONUS_TRACK_SECONDS;
   if (bonusGame.id === "aaron-or-jack") return BONUS_WHO_SECONDS;
+  if (bonusGame.id === "who-held-the-pen") return BONUS_PEN_SECONDS;
   // Not a reading budget — four of the messages are a single word. See BONUS_CAPS_SECONDS:
   // the fifteen pays for the one route the page leaves open, which is hearing which record
   // talks like that and then walking its running order.
@@ -7490,6 +7497,8 @@ function buildBonusPuzzle() {
                             { words: bonusRound > CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
   if (bonusGame.id === "aaron-or-jack")
     return buildProducerPuzzle(songs, producerCredits, Math.random, 120, new Set(bonusRecentSongs));
+  if (bonusGame.id === "who-held-the-pen")
+    return buildPenPuzzle(songs, writerCredits, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "the-capitals")
     return buildCapitalsPuzzle(songs, secretMessages, Math.random, 120, new Set(bonusRecentSongs));
   if (isRuthlessRun())
@@ -7512,6 +7521,10 @@ function bonusDealCount() {
   // rather than twelve, and only the songs on them that either man is credited on.
   if (bonusGame && bonusGame.id === "aaron-or-jack")
     return producerDealCount(songs, producerCredits);
+  // And again: three records in full plus an authored handful off five others, which is a
+  // hundred and three pages out of the shelf's own two hundred and forty-seven.
+  if (bonusGame && bonusGame.id === "who-held-the-pen")
+    return penDealCount(songs, writerCredits);
   // And again, and the narrowest pool on the shelf: five records out of the twelve, and only
   // the songs on them that carried a message. Seventy-two pages, which an endless run can
   // genuinely reach the end of — see the roster note on why that is the design, not a bug.
@@ -7608,6 +7621,7 @@ function nextBonusRound(options = {}) {
   trackSecs = 0;
   onlyPlayed = null;
   whoPlayed = null;
+  penPlayed = null;
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
   // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
@@ -7898,6 +7912,40 @@ function renderBonusRound() {
       `<div class="bg-who-row" role="group" aria-label="Who produced this song">${cards}</div>`;
     body.querySelectorAll(".bg-who").forEach((b) =>
       b.addEventListener("click", () => judgeProducer(b.dataset.v)));
+  } else if (bonusGame.id === "who-held-the-pen") {
+    /* THE SAME SHEET AS AARON OR JACK, deliberately: the two games ask one question about one
+       title off two different credit lines, and giving the second one furniture of its own
+       would be inventing a difference that is not there. The title stands in the heading, the
+       meta under the rule is empty while the page is live, and the album drops into it at the
+       reveal — where, on this game more than any other on the shelf, it is most of the answer.
+
+       WHAT THE CARDS ARE IS THE DECISION. Aaron or Jack's three are rubber stamps and Only
+       Here's are torn scraps, and a third set sharing either silhouette would make three
+       neighbours on one shelf into one object drawn three times. So these are SIGNATURE LINES:
+       a ruled line with one, two or three hands written on it, which is not a third object
+       borrowed from somewhere else but the answer itself, drawn. The count is the question, so
+       the count is the picture, and the card is readable before the word under it is. */
+    const cards = [
+      ["solo", "alone", "She wrote it alone", 1],
+      ["one", "and one", "She wrote it with one other person", 2],
+      ["room", "a room", "She wrote it with three or more people", 3],
+    ].map(([v, label, full, n]) =>
+      `<button type="button" class="bg-pen" data-v="${v}" aria-label="${escapeHtml(full)}">` +
+        `<span class="bg-pen-slip">` +
+          penHandMarkup(n) +
+          `<span class="bg-pen-word">${escapeHtml(label)}</span>` +
+        `</span>` +
+      `</button>`).join("");
+    body.innerHTML =
+      `<p class="bg-ask">who held the pen?</p>` +
+      `<div class="bg-sheet bg-sheet--ask">` +
+        `<h3 class="bg-sheet-title">${escapeHtml(censor(p.song.title))}</h3>` +
+        `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
+        `<div class="bg-sheet-meta" id="bonusPenMeta"></div>` +
+      `</div>` +
+      `<div class="bg-pen-row" role="group" aria-label="Who wrote this song">${cards}</div>`;
+    body.querySelectorAll(".bg-pen").forEach((b) =>
+      b.addEventListener("click", () => judgePen(b.dataset.v)));
   } else if (bonusGame.id === "running-order") {
     /* THE PAGE IS A LYRIC SHEET WITH ITS TITLE MISSING, and it is the shelf's own `bg-sheet`
        rather than any furniture of its own: the heading in pen, the red rule, the album noted
@@ -8318,6 +8366,13 @@ function bonusTimeout() {
   if (bonusGame && bonusGame.id === "aaron-or-jack") {
     markWhoCards(null);
     settleBonusRound(false, whoDetail(), true);
+    return;
+  }
+  // The same: a page the clock took still turns its lines over. Nothing was picked, so nothing
+  // is crossed, and the one that was signed is signed exactly as it would have been.
+  if (bonusGame && bonusGame.id === "who-held-the-pen") {
+    markPenCards(null);
+    settleBonusRound(false, penDetail(), true);
     return;
   }
   const detail = bonusGame && bonusGame.id === "spot-the-slip"
@@ -8809,6 +8864,79 @@ function whoDetail() {
   return `<b>${escapeHtml(bonusPuzzle.credit)}</b>`;
 }
 
+/* ---------- Who Held The Pen ----------
+/* THE THREE PENS ARE THE NOTEBOOK'S OWN, not a set drawn for this page. `PEN_SVG` (config.js)
+   holds a quill, a fountain pen and a glitter gel pen, and they already exist because the main
+   game sometimes swaps the pencil resting at the start of the writing line for one of them —
+   see setPen and the round eggs. Three pens, which is exactly how many this page needs.
+
+   USING THEM RATHER THAN DRAWING NEW ONES IS THE POINT, and not only the cheap option. A second
+   set of pens would be a parallel vocabulary: two different fountain pens in one notebook, each
+   the house style of a different screen. Reusing these makes the card say something true — the
+   pens you occasionally get to write with in a real round are the pens you are counting here.
+   They are also already drawn in this project's grammar (barrel filled in paper with an ink
+   outline, nib solid, slit and breather hole cut back out in paper), which is the grammar a
+   from-scratch set had to be rebuilt twice to arrive at.
+
+   THE FOUNTAIN PEN IS FIRST AND IS THE SAME PEN ON ALL THREE CARDS. She is a credited writer on
+   all 255 songs, so hers is the instrument always on the desk and the cards differ only by who
+   joined it. It is drawn at ONE SIZE on every card for the same reason: scaling it down as the
+   row fills would quietly make it a different pen each time.
+
+   MONOCHROME HERE, THOUGH THE EGG IS NOT. On the writing line the band and grip take
+   `--ink-accent` and the gel pen throws `--bead` sparks; on these cards everything is
+   `currentColor`, pencil until the page settles and the answer's ink after. That is a fairness
+   decision rather than a tidy one — a gold spark on the third card only would pull the eye to
+   "a room" before the player had read anything, which is the same leak as printing the album. */
+const PEN_ORDER = ["fountain", "quill", "glitter"];
+// Laid down by hand, so each sits on its own tilt and no two are a mirrored pair. The drawings
+// already carry a -45° lie of their own; these are the few degrees on top of it.
+const PEN_TILT = [-3, 2.5, -1.5];
+
+function penHandMarkup(n) {
+  const pens = PEN_ORDER.slice(0, n).map((id, i) =>
+    `<span class="bg-pen-glyph" style="transform:rotate(${PEN_TILT[i]}deg)">${PEN_SVG[id]}</span>`).join("");
+  return `<span class="bg-pen-hand" aria-hidden="true">${pens}</span>`;
+}
+
+// One tap, one answer, no confirm — judgeProducer's rule and its reason exactly.
+function judgePen(choice) {
+  if (bonusLocked || !bonusPuzzle) return;
+  penPlayed = choice;
+  markPenCards(choice);
+  settleBonusRound(choice === bonusPuzzle.by, penDetail());
+}
+
+/* The three lines turned over: the true one is SIGNED and the other two are left blank. That is
+   Aaron or Jack's "this one printed" said in this game's own object rather than borrowed from
+   it — there the true stamp is the one that took the ink, here the true line is the one that
+   got written on. It also means the reveal never has to add a mark: the ink was always in the
+   markup and the two that were wrong simply have theirs taken away. */
+function markPenCards(choice) {
+  $("bonusPlayBody").querySelectorAll(".bg-pen").forEach((b) => {
+    const v = b.dataset.v;
+    b.disabled = true;
+    if (v === bonusPuzzle.by) b.classList.add("is-answer");
+    else b.classList.add("is-blank");
+    if (choice && v === choice) b.classList.add(v === bonusPuzzle.by ? "is-got" : "is-missed");
+  });
+}
+
+/* What the verdict says: the credit line as the sleeve prints it, which is the whole teaching
+   moment and the reason data/writers.json keeps names instead of a count. "alone" is a right
+   answer; "Taylor Swift, Liz Rose" is the thing the player actually wanted to know, and on a
+   page they got wrong it is the only thing that will make the next one easier.
+
+   HER OWN NAME IS LEFT IN, though it is on all 255 and carries no information. Dropping it
+   would print "Liz Rose" under a song Taylor wrote with Liz Rose, which reads as the answer
+   being somebody else. The line is a credit, and a credit starts with her.
+
+   It lives here and not in the sheet's meta for whoDetail's reason: the meta takes the album
+   alone, and a five-name credit set in the typewriter's capitals is unreadable. */
+function penDetail() {
+  return `<b>${escapeHtml(bonusPuzzle.credit)}</b>`;
+}
+
 /* One tap, and the page is answered. Every card is real, so every pick banks at least a point
    and nothing here can be WRONG — a page is CLEARED by picking the rarest word in the hand,
    whatever it paid, not by scoring five. A hand's best word might only be worth 3, and a tick
@@ -8888,7 +9016,8 @@ function bonusAnswerCard() {
      showed the player a word of the song. */
   if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
       bonusGame.id === "then-what" || bonusGame.id === "running-order" ||
-      bonusGame.id === "aaron-or-jack" || bonusGame.id === "the-capitals" ||
+      bonusGame.id === "aaron-or-jack" || bonusGame.id === "who-held-the-pen" ||
+      bonusGame.id === "the-capitals" ||
       isRuthlessRun()) return "";
   if (bonusGame.id === "sing-it-back")
     return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
@@ -8965,6 +9094,16 @@ function bonusBannerText(correct, isTimeout) {
     return correct ? (bonusPuzzle.by === "both" ? "both of them, and you knew it" : "that's his")
          : isTimeout ? "the page ran out"
          : bonusPuzzle.by === "both" ? "it was the two of them" : "the other one";
+  /* Three answers again, so "not this one" is nonsense here too, and the miss says which way it
+     went. The solo page gets its own good word because it is the one this game is really about
+     — the whole pool exists to make "she wrote this one herself" a thing you can be right about
+     rather than a thing you can assume. */
+  if (bonusGame && bonusGame.id === "who-held-the-pen")
+    return correct ? (bonusPuzzle.by === "solo" ? "hers alone, and you called it" : "that's the line")
+         : isTimeout ? "the page ran out"
+         : bonusPuzzle.by === "solo" ? "she wrote that one alone"
+         : bonusPuzzle.by === "one" ? "there were two of them"
+         : "there was a room in there";
   /* Running Order's problem again: the page holds no song, only a line lifted out of a booklet,
      so "not this one" would be pointing at something that is not there. The good banner says
      where the message was FOUND rather than that a title was matched, because what the page
@@ -9068,6 +9207,13 @@ function settleBonusRound(correct, detail, isTimeout = false) {
            glance down the margin. */
         : bonusGame.id === "aaron-or-jack"
             ? (bonusPuzzle.by === "both" ? "both" : bonusPuzzle.by)
+        /* HOW MANY NAMES WERE ON IT, which is the answer this page hid, written as a count
+           rather than as the card's word: "alone" and "and one" are the cards, and a margin
+           read down at a glance wants the number it is really about. The column is clipped
+           at 10ch, so "3+ names" survives where "three or more" would not. */
+        : bonusGame.id === "who-held-the-pen"
+            ? (bonusPuzzle.by === "solo" ? "alone"
+               : bonusPuzzle.by === "one" ? "2 names" : "3+ names")
         : bonusGame.id === "running-order" ? `${trackSecs.toFixed(2)}s`
         : isRuthlessRun() ? fmtTimeFine(gained)
         : bonusPuzzle.song.album,
@@ -9142,6 +9288,13 @@ function settleBonusRound(correct, detail, isTimeout = false) {
        whoDetail for why the two must not both carry it. The cards above have already been
        turned over by the judge. */
     const meta = $("bonusWhoMeta");
+    if (meta) meta.textContent = bonusPuzzle.album;
+  } else if (bonusGame.id === "who-held-the-pen") {
+    // The sheet finishes itself exactly as Aaron or Jack's does, and the album it hands over is
+    // worth more here than it is there: the record is most of the answer on this question, which
+    // is the whole reason the page withheld it. The credit line goes in the verdict instead —
+    // see penDetail. The lines above have already been signed by the judge.
+    const meta = $("bonusPenMeta");
     if (meta) meta.textContent = bonusPuzzle.album;
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
@@ -9360,6 +9513,14 @@ function foldBonusPageCharms(correct, isTimeout) {
     // productions and a run can be dealt none at all — a charm nobody can work towards on the
     // page in front of them would be a lottery wearing a collection's clothes.
     if (correct && !isTimeout && bonusPuzzle.by === "both") unlock("name-a-joint-production");
+  } else if (bonusGame.id === "who-held-the-pen") {
+    /* On My Own. A solo credit called right on one of the twelve titles PEN_GUESTS carries up
+       from 1989 onward — the records where she almost never wrote alone, and so the pages where
+       the answer is one nobody reaches for. The three country records are excluded deliberately:
+       a solo credit is the commonest single answer on all three, so calling one there is the
+       default play rather than a read. Asked of the PAGE, since a deal can hold none of these. */
+    if (correct && !isTimeout && bonusPuzzle.by === "solo" &&
+        !PEN_ALBUMS.includes(bonusPuzzle.song.album)) unlock("call-a-late-solo-credit");
   } else if (bonusGame.id === "only-here" && onlyPlayed) {
     // The commonest card in the hand, and NOT when that card is also the rarest: a hand where
     // every word is sung equally often is a tie the player cannot lose, and charging them with
@@ -9409,7 +9570,8 @@ function foldBonusRunCharms(perfect, cleared) {
     const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
                          "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain",
                          "running-order": "sweep-running-order", "word-cloud": "sweep-word-cloud",
-                         "the-capitals": "sweep-the-capitals" }[bonusGame.id];
+                         "the-capitals": "sweep-the-capitals",
+                         "who-held-the-pen": "sweep-who-held-the-pen" }[bonusGame.id];
     if (sweepCharm) unlock(sweepCharm);
     if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
   }
@@ -13918,6 +14080,54 @@ function installProducerCredits(doc, grouped) {
   return map;
 }
 
+/* The songwriting credits, for Who Held The Pen. data/writers.json holds the full credited
+   name list for all 255 songs on the twelve studio albums, and this flattens it to
+   title -> { writers, credit, album, bucket }.
+
+   THE BUCKET IS DERIVED HERE AND NOT STORED. Taylor is a credited writer on every one of the
+   255, so the answer the game wants is only ever how many names sit beside hers: one name is
+   "solo", two is "one", three or more is "room". Keeping it out of the file is the point of
+   the file — a stored flag could not tell you who the co-writer WAS, which is what the reveal
+   prints and what any later game off this data would need.
+
+   VALIDATED ON ALBUM AND TITLE TOGETHER, which is installProducerCredits' guard for its reason:
+   the two files join on nothing but a string, so a title spelled differently in one of them does
+   not throw, it quietly stops being a page. The orphans are kept rather than only warned about,
+   because a dropped row is exactly the row that is not in the map afterwards and a check that
+   can only answer "none" reads as a clean bill of health.
+
+   THE AUTHORED POOL IS CHECKED THE SAME WAY, separately, and it is the check that matters more:
+   PEN_GUESTS is thirty hand-typed titles and a typo in one of them is a page that silently stops
+   existing. `writerPoolOrphans` is what the dev tool reads back. */
+let writerCredits = new Map();
+let writerCreditOrphans = [];
+let writerPoolOrphans = [];
+function installWriterCredits(doc, grouped) {
+  const known = new Set();
+  grouped.forEach((a) => a.songs.forEach((song) => known.add(a.album + "\u0000" + song.title)));
+  const map = new Map();
+  const orphans = [];
+  (doc.albums || []).forEach((a) => (a.songs || []).forEach((row) => {
+    if (!known.has(a.album + "\u0000" + row.title)) { orphans.push(`${a.album} / ${row.title}`); return; }
+    const writers = Array.isArray(row.writers) ? row.writers : [];
+    map.set(row.title, {
+      writers,
+      credit: writers.join(", "),
+      album: a.album,
+      bucket: writers.length <= 1 ? "solo" : writers.length === 2 ? "one" : "room",
+    });
+  }));
+  if (orphans.length)
+    console.warn(`writers.json: ${orphans.length} title(s) do not match songs.json and were dropped`, orphans);
+  const missing = PEN_GUESTS.filter((t) => !map.has(t));
+  if (missing.length)
+    console.warn(`PEN_GUESTS: ${missing.length} title(s) are not in writers.json and will never be dealt`, missing);
+  writerCreditOrphans = orphans;
+  writerPoolOrphans = missing;
+  writerCredits = map;
+  return map;
+}
+
 /* The liner-note secret messages, for The Capitals. data/secret-messages.json is keyed
    { album: { title: message } } over the five records that carried them, and is flattened here
    to title -> { album, message }, which is the shape both the game and the bottle egg want.
@@ -13954,11 +14164,12 @@ function installSecretMessages(byAlbum, grouped) {
 }
 
 async function loadData() {
-  const [wordsRes, songsRes, credsRes, secretsRes] = await Promise.all([
+  const [wordsRes, songsRes, credsRes, secretsRes, writersRes] = await Promise.all([
     fetch("data/words.json"),
     fetch("data/songs.json"),
     fetch("data/producers.json"),
     fetch("data/secret-messages.json"),
+    fetch("data/writers.json"),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
@@ -13986,6 +14197,15 @@ async function loadData() {
     try { installSecretMessages(await secretsRes.json(), grouped); }
     catch (e) { console.warn("secret messages failed to load", e); }
   } else console.warn("secret messages missing: The Capitals will have nothing to deal");
+  /* The songwriting credits, for Who Held The Pen, installed beside the corpus rather than
+     inside it for the production credits' reason exactly: a fact about Taylor's sleeves keyed
+     by her titles, never swapped for a guest's, and a guest run cannot reach the shelf. So
+     snapshotCorpus does not and must not carry it. Survivable on failure, again for that
+     reason — one zine's data should not stop the notebook opening. */
+  if (writersRes.ok) {
+    try { installWriterCredits(await writersRes.json(), grouped); }
+    catch (e) { console.warn("writer credits failed to load", e); }
+  } else console.warn("writer credits missing: Who Held The Pen will have nothing to deal");
   // Kept for the blended lineup corpus, which needs Taylor's catalogue in its ORIGINAL
   // grouped shape (installCorpus flattens); re-fetching a precached file would work but
   // would be a second copy of the same bytes.
@@ -29857,6 +30077,13 @@ function buildDevApi() {
             if (p) recent.push(p.song.title);
             out.push(p ? { ask: `track ${p.track} from ${pressingName(p.album)}`,
                            answer: p.song.title, of: p.total } : null);
+          } else if (id === "who-held-the-pen") {
+            // Dealt with the run's own avoid list, which is the only way a sample shows the
+            // bucket balance honestly: the buckets are three very different sizes, so a
+            // sample that never bars a song would over-report the small one's variety.
+            const p = buildPenPuzzle(songs, writerCredits, Math.random, 120, new Set(recent));
+            if (p) recent.push(p.song.title);
+            out.push(p ? { ask: p.song.title, answer: p.by, album: p.album, credit: p.credit } : null);
           } else if (id === "the-capitals") {
             const p = buildCapitalsPuzzle(songs, secretMessages, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
@@ -29910,6 +30137,7 @@ function buildDevApi() {
             : id === "only-here" ? buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex)
             : id === "then-what" ? buildChainPuzzle(songs)
             : id === "aaron-or-jack" ? buildProducerPuzzle(songs, producerCredits)
+            : id === "who-held-the-pen" ? buildPenPuzzle(songs, writerCredits)
             : id === "running-order" ? buildTrackPuzzle(songs, bonusIndexes().trackIndex)
             : id === "the-capitals" ? buildCapitalsPuzzle(songs, secretMessages)
             : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
@@ -29995,6 +30223,61 @@ function buildDevApi() {
                  ceilingFloor: BONUS_ROUNDS * WHO_PAY_ONE,
                  ceilingMax: by.both >= BONUS_ROUNDS ? BONUS_ROUNDS * WHO_PAY_BOTH
                    : by.both * WHO_PAY_BOTH + (BONUS_ROUNDS - by.both) * WHO_PAY_ONE };
+      },
+      /* Who Held The Pen. `pen()` reads the live page for `who()`'s reason exactly: the player
+         is shown a title and nothing else, so a page cannot be checked against the data by
+         looking at it.
+
+         `penPool()` is the one to run before touching PEN_ALBUMS or PEN_GUESTS, and it answers
+         the two questions this pool can go wrong on. `share` is the DEALT split, which should
+         read a third each whatever the pool's own shape is, because a page picks its bucket
+         before it picks its song — if it ever drifts off a third, the bucket dealing has been
+         broken and a blind tapper has a favourite card again. `albumOracle` is the meta the
+         pool exists to kill: the score of a player who knows nothing but each record's habit
+         and always plays it. Across all twelve records that number is 61% against a blind 33%;
+         on this pool it should sit a whisker over 33, and anything much above it means an
+         album has been added that has already made its mind up. `orphans` and `missing` are the
+         two ways a title can silently stop being a page. */
+      pen: () => {
+        if (!bonusGame || bonusGame.id !== "who-held-the-pen" || !bonusPuzzle) return "no Who Held The Pen page live";
+        return { ask: bonusPuzzle.song.title, album: bonusPuzzle.album,
+                 answer: bonusPuzzle.by, credit: bonusPuzzle.credit, mates: bonusPuzzle.mates,
+                 picked: penPlayed,
+                 left: +(bonusSeconds() - (performance.now() - bonusPageStart) / 1000).toFixed(2) };
+      },
+      penPool: () => {
+        const pool = penEligible(bonusSongs(), writerCredits);
+        const by = { solo: 0, one: 0, room: 0 };
+        const byAlbum = {};
+        pool.forEach((x) => {
+          const c = writerCredits.get(x.title);
+          by[c.bucket]++;
+          byAlbum[x.album] = byAlbum[x.album] || { solo: 0, one: 0, room: 0 };
+          byAlbum[x.album][c.bucket]++;
+        });
+        /* The album oracle: for each bucket, how often the record a page came off has that
+           bucket as its own commonest answer — averaged over the three, because the deal is
+           balanced across them and not across the pool. That average IS the score of a player
+           who has learned the records and nothing else. */
+        let oracle = 0;
+        ["solo", "one", "room"].forEach((b) => {
+          const rows = pool.filter((x) => writerCredits.get(x.title).bucket === b);
+          if (!rows.length) return;
+          const hit = rows.filter((x) => {
+            const c = byAlbum[x.album];
+            return b === ["solo", "one", "room"].reduce((m, k) => (c[k] > c[m] ? k : m), "solo");
+          }).length;
+          oracle += hit / rows.length / 3;
+        });
+        const n = pool.length || 1;
+        return { pool: pool.length, loaded: writerCredits.size, by, byAlbum,
+                 share: Object.fromEntries(Object.entries(by).map(([k, v]) => [k, `${((v / n) * 100).toFixed(1)}%`])),
+                 albumOracle: `${(oracle * 100).toFixed(0)}%`, blind: "33%",
+                 // The On My Own charm's pool: a solo credit off a record that is not one of
+                 // the three. If this ever reaches zero the charm has quietly become unwinnable.
+                 lateSolos: pool.filter((x) => !PEN_ALBUMS.includes(x.album) &&
+                                               writerCredits.get(x.title).bucket === "solo").map((x) => x.title),
+                 orphans: writerCreditOrphans.slice(), missing: writerPoolOrphans.slice() };
       },
       /* Running Order. `track()` reads the live page, since the player is never shown the
          title: the question, the answer, and the seconds still on the clock, which is the one
@@ -30457,6 +30740,8 @@ function buildDevApi() {
                 : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.hand[p.optimal[0]].word.toLowerCase()}`
                                                         : p.hand[p.optimal[0]].word.toLowerCase())
                 : bonusGame.id === "aaron-or-jack" ? p.by
+                : bonusGame.id === "who-held-the-pen"
+                    ? (p.by === "solo" ? "alone" : p.by === "one" ? "2 names" : "3+ names")
                 : p.song.album,
           });
           if (bonusGame.points || bonusDealMax(bonusGame)) bonusScore += pts;
@@ -30498,6 +30783,9 @@ function buildDevApi() {
             : bonusGame.id === "redacted" ? (n % 4 ? `${n % 4} peeled` : "untouched")
             : bonusGame.id === "spot-the-slip" ? puz.fakeWord
             : bonusGame.id === "sing-it-back" ? puz.answer
+            : bonusGame.id === "aaron-or-jack" ? puz.by
+            : bonusGame.id === "who-held-the-pen"
+                ? (puz.by === "solo" ? "alone" : puz.by === "one" ? "2 names" : "3+ names")
             : puz.song.album;
           bonusLog.push({ n, ok, title: puz.song.title, album: puz.song.album, note });
           if (ok) bonusScore++;

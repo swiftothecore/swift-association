@@ -8,7 +8,8 @@
    puzzle handed to the player must have exactly one defensible answer. Enforcing that is
    most of what this file does. */
 import { normalizeLyric, normalizeTitle, levenshtein, swappedNeighbours } from "./util.js";
-import { STUDIO_ALBUMS, ALBUM_TRACKS, TRACK_ALT_TAKES, PRODUCER_ALBUMS } from "./config.js";
+import { STUDIO_ALBUMS, ALBUM_TRACKS, TRACK_ALT_TAKES, PRODUCER_ALBUMS,
+         PEN_ALBUMS, PEN_GUESTS } from "./config.js";
 
 /* Words never worth swapping or counting as a line's content. Swapping a function word
    ("the" -> "a") is invisible rather than hard, and a line whose only meat is filler makes a
@@ -1420,6 +1421,62 @@ export function buildProducerPuzzle(songs, credits, rng = Math.random, tries = 1
    `bonusSongs()` and is not a page. */
 export function producerDealCount(songs, credits) {
   return songs.filter((song) => PRODUCER_ALBUMS.includes(song.album) && credits.has(song.title)).length;
+}
+
+/* ---------- Who Held The Pen ----------
+   A song title, and how many people wrote it. Like Aaron or Jack there is no puzzle to
+   construct — the answer is a fact somebody printed on a sleeve — so what this builder really
+   does is DEAL, and the dealing is the whole design.
+
+   `credits` is a Map of title -> { writers, credit, album, bucket }, built at load from
+   data/writers.json. `bucket` is one of "solo" (she is the only name), "one" (one co-writer) or
+   "room" (three names or more), and it is derived from the length of the credit rather than
+   stored, because the file deliberately keeps the names and not a flag.
+
+   THE PAGE PICKS ITS BUCKET FIRST AND ITS SONG SECOND, and that is the fairness rule this game
+   turns on. The dealable pool measures 39 solo / 38 one / 21 room, so dealing a song at random
+   would put a blind tapper on "solo" at 40% before they had read anything. Dealing a bucket at
+   random and then a song out of it floors them at 33%, which is the number three cards ought to
+   mean — measured over 2000 pages it runs 34 / 31 / 35. The same move the balanced pool makes
+   for the album, made for the answer.
+
+   IT IS THE BUCKET THAT IS CHOSEN AT RANDOM, NOT THE ORDER OF THE THREE. A page is never "the
+   one you have not had yet": a run of ten off a three-way rotation is a run whose last pages can
+   be counted out, which would be a far bigger leak than the one this fixes.
+
+   AN EMPTY BUCKET IS SKIPPED RATHER THAN WAITED FOR. `avoid` bars every song already dealt this
+   run, and the room bucket is the small one — 21 songs against 39 — so a long endless run spends
+   it first. When that happens the choice is simply made among the buckets that still have a song
+   left, which lets the run carry on off-balance rather than stall. It cannot happen inside a
+   ten-page run at all, and by the time it can the reshuffle is close behind. */
+export function penEligible(songs, credits) {
+  return songs.filter((song) =>
+    credits.has(song.title) &&
+    (PEN_ALBUMS.includes(song.album) || PEN_GUESTS.includes(song.title)));
+}
+
+export function buildPenPuzzle(songs, credits, rng = Math.random, tries = 120, avoid = null) {
+  const buckets = { solo: [], one: [], room: [] };
+  penEligible(songs, credits).forEach((song) => {
+    if (avoid && avoid.has(song.title)) return;
+    const c = credits.get(song.title);
+    if (buckets[c.bucket]) buckets[c.bucket].push(song);
+  });
+  const live = Object.keys(buckets).filter((k) => buckets[k].length);
+  if (!live.length) return null;
+  const bucket = live[Math.floor(rng() * live.length)];
+  const pool = buckets[bucket];
+  const song = pool[Math.floor(rng() * pool.length)];
+  const c = credits.get(song.title);
+  return { song, by: bucket, writers: c.writers, credit: c.credit, album: song.album,
+           mates: Math.max(0, c.writers.length - 1) };
+}
+
+/* How many songs this game can deal, which is what an endless run's no-repeat list is measured
+   against. It asks the builder's own question rather than counting the pool, for Aaron or Jack's
+   reason: most of the twelve records are in `bonusSongs()` and are not pages here. */
+export function penDealCount(songs, credits) {
+  return penEligible(songs, credits).length;
 }
 
 /* ---------- Track by Track ----------

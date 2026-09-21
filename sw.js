@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v153";
+const CACHE = "stta-v154";
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -158,6 +158,7 @@ const ASSETS = [
   "sounds/close.mp3",
   "data/songs.json",
   "data/producers.json",
+  "data/writers.json",
   "data/words.json",
   // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg
   // is first caught (see loadSecretMessages in js/app.js).
