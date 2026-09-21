@@ -741,7 +741,9 @@ export const BONUS_GAMES = [
      the tap family, and inside a family the order is how much you must already be carrying.
      Only Here prices a card by every song you are NOT being shown, which is the deepest ask
      the catalogue itself can make; this one is deeper still, because what it asks for is not in
-     the catalogue at all. It is the last thing you can answer with one finger.
+     the catalogue at all. It WAS the last thing you could answer with one finger, until
+     Nashville went a step further out still — past the credits on a record, out to songs that
+     were never on one.
 
      THE POOL IS FOUR RECORDS (PRODUCER_ALBUMS) and that is a fairness decision rather than a
      scoping one. Across the whole twelve, "always say Jack" scores 57% while knowing nothing;
@@ -763,6 +765,48 @@ export const BONUS_GAMES = [
     kicker: "whose record is this?", tint: "#3f9fb5",
     line: "Name the producer: Aaron, Jack, or both.",
     blurb: "A song from one of the four records the two of them share, and nothing else on the page. Aaron Dessner, Jack Antonoff, or both?" },
+  /* NASHVILLE — NOT WRITTEN YET (`ready: false`): the desk opens it and says so in words, and
+     there is no Play sticker until the branch exists. What follows is the spec it gets built to.
+
+     A title is written on the page and you say whether it is HERS — one of roughly seventy
+     unreleased songs, verified, never on a record — or SOMEBODY ELSE'S. The decoys are real
+     country songs from the same few years, so that nothing on the page is invented: an invented
+     title can only be written in a register, and a register is a tell the player learns instead
+     of learning the songs. Never a charting single, for that reason in reverse — recognising a
+     hit is general radio memory rather than knowledge of her.
+
+     THE THIRD DOOR IS THE GAME. Two doors and a right answer is a coin, and ten coins say
+     nothing about the player who flipped them. So a wrong page costs a point (NASHVILLE_WRONG)
+     and a run is allowed to finish BELOW ZERO, which makes a guess worth nothing on average and
+     makes zero — rather than five — the score for knowing nothing. Floor it at zero and a player
+     sitting on zero guesses for free, which is the correction falling over exactly where it was
+     working hardest. The PASS door is what keeps that from being a tax on not-knowing: it pays
+     nothing and costs nothing, so the page stops asking do you know this and starts asking do
+     you know WHETHER you know this. Across a deal of obscure titles those are different
+     questions, and the second is the better game.
+
+     PASSING MUST BE CHOSEN. An expired clock is a wrong answer, not a free pass, or letting the
+     eight seconds run out becomes the cheapest pass on the page and the clock stops mattering on
+     precisely the pages it was put there for.
+
+     NO ALBUM, NO YEAR, NO ARTIST ON THE PAGE — Aaron or Jack's rule for Aaron or Jack's reason.
+     All three are the answer wearing a hint's clothes.
+
+     THE DEAL MUST BE ERA-BOUNDED ON BOTH SIDES, and this is a fairness rule rather than a
+     tidiness one: if her titles span a wider stretch of years than the decoys do, then a player
+     who cannot place a title can still smell the later one, and the spread hands over the answer
+     for free. A title outside the band the decoys cover does not get dealt, however well
+     verified it is — the ruthlessBar pattern, where a song can exist in the data and still be
+     undealable.
+
+     ITS ENDLESS SIDE DROPS BOTH THE PASS DOOR AND THE PENALTY: a wrong page ends the run, so
+     there is nothing left for a minus to do and nothing to protect by passing. Ten pages is the
+     calibration game and the endless side is the nerve game — the Only Here relationship, two
+     questions off one hand, rather than the same game with the lid off. */
+  { id: "nashville", name: "Nashville", ready: false, sweep: true, endless: true,
+    kicker: "which one never came out?", tint: "#a8642c",
+    line: "One title. Hers, not hers, or pass.",
+    blurb: "A song she wrote and never released, or somebody else's record from the same few years. Wrong costs a point. Passing costs nothing." },
   // The hinge of the shelf: the song is still named, but the answer is now written rather than
   // pointed at, which is the last page before every game below asks for a title.
   { id: "sing-it-back", name: "Sing It Back", ready: true, sweep: true, endless: true,
@@ -852,6 +896,20 @@ export const BONUS_NAME_SECONDS = 15;
    answer arrives long before fifteen seconds do. Long enough to picture the record and talk
    yourself out of the wrong one, short enough that the page is a recall rather than a study. */
 export const BONUS_WHO_SECONDS = 12;
+/* Nashville's clock is the tightest on the shelf, and deliberately tighter than Aaron or Jack's
+   twelve. Twelve is bought there by a real slow path: picture the record, and the record implies
+   the producer. There is no such path here — you place the title or you do not — so every second
+   past recognition goes on hunting a tell in the writing rather than on remembering a song,
+   which is the one skill this game must not pay. Eight is a title read twice and a decision. */
+export const BONUS_NASHVILLE_SECONDS = 8;
+// What a wrong page costs, and the reason a guess is worth nothing on average. See the roster
+// entry: a run is NOT floored at zero, and a pass scores 0 rather than this.
+export const NASHVILLE_WRONG = -1;
+// Pages 1 to NASHVILLE_EASY_PAGES take the easy end of BOTH pools — her fan-famous titles
+// against decoys that are era-correct but a little off her register. After that the two sides
+// tighten toward each other. Proximity is the only ramp a three-door page has, and three is
+// already the shelf's number in ONLY_WIDE_PAGES and CHAIN_EASY_PAGES.
+export const NASHVILLE_EASY_PAGES = 3;
 export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
 // Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
 // the strips you peel while you think, so a tight clock would charge you twice for the same

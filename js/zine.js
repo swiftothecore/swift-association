@@ -478,6 +478,42 @@ const COVERS = {
       { amp: 0.55, step: 4, shadow: false });
   },
 
+  /* NASHVILLE — the tape. A cassette with two words written on its label, and nothing else
+     said about it. The only cover on the shelf that draws an object you could pick up.
+
+     WHY THE PALETTE IS INVERTED, and it is the whole reason this cover works: the desk
+     already wears a cassette a few inches from the shelf (js/cassette.js — dark shell, cream
+     label, and its text changes daily), and the difficulty rating draws cassettes too,
+     echoing that prop deliberately. A dark shell with a pale label here would read as the
+     desk prop reproduced rather than as a game. So this one is the other way round — PALE
+     SHELL, RUST LABEL, on a hot ground — which makes it a different tape rather than the
+     same tape drawn again. Do not "correct" it back toward a realistic cassette later.
+
+     It is also the only warm card in the rack's first row (navy, violet, teal, cream, plum),
+     which is the second reason it was taken: the shelf gains a colour it did not have
+     instead of doubling one it did. Running Order's ochre is a row away and a disc rather
+     than a slab, so the two warm covers never read as a pair.
+
+     THE HUBS AND THE WINDOW ARE THE GROUND, not a dark fill: they are drawn in the cover
+     paper's own colour with inverted shadow offsets, so they read as holes through the
+     shell the way Sing It Back's gap does. A cassette whose hubs are painted on is a
+     drawing of a cassette; one you can see through is a cassette. */
+  "nashville": (r) => {
+    const SHELL = "#eadfc2", LABEL = "#c2632b", INK = "#f6ecd6", WINDOW = "#8a7c5c", GROUND = "#9c4a22";
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#a85428", r, { shadow: false, crisp: true });
+    s += sheet(roundRectPts(14, 32, 92, 68, 4), SHELL, r, { amp: 1.1, step: 5 });
+    // The label, and two lines of writing on it. Two rather than three: a title and a date is
+    // what a tape spine carries, and a third line turns the object into a paragraph.
+    s += sheet([[20, 37], [100, 34], [101, 60], [21, 63]], LABEL, r, { amp: 0.9, step: 4.5, shadow: false });
+    const written = (y, len) => sheet([[26, y], [26 + len, y - 1.6], [26 + len, y + 2.6], [26, y + 4.2]],
+      INK, r, { amp: 0.5, step: 3.5, shadow: false });
+    s += written(45, 46) + written(53, 30);
+    s += sheet(roundRectPts(28, 70, 64, 22, 3), WINDOW, r, { amp: 0.8, step: 4.5, sx: -1, sy: -1.2 });
+    s += sheet(circlePts(45, 81, 7, r, 18, 0.6), GROUND, r, { amp: 0.6, step: 3.5, sx: -1, sy: -1 });
+    s += sheet(circlePts(75, 81, 7, r, 18, 0.6), GROUND, r, { amp: 0.6, step: 3.5, sx: -1, sy: -1 });
+    return s;
+  },
+
   /* RUTHLESS GAME — the sun going down on you. A huge ochre sun half off the page behind
      hot torn rays, with the ridges closing in front of it in the mode's own deep red. The
      one cover that is about a clock without drawing one. */
@@ -532,6 +568,7 @@ const LABELS = {
   "word-cloud":     { x: 12, y: 126, w: 96, h: 21, rot: -1.3 },
   "track-by-track": { x: 14, y: 130, w: 92, h: 21, rot: -1.1 },
   "aaron-or-jack":  { x: 14, y: 14,  w: 94, h: 23, rot: 1.6 },
+  "nashville":      { x: 13, y: 126, w: 94, h: 22, rot: -1.4 },
   "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
 };
 const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };
@@ -554,7 +591,8 @@ export function seedOf(id) {
 /* Aaron or Jack is printed rather than pasted — two inks on pale stock — so its ground is a
    shade warmer than the shelf's default bone, which is the paper showing round the discs
    rather than a field they sit on. */
-const GROUNDS = { "redacted": "#cbb794", "track-by-track": "#e6dbc0", "aaron-or-jack": "#ece0c6" };
+const GROUNDS = { "redacted": "#cbb794", "track-by-track": "#e6dbc0", "aaron-or-jack": "#ece0c6",
+                  "nashville": "#9c4a22" };
 
 let uid = 0;
 

@@ -3558,7 +3558,7 @@
      alignment instead lifts a zine whose record has wrapped to two lines, which reads as a
      shorter book rather than as a longer caption. */
   .zine-row {
-    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-content: center;
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); justify-content: center;
     align-items: start; gap: 14px 10px; padding-bottom: 10px;
   }
   .zine-tile {
@@ -3583,8 +3583,20 @@
        rather than a layout that came out wrong. The old rule's "six and a lonely one" fear
        does not apply to a row four wide. Five across measures 88px on a narrow page and 106px
        on a wide one, both clear of the 62px floor that broke one-row-of-eight.
-       The PHONE is three across below, where nine is a clean 3x3. Ten will not be, and that is
-       the next thing to decide rather than something to nudge: 3+3+3+1 is the lonely one. */
+       SIX ACROSS SINCE NASHVILLE MADE IT ELEVEN (2026-09-21). Ten never arrived on five; the
+       shelf went from nine to eleven, and eleven on five is 5+5+1 — the lonely one this note
+       has feared since the row of eight. Six gives 6+5 with a single gap at the end of the
+       second row, which is the same honest gap five gave at nine.
+       What it costs is measured rather than guessed, because the floor here is real: a cover
+       comes out at 83px on a wide desktop and 70px on a narrow one, against 102 and 88 at five
+       across. That clears the 62px that broke one-row-of-eight, but only by eight pixels on a
+       narrow page, and it is the closest this shelf has run to the floor. SEVEN ACROSS IS NOT
+       AVAILABLE: it measures 57px narrow, under the floor, so a twelfth game does not get
+       another column. Twelve is 6+6 on this count and needs no change at all; thirteen is where
+       this has to be solved properly rather than widened again.
+       The PHONE is three across below. Nine was a clean 3x3 and eleven is 3+3+3+2, which is not
+       the lonely one — so the phone needs nothing here. Ten would have been 3+3+3+1 and was
+       the case this note was holding open; the shelf skipped it. */
     width: 100%;
     display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0;
     padding: 8px 4px 7px; background: none; border: none; cursor: pointer; text-align: center;
