@@ -4139,10 +4139,23 @@
      two strips down the sides of it, which on the dark page reads as a panel floating on the
      sheet rather than as the foot of it. Both numbers are tied to .card's padding (58px left,
      30px right); move that and these follow. */
+  /* IT IS PAINTED AS THE FOOT OF THE SHEET, NOT AS A PANEL ON IT. Flat --paper is not what
+     the paper looks like anywhere on this page: .card lays the era's --page-wash over it and
+     then the lamp, which falls into shade at the bottom of the sheet — exactly where this band
+     sits. A band of raw --paper down there therefore comes out LIGHTER than the paper either
+     side of it, which is the whole reason it read as a white slab pasted over the notebook.
+     So it is given the same two layers: --tbt-foot is --paper with the foot of the lamp already
+     mixed in (the light theme's 0.075 of warm brown, the dark one's 0.17 of black), and the
+     wash goes over it the way .card stacks them. The glow above it takes the same colour for
+     the same reason — a paper-white haze rising off the band bleached the ruled lines it was
+     only meant to fade out. */
+  :root { --tbt-foot: color-mix(in srgb, #4a351d 7.5%, var(--paper)); }
+  :root[data-theme="dark"] { --tbt-foot: color-mix(in srgb, #000000 17%, var(--paper)); }
   .tbt-pen {
     position: sticky; bottom: 0; z-index: 3; padding: 10px 30px 4px 40px;
     margin-left: -40px; margin-right: -30px;
-    background: var(--paper); box-shadow: 0 -14px 18px -8px var(--paper);
+    background: linear-gradient(var(--page-wash), var(--page-wash)), var(--tbt-foot);
+    box-shadow: 0 -14px 18px -8px var(--tbt-foot);
   }
   /* The clock IS the score in this game, and the shelf's shared readout sets it at 12px under
      a bar sized for a countdown. Scoped up here only — every other game on the shelf is scored
@@ -4158,8 +4171,12 @@
     margin: 0 0 16px; text-align: center; position: relative;
     background: rgba(43, 39, 34, 0.035);
   }
+  /* 700, like every other number this notebook writes big (the personal best, the keepsake
+     counter, a challenge's name). Caveat ships 400-700 in one variable file, and this was the
+     only headline in the place left at 400 — which does not read as a lighter choice, it reads
+     as the one bit of handwriting that did not get pressed down. */
   .tbt-end-time {
-    font-family: var(--hand); font-size: calc(52px + var(--text-size-adjust));
+    font-family: var(--hand); font-weight: 700; font-size: calc(52px + var(--text-size-adjust));
     line-height: 1; color: var(--ink);
   }
   .tbt-end-remark {
@@ -4170,7 +4187,13 @@
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
     letter-spacing: 0.8px; color: var(--ink-soft); margin: 0 0 12px;
   }
-  .tbt-end-row { display: flex; justify-content: center; gap: 10px; }
+  /* The shared row, sized for the panel it sits in rather than for the back cover: no top
+     margin (the charm row above already leaves its own gap), and held in from the panel's
+     edges so the pair reads as two buttons under the time and not as the foot of the box.
+     It also drops the stacked row's 104px of bottom padding, which exists on the back cover
+     to clear the corner links at the foot of the WINDOW — this panel is at the top of the
+     page with a whole tracklist under it. */
+  .tbt-end .bg-end-actions { max-width: 420px; margin: 0 auto; }
   /* The rubber stamp the back cover uses, in this game's own words. Only ever printed on a run
      that actually took the record, so it can be as loud as a stamp is. */
   .tbt-stamp {
@@ -5023,7 +5046,7 @@
     line-height: 1.2; color: var(--ach-theme); }
   /* Track by Track's ending is a bordered panel rather than a card that gets rasterised, so the
      row goes INSIDE it — there is no PNG here for a line to disagree with. It sits below the
-     record's own numbers and above the one action, cut off from the time by a dotted rule so
+     record's own numbers and above the actions, cut off from the time by a dotted rule so
      the panel does not read as one block of four centred lines. `--bg-card-w` is not set on
      this screen, which is what the fallback above is for. */
   .tbt-end .bg-charms { margin: 0 0 12px; padding-top: 11px;
@@ -5038,7 +5061,7 @@
   .bg-end-actions .btn-primary { flex: 1; width: auto; margin: 0; padding: 11px 10px; font-size: calc(13px + var(--text-size-adjust)); }
   .bg-end-actions .btn-primary:first-child { transform: rotate(0.6deg); }
 
-  :is(#bonusShelfBtn, [data-flip-id="bonusShelfBtn"]) {
+  :is(#bonusShelfBtn, [data-flip-id="bonusShelfBtn"], #tbtPickBtn, [data-flip-id="tbtPickBtn"]) {
     --btn-wash: rgba(112, 122, 178, 0.28);
     --btn-mark: rgba(66, 76, 136, 0.26);
     background-color: var(--btn-wash);
@@ -5048,13 +5071,13 @@
     background-size: 11px 11px;
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  :is(#bonusShelfBtn, [data-flip-id="bonusShelfBtn"]):hover {
+  :is(#bonusShelfBtn, [data-flip-id="bonusShelfBtn"], #tbtPickBtn, [data-flip-id="tbtPickBtn"]):hover {
     color: var(--paper);
     --btn-wash: #4c5488;
     --btn-mark: rgba(245, 239, 225, 0.26);
   }
 
-  :is(#bonusAgainBtn, [data-flip-id="bonusAgainBtn"]) {
+  :is(#bonusAgainBtn, [data-flip-id="bonusAgainBtn"], #tbtAgainBtn, [data-flip-id="tbtAgainBtn"]) {
     --btn-wash: rgba(186, 96, 122, 0.28);
     --btn-mark: rgba(158, 62, 90, 0.32);
     background-color: var(--btn-wash);
@@ -5062,7 +5085,7 @@
     background-size: 13px 7.5px;
     transition: --btn-wash 0.22s ease, --btn-mark 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
   }
-  :is(#bonusAgainBtn, [data-flip-id="bonusAgainBtn"]):hover {
+  :is(#bonusAgainBtn, [data-flip-id="bonusAgainBtn"], #tbtAgainBtn, [data-flip-id="tbtAgainBtn"]):hover {
     color: var(--paper);
     --btn-wash: #a8465e;
     --btn-mark: rgba(245, 239, 225, 0.30);
@@ -5182,6 +5205,7 @@
     .bg-charms-row { gap: 4px 13px; }
     .bg-charm-ic { width: 23px; height: 23px; }
     .bg-end-actions { flex-direction: column; gap: 9px; padding-bottom: 104px; }
+    .tbt-end .bg-end-actions { padding-bottom: 0; }
     /* Stacked, so the hand-laid lean of the row's ends would read as two crooked buttons in a
        column rather than as three things laid down beside each other. */
     .bg-end-actions .btn-primary:first-child,

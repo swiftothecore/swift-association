@@ -9705,7 +9705,7 @@ function wireBonusCharmRow(root) {
    are not on screen is what keeps this inert for every unlock that is not on an ending. */
 function refreshBonusCharmRow() {
   const host = document.querySelector(".bg-end, .tbt-end");
-  const anchor = host && host.querySelector(".bg-end-actions, .tbt-end-row");
+  const anchor = host && host.querySelector(".bg-end-actions");
   if (!anchor) return;
   host.querySelector(".bg-charms")?.remove();
   const html = bonusCharmRow();
@@ -11755,6 +11755,14 @@ function endTrackRun() {
   // the same swap endBonusRun makes, and startBonusGame is what puts the pair back.
   $("bonusQuitBtn").hidden = true;
   $("bonusHomeBtn").hidden = false;
+  /* AND SNAP ONE LAST TIME, LAST OF ALL. renderTrackSheet measures a sheet that is about to
+     have two things put on top of it: the end panel, which is inserted ABOVE the list and is a
+     different height on a run that dropped a guess, on a run that earned a charm and on a
+     phone where the actions stack — and the link swap directly above, where "← front page"
+     wraps to two lines at 375px where "← quit" did not. Either one pushes every row off the
+     paper's ruling, and the sheet left on screen is the keepsake, which is the one that most
+     wants to be written on the lines. */
+  snapTrackGrid();
 }
 
 function renderTrackEnd(rec, secs) {
@@ -11776,19 +11784,32 @@ function renderTrackEnd(rec, secs) {
     // The same row the back cover gets, for the same reason: this game's ending is the filled-in
     // sleeve rather than a card, but a charm earned writing out a record was just as invisible.
     bonusCharmRow() +
-    `<div class="tbt-end-row">` +
-      `<button type="button" class="chall-go" id="tbtAgainBtn">Another record</button>` +
+    /* THE BACK COVER'S PAIR, not a sticker of this game's own. A run ends on the same two
+       wants here as on every other zine — go back to where the run was picked, or go round
+       again — so it ends on the same two buttons, in the same row, wearing the same washes:
+       the slate cross-hatch for the way back and the berry scallops for the replay. What it
+       replaced was one gold `.chall-go`, which is the sticker that STARTS a challenge, and it
+       said "Another record", which names neither destination: another record could as easily
+       be another time on this one. The destinations are still this game's own — back is the
+       PICKER rather than the shelf (the board with the new time on it and eleven more
+       waiting), and replay writes THIS album out again rather than dealing a new page. */
+    `<div class="bg-end-actions">` +
+      `<button type="button" id="tbtPickBtn" class="btn-primary">\u2190 the albums</button>` +
+      `<button type="button" id="tbtAgainBtn" class="btn-primary">write it again \u21ba</button>` +
     `</div>`;
   body.insertBefore(card, body.firstChild);
   wireBonusCharmRow(card);
-  const again = $("tbtAgainBtn");
-  if (again) again.addEventListener("click", () => {
-    // Straight back to the picker rather than to the shelf: what you want after finishing one
-    // record is the board with the new time on it and eleven others waiting.
+  // Captured now: the replay reads the album off the sheet, and the sheet is torn down by the
+  // time the click lands.
+  const album = trackSheet.album;
+  $("tbtPickBtn")?.addEventListener("click", () => {
     bonusGame = null;
     bonusEnded = false;
     openTrackPicker(trackBackTarget);
   });
+  // The one replay on the shelf that is unambiguously worth offering: the score is the clock,
+  // so the record you have just written out is the one you most want another run at.
+  $("tbtAgainBtn")?.addEventListener("click", () => startTrackRun(album));
 }
 
 function openRuthless(from) {
