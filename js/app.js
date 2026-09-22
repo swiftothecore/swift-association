@@ -7129,11 +7129,15 @@ function bonusSweeps(g) { return !!(g && g.sweep); }
 
    So this flag means "ask the run, not the roster". `whoCeiling` is the live answer, and like
    `bonusTimed` it has to be asked BEFORE anything reaches for bonusMaxScore. Three surfaces
-   care: the shelf line and the back cover's small print quote a best with no denominator (a
-   stored 23 is not out of anything, exactly as a stored time isn't), and the card's big number
-   is quoted against the ceiling of the run that just happened. A stored best is also never
+   care: the shelf line and the back cover's small print quote the best out of the ceiling of
+   the run that scored it (banked beside it as `bestOf`, since the next deal's ceiling is a
+   different number), and the card's big number is quoted against the ceiling of the run that
+   just happened. A stored best is also never
    clamped, for `bonusBest`'s timed reason: there is nothing to clamp it against. */
 function bonusDealMax(g) { return !!(g && g.dealMax); }
+// A dealMax best out of the deal that scored it. A best banked before the deal was kept has no
+// `bestOf`, and a guessed denominator would be a made-up fact, so it stands alone.
+function bestOfText(best, of) { return of ? `${best} / ${of}` : `${best}`; }
 // A best is read back through the maximum it is quoted against, because a game's `points` can
 // be retuned after a run has been banked — and a stored 74 shown as "best 74 / 60" is a
 // notebook contradicting itself. Clamped on the way out rather than rewritten in storage: the
@@ -7188,10 +7192,11 @@ function bonusScoreLine(g, short = false) {
   // A time is quoted on its own — "best 3:41 / 10" would be nonsense, and there is no total
   // for it to be out of.
   if (bonusTimed(g)) return `best ${fmtTimeFine(bonusBest(g))} · played ${rec.plays}`;
-  // A best with nothing to be out of, for the timed line's reason: every run of this game has a
-  // different ceiling, so the only honest denominator is the one belonging to the run that
-  // scored it, and that is on the back cover rather than on the shelf.
-  const score = bonusDealMax(g) ? `best ${bonusBest(g)}` : `best ${bonusBest(g)} / ${bonusMaxScore(g)}`;
+  // Every run of a dealMax game has a different ceiling, so the only honest denominator is the
+  // one belonging to the run that scored the best, banked beside it as `bestOf`. A best from
+  // before that was kept has no deal on record and stands alone.
+  const score = bonusDealMax(g) ? `best ${bestOfText(bonusBest(g), rec.bestOf)}`
+    : `best ${bonusBest(g)} / ${bonusMaxScore(g)}`;
   if (rec.sweep && short) return `${score} · swept ${fmtTimeFine(rec.sweep)}`;
   const swept = rec.sweep ? ` · swept ${fmtTimeFine(rec.sweep)}` : "";
   // The endless board, on the long line only. The shelf STRIP shares one line with nothing and
@@ -9934,7 +9939,7 @@ function endBonusRun() {
        be cut to 20 by the next stingy one. It has no maximum to be clamped against at all,
        which is what Infinity says here. */
     : recordBonusRun(bonusGame.id, bonusScore, bonusDealMax(bonusGame) ? Infinity : bonusMaxScore(bonusGame),
-                     timed, sweepSecs, perfect);
+                     timed, sweepSecs, perfect, bonusDealMax(bonusGame) ? whoCeiling : null);
   // After the run is banked, so a sweep that completes the set counts itself (see the note in
   // foldBonusRunCharms), and after the lens fork above, so Ruthless earns none of them.
   foldBonusRunCharms(perfect, bonusLog.filter((t) => t.ok).length);
@@ -10001,8 +10006,9 @@ function endBonusRun() {
              : timed ? `best ${fmtTimeFine(rec.best)} · played ${rec.plays}`
              // A best from some other run, quoted against THIS run's ceiling, would be two
              // different deals sharing one fraction — and clamped to it, the way the line below
-             // clamps, it would quietly under-report the board. So it stands alone.
-             : bonusDealMax(bonusGame) ? `best ${rec.best}${sweepFoot} · played ${rec.plays}`
+             // clamps, it would quietly under-report the board. So it is quoted out of the
+             // ceiling of the run that scored it.
+             : bonusDealMax(bonusGame) ? `best ${bestOfText(rec.best, rec.bestOf)}${sweepFoot} · played ${rec.plays}`
                      : `best ${Math.min(rec.best, max)} / ${max}${sweepFoot} · played ${rec.plays}`;
   /* An endless run can be forty pages long and the keepsake is one card, so the listing is
      dealt in SLICES of ten and the card opens on the last of them, ending on the page that

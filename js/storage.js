@@ -499,7 +499,8 @@ export function saveBonus(o) {
 // a swept one can never both read 0.
 export function bonusRecord(id) {
   const e = loadBonus()[id] || {};
-  return { best: e.best || 0, plays: e.plays || 0, last: e.last || 0, sweep: e.sweep || 0, swept: !!e.swept };
+  return { best: e.best || 0, bestOf: e.bestOf || 0, plays: e.plays || 0, last: e.last || 0,
+           sweep: e.sweep || 0, swept: !!e.swept };
 }
 // Fold a finished bonus run into the board and return the updated record, plus whether the
 // run set a new best (the end card calls that out).
@@ -517,7 +518,12 @@ export function bonusRecord(id) {
 // `lower`: that flag says the whole game is scored the other way up, whereas a sweep game is
 // scored in points and keeps a low-wins time alongside them. A game can want one and not the
 // other, and Ruthless and Spot the Slip are one of each.
-export function recordBonusRun(id, score, max = Infinity, lower = false, sweepSecs = null, swept = false) {
+// `ceiling` is what THIS run could have scored, for a game whose maximum changes run to run
+// (Aaron or Jack's deal). It is banked as `bestOf` beside the best it belongs to and moves only
+// with it, so the best can be quoted as "12 / 20" out of its own deal. A best banked before this
+// field existed has no `bestOf` and is quoted bare: its deal is gone and cannot be guessed.
+export function recordBonusRun(id, score, max = Infinity, lower = false, sweepSecs = null, swept = false,
+                               ceiling = null) {
   const all = loadBonus();
   const e = all[id] || {};
   // Written before either branch, so a sweep is banked on whichever way the game's own score
@@ -549,7 +555,10 @@ export function recordBonusRun(id, score, max = Infinity, lower = false, sweepSe
      it also fixes a live one-liner on the games already here: a first run of exactly 0 used to
      leave `best` undefined beside a `plays` of 1. */
   const isBest = !e.plays || score > e.best;
-  if (isBest) e.best = score;
+  if (isBest) {
+    e.best = score;
+    if (ceiling != null) e.bestOf = ceiling; else delete e.bestOf;
+  }
   e.plays = (e.plays || 0) + 1;
   e.last = score;
   all[id] = e;
