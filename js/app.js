@@ -31,7 +31,7 @@ import {
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
   BONUS_TRACK_SECONDS, BONUS_CAPS_SECONDS, BONUS_ENDLESS_RUNGS,
   BONUS_WHO_SECONDS, PRODUCER_ALBUMS, WHO_PAY_ONE, WHO_PAY_BOTH,
-  BONUS_NASHVILLE_SECONDS, NASHVILLE_WRONG,
+  BONUS_NASHVILLE_SECONDS, NASHVILLE_WRONG, NASHVILLE_KNOW_BETTER,
   BONUS_PEN_SECONDS, PEN_ALBUMS, PEN_GUESTS,
   BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
@@ -2937,6 +2937,9 @@ const HIDDEN_ACH_IDS = [
   "take-commonest-only-here-card", "name-a-joint-production", "call-a-late-solo-credit", "name-redacted-song-after-buying-all-strips", "time-out-all-10-only-here-pages", "finish-bonus-run-one-page-short-of-sweep", "flag-spot-the-slip-impostor-under-2s",
   // The shelf's sixth, and the endless side's own: a run that ended on the page it opened on.
   "end-an-endless-bonus-run-on-its-first-page",
+  // Nashville's two failures worn well. Secret for the shelf's usual reason: you have to go and
+  // commit them on purpose once you know they exist.
+  "finish-nashville-run-below-zero", "pass-last-nashville-page-to-finish-on-zero",
   /* The Core batch's twenty-three secrets, the scarf first. Listing them roughly two-thirds
      again on the capstone's price, which is the deliberate reading of it: leaving them out
      would make Is It Over Now?'s own description untrue the moment they shipped. Grouped the
@@ -8002,8 +8005,12 @@ function renderBonusRound() {
         `<div class="bg-sheet-meta" id="bonusNashMeta"></div>` +
       `</div>` +
       `<div class="bg-nash-row" role="group" aria-label="Is this one of hers?">${doors}</div>` +
-      `<button type="button" class="bg-nash-pass" data-v="pass"` +
-        ` aria-label="Pass: score nothing rather than risk a point">pass</button>`;
+      /* NO PASS DOOR ON THE ENDLESS SIDE. There is no penalty there for it to dodge, so a pass
+         could only be a miss by another name: it would end the run under a banner saying it had
+         been left alone. That side is the nerve game and every page has to be called. */
+      (bonusEndless ? "" :
+        `<button type="button" class="bg-nash-pass" data-v="pass"` +
+          ` aria-label="Pass: score nothing rather than risk a point">pass</button>`);
     body.querySelectorAll(".bg-nash, .bg-nash-pass").forEach((b) =>
       b.addEventListener("click", () => judgeNashville(b.dataset.v)));
   } else if (bonusGame.id === "running-order") {
@@ -9741,6 +9748,18 @@ function foldBonusRunCharms(perfect, cleared) {
   // `perfect` block for exactly that reason.
   if (bonusGame.id === "word-cloud" && cloudSpareRun === BONUS_ROUNDS - CLOUD_WIDE_PAGES)
     unlock("clear-every-spare-word-cloud-page");
+  /* Nashville's three, read off the listing rather than off the score, because the score cannot
+     tell a pass from a right-and-a-wrong: both leave it where it was. A wrong page is one that
+     was neither right nor passed, so an expired clock counts as wrong here as it does in the
+     score. Outside the `perfect` block, since none of them is a sweep. */
+  if (bonusGame.id === "nashville" && bonusLog.length === BONUS_ROUNDS) {
+    const right = bonusLog.filter((p) => p.ok).length;
+    const wrong = bonusLog.filter((p) => !p.ok && !p.passed).length;
+    if (!wrong && right >= NASHVILLE_KNOW_BETTER) unlock("finish-nashville-run-with-no-wrong-calls");
+    if (bonusScore < 0) unlock("finish-nashville-run-below-zero");
+    if (bonusScore === 0 && right > 0 && bonusLog[bonusLog.length - 1].passed)
+      unlock("pass-last-nashville-page-to-finish-on-zero");
+  }
   // The two shelf-wide ledger charms, read off the board rather than off this run, so they
   // close on whichever game happens to be the last one. The roster is the shelf again now that
   // Ruthless's descriptor lives outside it, so these count BONUS_GAMES straight — and the

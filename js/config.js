@@ -804,8 +804,7 @@ export const BONUS_GAMES = [
     kicker: "how many names?", tint: "#7a2230",
     line: "Alone, with one, or with a room?",
     blurb: "A title, and the question of who was in the room. She wrote it by herself, with one other person, or with three or more." },
-  /* NASHVILLE — NOT WRITTEN YET (`ready: false`): the desk opens it and says so in words, and
-     there is no Play sticker until the branch exists. What follows is the spec it gets built to.
+  /* NASHVILLE — built to the spec below (opened 2026-09-21).
 
      A title is written on the page and you say whether it is HERS — one of roughly seventy
      unreleased songs, verified, never on a record — or SOMEBODY ELSE'S. The decoys are real
@@ -1012,6 +1011,10 @@ export const BONUS_NASHVILLE_SECONDS = 8;
 // What a wrong page costs, and the reason a guess is worth nothing on average. See the roster
 // entry: a run is NOT floored at zero, and a pass scores 0 rather than this.
 export const NASHVILLE_WRONG = -1;
+/* Know Better's floor: how many pages a clean Nashville run must have called RIGHT. Without one
+   the charm for calling only what you know is ten taps on pass, which knows nothing. Six is most
+   of the run, so the passes it allows are a few pages honestly declined, not a run sat out. */
+export const NASHVILLE_KNOW_BETTER = 6;
 export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
 // Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
 // the strips you peel while you think, so a tight clock would charge you twice for the same
@@ -4496,6 +4499,22 @@ export const ACHIEVEMENTS = [
      marks are drawn, like Track by Track's three and The Capitals' pair. */
   { id: "sweep-who-held-the-pen", name: "Signed Your Name", desc: "Sweep Who Held The Pen", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   { id: "call-a-late-solo-credit", name: "On My Own", desc: "Call a song she wrote alone on a record where she almost never did", secret: true, icon: "placeholder" },
+  /* Nashville's three, and NO SWEEP among them, which is the decision. A sweep here is ten calls
+     and no passes, so a charm for it would pay for never using the door the whole game is built
+     around; Every Single One already asks for Nashville's sweep, and that is enough.
+     Know Better is the game's own skill said as a charm: a run with no wrong call in it and at
+     least NASHVILLE_KNOW_BETTER right, passes allowed — you called what you knew and left the
+     rest. The floor is what stops ten passes earning it.
+     The other two are failures worn well, and both could exist on no other zine, because this
+     is the only page on the shelf that charges. Nothing Safe is a run finished below zero.
+     Just Walk Away is a run that PASSES its last page and lands on exactly zero — the door taken
+     at the very end with the books balanced — and it needs at least one page CALLED, or ten
+     passes (a zero with nothing risked) would be the cheap way in.
+     Named off "If I didn't know better" (marjorie), "Nothing safe is worth the drive"
+     (Treacherous) and "Just walk away" (Cold As You). On the dashed placeholder until drawn. */
+  { id: "finish-nashville-run-with-no-wrong-calls", name: "Know Better", desc: `Finish a Nashville run with no wrong calls and at least ${NASHVILLE_KNOW_BETTER} right`, tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "finish-nashville-run-below-zero", name: "Nothing Safe", desc: "Finish a Nashville run below zero", secret: true, icon: "placeholder" },
+  { id: "pass-last-nashville-page-to-finish-on-zero", name: "Just Walk Away", desc: "Pass the last page of a Nashville run and finish on exactly zero", secret: true, icon: "placeholder" },
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
   { id: "name-redacted-song-after-buying-all-strips",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "peeled" },
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
@@ -4912,6 +4931,8 @@ export const ACH_GROUP_OF = {
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
   "sweep-the-capitals": "bonus", "name-a-one-word-capitals-message": "bonus",
   "sweep-who-held-the-pen": "bonus", "call-a-late-solo-credit": "bonus",
+  "finish-nashville-run-with-no-wrong-calls": "bonus", "finish-nashville-run-below-zero": "bonus",
+  "pass-last-nashville-page-to-finish-on-zero": "bonus",
   "clear-13-pages-in-an-endless-bonus-run": "bonus", "clear-25-pages-in-an-endless-bonus-run": "bonus",
   "end-an-endless-bonus-run-on-its-first-page": "bonus",
   "name-ruthless-page-off-one-word": "ruthless", "finish-ruthless-run-naming-all-ten": "ruthless",
