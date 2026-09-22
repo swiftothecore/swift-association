@@ -78,7 +78,7 @@ if (location.pathname.endsWith('/index.html')) {
 <link rel="preload" href="fonts/courierprime-700-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/courierprime-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="ink.css" />
-  <link rel="stylesheet" href="styles.css?v=81" />
+  <link rel="stylesheet" href="styles.css?v=82" />
 </head>
 <body data-era="gold">
 <!-- Hand-drawn wobble for the penned achievement charms. Referenced by .charm svg
@@ -303,6 +303,22 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M22.4 11.1 C24.2 10.4 26.6 10 29 10"/>
     <path d="M7 13.6 C9.4 13.6 11.8 14 13.6 14.6"/>
   </symbol>
+  <!-- one headstone with a sprig growing beside it. The pair rule is kept the way Mastery keeps
+       it, by trailing rather than repeating: a second stone would have made this a cemetery, and
+       the page is about individual decisions. The sprig is the half that matters — the notebook
+       is still being written, and one of these graves (Adaptive's) left its mechanic behind.
+       Deliberately NOT in PAGE_MARK_KINDS: see js/config.js. -->
+  <symbol id="mark-graveyard" viewBox="0 0 36 24">
+    <path d="M8 21 C7.6 15.8 7.7 10 8.6 7.4 C10 4.8 14.8 4.8 16.2 7.4 C17.1 10 17.2 15.8 16.8 21"/>
+    <path d="M10.4 11.4 C12 11.3 13.8 11.3 14.4 11.4"/>
+    <path d="M10.8 14.2 C12.1 14.1 13.5 14.1 14.1 14.2"/>
+    <path d="M11.2 17 C12.2 16.9 13.2 16.9 13.7 17"/>
+    <path d="M25.6 21 C25.2 18 25.4 15.2 26.1 13.2"/>
+    <path d="M25.9 17.6 C24.4 16.8 23.4 15.5 23 14 C24.7 14 25.9 14.9 26.5 16.2"/>
+    <path d="M26.1 15.8 C26.9 14.3 28.2 13.2 29.7 12.8 C29.7 14.5 28.8 16 27.4 16.9"/>
+    <path d="M3.4 21.4 C9.6 21 16.6 21 21 21.2"/>
+    <path d="M22.6 21.3 C27 21 31.8 21 34.4 21.3"/>
+  </symbol>
 </svg>
 <!-- THE KEEPSAKE BRACELET'S BEAD — one drawing, placed six times by the charms card's icon,
      which appears twice in this page (the board's nav row and the results row). A bead is a
@@ -461,6 +477,94 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M3.4 7.2 C9.2 6.7 15.2 6.7 20.6 7.2 C20.9 11.4 20.9 14.6 20.6 18 C15.2 18.5 9.2 18.5 3.4 18 C3.1 14.6 3.1 11.4 3.4 7.2 Z"/>
     <path d="M8.2 12.6 C9.8 12.3 11 12.3 12.4 12.6"/>
     <path d="M16 11 C17 11 17.7 11.8 17.7 12.7 C17.7 13.3 17.4 13.8 16.9 14.1 L17.4 15.6 C16.5 15.8 15.6 15.8 14.7 15.6 L15.2 14.1 C14.7 13.8 14.4 13.3 14.4 12.7 C14.4 11.8 15.1 11 16 11 Z"/>
+  </symbol>
+
+  <!-- GRAVEYARD ENTRY ICONS — one per plot, 24x24, same pen as the theme marks above.
+       Every one draws the THING as the game actually had it, never a picture of why it died:
+       the set's rule is that a mark is an object off this desk, and a cause of death drawn as
+       a symbol (a carrot, a guard rail) would be the only metaphor in the notebook. -->
+  <!-- a card box, the middle card standing proud -->
+  <symbol id="grave-study" viewBox="0 0 24 24">
+    <path d="M3.4 10.8 C8.6 10.4 15.4 10.4 20.6 10.8 C20.9 14.6 20.8 17.8 20.4 20.6 C15.2 21 8.8 21 3.6 20.6 C3.2 17.6 3.2 13.8 3.4 10.8 Z"/>
+    <path d="M7.2 10.6 C7 8.8 7 7.4 7.2 6.2 C8.8 6 10.2 6 11.6 6.2"/>
+    <path d="M10.8 10.6 C10.6 8 10.6 5.8 10.8 3.9 C12.8 3.7 14.8 3.7 16.6 3.9 C16.8 6.1 16.8 8.3 16.6 10.6"/>
+    <path d="M12.6 7.2 C13.6 7.1 14.6 7.1 15.4 7.2"/>
+  </symbol>
+  <!-- a charm dropping into the wire wastepaper basket. The charm is lifted clear of the rim
+       and tipped: sat flush on it, the pair reads unmistakably as a cupcake -->
+  <symbol id="grave-sacrifice" viewBox="0 0 24 24">
+    <path d="M13.9 7.2 C11.9 6.4 10.2 5.7 9.7 4.4 C9.3 3.4 9.9 2.6 10.7 2.5 C11.3 2.4 12 2.6 12.6 3.1 C12.7 2.3 13.1 1.8 13.7 1.6 C14.5 1.3 15.4 1.7 15.8 2.7 C16.3 4 15.5 5.6 13.9 7.2 Z"/>
+    <path d="M5.6 12 C5.6 10.7 8.4 9.8 12 9.8 C15.6 9.8 18.4 10.7 18.4 12 C18.4 13.3 15.6 14.2 12 14.2 C8.4 14.2 5.6 13.3 5.6 12 Z"/>
+    <path d="M6.2 12.8 C6.9 16.2 7.5 18.8 8.1 20.8"/>
+    <path d="M17.8 12.8 C17.1 16.2 16.5 18.8 15.9 20.8"/>
+    <path d="M8.1 20.8 C10.7 21.4 13.4 21.4 15.9 20.8"/>
+    <path d="M9.8 13.8 C10.2 16.6 10.6 19 10.9 21.2"/>
+    <path d="M14.2 13.8 C13.8 16.6 13.4 19 13.1 21.2"/>
+  </symbol>
+  <!-- a stub torn in half. The zigzag runs down BOTH edges and the halves are offset, which is
+       what stops it reading as a small open book the way a clean gap did -->
+  <symbol id="grave-tickets" viewBox="0 0 24 24">
+    <path d="M2.6 6.6 C4.6 6.3 7 6.3 8.8 6.6 C9.1 10.4 9 13.6 8.6 16.6 C6.8 16.9 4.4 16.9 2.8 16.6 C2.4 13.4 2.4 9.6 2.6 6.6 Z"/>
+    <path d="M8.8 6.6 L10.4 8.2 L8.9 9.8 L10.4 11.4 L8.9 13 L10.4 14.6 L8.6 16.6"/>
+    <path d="M4.8 9.8 C5.8 9.7 6.6 9.7 7.2 9.8"/>
+    <path d="M4.8 12.4 C5.6 12.3 6.2 12.3 6.8 12.4"/>
+    <path d="M21.4 9 C21.7 12.8 21.6 16 21.2 19 C19.4 19.3 16.4 19.3 14.6 19 C14.2 15.8 14.2 12 14.4 9 C16.4 8.7 19.6 8.7 21.4 9 Z"/>
+    <path d="M14.4 9 L12.8 10.6 L14.3 12.2 L12.8 13.8 L14.3 15.4 L12.8 17 L14.6 19"/>
+    <path d="M16.6 12.2 C17.8 12.1 18.8 12.1 19.4 12.2"/>
+  </symbol>
+  <!-- tabbed dividers standing in a drawer. The climb lives in the TABS, which stagger across
+       the three, rather than only in the heights: heights alone read as a bar chart -->
+  <symbol id="grave-atoz" viewBox="0 0 24 24">
+    <path d="M3 18.4 C3.2 15.8 3.2 13.6 3 11.6 C5.6 11.3 8.6 11.3 11 11.6 C11.2 14.2 11.2 16.4 11 18.6"/>
+    <path d="M3.4 11.6 C3.3 10.2 3.4 9.4 3.6 8.8 C4.8 8.6 6 8.6 7 8.8 C7.1 9.6 7.1 10.6 7 11.5"/>
+    <path d="M9.4 15.8 C9.6 13 9.6 10.4 9.4 8.2 C12 7.9 15 7.9 17.4 8.2 C17.6 11 17.6 14.6 17.4 17.6"/>
+    <path d="M13.6 8.1 C13.5 6.6 13.6 5.8 13.8 5.2 C15 5 16.4 5 17.4 5.2 C17.5 6 17.5 7 17.4 8.1"/>
+    <path d="M16 13.6 C16.2 10.2 16.2 7.2 16 5 C17.8 4.8 19.8 4.8 21.4 5"/>
+    <path d="M2 18.8 C7.6 18.4 14.4 18.4 19.4 18.7"/>
+  </symbol>
+  <!-- the snake, drawn flat. The entry is about an object painted in the wrong medium, so this
+       one is the argument as well as the subject: it is what the egg should have looked like -->
+  <symbol id="grave-snake" viewBox="0 0 24 24">
+    <path d="M3.2 18.6 C5.6 14.8 9.4 14.2 12.6 15.4 C15.8 16.6 18.6 16.2 19.4 13.8 C20.2 11.4 18 9.6 15.4 10.2 C12.8 10.8 11.6 13 12.8 14.6"/>
+    <path d="M15.6 10.2 C16.2 7.8 18 6.2 20.4 5.8 C20.9 6.8 21 7.8 20.8 8.8"/>
+    <path d="M19.3 6.6 C19.5 7 19.5 7.4 19.3 7.7"/>
+  </symbol>
+  <!-- two threads knotted. Not five: the game dealt five pairs and five of anything at this size
+       is a texture rather than a picture -->
+  <symbol id="grave-string" viewBox="0 0 24 24">
+    <path d="M3.4 5.6 C6.6 7.6 8.8 9.4 10.4 11.2"/>
+    <path d="M20.6 5.6 C17.4 7.6 15.2 9.4 13.6 11.2"/>
+    <path d="M10.4 11.2 C9.2 12.4 9.6 14 11.2 14.2 C12.8 14.4 13.8 13.2 13.6 11.2 C13.4 9.6 11.6 9.8 10.8 11"/>
+    <path d="M11 14.2 C10.2 16.6 9.6 18.6 9.2 20.6"/>
+    <path d="M13 14.1 C13.8 16.5 14.4 18.5 14.8 20.5"/>
+  </symbol>
+  <!-- one strand, four beads, each bigger than the last. Doubling drawn as escalation rather
+       than as a quantity, which is the only version that survives the small size. A vessel was
+       tried twice and read as the desk mug both times -->
+  <symbol id="grave-doubleup" viewBox="0 0 24 24">
+    <path d="M2.8 8.4 C8.4 12.4 15.6 15.6 21.4 17.2"/>
+    <path d="M4.4 8.2 C5.2 8.2 5.8 8.9 5.7 9.7 C5.6 10.4 5 10.9 4.3 10.8 C3.6 10.7 3.2 10.1 3.3 9.4"/>
+    <path d="M9.4 11.2 C10.5 11.2 11.3 12.1 11.2 13.1 C11.1 14.1 10.3 14.7 9.3 14.6 C8.4 14.5 7.8 13.7 7.9 12.8"/>
+    <path d="M14.8 13.6 C16.2 13.6 17.3 14.8 17.2 16.1 C17.1 17.4 16 18.3 14.7 18.2 C13.5 18.1 12.6 17 12.7 15.8"/>
+    <path d="M20.2 15.4 C21.9 15.4 23.2 16.9 23 18.5 C22.8 20.1 21.4 21.2 19.8 21 C18.3 20.8 17.2 19.4 17.4 17.9"/>
+  </symbol>
+  <!-- a lever thrown over, with the run of the climb behind it: the knob that turned itself -->
+  <symbol id="grave-adaptive" viewBox="0 0 24 24">
+    <path d="M4.6 20 C4.2 15 4.4 9.4 4.8 5.2"/>
+    <path d="M4.6 20 C9.6 20.4 15.8 20.2 20.2 19.8"/>
+    <path d="M7 17.2 C9.6 13.8 13.4 10.4 18.4 7.4"/>
+    <path d="M17 6.4 C18 6.2 19 6.3 19.8 6.6"/>
+    <path d="M18.8 5.4 C19.2 6.2 19.6 7 19.8 7.8"/>
+  </symbol>
+  <!-- the coda's mark: the same lever, but standing in the rack it belongs in. This is the one
+       icon on the page whose subject is still in the game -->
+  <symbol id="grave-floating" viewBox="0 0 24 24">
+    <path d="M6.4 4.4 C6.6 9.6 6.6 14.8 6.4 19.6"/>
+    <path d="M12 4.4 C12.2 9.6 12.2 14.8 12 19.6"/>
+    <path d="M17.6 4.4 C17.8 9.6 17.8 14.8 17.6 19.6"/>
+    <path d="M6.4 14.6 C7.8 14.6 8.9 15.7 8.9 17 C8.9 18.4 7.8 19.5 6.4 19.5 C5.1 19.5 4 18.4 4 17 C4 15.7 5 14.6 6.3 14.6"/>
+    <path d="M12 9.2 C13.4 9.2 14.5 10.3 14.5 11.6 C14.5 13 13.4 14.1 12 14.1 C10.7 14.1 9.6 13 9.6 11.6 C9.6 10.3 10.6 9.2 11.9 9.2"/>
+    <path d="M17.6 6 C19 6 20.1 7.1 20.1 8.4 C20.1 9.8 19 10.9 17.6 10.9 C16.3 10.9 15.2 9.8 15.2 8.4"/>
   </symbol>
 
   <!-- FAMILY MARKS — one rank up from the theme marks above, for the four index tabs and the
@@ -3221,6 +3325,23 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="glossaryBackBtn" class="btn-link">← back</button>
     </div>
     <div id="glossaryBody"></div>
+  </section>
+
+  <!-- GRAVEYARD SCREEN — features this notebook used to have. Body rendered by renderGraveyard()
+       in app.js off the GRAVEYARD array in config.js. Two views share the one body: a contents
+       map of every plot, and one plot at a time leafed with the How to play arrows.
+       Its page mark kicks like every other but is NOT in PAGE_MARK_KINDS, because this page is
+       found rather than linked and a mark nobody can reach would make Marked Every Page
+       unwinnable. -->
+  <section id="screen-graveyard" class="screen card" tabindex="-1" aria-label="Graveyard">
+    <div class="stats-nav">
+      <span class="title-group">
+        <span class="page-mark mark-graveyard" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-graveyard"/></svg></span>
+        <span class="stats-title">Graveyard</span>
+      </span>
+      <button id="graveyardBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="graveyardBody"></div>
   </section>
 
   <!-- MASTERY SCREEN -->

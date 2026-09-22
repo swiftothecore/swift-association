@@ -16,6 +16,7 @@ import {
   PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
+  GRAVEYARD,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
@@ -991,6 +992,7 @@ const screens = {
   mastery: $("screen-mastery"),
   howto: $("screen-howto"),
   glossary: $("screen-glossary"),
+  graveyard: $("screen-graveyard"),
 };
 /* ---------- Desk tail ----------
    How much bare desk sits under the notebook, decided by whether the page is long enough
@@ -1593,6 +1595,7 @@ const routeOpeners = {
   ruthless: () => openRuthless("start"),
   "how-to-play": () => openHowTo("start"),
   glossary: () => openGlossary("start"),
+  graveyard: () => openGraveyard("start"),
 };
 // True while a popstate (or the boot deep-link) is driving the screen change, so the opener
 // it calls doesn't push the very entry we're already sitting on back onto the stack.
@@ -25644,13 +25647,17 @@ function wirePageMarks() {
     // By kind, not by element: the guest shelf and a guest's catalogue page draw the same
     // mark, and asking the player to find both would be asking them to find one twice.
     const kind = PAGE_MARK_KINDS.find((k) => el.classList.contains("mark-" + k));
-    if (!kind) return;
     el.addEventListener("click", () => {
       el.classList.remove("mark-poked");
       void el.offsetWidth;   // reflow, so a second poke restarts the animation rather than ignoring it
       el.classList.add("mark-poked");
       setTimeout(() => el.classList.remove("mark-poked"), MARK_POKE_MS);
-      markPoked(tapPageMark(kind));
+      // A mark with no kind belongs to a page that is NOT a permanent fixture everyone can
+      // reach — currently the graveyard, which is found rather than linked. It kicks like every
+      // other mark and counts for nothing: putting it in PAGE_MARK_KINDS would make Marked Every
+      // Page cost a tap on a page a player may never be told exists, which is the one thing that
+      // list is documented not to do.
+      if (kind) markPoked(tapPageMark(kind));
     });
   });
   // Backfill: the tenth poke may have landed inside a sandbox, where unlock() was gated. The
@@ -27985,6 +27992,113 @@ function openGlossary(from, focus = "") {
   flipAwayToScreen("glossary");
 }
 
+/* ---------- The graveyard ----------
+   Two views over one body. The MAP is every plot at once — mark, struck name, dates — and it
+   exists for one reason: the lifespans only say anything side by side. Invisible String lived
+   three days and From A to Z lived ten weeks, and a reader leafing one card at a time never
+   learns that. The CARDS are the same stack How to play uses, because a reason wants a page of
+   its own and a wall of nine reasons is a wall.
+
+   graveyardIndex is the whole state: MAP_VIEW for the map, otherwise the plot being read. It is
+   never persisted. The page keeps no "you have read this" memory, for the same reason How to
+   play keeps none — it is somewhere you can go back to, not a task with a completion. */
+const GRAVEYARD_MAP = -1;
+let graveyardBackTarget = "start";
+let graveyardIndex = GRAVEYARD_MAP;
+
+const graveIcon = (id) =>
+  `<span class="grave-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#grave-${id}"/></svg></span>`;
+// The dates as one line. A grave with no birth date on record says only when it went: a made-up
+// "from" would be the one dishonest thing on a page whose whole subject is what really happened.
+function graveLife(g) {
+  if (g.coda) return escapeHtml(g.died);
+  return g.born ? `${escapeHtml(g.born)} &ndash; ${escapeHtml(g.died)}` : `Buried ${escapeHtml(g.died)}`;
+}
+// The name, struck through in the margin's red — except the coda, which is the one thing on this
+// page that is still in the game and would be libelled by a line through it.
+// Two elements, not one, and the nesting is load-bearing: the strike is a background painted per
+// line fragment, which only happens on an INLINE box, and both places this sits are flex
+// containers that would blockify it. The outer span takes the blockifying; the inner one stays
+// inline and keeps its pen.
+const graveName = (g, tag) =>
+  `<${tag} class="grave-line"><span class="grave-name${g.coda ? " grave-name--living" : ""}">` +
+    `${escapeHtml(g.name)}</span></${tag}>`;
+
+function renderGraveyard() {
+  const el = $("graveyardBody");
+  if (!el) return;
+  const total = GRAVEYARD.length;
+  if (graveyardIndex !== GRAVEYARD_MAP) graveyardIndex = Math.max(0, Math.min(total - 1, graveyardIndex));
+  el.innerHTML = graveyardIndex === GRAVEYARD_MAP ? graveyardMapMarkup() : graveyardCardMarkup();
+}
+
+function graveyardMapMarkup() {
+  const rows = GRAVEYARD.map((g, i) =>
+    `<button type="button" class="grave-plot${g.coda ? " grave-plot--living" : ""}" data-grave-open="${i}">` +
+      graveIcon(g.icon) +
+      `<span class="grave-plot-text">${graveName(g, "span")}` +
+        `<span class="grave-dates">${graveLife(g)}</span></span>` +
+    `</button>`).join("");
+  return `<div class="grave-map">` +
+    `<p class="grave-lead">Things this notebook used to have. Each one was taken out on purpose, ` +
+      `and each one has a reason worth reading.</p>` +
+    `<div class="grave-plots">${rows}</div>` +
+  `</div>`;
+}
+
+function graveyardCardMarkup() {
+  const total = GRAVEYARD.length;
+  const g = GRAVEYARD[graveyardIndex];
+  const last = graveyardIndex === total - 1;
+  return `<div class="grave-card" data-grave-card>` +
+      `<div class="grave-view" data-grave-view aria-live="polite">` +
+        `<div class="grave-text">` +
+          `<div class="ach-latest-label"><span>${graveLife(g)}</span>` +
+            `<span class="ach-latest-position">${graveyardIndex + 1} / ${total}</span></div>` +
+          `<div class="grave-head">${graveIcon(g.icon)}${graveName(g, "div")}</div>` +
+          (g.was ? `<p class="grave-was">${escapeHtml(g.was)}</p>` : "") +
+          `<p class="grave-why">${escapeHtml(g.why)}</p>` +
+          (g.took ? `<p class="grave-took">${escapeHtml(g.took)}</p>` : "") +
+        `</div>` +
+      `</div>` +
+      `<button type="button" class="ach-latest-nav ach-latest-prev" data-grave-prev` +
+        ` aria-label="Previous plot"${graveyardIndex === 0 ? " disabled" : ""}>${charmHistoryArrow()}</button>` +
+      (last ? "" : `<button type="button" class="ach-latest-nav ach-latest-next" data-grave-next` +
+        ` aria-label="Next plot">${charmHistoryArrow(true)}</button>`) +
+    `</div>` +
+    // Always out, on every card rather than only the last one. Leafing is one way through the
+    // page and the map is the other, and a reader who came in on plot six by tapping it there
+    // should not have to walk to the end to get back.
+    `<p class="grave-return"><button type="button" class="gloss-jump" data-grave-map>` +
+      `&larr; all the plots</button></p>`;
+}
+
+function turnGraveyard(step) {
+  const next = graveyardIndex + step;
+  if (graveyardIndex === GRAVEYARD_MAP || next < 0 || next >= GRAVEYARD.length) return;
+  graveyardIndex = next;
+  renderGraveyard();
+  // Same focus rescue as the How to play stack: the re-render destroys the button that was
+  // focused, and focus falling to <body> puts the arrow keys out of reach of the screen handler.
+  if (!screens.graveyard.classList.contains("active")) return;
+  const el = $("graveyardBody");
+  const usable = (b) => b && !b.disabled;
+  const wanted = el.querySelector(step > 0 ? "[data-grave-next]" : "[data-grave-prev]");
+  const other = el.querySelector(step > 0 ? "[data-grave-prev]" : "[data-grave-next]");
+  const keep = usable(wanted) ? wanted : (usable(other) ? other : screens.graveyard);
+  try { keep.focus({ preventScroll: true }); } catch (_) { keep.focus(); }
+}
+
+// Opens on the map, not on plot one: the map is the view that says what the page IS, and a
+// reader dropped straight into Study mode's card has no way of knowing there are eight more.
+function openGraveyard(from, index = GRAVEYARD_MAP) {
+  graveyardBackTarget = from;
+  routeTo("graveyard", from);
+  graveyardIndex = index;
+  renderGraveyard();
+  flipAwayToScreen("graveyard");
+}
+
 /* ---------- How to play ----------
    A short stack of cards, one idea each, leafed through with the same corner arrows the charm
    keepsake uses. Four cards where one page of prose would have fitted, on purpose: a reader who
@@ -28035,9 +28149,16 @@ const HOWTO_PAGES = [
       `and experience across five skills that unlocks as it climbs. None of it is spent by ` +
       `playing badly, so there's no wrong way to start.`,
     note: `Everything lives on this device alone. There's no account, and nothing to sign up for.`,
-    // The one card that sends you somewhere. The notebook invents a lot of nouns and this is
-    // where a reader who noticed that gets told where they are defined.
-    door: { label: "the notebook's own words", to: "glossary" },
+    // The one card that sends you somewhere, and it sends you two places. The notebook invents a
+    // lot of nouns, and this is where a reader who noticed that gets told where they are defined.
+    // The graveyard hangs off the same card because it wants the same reader: someone who has
+    // finished learning the game and is now curious about it. It is the page's only door — there
+    // is no link to it from the front page and no badge — so a player who never reads this far
+    // simply never meets it, which is the intention.
+    doors: [
+      { label: "the notebook's own words", to: "glossary" },
+      { label: "what used to be here", to: "graveyard" },
+    ],
   },
 ];
 let howToBackTarget = "start";   // where the How to play page's ← back returns to
@@ -28063,8 +28184,8 @@ function renderHowTo() {
           `<p class="howto-body">${page.body}</p>` +
           (page.legend ? ruleLegendMarkup() : "") +
           `<p class="howto-note">${note}</p>` +
-          (page.door ? `<p class="howto-door"><button type="button" class="gloss-jump" ` +
-            `data-howto-door="${page.door.to}">${escapeHtml(page.door.label)} &rarr;</button></p>` : "") +
+          (page.doors || []).map((d) => `<p class="howto-door"><button type="button" class="gloss-jump" ` +
+            `data-howto-door="${d.to}">${escapeHtml(d.label)} &rarr;</button></p>`).join("") +
         `</div>` +
       `</div>` +
       `<button type="button" class="ach-latest-nav ach-latest-prev" data-howto-prev` +
@@ -32873,6 +32994,22 @@ async function init() {
   // the page, and any `data-gloss` term anywhere in the notebook (delegated, since those live in
   // bodies that re-render).
   $("glossaryBackBtn").addEventListener("click", () => backToScreen(glossaryBackTarget));
+  // Graveyard — back, the two paging arrows, the return to the map, and a tap on any plot row.
+  // All delegated: the body re-renders whole on every view change.
+  $("graveyardBackBtn").addEventListener("click", () => backToScreen(graveyardBackTarget));
+  $("graveyardBody").addEventListener("click", (e) => {
+    const plot = e.target.closest("[data-grave-open]");
+    if (plot) { graveyardIndex = Number(plot.dataset.graveOpen); renderGraveyard(); return; }
+    if (e.target.closest("[data-grave-map]")) { graveyardIndex = GRAVEYARD_MAP; renderGraveyard(); return; }
+    if (e.target.closest("[data-grave-prev]")) turnGraveyard(-1);
+    else if (e.target.closest("[data-grave-next]")) turnGraveyard(1);
+  });
+  $("screen-graveyard").addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    if (e.target.closest("input, textarea, select")) return;
+    e.preventDefault();
+    turnGraveyard(e.key === "ArrowRight" ? 1 : -1);
+  });
   $("glossaryBody").addEventListener("click", (e) => {
     const jump = e.target.closest("[data-gloss-jump]");
     if (!jump) return;
@@ -32891,7 +33028,13 @@ async function init() {
     if (e.target.closest("[data-howto-prev]")) turnHowTo(-1);
     else if (e.target.closest("[data-howto-next]")) turnHowTo(1);
     // A door on a card returns to how-to on back, not past it to the start screen.
-    else if (e.target.closest("[data-howto-door]")) openGlossary("howto");
+    else if (e.target.closest("[data-howto-door]")) {
+      // Dispatch on the door's own target rather than assuming the glossary: the card carries
+      // more than one now, and a hardcoded opener here is exactly how the second one would
+      // silently open the first.
+      const to = e.target.closest("[data-howto-door]").dataset.howtoDoor;
+      if (to === "graveyard") openGraveyard("howto"); else openGlossary("howto");
+    }
   });
   // Arrow keys turn the cards too. Scoped to the screen, and left alone when the player is
   // in a field or on a control that wants its own arrow behaviour.

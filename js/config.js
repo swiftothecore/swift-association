@@ -97,6 +97,7 @@ export const PANEL_ROUTES = {
   ruthless: "ruthless",
   "how-to-play": "howto",
   glossary: "glossary",
+  graveyard: "graveyard",
 };
 
 /* ---------- localStorage keys ---------- */
@@ -5249,3 +5250,143 @@ export const GLOSSARY = [
   { term: "wax seal", slug: "wax-seal", seen: "always", also: ["challenge"],
     defn: "The blob of wax pressed onto a challenge card. Its colour and its device say what you have done with that challenge, so a shelf of cards can be read at a glance." },
 ];
+
+/* ---------- The graveyard ----------
+   Features this notebook used to have and does not any more, one plot each. Reached from the
+   last How to play card and from /graveyard, and from nowhere else: it is a page for a reader
+   who went looking, not a notice board.
+
+   What earns a plot is a DECISION, not a deletion. A thing belongs here when it was removed on
+   purpose and there is no plan to bring it back — which is why the leaderboards are not here
+   (still on the roadmap) and why nothing secret is, since an easter egg written down on a public
+   page has been spent rather than retired.
+
+   Each row is the same four beats, and the order matters: `was` is what the player had, in the
+   present tense they had it in, and `why` is the argument that ended it. `took` names anything
+   that went into the ground alongside it, which is nearly always a charm, and is the line a
+   collector reads first. `born`/`died` are display strings, never parsed.
+
+   `coda` is the one row with no strike through its name: the mechanic that outlived its mode.
+   A page of nothing but failures reads as an apology, and this one genuinely does not want to. */
+export const GRAVEYARD = [
+  {
+    id: "study",
+    name: "Study mode",
+    born: "4 July 2026", died: "24 July 2026",
+    icon: "study",
+    was: `A review deck. It sorted the songs you kept missing into boxes and fed them back to ` +
+      `you on a schedule until they stuck.`,
+    why: `It worked, and that was the problem. It was the most eat-your-vegetables thing in the ` +
+      `notebook, a productivity app that had wandered into a game, and nobody ever opened it ` +
+      `because they wanted to. You came here to play, not to revise.`,
+    took: `Back To December, Stay Beautiful and The Best Day went into the ground with it.`,
+  },
+  {
+    id: "sacrifice",
+    name: "Sacrificing charms",
+    born: "", died: "13 July 2026",
+    icon: "sacrifice",
+    was: `You could give up a charm you had earned, permanently, and mint challenge tokens out of it.`,
+    why: `It was a door for anyone stuck without the tokens to open the next challenge. But a ` +
+      `currency you can print by burning the collection is not scarce, and a collection you can ` +
+      `spend is not a collection. The door got bricked up. Tokens stayed exactly where they were; ` +
+      `you just have to win them now.`,
+    took: `Castles Crumbling went with it. Its only unlock was the sacrifice.`,
+  },
+  {
+    id: "tickets",
+    name: "Persistence tickets",
+    born: "31 July 2026", died: "14 August 2026",
+    icon: "tickets",
+    was: `A consolation prize. Finish a challenge enough times without ever beating it and the ` +
+      `notebook handed you a ticket, and tickets bought your way into a challenge you had not unlocked.`,
+    why: `It lasted two weeks. Nothing was wrong with paying you for persistence. The problem was ` +
+      `that it paid you in a second currency, which every challenge then had to account for, and ` +
+      `which had to be earned, held and explained alongside the first one. Challenge returns do the ` +
+      `same job with nothing new to count: hand back a challenge you are finished with and take ` +
+      `another in its place. Easier to hold in your head, and it asks you to give something up ` +
+      `rather than to pile something up.`,
+  },
+  {
+    id: "atoz",
+    name: "From A to Z",
+    born: "22 June 2026", died: "4 September 2026",
+    icon: "atoz",
+    was: `Name a song holding the word, but every title had to start further up the alphabet than ` +
+      `the last one.`,
+    why: `It asked the wrong question. Every other card on the shelf tests what you know about the ` +
+      `catalogue or what you are willing to risk. This one tested whether you could cross-reference ` +
+      `the catalogue against the alphabet in ten seconds. And its real decision, how far up to jump, ` +
+      `was invisible, because nothing on the page tells you how much catalogue is left above each ` +
+      `letter. By the end it needed three separate guard rails to stop you ruining your own run. A ` +
+      `rule that has to be protected from its own central choice is not a rule anyone can play well.`,
+    took: `Tied Together With A Smile hung off it and went too.`,
+  },
+  {
+    id: "snake",
+    name: "The slithering snake",
+    born: "14 June 2026", died: "24 August 2026",
+    icon: "snake",
+    was: `A reputation easter egg. It crossed the desk on the right sort of page, and catching it ` +
+      `earned a secret charm.`,
+    why: `Nothing was wrong with it except how it looked. This notebook is ink on paper. The snake ` +
+      `was a shaded thing with a green gradient down its body, scales, a sheen along its back and ` +
+      `amber slit eyes, and next to the fence and the cat and the scarf it read as clip art somebody ` +
+      `had dropped on the page. No amount of tuning the crawl fixes a paint job that belongs to a ` +
+      `different game. The era still gets its say: the ink goes near-black on a reputation page.`,
+    took: `Look What You Made Me Do is no longer earnable.`,
+  },
+  {
+    id: "string",
+    name: "Invisible String",
+    born: "1 August 2026", died: "4 August 2026",
+    icon: "string",
+    was: `A bonus game. Five lines, five songs, thread each one to where it came from.`,
+    why: `It lasted three days. It was Name That Song with the feedback taken away and the answers ` +
+      `handed over. Holding five pairs back pushes the reveal past the point where you still remember ` +
+      `which one you were unsure about; by the fourth pair the board has solved itself, so you stop ` +
+      `working exactly when you should be feeling clever; and a list of four choices turns "oh, that ` +
+      `is Cornelia Street" into "well, it cannot be the other three". Same skill, same songs, worse game.`,
+  },
+  {
+    id: "doubleup",
+    name: "Double Or Nothing",
+    born: "22 July 2026", died: "28 July 2026",
+    icon: "doubleup",
+    was: `A risk card. Bank what the chain had earned, or double it and risk losing the lot.`,
+    why: `Shelved twice inside a week. The first version was broken and the fix was real, which made ` +
+      `the second look worse: it rode the same beads, the same offer between pages, the same run ` +
+      `length and the same target as Press Your Luck, and differed only in whether the pot added or ` +
+      `doubled. That is a tuning parameter, not a challenge, and a player meets it as one rule wearing ` +
+      `two seals. Two cards that ask the same question earn less than one card that asks it well. It ` +
+      `can come back when it has an axis of its own.`,
+  },
+  {
+    id: "adaptive",
+    name: "Adaptive mode",
+    born: "25 June 2026", died: "13 August 2026",
+    icon: "adaptive",
+    was: `A third kind of run, where the words got rarer the better you did and easier again when ` +
+      `you slipped.`,
+    why: `It was never really a game type. Classic, Infinite and Custom each describe a shape of run: ` +
+      `a fixed thirteen, play until the lives run out, write your own rules. Adaptive was a fixed ` +
+      `thirteen with one knob turning itself, which is a difficulty setting sitting in the row where ` +
+      `the formats live. Two things never came good either. Its score only had four values, because a ` +
+      `run was ranked on the highest tier it reached, so the day you could reliably touch Rarest was ` +
+      `the day every run scored the same and there was nothing left to chase. And the climb was over ` +
+      `in three or four pages, which left eight or nine pages of ordinary hard Classic behind it, on ` +
+      `a card promising the words would keep moving.`,
+    took: `Both of its charms were deleted rather than rehoused.`,
+  },
+  {
+    id: "floating",
+    name: "The bit that lived",
+    born: "", died: "Still here",
+    icon: "floating",
+    coda: true,
+    why: `Rarity that answers to how you are playing was always a good idea. It just wanted to be a ` +
+      `lever rather than a mode, so it is the fifth stop on Custom's rarity picker now, called ` +
+      `Floating, riding the same ladder over the same four buckets behind the same gauge.`,
+  },
+];
+

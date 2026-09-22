@@ -46,6 +46,7 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Beads that record how a page went and not just whether: sanded for a hint taken, pearl for a line written from memory, clear for one you missed
 - Finished bracelets stay readable across long runs, explain what each bead remembers, and can be copied or downloaded as a PNG
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
+- A graveyard of everything this notebook used to have and does not any more, each plot carrying the argument that ended it, for anyone who goes looking for it
 - A night version of the whole desk, and a high-contrast setting that works in either light, measured page by page rather than eyeballed
 - Installable as a phone or desktop app and works offline once loaded
 
