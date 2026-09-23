@@ -4546,11 +4546,18 @@
      See penHandMarkup in app.js for the drawing and for why the first pen never changes. */
   /* ---------- NASHVILLE: two doors and a way out ----------
      A PAIR AND AN ESCAPE, not three of a kind, and the shape is the argument. Hers and not-hers
-     are matched cards of one width, because they are the two halves of one question. PASS is
-     smaller, set below them and drawn as a pencil note rather than a card, because it is not a
-     third guess — it is the decision to make none, and a third equal card would give a shrug the
-     same weight as a call. The whole point of the door is that using it well is a skill, and the
-     page has to say that before the player has read the rules.
+     are matched blocks of one width, because they are the two halves of one question. PASS is
+     smaller, set below them and drawn as a printer's ornament rather than a block, because it
+     is not a third guess — it is the decision to make none, and a third equal block would give a
+     shrug the same weight as a call. The whole point of the door is that using it well is a
+     skill, and the page has to say that before the player has read the rules.
+
+     THE DOORS ARE A HATCH SHOW PRINT POSTER, which is Nashville's own letterpress shop and the
+     most 2006-country object there is that is still ink on paper: a heavy rule round each block
+     pulled twice a hair off register, three stars over slab capitals (Courier Prime bold IS a
+     slab serif, so no poster face was added for it), a double rule under. The pass door is the
+     pointing fist out of the same type case, sending you on to the next page. The board these
+     were picked from is scripts/bonus/nashville-buttons.html.
 
      THE INK IS THE COVER'S. The zine is a bone cassette on a hot rust ground, so the page is
      laid in that rust — Aaron or Jack's rule, where the tap cards carry the arithmetic of the
@@ -4560,56 +4567,72 @@
   .banner.pass { color: var(--ink-soft); opacity: 0.82; }
   .bg-feedback.pass { --bg-fb: var(--ink-soft); }
 
+  .bg-nash-row, .bg-nash-pass { --nash-ink: #9c4a22; --nash-wash: rgba(156, 74, 34, 0.08); }
+  :root[data-theme="dark"] :is(.bg-nash-row, .bg-nash-pass) { --nash-ink: #d0804f; --nash-wash: rgba(208, 128, 79, 0.1); }
   .bg-nash-row {
-    --nash-ink: #9c4a22;
-    --nash-pencil: rgba(60, 40, 18, 0.42);
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
     max-width: 400px; margin: 4px auto 6px;
   }
   .bg-nash {
     background: none; border: 0; padding: 0; min-height: 64px; cursor: pointer;
     display: grid; place-items: stretch; transition: opacity 0.14s;
   }
-  /* Two cards laid down by hand, so two different tilts and neither the negative of the other —
+  /* Two blocks laid down by hand, so two different tilts and neither the negative of the other —
      the ornament rule everywhere else in the notebook. */
   .bg-nash[data-v="hers"] { transform: rotate(-1.1deg); }
   .bg-nash[data-v="not"]  { transform: rotate(0.8deg); }
   .bg-nash-card {
-    width: 100%; box-sizing: border-box;
-    display: grid; place-items: center; padding: 14px 10px;
-    border: 1.5px solid rgba(60, 40, 18, 0.22); border-radius: 2px;
-    background: rgba(255, 252, 243, 0.5); transition: transform 0.1s, border-color 0.14s;
+    position: relative; width: 100%; box-sizing: border-box;
+    display: grid; gap: 3px; justify-items: center; align-content: center; padding: 9px 6px 8px;
+    border: 3px solid var(--nash-ink); background: none; transition: transform 0.1s, background-color 0.14s;
   }
-  :root[data-theme="dark"] .bg-nash-card { background: rgba(255, 252, 243, 0.05); }
+  /* The press's second pull, a hair off register. Flat and faint rather than a shadow: it is
+     ink that landed in the wrong place, not light falling on an object. */
+  .bg-nash-card::after {
+    content: ""; position: absolute; inset: -3px; border: 3px solid var(--nash-ink);
+    opacity: 0.28; transform: translate(2.5px, 2px); pointer-events: none;
+  }
+  .bg-nash-stars { font-family: var(--type); font-size: 9px; letter-spacing: 3.2px; line-height: 1; color: var(--nash-ink); opacity: 0.85; }
   /* Typewriter capitals, like Aaron or Jack's stamps and for the same reason: it is a label on
-     a record sleeve rather than something written by hand, so it wants no entry in ink.css's
-     three var(--hand) lists. */
+     a poster rather than something written by hand, so it wants no entry in ink.css's three
+     var(--hand) lists. */
   .bg-nash-word {
-    font-family: var(--type); font-size: 15px; letter-spacing: 1.2px;
-    text-transform: uppercase; color: var(--ink-soft);
+    font-family: var(--type); font-weight: 700; font-size: 24px; letter-spacing: 3px; line-height: 1;
+    text-transform: uppercase; color: var(--nash-ink);
   }
-  .bg-nash:not([disabled]):hover .bg-nash-card { border-color: var(--nash-ink); transform: translateY(-1px); }
-  .bg-nash:not([disabled]):active .bg-nash-card { transform: translateY(0); }
+  .bg-nash[data-v="not"] .bg-nash-word { font-size: 20px; letter-spacing: 2px; }
+  .bg-nash-rules { width: 82%; height: 5px; border-top: 1.5px solid var(--nash-ink); border-bottom: 1px solid var(--nash-ink); opacity: 0.7; }
+  .bg-nash:not([disabled]):hover .bg-nash-card { background: var(--nash-wash); }
+  .bg-nash:not([disabled]):active .bg-nash-card { transform: translate(1px, 1px); }
   /* THE TRUE DOOR TOOK THE INK and the other is left as an impression — Aaron or Jack's "this
-     one printed", said again deliberately rather than invented a fourth way. */
-  .bg-nash.is-answer .bg-nash-card { border-color: var(--nash-ink); background: var(--nash-ink); }
-  .bg-nash.is-answer .bg-nash-word { color: #f6ecd6; }
+     one printed", said again deliberately rather than invented a fourth way. On a poster block
+     it is also literally what printing does: the type knocks out of the solid. */
+  .bg-nash.is-answer .bg-nash-card { background: var(--nash-ink); }
+  .bg-nash.is-answer :is(.bg-nash-word, .bg-nash-stars) { color: var(--paper); }
+  .bg-nash.is-answer .bg-nash-rules { border-color: var(--paper); }
   .bg-nash.is-blank .bg-nash-card { opacity: 0.35; }
-  .bg-nash.is-got .bg-nash-card { box-shadow: 0 0 0 2px var(--nash-ink); }
   .bg-nash.is-missed .bg-nash-card { border-color: var(--bad, #b4453a); border-style: dashed; }
-  /* The way out: a pencil note under the pair, never a third card. */
+  /* The way out: the printer's fist under the pair, never a third block. It leans toward the
+     next page on hover and fills in when it is taken; the other pass states just step back. */
   .bg-nash-pass {
-    display: block; margin: 2px auto 8px; padding: 4px 14px;
-    background: none; border: 0; border-bottom: 1.5px dotted rgba(60, 40, 18, 0.42);
-    font-family: var(--hand-font, inherit); font-size: 17px; color: var(--ink-soft);
-    opacity: 0.72; cursor: pointer; transition: opacity 0.14s;
+    display: flex; align-items: center; gap: 8px; width: max-content; margin: 10px auto 8px; padding: 2px 6px;
+    background: none; border: 0; color: var(--nash-ink);
+    font-family: var(--type); font-weight: 700; font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+    opacity: 0.8; cursor: pointer; transition: opacity 0.14s;
   }
+  .bg-nash-fist { width: 38px; height: 17px; overflow: visible; transition: transform 0.15s; }
+  .bg-nash-fist path { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+  .bg-nash-fist .cuff { fill: currentColor; stroke: none; }
   .bg-nash-pass:not([disabled]):hover { opacity: 1; }
-  .bg-nash-pass[disabled] { cursor: default; }
-  .bg-nash-pass.is-took { opacity: 1; border-bottom-style: solid; }
+  .bg-nash-pass:not([disabled]):hover .bg-nash-fist { transform: translateX(3px); }
+  .bg-nash-pass[disabled] { cursor: default; opacity: 0.3; }
+  .bg-nash-pass.is-took { opacity: 1; }
+  .bg-nash-pass.is-took .hand { fill: currentColor; }
+  .bg-nash-pass.is-took .knuck { stroke: var(--paper); }
   @media (max-width: 420px) {
-    .bg-nash-row { gap: 8px; }
-    .bg-nash-card { padding: 11px 8px; }
+    .bg-nash-row { gap: 10px; }
+    .bg-nash-word { font-size: 20px; letter-spacing: 2px; }
+    .bg-nash[data-v="not"] .bg-nash-word { font-size: 16px; letter-spacing: 1.4px; }
   }
 
   .bg-pen-row {

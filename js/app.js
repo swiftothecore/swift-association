@@ -7994,13 +7994,16 @@ function renderBonusRound() {
        three. Hers and not-hers are a matched pair of cards; PASS is a smaller, quieter thing set
        apart from them, because it is not a third guess — it is the decision to make none. Drawn
        as one of three equal cards it would read as a shrug with the same weight as a call, and
-       the whole point of the door is that using it well is a skill. */
+       the whole point of the door is that using it well is a skill. So the two doors are poster
+       blocks and the pass is the pointing fist from the same type case (see styles.css). */
     const doors = [
       ["hers", "hers", "This is a Taylor Swift song she never released"],
       ["not", "not hers", "This is somebody else's song"],
     ].map(([v, label, full]) =>
       `<button type="button" class="bg-nash" data-v="${v}" aria-label="${escapeHtml(full)}">` +
-        `<span class="bg-nash-card"><span class="bg-nash-word">${escapeHtml(label)}</span></span>` +
+        `<span class="bg-nash-card"><span class="bg-nash-stars" aria-hidden="true">\u2605 \u2605 \u2605</span>` +
+          `<span class="bg-nash-word">${escapeHtml(label)}</span>` +
+          `<span class="bg-nash-rules" aria-hidden="true"></span></span>` +
       `</button>`).join("");
     body.innerHTML =
       `<p class="bg-ask">did this one ever come out?</p>` +
@@ -8015,7 +8018,7 @@ function renderBonusRound() {
          been left alone. That side is the nerve game and every page has to be called. */
       (bonusEndless ? "" :
         `<button type="button" class="bg-nash-pass" data-v="pass"` +
-          ` aria-label="Pass: score nothing rather than risk a point">pass</button>`);
+          ` aria-label="Pass: score nothing rather than risk a point">${NASH_FIST}<span>pass</span></button>`);
     body.querySelectorAll(".bg-nash, .bg-nash-pass").forEach((b) =>
       b.addEventListener("click", () => judgeNashville(b.dataset.v)));
   } else if (bonusGame.id === "running-order") {
@@ -9002,6 +9005,15 @@ function markPenCards(choice) {
     if (choice && v === choice) b.classList.add(v === bonusPuzzle.by ? "is-got" : "is-missed");
   });
 }
+
+/* The printer's fist on the pass door: a solid cuff, the hand in outline, three knuckle lines.
+   Taking the door fills the hand, and the knuckles are redrawn in paper so they survive it. */
+const NASH_FIST =
+  `<svg class="bg-nash-fist" viewBox="0 0 38 17" aria-hidden="true">` +
+  `<rect class="cuff" x="1" y="3.2" width="5.2" height="11" rx=".6"/>` +
+  `<path class="hand" d="M6.6 3.4C10 2.6 13 2.4 16 3.1c2.4.5 3.4.9 6 .9l12.4-.2c1.6 0 2.4.9 2.3 1.9-.1 1.1-1 1.7-2.4 1.7L21.6 7.6` +
+  `c.9.6 1.1 1.4 1 2.1-.1.9-.8 1.3-1.7 1.3.7.5.9 1.2.7 1.9-.3.8-1 1.1-1.8 1.1.4.5.5 1.1.2 1.6-.4.6-1.1.8-2 .8H11c-2 0-3.4-.6-4.4-1.2z"/>` +
+  `<path class="knuck" d="M16.2 7.7h5.2M16.6 11.1h4.1M16.6 14.1h3.2"/></svg>`;
 
 /* One tap and the page is answered, on any of the three doors. A pass settles as NOT CORRECT,
    which is right — nothing was called — and `nashvillePassed` is what stops the rest of the
