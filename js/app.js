@@ -17,6 +17,7 @@ import {
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
   GRAVEYARD,
+  CREDITS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
@@ -993,6 +994,7 @@ const screens = {
   howto: $("screen-howto"),
   glossary: $("screen-glossary"),
   graveyard: $("screen-graveyard"),
+  credits: $("screen-credits"),
 };
 /* ---------- Desk tail ----------
    How much bare desk sits under the notebook, decided by whether the page is long enough
@@ -1596,6 +1598,7 @@ const routeOpeners = {
   "how-to-play": () => openHowTo("start"),
   glossary: () => openGlossary("start"),
   graveyard: () => openGraveyard("start"),
+  credits: () => openCredits("start"),
 };
 // True while a popstate (or the boot deep-link) is driving the screen change, so the opener
 // it calls doesn't push the very entry we're already sitting on back onto the stack.
@@ -25699,7 +25702,7 @@ function wirePageMarks() {
       el.classList.add("mark-poked");
       setTimeout(() => el.classList.remove("mark-poked"), MARK_POKE_MS);
       // A mark with no kind belongs to a page that is NOT a permanent fixture everyone can
-      // reach — currently the graveyard, which is found rather than linked. It kicks like every
+      // reach — currently the graveyard and the credits, which are found rather than linked. It kicks like every
       // other mark and counts for nothing: putting it in PAGE_MARK_KINDS would make Marked Every
       // Page cost a tap on a page a player may never be told exists, which is the one thing that
       // list is documented not to do.
@@ -26814,6 +26817,10 @@ function setBookplateHTML() {
    came from no longer holds a game. The arm state lives on this button rather than being
    borrowed from #quitBtn, whose armed label says "give up" and belongs to a different act. */
 let bpTitleTimer = null;
+// True while the settings modal is sitting over a live run (notebook or bonus shelf).
+function settingsOverRun() {
+  return screens.game.classList.contains("active") || screens.bonusplay.classList.contains("active");
+}
 function bpTitleBtn() { return document.querySelector("#settingsBody [data-bp-title]"); }
 function disarmBookplateTitle() {
   clearTimeout(bpTitleTimer);
@@ -27149,6 +27156,13 @@ function renderSettingsBody() {
           `</span>` +
         `</a>` +
       `</div>` +
+      // The credits door. Hidden during a run: the modal only pauses the clock, and walking off
+      // to a page from the middle of a game would leave the run open underneath it.
+      (settingsOverRun() ? "" :
+        `<button type="button" class="about-feedback about-credits" data-action="credits">` +
+          `<svg class="about-feedback-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
+            `<use href="#credit-nib"/>` +
+          `</svg>Credits</button>`) +
       `<a class="about-feedback" href="feedback/" target="_blank" rel="noopener">` +
         `<svg class="about-feedback-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
           `<path d="M4 4.4 H14 L20 10.4 V16.4 H10 L6.5 19.6 L8 16.4 H4 Z"/>` +
@@ -27261,6 +27275,11 @@ function wireSettingsBody() {
   body.querySelectorAll("[data-action]").forEach((b) => b.addEventListener("click", () => {
     if (b.dataset.action === "export") exportBackup();
     else if (b.dataset.action === "import") $("importFile").click();
+    else if (b.dataset.action === "credits") {
+      const from = Object.keys(screens).find((k) => screens[k].classList.contains("active")) || "start";
+      closeSettings();
+      openCredits(from);
+    }
   }));
   body.querySelectorAll(".led-row[data-danger]").forEach((r) => r.addEventListener("click", () => armDanger(r)));
 }
@@ -28153,6 +28172,44 @@ function openGraveyard(from, index = GRAVEYARD_MAP) {
   graveyardIndex = index;
   renderGraveyard();
   flipAwayToScreen("graveyard");
+}
+
+/* ---------- The credits ----------
+   One page, one column, no paging: the notebook's liner notes read top to bottom the way a
+   sleeve does. Every line is the same shape (mark, typed role, the name in the hand, then what
+   the credit covers) and the same size. A lesser credit is never set smaller, because a page
+   that sizes its names by importance reads as ranking the people on it. */
+let creditsBackTarget = "start";
+const creditIcon = (id) =>
+  `<span class="credit-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#credit-${id}"/></svg></span>`;
+// The notebook's own heart hands, never the emoji, so the thanks line draws the same on every
+// device. The emblem is labelled as an image elsewhere; here the words already say it, so the
+// copy is hidden from screen readers rather than read out as "heart hands" mid-sentence.
+const creditHands = () =>
+  `<span class="credit-hands" aria-hidden="true">${HEART_HANDS_SVG.replace(' role="img" aria-label="heart hands"', "")}</span>`;
+
+function renderCredits() {
+  const el = $("creditsBody");
+  if (!el) return;
+  const rows = CREDITS.map((c) =>
+    `<div class="credit-row">${creditIcon(c.icon)}` +
+      `<div class="credit-text">` +
+        `<div class="credit-role">${escapeHtml(c.role)}</div>` +
+        `<div class="credit-who">${escapeHtml(c.who)}${c.hands ? " " + creditHands() : ""}</div>` +
+        (c.what ? `<p class="credit-what">${escapeHtml(c.what)}</p>` : "") +
+      `</div>` +
+    `</div>`).join("");
+  el.innerHTML =
+    `<p class="credit-lead">The liner notes. Who made this notebook, what it borrows, and who it\u2019s for.</p>` +
+    `<div class="credit-list">${rows}</div>` +
+    `<p class="credit-signoff">thank you for playing!</p>`;
+}
+
+function openCredits(from) {
+  creditsBackTarget = from;
+  routeTo("credits", from);
+  renderCredits();
+  flipAwayToScreen("credits");
 }
 
 /* ---------- How to play ----------
@@ -33053,6 +33110,7 @@ async function init() {
   // Graveyard — back, the two paging arrows, the return to the map, and a tap on any plot row.
   // All delegated: the body re-renders whole on every view change.
   $("graveyardBackBtn").addEventListener("click", () => backToScreen(graveyardBackTarget));
+  $("creditsBackBtn").addEventListener("click", () => backToScreen(creditsBackTarget));
   $("graveyardBody").addEventListener("click", (e) => {
     const plot = e.target.closest("[data-grave-open]");
     if (plot) { graveyardIndex = Number(plot.dataset.graveOpen); renderGraveyard(); return; }

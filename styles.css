@@ -9708,6 +9708,9 @@
      a second red one step along would have read as the same page twice. Cool and low against a
      warm sheet is also the only tonal move on this page that is doing any work. */
   .page-mark.mark-graveyard  { --mark-tint: #5f6470; }
+  /* Blue-black, the ink a signature goes down in. The credits page is signed rather than
+     read, and none of the nearby pages (How to play's red, the graveyard's slate) wears it. */
+  .page-mark.mark-credits    { --mark-tint: #2f5d8a; }
   /* The one thing on an inside page you can prod. Nothing advertises it — no pointer
      cursor, no hover state, no title — but a press makes the drawing kick off the paper
      and its highlighter swipe puff out behind it, so a stray click gets an answer. Poking
@@ -11140,6 +11143,63 @@
     .grave-card { padding: 14px 15px 38px; min-height: 0; }
     .grave-plot { gap: 10px; }
   }
+
+  /* CREDITS — the liner notes. One column, the graveyard map's width, every row the same shape
+     and every name the same size (see renderCredits). The marks wear the page mark's ink. */
+  .credit-list, .credit-lead { --credit-ink: #2f5d8a; }
+  .credit-lead {
+    max-width: 560px; margin: 4px auto 16px; text-align: center;
+    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
+    color: var(--ink-soft); line-height: 1.55;
+  }
+  .credit-list { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; }
+  .credit-row {
+    display: flex; align-items: flex-start; gap: 14px; padding: 12px 4px;
+    border-bottom: 1px solid rgba(43,39,34,0.1);
+  }
+  .credit-row:last-child { border-bottom: 0; }
+  .credit-mark {
+    display: inline-flex; flex: none; width: 30px; height: 30px; margin-top: 2px;
+    color: color-mix(in srgb, var(--credit-ink) 70%, var(--ink));
+  }
+  .credit-mark svg {
+    width: 100%; height: 100%; overflow: visible; filter: url(#charmWobble);
+    fill: none; stroke: currentColor; stroke-width: 1.75;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .credit-text { min-width: 0; }
+  .credit-role {
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust));
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .credit-who {
+    font-family: var(--hand); font-weight: 700; font-size: calc(27px + var(--text-size-adjust));
+    line-height: 1.05; margin: 1px 0 3px; color: var(--ink);
+  }
+  .credit-what {
+    margin: 0; font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
+    line-height: 1.6; color: var(--ink);
+  }
+  /* The heart hands sit in the sentence at the height of the handwriting, in the same ink,
+     so they read as the end of the line rather than a sticker on it. */
+  .credit-hands .np-hands {
+    display: inline-block; width: 0.95em; height: 0.76em; margin: 0 0 0 0.12em;
+    vertical-align: -0.12em; color: currentColor;
+  }
+  .credit-signoff {
+    max-width: 560px; margin: 18px auto 0; text-align: center;
+    font-family: var(--hand); font-size: calc(24px + var(--text-size-adjust)); color: var(--ink);
+  }
+  @media (max-width: 560px) {
+    .credit-row { gap: 10px; padding: 11px 2px; }
+    .credit-who { font-size: calc(24px + var(--text-size-adjust)); }
+  }
+  /* The About tab's door to the page. A button in the feedback link's clothes, so the two
+     postscripts under the pinned notes read as a pair. */
+  button.about-credits {
+    background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink-accent);
+  }
+  button.about-credits + .about-feedback { margin-top: 8px; }
 
   /* Index tabs: the divider that opens one family's run of themes. The tab is a paper tab
      stuck to the page, square on the left where it meets the margin and rounded off on the

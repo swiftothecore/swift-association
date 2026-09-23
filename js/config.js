@@ -98,6 +98,7 @@ export const PANEL_ROUTES = {
   "how-to-play": "howto",
   glossary: "glossary",
   graveyard: "graveyard",
+  credits: "credits",
 };
 
 /* ---------- localStorage keys ---------- */
@@ -5474,5 +5475,33 @@ export const GRAVEYARD = [
       `lever rather than a mode, so it is the fifth stop on Custom's rarity picker now, called ` +
       `Floating, riding the same ladder over the same four buckets behind the same gauge.`,
   },
+];
+
+/* ---------- The credits ----------
+   The notebook's liner notes: who made it, what it quotes, and who it is for. Reached from the
+   About tab in settings and from /credits. Every line is the same three beats a sleeve uses:
+   the `role` small and typed, the `who` in the hand, and `what` saying plainly what that credit
+   covers. `icon` names a credit-* symbol in index.html; `hands` closes the line with the
+   notebook's own heart hands instead of an emoji, so it draws the same on every device.
+
+   The engineering line is deliberately one line with no numbers. The split between the two
+   tools was measured (roughly nine to one) and deliberately not printed: a count on a page
+   goes stale with the next change, and the page is about who did what, not a tally. */
+export const CREDITS = [
+  { role: "Written by", who: "Corey Shurdington", icon: "nib",
+    what: "The idea, every mode and challenge, every charm name, the look of the notebook, and every call about what stays in and what comes out." },
+  { role: "Playtested by", who: "Corey Shurdington", icon: "mug",
+    what: "Every page, every mode and every challenge, played more times than is reasonable. Anything that feels right here felt wrong first." },
+  { role: "Engineered with", who: "Claude Code, and a little Codex", icon: "typewriter",
+    what: "The code was written by AI coding tools working from my direction: mostly Claude Code, with a little help from Codex. I said what I wanted, they built it, and I played it and sent it back until it was right." },
+  { role: "Lyrics", who: "Taylor Swift and her co-writers", icon: "cassette",
+    what: "And the guest shelf\u2019s artists and theirs. Quoted for a fan-made word game. They belong to the people who wrote them, not to me." },
+  { role: "Sounds", who: "Google\u2019s Material Design kit, and freesound", icon: "glockenspiel",
+    what: "The verdict sounds are from Google\u2019s Material Design sound kit (CC-BY 4.0). The page turn and the glockenspiel are CC0 recordings from freesound." },
+  { role: "Type", who: "Caveat and Courier Prime", icon: "specimen",
+    what: "Caveat for the hand, Courier Prime for the typewriter. Both under the SIL Open Font License." },
+  { role: "Small print", who: "Made by a fan", icon: "star",
+    what: "Not affiliated with or endorsed by Taylor Swift, her team or her labels." },
+  { role: "Special thanks", who: "Taylor, for the songs, and for everything", icon: "letter", hands: true },
 ];
 

@@ -319,6 +319,20 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M3.4 21.4 C9.6 21 16.6 21 21 21.2"/>
     <path d="M22.6 21.3 C27 21 31.8 21 34.4 21.3"/>
   </symbol>
+  <!-- a signature with the nib that wrote it lifted off the end: the page that signs the
+       notebook. Two objects, the pair rule kept the plain way. The scrawl is loops and a
+       tail rather than letters, so it can never be read as anybody's actual name.
+       Deliberately NOT in PAGE_MARK_KINDS, for the graveyard's reason: see js/config.js. -->
+  <symbol id="mark-credits" viewBox="0 0 36 24">
+    <path d="M3 16.6 C4.6 12 6.4 9.4 7.6 10.2 C8.8 11 7 15.6 8.4 15.8 C9.8 16 11 11.8 12.4 12.4 C13.6 12.9 12.6 15.8 13.8 16 C15 16.2 16.4 14 17.6 13.8"/>
+    <path d="M3.4 19.6 C8.6 19.2 14.2 19.2 19 19.5"/>
+    <g transform="translate(-2 -3) rotate(30 27 21)">
+      <path d="M27 21 C25.4 18.2 23.8 15.6 23.4 12.8 C23.2 11.2 24 9.8 24.9 9.2 L29.1 9.3 C30 9.9 30.8 11.3 30.6 12.9 C30.3 15.7 28.6 18.3 27 21 Z"/>
+      <path d="M27 20.8 C27 19 27.1 17.2 27 15.6"/>
+      <path d="M25.1 9.2 C25 7.8 25.2 6.2 25.4 4.6"/>
+      <path d="M28.9 9.3 C28.9 7.8 28.7 6.3 28.5 4.8"/>
+    </g>
+  </symbol>
 </svg>
 <!-- THE KEEPSAKE BRACELET'S BEAD — one drawing, placed six times by the charms card's icon,
      which appears twice in this page (the board's nav row and the results row). A bead is a
@@ -565,6 +579,65 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M6.4 14.6 C7.8 14.6 8.9 15.7 8.9 17 C8.9 18.4 7.8 19.5 6.4 19.5 C5.1 19.5 4 18.4 4 17 C4 15.7 5 14.6 6.3 14.6"/>
     <path d="M12 9.2 C13.4 9.2 14.5 10.3 14.5 11.6 C14.5 13 13.4 14.1 12 14.1 C10.7 14.1 9.6 13 9.6 11.6 C9.6 10.3 10.6 9.2 11.9 9.2"/>
     <path d="M17.6 6 C19 6 20.1 7.1 20.1 8.4 C20.1 9.8 19 10.9 17.6 10.9 C16.3 10.9 15.2 9.8 15.2 8.4"/>
+  </symbol>
+
+  <!-- CREDIT ICONS — one per line of the credits page, 24x24, the graveyard's pen. Same rule as
+       that set: every mark is an object off this desk, never a symbol for the idea. -->
+  <!-- a fountain pen nib, slit and breather hole -->
+  <symbol id="credit-nib" viewBox="0 0 24 24">
+    <path d="M12 21.4 C10.1 18.1 8.1 15 7.6 11.6 C7.4 9.7 8.3 8.1 9.4 7.2 L14.6 7.3 C15.7 8.1 16.6 9.8 16.4 11.7 C16 15.1 13.9 18.2 12 21.4 Z"/>
+    <path d="M12 21.2 C12 18.8 12.1 16.4 12 14.4"/>
+    <path d="M12.9 13.3 C12.9 13.8 12.5 14.2 12 14.2 C11.5 14.2 11.1 13.8 11.1 13.3 C11.1 12.8 11.5 12.4 12 12.4 C12.5 12.4 12.9 12.8 12.9 13.3 Z"/>
+    <path d="M9.6 7.1 C9.5 5.5 9.7 3.9 10 2.5"/><path d="M14.5 7.2 C14.5 5.6 14.3 4 14.1 2.7"/>
+  </symbol>
+  <!-- the desk mug, still steaming: the playtesting -->
+  <symbol id="credit-mug" viewBox="0 0 24 24">
+    <path d="M5 9.4 C5 13.6 5.2 17.4 5.8 20.2 C8.6 20.8 12 20.7 14.8 20.2 C15.4 17.4 15.6 13.6 15.6 9.3 C12 8.9 8.6 9 5 9.4 Z"/>
+    <path d="M15.6 11.3 C18.3 10.9 19.9 12.3 19.5 14.4 C19.1 16.2 17.4 16.9 15.2 16.5"/>
+    <path d="M8.5 7.1 C7.5 5.7 9.6 4.7 8.8 2.9"/><path d="M12.1 7.3 C11.1 6 13.1 4.6 12.3 3.4"/>
+  </symbol>
+  <!-- a typewriter with a sheet in it. The machine that does the typing, in a notebook whose
+       typed face is kept for its functional text -->
+  <symbol id="credit-typewriter" viewBox="0 0 24 24">
+    <path d="M3.1 20 C3.5 17 4.1 14.6 5.1 12.4 C9.8 12.2 14.3 12.2 18.9 12.5 C19.9 14.6 20.5 17 20.9 20 C15 20.4 9 20.4 3.1 20 Z"/>
+    <path d="M4.3 9.7 C9 9.2 15 9.2 19.7 9.6"/><path d="M4.3 9.7 L2.9 9.6"/><path d="M19.7 9.6 L21.1 9.8"/>
+    <path d="M8.1 9.4 C8 7 8.1 5 8.3 3.4 C11 3.2 13.6 3.2 16 3.5 C15.8 5.3 15.8 7.3 15.9 9.3"/>
+    <path d="M10 5.7 C11.4 5.6 12.8 5.6 14 5.7"/>
+    <path d="M7 15.2 h.1 M9.4 15.1 h.1 M11.9 15.2 h.1 M14.4 15.1 h.1 M16.9 15.3 h.1"/>
+    <path d="M9 17.9 C11 17.8 13 17.8 15.1 18"/>
+  </symbol>
+  <!-- a cassette: window, two spools, the ramp along the bottom -->
+  <symbol id="credit-cassette" viewBox="0 0 24 24">
+    <path d="M3 6.2 C9 5.8 15 5.8 21 6.1 C21.3 10.2 21.2 14.2 20.8 18.2 C15 18.6 9 18.6 3.2 18.2 C2.8 14 2.8 10 3 6.2 Z"/>
+    <path d="M7.3 9.2 C10.4 9 13.6 9 16.7 9.3 C16.8 10.6 16.8 11.9 16.7 13.2 C13.6 13.4 10.4 13.4 7.3 13.2 C7.2 11.8 7.2 10.5 7.3 9.2 Z"/>
+    <circle cx="9.6" cy="11.2" r="1.2"/><circle cx="14.4" cy="11.3" r="1.3"/>
+    <path d="M6.5 18.2 L7.7 15.5 C10.6 15.3 13.4 15.3 16.3 15.6 L17.4 18.2"/>
+  </symbol>
+  <!-- the glockenspiel whose note is the unlock chime, and its mallet -->
+  <symbol id="credit-glockenspiel" viewBox="0 0 24 24">
+    <path d="M2.8 10.4 C6.4 10.8 10 11.4 13.6 12.2"/><path d="M2.4 17.6 C6.2 17.6 10 17.4 13.6 17"/>
+    <path d="M3.4 8.6 L3.4 19.8 M5.8 9.2 L5.9 19.6 M8.3 9.8 L8.2 19.1 M10.6 10.6 L10.7 18.6 M12.9 11.3 L12.9 18"/>
+    <path d="M14.6 3.4 C17 6.6 19 10 20.4 13.6"/>
+    <path d="M21.9 14.8 C21.9 15.7 21.2 16.4 20.3 16.4 C19.4 16.4 18.7 15.7 18.7 14.8 C18.7 13.9 19.5 13.2 20.4 13.3 C21.2 13.3 21.9 14 21.9 14.8 Z"/>
+  </symbol>
+  <!-- a type specimen card: a capital and a lowercase, drawn, never set in a font -->
+  <symbol id="credit-specimen" viewBox="0 0 24 24">
+    <path d="M3.4 4.2 C9 3.8 15 3.8 20.6 4.3 C20.9 9.4 20.9 14.6 20.6 19.8 C15 20.2 9 20.2 3.5 19.8 C3.1 14.6 3.1 9.4 3.4 4.2 Z"/>
+    <path d="M6 15.6 L9.3 7.1 L12.6 15.8"/><path d="M7.3 12.6 C8.6 12.5 10 12.5 11.4 12.7"/>
+    <path d="M17.6 13.6 C17.6 14.8 16.8 15.7 15.8 15.7 C14.8 15.7 14.1 14.8 14.1 13.6 C14.1 12.4 14.9 11.5 15.9 11.5 C16.9 11.5 17.6 12.4 17.6 13.6 Z"/>
+    <path d="M17.6 10.8 C17.7 12.6 17.7 14.4 17.9 15.9"/>
+    <path d="M5.6 17.9 C9.4 17.7 14 17.7 18.2 18"/>
+  </symbol>
+  <!-- a folded paper star, the kind a fan makes by the jarful -->
+  <symbol id="credit-star" viewBox="0 0 24 24">
+    <path d="M12 3.3 L14.5 9 L20.5 9.5 L15.9 13.4 L17.5 19.5 L12 16.1 L6.6 19.3 L8.2 13.4 L3.6 9.3 L9.7 8.9 Z"/>
+    <path d="M12 11.7 L12 3.6 M12 11.7 L20.2 9.6 M12 11.7 L17.3 19.2 M12 11.7 L6.8 19.1 M12 11.7 L3.9 9.4"/>
+  </symbol>
+  <!-- a letter, sealed with a heart -->
+  <symbol id="credit-letter" viewBox="0 0 24 24">
+    <path d="M3 7.1 C9 6.8 15 6.8 21 7.2 C21.2 10.8 21.1 14.4 20.9 17.9 C15 18.3 9 18.3 3.2 17.9 C2.9 14.4 2.8 10.8 3 7.1 Z"/>
+    <path d="M3.2 7.4 C6.2 9.6 9.2 11.8 12 13.4 C14.8 11.8 17.8 9.6 20.8 7.4"/>
+    <path d="M12 16.2 C10.9 15.4 10 14.8 10 13.9 C10 13.3 10.4 12.9 10.9 12.9 C11.4 12.9 11.8 13.2 12 13.6 C12.2 13.2 12.6 12.9 13.1 12.9 C13.6 12.9 14 13.3 14 13.9 C14 14.8 13.1 15.4 12 16.2 Z"/>
   </symbol>
 
   <!-- FAMILY MARKS — one rank up from the theme marks above, for the four index tabs and the
@@ -3342,6 +3415,20 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="graveyardBackBtn" class="btn-link">← back</button>
     </div>
     <div id="graveyardBody"></div>
+  </section>
+
+  <!-- CREDITS SCREEN — the notebook's liner notes. Body rendered by renderCredits() in app.js
+       off the CREDITS array in config.js. Reached from the About tab in settings and /credits.
+       Like the graveyard's, its page mark kicks but is NOT in PAGE_MARK_KINDS. -->
+  <section id="screen-credits" class="screen card" tabindex="-1" aria-label="Credits">
+    <div class="stats-nav">
+      <span class="title-group">
+        <span class="page-mark mark-credits" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-credits"/></svg></span>
+        <span class="stats-title">Credits</span>
+      </span>
+      <button id="creditsBackBtn" class="btn-link">← back</button>
+    </div>
+    <div id="creditsBody"></div>
   </section>
 
   <!-- MASTERY SCREEN -->
