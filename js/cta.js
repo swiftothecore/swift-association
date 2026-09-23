@@ -21,8 +21,23 @@ const flower = (x, i) => {
 };
 const garden = `<svg class="cta-garden" viewBox="0 0 400 28" preserveAspectRatio="none" aria-hidden="true">${Array.from({ length: 55 }, (_, i) => `<path class="cta-blade" d="M${i * 7.5} 30q3 -7 ${i % 2 ? -1 : 1} -${8 + i % 4 * 3}"/>`).join("")}${[22, 48, 78, 325, 354, 379].map(flower).join("")}</svg>`;
 const snow = `<svg class="cta-snowdrift" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 49Q35 39 73 49T149 48T230 50T312 46T400 47V60H0Z" fill="#f5fafb"/><path d="M0 55Q65 45 126 54T254 53T400 51" fill="none" stroke="#c8dce3"/></svg>${Array.from({ length: 24 }, (_, i) => `<i class="cta-snowflake" style="left:${(i * 37 + 7) % 100}%;--snow-size:${2 + i % 3}px;--snow-time:${2.6 + i % 5 * .35}s;--snow-delay:${i * .075}s"></i>`).join("")}`;
-// Each vine has its own leaves and veins, with a clear centre for every CTA label.
-const ivyVine = (side) => `<svg class="cta-ivy cta-ivy--${side}" viewBox="0 0 110 74"><g class="cta-ivy-stem"><path d="M4 68C30 54 9 31 31 15S75 20 104 3M26 24Q52 27 66 44M34 14Q48 3 72 4" fill="none" stroke="#425332" stroke-width="2"/>${[[10,57,-35],[20,43,30],[19,28,-50],[32,16,25],[45,13,-25],[62,16,35],[80,11,-35],[97,5,40],[46,29,-20],[61,40,20],[60,4,-30]].map(([x,y,r],i)=>`<g transform="translate(${x} ${y}) rotate(${r})"><g class="cta-ivy-leaf" style="--ivy-delay:${i * .012}s;--ivy-turn:${-5-i%3*3}deg"><path d="M0 10C-3 5 -10 4 -9 -2L-5 -1L-3 -9L1 -6L6 -10L7 -3L12 -1C10 6 4 5 0 10Z" fill="${['#45643d','#63834c','#78905a'][i%3]}" stroke="#344d31" stroke-width=".65"/><path d="M0 9L1 -5M0 4L-5 0M0 3L7 -1" fill="none" stroke="#b5c38a" stroke-width=".6" opacity=".7"/></g></g>`).join("")}</g></svg>`;
+// Two separately drawn vines, never one vine flipped: each is rooted in its own bottom corner
+// (the stem's first point, which is also its hover pivot) and the right one is shorter and
+// sparser, so the pair reads as grown rather than printed. Leaves are [x, y, rotate, scale].
+const IVY_VINES = {
+  left: { w: 110, h: 74, root: [4, 68],
+    stem: "M4 68C30 54 9 31 31 15S75 20 104 3M26 24Q52 27 66 44M34 14Q48 3 72 4",
+    leaves: [[10,57,-35,1],[20,43,30,1],[19,28,-50,1],[32,16,25,1],[45,13,-25,1],[62,16,35,1],[80,11,-35,1],[97,5,40,1],[46,29,-20,1],[61,40,20,1],[60,4,-30,1]] },
+  right: { w: 96, h: 70, root: [92, 64],
+    stem: "M92 64C68 59 87 40 67 27S38 23 13 10M71 33Q55 37 49 50M57 24Q50 12 33 12",
+    leaves: [[86,55,40,1.05],[77,44,-20,.9],[81,31,55,1],[66,24,-15,1.1],[51,20,30,.95],[36,17,-30,.9],[21,12,20,.85],[53,41,-25,1],[47,49,15,.8],[35,11,-45,.9]] },
+};
+const IVY_GREENS = ["#45643d", "#63834c", "#78905a"];
+const ivyVine = (side) => {
+  const { w, h, root, stem, leaves } = IVY_VINES[side];
+  const shade = side === "left" ? 0 : 1;
+  return `<svg class="cta-ivy cta-ivy--${side}" viewBox="0 0 ${w} ${h}" style="aspect-ratio:${w}/${h}"><g class="cta-ivy-stem" style="transform-origin:${root[0]}px ${root[1]}px"><path d="${stem}" fill="none" stroke="#425332" stroke-width="2"/>${leaves.map(([x, y, r, s], i) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><g class="cta-ivy-leaf" style="--ivy-delay:${(i * .037).toFixed(3)}s;--ivy-turn:${-7 - (i + shade) % 3 * 4}deg"><path d="M0 10C-3 5 -10 4 -9 -2L-5 -1L-3 -9L1 -6L6 -10L7 -3L12 -1C10 6 4 5 0 10Z" fill="${IVY_GREENS[(i + shade) % 3]}" stroke="#344d31" stroke-width=".65"/><path d="M0 9L1 -5M0 4L-5 0M0 3L7 -1" fill="none" stroke="#b5c38a" stroke-width=".6" opacity=".7"/></g></g>`).join("")}</g></svg>`;
+};
 const ivy = ivyVine("left") + ivyVine("right");
 const FINISH_ART = {
   "": `<i class="cta-stroke"></i>`,

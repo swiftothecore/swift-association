@@ -1671,20 +1671,32 @@
     100% { opacity: 0; transform: translate(-3px, 76px); }
   }
 
-  /* Ivy is deliberately allowed out of the frame, like a cutting laid on brick. */
+  /* Ivy is deliberately allowed out of the frame, like a cutting laid on brick. The brick is
+     dark enough to carry cream lettering at 4.8:1, and a soft shade sits under the label so the
+     pale mortar never runs through the letters at full strength. The tile is four courses of
+     four bricks, each its own tone with its joints a pixel or two off true, so the wall reads
+     as laid by hand rather than stamped from one repeating pair. */
   .play-cta[data-startbtn="ivy"] {
-    --cta-fill: #aa705b; --cta-hover-fill: #b77e65;
+    --cta-fill: #9a5f4b; --cta-hover-fill: #874f3e;
     --cta-text: #fff6df; --cta-hover-text: #fff6df;
-    --cta-art: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='84' height='32' viewBox='0 0 84 32'><path d='M0 0H84M0 16H84M0 32H84M42 0V16M0 16V32M84 16V32' fill='none' stroke='%23dfbea0' stroke-width='2'/><path d='M3 4H38M46 4H80M5 20H78' stroke='%237e4d40' opacity='.4'/></svg>");
+    --cta-art: radial-gradient(ellipse 46% 62% at 50% 50%, #3b1d145e, #3b1d1400), url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='192' height='64' viewBox='0 0 192 64'><rect x='1' y='1' width='45' height='14' fill='%233a1a10' opacity='0.12'/><rect x='48' y='1' width='48' height='14' fill='%233a1a10' opacity='0.17'/><rect x='98' y='1' width='43' height='14' fill='%233a1a10' opacity='0.06'/><rect x='27' y='17' width='45' height='14' fill='%233a1a10' opacity='0.06'/><rect x='74' y='17' width='44' height='14' fill='%233a1a10' opacity='0.12'/><rect x='120' y='17' width='46' height='14' fill='%23fff' opacity='0.05'/><rect x='168' y='17' width='49' height='14' fill='%233a1a10' opacity='0.12'/><rect x='-24' y='17' width='49' height='14' fill='%233a1a10' opacity='0.12'/><rect x='1' y='33' width='47' height='14' fill='%233a1a10' opacity='0.06'/><rect x='50' y='33' width='46' height='14' fill='%233a1a10' opacity='0.12'/><rect x='98' y='33' width='46' height='14' fill='%23fff' opacity='0.09'/><rect x='146' y='33' width='45' height='14' fill='%23fff' opacity='0.05'/><rect x='24' y='49' width='46' height='14' fill='%233a1a10' opacity='0.06'/><rect x='72' y='49' width='46' height='14' fill='%233a1a10' opacity='0.17'/><rect x='120' y='49' width='48' height='14' fill='%233a1a10' opacity='0.12'/><rect x='170' y='49' width='44' height='14' fill='%23fff' opacity='0.09'/><path d='M7 5H38M55 4H91M100 5H132M147 5H187M33 21H69M79 20H115M122 20H160M172 20H212M-18 21H19M4 36H42M52 36H93M102 37H137M153 36H182M26 52H62M74 52H113M126 52H164M173 53H205M-19 52H19' stroke='%237e4d40' opacity='.3'/><path d='M0 0H192M0 16H192M0 32H192M0 48H192M0 64H192M0 0V16M192 0V16M47 0V16M97 0V16M142 0V16M26 16V32M73 16V32M119 16V32M167 16V32M0 32V48M192 32V48M49 32V48M97 32V48M145 32V48M23 48V64M71 48V64M119 48V64M169 48V64' fill='none' stroke='%23d2ae8f' stroke-width='2'/></svg>");
+    /* The vines own the corners, so the label keeps out of their reach at every width. */
+    padding-inline: clamp(18px, 10%, 52px);
   }
   .play-cta[data-startbtn="ivy"] .cta-label { text-shadow: 0 1px 2px #482b20; }
   .play-cta[data-startbtn="ivy"] .cta-fx { overflow: visible; }
-  .cta-ivy { top: -11px; left: -9px; width: 29%; max-width: 110px; height: calc(100% + 20px); overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); }
-  .cta-ivy-stem { transform-origin: 4px 68px; transition: transform .65s cubic-bezier(.22,.75,.3,1); }
-  .cta-ivy-leaf { transform-box: fill-box; transform-origin: 50% 90%; transition: transform .55s cubic-bezier(.22,.75,.3,1); transition-delay: var(--ivy-delay); }
-  .cta-ivy--right { left: auto; right: -9px; transform: scaleX(-1); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy-stem { transform: rotate(-14deg); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy-leaf { transform: rotate(var(--ivy-turn)); }
+  /* Sized off the button, but pinned by the root to its own bottom corner, so a narrow phone
+     button gets a smaller vine still growing from the corner rather than one floating mid-face. */
+  .cta-ivy { top: auto; bottom: -6px; left: -9px; width: clamp(54px, 29%, 110px); height: auto; overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); }
+  .cta-ivy--right { left: auto; right: -8px; bottom: -5px; width: clamp(46px, 25%, 96px); }
+  /* Ivy clings, so the stem barely stirs; the breeze is in the leaves, turning one after
+     another and settling part of the way back. */
+  .cta-ivy-stem { transition: transform .7s cubic-bezier(.22,.75,.3,1); }
+  .cta-ivy-leaf { transform-box: fill-box; transform-origin: 50% 90%; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--left .cta-ivy-stem { transform: rotate(-4deg); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--right .cta-ivy-stem { transform: rotate(3deg); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy-leaf { animation: ctaIvyRustle .9s var(--ivy-delay) cubic-bezier(.3,.6,.35,1) both; }
+  @keyframes ctaIvyRustle { 0% { transform: rotate(0); } 35% { transform: rotate(var(--ivy-turn)); } 70% { transform: rotate(calc(var(--ivy-turn) * -.3)); } 100% { transform: rotate(calc(var(--ivy-turn) * .5)); } }
 
   /* Pride: all eight ramps still come only from PRIDE_BUTTONS. A local wash carries the
      dark label without dimming the flag, and one moving light fold gives it ribbon depth. */
