@@ -3005,7 +3005,7 @@ export const ACH_ICONS = {
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
   // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; as of
-  // 2026-09-17 nothing wears it, and a new charm borrowing it should not stay on it for long.
+  // 2026-09-24 nothing wears it, and a new charm borrowing it should not stay on it for long.
   placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
@@ -3632,6 +3632,39 @@ export const ACH_ICONS = {
   // page dealt, one page missed, run over. Drawn as a record because this is the shelf's
   // pratfall and the shelf is zines and vinyl — the skid is the joke and it carries the mark
   skid:`<svg viewBox="0 0 24 24"><circle class="ink" fill="none" stroke-width="1.8" cx="10.2" cy="14.4" r="7.5"/><circle class="ink" fill="none" stroke-width="0.9" opacity="0.45" cx="10.2" cy="14.4" r="5.1"/><circle cx="10.2" cy="14.4" r="1.1" fill="currentColor" stroke="none"/><path class="ink" fill="none" stroke-width="1.5" d="M22 2.6 L18.4 7.6"/><path class="ink-fill" d="M18.6 6.9 L20.4 8.2 L18.4 11 L16.6 9.7 Z"/><path class="ink" fill="none" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" d="M16.4 10.6 L12.9 12.6 L14.9 14 L11.2 16 L13.3 17.4 L9.6 19.2"/></svg>`,
+  /* ---- The second placeholder batch drawn (2026-09-24) ----
+     Ten charms from Track by Track, The Capitals, Who Held The Pen and Nashville shipped on the
+     dashed question mark while their art was pending. Each was picked from three candidates. */
+  // the pencil that wrote the record out, its eraser still square at the corners because it
+  // was never once turned round. Two lines of writing under it, and nothing struck out
+  cleaneraser:`<svg viewBox="0 0 24 24"><g transform="translate(0 -3.2) rotate(-30 12 12)"><path class="ink-fill" d="M3 12 L6.4 10.2 H16.8 V13.8 H6.4 Z"/><path d="M3 12 L4.5 11.2 V12.8 Z" fill="currentColor" stroke="none"/><path style="stroke-width:0.9" class="ink" opacity="0.45" d="M6.6 12 H16.6"/><rect style="stroke-width:1.2" class="ink" x="16.8" y="10" width="1.9" height="4"/><rect class="ink-fill" x="18.7" y="10.1" width="2.7" height="3.8" rx="0.15"/></g><g style="stroke-width:1" class="ink" fill="none"><path d="M20.4 2.2 L21.4 1.2"/><path d="M22 4.4 L23.2 4.1"/></g><g class="ink" fill="none"><path stroke-width="1.15" d="M3.4 17.4 c0.7 -1 1.2 0.9 2 0 s1.2 0.8 2 -0.1 s1.2 0.9 2 0 s1.2 0.8 2 0 s1.1 0.7 1.9 -0.1"/><path stroke-width="1.05" d="M3.4 20.8 c0.7 -0.9 1.2 0.9 2 0 s1.2 0.8 2 0 s1.1 0.8 1.9 -0.1"/></g></svg>`,
+  // a track list too long for a page, coming off a roll, with an arrow running the whole way
+  // down beside it: the longest record on the shelf, top to bottom and nowhere skipped
+  longscroll:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M5.8 1.6 H15.6 V18"/><path style="stroke-width:1.5" class="ink" d="M5.8 1.6 V18"/><g style="stroke-width:0.9" class="ink" fill="none" opacity="0.55"><path d="M7.6 4 H13.8"/><path d="M7.6 5.8 H12.6"/><path d="M7.6 7.6 H14"/><path d="M7.6 9.4 H11.8"/><path d="M7.6 11.2 H13.4"/><path d="M7.6 13 H12.2"/><path d="M7.6 14.8 H13.8"/></g><rect class="ink-fill" x="4.6" y="17.4" width="12" height="3.8" rx="1.9"/><circle style="stroke-width:0.9" class="ink" cx="14.7" cy="19.3" r="0.8"/><path style="stroke-width:1.4" class="ink" fill="none" d="M19.3 2.6 C19.1 8 19.6 13.4 19.3 20.4"/><path style="stroke-width:1.4" class="ink" fill="none" d="M17.6 18.6 L19.3 20.6 L21 18.4"/></svg>`,
+  // twelve records set round like the hours on a clock face, every one of them there, with
+  // a heart in the middle. All twelve written out, and the ring is closed
+  twelvering:`<svg viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="11.7" cy="3.9" r="1.52"/><circle cx="16.1" cy="5.6" r="1.34"/><circle cx="18.4" cy="7.9" r="1.54"/><circle cx="19.9" cy="11.6" r="1.34"/><circle cx="18.9" cy="15.7" r="1.59"/><circle cx="15.6" cy="18.5" r="1.36"/><circle cx="12.4" cy="20.3" r="1.57"/><circle cx="7.6" cy="18.9" r="1.55"/><circle cx="4.7" cy="15.6" r="1.35"/><circle cx="4.1" cy="11.6" r="1.55"/><circle cx="5.3" cy="8" r="1.4"/><circle cx="8.1" cy="5.4" r="1.3"/></g><g fill="var(--paper)" stroke="none"><circle cx="11.7" cy="3.9" r="0.38"/><circle cx="16.1" cy="5.6" r="0.34"/><circle cx="18.4" cy="7.9" r="0.38"/><circle cx="19.9" cy="11.6" r="0.34"/><circle cx="18.9" cy="15.7" r="0.4"/><circle cx="15.6" cy="18.5" r="0.34"/><circle cx="12.4" cy="20.3" r="0.4"/><circle cx="7.6" cy="18.9" r="0.38"/><circle cx="4.7" cy="15.6" r="0.34"/><circle cx="4.1" cy="11.6" r="0.38"/><circle cx="5.3" cy="8" r="0.36"/><circle cx="8.1" cy="5.4" r="0.33"/></g><path style="stroke-width:1.3" d="M12 15.6 C12 15.6 8.6 13.4 8.6 11.1 C8.6 9.9 9.5 9.1 10.5 9.1 C11.2 9.1 11.7 9.5 12 10.1 C12.3 9.5 12.9 9.1 13.6 9.1 C14.6 9.1 15.4 9.9 15.4 11.1 C15.4 13.4 12 15.6 12 15.6 Z" class="ink-fill"/></svg>`,
+  // a reading glass over the lyric booklet, a capital swimming up big in the lens. The
+  // messages were always printed there; the sweep is having found every one
+  magnifier:`<svg viewBox="0 0 24 24"><g style="stroke-width:0.9" class="ink" fill="none" opacity="0.45"><path d="M1.8 4.2 H4.8"/><path d="M1.6 18.4 H6.2"/><path d="M14.6 3.4 H21"/><path d="M17.2 8.6 H22.2"/></g><circle class="ink-fill" cx="10" cy="10.2" r="6"/><path style="stroke-width:2.6" class="ink" d="M14.4 14.6 L20.6 20.8"/><path style="stroke-width:1.9" class="ink" fill="none" d="M11.8 7.4 H8.4 V12.9 H12 M8.4 10.1 H11.1"/></svg>`,
+  // a speech bubble holding one capital and a full stop, and nothing else, because that was
+  // the whole message. The initial stands for any name, not one in particular
+  oneinitial:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.2 3.8 H19.6 C20.7 3.8 21.4 4.5 21.4 5.6 V14.2 C21.4 15.3 20.7 16 19.6 16 H10.6 L5.8 20.4 L6.6 16 H4.2 C3.1 16 2.4 15.3 2.4 14.2 V5.6 C2.4 4.5 3.1 3.8 4.2 3.8 Z"/><path style="stroke-width:2" class="ink" fill="none" d="M7.8 7.2 H13.4 M10.6 7.2 V13"/><circle cx="15.6" cy="12.6" r="1.05" fill="currentColor" stroke="none"/></svg>`,
+  // a signature on the dotted line, the X still beside it. Not a nib (nib and feather are
+  // worn already): the charm is the name signed, not the pen that did it
+  signature:`<svg viewBox="0 0 24 24"><path style="stroke-width:1.3" class="ink" d="M3 14.6 L5.3 17 M5.3 14.6 L3 17"/><path style="stroke-width:1.2" class="ink" opacity="0.7" stroke-dasharray="1.6 1.1" d="M2.6 19.4 H21.4"/><path style="stroke-width:1.5" class="ink" fill="none" d="M6.6 16.8 C7.2 12 9.2 6.2 10.4 7.4 C11.6 8.6 8 14.8 8.6 16 C9.2 17.2 11 12.6 12 12.8 C12.8 13 12 15.8 12.8 16 C13.6 16.2 14.6 13.2 15.6 13.4 C16.4 13.6 15.6 16 16.6 15.9 C17.8 15.8 19.4 13.2 21.2 12.4"/></svg>`,
+  // a credits card ruled for a room full of writers, with only the first line filled in
+  // and the rest left dotted. Drawn as the empty lines, since they are the surprise
+  oneline:`<svg viewBox="0 0 24 24"><g transform="rotate(-3 12 12)"><rect class="ink-fill" x="3.2" y="3.4" width="17.6" height="17.4" rx="1"/><path style="stroke-width:1.5" class="ink" d="M5.6 6.6 H10.4"/><path style="stroke-width:1.4" class="ink" fill="none" d="M5.8 10.6 c0.7 -1.2 1.3 0.9 2 -0.1 s1.2 0.9 2 -0.1 s1.2 0.9 2 0 s1.2 0.8 2 -0.1 s1.1 0.8 1.9 0"/><g style="stroke-width:1" class="ink" fill="none" opacity="0.45" stroke-dasharray="0.1 1.9"><path d="M5.8 13.6 H18"/><path d="M5.8 16 H18"/><path d="M5.8 18.4 H18"/></g></g></svg>`,
+  // two columns, right and wrong: the right one tallied up, the wrong one never touched.
+  // Passes leave no mark on either side, which is the whole trick of the run
+  emptycross:`<svg viewBox="0 0 24 24"><path style="stroke-width:1.6" class="ink" fill="none" d="M4.4 4.6 L5.7 5.9 L8.1 3"/><path style="stroke-width:1.4" class="ink" fill="none" d="M15.6 3.2 L18.2 5.8 M18.2 3.2 L15.6 5.8"/><path style="stroke-width:1.3" class="ink" d="M2.4 8 H21.6"/><path style="stroke-width:1.3" class="ink" d="M12 2.2 V21.8"/><g style="stroke-width:1.5" class="ink" fill="none"><path d="M4.2 11 V17.6"/><path d="M6 10.8 V17.4"/><path d="M7.8 11.1 V17.7"/><path d="M9.5 10.9 V17.4"/><path d="M3.4 16.4 L10.4 12"/></g></svg>`,
+  // the run drawn as a line: along the zero, up for a while, then down through it and still
+  // going when the pages ran out. The dashed rule is zero, and the arrow ends under it
+  dipchart:`<svg viewBox="0 0 24 24"><path style="stroke-width:1.3" class="ink" d="M2.6 2.6 V21.4"/><path style="stroke-width:1.1" class="ink" opacity="0.6" stroke-dasharray="1.4 1.2" d="M2.6 10.4 H21.8"/><path style="stroke-width:1.7" class="ink" fill="none" d="M2.8 10.4 L6.2 7.6 L8.8 9 L11.4 5.8 L13.8 10.6 L16 9.6 L19 17.6"/><path style="stroke-width:1.6" class="ink" fill="none" d="M16.9 16.8 L19.2 18.4 L20.3 15.8"/></svg>`,
+  // a pair of scales hanging dead level: the books balanced to exactly nothing. Not
+  // spiritlevel, which is a bubble in a tube; this is weighing, the run's own sum
+  levelscale:`<svg viewBox="0 0 24 24"><path style="stroke-width:1.6" class="ink" d="M12 3.4 V20.6"/><path style="stroke-width:1.7" class="ink" d="M7.6 21.2 H16.6"/><circle cx="12" cy="3.2" r="1" fill="currentColor" stroke="none"/><path style="stroke-width:1.6" class="ink" d="M3.6 6 H20.4"/><g style="stroke-width:0.95" class="ink" fill="none"><path d="M4 6.2 L2 12.6 M4 6.2 L6.2 12.6"/><path d="M20 6.2 L17.8 12.4 M20 6.2 L22.1 12.4"/></g><path class="ink-fill" d="M1.6 12.6 H6.6 C6.4 14.6 5.4 15.6 4.1 15.6 C2.8 15.6 1.8 14.6 1.6 12.6 Z"/><path class="ink-fill" d="M17.4 12.4 H22.4 C22.2 14.4 21.2 15.5 19.9 15.5 C18.6 15.5 17.6 14.4 17.4 12.4 Z"/></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -4446,9 +4479,9 @@ export const ACHIEVEMENTS = [
      LONG a record, and how MANY of them. All three stay winnable on a notebook that has done
      anything at all — every album can be written out again, so none of these can be walked
      past. */
-  { id: "write-out-an-album-with-no-wrong-guesses", name: "Every Word", desc: "Write out a record in Track by Track without a single wrong guess", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "write-out-the-longest-album", name: "Straight Through", desc: "Write out the longest record on the shelf, top to bottom", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "write-out-all-twelve-albums", name: "Remember It All", desc: "Write out all twelve records in Track by Track", tier: 3, secret: false, icon: "placeholder" },
+  { id: "write-out-an-album-with-no-wrong-guesses", name: "Every Word", desc: "Write out a record in Track by Track without a single wrong guess", tier: 2, secret: false, icon: "cleaneraser", sitting: true, earn: { cat: "bonus" } },
+  { id: "write-out-the-longest-album", name: "Straight Through", desc: "Write out the longest record on the shelf, top to bottom", tier: 2, secret: false, icon: "longscroll", sitting: true, earn: { cat: "bonus" } },
+  { id: "write-out-all-twelve-albums", name: "Remember It All", desc: "Write out all twelve records in Track by Track", tier: 3, secret: false, icon: "twelvering" },
   { id: "sweep-word-cloud", name: "All The Words", desc: "Sweep Word Cloud", tier: 2, secret: false, icon: "wordcloud", sitting: true, earn: { cat: "bonus" } },
   // Word Cloud's second, and NOT a re-skin of By Heart above: this one is not about speed at
   // all. The run's late pages deal a spare cloud (see CLOUD_WIDE_PAGES), so the player can see
@@ -4464,10 +4497,9 @@ export const ACHIEVEMENTS = [
      a page and not a run because a ten-page deal can contain none of them, and a charm you
      cannot work towards on the page in front of you is a lottery wearing a collection's clothes.
      Named off "Say my name and everything just stops" (Dress), which the shelf can deal, and
-     the sweep off "I didn't read between the lines" (The Outside), which is the game itself.
-     Both on the dashed placeholder while their marks are drawn, like Track by Track's three. */
-  { id: "sweep-the-capitals", name: "Between The Lines", desc: "Sweep The Capitals", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "name-a-one-word-capitals-message", name: "Say My Name", desc: "Place a secret message that is nothing but a name", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+     the sweep off "I didn't read between the lines" (The Outside), which is the game itself. */
+  { id: "sweep-the-capitals", name: "Between The Lines", desc: "Sweep The Capitals", tier: 2, secret: false, icon: "magnifier", sitting: true, earn: { cat: "bonus" } },
+  { id: "name-a-one-word-capitals-message", name: "Say My Name", desc: "Place a secret message that is nothing but a name", tier: 2, secret: false, icon: "oneinitial", sitting: true, earn: { cat: "bonus" } },
   /* ---- The endless side (2026-09-13) ----
      Two rungs and a pratfall, and all three are shelf-wide rather than Running Order's: the
      feat is how far an endless run got, which is the same feat out of whichever zine it was
@@ -4495,10 +4527,9 @@ export const ACHIEVEMENTS = [
      clothes. Secret for Both Ways' reason too — saying it out loud would hand over half of what
      the pool is hiding, which is that the late records have solos on them at all.
      Named off "Watched as you signed your name" (marjorie) and "I'm alone, on my own" (A Place
-     In This World), which this game can itself deal. Both on the dashed placeholder until their
-     marks are drawn, like Track by Track's three and The Capitals' pair. */
-  { id: "sweep-who-held-the-pen", name: "Signed Your Name", desc: "Sweep Who Held The Pen", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "call-a-late-solo-credit", name: "On My Own", desc: "Call a song she wrote alone on a record where she almost never did", secret: true, icon: "placeholder" },
+     In This World), which this game can itself deal. */
+  { id: "sweep-who-held-the-pen", name: "Signed Your Name", desc: "Sweep Who Held The Pen", tier: 2, secret: false, icon: "signature", sitting: true, earn: { cat: "bonus" } },
+  { id: "call-a-late-solo-credit", name: "On My Own", desc: "Call a song she wrote alone on a record where she almost never did", secret: true, icon: "oneline" },
   /* Nashville's three, and NO SWEEP among them, which is the decision. A sweep here is ten calls
      and no passes, so a charm for it would pay for never using the door the whole game is built
      around; Every Single One already asks for Nashville's sweep, and that is enough.
@@ -4511,10 +4542,10 @@ export const ACHIEVEMENTS = [
      at the very end with the books balanced — and it needs at least one page CALLED, or ten
      passes (a zero with nothing risked) would be the cheap way in.
      Named off "If I didn't know better" (marjorie), "Nothing safe is worth the drive"
-     (Treacherous) and "Just walk away" (Cold As You). On the dashed placeholder until drawn. */
-  { id: "finish-nashville-run-with-no-wrong-calls", name: "Know Better", desc: `Finish a Nashville run with no wrong calls and at least ${NASHVILLE_KNOW_BETTER} right`, tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "finish-nashville-run-below-zero", name: "Nothing Safe", desc: "Finish a Nashville run below zero", secret: true, icon: "placeholder" },
-  { id: "pass-last-nashville-page-to-finish-on-zero", name: "Just Walk Away", desc: "Pass the last page of a Nashville run and finish on exactly zero", secret: true, icon: "placeholder" },
+     (Treacherous) and "Just walk away" (Cold As You). */
+  { id: "finish-nashville-run-with-no-wrong-calls", name: "Know Better", desc: `Finish a Nashville run with no wrong calls and at least ${NASHVILLE_KNOW_BETTER} right`, tier: 2, secret: false, icon: "emptycross", sitting: true, earn: { cat: "bonus" } },
+  { id: "finish-nashville-run-below-zero", name: "Nothing Safe", desc: "Finish a Nashville run below zero", secret: true, icon: "dipchart" },
+  { id: "pass-last-nashville-page-to-finish-on-zero", name: "Just Walk Away", desc: "Pass the last page of a Nashville run and finish on exactly zero", secret: true, icon: "levelscale" },
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
   { id: "name-redacted-song-after-buying-all-strips",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "peeled" },
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
@@ -4927,6 +4958,7 @@ export const ACH_GROUP_OF = {
   "sweep-name-that-song-one-line-each": "bonus", "sweep-sing-it-back-all-words-exact": "bonus", "name-redacted-song-no-strips-removed": "bonus",
   "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus", "name-a-joint-production": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
+  "write-out-an-album-with-no-wrong-guesses": "bonus", "write-out-the-longest-album": "bonus", "write-out-all-twelve-albums": "bonus",
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
   "sweep-the-capitals": "bonus", "name-a-one-word-capitals-message": "bonus",
