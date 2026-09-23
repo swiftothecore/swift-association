@@ -4612,6 +4612,17 @@
   .bg-nash.is-answer .bg-nash-rules { border-color: var(--paper); }
   .bg-nash.is-blank .bg-nash-card { opacity: 0.35; }
   .bg-nash.is-missed .bg-nash-card { border-color: var(--bad, #b4453a); border-style: dashed; }
+  /* THE CALL IS CIRCLED IN RED PEN, and that is the only thing that tells a right call from a
+     pass: both end with the true block inked, because the ink is the truth and is owed either
+     way. The ring is the notebook's grading pen rather than more poster, since it is the
+     player's mark on the page and not part of the print. Uneven radii and a tilt against the
+     block's own, so it reads as drawn round it in a hurry. */
+  .bg-nash { position: relative; }
+  .bg-nash.is-got::before {
+    content: ""; position: absolute; inset: -9px -12px -8px -11px; pointer-events: none;
+    border: 2px solid var(--red-pen); border-radius: 48% 52% 46% 54% / 55% 47% 53% 45%;
+    transform: rotate(2.2deg);
+  }
   /* The way out: the printer's fist under the pair, never a third block. It leans toward the
      next page on hover and fills in when it is taken; the other pass states just step back. */
   .bg-nash-pass {
