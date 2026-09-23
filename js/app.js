@@ -55,7 +55,7 @@ import {
   CUSTOM_PRESET_SHELF, CUSTOM_ENDLESS_MILESTONE, MEAN_GRUDGE,
   CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_ROUNDS_TYPED_MAX,
   CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES,
-  PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE,
+  PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE, DATED_DOODLES,
   WHALE_SURFACE_MS, WHALE_TAIL_SVG, WHALE_SPLASH_SVG,
   BOTTLE_SURFACE_MS, BOTTLE_SVG, BOTTLE_WAVE_SVG,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
@@ -26026,6 +26026,13 @@ function setPen(pen) {
 }
 
 // Called from advanceRound once the new page is set up.
+// Which drawing, if any, today's margin is dated to (DATED_DOODLES in config.js).
+function datedDoodleFor(dayKey) {
+  const md = String(dayKey || "").slice(5, 10);
+  const hit = DATED_DOODLES.find((d) => d.md === md);
+  return hit ? hit.kind : null;
+}
+
 function runRoundEggs() {
   clearEggs();
   setPen(null);
@@ -26047,7 +26054,10 @@ function runRoundEggs() {
   if (gameType === "classic" && round === 5) {
     addDoodle("fence");
   } else if (chance(0.15)) {
-    const pool = ["scarf", "thirteen", "mirrorball", "paperplane", "willow"];
+    // On a dated day the pool is that day's drawing and nothing else, at the same odds: a
+    // dated doodle is still a thing you catch, not a banner the whole run wears.
+    const dated = datedDoodleFor(todayKey());
+    const pool = dated ? [dated] : ["scarf", "thirteen", "mirrorball", "paperplane", "willow"];
     addDoodle(pool[Math.floor(Math.random() * pool.length)]);
   }
   if (midnightHour) addMarginNote("meet me at midnight");
@@ -29790,8 +29800,8 @@ function buildDevApi() {
       // of its own there.
       marked: () => {
         const yr = todayKey().slice(0, 4);
-        const tag = { birthday: "birthday", album: "album", tv: "TV", songday: "songday", guest: "guest", lore: "lyric" };
-        return [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS]
+        const tag = { birthday: "birthday", album: "album", tv: "TV", songday: "songday", guest: "guest", lore: "lyric", doodle: "doodle" };
+        return [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS, ...DATED_DOODLES.map((d) => ({ ...d, kind: "doodle" }))]
           .map((m) => ({ key: `${yr}-${m.md}`, label: `${m.md}  ${m.title || m.name} (${tag[m.kind]})` }))
           .sort((a, b) => a.key.localeCompare(b.key) || a.label.localeCompare(b.label));
       },

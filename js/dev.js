@@ -6,7 +6,7 @@
 
 import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS,
          CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, WAX_AUTO_IDS, reseedSeal, waxPourFaults,
-         byShelf, auditChallengeShelf } from "./config.js";
+         byShelf, auditChallengeShelf, DOODLE_SVG } from "./config.js";
 import { POLAROIDS } from "./polaroids.js";
 import { STICKERS } from "./stickers.js";
 
@@ -1472,7 +1472,8 @@ export function initDev(api) {
 
   // ---- Visual eggs -----------------------------------------------------------
   const penSel = select(["", "quill", "fountain", "glitter"], (x) => x, (x) => x || "no pen");
-  const doodleSel = select(["scarf", "fence", "thirteen", "mirrorball", "paperplane", "willow"], (x) => x, (x) => x);
+  // Every drawing DOODLE_SVG holds, the dated four included, so the list cannot go stale.
+  const doodleSel = select(Object.keys(DOODLE_SVG), (x) => x, (x) => x);
   // Seasonal-layer toggles bypass the calendar/clock gate but still respect
   // reduce-motion, so they exercise the real effect rather than a special case.
   const snowBtn = btn("snow", () => snowBtn.classList.toggle("on", api.eggs.snow()));

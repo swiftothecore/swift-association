@@ -5065,6 +5065,26 @@ export const DOODLE_SVG = {
   paperplane: `<svg viewBox="0 0 40 58"><g class="ink"><path d="M35 5 C27.5 11.5 20 18 12.5 24.5 C16.6 25.3 20.7 26.1 24.8 26.9 Z"/><path d="M35 5 C31.5 12.8 28 20.6 24.8 26.9 L26.3 33.5 Z"/><path d="M26.3 33.5 L29.4 28.8"/></g><g class="ink" stroke-width="1.2" opacity="0.65" stroke-dasharray="2.5 3.5"><path d="M5 55 C11 51 13.5 45.5 9.5 43.5 C6 41.8 4 46 8 47 C13 48.2 16 42 19 38"/></g></svg>`,
   // a willow bough bent to the wind, its strands drooping, two leaves let go
   willow: `<svg viewBox="0 0 40 58"><g class="ink"><path d="M2 8 C11 5.5 22 8 30 15 C33 17.6 35.5 20.6 37 24"/></g><g class="ink" stroke-width="1.2"><path d="M9.5 8.5 C8.5 17 10.5 25 8.5 33"/><path d="M16 8.6 C15.5 18 18 27 15.5 38"/><path d="M22.5 11 C23.5 21 26 30 23.5 42"/><path d="M29.5 15 C31.5 25 34 33 31.5 46"/></g><g class="ink" stroke-width="1.1" opacity="0.8"><path d="M9 14 l-2.4 1.9 M9 14 l2.3 2 M9.6 22 l-2.4 1.9 M9.6 22 l2.3 2 M9.2 29 l-2.3 1.8 M9.2 29 l2.2 1.9"/><path d="M15.7 14.5 l-2.4 1.9 M15.7 14.5 l2.3 2 M16.6 23.5 l-2.4 1.9 M16.6 23.5 l2.3 2 M16.4 32.5 l-2.3 1.8 M16.4 32.5 l2.2 1.9"/><path d="M23 18 l-2.4 1.9 M23 18 l2.3 2 M24.4 27 l-2.4 1.9 M24.4 27 l2.3 2 M24.2 36 l-2.3 1.8 M24.2 36 l2.2 1.9"/><path d="M30.4 21.5 l-2.4 1.9 M30.4 21.5 l2.3 2 M32 30.5 l-2.4 1.9 M32 30.5 l2.3 2 M31.8 39.5 l-2.3 1.8 M31.8 39.5 l2.2 1.9"/></g><g class="ink" stroke-width="1.2"><path d="M6 47 q2.2 -1.4 2.6 -3.4 M12 54 q2 -1.2 2.4 -3"/></g></svg>`,
+  // ---- The dated four. Never in the random pool: each is dealt only on its own day, through
+  // DATED_DOODLES below, and on that day it IS the pool. Same register as the rest, portrait
+  // and 40px across, and every one of them is a Taylor fact rather than a season. A generic
+  // tree, bat or firework is the thing this set exists not to be.
+  // 12-06: a tree off the lot at Pine Ridge Farm, still in its bucket with the price tag on a
+  // string. The inner boughs are left bare on purpose: any mark inside the tree reads as a bauble
+  // and turns it back into a Christmas tree.
+  treefarm: `<svg viewBox="0 0 40 60"><g class="ink"><path d="M19.4 3.6 L12.6 15.2 L16.6 14.7 L9.2 26.4 L13.9 25.6 L5.8 38.6 Q19.6 41 33.8 37.9 L25.9 25.4 L30.3 26.1 L23.2 14.6 L26.7 15.1 Z"/><path d="M19.6 40.1 L19.8 43.6"/><path d="M11.2 44.3 Q19.8 42.5 28.4 43.8"/><path d="M11.2 44.3 Q19.9 46.5 28.4 43.8"/><path d="M12.3 45.3 L14.5 57.2 Q19.9 58.3 25.3 57.4 L27.4 45.1"/></g><g class="ink" stroke-width="1.1" opacity="0.6"><path d="M12.6 47 Q19.8 53.8 27.1 46.8"/><path d="M13.4 51.2 Q19.8 52.3 26.4 51.4"/></g><g class="ink" stroke-width="1.2"><path d="M33.4 38.3 Q35.2 40.4 34.7 43.1"/><path d="M31.3 42.7 L37.5 41.4 L38.9 48.7 L32.5 49.9 Z"/></g><circle class="ink-fill" cx="34.6" cy="43.6" r="0.75"/><g class="ink" stroke-width="0.9" opacity="0.7"><path d="M33.6 46.1 l3 -0.55 M33.9 48.1 l2.1 -0.4"/></g></svg>`,
+  // 10-31: the pegacorn she went as in 2014. Head and neck only, because the whole animal is
+  // landscape and the gutter is not. The raised wing is what stops it being a unicorn, and the
+  // head is drawn big and jowly because a small head on that neck read as a llama.
+  pegacorn: `<svg viewBox="0 0 40 60"><g class="ink"><path d="M14.6 17.4 L9.4 2.2 L18 15.4"/><path d="M18.8 15.6 L21.6 9 L23 16.2"/><path d="M14.4 18 C11 22.5 7.4 28.4 5.2 32.6 C4 35 5.2 37.6 8 37.4 C10.4 37.2 11.6 36.2 13.4 36.4 C17.6 36.8 21.4 34.2 21.6 30.6 C21 39.4 19.2 48 18.4 58.6"/><path d="M23 16.2 C27.8 19.2 30.6 26.4 31.4 34.4 C32.1 41.8 32.6 50.6 32.9 58.6"/><path d="M30.6 31 C31 21 33.2 10.6 37.6 2.4 C38.6 5 39.2 7.4 39.4 9.8 L37.4 10.6 C38.8 13 39.2 15.6 39.2 18.2 L36.9 18.6 C38 21 38.2 23.6 37.8 26 L35.6 25.8 C35.6 28.6 34.2 31 32.2 33.4"/></g><g class="ink" stroke-width="1" opacity="0.6"><path d="M12.9 12.6 L15.6 11.2 M11.5 8.6 L13.1 7.6 M10.5 5.4 L11.4 4.8"/><path d="M37.4 10.6 L33.8 12.8 M36.9 18.6 L32.8 19.8 M35.6 25.8 L31.8 26.4"/><path d="M19.6 24.6 C20.8 27.6 19.8 31 17 33.4"/><path d="M5.8 36 q1.6 0.4 2.8 -0.2"/></g><g class="ink" stroke-width="1.3"><path d="M18.2 15.8 q-2.6 2 -2.2 5.6"/><path d="M19.8 16.2 q-1 2.6 0.2 5"/><path d="M22.8 14.2 C26.6 15.2 28.8 17.8 29.8 20.6"/><path d="M12.2 23.2 q1.5 1.1 3 0"/><path d="M12.6 23.6 l-0.7 1.3 M13.8 24 l-0.1 1.4 M14.9 23.6 l0.5 1.2"/><path d="M6.6 32.6 q0.9 -1 1.9 -0.3"/></g><g class="ink" stroke-width="0.9" opacity="0.6"><path d="M18.4 57 Q25.6 58.9 32.9 57.2"/></g></svg>`,
+  // 12-31: the first half of "New Year's Day", her midnights. A mantel clock, both hands laid
+  // together on twelve, pendulum still going. The specks are dots, never dashes: dashes round a
+  // clock are an alarm ringing.
+  nye: `<svg viewBox="0 0 40 58"><g class="ink"><path d="M8.7 24.1 C8.3 12.7 13.4 6.1 20.3 6 C27.3 6.2 31.7 12.9 31.4 23.9 L31.1 50.3"/><path d="M8.7 24.1 L8.9 50.2"/><path d="M6.4 50.3 L33.4 50.5 L33.7 53.4 L6.2 53.2 Z"/><path d="M8.5 53.4 L8.6 55.7 M31.5 53.5 L31.3 55.6"/><path d="M20.1 13.7 C24.9 13.8 28.3 17.4 28.2 22.1 C28.1 26.7 24.6 30.2 19.9 30.1 C15.3 30 11.8 26.5 11.9 21.9 C12 17.2 15.4 13.6 20.1 13.7 Z"/><path d="M20.2 21.9 L20.4 17.6" stroke-width="2.2"/><path d="M20.2 21.9 L19.8 15.8"/></g><g class="ink" stroke-width="1.1" opacity="0.7"><path d="M20.1 14.9 v1.3 M27 22 h-1.3 M20 29 v-1.2 M13 21.9 h1.3"/><path d="M16.1 46.3 V36.6 Q20.1 32.5 24.1 36.5 V46.3 Z"/><path d="M20.1 34 L20.5 41.6"/></g><circle class="ink-fill" cx="20.2" cy="21.9" r="0.95"/><circle class="ink" cx="20.6" cy="43.2" r="1.7" stroke-width="1.2"/><path class="ink-fill" d="M4.2 8.6 l0.7 1.9 1.9 0.7 -1.9 0.7 -0.7 1.9 -0.7 -1.9 -1.9 -0.7 1.9 -0.7 z"/><path class="ink-fill" d="M36.1 3.2 l0.5 1.4 1.4 0.5 -1.4 0.5 -0.5 1.4 -0.5 -1.4 -1.4 -0.5 1.4 -0.5 z"/><g class="ink-fill"><circle cx="3.6" cy="20.2" r="0.8"/><circle cx="36.4" cy="16.3" r="0.7"/><circle cx="36.1" cy="32.1" r="0.85"/><circle cx="4.4" cy="36.6" r="0.6"/></g></svg>`,
+  // 01-01: the second half, the clean-up. One bottle standing emptied, one down on the floor, a
+  // ribbon left hanging, glitter everywhere. The ribbon is a coil because an S-wave read as a
+  // worm, which is the retired snake egg again.
+  nyd: `<svg viewBox="0 0 40 60"><g class="ink"><path d="M27 8.3 L31.2 8.1"/><path d="M27.4 8.6 L27.6 20.5 C27.5 24 24.1 25.1 24.2 30.2 L24.3 55.5 Q29.1 56.6 33.9 55.4 L33.8 30 C33.8 25 30.6 24 30.7 20.4 L30.9 8.5"/><g transform="translate(2.6 52.2) rotate(-16)"><path d="M0.4 -3.6 L12.6 -3.6 C14.6 -3.6 14.8 -1.3 16.3 -1.3 L20.4 -1.2 M0.4 3.6 L12.6 3.6 C14.6 3.6 14.8 1.3 16.3 1.3 L20.4 1.2 M0.4 -3.6 Q-1.2 0 0.4 3.6 M20.4 -1.6 L20.4 1.6"/></g></g><g class="ink" stroke-width="1" opacity="0.55"><path d="M24.6 37.1 Q29.1 36.4 33.6 37 M24.6 46.1 Q29.1 45.5 33.6 46.3"/><path d="M27.5 14.1 l3.3 -0.1"/><path d="M2 57 Q20 58.2 38.4 56.5"/></g><g class="ink" stroke-width="1.15"><path d="M4.8 1.6 C9.8 2.9 9.6 7.6 6.5 7.7 C3.7 7.8 4.1 4.9 6.7 5.8 C10.5 7.2 10.1 12.9 6.9 13.1 C4.2 13.3 4.6 10.3 7.1 11.2 C10.7 12.6 10.6 18.5 8 19.6"/></g><g class="ink-fill"><circle cx="13.3" cy="21.8" r="0.9"/><circle cx="17.6" cy="31.2" r="0.7"/><circle cx="8.3" cy="35.6" r="1"/><circle cx="15.1" cy="40.1" r="0.8"/><circle cx="19.6" cy="43.8" r="0.65"/><circle cx="11.2" cy="57.2" r="0.8"/><circle cx="16.7" cy="56.3" r="1"/><circle cx="21.2" cy="57.7" r="0.7"/><circle cx="36.8" cy="55.4" r="0.8"/><circle cx="6.6" cy="58.1" r="0.7"/><path d="M16.4 9.4 l0.6 1.7 1.7 0.6 -1.7 0.6 -0.6 1.7 -0.6 -1.7 -1.7 -0.6 1.7 -0.6 z"/><path d="M5.8 42.2 l0.45 1.25 1.25 0.45 -1.25 0.45 -0.45 1.25 -0.45 -1.25 -1.25 -0.45 1.25 -0.45 z"/></g></svg>`,
 };
 
 // Natural display size (px) for each doodle, matched to its viewBox aspect. Nothing here
@@ -5072,7 +5092,20 @@ export const DOODLE_SVG = {
 export const DOODLE_SIZE = {
   fence: [40, 76], scarf: [40, 58], thirteen: [40, 49],
   mirrorball: [40, 58], paperplane: [40, 58], willow: [40, 58],
+  treefarm: [40, 60], pegacorn: [40, 60], nye: [40, 58], nyd: [40, 60],
 };
+
+// The days a doodle is dated to. On one of these the margin's random pool is replaced by that
+// day's drawing alone: same 15% roll, same one-doodle-per-page rule, and classic's page 5 still
+// gets its fence. Matched on month-day off todayKey(), so the dev date override moves it like
+// every other dated surface. `title` is only what the dev panel's date jump prints.
+// Verify every date before editing: fans catch a wrong one instantly.
+export const DATED_DOODLES = [
+  { md: "10-31", kind: "pegacorn", title: "the pegacorn (Halloween 2014)" },
+  { md: "12-06", kind: "treefarm", title: "Christmas Tree Farm (2019)" },
+  { md: "12-31", kind: "nye",      title: "New Year's Eve" },
+  { md: "01-01", kind: "nyd",      title: "New Year's Day" },
+];
 
 // Yes, whale! — the famous whale tail that looks for all the world like a pair of
 // legs, surfacing from behind the top edge of the notebook (see surfaceWhale in
