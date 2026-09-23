@@ -30,7 +30,7 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself
-- Twenty-two stickers, mostly earned by noticing things rather than scoring, plus a souvenir for every guest catalogue you clear. Pick up to fifteen for the notebook cover
+- Seventeen stickers, mostly earned by noticing things rather than scoring, plus a souvenir for every guest catalogue you clear. Pick up to fifteen for the notebook cover
 - An ink for every album you beat in Album Focus, worn by the game's own title and gilded for a perfect run
 
 **The details**
