@@ -4,11 +4,11 @@
 
 [![A round in progress: the word "sad" on a notebook page, a timer running down, and a half-built friendship bracelet across the top](readme/hero.webp)](https://swiftassociation.com)
 
-I’m currently working on a game inspired by ELLE’s Song Association. Where, by default, you are given 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs 🫶
+I’m working on a game inspired by ELLE’s Song Association: by default you get 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs 🫶
 
 *pretty sure that's Taylor Swift*
 
-The game is still a work in progress and is by no means 'done', but it is quite extensive and very playable right now.
+It’s still a work in progress, but it’s already extensive and very playable.
 
 ## Standout features
 
@@ -20,49 +20,36 @@ The game is still a work in progress and is by no means 'done', but it is quite 
 - Daily challenge
 - The ability to make your own **custom modes**
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
-- The lineup, reached by the all-access pass at the front of that shelf: thirteen pages dealt from every catalogue at once, played under a hand of goal cards you are dealt and commit to before page one, and every bead on the bracelet is coloured by whoever you answered. Which of the twenty-four cards you have held is a board that fills in across many runs
-- A shelf of bonus mini-games, each one a little hand-bound zine with a torn-paper cover, including one where you hunt a swapped word in a real lyric and one where an album and a track number are all you get. Most of them have an endless side as well, with no last page and one miss to end it
-- Track by Track, where you write a whole record's running order out from track one with no suggestions and no skipping, and your time is the score
-- Ruthless Game, where the song writes itself out a word a second from a section you pick, and your time is the score
-- A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet and toward the charm you've pinned
+- The lineup: thirteen pages dealt from every catalogue at once, played under goal cards you commit to before page one
+- A shelf of bonus mini-games, each a little hand-bound zine, most with an endless side where one miss ends it
+- Track by Track (write an album's running order from track one) and Ruthless Game (the song writes itself out a word a second), both scored on your time
+- A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet
 
 **The long game**
 
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself
-- Twenty-four stickers, mostly earned by noticing things rather than by scoring, shown as silhouettes until discovered. After your sixteenth unlock, Settings lets you choose up to fifteen for the notebook cover
-- A souvenir sticker for every guest catalogue you clear end to end, at any difficulty
-- An ink for every album you beat in Album Focus, worn by the game's own title on the desk in front of you, gilded for a perfect run, and set loose to follow the era you're playing once all twelve are in
+- Twenty-two stickers, mostly earned by noticing things rather than scoring, plus a souvenir for every guest catalogue you clear. Pick up to fifteen for the notebook cover
+- An ink for every album you beat in Album Focus, worn by the game's own title and gilded for a perfect run
 
 **The details**
 
 - Every era, plus holiday, movie, collaboration and some unreleased songs
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
-- Five marks in the corner of every page saying what it will take, so the rules aren't something you learn by breaking them
-- A streak penciled in the margin that bursts across the page, climbing from pencil to your era's own pen to gold
-- A rubber stamp pressed into the corner of your results when a run has a story worth one: thirteen clean, a comeback, or three lines sung from memory
-- Beads that record how a page went and not just whether: sanded for a hint taken, pearl for a line written from memory, clear for one you missed
-- Finished bracelets stay readable across long runs, explain what each bead remembers, and can be copied or downloaded as a PNG
+- Five marks in the corner of every page saying what it will take, so you don't learn the rules by breaking them
+- A streak in the margin that climbs from pencil to your era's own pen to gold
+- A rubber stamp on your results when a run has a story worth one
+- Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
-- A graveyard of everything this notebook used to have and does not any more, each plot carrying the argument that ended it, for anyone who goes looking for it
-- A night version of the whole desk, and a high-contrast setting that works in either light, measured page by page rather than eyeballed
+- A graveyard of everything the notebook used to have, each plot carrying the argument that ended it
+- A night version of the whole desk, and a high-contrast setting that works in either light
 - Installable as a phone or desktop app and works offline once loaded
 
-**There are many features in the works as we speak:**
+More mini-games, easter eggs, sound design and achievements are on the way.
 
-- More bonus mini-games
-- More easter eggs
-- More sound design
-- Polaroids in more places!
-- More achievements (always)
-
-I want this game to have extensive replay value. I want it to be challenging. I want it to be as good as it can be for as many people as possible, so I’m working on adding accessibility features, and I’m open to all feedback/suggestions. Submit feedback with the feedback button on the site or at https://swiftassociation.com/feedback
-
-Above all, **I want it to be fun.**
-
-If the game doesn’t seem like it’s in a finished state right now, that’s because it isn’t. We’re getting there lol. For now, thank you for reading, and you can play the game RIGHT NOW in its alpha stage at https://swiftassociation.com
+I want this game to have extensive replay value, to be challenging, and to work for as many people as possible, so accessibility is part of the work and all feedback is welcome, via the feedback button on the site or at https://swiftassociation.com/feedback. Above all, **I want it to be fun.**
 
 *no its becky*
 
