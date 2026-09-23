@@ -2121,14 +2121,17 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   if (isClassic) lastStatsDifficulty = viewMode;
   // Two-tier tabs (mirrors the start screen). Tier 1 = view / game type:
   // All · Classic · Infinite. Tier 2 = difficulty, shown only under Classic.
+  // Each tab also carries the front page's data-type / data-mode so it wears the same
+  // highlighter wash there (hard is coral, Infinite teal, and so on).
   const tier1 = `<div class="mode-tabs stats-tabs">` +
-    `<button type="button" class="mode-tab${isAll ? " active" : ""}" data-statmode="all">All</button>` +
-    `<button type="button" class="mode-tab${isClassic ? " active" : ""}" data-statmode="classic">Classic</button>` +
-    `<button type="button" class="mode-tab mode-tab--inf${isInf ? " active" : ""}" data-statmode="infinite">${INF_GLYPH}Infinite</button>` +
+    `<button type="button" class="mode-tab${isAll ? " active" : ""}" data-statmode="all" data-type="all">All</button>` +
+    `<button type="button" class="mode-tab${isClassic ? " active" : ""}" data-statmode="classic" data-type="classic">Classic</button>` +
+    `<button type="button" class="mode-tab${isInf ? " active" : ""}" data-statmode="infinite" data-type="infinite">${INF_GLYPH}Infinite</button>` +
     `</div>`;
   const tier2 = isClassic
     ? `<div class="mode-tabs stats-subtabs">` + MODE_ORDER.map((m) =>
-        `<button type="button" class="mode-tab${m === viewMode ? " active" : ""}" data-statmode="${m}">${MODES[m].label}</button>`
+        `<button type="button" class="mode-tab${MODALITY_MODES.includes(m) ? " mode-tab--modality" : ""}` +
+        `${m === viewMode ? " active" : ""}" data-statmode="${m}" data-mode="${m}">${MODES[m].label}</button>`
       ).join("") + `</div>`
     : "";
   const tabs = tier1 + tier2;

@@ -1989,14 +1989,9 @@
     color: var(--ink); background: var(--highlighter);
     border-color: rgba(43,39,34,0.32); transform: translateY(0) rotate(0deg);
   }
-  /* the Infinite stats tab — its own game type: set apart by the ∞ glyph and
-     (when active) an inked fill instead of the pale highlighter wash */
-  .mode-tab--inf.active {
-    background: var(--ink); color: var(--paper); border-color: var(--ink);
-  }
   /* Pen-stroke glyphs before a mode label (Infinite's ∞, Custom's levers). They
      inherit the tab's ink via currentColor: soft when resting, full ink on
-     hover/active, paper on the inked Infinite stats tab. */
+     hover/active. */
   .type-glyph { width: 18px; height: 18px; margin-right: 5px; vertical-align: -3px;
     fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   /* ∞ is wider than tall, so it gets its own box; rounder loops keep it from
@@ -2029,6 +2024,12 @@
   .mode-tab.active[data-mode="ultra"]    { background: rgba(122,98,182,0.34);   border-color: rgba(90,72,152,0.5); }
   .mode-tab.active[data-type="infinite"] { background: rgba(64,150,146,0.34);   border-color: rgba(40,120,116,0.52); }
   .mode-tab.active[data-type="custom"]   { background: rgba(176,104,150,0.32);  border-color: rgba(150,74,124,0.52); }
+  /* The stats page's "All" view sums every mode, so it wears every mode's wash at once: the
+     ladder's colours laid side by side, relaxed denim through ultra violet. */
+  .mode-tab.active[data-type="all"] {
+    background: linear-gradient(100deg, rgba(103,150,190,0.36) 0%, rgba(133,173,96,0.40) 25%, rgba(247,201,72,0.5) 50%, rgba(202,92,74,0.34) 75%, rgba(122,98,182,0.34) 100%);
+    border-color: rgba(90,80,90,0.5);
+  }
   /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
      wash — a health meter draining from safe to danger. "Sudden death" takes the same wash +
      inked-border treatment as the rest, in a smoky near-black: dark and ominous, one slip and
