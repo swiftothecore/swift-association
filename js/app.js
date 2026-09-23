@@ -11655,6 +11655,9 @@ function startTrackRun(album) {
 // Called by startBonusGame in place of nextBonusRound. Everything a page turn would normally
 // set up happens once here, because the sheet is the whole run.
 function beginTrackSheet() {
+  // A finished sheet leaves the count-up clock's baseline behind. A replay must be
+  // unstarted again, or the first keystroke sees the old baseline and never starts it.
+  ruthlessStart = 0;
   const index = trackIndexNow();
   trackSheet = trackAlbum ? buildAlbumSheet(trackAlbum, index) : null;
   if (!trackSheet) { leaveBonusGame("bonus"); return; }
