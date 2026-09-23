@@ -20,7 +20,27 @@ const flower = (x, i) => {
   return `<g class="cta-flower" style="--flower-delay:${i * 0.07}s;--flower-colour:${FLOWER_COLOURS[i]}"><path d="M${x} 31V${y + 2}M${x} 25q-4 -1 -4 -4M${x} 22q4 -1 4 -4" fill="none" stroke="#47683b" stroke-width="1.3"/><g class="cta-petals" transform="translate(${x} ${y})" stroke="#785e32" stroke-width=".5">${FLOWER_HEADS[i % FLOWER_HEADS.length]}</g></g>`;
 };
 const garden = `<svg class="cta-garden" viewBox="0 0 400 28" preserveAspectRatio="none" aria-hidden="true">${Array.from({ length: 55 }, (_, i) => `<path class="cta-blade" d="M${i * 7.5} 30q3 -7 ${i % 2 ? -1 : 1} -${8 + i % 4 * 3}"/>`).join("")}${[22, 48, 78, 325, 354, 379].map(flower).join("")}</svg>`;
-const snow = `<svg class="cta-snowdrift" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 49Q35 39 73 49T149 48T230 50T312 46T400 47V60H0Z" fill="#f5fafb"/><path d="M0 55Q65 45 126 54T254 53T400 51" fill="none" stroke="#c8dce3"/></svg>${Array.from({ length: 24 }, (_, i) => `<i class="cta-snowflake" style="left:${(i * 37 + 7) % 100}%;--snow-size:${2 + i % 3}px;--snow-time:${2.6 + i % 5 * .35}s;--snow-delay:${i * .075}s"></i>`).join("")}`;
+// The drift is drawn once at its real size and cropped, never stretched, so a phone button
+// shows a narrower stretch of the same sill instead of the whole drift squeezed into steep
+// lumps. Its humps are deliberately uneven. The flakes fall inside a layer that stops at the
+// drift's lowest trough and draw behind the drift, so they land in the snow, not through it.
+// Every flake gets its own size, sway and start, so the first second is not a row of dots.
+const SNOW_DRIFT = "M0 12.8C22 10.4 41 16.4 66 14S112 6.8 146 9.2S190 16.4 228 15.2S268 8 298 9.2S344 16.4 376 14S424 5.6 458 8S512 15.2 544 14S584 8 600 10.4V22H0Z";
+// mulberry32, seeded per flake, so the draws are fixed from load to load but uncorrelated.
+const flakeRandom = (seed) => () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+const snowflakes = Array.from({ length: 26 }, (_, i) => {
+  const next = flakeRandom(1213 + i * 97), draws = Array.from({ length: 6 }, next);
+  const r = (n) => draws[n - 1];
+  return `<i class="cta-snowflake" style="left:${(r(1) * 98 + 1).toFixed(1)}%;--snow-size:${(1.6 + r(2) * 2.4).toFixed(1)}px;` +
+    `--snow-time:${(2.3 + r(3) * 1.9).toFixed(2)}s;--snow-delay:${(r(4) * 2.2).toFixed(2)}s;` +
+    `--sway-a:${(r(5) * 16 - 7).toFixed(1)}px;--sway-b:${(r(6) * 12 - 6).toFixed(1)}px"></i>`;
+}).join("");
+const snow = `<span class="cta-snowfall">${snowflakes}</span><svg class="cta-snowdrift" viewBox="0 0 600 22" preserveAspectRatio="xMidYMax slice"><path class="cta-drift" d="${SNOW_DRIFT}"/><path class="cta-drift-shade" d="M0 19.4C40 18.2 76 20 118 18.8S196 18.3 240 19.5S330 20 372 18.8S468 18.3 512 19.5S578 19.5 600 18.8"/></svg>`;
 // Two separately drawn vines, never one vine flipped: each is rooted in its own bottom corner
 // (the stem's first point, which is also its hover pivot) and the right one is shorter and
 // sparser, so the pair reads as grown rather than printed. Leaves are [x, y, rotate, scale].

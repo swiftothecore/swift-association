@@ -1652,23 +1652,46 @@
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-blade { animation: ctaBreeze 1s ease-in-out 2; }
   @keyframes ctaBreeze { 0%, 100% { transform: skewX(0); } 40% { transform: skewX(12deg); } 75% { transform: skewX(-6deg); } }
 
-  /* Snow rests on the sill until the pointer or keyboard arrives. */
+  /* Snow rests on the sill until the pointer or keyboard arrives, then the sky comes over:
+     the fill deepens so the flakes read against it, and they fall for a few passes and stop,
+     like every other finish, rather than snowing for as long as the button keeps focus. The
+     face gets a lighter sheen and glare than the other finishes, because both are white and
+     would wash the ice blue out to slate and swallow the flakes where they start. */
   .play-cta[data-startbtn="snow"] {
-    --cta-fill: #adc8d3; --cta-text: #253e4b; --cta-hover-text: #253e4b;
-    --cta-hover-fill: #bdd5df;
-    --cta-art: radial-gradient(ellipse at 20% 0, #ffffffa6, transparent 65%);
+    --cta-fill: #9dc0d4; --cta-text: #253e4b; --cta-hover-text: #253e4b;
+    --cta-hover-fill: #8fb6cc;
+    --cta-art: radial-gradient(ellipse at 18% 0, #ffffff47, transparent 60%);
+    --drift: #f5fafb; --drift-shade: #bcd3de; --flake: #fff; --flake-edge: #4f7d9459;
+    background-image: linear-gradient(168deg, #ffffff2e 0%, #ffffff00 46%, #2b27221f 100%), var(--cta-art);
+  }
+  /* Night: plain pale snow would be a 0.5-luminance slab on a 0.02 desk, the same glare the
+     default gold is taken down for (see above). Snow at night is a dark sky with the lettering
+     and flakes lit instead, which also makes it the one finish where the flakes read best. */
+  :root[data-theme="dark"] .play-cta[data-startbtn="snow"] {
+    --cta-fill: #3e5a6c; --cta-hover-fill: #34505f;
+    --cta-text: #eef4f6; --cta-hover-text: #eef4f6;
+    --cta-art: radial-gradient(ellipse at 18% 0, #ffffff1a, transparent 60%);
+    --drift: #d7e3e8; --drift-shade: #9fb6c1; --flake-edge: transparent;
+    background-image: linear-gradient(168deg, #ffffff14 0%, #ffffff00 46%, #0000002e 100%), var(--cta-art);
   }
   .play-cta:is([data-startbtn="snow"], [data-startbtn="ivy"])::after { content: none; }
-  .cta-snowdrift { inset: 0; width: 100%; height: 100%; }
-  .cta-snowflake { top: -3px; width: var(--snow-size); height: var(--snow-size); border-radius: 50%; background: #fff; opacity: 0; }
+  /* A fixed-height drift, cropped rather than stretched (see js/cta.js). */
+  .cta-snowdrift { left: 0; bottom: 0; width: 100%; height: 22px; }
+  .cta-drift { fill: var(--drift); }
+  .cta-drift-shade { fill: none; stroke: var(--drift-shade); stroke-width: 1; }
+  /* The flakes' layer ends at the drift's lowest trough, and the drift is painted over it, so
+     a flake disappears into the snow wherever it lands instead of crossing in front of it. */
+  .cta-snowfall { inset: 0 0 5px; overflow: hidden; }
+  .cta-snowflake { position: absolute; top: -4px; width: var(--snow-size); height: var(--snow-size); border-radius: 50%;
+    background: var(--flake); box-shadow: 0 0 0 .6px var(--flake-edge); opacity: 0; }
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-snowflake {
-    animation: ctaSnowfall var(--snow-time) var(--snow-delay) linear infinite;
+    animation: ctaSnowfall var(--snow-time) var(--snow-delay) linear 3;
   }
   @keyframes ctaSnowfall {
     0% { opacity: 0; transform: translate(0, 0); }
-    6%, 80% { opacity: .9; }
-    50% { transform: translate(7px, 34px); }
-    100% { opacity: 0; transform: translate(-3px, 76px); }
+    6%, 100% { opacity: .95; }
+    50% { transform: translate(var(--sway-a), 46px); }
+    100% { transform: translate(var(--sway-b), 96px); }
   }
 
   /* Ivy is deliberately allowed out of the frame, like a cutting laid on brick. The brick is
