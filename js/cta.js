@@ -3,6 +3,14 @@
 import { CTA_LABELS, CTA_MARKS } from "./config.js";
 import { escapeHtml } from "./util.js";
 
+// mulberry32: fixed draws from load to load, so hand-scattered art never re-deals on reload,
+// without the lockstep patterns an index formula leaves between one property and the next.
+const seededRandom = (seed) => () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
 const rain = (count, offset) => Array.from({ length: count }, (_, i) => {
   const x = (i * 37 + offset) % 101;
   return `<i class="cta-drop" style="left:${x}%;--drop-y:${(i * 17) % 57}px;--drop-h:${5 + i % 5 * 2}px;--drop-delay:${(i % 7) * 0.075}s;--drop-duration:${0.42 + i % 4 * 0.075}s"></i>`;
@@ -15,26 +23,38 @@ const FLOWER_HEADS = [
   `<path d="M-4 -4L-1 -1L0 -5L2 -1L4 -4Q5 4 0 4Q-5 4 -4 -4Z"/><path d="M0 3L0 -1" fill="none"/>`,
   `<path d="M0 -3C-5 -7 -7 0 -3 2C-4 7 3 7 3 3C8 2 5 -5 0 -3Z"/><circle r="1.5" fill="#65504c"/>`,
 ];
-const flower = (x, i) => {
-  const y = [10, 14, 9][i % 3];
-  return `<g class="cta-flower" style="--flower-delay:${i * 0.07}s;--flower-colour:${FLOWER_COLOURS[i]}"><path d="M${x} 31V${y + 2}M${x} 25q-4 -1 -4 -4M${x} 22q4 -1 4 -4" fill="none" stroke="#47683b" stroke-width="1.3"/><g class="cta-petals" transform="translate(${x} ${y})" stroke="#785e32" stroke-width=".5">${FLOWER_HEADS[i % FLOWER_HEADS.length]}</g></g>`;
-};
-const garden = `<svg class="cta-garden" viewBox="0 0 400 28" preserveAspectRatio="none" aria-hidden="true">${Array.from({ length: 55 }, (_, i) => `<path class="cta-blade" d="M${i * 7.5} 30q3 -7 ${i % 2 ? -1 : 1} -${8 + i % 4 * 3}"/>`).join("")}${[22, 48, 78, 325, 354, 379].map(flower).join("")}</svg>`;
+// Each flower is its own little drawing at its real size, placed by percentage, so no button
+// width can stretch a head out of shape. The spots are deliberately uneven and reach into the
+// middle, but only the outer flowers stand tall: on a phone the label wraps across nearly the
+// whole face, so everything inward of the edges stays low in the grass to pass under it.
+// [left %, head height, head scale, head kind]. The breeze delay follows the left edge, so the wind crosses the strip.
+const MEADOW_FLOWERS = [[3, 17, 1.35, 0], [10.5, 12, 1.2, 2], [24, 8, 1.05, 1], [41, 7, 1, 0], [60, 7.5, 1, 2], [79, 8, 1.05, 1], [93.5, 12.5, 1.3, 0]];
+const flower = ([left, h, scale, kind], i) => `<svg class="cta-flower" viewBox="-9 -27 18 27" style="left:calc(${left}% - 9px);--flower-delay:${(i * 0.07).toFixed(2)}s;--wind-delay:${(left / 100 * 0.6).toFixed(2)}s;--flower-colour:${FLOWER_COLOURS[i]}"><g class="cta-flower-sway"><path d="M0 0C${i % 2 ? 1 : -1} ${-h / 2} 0 ${-h * .7} 0 ${-h}M0 ${-h * .35}q${i % 2 ? 4 : -4} -1 ${i % 2 ? 4 : -4} -4" class="cta-flower-stem"/><g class="cta-petals" transform="translate(0 ${-h}) scale(${scale})" stroke="#785e32" stroke-width=".5">${FLOWER_HEADS[kind]}</g></g></svg>`;
+// A 600-unit strip drawn at 1:1 and cropped from the middle, never stretched. Blades scatter
+// in height, lean, curl, weight and spacing, in two greens for depth, and cluster into tufts;
+// each carries a delay from its position so the breeze travels across instead of the whole
+// strip shearing at once.
+const grassBlades = (() => {
+  const rand = seededRandom(1310), blades = [];
+  for (let x = 1; x < 600;) {
+    const tuft = 1 + Math.floor(rand() * 4);
+    for (let t = 0; t < tuft; t++) {
+      const bx = x + t * (1.2 + rand() * 2.2), h = 6 + rand() * 12, lean = rand() * 7 - 3, curl = rand() * 6 - 3;
+      blades.push(`<path class="cta-blade${rand() < .35 ? " cta-blade--back" : ""}" style="--wind-delay:${(bx / 600 * 0.6).toFixed(2)}s;stroke-width:${(1 + rand() * .8).toFixed(2)}" d="M${bx.toFixed(1)} 31q${curl.toFixed(1)} ${(-h * .55).toFixed(1)} ${lean.toFixed(1)} ${(-h).toFixed(1)}"/>`);
+    }
+    x += 5 + rand() * 9;
+  }
+  return blades.join("");
+})();
+const garden = `<svg class="cta-garden" viewBox="0 0 600 30" preserveAspectRatio="xMidYMax slice">${grassBlades}</svg>${MEADOW_FLOWERS.map(flower).join("")}`;
 // The drift is drawn once at its real size and cropped, never stretched, so a phone button
 // shows a narrower stretch of the same sill instead of the whole drift squeezed into steep
 // lumps. Its humps are deliberately uneven. The flakes fall inside a layer that stops at the
 // drift's lowest trough and draw behind the drift, so they land in the snow, not through it.
 // Every flake gets its own size, sway and start, so the first second is not a row of dots.
 const SNOW_DRIFT = "M0 12.8C22 10.4 41 16.4 66 14S112 6.8 146 9.2S190 16.4 228 15.2S268 8 298 9.2S344 16.4 376 14S424 5.6 458 8S512 15.2 544 14S584 8 600 10.4V22H0Z";
-// mulberry32, seeded per flake, so the draws are fixed from load to load but uncorrelated.
-const flakeRandom = (seed) => () => {
-  seed = (seed + 0x6d2b79f5) | 0;
-  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
 const snowflakes = Array.from({ length: 26 }, (_, i) => {
-  const next = flakeRandom(1213 + i * 97), draws = Array.from({ length: 6 }, next);
+  const next = seededRandom(1213 + i * 97), draws = Array.from({ length: 6 }, next);
   const r = (n) => draws[n - 1];
   return `<i class="cta-snowflake" style="left:${(r(1) * 98 + 1).toFixed(1)}%;--snow-size:${(1.6 + r(2) * 2.4).toFixed(1)}px;` +
     `--snow-time:${(2.3 + r(3) * 1.9).toFixed(2)}s;--snow-delay:${(r(4) * 2.2).toFixed(2)}s;` +
@@ -95,11 +115,19 @@ export function initCtaInteractions(root = document) {
       // A fresh position at least one fifth of the usable width from the last strike.
       cta.style.setProperty("--cta-bolt-x", ((before + .2 + Math.random() * .6) % 1).toFixed(4));
     } else if (cta.dataset.startbtn === "meadow") {
-      cta.querySelectorAll(".cta-flower").forEach((flower) => {
-        const before = flower.style.getPropertyValue("--flower-colour").trim();
-        const choices = FLOWER_COLOURS.filter((colour) => colour !== before);
-        flower.style.setProperty("--flower-colour", choices[Math.floor(Math.random() * choices.length)]);
-      });
+      // One hand of colours per hover: no two flowers share one, and none keeps its last.
+      const flowers = [...cta.querySelectorAll(".cta-flower")];
+      const before = flowers.map((flower) => flower.style.getPropertyValue("--flower-colour").trim());
+      let deal = [];
+      for (let tries = 0; tries < 30; tries++) {
+        deal = [...FLOWER_COLOURS].sort(() => Math.random() - .5).slice(0, flowers.length);
+        if (deal.every((colour, i) => colour !== before[i])) break;
+      }
+      if (deal.some((colour, i) => colour === before[i])) {
+        const at = (colour) => FLOWER_COLOURS.indexOf(colour);
+        deal = before.map((colour) => FLOWER_COLOURS[(at(colour) + 1) % FLOWER_COLOURS.length]);
+      }
+      flowers.forEach((flower, i) => flower.style.setProperty("--flower-colour", deal[i]));
     }
   };
   root.addEventListener("pointerover", (event) => {
