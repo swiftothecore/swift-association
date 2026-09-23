@@ -22,7 +22,7 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - The lineup: thirteen pages dealt from every catalogue at once, played under goal cards you commit to before page one
 - A shelf of bonus mini-games, each a little hand-bound zine, most with an endless side where one miss ends it
-- Track by Track (write an album's running order from track one) and Ruthless Game (the song writes itself out a word a second), both scored on your time
+- Ruthless Game, where the song writes itself out a word a second and your time is the score
 - A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet
 
 **The long game**
