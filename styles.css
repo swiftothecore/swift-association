@@ -1609,33 +1609,47 @@
     opacity: 0; transform: scale(.1) rotate(-20deg); transition: transform .85s ease-out, opacity .4s; }
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bloom { transform: scale(2.3) rotate(15deg); opacity: 1; }
 
-  /* Sky: the stored clouds are reused as a moving charcoal storm front. The rain has
-     two depths, irregular spacing, short trails and staggered arrivals, never a striped veil.
-     One branching discharge has a thin white core and a softer blue halo. No repeating flash. */
+  /* Sky: fair-weather clouds along the top edge give way to a storm front of their own on
+     hover. The two are separate layers so one can fade out while the other rolls in; the old
+     clouds were a background image, which cannot fade, and simply vanished, leaving a bare sky
+     for half a second. The rain has two depths, irregular spacing, short trails and staggered
+     arrivals, never a striped veil, and is thinned rather than removed behind the lettering.
+     One branching discharge has a thin white core and a softer blue halo, placed by
+     placeStrike in js/cta.js so it never lands on the label. No repeating flash. */
   .play-cta[data-startbtn="sky"] {
     --cta-fill: #7fb0dd; --cta-hover-fill: #263b53; --cta-hover-text: #faf0da;
-    --cta-clouds: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='46' viewBox='0 0 150 46'><g fill='white'><g opacity='.82' transform='translate(10 8)'><circle cx='9' cy='7' r='6'/><circle cx='19' cy='5.5' r='7.5'/><circle cx='29' cy='7.5' r='5.5'/><rect x='3' y='8' width='32' height='5' rx='2.5'/></g><g opacity='.5' transform='translate(58 4) scale(.55)'><circle cx='9' cy='7' r='6'/><circle cx='19' cy='5.5' r='7.5'/><circle cx='29' cy='7.5' r='5.5'/><rect x='3' y='8' width='32' height='5' rx='2.5'/></g><g opacity='.62' transform='translate(92 22) scale(.78)'><circle cx='9' cy='7' r='6'/><circle cx='19' cy='5.5' r='7.5'/><circle cx='29' cy='7.5' r='5.5'/><rect x='3' y='8' width='32' height='5' rx='2.5'/></g></g></svg>");
-    --cta-art: var(--cta-clouds);
-    background-repeat: repeat, repeat-x; background-position: 0 0, 0 50%;
+    --day-cloud: #fff; --storm-back: #3f546c; --storm-front: #17222f; --rain: #d8e8f7;
   }
-  .cta-storm-clouds { inset: -4px -30px; background: var(--cta-clouds) repeat-x 0 50%;
-    filter: brightness(.4) sepia(.3) hue-rotate(155deg); opacity: 0;
-    transform: translateX(-22px); transition: opacity .5s, transform 1.2s; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta)[data-startbtn="sky"] { --cta-art: none; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-storm-clouds { opacity: .9; transform: translateX(8px); }
+  /* Night: a clear night sky with dim clouds instead of a bright daytime slab on the dark desk;
+     the storm then only has to darken it a step further. */
+  :root[data-theme="dark"] .play-cta[data-startbtn="sky"] {
+    --cta-fill: #2f4a66; --cta-hover-fill: #1b2837;
+    --cta-text: #f3ecd6; --cta-hover-text: #f3ecd6;
+    --day-cloud: #b9c9d8; --storm-back: #33465b; --storm-front: #0f1822;
+  }
+  .cta-day-clouds { inset: 0; width: 100%; height: 100%; fill: var(--day-cloud);
+    transition: opacity .45s ease, transform 1.2s ease; }
+  :root[data-theme="dark"] .play-cta[data-startbtn="sky"] .cta-day-clouds { opacity: .45; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-day-clouds { opacity: 0 !important; transform: translateX(14px); }
+  .cta-storm-clouds { top: -4px; left: -30px; width: calc(100% + 60px); height: 36px; opacity: 0;
+    transform: translateX(-24px); transition: opacity .5s ease .1s, transform 1.2s ease; }
+  .cta-storm-back { fill: var(--storm-back); }
+  .cta-storm-front { fill: var(--storm-front); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-storm-clouds { opacity: 1; transform: translateX(0); }
   .cta-rain { inset: 0; opacity: 0; overflow: hidden;
-    mask-image: linear-gradient(90deg, #000 0 15%, #0002 36% 65%, #000 85%); }
+    mask-image: linear-gradient(90deg, #000 0 15%, #0007 36% 65%, #000 85%); }
   .cta-rain--far { filter: blur(.3px); }
-  .cta-drop { position: absolute; top: -18px; width: 1px; height: var(--drop-h);
-    background: linear-gradient(transparent, #c1d9edc9); border-radius: 50%; opacity: 0; transform: rotate(16deg); }
-  .cta-rain--far .cta-drop { width: .7px; height: calc(var(--drop-h) * .65); }
+  .cta-drop { position: absolute; top: -18px; width: 1.2px; height: var(--drop-h);
+    background: linear-gradient(transparent, var(--rain)); border-radius: 50%; opacity: 0; transform: rotate(16deg); }
+  .cta-rain--far .cta-drop { width: .8px; height: calc(var(--drop-h) * .65); }
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-rain { animation: ctaRainShower 2.6s ease-out both; }
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-drop { animation: ctaRainFall var(--drop-duration) var(--drop-delay) linear 4; }
-  @keyframes ctaRainShower { 0% { opacity: 0; } 12%, 75% { opacity: .8; } 100% { opacity: 0; } }
+  @keyframes ctaRainShower { 0% { opacity: 0; } 12%, 75% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes ctaRainFall { 0% { opacity: 0; transform: translate(8px, var(--drop-y)) rotate(16deg); }
-    15%, 75% { opacity: .7; } 100% { opacity: 0; transform: translate(-12px, calc(var(--drop-y) + 82px)) rotate(16deg); } }
-  .cta-lightning { left: calc((100% - 43px) * var(--cta-bolt-x, .9)); top: -3px; width: 43px; height: calc(100% + 6px); opacity: 0;
+    15%, 75% { opacity: .95; } 100% { opacity: 0; transform: translate(-12px, calc(var(--drop-y) + 82px)) rotate(16deg); } }
+  .cta-lightning { left: var(--cta-bolt-left, 0px); top: -3px; width: var(--cta-bolt-w, 43px); height: calc(100% + 6px); opacity: 0;
     fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .cta-no-bolt .cta-lightning { display: none; }
   .cta-bolt-halo { stroke: #a3c8ff; stroke-width: 3; filter: blur(2px); }
   .cta-bolt-core { stroke: #f6faff; stroke-width: 1.1; }
   .cta-bolt-branch { stroke: #d5e6ff; stroke-width: .55; }

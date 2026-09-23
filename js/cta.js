@@ -11,10 +11,44 @@ const seededRandom = (seed) => () => {
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
-const rain = (count, offset) => Array.from({ length: count }, (_, i) => {
-  const x = (i * 37 + offset) % 101;
-  return `<i class="cta-drop" style="left:${x}%;--drop-y:${(i * 17) % 57}px;--drop-h:${5 + i % 5 * 2}px;--drop-delay:${(i % 7) * 0.075}s;--drop-duration:${0.42 + i % 4 * 0.075}s"></i>`;
-}).join("");
+// Rain in two depths, laid out from the seeded generator rather than index arithmetic, so no
+// run of drops repeats a spacing, start height or pace.
+const rain = (count, seed) => {
+  const rand = seededRandom(seed);
+  return Array.from({ length: count }, () => `<i class="cta-drop" style="left:${(rand() * 100).toFixed(1)}%;` +
+    `--drop-y:${Math.round(rand() * 56)}px;--drop-h:${(6 + rand() * 9).toFixed(1)}px;` +
+    `--drop-delay:${(rand() * .5).toFixed(2)}s;--drop-duration:${(.42 + rand() * .24).toFixed(2)}s"></i>`).join("");
+};
+// Fair-weather clouds, each its own shape and none repeated, kept to the top edge (some cut
+// off by it, as clouds are by a window frame) and two small ones low at the corners, so the
+// label's band stays clear sky. The strip is cropped, never stretched. [x, y, width, opacity]
+const cloudPuff = (x, y, w, rand) => {
+  // Bumps sit ON a flat base at y and rise from it, the middle one tallest.
+  const n = 3 + Math.floor(rand() * 2), step = w / (n + 1), mid = (n - 1) / 2;
+  const bumps = Array.from({ length: n }, (_, i) => {
+    const r = step * (.62 + rand() * .3) * (Math.abs(i - mid) < 1 ? 1.25 : 1);
+    return `<circle cx="${(x + step * (i + 1)).toFixed(1)}" cy="${(y - r * .85).toFixed(1)}" r="${r.toFixed(1)}"/>`;
+  }).join("");
+  return `${bumps}<rect x="${(x + step * .35).toFixed(1)}" y="${(y - step * .75).toFixed(1)}" width="${(w - step * .7).toFixed(1)}" height="${(step * .75).toFixed(1)}" rx="${(step * .37).toFixed(1)}"/>`;
+};
+const DAY_CLOUDS = [[8, 15, 46, .85], [118, 12, 30, .55], [206, 16, 58, .8], [318, 12.5, 34, .6], [402, 16, 52, .82], [500, 11, 28, .5], [548, 15, 44, .78], [70, 60, 26, .45], [476, 61, 30, .5]];
+const dayClouds = (() => {
+  const rand = seededRandom(1989);
+  return `<svg class="cta-day-clouds" viewBox="0 0 600 60" preserveAspectRatio="xMidYMid slice">${DAY_CLOUDS.map(([x, y, w, o]) => `<g opacity="${o}">${cloudPuff(x, y, w, rand)}</g>`).join("")}</svg>`;
+})();
+// The storm front is its own bank, heavier and lower than the fair-weather clouds and never
+// the same shapes darkened: a pale back row of billows under a dark front row, drawn along
+// the top so it rolls in over the sky rather than being a grey copy of it.
+const stormBank = (() => {
+  // Each row is ragged in height as well as spacing, so the underside of the storm is torn
+  // rather than a scalloped valance.
+  const rand = seededRandom(2012), row = (y, spread, rMin, rMax, gapMin, gapMax, cls) => {
+    let out = "";
+    for (let x = -30 + rand() * 20; x < 640; x += gapMin + rand() * (gapMax - gapMin)) out += `<circle cx="${x.toFixed(1)}" cy="${(y + rand() * spread).toFixed(1)}" r="${(rMin + rand() * (rMax - rMin)).toFixed(1)}"/>`;
+    return `<g class="${cls}">${out}</g>`;
+  };
+  return `<svg class="cta-storm-clouds" viewBox="0 0 600 40" preserveAspectRatio="xMidYMin slice">${row(6, 14, 10, 24, 14, 34, "cta-storm-back")}${row(-4, 12, 8, 20, 12, 30, "cta-storm-front")}</svg>`;
+})();
 const bolt = `<svg class="cta-lightning" viewBox="0 0 48 60" aria-hidden="true"><path class="cta-bolt-halo" d="M28 -2L24 9L28 15L20 23L24 29L16 39L19 44L10 60M24 29L33 33L35 40L43 44M24 9L15 15L12 22"/><path class="cta-bolt-core" d="M28 -2L24 9L28 15L20 23L24 29L16 39L19 44L10 60"/><path class="cta-bolt-branch" d="M24 29L33 33L35 40L43 44M24 9L15 15L12 22"/></svg>`;
 const FLOWER_COLOURS = ["#fff1c7", "#f3a48e", "#e99abd", "#b9a0de", "#95c9e3", "#edc45f", "#d8788d", "#d9c8ef"];
 const FLOWER_HEADS = [
@@ -83,7 +117,7 @@ const FINISH_ART = {
   "": `<i class="cta-stroke"></i>`,
   ink: `<i class="cta-pool"></i>`,
   rose: `<i class="cta-bloom"></i>`,
-  sky: `<i class="cta-storm-clouds"></i><span class="cta-rain cta-rain--far">${rain(15, 11)}</span><span class="cta-rain">${rain(19, 3)}</span>${bolt}`,
+  sky: `${dayClouds}${stormBank}<span class="cta-rain cta-rain--far">${rain(18, 1311)}</span><span class="cta-rain">${rain(24, 1989)}</span>${bolt}`,
   meadow: garden,
   snow,
   ivy,
@@ -98,6 +132,38 @@ export function ctaContentHTML(labelId = "", finish = "") {
 }
 
 
+// Lightning strikes only in the clear sky either side of the lettering, never through it: a
+// white bolt behind cream text blinds the label at the one moment the player is looking. The
+// label is measured as it sits (the ✎ is a pseudo-element outside .cta-label, so its width is
+// added by hand), and the bolt narrows to fit a thin gutter. When neither side has room for
+// even a narrow bolt, as with a long label on a phone, the storm simply comes without one.
+// Each strike also lands well away from the last.
+const BOLT_W = 43, BOLT_MIN_W = 22, BOLT_PAD = 8, PENCIL_W = 28;
+function placeStrike(cta) {
+  const box = cta.getBoundingClientRect(), label = cta.querySelector(".cta-label")?.getBoundingClientRect();
+  if (!label || !box.width || !cta.offsetWidth) return;
+  const k = cta.offsetWidth / box.width; // undo a preview's scale: work in the button's own pixels
+  const width = cta.offsetWidth;
+  const left = (label.left - box.left) * k - (cta.classList.contains("cta-mk") ? 0 : PENCIL_W) - BOLT_PAD;
+  const right = (label.right - box.left) * k + BOLT_PAD;
+  const bolt = Math.min(BOLT_W, Math.max(left, width - right));
+  if (bolt < BOLT_MIN_W) { cta.classList.add("cta-no-bolt"); return; }
+  cta.classList.remove("cta-no-bolt");
+  const spots = [];
+  if (left >= bolt) spots.push([0, left - bolt]);
+  if (width - right >= bolt) spots.push([right, width - bolt]);
+  const span = spots.reduce((sum, [a, b]) => sum + b - a, 0);
+  const before = parseFloat(cta.style.getPropertyValue("--cta-bolt-left"));
+  let x = 0;
+  for (let tries = 0; tries < 12; tries++) {
+    let pick = Math.random() * span;
+    for (const [a, b] of spots) { if (pick <= b - a) { x = a + pick; break; } pick -= b - a; }
+    if (Number.isNaN(before) || Math.abs(x - before) >= width / 5) break;
+  }
+  cta.style.setProperty("--cta-bolt-left", `${x.toFixed(1)}px`);
+  cta.style.setProperty("--cta-bolt-w", `${bolt.toFixed(1)}px`);
+}
+
 // Delegate to the actual clickable control, including a preview's enclosing picker row.
 // Crossing a label, icon or empty patch inside it must not deal a second set of colours.
 // Nothing persists: a hover changes only this rendered button's decorative CSS properties.
@@ -110,11 +176,7 @@ export function initCtaInteractions(root = document) {
   const refresh = (control) => {
     const cta = control.matches(".play-cta") ? control : control.querySelector(".play-cta");
     if (!cta) return;
-    if (cta.dataset.startbtn === "sky") {
-      const before = parseFloat(cta.style.getPropertyValue("--cta-bolt-x")) || 0;
-      // A fresh position at least one fifth of the usable width from the last strike.
-      cta.style.setProperty("--cta-bolt-x", ((before + .2 + Math.random() * .6) % 1).toFixed(4));
-    } else if (cta.dataset.startbtn === "meadow") {
+    if (cta.dataset.startbtn === "sky") placeStrike(cta); else if (cta.dataset.startbtn === "meadow") {
       // One hand of colours per hover: no two flowers share one, and none keeps its last.
       const flowers = [...cta.querySelectorAll(".cta-flower")];
       const before = flowers.map((flower) => flower.style.getPropertyValue("--flower-colour").trim());
