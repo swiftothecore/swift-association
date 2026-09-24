@@ -2348,7 +2348,7 @@ export const MASTERY_REWARDS = [
   // reward board can preview them all side by side). Persists in settings.masteryButton,
   // applied by applySettings.
   { level: 8,  id: "btn-ink",    kind: "button", name: "Ink press", desc: "A solid ink-stamped start button.",   payload: { button: "ink" } },
-  { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "A soft rose marker start button.",    payload: { button: "rose" } },
+  { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "Rose paper that takes a watercolour wash as you hover.", payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
   { level: 8, id: "btn-snow", kind: "button", name: "Snowfall", desc: "Settled snow, with flakes falling as you hover.", payload: { button: "snow" } },
