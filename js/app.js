@@ -4844,7 +4844,9 @@ function fitHeatGrid(retries = 10) {
 }
 
 /* ---------- Profile polaroid (a photo tucked into the notebook) ---------- */
-const POL_CAMERA_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h3l1.4-2h5.2L16 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>`;
+// The empty slot's camera is an instant camera, the one that makes a polaroid: square body,
+// big lens, viewfinder in the corner and the slot the print comes out of, drawn by hand.
+const POL_CAMERA_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.3 4.6 C9.4 4.3 14.6 4.3 19.7 4.7 C20 9.6 20 14.6 19.8 19.6 C14.6 19.9 9.4 19.9 4.4 19.6 C4 14.6 4 9.6 4.3 4.6 Z"/><path d="M16 11.2 C16 13.5 14.2 15.2 12 15.2 C9.7 15.1 8 13.3 8.1 11.1 C8.2 8.9 10 7.2 12.1 7.2 C14.3 7.3 16 9 16 11.2 Z"/><path d="M6.6 17.5 C10.2 17.4 13.8 17.4 17.4 17.6"/><path d="M6.6 7.1 h.1"/></svg>`;
 // The clip is a real paperclip, bent wire with an inner and an outer loop, drawn a little
 // wobbly; it used to be the email-attachment glyph, a loop no paperclip on a desk has.
 const POL_CLIP_SVG = `<svg class="pol-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.1 6.6 C10 9.8 10 13 10.1 16 C10.2 18.3 13.9 18.4 14 16.1 C14.1 12.4 14.1 8.6 14 4.9 C13.9 1.9 7.7 1.8 7.6 4.9 C7.5 9.4 7.5 13.8 7.7 18.2 C7.9 21.7 16.3 21.8 16.4 18.1 C16.5 14.9 16.5 11.7 16.3 8.6"/></svg>`;
