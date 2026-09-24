@@ -304,6 +304,9 @@ export function placeCoverStickers(cov, opts) {
     layer.appendChild(cell);
   }
   cov.appendChild(layer);
+  // Anything lying on the cover that has to keep clear of the stickers (the stuck-shut tag)
+  // re-seats off this, since a re-place after the fonts land or a resize can move the field.
+  cov.dispatchEvent(new CustomEvent("coverstickers", { bubbles: true }));
   return set.length;
 }
 

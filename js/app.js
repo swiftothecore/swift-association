@@ -33171,7 +33171,50 @@ function showLoadError(err) {
     <button class="load-tag-retry" type="button">Try again</button>`;
   tag.querySelector("button").addEventListener("click", () => location.reload());
   loading.append(tag);
+  seatLoadTag();
+  if (!loading.dataset.tagSeated) {
+    // The stickers can be re-dealt under the tag after it is tied on (the fonts landing, a
+    // resize), so it re-seats whenever they are, and on a resize of its own.
+    loading.dataset.tagSeated = "1";
+    loading.addEventListener("coverstickers", seatLoadTag);
+    addEventListener("resize", seatLoadTag);
+    document.fonts?.ready.then(seatLoadTag);
+  }
   return cause;
+}
+
+// The tag hangs off the strap, so any height along it is somewhere a real one could have
+// slid to. It takes the one that hides the fewest stickers, never rising onto the title plate
+// and never dropping below its CSS resting place (which on a phone is what keeps it clear of
+// the floating desk buttons). The stickers themselves are never moved to make room: they are
+// dealt from the cover's geometry alone, and the tag is not part of it.
+function seatLoadTag() {
+  const loading = $("loading");
+  const tag = loading?.querySelector(".load-tag");
+  if (!tag) return;
+  tag.style.top = tag.style.bottom = "";
+  const floor = tag.offsetTop;                       // the CSS resting place, via `bottom`
+  const plate = loading.querySelector(".nb-cover-plate");
+  if (!plate || !floor) return;
+  const lb = loading.getBoundingClientRect();
+  const ceiling = plate.getBoundingClientRect().bottom - lb.top + 18;
+  if (ceiling >= floor) return;
+  const tb = tag.getBoundingClientRect();
+  const left = tb.left - lb.left, right = tb.right - lb.left, h = tb.height;
+  const spots = [...loading.querySelectorAll(".cover-sticker")].map((el) => {
+    const r = el.getBoundingClientRect();
+    return { l: r.left - lb.left, r: r.right - lb.left, t: r.top - lb.top, b: r.bottom - lb.top };
+  }).filter((r) => r.r > left && r.l < right);
+  const hidden = (top) => spots.reduce((sum, r) =>
+    sum + Math.max(0, Math.min(r.r, right) - Math.max(r.l, left))
+        * Math.max(0, Math.min(r.b, top + h) - Math.max(r.t, top)), 0);
+  // Walked from the bottom up, so a tie keeps the tag low, where it hangs by default.
+  let best = floor, least = hidden(floor);
+  for (let top = floor - 4; top >= ceiling && least > 0; top -= 4) {
+    const cost = hidden(top);
+    if (cost < least) { least = cost; best = top; }
+  }
+  if (best !== floor) { tag.style.top = best + "px"; tag.style.bottom = "auto"; }
 }
 
 async function init() {

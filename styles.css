@@ -9386,9 +9386,11 @@
      tied to the strap saying why. The tag is stock lying ON the cover, so it takes physical
      colours rather than page tokens (the same reasoning as the title plate). It hangs off the
      lower part of the cover with its notched end tucked UNDER the strap (z 3), so the string
-     reads as tied round the elastic rather than stopping short of it. The plate is lifted into
-     the upper part of the cover while stuck, which is what gives the tag the room. */
-  .loading.is-stuck .nb-cover { align-items: flex-start; padding-top: max(40px, 13%); }
+     reads as tied round the elastic rather than stopping short of it. NOTHING ELSE ON THE COVER
+     MOVES for it: the plate stays where it sat while loading, because the stickers were dealt
+     around it and a lifted plate lands on the top row of them. Instead the tag slides along the
+     strap (seatLoadTag in app.js) to whichever height covers the fewest stickers. The `bottom`
+     here is only its lowest resting place, which that slide never goes below. */
   .load-tag {
     position: absolute; z-index: 2;
     right: calc(13% + 7px); bottom: 10%;
