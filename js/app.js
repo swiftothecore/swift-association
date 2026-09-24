@@ -10164,7 +10164,7 @@ function endRuthlessRun() {
   // timeouts, none of which a lens run touches — so the only stamp that could be standing is
   // the last main-game run's, and it is taken off the page.
   screens.results.querySelector(".run-stamp")?.remove();
-  $("keepGoingBtn").style.display = "none";
+  setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
@@ -15288,7 +15288,7 @@ function endLineup() {
   renderFinishedBracelet(roundResults, roundAlbums,
     { beadTints: roundBeadTints.slice(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
-  $("keepGoingBtn").style.display = "none";
+  setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
@@ -19203,7 +19203,7 @@ function endChallenge() {
     : beadScoredRule() ? [{ v: String(riskTarget()), l: "needed" }]
                      : [{ v: String(challengeTotal), l: "pages" }],
     inkRun ? "characters" : beadScoredRule() ? "beads" : "");
-  $("keepGoingBtn").style.display = "none";
+  setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
@@ -19572,7 +19572,7 @@ function endAlbumFocus() {
   renderFinishedBracelet(roundResults, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
-  $("keepGoingBtn").style.display = "none";
+  setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
@@ -19654,7 +19654,7 @@ function endGuest() {
   renderFinishedBracelet(roundResults, roundAlbums,
     { beadTints: roundBeadTints.slice(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
-  $("keepGoingBtn").style.display = "none";
+  setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
   hideNewBestBanner();
@@ -19740,7 +19740,7 @@ function endCustom() {
   setFinalTally(score, [infinite
     ? { v: String(roundsPlayed), l: roundsPlayed === 1 ? "round" : "rounds" }
     : { v: String(total), l: "pages" }]);
-  $("keepGoingBtn").style.display = "none";
+  setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
   renderVerseAnthology();
@@ -19852,7 +19852,7 @@ function showDailyResult(data, dateStr) {
   showScreen("results");
   renderFinishedBracelet(roundResults, roundAlbums, dailyBraceletOptions());
   renderDailyTally();
-  $("keepGoingBtn").style.display = "none";
+  setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
   document.querySelector("#screen-results .podium-title").textContent =
@@ -19925,6 +19925,61 @@ const AGAIN_MARK_CALENDAR =
   `<path class="ink" d="M16 3.4 L15.9 7.1"/>` +
   `<path class="ink" d="M9.6 13.6 L14.4 17.4"/>` +
   `<path class="ink" d="M14.5 13.7 L9.5 17.3"/>`;
+
+// The results page's two stamps, shown and hidden together so neither is left standing from the
+// last run. Side by side when both are up (the CSS stacks them on a phone), full width alone.
+function setResultStamps(replay, encore) {
+  $("replayBtn").style.display = replay ? "" : "none";
+  $("keepGoingBtn").style.display = encore ? "" : "none";
+  $("resultStamps").classList.toggle("is-pair", !!(replay && encore));
+}
+
+// TAKE, the replay stamp: a numbering machine whose wheels read the take the replay will be, so
+// no two runs are stamped alike. Drawn here rather than in index.html because the number moves
+// every run. Two cuts of the one stamp: the full column, and the half it gets beside ENCORE.
+function replayStampArt(w, take, sub) {
+  const narrow = w < 400;
+  const digits = String(take).padStart(3, "0");
+  const text = (x, y, size, ls, txt, rot) =>
+    `<text x="${x}" y="${y}"${rot ? ` rotate="${rot}"` : ""} fill="currentColor" text-anchor="middle" ` +
+    `style="font-family: var(--type); font-weight: 700; font-size: ${size}px; letter-spacing: ${ls}px;">${txt}</text>`;
+  const word = narrow ? { w: 84, size: 26, ls: 4 } : { w: 128, size: 30, ls: 6 };
+  const box = narrow ? { w: 22, h: 30, y: 19, size: 22, base: 41.5, gap: 3 } : { w: 26, h: 32, y: 18, size: 25, base: 43.5, gap: 4 };
+  const x0 = (w - (word.w + 10 + digits.length * box.w + (digits.length - 1) * box.gap)) / 2;
+  let art = `<rect x="4" y="4" width="${w - 8}" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>` +
+    `<rect x="10" y="10" width="${w - 20}" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>` +
+    text(x0 + word.w / 2, 44, word.size, word.ls, "TAKE", "-2 1 -1 2");
+  [...digits].forEach((d, i) => {
+    const bx = x0 + word.w + 10 + i * (box.w + box.gap);
+    art += `<rect x="${bx}" y="${box.y}" width="${box.w}" height="${box.h}" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>` +
+      text(bx + box.w / 2, box.base, box.size, 0, d, [1, -1.5, 0.8, -0.6][i % 4]);
+  });
+  return art + text(w / 2, 61.5, 8.5, 3, `&#9733; ${sub} &#9733;`);
+}
+
+// What the replay will start, captured when the stamp is inked so nothing between the results
+// page and the click (a trip to the stats and back) can change which run it hands back.
+let replayRun = null;
+function paintReplayStamp(take) {
+  const label = currentMode.label;
+  const infinite = gameType === "infinite";
+  const sub = infinite
+    ? (infiniteVariant === "sudden" ? "SUDDEN DEATH" : "INFINITE") + " · " + label.toUpperCase()
+    : label.toUpperCase() + " MODE";
+  $("rpStampArt").innerHTML = replayStampArt(560, take, sub);
+  $("rpStampArtNarrow").innerHTML = replayStampArt(276, take, sub);
+  // Chrome keeps printing a <use> clone of the art it first drew, so the second run's results
+  // would still read the first run's take. Pointing each clone away and back re-cuts it.
+  $("replayBtn").querySelectorAll("use").forEach((u) => {
+    const href = u.getAttribute("href");
+    u.setAttribute("href", "");
+    u.setAttribute("href", href);
+  });
+  $("replayBtn").setAttribute("aria-label", infinite
+    ? `Play ${infiniteVariant === "sudden" ? "sudden death" : "Infinite"} on ${label} again, take ${take}`
+    : `Play ${label} again, take ${take}`);
+  replayRun = { type: infinite ? "infinite" : "classic", mode: currentMode, variant: infiniteVariant };
+}
 
 // The results screen's "leave" stamp reads differently depending on how we got here:
 // finishing a real run turns back to the front page, but flipping back to an old
@@ -25341,7 +25396,10 @@ function endGame() {
   if (shownTime != null && !tallyHidden) tallyCells.push({ v: fmtTime(shownTime), l: "on the clock" });
   if (verseBonus > 0 && !tallyHidden) tallyCells.push({ v: "+" + verseBonus, l: "verse bonus" });
   setFinalTally(tallyHidden ? "?" : boardScore, tallyCells, isInfinite ? "rounds" : "");
-  $("keepGoingBtn").style.display = (isInfinite || isDaily) ? "none" : "";
+  // TAKE replays this mode (a Daily is one play a day, so it has none); ENCORE rolls a finished
+  // classic run on into Infinite, which an Infinite run already is.
+  if (!isDaily) paintReplayStamp(loadStats(mode).played + 1);
+  setResultStamps(!isDaily, !isInfinite && !isDaily);
   renderVerseAnthology();
   if (!isInfinite && score === TOTAL_ROUNDS && !dailyResultIsSealed()) {
     celebratePerfect();
@@ -29410,6 +29468,8 @@ function buildDevApi() {
     },
     jumpToRound: (n) => { round = Math.max(0, (n | 0) - 1); clearTimer(); advanceRound(); startTimer(); },
     endNow: () => endGame(),
+    // Re-ink the TAKE stamp with any number, to see how the wheels sit at four digits and up.
+    replayTake: (n) => paintReplayStamp(Math.max(1, n | 0)),
     batch1: {
       // The underline still has to pass through submitAnswer's stopwatch recording and the real
       // correct-verdict renderer. This only moves that stopwatch back half a second.
@@ -33235,6 +33295,13 @@ async function init() {
   $("braceletGuide")?.addEventListener("click", () => setBraceletMemoryOpen(!braceletMemoryOpen()));
   // Roll a finished classic run straight into endless play, carrying the score.
   $("keepGoingBtn").addEventListener("click", () => startInfinite("3lives", { carry: true }));
+  // Replay the run just finished, same mode (and the same Infinite rules), from page one.
+  $("replayBtn").addEventListener("click", () => {
+    if (!replayRun) return;
+    currentMode = replayRun.mode;
+    if (replayRun.type === "infinite") startInfinite(replayRun.variant);
+    else startGame();
+  });
   // Quit / give up mid-game — first tap arms, second tap leaves (see armQuit).
   $("quitBtn").addEventListener("click", armQuit);
 

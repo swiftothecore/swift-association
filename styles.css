@@ -1868,20 +1868,38 @@
   }
   .btn-ghost:hover { background: var(--highlighter); border-style: solid; }
 
-  /* ---------- "Keep going" — the encore stamp ----------
-     The finished tally gets marked the way a teacher stamps a page: a big
-     ENCORE / INFINITE MODE rubber stamp in margin-rule red (the rarity stamp's
-     hero sibling — same typewriter caps, double ring, multiply ink), distressed
-     by the #kgStampInk turbulence filter so no two edges print clean. Hovering
-     re-inks it and ghosts in a second strike; pressing thumps it down. */
-  /* the button (and the stamp inside it) spans the full page column so it takes up
-     the same horizontal space as the "front page" button beneath it */
+  /* ---------- The result stamps: TAKE (replay) and ENCORE (keep going) ----------
+     The finished tally gets marked the way a teacher stamps a page: big rubber stamps
+     (the rarity stamp's hero siblings — same typewriter caps, double ring, multiply ink),
+     distressed by a turbulence filter so no two edges print clean. ENCORE is margin-rule
+     red and rolls the run on into Infinite; TAKE is stamp-pad navy, a numbering-machine
+     stamp whose wheels count the take the replay will be. Hovering re-inks a stamp and
+     ghosts in a second strike; pressing thumps it down.
+
+     Alone, a stamp spans the full page column, the same width as the "front page" button
+     above it. When both are on the page they sit side by side, each printing its 276-wide
+     cut (see the index.html note) so the sub-lines keep their size. A phone stacks them
+     instead: half of a phone column is too narrow for either stamp to read. */
+  .result-stamps { position: relative; }
+  /* One pixel, not zero: Chrome does not lay out <text> inside an svg with no area, so a
+     0x0 defs sheet clones every stamp's frame and none of its lettering. It holds only
+     <defs>, so the pixel paints nothing. */
+  .stamp-defs { position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; pointer-events: none; }
   .keep-going {
+    --stamp-ink: #9e2b2b;
     display: block; width: 100%; margin: 16px auto 0;
     padding: 4px 0;
     background: transparent; border: none; cursor: pointer;
   }
+  .keep-going.replay-stamp { --stamp-ink: #27406f; }
   .keep-going:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 5px; border-radius: 4px; }
+  .keep-going .kg-narrow { display: none; }
+  @media (min-width: 561px) {
+    .result-stamps.is-pair { display: flex; gap: 12px; margin-top: 16px; }
+    .result-stamps.is-pair .keep-going { flex: 1 1 0; min-width: 0; margin: 0; }
+    .result-stamps.is-pair .kg-wide { display: none; }
+    .result-stamps.is-pair .kg-narrow { display: block; }
+  }
 
   .kg-press {
     display: block; transform: rotate(0deg);
@@ -1893,17 +1911,22 @@
   /* the stamp art itself carries its styling as presentation attributes (see the
      index.html note: <use> shadow clones are out of reach of these selectors) */
   .kg-stamp { display: block; width: 100%; height: auto; overflow: visible; mix-blend-mode: multiply; }
-  .kg-print { color: #9e2b2b; opacity: 0.82; transition: opacity 0.25s; }
+  .kg-print { color: var(--stamp-ink); opacity: 0.82; transition: opacity 0.25s; }
   .keep-going:hover .kg-print, .keep-going:focus-visible .kg-print { opacity: 1; }
   .keep-going:active .kg-print { opacity: 1; }
   /* the second strike: a slightly skewed ghost that only shows once re-inked */
   .kg-ghost {
-    color: #9e2b2b; opacity: 0;
+    color: var(--stamp-ink); opacity: 0;
     transform: translate(5px, -3.5px) rotate(1.8deg);
     transform-box: fill-box; transform-origin: center;
     transition: opacity 0.3s ease 0.05s;
   }
   .keep-going:hover .kg-ghost, .keep-going:focus-visible .kg-ghost { opacity: 0.3; }
+  /* Night: multiplied onto dark paper, a dark ink is a hole in the page rather than a print.
+     The pad lifts a shade and the ink sits on top instead. */
+  :root[data-theme="dark"] .keep-going { --stamp-ink: #e07f74; }
+  :root[data-theme="dark"] .keep-going.replay-stamp { --stamp-ink: #8ea6dc; }
+  :root[data-theme="dark"] .kg-stamp { mix-blend-mode: normal; }
 
 
   /* ---------- Hall of Fame (handwritten list) ---------- */
