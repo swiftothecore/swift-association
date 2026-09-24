@@ -224,7 +224,7 @@ export const DEFAULT_SETTINGS = {
   highContrast: false,
   colorBlindAlbums: false,  // swap ALBUM_COLORS for a colour-blind-friendly palette
   deskDensity: "full",      // "full" | "quiet" | "bare" decorative desk dressing
-  seasonalEffects: true,    // calendar-driven snow, midnight rain and autumn leaves
+  seasonalEffects: true,    // calendar-driven snow and autumn leaves
   hideDailyScore: false,    // hide the daily score until "reveal & copy"
   timezone: "auto",         // daily-reset zone: "auto" (detect) | an IANA id e.g. "America/New_York"
   weekStart: "mon",         // first row/column of week-based views (the records calendar): "mon" | "sun"
@@ -3090,7 +3090,6 @@ export const ACH_ICONS = {
   palm:    `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.7" d="M11 21.4 C11.6 17 11.4 13 10.2 9.6"/><path class="ink-fill" d="M10 9.2 C7 7.6 4.4 8 2.8 10 C5.6 10.6 8.2 10.4 10 9.2 Z"/><path class="ink-fill" d="M10 9 C8.4 6 5.8 4.6 3.2 5 C5.2 7.4 7.6 8.8 10 9 Z"/><path class="ink-fill" d="M10.2 8.8 C10 5.6 11.6 3 14.2 2.2 C14 5 12.4 7.6 10.2 8.8 Z"/><path class="ink-fill" d="M10.4 9 C13.2 7.4 16 7.6 17.8 9.4 C15.2 10.4 12.6 10.2 10.4 9 Z"/><path class="ink" stroke-width="1.4" d="M6.6 21.6 H15.4"/><g class="ink" stroke-width="1"><path d="M19.6 13.2 V16.8"/><path d="M17.8 15 H21.4"/><path d="M18.3 13.7 L20.9 16.3"/><path d="M20.9 13.7 L18.3 16.3"/><path d="M17 3.6 V6"/><path d="M15.8 4.8 H18.2"/><path d="M16.2 4 L17.8 5.6"/><path d="M17.8 4 L16.2 5.6"/></g></svg>`,
   // a crescent over thin falling streaks, the page kept company past midnight
   // (depth faked like the canvas effect: nearer drops longer and brighter)
-  nightrain:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M17.6 8.9 A4.95 4.95 0 1 1 12.65 2.55 A3.85 3.85 0 0 0 17.6 8.9 Z"/><path class="ink-fill" d="M4.7 2.2 L5.3 3.1 L6.2 3.7 L5.3 4.3 L4.7 5.2 L4.1 4.3 L3.2 3.7 L4.1 3.1 Z"/><g class="ink" stroke-width="1.5"><path d="M7.4 11.6 L6.9 16.8"/><path d="M12.7 14.4 L12.2 19.6"/></g><g class="ink" stroke-width="1.2" opacity="0.75"><path d="M17.6 12.8 L17.2 16.8"/><path d="M4.2 14.2 L3.9 17.6"/></g><g class="ink" stroke-width="1" opacity="0.5"><path d="M20.9 8.6 L20.6 11.4"/><path d="M9.9 19.4 L9.7 21.6"/></g></svg>`,
   // twelve beads strung, the clasp open, one bead never tied on — no closure
   unclasped:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.3" d="M17.2 5.2 A8.6 8.6 0 1 0 19.8 14.6"/><g class="ink-fill"><circle cx="19.45" cy="16.3" r="1.15"/><circle cx="17.1" cy="18.9" r="1.15"/><circle cx="13.9" cy="20.4" r="1.15"/><circle cx="10.4" cy="20.45" r="1.15"/><circle cx="7.15" cy="19.1" r="1.15"/><circle cx="4.7" cy="16.55" r="1.15"/><circle cx="3.5" cy="13.25" r="1.15"/><circle cx="3.7" cy="9.75" r="1.15"/><circle cx="5.3" cy="6.6" r="1.15"/><circle cx="8" cy="4.4" r="1.15"/><circle cx="11.4" cy="3.4" r="1.15"/><circle cx="14.9" cy="4.1" r="1.15"/></g><path class="ink" stroke-width="1.1" d="M17.2 5.2 C18 4.4 19 4.3 19.7 4.9"/><circle cx="20.2" cy="9.5" r="1.15" fill="none" stroke="currentColor" stroke-width="0.9" stroke-dasharray="1.4 1.3" opacity="0.55"/></svg>`,
   // your first daily, a fairytale: the glass slipper with a sparkle over it. The pumpkin coach
@@ -4249,7 +4248,6 @@ export const ACHIEVEMENTS = [
   { id: "recall-lyric-line-word-perfect",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: false, icon: "quote", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "open-settings-menu", name: "I Look In People's Windows", desc: "Open the settings menu",      secret: true,  icon: "window" },
   { id: "watch-snow-fall",   name: "Snow On The Page",    desc: "Watch the snow fall",                   secret: true,  icon: "palm" },
-  { id: "keep-page-company-past-midnight",       name: "Midnights Like This", desc: "Keep the page company past midnight",    secret: true,  icon: "nightrain" },
   { id: "watch-autumn-leaves-fall", name: "Autumn Leaves Falling", desc: "Watch the autumn leaves fall on the page", secret: true, icon: "leaf" },
   /* The scarf doodle is the one drawing you can touch, and its tally is lifetime rather than
      per-run: it is one of five drawings, each page rolls for one at 15%, and the roll is made
@@ -4756,7 +4754,6 @@ export const ACH_ID_MIGRATIONS = {
   "word-for-word": "recall-lyric-line-word-perfect",
   "i-look-in-windows": "open-settings-menu",
   "snow-on-the-beach": "watch-snow-fall",
-  "midnight-rain": "keep-page-company-past-midnight",
   "autumn-leaves-falling": "watch-autumn-leaves-fall",
   "safe-and-sound": "play-easy-3-times-in-row",
   "revenge": "beat-personal-best-score",
@@ -5078,7 +5075,7 @@ export const ACH_GROUP_OF = {
   "type-reputation-tv": "margins", "open-settings-menu": "margins",
   "save-first-bracelet-keepsake": "margins", "find-every-polaroid-keepsake": "margins",
   "play-word-from-searcher": "margins", "play-between-midnight-and-1am": "margins",
-  "keep-page-company-past-midnight": "margins", "play-whole-game-in-3am-hour": "margins",
+  "play-whole-game-in-3am-hour": "margins",
   "answer-rain-on-monday": "margins", "answer-august-in-august": "margins",
   "score-7-on-the-7th": "margins", "play-at-1313-on-the-13th": "margins",
   "play-on-taylors-birthday": "margins", "play-all-seven-weekdays": "margins",
@@ -5502,6 +5499,19 @@ export const GRAVEYARD = [
       `tab right above it. It was not the notebook's kind of joke either. The easter eggs here are ` +
       `things you find on the desk, and the jokes are ones you are in on. A colour that quietly ` +
       `changes and never lets you in on it is neither.`,
+  },
+  {
+    id: "rain",
+    name: "Midnight Rain",
+    born: "11 July 2026", died: "24 September 2026",
+    icon: "rain",
+    was: `For one minute a night, from midnight to a minute past, rain fell across the whole ` +
+      `screen: thin slate streaks leaning into a light wind, over the notebook and everything on it.`,
+    why: `It looked bad. Everything else here is ink on paper, and the rain was neither: a sheet ` +
+      `of fast grey dashes laid over the top of the page, which read less like weather than like ` +
+      `something wrong with the screen. Cutting it from an hour to a minute made it rarer without ` +
+      `making it look any better.`,
+    took: `Midnights Like This went with it.`,
   },
   {
     id: "adaptive",

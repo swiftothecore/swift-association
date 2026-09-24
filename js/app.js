@@ -588,7 +588,6 @@ function applySettings() {
   if (!settings.sound) runSoundOn = false;
   paintSoundGear();                   // the corner icon is a view of settings.sound, never its own state
   refreshSnow();   // December snowfall follows the reduce-motion setting live
-  refreshRain();   // midnight rain follows the reduce-motion setting live too
   refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
   paintCoverRibbon();  // the bookmark wears the player's era, once they have named one
   window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
@@ -726,99 +725,10 @@ function stopSnow() {
 }
 function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); }
 
-/* ---------- Midnight Rain ---------- */
-// The snowfall's seasonal sibling on the same rAF machinery: a full-viewport canvas
-// of thin, near-vertical streaks. Active only in the first minute of the day, 12:00 to
-// 12:01am in the player's active timezone (the clock reads local wall-clock, matching
-// how the daily midnight sticky is gated), and only when motion is allowed. A shower
-// that passes, not weather you have to sit through: an hour of it wears out its
-// welcome long before the hour is up.
-let rainRaf = null, rainDrops = [], rainCanvas = null, rainCtx = null,
-    rainLast = 0, rainResizeT = null, rainResizeBound = false, devForceRain = false;
-// Both hands straight up: getHours() === 0 && getMinutes() === 0 is the minute after
-// midnight. rainFrame re-checks this every frame, so a page open across 12:01 stops
-// the rain on its own. Dev override bypasses the clock but still respects
-// reduce-motion, exercising the real gate rather than a special case.
-function rainActive() {
-  const now = new Date();
-  return settings.seasonalEffects !== false && (devForceRain || (now.getHours() === 0 && now.getMinutes() === 0)) && !motionReduced();
-}
-function sizeRainCanvas() {
-  if (!rainCanvas) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = window.innerWidth, h = window.innerHeight;
-  rainCanvas.width = Math.max(1, Math.round(w * dpr));
-  rainCanvas.height = Math.max(1, Math.round(h * dpr));
-  rainCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  // Drop count scales with viewport area, capped for performance. Depth is faked per
-  // drop (length/speed/opacity/width), so nearer drops fall faster, longer, brighter.
-  const target = Math.min(140, Math.round((w * h) / 14000));
-  if (rainDrops.length > target) rainDrops.length = target;
-  while (rainDrops.length < target) {
-    const d = Math.random();
-    rainDrops.push({ x: Math.random() * w, y: Math.random() * h,
-      len: 9 + d * 18, sp: 380 + d * 520, wob: 0.6 + d * 0.9,
-      o: 0.18 + d * 0.34 });
-  }
-}
-function rainFrame(ts) {
-  if (!rainActive() || !rainCtx) { stopRain(); return; }
-  const w = window.innerWidth, h = window.innerHeight;
-  let dt = rainLast ? (ts - rainLast) / 1000 : 0.016;
-  rainLast = ts;
-  if (dt > 0.05) dt = 0.05;   // clamp big jumps from a throttled/backgrounded tab
-  rainCtx.clearRect(0, 0, w, h);
-  rainCtx.strokeStyle = "#3f4d6b";   // dark slate-blue — reads as rain on a light desk
-  rainCtx.lineCap = "round";
-  const slant = 1.1;   // px of horizontal drift per px of fall — a light wind lean
-  for (const d of rainDrops) {
-    d.y += d.sp * dt;
-    d.x += d.wob * d.sp * 0.03 * dt;   // faint drift so the streaks aren't a rigid grid
-    if (d.y - d.len > h) { d.y = -d.len; d.x = Math.random() * w; }
-    if (d.x > w + 4) d.x = -4;
-    rainCtx.globalAlpha = d.o;
-    rainCtx.lineWidth = 0.8 + d.len * 0.04;
-    rainCtx.beginPath();
-    rainCtx.moveTo(d.x, d.y);
-    rainCtx.lineTo(d.x - slant * d.len * 0.32, d.y - d.len);
-    rainCtx.stroke();
-  }
-  rainCtx.globalAlpha = 1;
-  rainRaf = requestAnimationFrame(rainFrame);
-}
-function startRain() {
-  if (!rainCanvas) {
-    rainCanvas = document.getElementById("midnightrain");
-    if (!rainCanvas) return;
-    rainCtx = rainCanvas.getContext("2d");
-  }
-  if (!rainResizeBound) {
-    window.addEventListener("resize", () => {
-      clearTimeout(rainResizeT);
-      rainResizeT = setTimeout(() => { if (rainActive()) sizeRainCanvas(); }, 150);
-    });
-    rainResizeBound = true;
-  }
-  sizeRainCanvas();
-  rainCanvas.style.display = "block";
-  rainLast = 0;
-  if (!rainRaf) rainRaf = requestAnimationFrame(rainFrame);
-  unlock("keep-page-company-past-midnight");   // you kept the page company past midnight
-}
-function stopRain() {
-  if (rainRaf) { cancelAnimationFrame(rainRaf); rainRaf = null; }
-  if (rainCanvas) {
-    rainCtx && rainCtx.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
-    rainCanvas.style.display = "none";
-  }
-}
-function refreshRain() { if (rainActive()) startRain(); else stopRain(); }
-
 /* ---------- Autumn leaves ---------- */
-// The third seasonal sibling on the same rAF machinery: a full-viewport canvas of leaves
-// that tumble rather than fall. Where snow drifts and rain streaks, a leaf flutters — a
-// pendulum sway, a slow spin, and a faked edge-on flip so each one turns over on its way
-// down. Active for the Halloween week (28 Oct through 3 Nov, active timezone) and only
+// The snowfall's seasonal sibling on the same rAF machinery: a full-viewport canvas of leaves
+// that tumble rather than fall. Where snow drifts, a leaf flutters — a pendulum sway, a
+// slow spin, and a faked edge-on flip so each one turns over on its way down. Active for the Halloween week (28 Oct through 3 Nov, active timezone) and only
 // when motion is allowed. Sparse and warm: a window left open in late October, not a
 // leaf storm.
 let leafRaf = null, leaves = [], leafCanvas = null, leafCtx = null,
@@ -839,7 +749,7 @@ function makeLeaf(w, h) {
   return {
     x: Math.random() * w, y: Math.random() * h,
     size: 6 + d * 10,                    // half-length in px → ~12–32px tall
-    sp: 20 + d * 42,                     // fall speed (px/s), gentler than rain
+    sp: 20 + d * 42,                     // fall speed (px/s)
     sway: 16 + d * 30,                   // lateral flutter amplitude (px)
     swayFq: 0.5 + Math.random() * 0.8,   // flutter frequency
     swayPh: Math.random() * 6.2832,
@@ -2900,7 +2810,7 @@ const HIDDEN_ACH_IDS = [
   "answer-under-half-second-left", "streak-3-same-album", "play-between-midnight-and-1am", "answer-cardigan-betty-august-one-game",
   "streak-3-b-titles", "lose-3-lives-first-4-rounds", "finish-with-no-answers", "miss-1000-rounds-lifetime",
   "answer-if-this-was-a-movie", "open-settings-menu", "watch-snow-fall",
-  "keep-page-company-past-midnight", "watch-autumn-leaves-fall", "answer-3-rounds-same-song", "answer-paris-for-somewhere",
+  "watch-autumn-leaves-fall", "answer-3-rounds-same-song", "answer-paris-for-somewhere",
   "answer-nemesis-word", "answer-rain-on-monday", "play-all-seven-weekdays", "type-reputation-tv",
   "quit-round-1-before-typing", "give-up-after-12-before-13", "defeat-challenge-after-7-runs", "fall-for-first-impostor",
   "miss-only-first-and-last-round",
@@ -15674,10 +15584,9 @@ function refreshDateSurfaces() {
   // played/unplayed coat, its countdown and the streak on the desk placard all
   // have to be redrawn with it.
   renderDailyButtonState();
-  // The weather is on the calendar too: snow is a December reading, the leaves are three
-  // days in November, and the rain wants the hour. Each refresher re-asks its own gate.
+  // The weather is on the calendar too: snow is a December reading and the leaves are three
+  // days in November. Each refresher re-asks its own gate.
   refreshSnow();
-  refreshRain();
   refreshLeaves();
 }
 // The day turning under a page that is already open. This is deliberately a POLL against
@@ -27107,7 +27016,7 @@ function renderSettingsBody() {
         // on the dark page, where the ink goes lighter and the paper darker.
         setCheckHTML("highContrast", "High contrast", "stronger ink, bolder accents"),
         setCheckHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette"),
-        setCheckHTML("seasonalEffects", "Seasonal effects", "December snow, midnight rain and autumn leaves"),
+        setCheckHTML("seasonalEffects", "Seasonal effects", "December snow and autumn leaves"),
         setCheckHTML("hideDailyScore", "Seal Daily results until reveal", "keeps the tally, bracelet, and recap covered until you tear the result slip to copy it"),
       ]));
   panels.sound =
@@ -32936,7 +32845,6 @@ function buildDevApi() {
             sparkle: () => celebrateCorrect(3), lyricSparkle: () => lyricSparkle(), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },
-            rain: (on) => { devForceRain = on === undefined ? !devForceRain : !!on; refreshRain(); return devForceRain; },
             leaves: (on) => { devForceLeaves = on === undefined ? !devForceLeaves : !!on; refreshLeaves(); return devForceLeaves; },
             pen: (p) => setPen(p || null) },
     // The corner guest stamp's ink, which is otherwise a once-per-load roll: this is

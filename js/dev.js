@@ -1471,7 +1471,6 @@ export function initDev(api) {
   // Seasonal-layer toggles bypass the calendar/clock gate but still respect
   // reduce-motion, so they exercise the real effect rather than a special case.
   const snowBtn = btn("snow", () => snowBtn.classList.toggle("on", api.eggs.snow()));
-  const rainBtn = btn("rain", () => rainBtn.classList.toggle("on", api.eggs.rain()));
   const leafBtn = btn("leaves", () => leafBtn.classList.toggle("on", api.eggs.leaves()));
   body.append(section("eggs",
     row(doodleSel, btn("doodle", () => api.eggs.doodle(doodleSel.value)),
@@ -1482,7 +1481,7 @@ export function initDev(api) {
     row(btn("yes whale", () => api.eggs.whale()),
         btn("bottle left", () => api.eggs.bottle("left")),
         btn("bottle right", () => api.eggs.bottle("right"))),
-    row(snowBtn, rainBtn, leafBtn),
+    row(snowBtn, leafBtn),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
 
   // ---- The scrolling desk ------------------------------------------------------
