@@ -2617,10 +2617,22 @@ if (location.pathname.endsWith('/index.html')) {
     <span class="corner-link-label">search every lyric</span>
   </a>
 </div>
+<!-- SETTINGS ICON: three mixing-desk faders at different heights, drawn by hand. It replaced
+     the stock Feather gear, the most recognisable downloaded icon on the web. Each track
+     stops at its knob rather than running through it, so the drawing works on any fill the
+     button wears (paper, the hover highlighter, the night sheet).
+     THE RUNNER-UP, kept here so switching is one swap: a cog drawn by hand, eight uneven teeth
+     and a lopsided hub. To use it, replace the six paths inside the <svg> below with these two
+     (same stroke settings, nothing else changes):
+       <path d="M9.66 4.63 L9.83 2.00 L13.68 1.91 L13.98 4.52 L15.38 5.36 L17.45 3.79 L19.85 6.05 L18.41 8.21 L19.20 10.09 L22.02 10.59 L21.95 13.88 L19.10 14.24 L18.75 15.53 L20.60 17.73 L18.08 20.36 L15.81 18.60 L14.52 19.32 L14.14 21.62 L10.81 21.78 L10.20 19.53 L8.09 18.62 L5.99 20.40 L3.25 17.48 L5.15 15.49 L4.49 13.82 L2.18 13.48 L2.35 9.65 L4.68 9.51 L5.38 8.37 L3.58 6.34 L6.32 3.59 L8.36 5.39 Z"/>
+       <path d="M12 9.1 C13.7 9 15 10.3 14.9 12 C14.9 13.7 13.6 14.9 11.9 14.9 C10.3 14.9 9 13.6 9.1 11.9 C9.1 10.3 10.4 9.1 12 9.1 Z"/>
+-->
 <button id="settingsGear" class="settings-gear" aria-label="Settings" title="Settings">
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="12" cy="12" r="3"/>
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    <path d="M6 3.4 C6.1 7.2 6.1 10.6 6.05 13.8 M6.05 16.9 C6.05 18.2 6 19.4 6 20.6"/><path d="M12 3.2 C11.95 4.2 11.95 5.2 11.95 6.1 M11.95 9.1 C11.9 13 11.95 17 12.1 20.8"/><path d="M18 3.5 C18.1 6 18.05 8.4 18 10.6 M17.98 13.6 C17.96 16 17.92 18.3 17.9 20.5"/>
+    <path d="M3.9 13.8 C5.3 13.7 6.7 13.7 8.1 13.9 L8 16.9 C6.6 17 5.3 17 3.9 16.8 Z"/>
+    <path d="M9.9 6.1 C11.3 6 12.7 6 14.1 6.2 L14 9.1 C12.6 9.2 11.3 9.2 9.9 9 Z"/>
+    <path d="M15.9 10.6 C17.3 10.5 18.7 10.5 20.1 10.7 L20 13.6 C18.6 13.7 17.3 13.7 15.9 13.5 Z"/>
   </svg>
 </button>
 
