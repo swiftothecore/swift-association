@@ -35,7 +35,7 @@ export const RULE_MARKS = {
     // "in full" rather than "the full title": on a lyric page this mark is struck beside a
     // CIRCLED quaver, and a line telling you to type the full title there contradicts the
     // mark next to it.
-    off: "no suggestions — type it out in full",
+    off: "no suggestions: type it out in full",
     late: "suggestions once you're a few letters into a title, and only from its first word",
   },
   hint: {
@@ -51,7 +51,7 @@ export const RULE_MARKS = {
   clock: {
     symbol: "rule-clock", strike: "rule-strike",
     on: "a clock on every page",
-    off: "no clock — take as long as you like",
+    off: "no clock: take as long as you like",
   },
   // The one mark with three things to say, because "a sung line counts" and "a sung line is
   // the only thing that counts" are a bonus and a whole different game, and until the second
@@ -63,7 +63,7 @@ export const RULE_MARKS = {
     more: ["only"],
     on: "sing the line the word is in, for a verse bonus",
     off: "the full title, nothing else",
-    only: "sing the line the word is in — a title won't do",
+    only: "sing the line the word is in; a title won't do",
   },
 };
 

@@ -230,7 +230,7 @@ export function initDev(api) {
   }
   function renderReveal() {
     const st = api.getState();
-    if (!st.valid.length) { answerBox.textContent = `"${st.word || "—"}" — no valid songs (or not in a round)`; return; }
+    if (!st.valid.length) { answerBox.textContent = `"${st.word || "—"}": no valid songs (or not in a round)`; return; }
     answerBox.textContent = `"${st.word}" → ${st.valid.length} song(s)\n` +
       st.valid.map((v) => `• ${v.title}${v.album ? "  [" + v.album + "]" : ""}\n    “${v.line}”`).join("\n");
   }
@@ -240,9 +240,9 @@ export function initDev(api) {
   function renderShortLines() {
     const rows = api.shortLines();
     const st = api.getState();
-    if (!rows.length) { answerBox.textContent = `"${st.word || "—"}" — no sub-floor lines in this round's songs`; return; }
-    answerBox.textContent = `"${st.word}" — ${rows.filter((r) => r.accepted).length}/${rows.length} short lines accepted\n` +
-      rows.map((r) => `${r.accepted ? "✓" : "✗"} “${r.line}”  — ${r.title}${r.why ? "  (" + r.why + ")" : ""}`).join("\n");
+    if (!rows.length) { answerBox.textContent = `"${st.word || "—"}": no sub-floor lines in this round's songs`; return; }
+    answerBox.textContent = `"${st.word}": ${rows.filter((r) => r.accepted).length}/${rows.length} short lines accepted\n` +
+      rows.map((r) => `${r.accepted ? "✓" : "✗"} “${r.line}”  · ${r.title}${r.why ? "  (" + r.why + ")" : ""}`).join("\n");
   }
   // Which tokens the lenient matcher actually credits to this page's word, in the same
   // three tiers the wrong-answer reveal sorts its cards by. The headline is the ratio:
@@ -368,7 +368,7 @@ export function initDev(api) {
     const r = api.typos.try(tryInput.value);
     tryOut.textContent = !r.key ? "—"
       : r.song ? `${r.song}  (${r.via})`
-      : `no song${r.forgiving ? "" : " — forgiveness off"}`;
+      : `no song${r.forgiving ? "" : " (forgiveness off)"}`;
   };
   tryInput.addEventListener("keydown", (e) => { if (e.key === "Enter") runTry(); });
   // The other half of the same question, from the list's side: which songs the dropdown is
@@ -521,9 +521,9 @@ export function initDev(api) {
         btn("burn 1", () => { readout.textContent = JSON.stringify(api.challenge.margin.spend(1)); }),
         btn("to the brink", () => { readout.textContent = JSON.stringify(api.challenge.margin.brink()); }),
         btn("doom the run", () => { readout.textContent = JSON.stringify(api.challenge.margin.doom()); }, "warn")),
-    row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked — open Challenges`; }),
-        btn("defeat all dark sides", () => { const n = api.challenge.dark.defeat(); readout.textContent = `${n} dark sides marked defeated — tap a black-violet seal`; }),
-        btn("char all seals", () => { const n = api.challenge.dark.char(); readout.textContent = `${n} seals burnt — compare the burnt art across the roster`; }),
+    row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked: open Challenges`; }),
+        btn("defeat all dark sides", () => { const n = api.challenge.dark.defeat(); readout.textContent = `${n} dark sides marked defeated: tap a black-violet seal`; }),
+        btn("char all seals", () => { const n = api.challenge.dark.char(); readout.textContent = `${n} seals burnt: compare the burnt art across the roster`; }),
         btn("un-char seals", () => { api.challenge.dark.char(false); readout.textContent = "violet wax back on every seal"; }),
         btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn")),
     row(returnSel, btn("ready return", () => {
@@ -541,8 +541,8 @@ export function initDev(api) {
     // Flourish charms hide behind ??? until their challenge is defeated, so checking how one
     // reads as a revealed target otherwise means actually beating the challenge first.
     row(btn("defeat all (reveal flourishes)", () => { const n = api.challenge.defeat();
-          readout.textContent = `${n} challenges marked defeated — open Achievements`; }),
-        btn("clear defeats", () => { api.challenge.undefeat(); readout.textContent = "defeats cleared — flourishes masked again"; }, "warn"))));
+          readout.textContent = `${n} challenges marked defeated: open Achievements`; }),
+        btn("clear defeats", () => { api.challenge.undefeat(); readout.textContent = "defeats cleared: flourishes masked again"; }, "warn"))));
 
   // ---- Album Focus -----------------------------------------------------------
   // Two halves, and the difference between them matters. The BOARD row forges the pinned
@@ -575,7 +575,7 @@ export function initDev(api) {
     row(mk("label", { class: "dv-check" }, afHints, " take a hint (board won't mark it beaten)")),
     row(btn("win all twelve", () => {
           api.album.winAll(afOpts());
-          readout.textContent = "twelve albums perfected — check the ink tray for the shuffle";
+          readout.textContent = "twelve albums perfected: check the ink tray for the shuffle";
         })),
     row("albums beaten", albumBeatenNum, btn("set", () => {
           api.albumBoard.beaten(+albumBeatenNum.value);
@@ -725,7 +725,7 @@ export function initDev(api) {
       flipAuditOut.textContent = lines.join("\n");
     });
     holdArmed.observe(document.body, { childList: true, subtree: true });
-    flipAuditOut.textContent = "armed — turn a page";
+    flipAuditOut.textContent = "armed: turn a page";
   };
   body.append(section("page turn",
     row(btn("hold next turn", holdNextTurn), btn("release", () => {
@@ -765,12 +765,12 @@ export function initDev(api) {
     row(btn("replay guided round", () => { api.onboarding.guideReplay(); toast("guided-round beats re-armed"); }),
         btn("replay word-forms note", () => { api.onboarding.formsReplay(); toast("word-forms note re-armed"); })),
     row(beatSel, btn("show beat", () => {
-      toast(api.onboarding.guideBeat(beatSel.value) ? beatSel.value + " shown" : "can't anchor — need an open round");
+      toast(api.onboarding.guideBeat(beatSel.value) ? beatSel.value + " shown" : "can't anchor: need an open round");
     })),
     // The era is also the colour of the bookmark ribbon, and the ribbon is only on screen while
     // the notebook is shut, so the cover has to be put back to judge the pick against it.
     row(obAlbumSel, btn("set era", () => { api.onboarding.setEra(obAlbumSel.value); toast("era → " + (obAlbumSel.value || "none")); }),
-        btn("show cover", () => { api.stickers.cover(); toast("notebook shut — ribbon on the cover"); })),
+        btn("show cover", () => { api.stickers.cover(); toast("notebook shut: ribbon on the cover"); })),
     // How to play opens on card one for players, so proofreading the last card would otherwise
     // cost three clicks every time. Jump straight to any of them.
     row(howToSel, btn("open how to play", () => api.onboarding.howTo(Number(howToSel.value)))),
@@ -786,7 +786,7 @@ export function initDev(api) {
     // The persistent testing flag (same switch as ?intro=0 / ?intro=1 on the URL): stop every
     // one-time greeting getting in the way of a session, or hand them all back.
     row(btn("silence intros (persists)", () => { api.onboarding.quiet(true); toast("first impressions silenced"); }),
-        btn("restore intros", () => { api.onboarding.quiet(false); toast("first impressions restored — reload"); })),
+        btn("restore intros", () => { api.onboarding.quiet(false); toast("first impressions restored: reload"); })),
     row(btn("reset", () => { api.onboarding.reset(); toast("onboarding reset"); }, "warn"))));
 
   // ---- Service worker / precache ----------------------------------------------
@@ -881,11 +881,11 @@ export function initDev(api) {
   async function flipBudget() {
     const g = flipGaps(await flipFrames(600));
     if (g.length < 12) {
-      return { ok: false, why: `only ${g.length} frames in 600ms — the window is not being drawn.` };
+      return { ok: false, why: `only ${g.length} frames in 600ms: the window is not being drawn.` };
     }
     const budget = flipMedian(g);
     if (budget > 24) {
-      return { ok: false, why: `idle frames are ${budget.toFixed(1)}ms apart — the window is being throttled.` };
+      return { ok: false, why: `idle frames are ${budget.toFixed(1)}ms apart: the window is being throttled.` };
     }
     return { ok: true, budget, idleDropped: g.filter((x) => x > budget * 1.6).length };
   }
@@ -1190,7 +1190,7 @@ export function initDev(api) {
     row("streak cur", stCur, "best", stBest, btn("set", () => { api.daily.setStreak(+stCur.value, +stBest.value); toast("streak set"); })),
     // Backfills n real saved days (fakeStrand), then jumps straight to one of them —
     // the fast path for checking the Stats calendar's archive view and its ‹ › month nav.
-    row(btn("fake 45-day strand", () => { api.daily.fakeStrand(45); toast("45 fake days saved — open Stats → All to see the calendar"); }),
+    row(btn("fake 45-day strand", () => { api.daily.fakeStrand(45); toast("45 fake days saved: open Stats → All to see the calendar"); }),
         "reopen", reopenDate,
         btn("reopen", () => toast(api.daily.reopen(reopenDate.value)))),
     // The desk slip's strand at the three counts that decide the drawing: the singular
@@ -1203,17 +1203,17 @@ export function initDev(api) {
     row(btn("preview album pool", () => {
           const r = api.daily.preview();
           api.daily.dump(r.date);
-          toast(r.pool ? `${r.album}: pool ${r.size}${r.relaxed ? " (relaxed)" : ""} — see console` : "no album pool that day");
+          toast(r.pool ? `${r.album}: pool ${r.size}${r.relaxed ? " (relaxed)" : ""}: see console` : "no album pool that day");
         }),
         btn("all albums", () => toast(api.daily.dump())),
         btn("5 years", () => {
           const y = api.daily.years();
           if (!y.years) { toast("no album pool that day"); return; }
-          console.group(`${y.album} — same anniversary, ${y.years.length} years (exp ${y.exp})`);
+          console.group(`${y.album}: same anniversary, ${y.years.length} years (exp ${y.exp})`);
           for (const r of y.years) console.log(`${r.year}  repeats ${r.repeats === null ? "—" : r.repeats + "/13"}   ${r.words.join(", ")}`);
           console.log(`${y.distinct}/${y.of} distinct words overall`);
           console.groupEnd();
-          toast(`${y.album}: ${y.distinct}/${y.of} distinct — see console`);
+          toast(`${y.album}: ${y.distinct}/${y.of} distinct: see console`);
         }))));
 
   // ---- Dated marginalia / sharing ------------------------------------------
@@ -1242,12 +1242,12 @@ export function initDev(api) {
      carries whatever a single page cannot cover: a run-long condition, a page number, a day of
      the week, or a warning that this one is an egg and will spend the page. */
   const catRecipes = api.catalogue.recipes();
-  const catSel = select(catRecipes, (r) => r.id, (r) => r.name + (r.egg ? " (egg — burns the page)" : ""));
+  const catSel = select(catRecipes, (r) => r.id, (r) => r.name + (r.egg ? " (egg: burns the page)" : ""));
   const catOut = mk("pre", { class: "dv-pre" }, "arm a page, then press Enter in the box");
   body.append(section("catalogue charms",
     row(catSel, btn("arm page", () => {
       const r = api.catalogue.arm(catSel.value);
-      if (!r) { catOut.textContent = "needs a live, unlocked page — start a run first"; return; }
+      if (!r) { catOut.textContent = "needs a live, unlocked page: start a run first"; return; }
       catOut.textContent = `“${r.word}” → ${r.answer}` + (r.egg ? " · wrong on purpose" : "") + (r.more ? ` · ${r.more}` : "");
       toast("page armed");
     })),
@@ -1267,7 +1267,7 @@ export function initDev(api) {
     row(achSel, btn("fire", () => api.seed.fireAch(achSel.value)),
         btn("remove", () => { api.seed.removeAch(achSel.value); toast("achievement removed"); }, "warn")),
     // Stocks the results band's charm half: fire enough at once to push it past its cap.
-    row(btn("fire 8 (recap band)", () => toast(api.seed.fireBatch(8) + " charms fired — now end a game")),
+    row(btn("fire 8 (recap band)", () => toast(api.seed.fireBatch(8) + " charms fired: now end a game")),
         btn("fire 2", () => toast(api.seed.fireBatch(2) + " charms fired"))),
     row(nameInput, btn("set name", () => { if (nameInput.value.trim()) { api.seed.setName(nameInput.value.trim()); toast("name set"); } }))));
 
@@ -1633,7 +1633,7 @@ export function initDev(api) {
       // fresh eyeball pass over all 33. Advisory: a flagged seal still renders.
       const f = waxPourFaults(seeds[id]);
       cell.classList.toggle("fault", f.kinked);
-      if (f.kinked) cell.setAttribute("title", `kinked (${f.kink}) — corners with straight edge between, worth re-pouring`);
+      if (f.kinked) cell.setAttribute("title", `kinked (${f.kink}): corners with straight edge between, worth re-pouring`);
       else cell.removeAttribute("title");
     };
     const markDupes = () => {
@@ -1680,7 +1680,7 @@ export function initDev(api) {
       const moved = Object.keys(seeds).filter((id) => seeds[id] !== WAX_SEEDS[id]);
       const list = moved.length ? moved : Object.keys(seeds);
       const txt = list.map((id) => `"${id}": { wax: ${seeds[id]}, ...`).join("\n");
-      console.log(`[dev] ${moved.length ? "re-poured" : "all"} seal seeds — lock these into WAX_SEAL_MOTIFS\n` + txt);
+      console.log(`[dev] ${moved.length ? "re-poured" : "all"} seal seeds: lock these into WAX_SEAL_MOTIFS\n` + txt);
       if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => toast(`${list.length} seed(s) copied`), () => toast("seeds in console"));
       else toast("seeds in console");
     });
@@ -1875,7 +1875,7 @@ export function initDev(api) {
     }
   });
   window.__dev = api;
-  console.log("%c[dev] cheats armed — backtick (`) toggles the panel · window.__dev for the API", "color:#7cd");
+  console.log("%c[dev] cheats armed: backtick (`) toggles the panel · window.__dev for the API", "color:#7cd");
 }
 
 function injectStyles() {

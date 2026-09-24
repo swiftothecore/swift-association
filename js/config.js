@@ -1331,13 +1331,13 @@ export const CHALLENGES = [
     // One guess, not three. The copy states the number out loud, so it has to move with it.
     hard: { guesses: 1,
       desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word, and the run ends the moment you do. You get ONE guess, so be sure before you commit.",
-      win: "Answer the named song first time, with a single guess — the earlier the page, the better." },
+      win: "Answer the named song first time, with a single guess. The earlier the page, the better." },
     desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word, and the run ends the moment you do. You have three guesses, and getting it wrong costs you a guess.",
-    win: "Answer the named song before your 3 guesses run out — the earlier the page, the better." },
+    win: "Answer the named song before your 3 guesses run out. The earlier the page, the better." },
   { id: "choose-your-path", name: "Choose Your Path", rule: "path", mode: "medium",
     free: false, cost: 1, target: 9, forks: [4, 8], tapes: 1,
     desc: "Pick perks at forks in the run that help you get ahead.",
-    win: "Score 9 / 13 — your way." },
+    win: "Score 9 / 13, your way." },
   { id: "wildcard", name: "Wildcard", rule: "wildcard", mode: "medium",
     free: false, cost: 1, target: 9, noTitle: false, tapes: 2,
     // Dark: two sub-rules at once. `stack` is read by applyWildcardRound, which only offers
@@ -1570,7 +1570,7 @@ export const CHALLENGES = [
     // answers, so the win copy is unchanged; only the difficulty of each call moves.
     hard: { seconds: 10, impostorCount: 5, impostorHardWords: true,
       blurb: "more fakes, harder to spot · flag the impostors, answer the real ones",
-      desc: "Same game, tightened: MORE of the pages are impostors now, and the fakes are the kind of word you could swear you've heard her sing. Flag every impostor and answer the real ones — one wrong call still ends the run." },
+      desc: "Same game, tightened: MORE of the pages are impostors now, and the fakes are the kind of word you could swear you've heard her sing. Flag every impostor and answer the real ones. One wrong call still ends the run." },
     blurb: "some words are fakes · flag the impostors, answer the real ones",
     desc: "Most pages will show a real word that appears in lyrics, but some are IMPOSTORS that don't appear in any real Taylor songs. Flag the impostors and answer the real ones, but don't flag a real word or fail to flag an impostor because you'll instantly lose.",
     win: "Survive the run: flag every impostor and answer 7 real words." },
@@ -1587,7 +1587,7 @@ export const CHALLENGES = [
     //   dark side leans on the honest, plentiful squeeze instead of a trap that can't fire.
     hard: { seconds: 7, seaMinValid: 1, seaMaxValid: 2,
       blurb: "7s · no typing · a wide sea, as little as ONE right song · tap its title",
-      desc: "The same sea of titles, but far fewer of them are right — sometimes only one — and you have less time to find it. Tap a title whose lyrics hold the word.",
+      desc: "The same sea of titles, but far fewer of them are right (sometimes only one), and you have less time to find it. Tap a title whose lyrics hold the word.",
       win: "Score 9 / 13 fishing the one right song from the sea." },
     blurb: "10s · no typing · a sea of titles · tap one whose lyrics hold the word",
     desc: "No typing this time. Instead, each page shows a sea of song titles, click one whose lyrics contain the word. There are multiple correct answers, but most are decoys.",
@@ -1602,7 +1602,7 @@ export const CHALLENGES = [
     // counts, so a rare page that can't reach a unique thread doesn't reject a legitimate answer.
     hard: { seconds: 2.5, commonLines: 4, commonMaxAccept: 1,
       blurb: "2.5s · four lines now, and only one word threads them all",
-      desc: "Throw everything you know about this game out the window. Four lyrics from four different songs, and one word runs through every one of them — nothing else will do. Can you find it in 2.5 seconds?",
+      desc: "Throw everything you know about this game out the window. Four lyrics from four different songs, and one word runs through every one of them, and nothing else will do. Can you find it in 2.5 seconds?",
       win: "Score 9 / 13 finding the one thread through four lines." },
     blurb: "3.5s · the game flips: three lines, one word runs through all of them",
     desc: "Throw everything you know about this game out the window. This time you are shown three lyrics from three different songs and you need to type the word they all share. Can you do it in 3.5 seconds?",
@@ -1680,7 +1680,7 @@ export const CHALLENGES = [
     // it a typing race instead.
     hard: { need: 4, target: 7, noTitle: true,
       blurb: "30s · suggestions · FOUR different songs a page · never in the title",
-      desc: "Three wasn't enough. Four different songs for the one word, every page, in the same half minute — and the titles no longer count, so every one of them has to sing it.",
+      desc: "Three wasn't enough. Four different songs for the one word, every page, in the same half minute, and the titles no longer count, so every one of them has to sing it.",
       win: "Clear 7 pages, naming four different songs each." },
     blurb: "30s · suggestions · name THREE different songs a page",
     desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue. Songs with the word in the title count here.",
@@ -4244,7 +4244,7 @@ export const ACHIEVEMENTS = [
   { id: "finish-with-no-answers",   name: "I Can't See You",  desc: "Finish a game without answering once", secret: true, icon: "blindfold" },
   { id: "miss-1000-rounds-lifetime",    name: "A Thousand Cuts",          desc: "1,000 lifetime missed rounds", tier: 2, secret: true, icon: "scissors" },
   { id: "reach-round-13-infinite-from-scratch",      name: "Where We Stood",   desc: "Reach round 13 from scratch in Infinite", secret: false, icon: "summit", sitting: true, earn: { cat: "infinite" } },
-  { id: "answer-if-this-was-a-movie",      name: "Spicy Drama",      desc: "Answer with \"If This Was A Movie\" — Fearless or Speak Now? Fans still argue", secret: true, icon: "clapper" },
+  { id: "answer-if-this-was-a-movie",      name: "Spicy Drama",      desc: "Answer with \"If This Was A Movie\". Fearless or Speak Now? Fans still argue", secret: true, icon: "clapper" },
   { id: "recall-lyric-line-word-perfect",    name: "Word For Word",    desc: "Recall a lyric line word-perfect",     secret: false, icon: "quote", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "open-settings-menu", name: "I Look In People's Windows", desc: "Open the settings menu",      secret: true,  icon: "window" },
   { id: "watch-snow-fall",   name: "Snow On The Page",    desc: "Watch the snow fall",                   secret: true,  icon: "palm" },

@@ -1856,7 +1856,7 @@ function renderExcludedNote() {
   const shown = titles.slice(0, SHOWN)
     .map((t) => `<span class="ex-title">${escapeHtml(censor(t))}</span>`);
   if (titles.length > SHOWN) shown.push(`<span class="ex-more">+${titles.length - SHOWN} more</span>`);
-  const lead = titles.length === 1 ? "can’t be played — it’s in the title" : "can’t be played — they’re in the title";
+  const lead = titles.length === 1 ? "can’t be played: it’s in the title" : "can’t be played: they’re in the title";
   el.innerHTML = `<span class="ex-lead">${lead}</span>${shown.join("")}`;
   el.style.display = "";
 }
@@ -2031,8 +2031,8 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   let body;
   if (s.played === 0) {
     body = (isAll
-      ? `<p class="stats-empty">no games yet — start writing!</p>`
-      : `<p class="stats-empty">no games yet in ${MODES[viewMode].label} — start writing!</p>`) + playCTA();
+      ? `<p class="stats-empty">no games yet. start writing!</p>`
+      : `<p class="stats-empty">no games yet in ${MODES[viewMode].label}. start writing!</p>`) + playCTA();
   } else {
     const avg = (s.totalScore / s.played).toFixed(1);
     const maxCount = Math.max(...s.scoreCounts, 1);
@@ -2054,7 +2054,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     const recent = recentScores(viewMode);
     const formPanel = recent.length >= 2
       ? sparklineSVG(recent)
-      : `<span class="statE-form-empty">— more games will draw your form —</span>`;
+      : `<span class="statE-form-empty">(more games will draw your form)</span>`;
     const star = `<span class="statE-star">${STAR_SVG}</span>`;
     // Rolling "forgiving form" — last-20 average, sitting beside the lifetime
     // best/average so a gentle current number reads against the aspirational one.
@@ -2135,7 +2135,7 @@ function lifetimeStatsHTML() {
   const nemesis = topTallyEntry(t.misses);
   const header = `<p class="histogram-label" style="margin-top:24px;">your catalogue</p>`;
   if (!discovered && !nemesis) {
-    return header + `<p class="stats-empty">no answers logged yet — play a game to start your catalogue!</p>`;
+    return header + `<p class="stats-empty">no answers logged yet. play a game to start your catalogue!</p>`;
   }
   // Floor, not round — 243/244 must read 99%, never a misleading 100% before completion.
   const pct = Math.floor((discovered / total) * 100);
@@ -2388,7 +2388,7 @@ function dailyStatsHTML() {
   const cal = dailyCalendarHTML();
   const head = `<p class="histogram-label" style="margin-top:24px;">daily challenge</p>`;
   if (!d.lastPlayed) {
-    return head + cal + `<p class="stats-empty">no daily runs yet — try today's Daily Challenge!</p>`;
+    return head + cal + `<p class="stats-empty">no daily runs yet. try today's Daily Challenge!</p>`;
   }
   const note = d.playedToday
     ? `<p class="daily-streak-note">✓ played today's challenge</p>`
@@ -2591,7 +2591,7 @@ function infiniteTabHTML() {
     const beads = Array.from({ length: sty.beads }, () => `<i style="background:${sty.color}"></i>`).join("");
     const head = `<div class="inf-group-h"><span class="inf-th-beads">${beads}</span>${sty.label}</div>`;
     if (!mine.length) {
-      return `<section class="inf-group">${head}<p class="inf-untried">nothing strung here yet — ${sty.label} is still an empty page</p></section>`;
+      return `<section class="inf-group">${head}<p class="inf-untried">nothing strung here yet; ${sty.label} is still an empty page</p></section>`;
     }
     const rows = mine.map((e) =>
       `<div class="inf-row">` +
@@ -3949,7 +3949,7 @@ function renderAchievementsPage() {
     `</div>` :
     `<div class="ach-latest ach-latest--empty"><div class="ach-latest-text">` +
     `<div class="ach-latest-label">your newest charm</div>` +
-    `<div class="ach-latest-meta">no charms yet — finish a game to earn your first</div>` +
+    `<div class="ach-latest-meta">no charms yet. finish a game to earn your first</div>` +
     playCTA() + `</div></div>`;
 
   html += `<div class="ach-head-row">${meter}${latestCard}</div>`;
@@ -4483,7 +4483,7 @@ function renderBestLine(el, mode, opts = {}) {
     if (best > 0) rec = { score: best, date: null };
   }
   if (!rec) {
-    el.innerHTML = `<div class="best-empty">no runs yet — set your first record</div>`;
+    el.innerHTML = `<div class="best-empty">no runs yet. set your first record</div>`;
     return;
   }
   const unit = isInfiniteToken(mode) ? " rounds" : " / " + TOTAL_ROUNDS;
@@ -4679,7 +4679,7 @@ function setHeatFoot(view, total, days) {
   const f = $("heatFoot"); if (!f) return;
   const g = (n) => `${n} game${n === 1 ? "" : "s"}`;
   let msg;
-  if (total === 0) msg = view === "m1" ? `no games yet this month — <b>play to start filling your calendar</b>` : `nothing logged here yet — <b>play a round to begin</b>`;
+  if (total === 0) msg = view === "m1" ? `no games yet this month. <b>play to start filling your calendar</b>` : `nothing logged here yet. <b>play a round to begin</b>`;
   else if (view === "y1") msg = `<b>${g(total)}</b> across <b>${days} day${days === 1 ? "" : "s"}</b>, darker means more games`;
   else if (view === "ytd") msg = `<b>${g(total)}</b> so far in ${todayKey().slice(0, 4)}`;
   else msg = `<b>${g(total)}</b> over the last 30 days`;
@@ -4802,7 +4802,7 @@ function renderWeekHeat(body) {
       `</div>` +
     `</div>`;
   const f = $("heatFoot");
-  if (f) f.innerHTML = total ? `<b>${total} game${total === 1 ? "" : "s"}</b> in the last 7 days — busiest hours are darkest` : `nothing in the last 7 days — <b>play to light up your week</b>`;
+  if (f) f.innerHTML = total ? `<b>${total} game${total === 1 ? "" : "s"}</b> in the last 7 days (busiest hours are darkest)` : `nothing in the last 7 days. <b>play to light up your week</b>`;
 }
 
 function renderHeatBody() {
@@ -5801,7 +5801,7 @@ function renderRecordsPage() {
     if (loadRecords(tok).length) infTokens.push(tok);
   }
   const infBlock = infTokens.length
-    ? `<p class="rec-group-label">infinite — rounds survived</p><div class="pb-grid pb-grid-inf">${infTokens.map((t) => pbTile(t)).join("")}</div>`
+    ? `<p class="rec-group-label">infinite · rounds survived</p><div class="pb-grid pb-grid-inf">${infTokens.map((t) => pbTile(t)).join("")}</div>`
     : "";
   const db = dailyBest();
   const streak = effectiveDailyStreak(todayKey());
@@ -5843,7 +5843,7 @@ function renderRecordsPage() {
     .map((id) => ruthlessLens(id)).filter(Boolean)
     .filter((lens) => ruthlessRecord(lens.id).plays);
   const ruthlessBlock = rlPlayed.length
-    ? `<p class="rec-group-label">ruthless game — fastest run, lowest wins</p><div class="pb-grid">` +
+    ? `<p class="rec-group-label">ruthless game · fastest run, lowest wins</p><div class="pb-grid">` +
       rlPlayed.map((lens) => {
         const rec = ruthlessRecord(lens.id);
         // How the time was got and when, in that order: two runs can post the same seconds with
@@ -5867,7 +5867,7 @@ function renderRecordsPage() {
   const tbtBoard = loadTracks();
   const tbtPlayed = STUDIO_ALBUMS.filter((a) => tbtBoard[a] && tbtBoard[a].plays);
   const tracksBlock = tbtPlayed.length
-    ? `<p class="rec-group-label">track by track — fastest record, lowest wins</p><div class="pb-grid">` +
+    ? `<p class="rec-group-label">track by track · fastest record, lowest wins</p><div class="pb-grid">` +
       tbtPlayed.map((album) => {
         const rec = tbtBoard[album];
         return `<div class="pb-tile" style="--pb-accent:${albumColor(album) || "#999"}">` +
@@ -5882,11 +5882,11 @@ function renderRecordsPage() {
   _pbByMode = {};
   for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
   const histBlock = hist.length
-    ? `<p class="rec-group-label">history — ${hist.length} run${hist.length === 1 ? "" : "s"}</p>` +
+    ? `<p class="rec-group-label">history · ${hist.length} run${hist.length === 1 ? "" : "s"}</p>` +
       `<div class="hist-head"><span>score</span><span>time</span><span>verse</span><span>mode</span><span>date</span></div>` +
       `<div id="histRows" class="hist-rows"></div>` +
       (hist.length > HISTORY_PAGE ? `<button id="histMore" class="btn-ghost">load more</button>` : "")
-    : `<p class="rec-group-label">history</p><p class="stats-empty">no runs yet — finish a game to start your log.</p>${playCTA()}`;
+    : `<p class="rec-group-label">history</p><p class="stats-empty">no runs yet. finish a game to start your log.</p>${playCTA()}`;
 
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
@@ -6123,7 +6123,7 @@ const MASTERY_LEVEL_LABEL = {
 // The next reward waiting up the track, phrased for the sub-line ("" once none remain).
 function masteryNextRewardNote(mLevel) {
   for (let lv = mLevel + 1; lv <= MASTERY_MAX_LEVEL; lv++) {
-    if (MASTERY_LEVEL_LABEL[lv]) return `Next — ${MASTERY_LEVEL_LABEL[lv]} at level ${lv}`;
+    if (MASTERY_LEVEL_LABEL[lv]) return `Next: ${MASTERY_LEVEL_LABEL[lv]} at level ${lv}`;
   }
   return "";
 }
@@ -6246,7 +6246,7 @@ function buildRewardBento(m, mLevel, unlocked) {
         area: "hard", tone: "dark", watermark: true, earned: superHardTierOpen(),
         // With the button below carrying the verb, the copy no longer has to point at
         // Challenges in words as well.
-        earnedCopy: "Unlocked — a whole tier of brutal challenges.",
+        earnedCopy: "Unlocked: a whole tier of brutal challenges.",
         lockedCopy: `A tier of brutal new challenges. Reach Mastery ${hardR ? hardR.level : ""} to break the seal.`,
         action: { label: "Take one on", attr: `data-open-brutal` },
       }) +
@@ -6265,7 +6265,7 @@ function buildRewardBento(m, mLevel, unlocked) {
       buildMilestoneTile(hintR, {
         area: "hint", tone: "ink", watermark: true, earned: !!(hintR && m.unlocked[hintR.id]),
         earnedCopy: secretsLeft
-          ? "Unlocked — every secret charm now shows how to earn it."
+          ? "Unlocked: every secret charm now shows how to earn it."
           : "Every secret charm found. The hints have nothing left to reveal.",
         lockedCopy: `What every secret charm wants from you, kept shut. Reach Mastery ${hintR ? hintR.level : ""} for the key.`,
         action: secretsLeft ? { label: "Read the hints", attr: `data-open-secret-charms` } : null,
@@ -6289,7 +6289,7 @@ function buildStickerHintTile(m, unlocks) {
   return buildMilestoneTile(r, {
     area: "stick", tone: "ink", watermark: true, earned: !!(r && m.unlocked[r.id]),
     earnedCopy: left
-      ? "Unlocked — every sticker you have not earned now whispers what it wants."
+      ? "Unlocked: every sticker you have not earned now whispers what it wants."
       : "All fifteen stuck down. Nothing left on the shelf to hint at.",
     lockedCopy: `A nudge toward each sticker still showing as a shape. Reach Mastery ${r ? r.level : ""} to be let in on it.`,
     action: left ? { label: "Open the drawer", attr: `data-open-sticker-shelf` } : null,
@@ -7231,7 +7231,7 @@ function renderBonusPage() {
             (bonusHasEndless(g)
               ? `<button type="button" id="bonusEndlessBtn" class="bonus-play is-endless" data-tear="${g.id}"` +
                 ` data-tip="No last page: it deals until you miss one">${ENDLESS_LOOP}` +
-                `<span>Endless</span><span class="sr-only"> — no last page: it deals until you miss one</span>` +
+                `<span>Endless</span><span class="sr-only"> (no last page: it deals until you miss one)</span>` +
                 `</button>` : "") +
             `</div>`
           : `<p class="bonus-now-soon">This one is still being written, so there is nothing inside it yet.</p>`) +
@@ -7769,7 +7769,7 @@ function renderBonusRound() {
       // On the endless side that is no longer true and would be exactly the wrong thing to say:
       // every card is still real, and only one of them keeps the run alive.
       `<p class="bg-hint">${bonusEndless
-          ? "every one of them is in the song — only the rarest keeps the run"
+          ? "every one of them is in the song, but only the rarest keeps the run"
           : "every one of them is in the song, spelled the way it is sung"}</p>`;
     renderOnlyHand();
   } else if (isRuthlessRun()) {
@@ -7777,7 +7777,7 @@ function renderBonusRound() {
     // breaks. Nothing about the song is named anywhere on the page — no title, no album, no
     // section — because the stream is the only evidence there is meant to be.
     body.innerHTML =
-      `<p class="bg-ask">name the song — a word arrives every second</p>` +
+      `<p class="bg-ask">name the song: a word arrives every second</p>` +
       `<div class="bg-stream" id="bonusStream" role="log" aria-live="polite" ` +
            `aria-label="The song, one word at a time"></div>` +
       `<p class="bg-worth"><b id="bonusWords">0</b> words · <b id="bonusSpent">0:00</b> on this page` +
@@ -7821,8 +7821,8 @@ function renderBonusRound() {
          a worth counter under a page that is worth one page either way would be the one number
          on screen that meant nothing. */
       `<p class="bg-ask">${bonusEndless
-          ? "name the song — peel what you need, the clock is the cost"
-          : "name the song — every strip you peel costs a point"}</p>` +
+          ? "name the song. peel what you need; the clock is the cost"
+          : "name the song. every strip you peel costs a point"}</p>` +
       label +
       `<div class="bg-redact" role="group" aria-label="A verse with words taped over">${rows}</div>` +
       (bonusEndless ? ""
@@ -8826,7 +8826,7 @@ function renderOnlyHand(reveal = false) {
       reveal ? (best.has(i) ? "is-best" : "") : "",
       reveal && picked ? (best.has(i) ? "is-got" : "is-missed") : ""].filter(Boolean).join(" ");
     const aria = censor(c.word) +
-      (reveal ? ` — sung by ${c.count} song${c.count === 1 ? "" : "s"}, worth ${c.points}` +
+      (reveal ? `: sung by ${c.count} song${c.count === 1 ? "" : "s"}, worth ${c.points}` +
                 (best.has(i) ? ", the rarest in the hand" : "") + (picked ? ", your pick" : "")
               : "");
     return `<button type="button" class="bg-scrap ${cls}" data-i="${i}"${reveal ? " disabled" : ""}` +
@@ -8996,7 +8996,7 @@ function markNashvilleDoors(choice) {
 // rule: two lines an inch apart saying one thing is the failure every reveal here avoids.
 function nashvilleDetail() {
   return bonusPuzzle.hers
-    ? `<b>hers</b> — written and never released`
+    ? `<b>hers</b>: written and never released`
     : `<b>${escapeHtml(bonusPuzzle.artist)}</b>`;
 }
 
@@ -10237,7 +10237,7 @@ function endRuthlessRun() {
   // carry the figure rather than describe the rule in words.
   const snapFoot = snaps
     ? `<p class="rl-pages-foot">${snaps} named inside ${snapWords} word${snapWords === 1 ? "" : "s"}` +
-      ` — a stopwatch on the strand</p>`
+      ` (a stopwatch on the strand)</p>`
     : `<p class="rl-pages-foot">name one inside ${snapWords} word${snapWords === 1 ? "" : "s"}` +
       ` and its bead wears a stopwatch</p>`;
 
@@ -13145,7 +13145,7 @@ function renderGuestDetail(id) {
   }).catch(() => {
     if (guestSelected !== id || !$("guestDetailBody")) return;
     $("guestDetailBody").innerHTML =
-      `<p class="guest-detail-note">couldn't fetch this catalogue — check your connection and reopen the shelf</p>`;
+      `<p class="guest-detail-note">couldn't fetch this catalogue. check your connection and reopen the shelf</p>`;
   });
   if (!el.innerHTML) el.innerHTML = `<p class="guest-detail-note">reading the sleeve…</p>`;
 }
@@ -15182,7 +15182,7 @@ async function startLineupRun(diffId) {
   // __dev.lineup.play — and for a first open slow enough that the reading did not cover it.
   if (!blendCorpus) notifyNote("the lineup", "putting every catalogue on one shelf…");
   try { await installBlendCorpus(); }
-  catch (e) { notifyNote("the lineup", "couldn't fetch the catalogues — check your connection"); return; }
+  catch (e) { notifyNote("the lineup", "couldn't fetch the catalogues. check your connection"); return; }
   lineupDiff = GUEST_DIFFS.includes(diffId) ? diffId : "medium";
   lineupDealt = dealLineupFive();
   lineupKept = [];
@@ -16479,7 +16479,7 @@ function typeHintSegments(input) {
   // you cannot do is worse than no line at all.
   if (insuranceRuleActive() && insuranceTokens > 0 && !roundInsured) {
     segs.push({ id: "insure-page", sticky: true,
-      full: `${keycap(INSURE_KEY_LABEL)} insures this page — a shield takes the miss for you.`,
+      full: `${keycap(INSURE_KEY_LABEL)} insures this page: a shield takes the miss for you.`,
       short: `${keycap(INSURE_KEY_LABEL)} insures this page` });
   }
   if (settings.enableHints !== false && currentMode.hint && gameType !== "daily" && hintBudgetLeft > 0) {
@@ -16859,7 +16859,7 @@ async function dealRandom() {
     if (await dispatchRandom(entry)) { if (!devNoLog) foldDicePick(); return; }
     pool = pool.filter((e) => e.cat !== "guest");
   }
-  notifyNote("the draw", "nothing to deal right now — try the shelves");
+  notifyNote("the draw", "nothing to deal right now. try the shelves");
 }
 
 function startGame(opts) {
@@ -17314,7 +17314,7 @@ async function startGuestRun(id, diffId) {
   if (!corpus) {
     let cat;
     try { cat = await loadGuest(id); }
-    catch (e) { notifyNote("guest shelf", "couldn't fetch that catalogue — check your connection"); return; }
+    catch (e) { notifyNote("guest shelf", "couldn't fetch that catalogue. check your connection"); return; }
     // Building installs into the globals as it goes (see installCorpus), so this line already
     // leaves the guest's catalogue live; the assignment below just remembers it for the replay.
     // challengePools: false for the same reason the blend skips them — a challenge only ever
@@ -18986,7 +18986,7 @@ function renderWildcardBanner(label) {
 // Soft reject for an answer that breaks the round's Wildcard rule — no burned round,
 // same flash vocabulary as the chain / off-limits rejects.
 function rejectWildcard(label) {
-  softRejectFlash(`breaks the rule — <b>${escapeHtml(label)}</b>`);
+  softRejectFlash(`breaks the rule: <b>${escapeHtml(label)}</b>`);
 }
 
 // Word Games (escalating distortion). DISPLAY-ONLY — matching reads currentWord from
@@ -19455,7 +19455,7 @@ function endChallenge() {
       `</div>`
     : `<div class="chall-verdict">` +
         `<div class="chall-result-status">` +
-          (outOfGuesses ? "out of guesses — the song got away"
+          (outOfGuesses ? "out of guesses. the song got away"
             : beatenBefore ? "not this time" : "not yet") +
         `</div>` + goalLine +
       `</div>`;
@@ -19672,12 +19672,12 @@ function endAlbumFocus() {
   let status;
   if (beat && hintFree) {
     status = perfect
-      ? `<div class="chall-result-status win">perfect — album complete ★</div>`
+      ? `<div class="chall-result-status win">perfect! album complete ★</div>`
       : `<div class="chall-result-status win">album beaten!</div>`;
   } else if (beat && !hintFree) {
     status = `<div class="chall-result-status">beaten, but hinted runs don't count toward completion</div>`;
   } else {
-    status = `<div class="chall-result-status">not yet — score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS} to beat it</div>`;
+    status = `<div class="chall-result-status">not yet: score ${ALBUM_FOCUS_TARGET}/${TOTAL_ROUNDS} to beat it</div>`;
   }
   const diffLabel = (MODES[diff] && MODES[diff].label) || diff;
   const meta = `<div class="chall-result-meta">${escapeHtml(diffLabel)} · best ${rec.best}/${TOTAL_ROUNDS}` +
@@ -19752,11 +19752,11 @@ function endGuest() {
   document.querySelector("#screen-results .podium-title").textContent = g.name;
   let status;
   if (admitted && hintFree) {
-    status = `<div class="chall-result-status win">a perfect run — admitted to the shelf ★</div>`;
+    status = `<div class="chall-result-status win">a perfect run, admitted to the shelf ★</div>`;
   } else if (admitted && !hintFree) {
     status = `<div class="chall-result-status">perfect, but hinted runs don't earn the stamp</div>`;
   } else {
-    status = `<div class="chall-result-status">not yet — every one of the ${TOTAL_ROUNDS} to be admitted</div>`;
+    status = `<div class="chall-result-status">not yet: every one of the ${TOTAL_ROUNDS} to be admitted</div>`;
   }
   const diffLabel = (MODES[diff] && MODES[diff].label) || diff;
   const meta = `<div class="chall-result-meta">${escapeHtml(diffLabel)} · best ${rec.best}/${TOTAL_ROUNDS}` +
@@ -20665,7 +20665,7 @@ function switchPageCardHTML() {
   return curtainCardHTML({ kicker: `page ${round} · switch-up`, tag: "this page",
     headline: roundLyricOnly ? "sing me a line" : "name the title",
     sub: roundLyricOnly
-      ? "type a real lyric line — a title won't count"
+      ? "type a real lyric line; a title won't count"
       : "name any song that uses the word" });
 }
 
@@ -20733,10 +20733,10 @@ function challengeIntroHTML(c) {
     return curtainCardHTML({ kicker: kick("one of a kind"), dark: challengeDark, tag: "find this song",
       headline: challengeTargetSong.title, headlineColor: col,
       sub: challengeTargetSong.album
-        ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b> — it's hiding somewhere in the next 13 pages`
+        ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b>, hiding somewhere in the next 13 pages`
         : `it's hiding somewhere in the next 13 pages`,
       terms: c.blurb,
-      cue: `name it on the right page and the run ends there — you get ` +
+      cue: `name it on the right page and the run ends there. you get ` +
         `${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}, and the earlier the page the better`,
       button: "start the hunt" });
   }
@@ -20748,7 +20748,7 @@ function challengeIntroHTML(c) {
     const col = albumColor(c.album) || "var(--ink-soft)";
     return curtainCardHTML({ kicker: kick("deep cut"), dark: challengeDark, tag: "your album",
       headline: c.album, headlineColor: col,
-      sub: `name <b>${c.need || 5}</b> songs from it over the next ${TOTAL_ROUNDS} pages — ` +
+      sub: `name <b>${c.need || 5}</b> songs from it over the next ${TOTAL_ROUNDS} pages. ` +
         `answers from anywhere else still score the page, but they don't move the tally`,
       terms: c.blurb, cue: "no swapping it now", button: "let's go" });
   }
@@ -21027,7 +21027,7 @@ function showPathFork(forkRound) {
   ov.innerHTML =
     `<div class="chall-path-panel">` +
     `<h3 class="chall-path-title">choose your path</h3>` +
-    `<p class="chall-path-sub">page ${forkRound} cleared — pick a perk for the rest of the run</p>` +
+    `<p class="chall-path-sub">page ${forkRound} cleared: pick a perk for the rest of the run</p>` +
     `<div class="chall-path-cards">` +
     offer.map((p) =>
       `<button class="chall-path-card" data-perk="${p.id}"><span class="cpc-icon">${escapeHtml(p.icon)}</span>` +
@@ -21051,7 +21051,7 @@ function renderPerkReveals() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "path") return;
   if (!perkReveals.size) { const b = $("challBanner"); if (b) b.remove(); return; }
   const el = ensureChallBanner();
-  if (!currentSongs.length) { el.innerHTML = `<span class="chall-banner-tag">help</span> no song fits — swap it`; return; }
+  if (!currentSongs.length) { el.innerHTML = `<span class="chall-banner-tag">help</span> no song fits, so swap it`; return; }
   const sample = roundHintSong || currentSongs[0];
   const parts = [];
   if (perkReveals.has("count"))   parts.push(`${currentSongs.length} song${currentSongs.length === 1 ? "" : "s"} fit`);
@@ -21113,7 +21113,7 @@ function devilAllowsSong(song) {
 // Soft-reject a curse-breaking pick with a message naming the curse it broke.
 function rejectDevil(song) {
   if (devilShortOnly && titleWordCount(song.title) > 2) {
-    softRejectFlash(`too long — one- or two-word titles only`);
+    softRejectFlash(`too long: one- or two-word titles only`);
   } else if (devilBannedAlbums.includes(song.album)) {
     softRejectFlash(`<b>${escapeHtml(song.album)}</b> is off-limits`);
   } else {
@@ -21188,7 +21188,7 @@ function showDevilFork(forkRound) {
   ov.innerHTML =
     `<div class="chall-path-panel">` +
     `<h3 class="chall-path-title">the devil's bargain</h3>` +
-    `<p class="chall-path-sub">page ${forkRound} cleared — take the lesser of two evils</p>` +
+    `<p class="chall-path-sub">page ${forkRound} cleared: take the lesser of two evils</p>` +
     `<div class="chall-path-cards">` +
     offers.map((o, i) =>
       `<button class="chall-path-card" data-i="${i}"><span class="cpc-icon">${escapeHtml(o.icon)}</span>` +
@@ -21501,7 +21501,7 @@ function useInsurance() {
   renderInsuranceBtn();
   renderRiskBanner();
   applyInputHints();   // the shortcut line goes with the button: this page is covered now
-  softRejectFlash(`insured — a miss on this page won't end the run`);
+  softRejectFlash(`insured: a miss on this page won't end the run`);
   $("songInput").focus();
 }
 // The shield drawn as an object rather than typed as an emoji, so it can be inked in the same
@@ -21539,7 +21539,7 @@ function renderInsuranceBtn() {
   }
   const pips = Array.from({ length: insuranceTokens }, () => `<i></i>`).join("");
   btn.setAttribute("aria-label",
-    `insure this page — ${insuranceTokens} shield${insuranceTokens === 1 ? "" : "s"} left`);
+    `insure this page (${insuranceTokens} shield${insuranceTokens === 1 ? "" : "s"} left)`);
   btn.innerHTML =
     `<span class="rss-mark">${SHIELD_MARK}</span>` +
     `<span class="rss-body">` +
@@ -21592,7 +21592,7 @@ function showRiskDecision() {
     if (beadRide < pressMinRide()) return false;
     riskOverlay({
       title: "press your luck",
-      sub: `page ${round} cleared — <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"} riding on the next one`,
+      sub: `page ${round} cleared, <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"} riding on the next one`,
       cards: [
         { icon: "✓", name: "bank it", desc: `take the ${beadPot} into your total and start a fresh pot` },
         { icon: "↑", name: "ride on", desc: `the next page you clear is worth ${(beadRide + 1) * PRESS_RIDE_STEP}, but a miss wipes the pot` },
@@ -21610,7 +21610,7 @@ function showRiskDecision() {
     if (beadPot <= 0 || isGameOver()) return false;
     riskOverlay({
       title: "double or nothing",
-      sub: `page ${round} cleared — the chain is worth <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"}`,
+      sub: `page ${round} cleared: the chain is worth <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"}`,
       cards: [
         { icon: "✓", name: "take it", desc: beadPot === 1
           ? "keep the bead and start the next chain at one"
@@ -22581,7 +22581,7 @@ function rejectOffLimits(song) {
   dropdownItems = []; activeIndex = -1;
   hideDropdown();
   const el = $("rejectFlash");
-  el.innerHTML = `<b>“${escapeHtml(censor(song.title))}”</b> is in the title — try another`;
+  el.innerHTML = `<b>“${escapeHtml(censor(song.title))}”</b> is in the title. try another`;
   el.classList.remove("show");
   void el.offsetWidth;                 // restart the pop-in animation
   el.classList.add("show");
@@ -22634,28 +22634,28 @@ function maxTitleWordsNow() {
 }
 // Title...?: the word's in the lyrics but not the title they named.
 function rejectTitleHas() {
-  softRejectFlash(`that's in the lyrics — name a <b>title</b> with the word`);
+  softRejectFlash(`that's in the lyrics. name a <b>title</b> with the word`);
 }
 // Title...?: the title holds a different form of the word ("Crazier" for "crazy"), and the
 // rule wants the word as printed.
 function rejectTitleForm() {
-  softRejectFlash(`close — the title needs <b>${escapeHtml(currentWord)}</b> itself`);
+  softRejectFlash(`close! the title needs <b>${escapeHtml(currentWord)}</b> itself`);
 }
 // Short n' Sweet: the named title is too long.
 function rejectShortTitle() {
   runTurnedAway = true;
   softRejectFlash(maxTitleWordsNow() === 1
-    ? `too long — name a <b>one-word</b> title`
-    : `too long — name a <b>one- or two-word</b> title`);
+    ? `too long: name a <b>one-word</b> title`
+    : `too long: name a <b>one- or two-word</b> title`);
 }
 // Wrapped Like A Chain: the named title doesn't start with the required letter.
 function rejectChain() {
-  softRejectFlash(`off the chain — start with <b>${escapeHtml(chainLetter)}</b>`);
+  softRejectFlash(`off the chain: start with <b>${escapeHtml(chainLetter)}</b>`);
 }
 // On Tour!: the named song isn't from tonight's album.
 function rejectTour() {
   const a = tourSetlist[round - 1] || "tonight's album";
-  softRejectFlash(`not on the setlist — name a <b>${escapeHtml(a)}</b> song`);
+  softRejectFlash(`not on the setlist: name a <b>${escapeHtml(a)}</b> song`);
 }
 // Album Focus: the named song is from another album. Don't burn the round.
 function rejectAlbumFocus() {
@@ -22759,7 +22759,7 @@ function rejectNewSong() {
   if (newSongLives <= 0) {                       // out of guesses — the song got away
     roundLocked = true;
     clearTimer();                                // the run is already lost; the clock has no say
-    softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit — out of guesses`);
+    softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit, and you're out of guesses`);
     renderNewSongBanner();                       // drain the last pip BEFORE the title goes
     const hold = burstNewSongTitle();
     if (!hold) { endGame(); return; }            // routes to endChallenge (a loss)
@@ -22771,8 +22771,8 @@ function rejectNewSong() {
     return;
   }
   const n = newSongLives;
-  softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit this word — ` +
-    `${n} ${n === 1 ? "guess" : "guesses"} left`);
+  softRejectFlash(`<b>“${escapeHtml(censor(t))}”</b> doesn't fit this word (` +
+    `${n} ${n === 1 ? "guess" : "guesses"} left)`);
   renderNewSongBanner();                          // refresh the lives pips
 }
 
@@ -23161,8 +23161,8 @@ function nudgeNearMiss(raw, near) {
   const t = `“<b>${escapeHtml(censor(typedForm(raw, near.token)))}</b>”`;
   const w = `“<b>${escapeHtml(censor(near.word))}</b>”`;
   softRejectFlash(near.why === "strict"
-    ? `${t} doesn't count as ${w} — word variants are off in settings`
-    : `${t} doesn't count as ${w} — sing a line with the word itself`, true);
+    ? `${t} doesn't count as ${w}: word variants are off in settings`
+    : `${t} doesn't count as ${w}. sing a line with the word itself`, true);
 }
 
 // A player can answer by typing a LYRIC LINE instead of the title. There is no lyric
@@ -23987,7 +23987,7 @@ function submitAnswer(song, isTimeout) {
     const need = currentChallenge.need || 2;
     if (roundNamed.includes(song.title)) {
       noteWrongSubmission(song);
-      softRejectFlash(`already named <b>${escapeHtml(song.title)}</b> — name a different song`);
+      softRejectFlash(`already named <b>${escapeHtml(song.title)}</b>. name a different song`);
       return;
     }
     // Dark side: a song named on ANY earlier page is spent, and saying it again costs the
@@ -23996,14 +23996,14 @@ function submitAnswer(song, isTimeout) {
     // said that" and the player needs to know which page they burned it on.
     if (multiNoRepeats() && runNamedSongs.has(song.title)) {
       noteWrongSubmission(song);
-      softRejectFlash(`<b>${escapeHtml(song.title)}</b> is spent — you named it earlier this run`);
+      softRejectFlash(`<b>${escapeHtml(song.title)}</b> is spent: you named it earlier this run`);
       return;
     }
     roundNamed.push(song.title);
     runNamedSongs.add(song.title);
     renderMultiBanner();
     if (roundNamed.length < need) {
-      softRejectFlash(`✓ ${roundNamed.length} of ${need} — name another song with the word`);
+      softRejectFlash(`✓ ${roundNamed.length} of ${need} · name another song with the word`);
       return;
     }
     // `need` reached — fall through with this final song to resolve the page correct.
@@ -24047,7 +24047,7 @@ function submitAnswer(song, isTimeout) {
     roundLocked = false;
     $("songInput").disabled = false;
     $("playArea").style.display = "";
-    softRejectFlash(`second chance — try again (${pathMulligans} left)`);
+    softRejectFlash(`second chance! try again (${pathMulligans} left)`);
     roundStart = performance.now();   // a fresh clock is a fresh page as far as the stopwatch is concerned
     startTimer();
     return;
@@ -25596,7 +25596,7 @@ function endGame() {
 function promptSignOnce(after) {
   const nameDiv = $("namePrompt");
   const p = nameDiv.querySelector("p");
-  if (p) p.textContent = "sign your notebook — you will be remembered";
+  if (p) p.textContent = "sign your notebook, and you will be remembered";
   nameDiv.style.display = "";
   const save = () => {
     const v = ($("nameInput").value || "").trim().slice(0, 20);
@@ -29851,7 +29851,7 @@ function buildDevApi() {
       cases: () => Object.keys(TALLY_PREVIEWS),
       tally: (name = "classic") => {
         const c = TALLY_PREVIEWS[name];
-        if (!c) return `no such case — try one of: ${Object.keys(TALLY_PREVIEWS).join(", ")}`;
+        if (!c) return `no such case: try one of: ${Object.keys(TALLY_PREVIEWS).join(", ")}`;
         showScreen("results");
         setFinalTally(c.score, c.sub, c.unit);
         return name;
@@ -30030,13 +30030,13 @@ function buildDevApi() {
         const reports = dateKey ? [previewDailyAlbum(dateKey, exp)]
           : previewDailyAlbumAll(+((window.__devDate || todayKey()).slice(0, 4)), exp);
         for (const r of reports) {
-          if (!r.pool) { console.log(`%c${r.album || "(no album)"} — ${r.date || "no release date"}: no pool (no skew that day)`, "color:#888"); continue; }
-          console.group(`${r.album}  ${r.date}  [${r.era}]  pool ${r.size}/${r.scored}  exp ${r.exp}${r.relaxed ? `  ⚠ FLOOR relaxed (<${r.floor} recurring — hapax words let back in)` : ""}`);
+          if (!r.pool) { console.log(`%c${r.album || "(no album)"} · ${r.date || "no release date"}: no pool (no skew that day)`, "color:#888"); continue; }
+          console.group(`${r.album}  ${r.date}  [${r.era}]  pool ${r.size}/${r.scored}  exp ${r.exp}${r.relaxed ? `  ⚠ FLOOR relaxed (<${r.floor} recurring; hapax words let back in)` : ""}`);
           console.log("13 words:", r.words.map((w) => `${w.word}${w.fromAlbum ? `(${w.songs}/${w.catalogue}→${w.score})` : "*general*"}`).join(", "));
           console.table(r.pool);
           console.groupEnd();
         }
-        return `${reports.length} album(s) — see console`;
+        return `${reports.length} album(s): see console`;
       },
       // Jump straight to a saved day's bracelet the way clicking its calendar X does —
       // for checking the archive view (podium title, streak note, "back to your
@@ -30079,7 +30079,7 @@ function buildDevApi() {
           const state = guestShelfState(g.guest);
           const tail = ink ? ink.accent
             : state === "announced" ? "announced (hollow crown, no pass yet)"
-            : "⚠ NO PASS — check the guest id against GUESTS";
+            : "⚠ NO PASS: check the guest id against GUESTS";
           return `${yr}-${g.md}  ${g.name}${g.arrived ? " (" + g.arrived + ")" : ""}  ${tail}`;
         }).sort();
       },
@@ -30982,7 +30982,7 @@ function buildDevApi() {
               `<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">${row(px, time)}</div>`)
             .join("");
           $("tracksBody").prepend(strip);
-          return albums.map((a) => `${a}: ${motifOf(a)}${hasMotif(a) ? "" : "  [UNNAMED — dealt off a hash]"}` +
+          return albums.map((a) => `${a}: ${motifOf(a)}${hasMotif(a) ? "" : "  [UNNAMED: dealt off a hash]"}` +
             `${sleeveName(a) === a ? "" : `  (lettered "${sleeveName(a)}")`}`);
         },
       },
@@ -31013,7 +31013,7 @@ function buildDevApi() {
       },
       seedSweep: (id, secs = 120) => {
         const g = BONUS_GAMES.find((x) => x.id === id);
-        if (!g) return `no such game — ${BONUS_GAMES.map((x) => x.id).join(", ")}`;
+        if (!g) return `no such game: ${BONUS_GAMES.map((x) => x.id).join(", ")}`;
         if (!bonusSweeps(g)) return `${id} keeps no sweep time`;
         // A sweep with no play behind it is a state real play cannot reach, and the shelf reads
         // it as UNPLAYED — so a seed meant for eyeballing the strip would show nothing at all.
@@ -31050,7 +31050,7 @@ function buildDevApi() {
         if (!bonusGame || bonusGame.id !== "only-here" || !bonusPuzzle) return "not on an only here page";
         const p = bonusPuzzle;
         return { song: p.song.title, shape: p.shape, fellBack: p.fallback, eligible: p.eligible,
-                 hand: p.hand.map((c, i) => `${p.optimal.includes(i) ? "*" : " "} ${c.word} — in ${c.count}, worth ${c.points}`) };
+                 hand: p.hand.map((c, i) => `${p.optimal.includes(i) ? "*" : " "} ${c.word}: in ${c.count}, worth ${c.points}`) };
       },
       deal: (shape = "tight") => {
         if (!bonusGame || bonusGame.id !== "only-here") return "not on an only here page";
@@ -31135,7 +31135,7 @@ function buildDevApi() {
         strip.innerHTML = [200, 96, 24].map((px) =>
           `<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">${row(px)}</div>`).join("");
         $("bonusBody").prepend(strip);
-        return [...BONUS_GAMES, RUTHLESS_GAME].map((g) => `${g.id}: ${hasCover(g.id) ? "drawn" : "NO COVER — blank kraft"}`);
+        return [...BONUS_GAMES, RUTHLESS_GAME].map((g) => `${g.id}: ${hasCover(g.id) ? "drawn" : "NO COVER: blank kraft"}`);
       },
       /* Then What. The ramp is the whole design and NONE of it is visible on screen — three
          lines look the same whether they came from another album or from this very song — so
@@ -31387,7 +31387,7 @@ function buildDevApi() {
       // clicking the sheet, which is fine until the thing under test is the sheet itself.
       play: (lensId = "chorus") => {
         const lens = ruthlessLens(lensId);
-        if (!lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        if (!lens) return `no such lens: ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         startRuthlessMode(lensId);
         return `${lens.label}: snap at ${ruthlessSnap(lens)}w, give up after ${ruthlessGiveUp(lens).after}w`;
       },
@@ -31398,7 +31398,7 @@ function buildDevApi() {
          __dev.bonus.sample, since a sample of the wrong section is a sample of nothing. */
       sample: (n = 10, lensId = null) => {
         const lens = lensId ? ruthlessLens(lensId) : null;
-        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        if (lensId && !lens) return `no such lens: ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         const songs = bonusSongs(), recent = [], out = [];
         for (let i = 0; i < n; i++) {
           const p = buildRuthlessPuzzle(songs, Math.random, 120, new Set(recent), lens);
@@ -31413,7 +31413,7 @@ function buildDevApi() {
       // slipped means the bars have been tightened past what that section can serve.
       audit: (n = 200, lensId = null) => {
         const lens = lensId ? ruthlessLens(lensId) : null;
-        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        if (lensId && !lens) return `no such lens: ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         const songs = bonusSongs();
         let ok = 0;
         for (let i = 0; i < n; i++) if (buildRuthlessPuzzle(songs, Math.random, 120, null, lens)) ok++;
@@ -31432,7 +31432,7 @@ function buildDevApi() {
          fabrication. */
       finish: (named = 8, snaps = 3, lensId = "chorus", wrong = 0, handouts = 0) => {
         const lens = ruthlessLens(lensId);
-        if (!lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        if (!lens) return `no such lens: ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         const { deal } = ruthlessPool(allSongs, lens);
         if (!deal.length) return `${lens.label} deals nothing`;
         const snapAt = ruthlessSnap(lens), giveUp = ruthlessGiveUp(lens);
@@ -31501,7 +31501,7 @@ function buildDevApi() {
          the point, that it caught nothing else. Pass a reason to list those songs in full. */
       pool: (why = null, lensId = null) => {
         const lens = lensId ? ruthlessLens(lensId) : null;
-        if (lensId && !lens) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        if (lensId && !lens) return `no such lens: ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         const { deal, barred } = ruthlessPool(allSongs, lens);
         if (why) return barred.filter((b) => b.why === why);
         const by = {};
@@ -31521,7 +31521,7 @@ function buildDevApi() {
       },
 
       seed: (lensId, seconds, gaveUp = 0) => {
-        if (!ruthlessLens(lensId)) return `no such lens — ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
+        if (!ruthlessLens(lensId)) return `no such lens: ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
         // Snapped to the hundredth the board really stores (see roundHundredth), so a seeded
         // best is a time a played run can beat rather than a hidden remainder sitting in front
         // of it.
@@ -31535,7 +31535,7 @@ function buildDevApi() {
       fill: () => {
         RUTHLESS_LENSES.forEach((l, i) => recordRuthlessRun(l.id, roundHundredth(90 + l.median * 2 + i / 8), i % 3 === 0 ? 1 : 0, todayKey()));
         repaintRuthless();
-        return "board filled — open Ruthless Game";
+        return "board filled: open Ruthless Game";
       },
       reset: () => { resetRuthless(); repaintRuthless(); return "ruthless board cleared"; },
     },
@@ -31613,7 +31613,7 @@ function buildDevApi() {
       // weighting entirely — this is a dispatch test, not a draw test.
       cat: (id) => {
         const opts = buildRandomPool().filter((e) => e.cat === id);
-        if (!opts.length) return `nothing playable in "${id}" — try ${RANDOM_CATEGORIES.map((c) => c.id).join(", ")}`;
+        if (!opts.length) return `nothing playable in "${id}": try ${RANDOM_CATEGORIES.map((c) => c.id).join(", ")}`;
         const entry = opts[Math.floor(Math.random() * opts.length)];
         // The draw resolves a difficulty for the categories that take one before dispatching, and
         // Infinite reads it straight off the entry — so forcing a category has to do it too, or
@@ -31628,7 +31628,7 @@ function buildDevApi() {
       seeAll: () => { for (const e of buildRandomPool()) markRandomSeen(e.token); return poolSummary(buildRandomPool(), loadRandomSeen()); },
       // Clear the ledger WITHOUT re-seeding: the next draw treats the whole notebook as
       // unplayed, which is the fresh-notebook state. A reload re-seeds from the boards.
-      reset: () => { resetRandomSeen(); return "ledger cleared — reload to re-seed from the boards"; },
+      reset: () => { resetRandomSeen(); return "ledger cleared: reload to re-seed from the boards"; },
     },
     // The pinned goal. Like the randomiser, a draw you cannot judge by clicking it once —
     // `sample` is the one that proves the category weighting is doing its job, and `pool`
@@ -31681,7 +31681,7 @@ function buildDevApi() {
       show: () => loadGoal(),                          // the raw record
       repin: () => { const id = pickGoal((loadGoal() || {}).id); if (id) saveGoal(id); if ($("achievementsBody")) renderAchievementsPage(); return id; },
       go: () => playGoal(),                            // the play button, from the console
-      clear: () => { clearGoal(); if ($("achievementsBody")) renderAchievementsPage(); return "pin cleared — next render draws fresh"; },
+      clear: () => { clearGoal(); if ($("achievementsBody")) renderAchievementsPage(); return "pin cleared: next render draws fresh"; },
     },
     // Folded sections on the Charm Collection. Folding by hand takes a click per theme, which
     // is a slow way to reach the two states worth eyeballing: everything shut (does the page
@@ -31731,7 +31731,7 @@ function buildDevApi() {
       // accepted too: the locked drawer wears a tab like the other four without being in them.
       fold: (id, shut = true) => {
         const f = achFamilies().find((x) => x.id === id);
-        if (!f && id !== "sealed") return `no such family — try ${ACH_FAMILIES.map((x) => x.id).join(", ")}, sealed`;
+        if (!f && id !== "sealed") return `no such family: try ${ACH_FAMILIES.map((x) => x.id).join(", ")}, sealed`;
         setFamilyFold(id, !!shut);
         return `${f ? f.label : "The locked drawer"} ${shut ? "shut" : "open"}`;
       },
@@ -31761,7 +31761,7 @@ function buildDevApi() {
           // Band 3 is the one with a real ceiling: it is worth something only while it stays
           // rare, and there is no automatic way to notice it creeping except this number.
           verdict: n(3) > ACHIEVEMENTS.length * 0.15
-            ? "struck is over 15% of the roster — it has stopped meaning 'the top'"
+            ? "struck is over 15% of the roster; it has stopped meaning 'the top'"
             : "bands look sane",
           ...(stray.length ? { stray } : {}),
         };
@@ -31778,7 +31778,7 @@ function buildDevApi() {
           el.classList.remove("ach--struck", "ach--punched");
           if (cls) el.classList.add(cls);
         });
-        return `${tiles.length} tiles drawn as ${cls || "pencil"} — re-render the page to restore`;
+        return `${tiles.length} tiles drawn as ${cls || "pencil"}: re-render the page to restore`;
       },
     },
     // Normal-mode novelty bias — the coverage nudge that favours un-encountered words in Normal.
@@ -31979,7 +31979,7 @@ function buildDevApi() {
         roundStart = performance.now() - (STICKER_LINGER_SECONDS + 1) * 1000;
         const capped = currentMode.seconds > 0 && currentMode.seconds < STICKER_LINGER_SECONDS;
         return capped
-          ? `page aged, but this mode caps the stopwatch at ${currentMode.seconds}s — the sprig cannot land here`
+          ? `page aged, but this mode caps the stopwatch at ${currentMode.seconds}s, so the sprig cannot land here`
           : "page aged: answer it correctly for the sprig";
       },
       // Every From The Vault track the live corpus is carrying, for the vault door.
@@ -32071,7 +32071,7 @@ function buildDevApi() {
         strip.innerHTML = [[0, 112], [4 / TOTAL_ROUNDS, 112], [9 / TOTAL_ROUNDS, 112], [1, 112], [1, 64]]
           .map(([lv, px]) => row(lv, px)).join("");
         $("albumFocusBody").prepend(strip);
-        return STUDIO_ALBUMS.map((a) => `${a}: ${hasTone(a) ? "printed" : "NO TONE MAP — blank square, re-run covertone.py"}`);
+        return STUDIO_ALBUMS.map((a) => `${a}: ${hasTone(a) ? "printed" : "NO TONE MAP: blank square, re-run covertone.py"}`);
       },
       reset: () => { resetAlbumFocus(); if ($("albumFocusBody")) renderAlbumFocusPage(); },
       /* Winning one, rather than writing one down. `set` and `fill` above forge the BOARD,
@@ -32231,7 +32231,7 @@ function buildDevApi() {
       // the two clicks through the guest shelf, which is the whole cost of checking a state.
       deck: () => { openLineupBoard(); return `${lineupBoardTally().line}`; },
       restore: () => { restoreCorpus(); return window.__dev.guest.corpus(); },
-      drop: () => { blendCorpus = null; blendMerges = []; return "blend dropped — next build refetches"; },
+      drop: () => { blendCorpus = null; blendMerges = []; return "blend dropped: next build refetches"; },
     },
     // Guest shelf. Two halves: the FETCH (a catalogue is read out of its file, so `counts` /
     // `inspect` prove one parses and report exactly what a pass and a round would draw, and
@@ -32377,7 +32377,7 @@ function buildDevApi() {
       ribbon: (on) => {
         const off = on == null ? !document.body.classList.contains("no-ctab-ribbon") : !on;
         document.body.classList.toggle("no-ctab-ribbon", off);
-        return off ? "ribbon off — bare seal" : "ribbon on";
+        return off ? "ribbon off: bare seal" : "ribbon on";
       },
       // startChallenge silently refuses a locked challenge, so `start` alone can't reach any
       // non-free one. These open the door directly, without the token wallet or I Like Shiny Things.
@@ -32990,8 +32990,8 @@ function buildDevApi() {
     // repaints are spread across the header, the tagline, the closed cover and the browser tab,
     // and the only way to know they move together is to watch them move together.
     ink: {
-      list: () => STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => `${MAST_INKS[a].slug} — ${MAST_INKS[a].name} (${a})`)
-              .concat(`${MAST_SHUFFLE} — ${MAST_SHUFFLE_NAME} (all 12 beaten)`),
+      list: () => STUDIO_ALBUMS.filter((a) => MAST_INKS[a]).map((a) => `${MAST_INKS[a].slug}: ${MAST_INKS[a].name} (${a})`)
+              .concat(`${MAST_SHUFFLE}: ${MAST_SHUFFLE_NAME} (all 12 beaten)`),
       set: (slug) => {
         if (slug && !inkSlugKnown(slug)) return `no such ink: ${slug}`;
         settings.titleInk = slug || "";
