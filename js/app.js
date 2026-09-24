@@ -16800,7 +16800,32 @@ function goalLean() {
   return tokens.size ? { tokens, weight: RANDOM_GOAL_WEIGHT } : null;
 }
 
+// One roll at a time. A guest draw waits on its catalogue download while the start screen, dice
+// and all, stays live, and a second tap in that window used to run a second draw: it could start
+// a Classic run, and then the first download would finish and install the guest's catalogue
+// over it. So a roll holds the button until it has dealt or given up, and says so: the dice
+// tumble on every throw, and keep tumbling while a download is outstanding. The short pause
+// before the draw is the throw itself, so a roll that deals instantly still reads as a roll;
+// with reduced motion there is no tumble to wait for, so there is no pause either.
+let diceRolling = false;
+const DICE_THROW_MS = 380;
 async function rollRandom() {
+  if (diceRolling) return;
+  diceRolling = true;
+  const btn = $("randomGear");
+  btn?.classList.add("is-rolling");
+  btn?.setAttribute("aria-busy", "true");
+  try {
+    if (!motionReduced()) await new Promise((r) => setTimeout(r, DICE_THROW_MS));
+    await dealRandom();
+  } finally {
+    diceRolling = false;
+    btn?.classList.remove("is-rolling");
+    btn?.removeAttribute("aria-busy");
+  }
+}
+
+async function dealRandom() {
   let pool = buildRandomPool();
   const seen = loadRandomSeen();
   const goal = goalLean();
