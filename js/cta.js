@@ -19,6 +19,39 @@ const rain = (count, seed) => {
     `--drop-y:${Math.round(rand() * 56)}px;--drop-h:${(6 + rand() * 9).toFixed(1)}px;` +
     `--drop-delay:${(rand() * .5).toFixed(2)}s;--drop-duration:${(.42 + rand() * .24).toFixed(2)}s"></i>`).join("");
 };
+// Watercolour blotches: an irregular closed outline through noisy points round an ellipse,
+// smoothed Catmull-Rom into curves. Drawn as real shapes rather than a blurred box scaled up,
+// so the edge stays soft-cornered but has the darker tide line a wash dries with, and
+// overlapping blotches deepen where they meet, as pigment does (see the multiply in CSS).
+const blotch = (cx, cy, rx, ry, rand) => {
+  const n = 9, pts = Array.from({ length: n }, (_, i) => {
+    const a = i / n * Math.PI * 2 + rand() * .2, k = .87 + rand() * .24;
+    return [cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k];
+  });
+  const at = (i) => pts[(i + n) % n], f = (v) => v.toFixed(1);
+  let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 0; i < n; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    d += `C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])} ${f(p2[1])}`;
+  }
+  return `${d}Z`;
+};
+// The live wash is a chain of seven blotches spaced so each overlaps only its neighbours:
+// nowhere is paint more than two layers deep, which is what keeps the lettering at 4.7:1 or
+// better over the darkest overlap. It is drawn across the full 600-unit strip and cropped, so
+// a desktop button is painted end to end and a phone sees the middle of the same wash. Each
+// blotch opens from its own centre, starting from the middle and spreading outward.
+const rosePaint = (() => {
+  const rand = seededRandom(1213);
+  const live = [20, 118, 212, 305, 398, 494, 588].map((x, i) => {
+    const d = blotch(x + rand() * 10 - 5, 28 + rand() * 10, 60 + rand() * 8, 24 + rand() * 12, rand);
+    return `<path class="cta-wash-blot" style="--wash-delay:${(Math.abs(x - 300) / 300 * .35).toFixed(2)}s" d="${d}"/>`;
+  }).join("");
+  // Two faint dried washes and their tide lines stay on the paper at rest, so the finish is a
+  // material before it is touched, like every other.
+  const dried = [[248, 44, 70, 16], [372, 16, 58, 13], [70, 34, 60, 20], [540, 30, 56, 18]].map(([x, y, rx, ry]) => `<path d="${blotch(x, y, rx, ry, rand)}"/>`).join("");
+  return `<svg class="cta-wash" viewBox="0 0 600 60" preserveAspectRatio="xMidYMid slice"><g class="cta-wash-dried">${dried}</g><g class="cta-wash-live">${live}</g></svg>`;
+})();
 // Fair-weather clouds, each its own shape and none repeated, kept to the top edge (some cut
 // off by it, as clouds are by a window frame) and two small ones low at the corners, so the
 // label's band stays clear sky. The strip is cropped, never stretched. [x, y, width, opacity]
@@ -116,7 +149,7 @@ const ivy = ivyVine("left") + ivyVine("right");
 const FINISH_ART = {
   "": `<i class="cta-stroke"></i>`,
   ink: `<i class="cta-pool"></i>`,
-  rose: `<i class="cta-bloom"></i>`,
+  rose: rosePaint,
   sky: `${dayClouds}${stormBank}<span class="cta-rain cta-rain--far">${rain(18, 1311)}</span><span class="cta-rain">${rain(24, 1989)}</span>${bolt}`,
   meadow: garden,
   snow,
@@ -176,7 +209,12 @@ export function initCtaInteractions(root = document) {
   const refresh = (control) => {
     const cta = control.matches(".play-cta") ? control : control.querySelector(".play-cta");
     if (!cta) return;
-    if (cta.dataset.startbtn === "sky") placeStrike(cta); else if (cta.dataset.startbtn === "meadow") {
+    if (cta.dataset.startbtn === "sky") placeStrike(cta);
+    // A fresh brushstroke each time: the same wash, laid a little along and at a new angle.
+    else if (cta.dataset.startbtn === "rose") {
+      cta.style.setProperty("--wash-x", `${(Math.random() * 60 - 30).toFixed(1)}px`);
+      cta.style.setProperty("--wash-turn", `${(Math.random() * 5 - 2.5).toFixed(2)}deg`);
+    } else if (cta.dataset.startbtn === "meadow") {
       // One hand of colours per hover: no two flowers share one, and none keeps its last.
       const flowers = [...cta.querySelectorAll(".cta-flower")];
       const before = flowers.map((flower) => flower.style.getPropertyValue("--flower-colour").trim());

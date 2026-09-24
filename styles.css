@@ -1600,14 +1600,35 @@
   button.play-cta[data-startbtn="ink"]:is(:hover, :focus-visible) { transform: rotate(-.6deg) translateY(1px); box-shadow: 1px 1px 0 #2b272255, inset 0 2px 5px #0008; }
   @keyframes ctaInkSpread { 0% { transform: scale(.12); opacity: 0; } 18% { opacity: .65; } 100% { transform: scale(1); opacity: .22; } }
 
-  /* Blush: overlapping watercolour washes, softly feathered into the paper. */
-  .play-cta[data-startbtn="rose"] { --cta-fill: #e79ab5; --cta-hover-fill: #f0b8cb; --cta-hover-text: #54243b; }
-  .cta-bloom { width: 175px; height: 175px; left: calc(50% - 88px); top: calc(50% - 88px);
-    border-radius: 46% 54% 41% 59%; filter: blur(2px);
-    background: radial-gradient(ellipse at 30% 35%, #ffdfdfaa, transparent 65%), radial-gradient(ellipse at 65% 70%, #ad356955, transparent 70%);
-    box-shadow: 20px -8px 0 #f4b4ce70, -28px 5px 0 #d379a244, 4px 23px 0 #e794b660;
-    opacity: 0; transform: scale(.1) rotate(-20deg); transition: transform .85s ease-out, opacity .4s; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bloom { transform: scale(2.3) rotate(15deg); opacity: 1; }
+  /* Blush: a watercolour wash laid across the paper on hover, over two faint dried washes
+     that stay at rest. The blotches are drawn shapes (js/cta.js) with a darker tide line at
+     the edge, and the whole layer multiplies into the pink, so paint going on deepens the
+     colour where it lands and deepest where two blotches overlap, as pigment does, instead of
+     bleaching the button. The fill no longer lightens on hover for the same reason. The
+     lettering goes to a deep plum over the wash: at most two layers of paint ever overlap,
+     and plum holds 5:1 over that. Leaving, the wash fades rather than shrinking back, because
+     paint does not un-soak. */
+  .play-cta[data-startbtn="rose"] {
+    --cta-fill: #e79ab5; --cta-hover-fill: #e79ab5; --cta-hover-text: #2e0f1d;
+    --wash: #d0648f; --wash-edge: #b04a78;
+  }
+  /* Night: a dusk rose with cream lettering; the same wash multiplies it deeper still. */
+  :root[data-theme="dark"] .play-cta[data-startbtn="rose"] {
+    --cta-fill: #8e4a66; --cta-hover-fill: #8e4a66;
+    --cta-text: #f6e8ee; --cta-hover-text: #f6e8ee;
+    --wash: #b0668a; --wash-edge: #6d2a4a;
+  }
+  .play-cta[data-startbtn="rose"] .cta-fx { mix-blend-mode: multiply; }
+  /* A slight blur turns each blotch's edge line into a pooled edge rather than an outline. */
+  .cta-wash { inset: 0; width: 100%; height: 100%; filter: blur(.55px); }
+  .cta-wash path { fill: var(--wash); stroke: var(--wash-edge); stroke-width: 1.8; vector-effect: non-scaling-stroke; }
+  .cta-wash-dried path { fill-opacity: .13; stroke-opacity: .18; }
+  .cta-wash-live { transform-box: view-box; transform-origin: 50% 50%;
+    transform: translateX(var(--wash-x, 0px)) rotate(var(--wash-turn, 0deg)); }
+  .cta-wash-blot { fill-opacity: .32; stroke-opacity: .3; transform-box: fill-box; transform-origin: center;
+    transform: scale(.3); opacity: 0; transition: opacity .3s ease, transform 0s .3s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-wash-blot { transform: scale(1); opacity: 1;
+    transition: transform 1s cubic-bezier(.2,.7,.3,1) var(--wash-delay), opacity .45s ease var(--wash-delay); }
 
   /* Sky: fair-weather clouds along the top edge give way to a storm front of their own on
      hover. The two are separate layers so one can fade out while the other rolls in; the old
