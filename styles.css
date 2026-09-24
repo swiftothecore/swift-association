@@ -376,6 +376,11 @@
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
   }
   :root[data-theme="dark"] .nav-card-seat { background: rgba(var(--tint), 0.24); }
+  /* Graphite is the page's own near-black, which is the one tint that lifting cannot save:
+     at any alpha it lands on #2f281f as nothing, and the challenges target was left
+     floating with no disc under it and its fills gone. At night it turns to the pale side
+     of graphite instead, which is what the same pencil looks like on dark paper. */
+  :root[data-theme="dark"] .nav-card[data-era-tint="graphite"] { --tint: 176, 168, 152; }
   /* The icon fills are alphas of the card tint over paper. On a dark card the same alphas
      land on #2f281f and the washed shapes all but vanish, leaving bare outlines, so each
      step is lifted. The stroke weights are NOT touched: they read the same either way. */
@@ -12083,6 +12088,9 @@
   /* Scoped away from the results row, which shares the .see-also class but wants one
      tile per track (see .see-also--row below). */
   .see-also:not(.see-also--row) > .nav-card { grid-column: span 2; }
+  /* The front-page row is a container, and the cards choose their layout off ITS width,
+     never the screen's: see the stacked layout further down for why. */
+  .see-also:not(.see-also--row) { container: navrow / inline-size; }
   /* Companion-tool entries: the lyrics searcher and the feedback form both live off the
      board, so they sit together as site-level chrome in the bottom-left corner — mirroring
      the settings gear (top-right) — rather than competing with the data nav-cards. They
@@ -12168,8 +12176,8 @@
     flex: 1; min-width: 0; width: auto; margin: 0;
     padding: 15px 16px; text-align: left;
     /* Horizontal keepsake row: circle seat on the left spanning both text rows,
-       title over kicker on the right. Reverts to the stacked layout on phones
-       (see the max-width:480px block), where 3-across cards are too narrow. */
+       title over kicker on the right. Reverts to the stacked layout once the cards
+       are too narrow for it (see the navrow container queries below). */
     display: grid; grid-template-columns: auto 1fr;
     grid-template-areas: "seat title" "seat kicker";
     align-items: center; align-content: center;
@@ -12364,10 +12372,16 @@
     font-size: calc(18px + var(--text-size-adjust)); line-height: 0.95; color: var(--ink); white-space: nowrap;
     border-bottom: 2px dotted var(--ink-soft); padding-bottom: 3px;
   }
+  /* ONE LINE, always. Left to wrap, three of the six broke onto a second line even at
+     desktop width and the other three did not, and on a narrow card "0 / 40 to unlock"
+     stacked four words deep; a row of cards with its kickers at three different depths
+     puts its titles at three different heights. So the copy is written to fit the
+     narrowest card (the longest is "12/40 levels"), and nowrap is the promise that it
+     does. Re-measure if a kicker gets longer. */
   .nav-card-kicker {
     grid-area: kicker; align-self: start;
-    display: block; margin-top: 3px;
-    font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.5px;
+    display: block; margin-top: 3px; white-space: nowrap;
+    font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.2px;
     text-transform: uppercase; color: var(--ink-soft);
   }
   .nav-card:hover, .nav-card:focus-visible {
@@ -12383,11 +12397,53 @@
   [data-reduce-motion="on"] .nav-card:hover, [data-reduce-motion="on"] .nav-card:focus-visible { transform: none; }
   @media (max-width: 480px) {
     .see-also { gap: 7px; margin: 18px -10px 0; }
-    .nav-card { display: block; text-align: center; padding: 14px 5px 11px; }
-    .nav-card-seat { width: 46px; height: 46px; margin: 0 auto 8px; }
+  }
+  /* STACKED: seat over title over kicker, centred. Side by side, a card needs about
+     180px (190px with large text, where "bonus games" is the one that runs out), and the
+     notebook's column only gives it 189px at its widest. The switch used to be a 480px
+     SCREEN width, so everything from 481px to about 900px laid three side-by-side cards
+     into as little as 121px each and ran every title and kicker out of its card, far
+     enough at 490px to scroll the page sideways. Three cards of 180px and two 14px gaps
+     make 568px of row; large text makes it 598px.
+
+     The card is a <button>, and a button centres its content vertically. The cards in a
+     row stretch to the tallest one, so a card with less in it used to sit lower than its
+     neighbours; the flex column pins every card's content to the top instead. */
+  @container navrow (max-width: 567px) {
+    .nav-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      text-align: center; padding: 14px 5px 11px;
+    }
+    .nav-card-seat { width: 46px; height: 46px; margin: 0 auto 8px; flex: none; }
     .nav-ic { width: 38px; height: 38px; }
-    .nav-card-title { font-size: calc(16px + var(--text-size-adjust)); }
-    .nav-card-kicker { font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 1px; }
+    .nav-card-title { font-size: calc(16px + var(--text-size-adjust)); justify-self: auto; align-self: center; }
+    .nav-card-kicker { font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 1px; align-self: center; }
+  }
+  @container navrow (max-width: 597px) {
+    body[data-text-size="large"] .nav-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      text-align: center; padding: 14px 5px 11px;
+    }
+    body[data-text-size="large"] .nav-card-seat { width: 46px; height: 46px; margin: 0 auto 8px; flex: none; }
+    body[data-text-size="large"] .nav-ic { width: 38px; height: 38px; }
+    body[data-text-size="large"] .nav-card-title { font-size: 18px; align-self: center; }
+    body[data-text-size="large"] .nav-card-kicker { font-size: 9.5px; letter-spacing: 1px; align-self: center; }
+  }
+  @container navrow (max-width: 340px) {
+    body[data-text-size="large"] .nav-card-kicker { font-size: 8.5px; }
+  }
+  /* A 320px phone leaves each card about 68px, and two of the labels are single
+     unbreakable runs: "achievements" and "bonus games". Both come down a step rather than
+     run out of the card. Large text gets the same sizes here: there is no width left to
+     give it anything bigger. */
+  @container navrow (max-width: 300px) {
+    .nav-card, body[data-text-size="large"] .nav-card { padding-left: 3px; padding-right: 3px; }
+    .nav-card-title, body[data-text-size="large"] .nav-card-title { font-size: 14.5px; }
+    .nav-card-kicker, body[data-text-size="large"] .nav-card-kicker { font-size: 7px; letter-spacing: 0.4px; }
+  }
+  @container navrow (max-width: 240px) {
+    .nav-card-title, body[data-text-size="large"] .nav-card-title { font-size: 13.5px; }
+    .nav-card-kicker, body[data-text-size="large"] .nav-card-kicker { letter-spacing: 0.1px; }
   }
 
   /* Results-page variant: the six keepsake cards collapse into one row of icon tiles —

@@ -5912,12 +5912,15 @@ function scrollMasteryTitlesIntoView() {
   revealAfterFlip(() => document.querySelector("#masteryBody .rb-titles"), { pad: 18 });
 }
 // Keep the live indicator on the mastery nav-cards (both start + results) current: the
-// Mastery level once unlocked, otherwise progress toward the unlock gate.
+// Mastery level once unlocked, otherwise progress toward the unlock gate. It sits under a
+// title that already says "mastery", so it never says it again, and it is held to one line
+// on the narrowest card (see .nav-card-kicker), which is why the gate reads "levels" rather
+// than "to unlock".
 function updateMasteryNav() {
   const m = loadMastery();
   const text = isMasteryUnlocked(m)
-    ? "mastery · level " + masteryLevelFromXp(m.masteryXp)
-    : totalSkillLevels(m) + " / " + MASTERY_GATE + " to unlock";
+    ? "level " + masteryLevelFromXp(m.masteryXp)
+    : totalSkillLevels(m) + "/" + MASTERY_GATE + " levels";
   document.querySelectorAll(".js-mastery-kicker").forEach((el) => { el.textContent = text; });
 }
 
