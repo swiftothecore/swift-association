@@ -52,6 +52,24 @@ const rosePaint = (() => {
   const dried = [[248, 44, 70, 16], [372, 16, 58, 13], [70, 34, 60, 20], [540, 30, 56, 18]].map(([x, y, rx, ry]) => `<path d="${blotch(x, y, rx, ry, rand)}"/>`).join("");
   return `<svg class="cta-wash" viewBox="0 0 600 60" preserveAspectRatio="xMidYMid slice"><g class="cta-wash-dried">${dried}</g><g class="cta-wash-live">${live}</g></svg>`;
 })();
+// Ink press: a stamp impression rather than a glossy slab. At rest the ink has not taken
+// evenly: pale specks where the paper shows through and a few faint mottled patches, all
+// scattered across the full cropped strip so nothing repeats. On hover fresh ink soaks
+// outward from an off-centre point (placed by placeInkBleed) and stays while the button is
+// held: one main blot, satellites and a little spatter, spaced so no more than two layers
+// ever overlap, which keeps the lettering above 4.5:1 over the deepest of it.
+const inkStamp = (() => {
+  const rand = seededRandom(1311);
+  const specks = Array.from({ length: 110 }, () => `<circle cx="${(rand() * 600).toFixed(1)}" cy="${(rand() * 60).toFixed(1)}" r="${(.35 + rand() * rand() * 1.3).toFixed(2)}" opacity="${(.06 + rand() * .18).toFixed(2)}"/>`).join("");
+  const mottle = [[90, 20, 80, 16], [330, 44, 110, 14], [520, 18, 70, 12]].map(([x, y, rx, ry]) => `<path opacity=".045" d="${blotch(x, y, rx, ry, rand)}"/>`).join("");
+  const blots = [[300, 30, 112, 30, 0], [196, 20, 42, 16, .12], [404, 42, 46, 14, .18], [236, 50, 30, 9, .24], [372, 11, 34, 9, .28]]
+    .map(([x, y, rx, ry, delay]) => `<path class="cta-ink-blot" style="--ink-delay:${delay}s" d="${blotch(x, y, rx, ry, rand)}"/>`).join("");
+  const spatter = Array.from({ length: 9 }, () => {
+    const a = rand() * Math.PI * 2, r = 70 + rand() * 90;
+    return `<circle class="cta-ink-blot" style="--ink-delay:${(.3 + rand() * .15).toFixed(2)}s" cx="${(300 + Math.cos(a) * r * 1.4).toFixed(1)}" cy="${(30 + Math.sin(a) * r * .22).toFixed(1)}" r="${(1 + rand() * 2.2).toFixed(1)}"/>`;
+  }).join("");
+  return `<svg class="cta-ink" viewBox="0 0 600 60" preserveAspectRatio="xMidYMid slice"><g class="cta-ink-grain">${mottle}${specks}</g><g class="cta-ink-bleed">${blots}${spatter}</g></svg>`;
+})();
 // Fair-weather clouds, each its own shape and none repeated, kept to the top edge (some cut
 // off by it, as clouds are by a window frame) and two small ones low at the corners, so the
 // label's band stays clear sky. The strip is cropped, never stretched. [x, y, width, opacity]
@@ -148,7 +166,7 @@ const ivyVine = (side) => {
 const ivy = ivyVine("left") + ivyVine("right");
 const FINISH_ART = {
   "": `<i class="cta-stroke"></i>`,
-  ink: `<i class="cta-pool"></i>`,
+  ink: inkStamp,
   rose: rosePaint,
   sky: `${dayClouds}${stormBank}<span class="cta-rain cta-rain--far">${rain(18, 1311)}</span><span class="cta-rain">${rain(24, 1989)}</span>${bolt}`,
   meadow: garden,
@@ -211,6 +229,12 @@ export function initCtaInteractions(root = document) {
     if (!cta) return;
     if (cta.dataset.startbtn === "sky") placeStrike(cta);
     // A fresh brushstroke each time: the same wash, laid a little along and at a new angle.
+    // Fresh ink lands somewhere new each press, to one side or the other of the middle.
+    else if (cta.dataset.startbtn === "ink") {
+      const side = Math.random() < .5 ? -1 : 1;
+      cta.style.setProperty("--ink-x", `${(side * (40 + Math.random() * 120)).toFixed(1)}px`);
+      cta.style.setProperty("--ink-turn", `${(Math.random() * 8 - 4).toFixed(2)}deg`);
+    }
     else if (cta.dataset.startbtn === "rose") {
       cta.style.setProperty("--wash-x", `${(Math.random() * 60 - 30).toFixed(1)}px`);
       cta.style.setProperty("--wash-turn", `${(Math.random() * 5 - 2.5).toFixed(2)}deg`);
