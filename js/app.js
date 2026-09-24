@@ -26919,15 +26919,18 @@ const COMMON_TZ_FALLBACK = [
    look-alike sections, with no way to see that "Data" or "About" existed. Now each
    tab is a panel a screen or so tall. Order here is the rail's order; `label` names
    the panel, so a panel's first block leaves its own heading off rather than saying
-   it twice. */
+   it twice. The icons are drawn by hand, and each is an object off the desk rather than
+   the web's stock symbol for the idea: a spiral notebook, gusts for motion, a game piece,
+   the desk lamp (night mode, contrast), the same speaker as the sound button, a card file
+   box for backups, and a luggage tag for About. */
 const SETTINGS_PANELS = [
-  { id: "notebook", label: "Notebook", icon: `<path d="M6 3.5h9.5l3 3V20.5H6z"/><path d="M15.5 3.5v3h3M9 10h6M9 14h6"/>` },
-  { id: "motion", label: "Motion", icon: `<path d="M4 8h10a2 2 0 1 0-2-2"/><path d="M4 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M4 16h7"/>` },
-  { id: "gameplay", label: "Gameplay", icon: `<rect x="5" y="5" width="14" height="14" rx="2.5"/><circle cx="9" cy="9" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="15" r="1" fill="currentColor" stroke="none"/>` },
-  { id: "display", label: "Display", icon: `<rect x="4" y="5" width="16" height="12" rx="1.5"/><path d="M9 20h6M12 17v3"/>` },
-  { id: "sound", label: "Sound", icon: `<path d="M5 10h3.5L13 6v12l-4.5-4H5z"/><path d="M16 10.2a3.5 3.5 0 0 1 0 3.6"/><path d="M18.6 7.7a7 7 0 0 1 0 8.6"/>` },
-  { id: "data", label: "Data", icon: `<ellipse cx="12" cy="6.5" rx="6.5" ry="2.5"/><path d="M5.5 6.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5M5.5 11.5v5c0 1.4 2.9 2.5 6.5 2.5s6.5-1.1 6.5-2.5v-5"/>` },
-  { id: "about", label: "About", icon: `<circle cx="12" cy="12" r="8"/><path d="M12 10.5v5M12 7.5h.01"/>` },
+  { id: "notebook", label: "Notebook", icon: `<path d="M6.4 3.6 C10.4 3.3 14.8 3.4 18.6 3.6 C18.9 9.2 18.8 14.9 18.5 20.5 C14.6 20.8 10.4 20.8 6.4 20.5 C6.1 14.9 6.1 9.2 6.4 3.6 Z"/><path d="M4.2 6.6 C5.2 5.9 6.6 6 7.8 6.8"/><path d="M4.2 10.6 C5.2 9.9 6.6 10 7.8 10.8"/><path d="M4.3 14.6 C5.3 13.9 6.7 14 7.9 14.8"/><path d="M4.2 18.4 C5.2 17.7 6.6 17.8 7.8 18.6"/><path d="M10.6 8.8 C12.6 8.7 14.6 8.7 16.2 8.9"/>` },
+  { id: "motion", label: "Motion", icon: `<path d="M4 8.1 C7.3 8 10.6 8 13.9 8.1 C15.6 8.1 16.4 6.6 15.6 5.4 C14.9 4.4 13.2 4.6 12.8 5.9"/><path d="M4 12.1 C8.3 12 12.7 12 16.8 12.2 C18.7 12.3 19.8 13.6 19.2 15.1 C18.6 16.6 16.6 16.6 16.2 15.2"/><path d="M4.1 16.1 C5.8 16 7.4 16 9 16.1"/>` },
+  { id: "gameplay", label: "Gameplay", icon: `<path d="M14.6 6.2 C14.6 7.7 13.5 8.8 12 8.8 C10.5 8.8 9.4 7.6 9.4 6.2 C9.4 4.7 10.6 3.6 12 3.6 C13.5 3.6 14.6 4.8 14.6 6.2 Z"/><path d="M9.6 9.5 C11.2 9.2 12.8 9.2 14.4 9.5"/><path d="M10.3 9.7 C10.1 12.4 9.3 15 7.9 17.2"/><path d="M13.7 9.7 C13.9 12.4 14.7 15 16.1 17.2"/><path d="M6.2 17.4 C10 17 14 17 17.8 17.4 C18.2 18.4 18.2 19.4 17.8 20.4 C14 20.8 10 20.8 6.2 20.4 C5.8 19.4 5.8 18.4 6.2 17.4 Z"/>` },
+  { id: "display", label: "Display", icon: `<path d="M4.4 20.4 C7 20.1 9.6 20.1 12.2 20.4"/><path d="M8.3 20.2 C8.8 17 9.4 14 10.4 11.2"/><path d="M10.4 11.2 C12 9.8 13.4 8.4 14.8 7.2"/><path d="M13.4 4 C15.8 2.8 18.8 3.8 20.4 6.2 C19 7.4 17.8 8.6 16.6 10 C15 8.4 14 6.4 13.4 4 Z"/><path d="M19 11.6 C19.4 12.4 19.7 13.2 19.9 14"/>` },
+  { id: "sound", label: "Sound", icon: `<path d="M10.9 5.2 C9.4 6.4 7.9 7.8 6.5 9.1 L3.4 9.2 C3.2 11.1 3.2 13 3.4 14.9 L6.5 15 C7.9 16.3 9.4 17.6 10.9 18.9 C11.2 14.4 11.2 9.7 10.9 5.2 Z"/><path d="M14.4 9.4 C15.6 10.9 15.6 13.2 14.5 14.7"/><path d="M17.2 6.9 C19.9 9.9 19.9 14.4 17.3 17.4"/>` },
+  { id: "data", label: "Data", icon: `<path d="M3.6 11.4 C9.2 11 14.8 11 20.4 11.4 C20.6 14.4 20.5 17.4 20.2 20.4 C14.8 20.7 9.2 20.7 3.8 20.4 C3.4 17.4 3.4 14.4 3.6 11.4 Z"/><path d="M6 11.2 C6 9.2 6.1 7.2 6.3 5.4 C9 5.2 11.6 5.2 14.2 5.4 C14.4 7.2 14.4 9.2 14.3 11.2"/><path d="M9.4 5.4 C9.4 4.6 9.5 4 9.6 3.4 C12.4 3.2 15.2 3.2 17.8 3.5 C18 6 18 8.6 17.9 11.2"/><path d="M10 15.6 C11.4 15.5 12.6 15.5 14 15.6"/>` },
+  { id: "about", label: "About", icon: `<path d="M9 4.4 C12.6 4.2 16.2 4.2 19.8 4.5 C20 8.8 20 13.1 19.8 17.3 C16.2 17.6 12.6 17.6 9 17.4 L4.2 10.9 Z"/><path d="M10.4 10.9 C10.4 11.6 9.9 12.1 9.2 12.1 C8.5 12.1 8 11.6 8 10.9 C8 10.2 8.5 9.7 9.2 9.7 C9.9 9.7 10.4 10.2 10.4 10.9 Z"/><path d="M12.8 8.6 C14.6 8.5 16.2 8.5 17.8 8.7"/><path d="M12.8 12.8 C14.2 12.7 15.6 12.7 16.8 12.9"/>` },
 ];
 // Module-level, because every toggle re-renders the whole body: without this the
 // player would be thrown back to Notebook each time they ticked a box.
