@@ -15797,18 +15797,21 @@ function dayStrandHTML(albums, days) {
     d += ` Q${((prevX + p.x) / 2).toFixed(1)} ${p.y + (i % 2 ? -3.4 : 3.4)} ${p.x} ${p.y}`;
   });
   d += ` Q${(knotX - 5).toFixed(1)} ${lastY - 3.4} ${knotX} ${lastY}`;
+  // Only the album inks are written in here. The cord, the outlines and the empty bead
+  // take their colours from the ticket's own stock in CSS (.day-strand), so they turn
+  // with the night card instead of printing daytime ink onto it.
   const beads = pts.map((p) => {
     const ink = p.album ? albumColor(p.album) : null;
     return ink
       ? `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${ink}"/>`
       // nothing right that day: an unstrung bead, outline only
-      : `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#f7f1e2" stroke-dasharray="2.6 2.2"/>`;
+      : `<circle class="empty" cx="${p.x}" cy="${p.y}" r="${r}" stroke-dasharray="2.6 2.2"/>`;
   }).join("");
   const w = Math.ceil(knotX + 5);
   return `<svg viewBox="0 0 ${w} 22" width="${w}" height="22" aria-hidden="true">` +
-    `<path d="${d}" fill="none" stroke="#8a7f6b" stroke-width="1.9" stroke-linecap="round"/>` +
-    `<g stroke="#2b2722" stroke-width="1.3">${beads}` +
-      `<circle cx="${knotX}" cy="${lastY}" r="2.4" fill="#8a7f6b" stroke-width="0"/></g></svg>` +
+    `<path class="cord" d="${d}" fill="none" stroke-width="1.9" stroke-linecap="round"/>` +
+    `<g class="beads" stroke-width="1.3">${beads}` +
+      `<circle class="knot" cx="${knotX}" cy="${lastY}" r="2.4" stroke-width="0"/></g></svg>` +
     `<b>${days}-DAY STREAK</b>`;
 }
 // Optically centre a chip numeral on its own ink rather than its advance width — Caveat
@@ -15859,19 +15862,20 @@ function renderDailyButtonState() {
   const { month, day, dow } = dayChipFields(dateStr);
   const serial = dailySerial(dateStr);
   const serialHTML = serial ? `<span class="day-serial">No. ${serial}</span>` : "";
-  // The ornament block and the date's flourishes are struck from the sprite in
-  // index.html; see the comment over #day-ast-a for why they are drawn and not typed.
+  // The ornament block is struck from the sprite in index.html; see the comment over
+  // #day-ast-a for why it is drawn and not typed. The date carries no flourish: there
+  // is no room for one inside the frame, and the pair that used to sit above and below
+  // it was buried under the frame's rule with only the lozenge's tip showing.
   const ornHTML =
     `<span class="day-orn" aria-hidden="true">` +
       `<svg class="ast" viewBox="0 0 12 12"><use href="#day-ast-a"/></svg>` +
       `<svg class="tk" viewBox="0 0 19 13"><use href="#day-ticks"/></svg>` +
       `<svg class="ast" viewBox="0 0 12 12"><use href="#day-ast-b"/></svg>` +
     `</span>`;
-  const decHTML = `<svg class="dec" viewBox="0 0 38 5" aria-hidden="true"><use href="#day-dec"/></svg>`;
   const dateHTML =
-    `<span class="day-date">${decHTML}` +
+    `<span class="day-date">` +
       `<span class="m">${month}</span><span class="n">${String(day).padStart(2, "0")}</span><span class="d">${dow}</span>` +
-    `${decHTML}</span>`;
+    `</span>`;
 
   // The kicker copy is carried twice, long and short: the line cannot be rewritten from
   // CSS, and a phone leaves it about 100px between the title and the date panel — the
@@ -15881,17 +15885,30 @@ function renderDailyButtonState() {
     `<span class="day-kick"><span class="day-kick-long">${long}</span>` +
       `<span class="day-kick-short">${short}</span>${serialHTML}</span>`;
 
+  // A run left partway through today resumes where it stopped (startDaily), so the ticket
+  // says so rather than inviting a fresh start it will not actually give. `round` counts
+  // the pages already played, which makes the next one round + 1. A run that reached
+  // page 13 and only has its fold outstanding is left out: there is no page to go back to.
+  const progress = undone ? loadDailyProgress(dateStr) : null;
+  const pageNext = progress && progress.startDate === dateStr
+    && progress.round > 0 && progress.round < TOTAL_ROUNDS ? progress.round + 1 : 0;
+  btn.classList.toggle("day--resume", pageNext > 0);
+
   let restHTML, ariaLabel;
   if (undone) {
     restHTML =
       `<span class="day-well">` +
         `<span class="day-name">DAILY CHALLENGE</span>` +
-        kickHTML("thirteen words · the same for everybody", "same for all") +
+        (pageNext
+          ? kickHTML(`picks up at page ${pageNext} of ${TOTAL_ROUNDS}`, `page ${pageNext} of ${TOTAL_ROUNDS}`)
+          : kickHTML("thirteen words · the same for everybody", "same for all")) +
       `</span>` + dateHTML +
       `<span class="day-perf"></span>` +
-      `<span class="day-stub"><span class="day-stub-frame"></span><span class="go">START</span>` +
+      `<span class="day-stub"><span class="day-stub-frame"></span><span class="go">${pageNext ? "RESUME" : "START"}</span>` +
         `<svg class="arw" viewBox="0 0 24 24" aria-hidden="true"><use href="#day-arw"/></svg></span>`;
-    ariaLabel = `Daily Challenge for ${month} ${day}, thirteen words, the same for everybody. Not played yet.`;
+    ariaLabel = pageNext
+      ? `Daily Challenge for ${month} ${day}, in progress. Resume at page ${pageNext} of ${TOTAL_ROUNDS}.`
+      : `Daily Challenge for ${month} ${day}, thirteen words, the same for everybody. Not played yet.`;
   } else {
     const scoreVisible = !settings.hideDailyScore || result.revealed === true;
     const scoreText = scoreVisible ? String(result.score) : "?";

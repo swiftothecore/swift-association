@@ -11694,8 +11694,8 @@
     --day-stock: color-mix(in srgb, var(--paper) 90%, #6d5a33);
     --day-ink: #2f2820;
     --day-ink: color-mix(in srgb, var(--ink) 92%, var(--day-stock));
-    --day-soft: #6f675a;
-    --day-soft: color-mix(in srgb, var(--ink) 55%, var(--day-stock));
+    --day-soft: #5c554a;
+    --day-soft: color-mix(in srgb, var(--ink) 72%, var(--day-stock));
     --day-red: var(--red-pen);
     --day-rule: rgba(47, 40, 32, 0.38);
     --day-rule: color-mix(in srgb, var(--ink) 38%, transparent);
@@ -11716,14 +11716,21 @@
     --day-seam: 110px;     /* where the perforation runs, measured from the right */
     position: relative; display: block; width: 100%; margin-top: 12px; padding: 0;
     border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
+    /* The ticket lays itself out off its OWN width, not the viewport's: see the tiers at
+       the end of this section for why a screen-width breakpoint could never get it right. */
+    container: day / inline-size;
   }
   :root[data-theme="dark"] .day {
     --day-stock: #342d23;
     --day-stock: color-mix(in srgb, var(--paper) 88%, #d9cdb4);
     --day-ink: #e9e1d0;
     --day-ink: color-mix(in srgb, var(--ink) 94%, var(--day-stock));
-    --day-soft: #9d947f;
-    --day-soft: color-mix(in srgb, var(--ink) 46%, var(--day-stock));
+    --day-soft: #bbb29d;
+    --day-soft: color-mix(in srgb, var(--ink) 70%, var(--day-stock));
+    /* the editor's red is pitched for cream paper and sinks into a dark card, so the
+       ticket's red print lifts toward its own ink at night */
+    --day-red: #e28a7b;
+    --day-red: color-mix(in srgb, var(--red-pen) 58%, var(--ink));
     --day-rule: rgba(233, 225, 208, 0.26);
     --day-rule: color-mix(in srgb, var(--ink) 26%, transparent);
     --day-rule-2: rgba(233, 225, 208, 0.12);
@@ -11812,13 +11819,13 @@
      pseudo-element is laid out last by default. Cornered instead, the serial fouled
      the frame's inner band at every width. */
   .day .day-kick {
-    display: flex; align-items: center; gap: 8px; margin-top: 7px;
+    display: flex; align-items: center; gap: 6px; margin-top: 7px;
     font-size: calc(9.5px + var(--text-size-adjust)); color: var(--day-red);
     letter-spacing: 0.5px; white-space: nowrap;
   }
   .day-kick::before { content: ""; width: 14px; height: 1px; background: currentColor; opacity: 0.55; }
-  .day-kick::after { content: ""; order: 1; flex: 1 1 auto; min-width: 12px; height: 1px; background: currentColor; opacity: 0.35; }
-  .day-serial { order: 2; font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 2px; color: var(--day-soft); opacity: 0.8; }
+  .day-kick::after { content: ""; order: 1; flex: 1 1 auto; min-width: 6px; height: 1px; background: currentColor; opacity: 0.35; }
+  .day-serial { order: 2; font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 2px; color: var(--day-soft); }
   .day .day-next { display: inline; }
   /* played, the small-print line is a countdown rather than an invitation, so it drops
      out of the editor's red and back to pencil */
@@ -11831,6 +11838,11 @@
   /* ---- the date: its own printed compartment ---- */
   .day .day-date {
     position: relative; z-index: 2; flex: 0 0 74px;
+    /* the 6px is the frame's own inset: it brings the compartment's right rule in under
+       the frame's right edge, so the two print as one line instead of a pair of rules
+       6px apart. The frame stops 6px short of the perforation (or the result) in both
+       states, which is why one margin serves both. */
+    margin-right: 6px;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     background-color: var(--day-tint);
     /* the era, carried as a wash behind the date rather than as a block of era ink:
@@ -11838,7 +11850,6 @@
     background-image: linear-gradient(var(--page-wash), var(--page-wash));
     box-shadow: inset 1px 0 0 var(--day-rule), inset -1px 0 0 var(--day-rule);
   }
-  .day-date .dec { width: 38px; height: 5px; color: var(--day-red); opacity: 0.9; }
   .day-date .m {
     font-size: calc(8.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 2.6px;
     padding-left: 2.6px; color: var(--day-red); margin-top: 3px;
@@ -11852,7 +11863,7 @@
     line-height: 0.92; letter-spacing: -1px; transform: translateX(var(--n-nudge, -3px));
   }
   .day-date .d {
-    font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 2.2px;
+    font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 2.2px;
     padding-left: 2.2px; color: var(--day-soft); margin-bottom: 3px;
   }
 
@@ -11872,6 +11883,9 @@
   .day-stub .go { font-size: calc(17px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1.6px; }
   .day-stub .arw { width: 14px; height: 14px; stroke: currentColor; transition: transform 0.17s ease; }
   .day:hover .day-stub .arw { transform: translateX(2px); }
+  /* RESUME is a letter longer than START, and at full spacing it runs to the frame */
+  .day--resume .day-stub { gap: 6px; }
+  .day--resume .day-stub .go { letter-spacing: 0.6px; }
 
   /* =====================================================================
      PLAYED — the stub is GONE. The strip is genuinely shorter, the tear is
@@ -11882,8 +11896,16 @@
   .day--done .day-body { transform: rotate(-0.5deg); }
   .day--done .day-strip {
     -webkit-mask-image: none; mask-image: none;
-    clip-path: polygon(0 0, 97.6% 0, 99.3% 8%, 97.7% 18%, 99.6% 29%, 97.9% 40%, 99.4% 52%,
-      97.6% 63%, 99.6% 75%, 97.8% 87%, 99.2% 100%, 0 100%);
+    /* Torn along the perforation, so the edge is shallow and wanders at the pitch of the
+       punched holes: a few pixels either way and never twice the same, with one fibre
+       dragged a little further where the tear caught. In px from the right rather than
+       percentages, because a percentage of a 570px strip is a tooth ten pixels deep and
+       what that cuts is pinking shears, not a tear. */
+    clip-path: polygon(0 0, calc(100% - 2px) 0, calc(100% - 0.5px) 6%, calc(100% - 2.5px) 11%,
+      calc(100% - 1px) 17%, calc(100% - 3px) 24%, calc(100% - 1.5px) 29%, 100% 36%,
+      calc(100% - 2px) 42%, calc(100% - 1px) 48%, calc(100% - 4.5px) 53%, calc(100% - 1.5px) 57%,
+      calc(100% - 0.5px) 64%, calc(100% - 2.5px) 70%, calc(100% - 1px) 77%, calc(100% - 3px) 83%,
+      calc(100% - 1px) 89%, calc(100% - 2px) 95%, calc(100% - 0.5px) 100%, 0 100%);
   }
   /* the fibre lip: torn card shows its own uncoloured core just inside the edge */
   .day--done .day-strip::after {
@@ -11911,45 +11933,138 @@
      waxed cord. Caps at seven beads + a written count, so a long run never overflows. */
   .day .day-strand { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 5px; }
   .day-strand svg { display: block; height: 18px; width: auto; overflow: visible; }
+  /* The cord and outlines are the ticket's own inks, so the night card gets night ones:
+     daytime near-black outlines vanish into a dark card, and the empty bead used to be a
+     fixed cream disc that glowed on it. Empty now means empty, the card showing through. */
+  .day-strand .cord { stroke: var(--day-soft); }
+  .day-strand .knot { fill: var(--day-soft); }
+  .day-strand .beads { stroke: var(--day-ink); stroke-opacity: 0.85; }
+  .day-strand .empty { fill: var(--day-stock); stroke: var(--day-soft); }
+  :root[data-theme="dark"] .day-strand .beads { stroke: color-mix(in srgb, var(--day-stock) 55%, #000); stroke-opacity: 1; }
   .day-strand b {
     display: block; font-family: var(--type); font-weight: 400;
-    font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 1.6px; color: var(--day-soft);
+    font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 1.6px; color: var(--day-soft);
   }
 
-  /* A PHONE COLUMN IS ABOUT 250px OF TICKET, and almost nothing survives that at full
-     size. The ornament block goes, the date and stub narrow, the kicker swaps to its
-     short copy, and — the one that matters — the title takes two lines instead of
-     shrinking to nothing: "DAILY CHALLENGE" is monospace and therefore a fixed width,
-     so at this column it either wraps or it runs under the date panel. A ticket that
-     stacks its own title is an ordinary thing; a clipped one is not. The date keeps its
-     rules and its tint, because the compartment IS the point, and loses only its
-     flourishes. Played, the strand's beads are wider than the space the stub left, so
-     they go and the written count stays.
+  /* THE TICKET READS ITS OWN WIDTH. The strip needs about 600px for everything at full
+     size, and a viewport breakpoint cannot know when it has that: the column it sits in
+     is narrower than the screen by a different amount at every width, so a 480px media
+     query left everything from about 481px to 650px with the title running under the
+     date panel and the small print cut off. These are container queries on `.day`, in
+     steps, each giving up the least it can:
+
+       · under 566px the ornament block goes (it is the only thing on the card that
+         carries no information). The notebook's own column gives 572px, so a desktop
+         keeps the whole card, serial and all, with 6px to spare;
+       · under 536px the small print swaps to its short copy;
+       · under 470px it is a phone column, about 250px of ticket, and almost nothing
+         survives that at full size. The date and stub narrow and the title takes two
+         lines instead of shrinking to nothing: "DAILY CHALLENGE" is monospace and
+         therefore a fixed width, so it either wraps or runs under the date panel. A
+         ticket that stacks its own title is an ordinary thing; a clipped one is not.
+         The date keeps its rules and its tint, because the compartment IS the point.
+         Played, the strand's beads are wider than the space the stub left, so they go
+         and the written count stays. The small print loses its leading rule;
+       · under 270px (a 360px phone) the title, date and result give up a little more,
+         and under 230px (a 320px phone, about 196px of ticket) the stub does too.
+
+     Large text needs every threshold higher, so it has its own set after the first,
+     rather than a width that would take the full copy away from normal text on a
+     desktop. A container query styles the container's descendants, never the container itself,
+     which is why the seam and bite are re-set on .day-body here rather than on .day.
+     Re-measure with the serial showing (LAUNCH_DATE set), at both text sizes, from
+     220px up, if the copy or the type changes.
      ===================================================================== */
-  @media (max-width: 480px) {
-    .day { --day-seam: 78px; --day-bite: 8px; }
-    .day .day-strip { height: 70px; }
+  @container day (max-width: 566px) {
     .day .day-orn { display: none; }
-    .day .day-well { padding: 0 8px 0 10px; }
+    .day .day-well { padding-left: 14px; }
+  }
+  @container day (max-width: 536px) {
+    .day .day-kick-long { display: none; }
+    .day .day-kick-short { display: block; }
+  }
+  @container day (max-width: 470px) {
+    .day-body { --day-seam: 78px; --day-bite: 8px; }
+    .day .day-strip { height: 70px; }
+    /* the frame's inner rule ends 11px in, so 14px is what gives the type air on it */
+    .day .day-well { padding: 0 8px 0 14px; }
     .day .day-name {
       font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 0.4px;
       line-height: 1.06; white-space: normal;
     }
     .day .day-kick { margin-top: 5px; font-size: calc(8.5px + var(--text-size-adjust)); gap: 6px; }
-    .day .day-kick-long { display: none; }
-    .day .day-kick-short { display: block; }
+    .day-kick::before { display: none; }
     .day .day-serial { display: none; }
     .day .day-date { flex-basis: 54px; }
-    .day-date .dec { display: none; }
     .day-date .m, .day-date .d { letter-spacing: 1.6px; padding-left: 1.6px; }
     .day-date .n { font-size: calc(26px + var(--text-size-adjust)); }
-    .day .day-stub { flex-basis: 78px; gap: 5px; }
-    .day-stub .go { font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 1px; }
+    /* the stub's frame leaves 66px inside, and START plus its arrow at full spacing
+       filled all 66 of it, touching the printed rule at both ends */
+    .day .day-stub { flex-basis: 78px; gap: 4px; }
+    .day-stub .go { font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 0.4px; }
+    .day-stub .arw { width: 11px; height: 11px; }
+    /* RESUME is two letters longer than START and the stub has no room for the arrow too */
+    .day--resume .day-stub .arw { display: none; }
     .day .day-result { flex-basis: 92px; padding-right: 10px; }
     .day-strand svg { display: none; }
     .day--done .day-frame { right: 98px; }
     .day-score { font-size: calc(20px + var(--text-size-adjust)); }
     .day-score i { display: none; }
+  }
+  @container day (max-width: 270px) {
+    .day .day-well { padding: 0 6px 0 13px; }
+    .day .day-name { font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 0; }
+    .day .day-kick { font-size: calc(8px + var(--text-size-adjust)); }
+    .day-kick::after { min-width: 0; }
+    .day .day-date { flex-basis: 48px; }
+    .day-date .n { font-size: calc(24px + var(--text-size-adjust)); }
+    .day .day-result { flex-basis: 84px; padding-right: 8px; }
+    .day--done .day-frame { right: 90px; }
+    .day-strand b { letter-spacing: 1px; }
+  }
+  @container day (max-width: 230px) {
+    .day-body { --day-seam: 66px; }
+    .day .day-stub { flex-basis: 66px; gap: 3px; }
+    .day-stub .go { font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0; }
+    .day-stub .arw { width: 10px; height: 10px; }
+    .day .day-well { padding: 0 4px 0 13px; }
+    .day .day-name { font-size: calc(11px + var(--text-size-adjust)); }
+    .day .day-kick { font-size: calc(7.5px + var(--text-size-adjust)); }
+    .day .day-date { flex-basis: 42px; }
+    .day-date .m, .day-date .d { letter-spacing: 1px; padding-left: 1px; }
+    .day-date .n { font-size: calc(22px + var(--text-size-adjust)); }
+    .day .day-result { flex-basis: 72px; padding-right: 6px; }
+    .day--done .day-frame { right: 78px; }
+    .day-strand b { letter-spacing: 0.6px; }
+  }
+  /* large text: the same steps, reached sooner */
+  @container day (min-width: 567px) and (max-width: 630px) {
+    body[data-text-size="large"] .day .day-orn { display: none; }
+    body[data-text-size="large"] .day .day-well { padding-left: 14px; }
+  }
+  @container day (max-width: 600px) {
+    body[data-text-size="large"] .day .day-kick-long { display: none; }
+    body[data-text-size="large"] .day .day-kick-short { display: block; }
+  }
+  /* On the two smallest steps there is no width left to give large text anything: the
+     ticket prints at the normal size there, which is still the largest that fits. */
+  @container day (max-width: 270px) {
+    body[data-text-size="large"] .day .day-name { font-size: 13px; }
+    body[data-text-size="large"] .day .day-kick { font-size: 8px; }
+    body[data-text-size="large"] .day-date .n { font-size: 24px; }
+    body[data-text-size="large"] .day-date :is(.m, .d) { font-size: 8.5px; }
+    body[data-text-size="large"] .day-score { font-size: 20px; }
+    body[data-text-size="large"] .day-score em { font-size: 14px; }
+    body[data-text-size="large"] .day-strand b { font-size: 8px; }
+  }
+  @container day (max-width: 230px) {
+    body[data-text-size="large"] .day .day-name { font-size: 11px; }
+    body[data-text-size="large"] .day .day-kick { font-size: 7.5px; }
+    body[data-text-size="large"] .day-stub .go { font-size: 12px; }
+    body[data-text-size="large"] .day-date .n { font-size: 22px; }
+  }
+  @container day (min-width: 471px) and (max-width: 490px) {
+    body[data-text-size="large"] .day .day-name { font-size: 22px; }
   }
 
   /* records / charms / stats — three taped index cards pinned to the page. Each is a
