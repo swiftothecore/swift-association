@@ -2579,11 +2579,12 @@ if (location.pathname.endsWith('/index.html')) {
        this is the door the welcome points at for players who want the longer version. -->
   <button id="howToPlayLink" class="corner-link howto-link" type="button" title="How to play: a few cards on the basics">
     <!-- An open book with a bookmark ribbon hanging out of it. The ribbon is what stops this
-         reading as the songbook mark: a plain open book is already spoken for. -->
+         reading as the songbook mark: a plain open book is already spoken for. Drawn by hand
+         to match the rest of the corner: bowed pages, an uneven spine. -->
     <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M12 7.4 C9.7 5.9 6.4 5.3 3 5.5 V17.6 C6.4 17.4 9.7 18 12 19.5 C14.3 18 17.6 17.4 21 17.6 V5.5 C17.6 5.3 14.3 5.9 12 7.4 Z"/>
-      <path d="M12 7.4 V19.5"/>
-      <path d="M16.4 5.7 V11.4 L18.4 9.9 L20.4 11.4 V5.6"/>
+      <path d="M12 7.5 C9.6 6 6.4 5.4 3.1 5.6 C2.9 9.6 2.9 13.6 3.1 17.6 C6.4 17.4 9.6 18 12 19.5 C14.4 18 17.6 17.3 20.9 17.5 C21.1 13.5 21.1 9.5 20.9 5.5 C17.6 5.3 14.4 5.9 12 7.5 Z"/>
+      <path d="M12 7.6 C12.1 11.6 12.1 15.6 12 19.4"/>
+      <path d="M15.8 6 C15.7 7.8 15.8 9.6 15.9 11.4 C16.5 10.8 17.1 10.3 17.8 9.9 C18.4 10.4 19 10.9 19.6 11.5 C19.7 9.5 19.7 7.6 19.6 5.7"/>
     </svg>
     <span class="corner-link-label">how to play</span>
   </button>
@@ -2594,25 +2595,25 @@ if (location.pathname.endsWith('/index.html')) {
     <!-- A passed note: a dog-eared page with two lines of writing on it and a speech-bubble
          tail. An envelope would read "email" and a bare bubble is the SaaS cliché; grafting
          the tail onto a written page keeps it stationery, and the tail is the only pointed
-         silhouette among its neighbours (magnifier, cog, speaker, trunk). Deliberately
+         silhouette among its neighbours (magnifier, faders, speaker, trunk). Deliberately
          under-detailed: the fold crease and a third line both turned to mud at 20px. -->
-    <!-- Geometry is tuned so the inked bbox lands on the viewBox centre: the tail is
-         tucked in from the far-left edge (it used to hang past the writing lines and
-         drag the whole note left) and the page sits 0.4 lower so the tail's reach
-         downward is paid for at the top. -->
+    <!-- Drawn by hand like its two neighbours: the edges bow and the two lines of writing
+         are different lengths. The inked box still lands on the viewBox centre: the tail is
+         tucked in from the far-left edge and the page sits a little low, so the tail's
+         reach downward is paid for at the top. -->
     <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M4 4.4 H14 L20 10.4 V16.4 H10 L6.5 19.6 L8 16.4 H4 Z" />
-      <path d="M8 8.9 H11.5" />
-      <path d="M8 12.9 H15" />
+      <path d="M4 4.6 C7.4 4.3 10.8 4.3 14 4.5 L19.9 10.3 C20 12.4 20 14.4 19.8 16.3 C16.6 16.5 13.3 16.5 10.1 16.4 L6.6 19.5 L7.9 16.4 C6.6 16.4 5.3 16.4 4.1 16.3 C3.8 12.4 3.8 8.4 4 4.6 Z"/>
+      <path d="M8 8.9 C9.2 8.8 10.4 8.8 11.5 8.9"/>
+      <path d="M8 12.8 C10.4 12.7 12.8 12.8 15 12.9"/>
     </svg>
     <span class="corner-link-label">feedback</span>
   </a>
   <a id="searchLink" class="corner-link search-link" href="search/" title="Swift To The Lyric: search every lyric">
     <svg class="corner-link-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <!-- The handle starts on the ring's own centreline (10.9 + 7·cos45°), not outside
-           it: any other start point leaves the round cap sitting half-on the ring as a
-           thickened blob. Ring and handle tip then bracket the viewBox centre evenly. -->
-      <circle cx="10.9" cy="10.9" r="7" /><line x1="15.85" y1="15.85" x2="20.1" y2="20.1" />
+      <!-- Drawn by hand: the ring is slightly lopsided and the handle not quite straight.
+           The handle still starts on the ring's own line rather than outside it, or its
+           round cap sits half-on the ring as a thickened blob. -->
+      <path d="M16.9 10.6 C16.9 14.3 14 17.2 10.4 17.1 C6.8 17 4 14.1 4.1 10.5 C4.2 6.9 7.1 4.1 10.6 4.1 C14.2 4.2 16.9 7.1 16.9 10.6 Z"/><path d="M15.3 15.4 C16.9 17 18.5 18.6 20.2 20.3"/>
     </svg>
     <span class="corner-link-label">search every lyric</span>
   </a>

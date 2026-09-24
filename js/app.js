@@ -27165,8 +27165,8 @@ function renderSettingsBody() {
           `</svg>Credits</button>`) +
       `<a class="about-feedback" href="feedback/" target="_blank" rel="noopener">` +
         `<svg class="about-feedback-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
-          `<path d="M4 4.4 H14 L20 10.4 V16.4 H10 L6.5 19.6 L8 16.4 H4 Z"/>` +
-          `<path d="M8 8.9 H11.5"/><path d="M8 12.9 H15"/>` +
+          `<path d="M4 4.6 C7.4 4.3 10.8 4.3 14 4.5 L19.9 10.3 C20 12.4 20 14.4 19.8 16.3 C16.6 16.5 13.3 16.5 10.1 16.4 L6.6 19.5 L7.9 16.4 C6.6 16.4 5.3 16.4 4.1 16.3 C3.8 12.4 3.8 8.4 4 4.6 Z"/>` +
+          `<path d="M8 8.9 C9.2 8.8 10.4 8.8 11.5 8.9"/><path d="M8 12.8 C10.4 12.7 12.8 12.8 15 12.9"/>` +
         `</svg>Send feedback</a>` +
       `</div>`
     );
