@@ -1516,7 +1516,7 @@
      Each finish supplies its art and colours; the label stays above a clipped decorative
      layer. Physical colours keep the material recognisable on either paper theme. */
   .btn-primary.play-cta {
-    --cta-fill: var(--cta-gold, #efb73e); --cta-text: #2b2722;
+    --cta-fill: #efb73e; --cta-text: #2b2722;
     --cta-hover-fill: var(--cta-fill); --cta-hover-text: #fff0ce;
     position: relative; isolation: isolate; overflow: visible;
     font-size: calc(17px + var(--text-size-adjust));
@@ -1531,12 +1531,8 @@
      down to meet it rather than given a hand-picked third gold that would drift from the
      masthead and the beads.
 
-     It is a color-mix rather than a flat colour because --cta-gold is NOT a constant: rollCtaGold
-     in js/app.js sets it inline on <html> as a fresh hsl() every load, jittered a few degrees and
-     percent around #efb73e so the button is hand-inked rather than printed. A flat dark gold here
-     would quietly delete that. Mixing 90% of whatever was rolled with the ink keeps the roll and
-     lands on 0.44 luminance, which is the night --brand-gold to within a rounding error, and
-     holds 6.0-8.4:1 against the paper across the jitter's full range.
+     #dba93b is 90% of #efb73e mixed with the ink, which lands on 0.44 luminance, the night
+     --brand-gold to within a rounding error, and holds 7.2:1 against the paper.
 
      It matters because of the size. At #efb73e this is a 31,000px slab at 0.53 luminance on a
      0.02 desk, comfortably the brightest object on the screen and reading as a light source
@@ -1545,21 +1541,17 @@
      sheen down the face comes back to a third of its daytime strength for the same reason it
      did on the tape: a highlight only reads as a highlight against a lit surface. */
   :root[data-theme="dark"] .btn-primary.play-cta:not([data-startbtn]) {
-    --cta-fill: color-mix(in srgb, var(--cta-gold, #efb73e) 90%, #2b2722);
+    --cta-fill: #dba93b;
     background-image: linear-gradient(168deg, #ffffff1f 0%, #ffffff00 46%, #2b272233 100%), var(--cta-art, none);
   }
 
-  .btn-primary.play-cta::before {
-    content: "✎"; margin-right: 9px; font-size: calc(19px + var(--text-size-adjust)); vertical-align: -1px;
-    position: relative; z-index: 1; display: inline-block; transform-origin: 70% 90%;
-  }
-  .btn-primary.play-cta.cta-mk::before { content: none; }
   .cta-label { position: relative; z-index: 1; }
   .cta-mark {
     display: inline-block; margin-right: 9px; vertical-align: -3px;
     width: calc(19px + var(--text-size-adjust)); height: calc(19px + var(--text-size-adjust));
   }
   .cta-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .cta-mark--pencil { transform-origin: 70% 90%; }
   .cta-mark .ink-fill { fill: currentColor; stroke: none; }
   .cta-mark .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
   /* The results button's mark, weighted the way the chance dice are and for the same reason:
@@ -1586,11 +1578,34 @@
   button.play-cta:active { transform: rotate(-.6deg) translateY(1px); }
   .play-cta:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; }
 
-  /* Gold: a fresh marker stroke. It crosses quickly enough to carry the light lettering. */
-  .cta-stroke { inset: -5px; background: #2b2722;
-    clip-path: polygon(0 4%, 97% 0, 100% 16%, 98% 38%, 100% 65%, 98% 96%, 0 100%);
+  /* Gold: a fresh marker stroke dragged across the button. It is a marker's shape rather than
+     a cut-out's: a rounded chisel end and faint streaks along the drag, not a flat zigzag. It
+     runs 44px past the right edge, so the end is never inside the button when the stroke has
+     finished; stopping flush left gold notches showing through the old zigzag.
+
+     The fx layer sits above the label for this finish (and only this one), and the stroke
+     carries a cream copy of the words that slides the opposite way, so it stays put while the
+     ink passes over it. Each letter turns cream exactly as the stroke reaches it (js/cta.js,
+     goldStroke). The copy's padding is the button's own plus the stroke's overhang on each
+     side, which is what makes the two copies of the words land on the same pixels, and it
+     draws its own underline, since the button's ::after would sit under the stroke.
+
+     At night the stroke is sepia rather than ink: a near-black stroke on a near-black desk
+     turned the hovered button into an outline with nothing in it. */
+  .play-cta:not([data-startbtn]) { --cta-hover-text: #2b2722; --cta-stroke: #2b2722; }
+  :root[data-theme="dark"] .play-cta:not([data-startbtn]) { --cta-stroke: #6b4a22; }
+  .play-cta:not([data-startbtn]) .cta-fx { z-index: 2; }
+  .play-cta:not([data-startbtn])::after { content: none; }
+  .cta-stroke { top: -5px; bottom: -5px; left: -5px; right: -44px; overflow: hidden;
+    background: repeating-linear-gradient(0deg, #ffffff0c 0 1px, #0000 1px 4px, #0000000f 4px 5px, #0000 5px 7px), var(--cta-stroke);
+    border-radius: 0 30px 38px 0 / 0 52% 48% 0;
     transform: translateX(-102%); transition: transform .45s cubic-bezier(.2,.7,.25,1); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-stroke { transform: translateX(0); }
+  .cta-stroke-copy { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 19px 62px 19px 23px; text-align: center; color: #fff0ce; font-style: normal;
+    transform: translateX(102%); transition: transform .45s cubic-bezier(.2,.7,.25,1); }
+  .cta-stroke-line { position: absolute; left: calc(5px + (100% - 49px) * .16); right: calc(44px + (100% - 49px) * .16);
+    bottom: 14px; height: 2px; border-radius: 2px; background: currentColor; opacity: .7; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-stroke, :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-stroke-copy { transform: translateX(0); }
 
   /* Ink press: a rubber-stamp impression. The face is matte (the shared white sheen turned a
      near-black slab into grey plastic), the ink has taken unevenly, and on hover fresh ink
@@ -1815,7 +1830,7 @@
 
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.play-cta { animation: playBob 2.8s ease-in-out infinite; }
-    .btn-primary.play-cta::before { animation: playPencil 2.8s ease-in-out infinite; }
+    .btn-primary.play-cta .cta-mark--pencil { animation: playPencil 2.8s ease-in-out infinite; }
     button.play-cta:is(:hover, :focus-visible) { animation: none; }
   }
   /* applySettings resolves the system preference to this attribute. The media fallback
@@ -12673,7 +12688,7 @@
   }
   /* A shelf of nine buttons all bobbing and wiggling at once is a fairground, not a notebook.
      The idle animations belong to the ONE real button on the start screen. */
-  .cta-prev .play-cta, .cta-prev .play-cta::before { animation: none; }
+  .cta-prev .play-cta, .cta-prev .play-cta .cta-mark--pencil { animation: none; }
   /* The bento paints ACH_ICONS glyphs in bead gold over an ink outline, which is right for a
      charm sitting on paper and wrong for a mark sitting INSIDE the gold button — it would
      paint the mark the same colour as the button it sits on. The CTA marks are currentColor
@@ -12791,7 +12806,7 @@
      the label wrap here and nowhere else. */
   .rb-btn-sw .play-cta { flex: none; width: 214px; margin: 0; transform: scale(0.54) rotate(-0.6deg);
     animation: none; pointer-events: none; }
-  .rb-btn-sw .play-cta::before { animation: none; }
+  .rb-btn-sw .play-cta .cta-mark--pencil { animation: none; }
   .rb-sw-col.active .rb-btn-sw { outline: 3px solid rgba(var(--m-accent), 0.22); outline-offset: 1px; }
   .rb-btn-sw.locked { background: rgba(43, 39, 34, 0.04); border: 1px dashed rgba(43, 39, 34, 0.25); color: var(--ink-soft); }
   .rb-btn-sw.locked .rb-lock { opacity: 0.6; }

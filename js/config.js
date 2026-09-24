@@ -2218,12 +2218,12 @@ export function masteryLevelFromXp(xp) {
 
 // The words the home-screen start button can wear (the level-12 reward), and the mark each
 // one brings with it. Keyed by the reward's `payload.label`; "" is not in here, because the
-// default is the button's own markup — the ✎ glyph and "Start writing" — and applySettings
-// restores that rather than looking a default up.
+// default ("Start writing" with the drawn pencil, CTA_MARKS.pencil) is what ctaContentHTML
+// writes when no label is chosen.
 //
 // `mark` names a CTA_MARKS drawing, or "" for the deliberately unmarked one. Blank page is
-// not a missing icon: the CTA centres its contents, so with the glyph suppressed and no mark
-// child it reads as a clean bare button, which is the whole joke.
+// not a missing icon: the CTA centres its contents, so with no mark child it reads as a clean
+// bare button, which is the whole joke.
 export const CTA_LABELS = {
   pen:     { text: "Grab a pen",           mark: "nib" },
   notepad: { text: "Write this down",      mark: "notepad" },
@@ -2239,10 +2239,12 @@ export const CTA_LABELS = {
 // Those two sets have to survive rendering as outlines AND filled; a CTA mark only ever
 // renders one way, at 19px, on the gold button, so it is drawn for that single job.
 //
-// Every one of them is measured against the ✎ glyph the default still uses: 10.00px of ink
-// height and ~33.98 ink area at 19px. That matching is the whole reason they read as a family
-// beside it — a mark drawn at ordinary icon weight came out 138% of its height and 236% of
-// its ink, and bullied the pencil badly. If you redraw one, measure it; do not eyeball it.
+// Every one of them is measured against the pencil the default wears: 10.00px of ink height
+// and ~33.98 ink area at 19px, the measure of the ✎ font glyph it replaced. That matching is the
+// whole reason they read as a family beside it — a mark drawn at ordinary icon weight came out
+// 138% of its height and 236% of its ink, and bullied the pencil badly. If you redraw one,
+// measure it; do not eyeball it. The pencil itself was a font glyph until it was drawn here, so
+// it rendered in whatever face the device had; it is the one mark that wiggles (see styles.css).
 //
 // Two rules hold them up. `currentColor` only, so the button's gold→ink hover inversion is
 // inherited for free. And holes are `fill-rule="evenodd"` cuts, NEVER a var(--paper) knockout:
@@ -2256,6 +2258,7 @@ export const CTA_LABELS = {
 // achievement glyphs it shows. On the attribute, all seven marks would silently thicken to
 // 1.6 inside the Mastery picker and nowhere else; an inline style outranks the selector.
 export const CTA_MARKS = {
+  pencil: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:1.15" d="M6.09 15.07L14.45 6.70Q16.86 7.41 17.23 9.82L9.09 17.95"/><path class="ink" style="stroke-width:1.15" d="M6.09 15.07L4.70 19.40L9.09 17.95"/><path class="ink-fill" d="M4.70 19.40L5.25 17.68L6.42 18.85Z"/><path class="ink" style="stroke-width:1.15" d="M12.42 8.74L15.28 11.76"/></svg>`,
   nib: `<svg viewBox="0 0 24 24"><path class="ink-fill" fill-rule="evenodd" d="M8.56 6.35L11.92 5.38A0.66 0.66 -16 0 1 12.74 5.84L12.97 6.65C14.4 7.93 15.37 9.78 15.32 11.8C15.28 13.82 14.44 15.93 13.71 17.96C12.01 16.63 10.18 15.28 9.07 13.59C7.96 11.9 7.81 9.82 8.34 7.98L8.11 7.17A0.66 0.66 -16 0 1 8.56 6.35Z M10.34 10.91A1.29 1.29 -16 1 0 12.83 10.2A1.29 1.29 -16 1 0 10.34 10.91Z M11.61 12.05L12.36 11.83L13.6 16.17L13.51 17.27L12.85 16.39Z"/></svg>`,
   notepad: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:1.05" d="M8.71 8.45L14.77 8.03A0.83 0.83 -4 0 1 15.65 8.79L16.19 16.5A0.83 0.83 -4 0 1 15.42 17.39L9.36 17.81A0.83 0.83 -4 0 1 8.48 17.04L7.94 9.33A0.83 0.83 -4 0 1 8.71 8.45Z"/><path class="ink" style="stroke-width:1.05" d="M9.51 6.73L9.71 9.58"/><path class="ink" style="stroke-width:1.05" d="M11.62 6.59L11.82 9.43"/><path class="ink" style="stroke-width:1.05" d="M13.73 6.44L13.93 9.28"/><path class="ink" style="stroke-width:1.05" d="M9.55 12.54L14.5 12.19"/><path class="ink" style="stroke-width:1.05" d="M9.73 15.11L13.4 14.85"/></svg>`,
   nametag: `<svg viewBox="0 0 24 24"><path class="ink" style="stroke-width:0.74" d="M6.42 7.32L16.68 6.42A1.23 1.23 -5 0 1 18.02 7.54L18.7 15.35A1.23 1.23 -5 0 1 17.58 16.68L7.32 17.58A1.23 1.23 -5 0 1 5.98 16.46L5.3 8.65A1.23 1.23 -5 0 1 6.42 7.32Z"/><path class="ink-fill" fill-rule="evenodd" d="M5.7 8.39L17.57 7.35L17.67 8.41L5.8 9.45Z"/><path class="ink" style="stroke-width:0.74" d="M8.14 14.14C9.27 11.68 10.9 14.79 12.16 13.79C13.2 12.91 13.52 11.42 14.77 12.77C15.5 13.49 16.2 13.77 16.85 13.49"/></svg>`,
@@ -5465,6 +5468,21 @@ export const GRAVEYARD = [
       `doubled. That is a tuning parameter, not a challenge, and a player meets it as one rule wearing ` +
       `two seals. Two cards that ask the same question earn less than one card that asks it well. It ` +
       `can come back when it has an axis of its own.`,
+  },
+  {
+    id: "goldroll",
+    name: "The gold that moved",
+    born: "10 August 2026", died: "24 September 2026",
+    icon: "goldroll",
+    was: `The start button was a slightly different gold on every visit. Nothing ever said so: the ` +
+      `shade was quietly rolled each time the page loaded, a few degrees warmer or cooler than the ` +
+      `last, and the idea was that nobody would ever catch it happening.`,
+    why: `It seemed like it would be a little funny, a joke told with a straight face. But it never ` +
+      `made much sense. It only worked if nobody noticed, which meant nobody ever got it, and anyone ` +
+      `who did notice would have taken it for a bug, a button sitting a shade off the gold Classic ` +
+      `tab right above it. It was not the notebook's kind of joke either. The easter eggs here are ` +
+      `things you find on the desk, and the jokes are ones you are in on. A colour that quietly ` +
+      `changes and never lets you in on it is neither.`,
   },
   {
     id: "adaptive",

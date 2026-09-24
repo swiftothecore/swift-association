@@ -516,49 +516,17 @@ function paintThemeColor(dark) {
   const m = document.querySelector('meta[name="theme-color"]');
   if (m) m.setAttribute("content", dark ? "#14110d" : "#f5efe1");
 }
-/* ---------- The gold that is never quite the same gold ----------
-   A private joke with a straight face. The hero button's fill is nominally #efb73e, which is
-   hsl(41 85% 59%), and every page load quietly re-rolls it inside a tiny box around that point.
-   The intent is that nobody ever catches it in the act: one load is never a different colour
-   from the one before it, only a slightly different one, so the button reads as gold every time
-   and a screenshot from last week reads as very slightly wrong for reasons nobody can name.
-
-   The box is deliberately mean. Hue is the wide axis at ±6°, because within that arc the fill
-   stays unarguably "the yellow button" — push it much further and one end goes green and the
-   other goes orange, which is a different button and would be clocked instantly. Saturation and
-   lightness barely move at all (±4 / ±2), since they're the axes that read as a MISTAKE rather
-   than a shade: a washed-out or blown-out fill looks like a rendering bug, and the label's
-   contrast against it has to survive every roll.
-
-   Only the plain gold rolls. The Mastery finishes are earned cosmetics and a player who chose
-   rose picked THAT rose, so they supply their own fill and never touch this.
-   Session-scoped on purpose: it lives in a style property on <html> rather than storage, so a
-   reload is the thing that changes it, which is the whole gag. */
-const CTA_GOLD = { h: 41, s: 85, l: 59 };   // #efb73e, the nominal fill
-const CTA_JITTER = { h: 6, s: 4, l: 2 };
-let ctaGoldRoll = null;   // the hue/sat/light actually in force this load (dev readout reads it)
-function rollCtaGold(fixed) {
-  const jit = (base, spread) => base + (Math.random() * 2 - 1) * spread;
-  ctaGoldRoll = fixed ? { ...CTA_GOLD }
-    : { h: jit(CTA_GOLD.h, CTA_JITTER.h), s: jit(CTA_GOLD.s, CTA_JITTER.s), l: jit(CTA_GOLD.l, CTA_JITTER.l) };
-  document.documentElement.style.setProperty("--cta-gold",
-    `hsl(${ctaGoldRoll.h.toFixed(1)} ${ctaGoldRoll.s.toFixed(1)}% ${ctaGoldRoll.l.toFixed(1)}%)`);
-  return ctaGoldRoll;
-}
-
 // Write the chosen words (and their mark) into the start button — the level-12 reward.
 //
 // Unlike the level-8 finish, which is one attribute, this owns the button's CONTENTS, so it
-// is the only thing allowed to write them: index.html ships the default and this replaces it.
-// `.cta-mk` suppresses the ✎ pseudo-element, because a chosen mark is a real SVG child and
-// the two must never both be present. The default ("" and, defensively, any label id that is
-// no longer in CTA_LABELS) puts the shipped markup back, glyph and all.
+// is the only thing allowed to write them: index.html ships the bare words and this replaces
+// them. The default ("" and, defensively, any label id that is no longer in CTA_LABELS) gets
+// "Start writing" with the drawn pencil.
 //
-// The glyph keeps its playPencil wiggle and the SVG marks do not. The rotation was drawn for
+// The pencil keeps its playPencil wiggle and the other marks do not. The rotation was drawn for
 // a pencil held in a hand; a nametag or a turned page rocking 12° reads as a wobble rather
 // than as writing, and the ones it would suit are not worth a per-mark opt-in.
 function writeCtaLabel(btn, labelId) {
-  btn.classList.toggle("cta-mk", !!CTA_LABELS[labelId]);
   btn.innerHTML = ctaContentHTML(labelId, btn.dataset.startbtn || "");
 }
 
@@ -6641,8 +6609,7 @@ function buildButtonTile(buttons, m) {
 // keeps the real button's proportions instead of wrapping. 280px is its floor rather than its
 // width, or the longest label would run through the right border.
 function ctaPreviewHTML(labelId, finish) {
-  const cls = CTA_LABELS[labelId] ? " cta-mk" : "";
-  return `<span class="cta-prev"><span class="btn-primary play-cta${cls}"` +
+  return `<span class="cta-prev"><span class="btn-primary play-cta"` +
     `${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML(labelId, finish)}</span></span>`;
 }
 
@@ -29497,16 +29464,6 @@ function buildDevApi() {
     // Word / era / mode
     setEra: (era) => applyEra(era),
     setMode: (id) => setMode(id),
-    // The start button's per-load gold. The joke only works if it can't be seen happening, which
-    // also means it can't be judged by playing normally — reading the roll and pinning it back to
-    // the nominal #efb73e are the only ways to tell a jitter from a bug in the fill.
-    ctaGold: {
-      roll: () => rollCtaGold(),
-      fix: () => rollCtaGold(true),
-      state: () => (ctaGoldRoll
-        ? `hsl(${ctaGoldRoll.h.toFixed(1)} ${ctaGoldRoll.s.toFixed(1)}% ${ctaGoldRoll.l.toFixed(1)}%)  ·  nominal hsl(41 85% 59%)`
-        : "not rolled"),
-    },
     // Onboarding / first-run
     onboarding: {
       state: () => ({ firstRunDone: settings.firstRunDone, favouriteAlbum: settings.favouriteAlbum || null,
@@ -33043,7 +33000,6 @@ async function init() {
   // place the default (the spiral cover) is put down.
   applyAgainBtnLabel();
   showScreen("start");
-  rollCtaGold();   // today's gold, decided once per load and never mentioned to anyone
   applyEra("gold");
   // Before the first read of either store: the purge rewrites achievements and settings, and a
   // copy loaded ahead of it would keep the dead values in memory and save them straight back.

@@ -165,7 +165,6 @@ const ivyVine = (side) => {
 };
 const ivy = ivyVine("left") + ivyVine("right");
 const FINISH_ART = {
-  "": `<i class="cta-stroke"></i>`,
   ink: inkStamp,
   rose: rosePaint,
   sky: `${dayClouds}${stormBank}<span class="cta-rain cta-rain--far">${rain(18, 1311)}</span><span class="cta-rain">${rain(24, 1989)}</span>${bolt}`,
@@ -175,27 +174,39 @@ const FINISH_ART = {
   pride: `<i class="cta-ribbon"></i>`,
 };
 
+// Gold's hover is a marker stroke dragged across the button, and it carries its own copy of
+// the words, in cream. The fx layer sits ABOVE the real label for this finish, so wherever the
+// stroke has reached it covers the dark lettering and shows the cream copy riding inside it,
+// held still by an equal and opposite slide. Each letter therefore turns at the moment the ink
+// reaches it. Changing the label's colour on its own clock could not do that: it turned the
+// whole label cream while half of it still sat on gold, which is about 1.6:1.
+const goldStroke = (words) => `<i class="cta-stroke"><span class="cta-stroke-copy"><span class="cta-copy-label">${words}</span><i class="cta-stroke-line"></i></span></i>`;
+
 export function ctaContentHTML(labelId = "", finish = "") {
   const opt = labelId ? CTA_LABELS[labelId] : null;
-  const mark = opt?.mark ? `<span class="cta-mark" aria-hidden="true">${CTA_MARKS[opt.mark] || ""}</span>` : "";
-  const art = FINISH_ART[finish.startsWith("pride-") ? "pride" : finish] ?? FINISH_ART[""];
-  return `<span class="cta-fx" aria-hidden="true">${art}</span><span class="cta-label">${mark}${opt ? escapeHtml(opt.text) : "Start writing"}</span>`;
+  // No chosen words means the default, which wears the drawn pencil (the one mark that wiggles).
+  const markId = opt ? opt.mark : "pencil";
+  const mark = markId ? `<span class="cta-mark${opt ? "" : " cta-mark--pencil"}" aria-hidden="true">${CTA_MARKS[markId] || ""}</span>` : "";
+  const words = `${mark}${opt ? escapeHtml(opt.text) : "Start writing"}`;
+  const key = finish.startsWith("pride-") ? "pride" : finish;
+  const art = FINISH_ART[key] ?? goldStroke(words);
+  return `<span class="cta-fx" aria-hidden="true">${art}</span><span class="cta-label">${words}</span>`;
 }
 
 
 // Lightning strikes only in the clear sky either side of the lettering, never through it: a
 // white bolt behind cream text blinds the label at the one moment the player is looking. The
-// label is measured as it sits (the ✎ is a pseudo-element outside .cta-label, so its width is
-// added by hand), and the bolt narrows to fit a thin gutter. When neither side has room for
+// label is measured as it sits (its mark included, since every mark is a child of it), and the
+// bolt narrows to fit a thin gutter. When neither side has room for
 // even a narrow bolt, as with a long label on a phone, the storm simply comes without one.
 // Each strike also lands well away from the last.
-const BOLT_W = 43, BOLT_MIN_W = 22, BOLT_PAD = 8, PENCIL_W = 28;
+const BOLT_W = 43, BOLT_MIN_W = 22, BOLT_PAD = 8;
 function placeStrike(cta) {
   const box = cta.getBoundingClientRect(), label = cta.querySelector(".cta-label")?.getBoundingClientRect();
   if (!label || !box.width || !cta.offsetWidth) return;
   const k = cta.offsetWidth / box.width; // undo a preview's scale: work in the button's own pixels
   const width = cta.offsetWidth;
-  const left = (label.left - box.left) * k - (cta.classList.contains("cta-mk") ? 0 : PENCIL_W) - BOLT_PAD;
+  const left = (label.left - box.left) * k - BOLT_PAD;
   const right = (label.right - box.left) * k + BOLT_PAD;
   const bolt = Math.min(BOLT_W, Math.max(left, width - right));
   if (bolt < BOLT_MIN_W) { cta.classList.add("cta-no-bolt"); return; }
