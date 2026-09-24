@@ -620,6 +620,8 @@ function paintSoundGear() {
 // Turning it on auditions the chime, which is also the gesture that wakes the AudioContext
 // (see the autoplay note in js/sound.js), so the very first sound is the one they asked for.
 function setSound(on) {
+  // The block feature: switched off mid-run rather than between runs.
+  if (settings.sound && !on && settingsOverRun()) earnTumblrPost("the-block-feature");
   settings.sound = !!on;
   saveSettings(settings);
   applySettings();
@@ -5614,6 +5616,45 @@ function earnTumblrPost(id) {
   updateKeepsakesNav();
   refreshTumblr();
   return true;
+}
+
+/* ---------- Tumblr message triggers ----------
+   She is not rewarding you, she is replying to you. Each post fires on a moment its words read as
+   an answer to, and several of those moments are bad ones: a run of none, a line the gauge lit up
+   for and the verdict refused, a loss you were back from inside two seconds. That is what keeps the
+   family on the stickers' side of the drawer rather than the charms': nothing here is a score to
+   chase, and the `how` line says what happened rather than what to do. Same rule as every charm,
+   too: each one stays reachable on a notebook that has already done everything, so a missed
+   first time is never the only time. Taylor's own corpus only, since every post is her talking. */
+const TUMBLR_MIDWAY = Math.ceil(TOTAL_ROUNDS / 2);   // page 7 of 13: "midway through" a run
+const TUMBLR_INFINITE_PAGE = 113;                    // well past where anybody meant to stop
+const TUMBLR_REPLAY_MS = 2000;                       // "within seconds of losing one"
+let runNamedTitle = false;     // the mom croon: a title answered anywhere this run spoils it
+let runTurnedAway = false;     // beautiful mind: Both Of Us / Short n' Sweet soft-rejected you
+let runEndedAt = 0;            // keep groovin: when the results page went up, and whether it was
+let runEndedLost = false;      // a loss (read by the replay stamp, never by anything else)
+
+// Called once per settled page, after roundResults holds this page's verdict.
+function checkPageTumblr() {
+  if (!catalogueCharmsLive()) return;
+  if (gameType === "classic" && round === TUMBLR_MIDWAY) {
+    // Most first games are Relaxed, so the first Normal one arrives a while in, which is when
+    // "I'm locking myself in my room until I figure this out" lands.
+    if (currentMode.id === "medium") earnTumblrPost("figure-out-my-tumblr");
+    // Extreme adventure, going well so far: more of the pages done are right than wrong.
+    const right = roundResults.filter(Boolean).length;
+    if (currentMode.id === "ultra" && right * 2 > round) earnTumblrPost("harness-life");
+  }
+  if (gameType === "infinite" && round === TUMBLR_INFINITE_PAGE) earnTumblrPost("only-one-that-could-stop-it");
+}
+
+// Called from endGame's own path (classic / infinite / daily), which is where the replay stamp
+// and the thirteen-page reading both live. The sandboxed modes are not asked.
+function foldRunTumblr(isInfinite, won, pages) {
+  if (!catalogueCharmsLive() || isInfinite || pages < TOTAL_ROUNDS) return;
+  if (score <= 1) earnTumblrPost("normal-today");
+  // Singing is a choice here, so Lyricist, where it is the only way to answer, does not count.
+  if (won && !runNamedTitle && !currentMode.lyricOnly) earnTumblrPost("the-mom-croon");
 }
 
 // The unlock toast. Same surface as the sticker toast, with the post card where the art goes,
@@ -11426,6 +11467,13 @@ let trackWritten = [];          // what has been filled in so far, parallel to s
 let trackWrong = 0;             // wrong guesses, for the finished sheet to remark on
 let trackSpent = 0;             // the run's seconds, frozen when the last blank fills
 let trackFresh = -1;            // the row just written, so only that one's ink settles
+/* THE TRAIL HIKED BACKWARDS. Before the first keystroke, a tap on the last blank turns the sheet
+   round and the pen walks UP the record from there; a tap back on the first blank turns it the
+   right way again. Nothing on the sheet says so: it is there to be found, and finding it is the
+   tumblr post. A backwards run is timed and finished like any other, and then banks NOTHING — no
+   board entry, no charm — because every time on that board is a record written from track one,
+   and a board that mixed the two would compare runs that asked different questions. */
+let trackBackwards = false;
 let trackBackTarget = "bonus";
 
 function isTrackRun() { return !!bonusGame && bonusGame.id === "track-by-track"; }
@@ -11562,6 +11610,7 @@ function beginTrackSheet() {
   trackSpent = 0;
   trackAt = 0;
   trackFresh = -1;
+  trackBackwards = false;
   skipToNextBlank();
   /* Entering the play screen is nextBonusRound's own gesture and not a variation on it: lay the
      sheet out while the screen is still hidden, turn the page, and only then let the player
@@ -11597,10 +11646,37 @@ function beginTrackSheet() {
 // cuts whose honest answer is a title sitting higher up the same record, printed rather than
 // asked so the sheet never demands a duplicate of a track you already wrote.
 function skipToNextBlank() {
-  while (trackAt < trackSheet.slots.length && trackWritten[trackAt] != null) trackAt++;
+  const step = trackBackwards ? -1 : 1;
+  while (trackAt >= 0 && trackAt < trackSheet.slots.length && trackWritten[trackAt] != null) trackAt += step;
 }
 
-function trackDone() { return !!trackSheet && trackAt >= trackSheet.slots.length; }
+function trackDone() { return !!trackSheet && (trackAt < 0 || trackAt >= trackSheet.slots.length); }
+
+// Point the pen at the top of the sheet or the bottom of it, past any printed alt takes.
+function setTrackDirection(back) {
+  trackBackwards = back;
+  trackAt = back ? trackSheet.slots.length - 1 : 0;
+  skipToNextBlank();
+}
+
+// The turn-round tap. Only on an untouched sheet: once the clock is running, or a track is
+// written in, the direction is the one the player chose by starting.
+function trackListTap(e) {
+  const row = e.target.closest(".tbt-row");
+  if (!row || bonusLocked || ruthlessStart || !trackSheet || trackDone()) return;
+  if (trackWritten.some((t, i) => t != null && !trackSheet.slots[i].alt)) return;
+  const i = Number(row.dataset.i);
+  // Where each end's first blank is: the bottom one is the last row that is not a printed alt.
+  const ends = trackSheet.slots.map((s, k) => k).filter((k) => !trackSheet.slots[k].alt);
+  const first = ends[0], last = ends[ends.length - 1];
+  if (!trackBackwards && i >= last) setTrackDirection(true);
+  else if (trackBackwards && i <= first) setTrackDirection(false);
+  else return;
+  renderTrackSheet();
+  focusTrackInput();
+  const el = $("bonusPlayBody").querySelector(".tbt-row.is-now");
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+}
 
 /* THE LINE THE PEN IS ON, inked in the record's own colour. What marked the place before was
    a grey wash over the whole row under a hard-ended bar in the era colour, which read as a
@@ -11646,7 +11722,7 @@ function renderTrackSheet(finished = false) {
         // the answer is. The current row gets the highlighter instead; the rest get paper.
         : now ? trackPenStroke() : `<span></span>`;
     const said = written != null ? censor(written) : "blank";
-    return `<li class="tbt-row ${cls}" aria-label="Track ${slot.n}: ${escapeHtml(said)}">` +
+    return `<li class="tbt-row ${cls}" data-i="${i}" aria-label="Track ${slot.n}: ${escapeHtml(said)}">` +
       `<span class="tbt-n">${slot.n}</span>${body}` +
       (slot.alt ? `<span class="tbt-printed">printed</span>` : "") +
     `</li>`;
@@ -11671,7 +11747,10 @@ function renderTrackSheet(finished = false) {
       aria: "Name the next track",
       hint: "part of the title is enough · Enter to write it in",
     }) + `</div>`);
-  if (!finished) wireTrackInput();
+  if (!finished) {
+    wireTrackInput();
+    $("bonusPlayBody").querySelector(".tbt-list").addEventListener("click", trackListTap);
+  }
   paintTrackProgress();
   snapTrackGrid();
 }
@@ -11771,7 +11850,7 @@ function submitTrack() {
   trackFresh = trackAt;
   noteSessionSong({ title: want, album: trackSheet.album });
   if (input) input.value = "";
-  trackAt++;
+  trackAt += trackBackwards ? -1 : 1;
   skipToNextBlank();
   sfx.play("correct");
   if (trackDone()) { endTrackRun(); return; }
@@ -11832,14 +11911,19 @@ function endTrackRun() {
   playRunFlourish();
   trackSpent = ruthlessStart ? (performance.now() - ruthlessStart) / 1000 : 0;
   const snapped = Math.round(trackSpent * 100) / 100;
-  const rec = recordTrackRun(trackSheet.album, snapped, todayKey());
+  // A backwards run is off the board (see trackBackwards), so it writes no record and folds no
+  // charm; what it gets instead is the post it was hiding.
+  const rec = trackBackwards
+    ? { backwards: true, isBest: false, best: null }
+    : recordTrackRun(trackSheet.album, snapped, todayKey());
   /* BEFORE the sleeve is drawn, and that ordering is now load-bearing: renderTrackEnd prints
      the run's charms (bonusCharmRow), so a fold that ran after it would draw the panel against
      an empty `newlyUnlocked` and the charms would appear on the NEXT run instead. The rule the
      fold was written for is untouched — it still runs after recordTrackRun, so a run that
      completes the set of twelve can count itself. endBonusRun has the same order for the same
      two reasons. */
-  foldTrackCharms(snapped, rec);
+  if (trackBackwards) earnTumblrPost("hiked-it-backwards");
+  else foldTrackCharms(snapped, rec);
   /* The clock goes with the run. Its readout is the run's TIME, and the sleeve prints that
      same number an inch below in an inch-high hand — two copies of one number, the smaller of
      which has stopped meaning anything — over a gauge sitting full against a sheet that is
@@ -11864,7 +11948,8 @@ function endTrackRun() {
 
 function renderTrackEnd(rec, secs) {
   const best = rec.isBest;
-  const remark = trackWrong === 0
+  const remark = rec.backwards ? "The whole trail, last track to first. Walked backwards, so it stays off the board."
+    : trackWrong === 0
     ? "Straight down the sleeve, not a wrong word in it."
     : trackWrong <= 3 ? "A couple of false starts, and then the whole record."
     : "You got there. The record does not care how many times you tried.";
@@ -11877,7 +11962,7 @@ function renderTrackEnd(rec, secs) {
     `<p class="tbt-end-remark">${escapeHtml(remark)}</p>` +
     `<p class="tbt-end-meta">${escapeHtml(trackSheet.album)} · ${trackSheet.total} tracks · ` +
       `${trackWrong} wrong ${trackWrong === 1 ? "guess" : "guesses"}` +
-      (best ? "" : ` · best ${fmtTimeFine(rec.best)}`) + `</p>` +
+      (best || rec.backwards ? "" : ` · best ${fmtTimeFine(rec.best)}`) + `</p>` +
     // The same row the back cover gets, for the same reason: this game's ending is the filled-in
     // sleeve rather than a card, but a charm earned writing out a record was just as invisible.
     bonusCharmRow() +
@@ -16087,6 +16172,9 @@ function resetRunState() {
   gameTimeSum = 0;
   gameHitRedZone = false;
   runSoundOn = settings.sound;    // the boombox: was the sound already on when this run began
+  runNamedTitle = false;
+  runTurnedAway = false;
+  runEndedAt = 0;
   rareStreak = 0;
   gameFuzzyMatches = 0;
   gameTimedRounds = 0;
@@ -19112,6 +19200,7 @@ function endChallenge() {
   // beaten (see noteRunOutcome). Nothing between here and its old home touches the score; the
   // risk settle, which does, has already run.
   const won = challengeWinCheck(c);
+  if (won && runTurnedAway && (c.id === "both-of-us" || c.id === "short-title")) earnTumblrPost("beautiful-mind");
   const challengeTotal = c.rule === "survive" ? surviveTarget(c) : TOTAL_ROUNDS;
   // The run written down as the bracelet keepsake's own strings, before anything downstream
   // can move the numbers it quotes (see challengeCard).
@@ -22554,6 +22643,7 @@ function rejectTitleForm() {
 }
 // Short n' Sweet: the named title is too long.
 function rejectShortTitle() {
+  runTurnedAway = true;
   softRejectFlash(maxTitleWordsNow() === 1
     ? `too long — name a <b>one-word</b> title`
     : `too long — name a <b>one- or two-word</b> title`);
@@ -22574,6 +22664,7 @@ function rejectAlbumFocus() {
 // Both Of Us: the named song sings some of the page's words but not all. Name the ones it's
 // missing rather than just refusing it, so the near miss teaches something. Doesn't burn the page.
 function rejectBoth(missing) {
+  runTurnedAway = true;
   const words = missing.map((w) => `“<b>${escapeHtml(w)}</b>”`).join(" or ");
   softRejectFlash(`that one never sings ${words}`);
 }
@@ -23777,8 +23868,15 @@ function submitAnswer(song, isTimeout) {
     }
     // Nothing the catalogue recognises. The page isn't burned, but something WAS sent, so it
     // goes in the log: a run that spent three pages guessing at spellings isn't a clean one.
-    if (!song) { noteWrongSubmission(null); if (triedLyric) nudgeLyricNeedsWord($("songInput").value); return; }
+    if (!song) {
+      noteWrongSubmission(null);
+      // You had one job: the verse gauge was lit on the line as it was sent, and it still missed.
+      if (triedLyric && !$("verseMeter").hidden && catalogueCharmsLive()) earnTumblrPost("one-job-test-people");
+      if (triedLyric) nudgeLyricNeedsWord($("songInput").value);
+      return;
+    }
   }
+  if (song && !lyricMatch && !isTimeout) runNamedTitle = true;
 
   // Impostor: you named a song for a fake word — you fell for it. Fatal. (Reaching any of the
   // scoring code below on an impostor run therefore always means a genuine, real-word page.)
@@ -23955,6 +24053,7 @@ function submitAnswer(song, isTimeout) {
     return;
   }
   roundResults[round - 1] = correct;
+  checkPageTumblr();
   // The tap grids answer with a tile rather than a typed song, so `song` is null here and the
   // bracelet used to string every page of Whose Line? and Odd One Out in the notebook's era
   // colour — thirteen beads that look picked at random because nothing about the run picked
@@ -25120,6 +25219,7 @@ function endGame() {
   // later. Infinite carries none: a run there ends when the lives run out, so there is no such
   // thing as winning one and it never qualifies either way.
   const runWon = isInfinite ? null : score >= Math.ceil(TOTAL_ROUNDS / 2);
+  if (!devNoLog) foldRunTumblr(isInfinite, runWon, roundsSurvived);
   if (!devNoLog) noteRunOutcome(gameType, isDaily ? "daily" : mode, runWon);   // before the append, or it reads this run
   if (!devNoLog) appendHistory({
     s: boardScore, c: score, n: roundsSurvived,
@@ -25381,6 +25481,8 @@ function endGame() {
   }
 
   showScreen("results");
+  runEndedAt = performance.now();
+  runEndedLost = isInfinite || !runWon;   // an Infinite run only ever ends by running out
   const keepsakeOpts = isDaily ? dailyBraceletOptions()
     : isInfinite
       ? { total: Math.max(roundsSurvived, 1), tieText: String(Math.max(roundsSurvived, 1)), colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
@@ -25663,6 +25765,8 @@ function addDoodle(kind) {
     });
   }
   layer.appendChild(d);
+  // Her stars, back in a margin: the tumblr post she drew them for.
+  if (kind === "stars" && catalogueCharmsLive()) earnTumblrPost("stars-do-u-like-dem");
 }
 
 /* The margin marks beside each inside page's title are the other drawings you can touch, and
@@ -26051,7 +26155,7 @@ function runRoundEggs() {
     // On a dated day the pool is that day's drawing and nothing else, at the same odds: a
     // dated doodle is still a thing you catch, not a banner the whole run wears.
     const dated = datedDoodleFor(todayKey());
-    const pool = dated ? [dated] : ["scarf", "thirteen", "mirrorball", "paperplane", "willow"];
+    const pool = dated ? [dated] : ["scarf", "thirteen", "mirrorball", "paperplane", "willow", "stars"];
     addDoodle(pool[Math.floor(Math.random() * pool.length)]);
   }
   if (midnightHour) addMarginNote("meet me at midnight");
@@ -27198,6 +27302,7 @@ function wireSettingsBody() {
     }
     settings.coverStickerSlots = toggleCoverSticker(earned, settings.coverStickerSlots, button.dataset.coverSticker);
     saveSettings(settings);
+    earnTumblrPost("rethinking-the-album-cover");
     placeCoverStickers();
     renderSettingsBody();
   }));
@@ -31758,9 +31863,9 @@ function buildDevApi() {
     // Stickers, the die-cut vinyl set. `earn` is the real path (toast + chime included) and the
     // rest write the store directly, for eyeballing the locked silhouette against the finished
     // sticker without having to hit the trigger.
-    // Tumblr messages, the screenshotted post set. Every post is currently dev-only: the shelf
-    // and the earn path are built, the triggers are not written yet (PLAN.md holds the list), so
-    // this is the only way onto the shelf until each post is given the thing it is earned for.
+    // Tumblr messages, the screenshotted post set. The triggers live beside earnTumblrPost
+    // (checkPageTumblr, foldRunTumblr and a handful of one-line call sites); this is the way to
+    // look at a card without playing into the moment it replies to.
     // `earn` is the real path, toast and chime included; the rest write the store directly.
     tumblr: {
       list: () => { const e = loadTumblr(); return TUMBLR_POSTS.map((t) => ({ id: t.id, name: t.name, blog: t.blog, found: !!e[t.id], at: e[t.id] || null, how: t.how || "(no trigger yet)" })); },
@@ -33298,6 +33403,7 @@ async function init() {
   // Replay the run just finished, same mode (and the same Infinite rules), from page one.
   $("replayBtn").addEventListener("click", () => {
     if (!replayRun) return;
+    if (runEndedAt && runEndedLost && performance.now() - runEndedAt <= TUMBLR_REPLAY_MS) earnTumblrPost("keep-groovin");
     currentMode = replayRun.mode;
     if (replayRun.type === "infinite") startInfinite(replayRun.variant);
     else startGame();

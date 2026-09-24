@@ -31,6 +31,7 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself
 - Seventeen stickers, mostly earned by noticing things rather than scoring, plus a souvenir for every guest catalogue you clear. Pick up to fifteen for the notebook cover
+- Twelve of her real Tumblr posts, blacked out until something you do in the game answers one
 - An ink for every album you beat in Album Focus, worn by the game's own title and gilded for a perfect run
 
 **The details**
