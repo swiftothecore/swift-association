@@ -4935,7 +4935,9 @@ function fitHeatGrid(retries = 10) {
 
 /* ---------- Profile polaroid (a photo tucked into the notebook) ---------- */
 const POL_CAMERA_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h3l1.4-2h5.2L16 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.2"/></svg>`;
-const POL_CLIP_SVG = `<svg class="pol-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 7.5l-6.8 6.8a2.4 2.4 0 0 0 3.4 3.4l7.1-7.1a4 4 0 0 0-5.66-5.66l-7.1 7.1"/></svg>`;
+// The clip is a real paperclip, bent wire with an inner and an outer loop, drawn a little
+// wobbly; it used to be the email-attachment glyph, a loop no paperclip on a desk has.
+const POL_CLIP_SVG = `<svg class="pol-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.1 6.6 C10 9.8 10 13 10.1 16 C10.2 18.3 13.9 18.4 14 16.1 C14.1 12.4 14.1 8.6 14 4.9 C13.9 1.9 7.7 1.8 7.6 4.9 C7.5 9.4 7.5 13.8 7.7 18.2 C7.9 21.7 16.3 21.8 16.4 18.1 C16.5 14.9 16.5 11.7 16.3 8.6"/></svg>`;
 
 // One polaroid — a photo (data-URL) clipped to the page, or the empty
 // "add a photo" slot when `photo` is "". `caption` rides the white lip;
@@ -6762,8 +6764,10 @@ function setMasteryTitle(value) {
 
 let _titleView = null;   // index into MASTERY_TITLES the stepper is currently viewing
 const TS_STAR = `<span class="ts-star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.8 5.9 21.4l1.5-6.8L2.2 9l6.9-.7z"/></svg></span>`;
-const TS_CHEV_L = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const TS_CHEV_R = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+// The arrows are drawn by hand and each separately, so the pair bow slightly differently
+// rather than one being the other flipped.
+const TS_CHEV_L = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 5.2 C12.6 7.4 10.4 9.6 8.3 12.1 C10.4 14.3 12.7 16.6 15.1 18.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const TS_CHEV_R = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.1 5 C11.4 7.2 13.6 9.5 15.8 11.9 C13.5 14.2 11.3 16.6 9 18.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 // The title picker: one title at a time with ← → to browse, a star marking the worn title
 // and a circle marking the one being viewed, tier-grouped position dots, and a context action
