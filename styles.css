@@ -1798,17 +1798,20 @@
   :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy-leaf { animation: ctaIvyRustle .9s var(--ivy-delay) cubic-bezier(.3,.6,.35,1) both; }
   @keyframes ctaIvyRustle { 0% { transform: rotate(0); } 35% { transform: rotate(var(--ivy-turn)); } 70% { transform: rotate(calc(var(--ivy-turn) * -.3)); } 100% { transform: rotate(calc(var(--ivy-turn) * .5)); } }
 
-  /* Pride: all eight ramps still come only from PRIDE_BUTTONS. A local wash carries the
-     dark label without dimming the flag, and one moving light fold gives it ribbon depth. */
+  /* Pride: all eight flags still come only from PRIDE_BUTTONS (js/config.js), in their own
+     colours and proportions. A pale patch carries the dark label across even the black and
+     navy bands; it is sized to the lettering (140px either side of centre), so
+     on a desktop button the stripes beyond the label keep their full colour instead of the
+     whole flag fading to pastel. On hover the flag waves: soft bands of fold and light travel
+     along its length, the way cloth moves in a breeze, rather than a glossy streak across it. */
   .play-cta[data-startbtn^="pride-"] {
     --cta-hover-text: #2b2722;
-    --cta-art: radial-gradient(ellipse at center, #ffffffb8 0 22%, #ffffff26 72%), var(--cta-stripes);
+    --cta-art: radial-gradient(ellipse 140px 72% at 50% 50%, #ffffffbd 0 50%, #ffffff00 100%), var(--cta-stripes);
   }
-  .cta-ribbon { inset: -20% -60%;
-    background: linear-gradient(100deg, transparent 35%, #0002 43%, #fff7 50%, #0002 57%, transparent 64%);
-    transform: translateX(-65%); opacity: 0; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ribbon { animation: ctaRibbonWave 1.25s ease-in-out both; }
-  @keyframes ctaRibbonWave { 0% { transform: translateX(-65%); opacity: 0; } 20%, 75% { opacity: 1; } 100% { transform: translateX(65%); opacity: 0; } }
+  .cta-ribbon { top: 0; bottom: 0; left: 0; width: 300%; opacity: 0;
+    background: repeating-linear-gradient(90deg, #0000 0, #00000024 8%, #0000 16.67%, #ffffff38 25%, #0000 33.33%); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ribbon { animation: ctaFlagWave 1.8s ease-in-out both; }
+  @keyframes ctaFlagWave { 0% { transform: translateX(-66.67%); opacity: 0; } 18%, 72% { opacity: 1; } 100% { transform: translateX(0); opacity: 0; } }
 
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.play-cta { animation: playBob 2.8s ease-in-out infinite; }

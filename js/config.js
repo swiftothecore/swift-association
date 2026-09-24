@@ -2275,25 +2275,39 @@ export const CTA_MARKS = {
 // rule would have to be written again for the picker's chips, and eight ramps kept in two
 // places is eight chances for a flag to be drawn wrong in one of them.
 //
-// The stops are deliberately left short of each other (a band ends at 15%, the next starts at
-// 19%) so the colours bleed together the way felt-tips do on paper, matching the rest of the
-// notebook. Widen a gap and you get a wash; close it and you get vinyl.
+// Each flag is drawn with its OFFICIAL colours in its official proportions, and the bands
+// meet at hard edges. A flag is recognised by its distinct stripes, and some of them carry
+// meaning in exactly that separation (the bisexual flag's purple IS the overlap of its pink and
+// blue), so blending them into gradients made several unreadable. The notebook's hand is kept
+// at the joins instead: prideStripes lays a hairline darker seam along each one, where two
+// felt-tip strokes laid side by side overlap and the ink doubles. `bands` are equal widths
+// unless a flag gives each colour a weight.
 export const PRIDE_BUTTONS = [
-  { id: "pride-rainbow",   name: "Rainbow Pride", stops: ["#d4574d 0 15%", "#dd8b3e 19% 32%", "#e4bf4c 36% 48%", "#6da668 53% 65%", "#5b8fc7 69% 82%", "#8b6cb2 86% 100%"] },
-  { id: "pride-trans",     name: "Transgender",   stops: ["#5bcefa 0 20%", "#f5a9b8 24% 38%", "#fff 42% 58%", "#f5a9b8 62% 76%", "#5bcefa 80% 100%"] },
-  { id: "pride-lesbian",   name: "Lesbian",       stops: ["#d52d00 0 17%", "#ef7627 21% 36%", "#ff9a56 40% 48%", "#fff 52% 57%", "#d162a4 61% 77%", "#a30262 81% 100%"] },
-  { id: "pride-gay-men",   name: "Gay men's",     stops: ["#078d70 0 15%", "#26ceaa 19% 31%", "#98e8c1 35% 47%", "#fff 51% 58%", "#7bade2 62% 74%", "#5049cc 78% 89%", "#3d1a78 93% 100%"] },
-  { id: "pride-bi",        name: "Bisexual",      stops: ["#d60270 0 40%", "#9b4f96 45% 57%", "#0038a8 62% 100%"] },
-  { id: "pride-pan",       name: "Pansexual",     stops: ["#ff218c 0 30%", "#ffd800 35% 65%", "#21b1ff 70% 100%"] },
-  { id: "pride-nonbinary", name: "Nonbinary",     stops: ["#fff430 0 23%", "#fff 28% 47%", "#9c59d1 52% 72%", "#222 77% 100%"] },
-  { id: "pride-asexual",   name: "Asexual",       stops: ["#222 0 22%", "#a3a3a3 27% 47%", "#fff 52% 72%", "#800080 77% 100%"] },
+  { id: "pride-rainbow",   name: "Rainbow Pride", bands: ["#e40303", "#ff8c00", "#ffed00", "#008026", "#24408e", "#732982"] },
+  { id: "pride-trans",     name: "Transgender",   bands: ["#5bcefa", "#f5a9b8", "#ffffff", "#f5a9b8", "#5bcefa"] },
+  { id: "pride-lesbian",   name: "Lesbian",       bands: ["#d52d00", "#ef7627", "#ff9a56", "#ffffff", "#d162a4", "#b55690", "#a30262"] },
+  { id: "pride-gay-men",   name: "Gay men's",     bands: ["#078d70", "#26ceaa", "#98e8c1", "#ffffff", "#7bade2", "#5049cc", "#3d1a78"] },
+  { id: "pride-bi",        name: "Bisexual",      bands: ["#d60270", "#9b4f96", "#0038a8"], weights: [2, 1, 2] },
+  { id: "pride-pan",       name: "Pansexual",     bands: ["#ff218c", "#ffd800", "#21b1ff"] },
+  { id: "pride-nonbinary", name: "Nonbinary",     bands: ["#fcf434", "#ffffff", "#9c59d1", "#2c2c2c"] },
+  { id: "pride-asexual",   name: "Asexual",       bands: ["#000000", "#a3a3a3", "#ffffff", "#800080"] },
 ];
 export const PRIDE_BUTTON_BY_ID = Object.fromEntries(PRIDE_BUTTONS.map((f) => [f.id, f]));
 // The gradient for a button finish, or "" if that finish is not a flag (every other finish
 // paints itself from CSS and wants no inline stripes at all).
 export function prideStripes(finish) {
   const flag = PRIDE_BUTTON_BY_ID[finish];
-  return flag ? `linear-gradient(to bottom, ${flag.stops.join(", ")})` : "";
+  if (!flag) return "";
+  const weights = flag.weights || flag.bands.map(() => 1);
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  const edges = [0];
+  weights.forEach((w) => edges.push(edges.at(-1) + w / total * 100));
+  const pc = (v) => `${+v.toFixed(3)}%`;
+  const stripes = flag.bands.map((colour, i) => `${colour} ${pc(edges[i])} ${pc(edges[i + 1])}`).join(", ");
+  // One hairline seam per join, 1px of doubled ink centred on the edge.
+  const seams = edges.slice(1, -1).map((at) =>
+    `transparent calc(${pc(at)} - .5px), #0000002e calc(${pc(at)} - .5px) calc(${pc(at)} + .5px), transparent calc(${pc(at)} + .5px)`).join(", ");
+  return `linear-gradient(to bottom, ${seams}), linear-gradient(to bottom, ${stripes})`;
 }
 
 // Mastery rewards — one granted per Mastery level. `kind` drives how the Mastery screen
