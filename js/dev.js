@@ -1343,6 +1343,10 @@ export function initDev(api) {
     row(btn("look at the cover", () => toast(api.stickers.cover())),
         btn("cover selection", () => { console.log("[dev] cover selection", api.stickers.coverSelection()); toast(api.stickers.coverSelection().available ? "Settings controls available; slots in console" : "controls appear after 15 unlocks"); }),
         btn("coincidences", () => { console.log("[dev] sticker coincidences", api.stickers.coincidences()); toast("triggers and missing songs in console"); })),
+    // The notebook that would not open: the cover shut with the load-failure tag on the strap.
+    row(btn("load error: offline", () => toast(api.loadError("offline"))),
+        btn("load error: missing", () => toast(api.loadError("missing"))),
+        btn("load error: broken", () => toast(api.loadError("broken")))),
     // The session ledger is memory-only and dies on reload, so these are the only way to see the
     // three "in one session" stickers without playing until every record has turned up.
     row("session", btn("name one per album", () => toast("albums: " + api.stickers.fill().length)),

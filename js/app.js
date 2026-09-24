@@ -31698,6 +31698,12 @@ function buildDevApi() {
       untriggered: () => TUMBLR_POSTS.filter((t) => !t.how).map((t) => t.id),
       reset: () => { resetTumblr(); devForgetSeenShelf("tumblr"); updateKeepsakesNav(); refreshTumblr(); },
     },
+    // The load failure only happens when the data files will not arrive, so it cannot be seen
+    // otherwise. This shuts the notebook and ties the real tag on with a stand-in error.
+    loadError: (kind) => showLoadError(
+      kind === "missing" ? new Error("Failed to fetch data files")
+        : kind === "broken" ? new Error("Cannot read properties of undefined (reading 'lyrics')")
+        : new TypeError("Failed to fetch")),
     stickers: {
       coverSelection: () => ({
         available: stickerCount() > COVER_STICKER_LIMIT,
@@ -32936,6 +32942,53 @@ function buildDevApi() {
 }
 
 /* ---------- Init ---------- */
+/* The notebook that would not open. It never turns to a page at all: the cover stays shut on
+   the desk exactly as it sat while loading, and a tag is tied to the strap saying why. The
+   loading state getting stuck IS what happened, so that is what the player is shown, rather
+   than a page-turn onto a blank sheet.
+   The browser's own message is kept, but as the tag's small print: "Failed to fetch" is a
+   diagnosis for us and no use as a headline. The cause is guessed only as far as it honestly
+   can be. A fetch that never reached the server rejects with a TypeError whose wording differs
+   per engine (Chrome "Failed to fetch", Safari "Load failed", Firefox "NetworkError ..."); a
+   file that came back missing is loadData's own Error; anything else is a bug of ours. */
+function loadErrorCause(err) {
+  if (navigator.onLine === false) return "offline";
+  if (err instanceof TypeError && /fetch|load failed|network/i.test(err.message || "")) return "offline";
+  if (/fetch data files/i.test(err?.message || "")) return "missing";
+  return "broken";
+}
+const LOAD_ERROR_WHY = {
+  offline: "The pages didn't come through. You look to be offline.",
+  missing: "The pages came back blank. That's on our end, not yours.",
+  broken: "Something caught as it opened. That's on our end, not yours.",
+};
+function showLoadError(err) {
+  const card = $("screen-start"), loading = $("loading");
+  if (!card || !loading) return;
+  // Keep (or, from the dev panel, put back) the closed cover filling the card.
+  card.classList.add("is-booting");
+  loading.style.display = "";
+  const content = $("startContent");
+  if (content) content.style.display = "none";
+  loading.querySelector(".load-tag")?.remove();
+  loading.classList.add("is-stuck");
+  loading.setAttribute("aria-label", "the notebook would not open");
+  const cause = loadErrorCause(err);
+  const tag = document.createElement("div");
+  tag.className = "load-tag";
+  tag.dataset.cause = cause;
+  tag.setAttribute("role", "alert");
+  tag.innerHTML = `
+    <span class="load-tag-string" aria-hidden="true"></span>
+    <p class="load-tag-head">Stuck shut.</p>
+    <p class="load-tag-why">${LOAD_ERROR_WHY[cause]}</p>
+    ${err?.message ? `<p class="load-tag-raw">${escapeHtml(err.message)}</p>` : ""}
+    <button class="load-tag-retry" type="button">Try again</button>`;
+  tag.querySelector("button").addEventListener("click", () => location.reload());
+  loading.append(tag);
+  return cause;
+}
+
 async function init() {
   initCtaInteractions();
   // Inks the results button's mark before anything can reach that screen. The markup
@@ -33257,13 +33310,7 @@ async function init() {
     // the same way a ?word= link does.
     revealNotebook(startedFromWord ? null : () => { if (!openBootRoute()) maybeRunFirstRun(); });
   } catch (err) {
-    $("screen-start").classList.remove("is-booting");   // show the error on the normal paper card
-    $("loading").outerHTML = `
-      <div class="error">
-        <p><b>Couldn't open the notebook.</b></p>
-        <p>${escapeHtml(err.message)}</p>
-        <p>Try refreshing the page.</p>
-      </div>`;
+    showLoadError(err);
   }
 
   // Dev cheats panel — only loaded behind the ?dev flag, so it costs nothing in
