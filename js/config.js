@@ -1581,8 +1581,8 @@ export const CHALLENGES = [
     // seaMinValidNow/seaMaxValidNow) cut the genuine answers per grid from 2-4 down to 1-2, so
     // the same 16-tile sea hides as little as a SINGLE right song, and the clock drops 10s->7s.
     //   NOTE ON TRAPS: the original plan seeded "trap" tiles — titles that hold the word but
-    //   whose lyrics don't. A full-corpus scan found only 2 such (word, song) pairs across 733
-    //   words (all "Mary's Song"), so a per-word trap can essentially never be drawn — it would
+    //   whose lyrics don't. A full-corpus scan found only 2 such (word, song) pairs across the
+    //   word list (all "Mary's Song"), so a per-word trap can essentially never be drawn — it would
     //   be inert. The looser alternative (a title that merely LOOKS like the word, e.g. "star"
     //   vs "Starlight") is a word-perception gotcha, a design lane we deliberately avoid. So the
     //   dark side leans on the honest, plentiful squeeze instead of a trap that can't fire.
@@ -2017,7 +2017,7 @@ export const DARK_SIDE_MILESTONE = 5;
                   from 2-4 to 1-2 via seaMinValidNow/seaMaxValidNow, so the 16-tile sea can hide
                   a single needle; the clock drops to 7s. The originally-specced TRAP decoys
                   (title holds the word, lyrics don't) were DROPPED: a full-corpus scan found
-                  only 2 such pairs across 733 words, so they'd be inert, and the looser lookalike
+                  only 2 such pairs across the word list, so they'd be inert, and the looser lookalike
                   version is a word-perception gotcha we avoid. The squeeze is the honest lever.
    - odd-one-out  `tiles` (6 on dark) widens the board, read through `oddTilesNow` by the grid
                   builder, the layout (a data-cols="3" two-row board) and the word picker,
