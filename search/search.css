@@ -43,8 +43,8 @@
   --paper: #f5efe1;
   --paper-edge: #efe7d4;
   --ink: #2b2722;
-  --ink-soft: #6f675a;
-  --ink-faint: #a39c8e;
+  --ink-soft: #5b5448;
+  --ink-faint: #655d50;
   --rule: rgba(43, 39, 34, 0.07);   /* faint ruled lines, matching the game */
   --line: 32px;                     /* notebook baseline rhythm */
   --margin: rgba(178, 58, 58, 0.45);
@@ -60,7 +60,10 @@
   --desk: #c8bca6;
   --hand: "Caveat", cursive;
   --type: "Courier Prime", "Courier New", monospace;
+  --text-size-adjust: 0px;
 }
+:root[data-text-size="small"] { --text-size-adjust: -1px; }
+:root[data-text-size="large"] { --text-size-adjust: 2px; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -191,10 +194,10 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 .sx-back {
   position: absolute; left: 18px; top: 20px; z-index: 2;
-  font-family: var(--type); font-size: 11px; letter-spacing: .03em;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .03em;
   color: #4a3518; text-decoration: none;
   background: var(--paper-edge); border: 1px solid #cdbf9f;
-  border-radius: 5px; padding: 4px 10px;
+  border-radius: 5px; padding: 12px; min-height: 44px; display: inline-flex; align-items: center;
 }
 .sx-back:hover { background: #fff8ec; }
 .sx-title {
@@ -241,7 +244,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 .sx-tagline {
   margin: 10px 0 0; font-family: var(--type);
-  font-size: 12px; letter-spacing: 1px;
+  font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
   color: #7a5c38;  /* warm desk-brown, matching the game's tagline */
 }
 @media (max-width: 560px) {
@@ -281,54 +284,56 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 .sx-search { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-bottom: 2px solid #e0d6bf; padding-bottom: 6px; }
 .sx-search > svg { width: 22px; height: 22px; color: var(--pen); flex: none; }
 #q {
-  flex: 1; min-width: 140px; border: 0; background: transparent; outline: none;
-  font-family: var(--hand); font-size: 36px; color: var(--ink); line-height: 1.35; padding: 2px 0;
+  flex: 1; min-width: 0; width: 0; border: 0; background: transparent; outline: none;
+  font-family: var(--hand); font-size: calc(36px + var(--text-size-adjust)); color: var(--ink); line-height: 1.35; padding: 2px 0;
 }
 #q::placeholder { color: var(--ink-faint); }
 /* silence the browser's own (blue, wrong-cursor) clear button — we mint our own below */
 #q::-webkit-search-cancel-button, #q::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
 /* custom clear — an ink cross in the search's own hand, shown only when there's something to clear */
 .sx-clear {
-  flex: none; width: 26px; height: 26px; border-radius: 50%; border: 0; background: transparent;
-  color: var(--ink-soft); font-family: var(--type); font-size: 17px; line-height: 1; cursor: pointer;
+  flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: transparent;
+  color: var(--ink-soft); font-family: var(--type); font-size: calc(17px + var(--text-size-adjust)); line-height: 1; cursor: pointer;
   display: flex; align-items: center; justify-content: center; padding: 0;
 }
 .sx-clear:hover { background: #eaddc4; color: var(--ink); }
 .sx-clear[hidden] { display: none; }
 
 /* committed search-term chips (AND-ed together) */
-.sx-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.sx-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 100%; }
+.sx-chips:not(:empty) { flex-basis: 100%; order: 1; }
 .sx-chips:empty { display: none; }
 .sx-chip {
-  display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
-  font-family: var(--type); font-size: 14px; color: #7a2f24;
-  background: #f3e2dc; border: 1px solid #c08274; border-radius: 4px; padding: 3px 5px 3px 9px;
+  display: inline-flex; align-items: center; gap: 4px; max-width: 100%;
+  font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); color: #7a2f24;
+  background: #f3e2dc; border: 1px solid #c08274; border-radius: 4px; padding: 0 0 0 9px;
 }
-.sx-chip-x { font-family: var(--type); font-size: 15px; line-height: 1; color: #b9402f; background: none; border: 0; cursor: pointer; padding: 0 2px; }
+.sx-chip-x { font-family: var(--type); font-size: calc(15px + var(--text-size-adjust)); line-height: 1; color: #b9402f; background: none; border: 0; cursor: pointer; padding: 0; min-width: 44px; min-height: 44px; flex: none; }
+.sx-chip-label { overflow-wrap: anywhere; min-width: 0; }
 .sx-chip-x:hover { color: #8f2e20; }
 
 /* controls — three labelled groups (how to match / how to list / narrow it down) so a
    first-timer can tell what each knob does; the plain-language names + a micro-example
    under each match mode carry the meaning, and #explain narrates the live combination. */
 .sx-controls { display: flex; flex-wrap: wrap; gap: 16px 22px; margin-top: 16px; align-items: flex-start; }
-.sx-ctrl-group { display: flex; flex-direction: column; gap: 5px; }
-.sx-ctrl-label { font-family: var(--type); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
+.sx-ctrl-group { display: flex; flex-direction: column; gap: 5px; min-width: 0; max-width: 100%; }
+.sx-ctrl-label { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); }
 .sx-seg { display: inline-flex; gap: 4px; flex-wrap: wrap; }
 .sx-seg button {
-  font-family: var(--type); font-size: 11px; letter-spacing: .02em; color: var(--ink-soft);
-  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 5px 10px; cursor: pointer;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .02em; color: var(--ink-soft);
+  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 8px 10px; min-height: 44px; cursor: pointer;
   line-height: 1.15; text-align: left;
 }
 .sx-seg button:hover { border-color: var(--ink-soft); }
 .sx-seg button.on { color: #7a2f24; border-color: #c08274; background: #f3e2dc; }
 .sx-seg-name { display: block; }
-.sx-seg-eg { display: block; font-size: 8.5px; letter-spacing: .01em; color: var(--ink-faint); margin-top: 1px; }
-.sx-seg button.on .sx-seg-eg { color: #a86a5c; }
+.sx-seg-eg { display: block; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .01em; color: var(--ink-faint); margin-top: 1px; }
+.sx-seg button.on .sx-seg-eg { color: #865044; }
 .sx-filters { display: inline-flex; gap: 8px; flex-wrap: wrap; }
-.sx-filter { font-family: var(--type); font-size: 11px; color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; }
+.sx-filter { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
 .sx-filter select {
-  font-family: var(--type); font-size: 11px; color: var(--ink-soft);
-  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 5px 8px; cursor: pointer;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
+  background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 8px; min-height: 44px; max-width: 100%; cursor: pointer;
 }
 .sx-filter select:hover { border-color: var(--ink-soft); }
 .sx-filter select.active { color: #7a2f24; border-color: #c08274; background: #f3e2dc; }
@@ -336,19 +341,19 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 /* a plain-English read of the current match/layout combination — teaches the controls by
    narrating what they're doing to the live search. Hidden until there's a word to describe. */
 .sx-explain {
-  font-family: var(--type); font-size: 11px; color: var(--ink-soft); line-height: 1.5;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); line-height: 1.5;
   border-left: 2px solid #e0d6bf; padding-left: 10px; margin: 12px 0 0;
 }
 .sx-explain:empty { display: none; }
 .sx-explain b { color: var(--pen); font-weight: 700; }
 /* honest caveat shown only in "letters in a word" mode — these hits aren't game word matches */
 .sx-explain-note {
-  font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #8a6a34;
-  border: 1px solid #d6c48f; border-radius: 3px; padding: 1px 5px; margin-left: 4px; white-space: nowrap;
+  font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .1em; text-transform: uppercase; color: #8a6a34;
+  border: 1px solid #d6c48f; border-radius: 3px; padding: 1px 5px; margin-left: 4px; display: inline-block; max-width: 100%;
 }
 
 /* counter + album bar */
-.sx-counter { font-family: var(--type); font-size: 13px; color: var(--ink-soft); margin-top: 18px; min-height: 17px; }
+.sx-counter { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 18px; min-height: 17px; }
 /* collapse entirely before a search so the start hint sits right under the controls */
 .sx-counter:empty { display: none; }
 .sx-counter b { color: var(--ink); font-weight: 700; }
@@ -362,7 +367,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 .sx-bar.sx-locked span.sx-lit { box-shadow: inset 0 0 0 2px rgba(43,39,34,0.5); }
 /* a readable read-out under the bar: a discoverability hint at rest, the hovered album +
    its line count while you're brushing over a colour (or a legend dot) */
-.sx-barlabel { font-family: var(--type); font-size: 11px; color: var(--ink-faint); margin-top: 6px; min-height: 15px; }
+.sx-barlabel { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-faint); margin-top: 6px; min-height: 15px; }
 .sx-barlabel:empty { display: none; }
 .sx-barlabel b { font-weight: 700; }
 
@@ -370,14 +375,14 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
    how rare it is, and a labeled breakdown of the top albums */
 .sx-concord { margin-top: 9px; }
 .sx-concord:empty { display: none; }
-.sx-concord-line { font-family: var(--type); font-size: 12px; color: var(--ink-soft); }
+.sx-concord-line { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); }
 .sx-concord-line b { font-weight: 700; }
 .sx-rarity { color: var(--ink-faint); font-style: italic; }
 .sx-concord-legend { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 6px; align-items: center; }
 .sx-leg {
-  font-family: var(--type); font-size: 11px; color: var(--ink-soft);
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
   display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
-  background: none; border: 0; padding: 2px 3px; border-radius: 3px;
+  background: none; border: 0; padding: 8px 6px; min-height: 44px; max-width: 100%; border-radius: 3px; text-align: left;
 }
 .sx-leg:hover, .sx-leg:focus-visible { color: var(--ink); background: rgba(224, 214, 191, .38); }
 .sx-leg:focus-visible { outline: 2px solid var(--pen); outline-offset: 1px; }
@@ -388,51 +393,52 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 .sx-leg-extra { display: none; }
 .sx-concord-legend.expanded .sx-leg-extra { display: inline-flex; }
 .sx-leg-more {
-  font-family: var(--type); font-size: 11px; color: var(--pen); font-style: italic;
-  background: none; border: 0; cursor: pointer; padding: 0 0 1px; border-bottom: 1px dashed rgba(185, 64, 47, .4);
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--pen); font-style: italic;
+  background: none; border: 0; cursor: pointer; padding: 8px 4px; min-height: 44px; border-bottom: 1px dashed rgba(185, 64, 47, .4);
 }
 .sx-leg-more:hover { color: #8f2e20; border-bottom-color: rgba(185, 64, 47, .9); }
 
 /* "play this word in the game" — a red-pen invitation tucked beside the counter */
 .sx-play {
-  font-family: var(--type); font-size: 11px; letter-spacing: .02em;
-  color: var(--pen); text-decoration: none; white-space: nowrap;
-  border-bottom: 1px dashed rgba(185, 64, 47, .45); padding-bottom: 1px; margin-left: 10px;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .02em;
+  color: var(--pen); text-decoration: none; display: inline-flex; align-items: center;
+  border-bottom: 1px dashed rgba(185, 64, 47, .45); padding: 8px 0; min-height: 44px;
 }
 .sx-play:hover { color: #8f2e20; border-bottom-color: rgba(185, 64, 47, .9); }
 
 /* "copy link" — a quiet typewriter button beside the counter that mints a shareable link */
 .sx-copy {
-  font-family: var(--type); font-size: 11px; letter-spacing: .02em;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .02em;
   color: var(--ink-soft); background: transparent; cursor: pointer;
   border: 0; border-bottom: 1px dashed rgba(111, 103, 90, .45);
-  padding: 0 0 1px; margin-left: 12px;
+  padding: 8px 0; min-height: 44px;
   display: inline-flex; align-items: center; gap: 5px;
 }
+.sx-result-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 2px; }
 .sx-copy svg { width: 13px; height: 13px; flex: none; }
 .sx-copy:hover { color: var(--ink); border-bottom-color: rgba(111, 103, 90, .9); }
 
-.sx-hint { font-family: var(--hand); font-size: 21px; color: var(--ink-faint); margin-top: 22px; }
+.sx-hint { font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); color: var(--ink-faint); margin-top: 22px; }
 
 /* recent searches — a little jotted list shown before you start typing */
 .sx-recent { margin-top: 26px; max-width: 460px; }
 .sx-recent-head {
-  font-family: var(--type); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .06em; text-transform: uppercase;
   color: var(--ink-faint); display: flex; align-items: baseline; gap: 10px;
   border-bottom: 1px solid #e6dcc6; padding-bottom: 5px;
 }
 .sx-recent-clear {
-  font-family: var(--type); font-size: 10px; color: var(--ink-faint);
-  background: none; border: 0; cursor: pointer; padding: 0; margin-left: auto; text-transform: none;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-faint);
+  background: none; border: 0; cursor: pointer; padding: 8px; min-width: 44px; min-height: 44px; margin-left: auto; text-transform: none;
 }
 .sx-recent-clear:hover { color: var(--pen); text-decoration: underline; }
 .sx-recent-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
 /* jotted paper tags rather than a grey run-on of words — each a little index chip pinned to
    the page at a slight, alternating tilt so the list reads as scraps on a desk. */
 .sx-recent-item {
-  font-family: var(--hand); font-size: 19px; line-height: 1.15; color: var(--ink);
+  font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); line-height: 1.15; color: var(--ink);
   background: var(--paper-edge); border: 1px solid #d8cbb0; border-radius: 4px;
-  padding: 3px 11px; cursor: pointer; box-shadow: 0 1px 2px rgba(60, 50, 35, .1);
+  padding: 8px 11px; min-height: 44px; max-width: 100%; overflow-wrap: anywhere; cursor: pointer; box-shadow: 0 1px 2px rgba(60, 50, 35, .1);
 }
 .sx-recent-item:nth-child(odd) { transform: rotate(-.6deg); }
 .sx-recent-item:nth-child(even) { transform: rotate(.7deg); }
@@ -451,18 +457,18 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 .sx-album { position: relative; margin-top: 32px; transition: opacity .15s ease; }
 .sx-album:first-child { margin-top: 6px; }
 /* the coloured spine, laid over the page's red margin rule (offset -14px lines up on both
-   the desktop 58px/44px and mobile 42px/28px paddings — both differ by exactly 14px) */
+   the desktop 58px/44px and mobile 34px/20px paddings — both differ by exactly 14px) */
 .sx-album-rule {
   position: absolute; left: -14px; top: 0; bottom: 0; width: 3px;
   background: var(--album); border-radius: 2px;
 }
 .sx-album-tab {
   display: inline-block; margin-left: -14px; padding: 3px 16px 4px 13px;
-  background: var(--album); border-radius: 0 7px 7px 0; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+  max-width: calc(100% + 14px); background: var(--album); border-radius: 0 7px 7px 0; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 }
 .sx-album-era {
-  font-family: var(--hand); font-weight: 700; font-size: 22px; line-height: 1.1;
-  color: #fff8ec; letter-spacing: .01em; white-space: nowrap;
+  font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1.1;
+  color: #fff8ec; letter-spacing: .01em;
 }
 .sx-album-body {
   margin-top: 8px; padding: 6px 8px 8px 10px;
@@ -470,20 +476,20 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 .sx-song { margin-top: 16px; }
 .sx-song:first-of-type { margin-top: 4px; }
-.sx-song-head { display: flex; align-items: baseline; gap: 10px; padding-bottom: 2px;
+.sx-song-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; padding-bottom: 2px;
   border-bottom: 1px solid color-mix(in srgb, var(--album) 24%, #e3d9c2); }
-.sx-song-title { font-family: var(--hand); font-size: 23px; line-height: 1.1;
+.sx-song-title { font-family: var(--hand); font-size: calc(23px + var(--text-size-adjust)); line-height: 1.1;
   color: color-mix(in srgb, var(--album) 80%, var(--ink)); }
-.sx-song-count { font-family: var(--type); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
+.sx-song-count { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-faint); margin-left: auto; }
 
 /* a single hit — section jotted in the margin (hand), line number in typewriter */
-.sx-hit { display: grid; grid-template-columns: 56px 1fr; gap: 10px; padding: 6px 0; }
+.sx-hit { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 10px; padding: 6px 0; }
 .sx-ann { text-align: right; padding-top: 4px; }
-.sx-sec { display: block; font-family: var(--hand); font-size: 14px; color: var(--ink-soft); line-height: 1.15; }
-.sx-ln { display: block; font-family: var(--hand); font-size: 15px; line-height: 1; color: var(--pen); margin-top: 2px; }
-.sx-lines { padding-bottom: 4px; }
-.sx-main { font-family: var(--hand); font-size: 21px; color: var(--ink); line-height: 1.55; }
-.sx-ctx { font-family: var(--hand); font-size: 16px; color: var(--ink-faint); line-height: 1.45; }
+.sx-sec { display: block; font-family: var(--hand); font-size: calc(14px + var(--text-size-adjust)); color: var(--ink-soft); line-height: 1.15; }
+.sx-ln { display: block; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1; color: var(--pen); margin-top: 2px; }
+.sx-lines { padding-bottom: 4px; overflow-wrap: anywhere; }
+.sx-main { font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); color: var(--ink); line-height: 1.55; }
+.sx-ctx { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); color: var(--ink-faint); line-height: 1.45; }
 /* the matched word, swiped with the game's gold highlighter (not circled) */
 .sx-main mark {
   background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700;
@@ -494,9 +500,9 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 .sx-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--album); flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18); }
 .sx-ann-flat { text-align: left; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 0; }
 .sx-ann-flat .sx-dot { align-self: center; }
-.sx-flat-title { font-family: var(--hand); font-size: 19px; color: var(--ink); }
-.sx-flat-album { font-family: var(--type); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
-.sx-flat-loc { font-family: var(--type); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
+.sx-flat-title { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--ink); }
+.sx-flat-album { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.sx-flat-loc { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-faint); margin-left: auto; }
 .sx-hit-flat .sx-lines { border-bottom: 0; }
 
 /* right-edge album rail: the index journal, a permanent desk prop. A slim green cloth
@@ -531,7 +537,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
    the outer tip, each settled at its own slight angle pivoting where it enters the book */
 .sx-rail button {
   position: relative; z-index: 1;
-  font-family: var(--type); font-size: 10px; letter-spacing: .02em; text-align: right;
+  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .02em; text-align: right;
   color: var(--ink-soft); background: color-mix(in srgb, var(--al) 10%, var(--paper-edge));
   border: 1px solid #ddd2bb; border-right: none; border-left: 5px solid var(--al);
   border-radius: 4px 0 0 4px;
@@ -547,17 +553,20 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 
 @media (max-width: 560px) {
   .sx-page {
-    padding: 22px 18px 40px 42px;
+    padding: 22px 16px 40px 34px;
     background:
-      linear-gradient(to right, transparent 28px, var(--margin-line) 28px, var(--margin-line) 30px, transparent 30px),
+      linear-gradient(to right, transparent 20px, var(--margin-line) 20px, var(--margin-line) 22px, transparent 22px),
       linear-gradient(var(--page-wash), var(--page-wash)),
       repeating-linear-gradient(to bottom,
         var(--paper) 0, var(--paper) calc(var(--line) - 1px),
         var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
     background-color: var(--paper);
   }
-  #q { font-size: 28px; }
-  .sx-hit { grid-template-columns: 42px 1fr; gap: 7px; }
+  .sx-filters { width: 100%; }
+  .sx-filter { flex: 1 1 100%; }
+  .sx-filter select { width: 100%; font-size: max(16px, calc(14px + var(--text-size-adjust))); }
+  #q { font-size: calc(28px + var(--text-size-adjust)); }
+  .sx-hit { grid-template-columns: 42px minmax(0, 1fr); gap: 7px; }
 }
 
 /* =========================================================
@@ -565,7 +574,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
    =========================================================
    The searcher has no settings menu and is not getting one. It shares an ORIGIN with the
    game, so the inline script in search/index.html reads the game's own settings object and
-   stamps data-theme (and data-contrast) on <html> before first paint. One switch on the
+   stamps data-theme, data-contrast and data-text-size on <html> before first paint. One switch on the
    front page turns both pages, and there is no second copy of the preference to drift.
 
    The attribute lands on <html> rather than <body>, unlike the game: the body does not
@@ -582,12 +591,9 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   --paper-edge: #362e24;
   --desk: #12100c;
   --ink: #ece5d6;
-  --ink-soft: #9d947f;
-  /* The faintest tier: hints, counts, placeholder. Lifted a little relative to its light
-     value (2.4:1 → 2.9:1 on paper), the same move the game makes on --ink-soft, because a
-     faded pencil on a dark page loses more than it does on cream. Still comfortably below
-     --ink-soft's 5.1:1, so the three tiers stay three tiers. */
-  --ink-faint: #736c5d;
+  --ink-soft: #b5ab96;
+  /* Supporting text keeps enough contrast to read on tinted result paper too. */
+  --ink-faint: #aaa08b;
   --rule: rgba(236, 229, 214, 0.08);
   --margin: rgba(206, 86, 86, 0.5);
   --margin-line: rgba(206, 86, 86, 0.42);
@@ -776,4 +782,9 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   background:
     radial-gradient(ellipse 66% 52% at 50% 26%, rgba(255, 212, 148, 0.07), rgba(255, 212, 148, 0) 62%),
     linear-gradient(rgba(3, 2, 1, 0.94), rgba(3, 2, 1, 0.97));
+}
+
+/* One focus treatment for the search actions, matching their red-pen selection ink. */
+.sx-page :is(button, a, select):focus-visible, .sx-back:focus-visible {
+  outline: 2px solid var(--pen); outline-offset: 3px;
 }

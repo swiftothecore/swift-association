@@ -331,7 +331,7 @@ function runSearch() {
 /* ---------- multi-term chips ---------- */
 function renderChips() {
   $("chips").innerHTML = state.terms.map((t, i) =>
-    `<span class="sx-chip">${escapeHtml(t)}<button type="button" class="sx-chip-x" data-i="${i}" aria-label="Remove ${escapeHtml(t)}">&times;</button></span>`).join("");
+    `<span class="sx-chip"><span class="sx-chip-label">${escapeHtml(t)}</span><button type="button" class="sx-chip-x" data-i="${i}" aria-label="Remove ${escapeHtml(t)}">&times;</button></span>`).join("");
   $("q").placeholder = state.terms.length ? "and another word…" : "search the lyrics…";
   updateClear();
 }
@@ -445,8 +445,7 @@ function barReadout(al) {
   const label = $("barlabel");
   if (!label) return;
   const c = LAST_COUNTS ? LAST_COUNTS.get(al) : null;
-  const color = ALBUM_COLORS[al] || "#999";
-  label.innerHTML = `<b style="color:${color}">${escapeHtml(al)}</b>${c != null ? " &middot; " + plural(c, "line") : ""}`;
+  label.innerHTML = `<b>${escapeHtml(al)}</b>${c != null ? " &middot; " + plural(c, "line") : ""}`;
 }
 
 // Hover preview: grey the OTHER bar colours down and name the album, but leave the results
@@ -518,7 +517,6 @@ function renderConcord(groups, counts) {
     .sort((a, b) => (b[1] - a[1]) || (ALBUM_INDEX.get(a[0]) - ALBUM_INDEX.get(b[0])));
   if (!entries.length) { $("concord").innerHTML = ""; return; }
   const [topAlbum, topCount] = entries[0];
-  const topColor = ALBUM_COLORS[topAlbum] || "#999";
   const more = entries.length - CONCORD_TOP;
   // Render EVERY album (so the hover-isolate can reach it and the breakdown can expand), but
   // fold everything past the top few behind a "+N more" toggle to keep the strip compact.
@@ -528,10 +526,10 @@ function renderConcord(groups, counts) {
     `<span class="sx-leg-dot" aria-hidden="true" style="background:${ALBUM_COLORS[al] || "#999"}"></span>` +
     `${escapeHtml(al)} <b aria-hidden="true">${c}</b></button>`).join("");
   const moreBtn = more > 0
-    ? `<button type="button" class="sx-leg-more" id="moreAlbums" data-more="${more}">+${more} more album${more === 1 ? "" : "s"}</button>`
+    ? `<button type="button" class="sx-leg-more" id="moreAlbums" data-more="${more}" aria-expanded="false">+${more} more album${more === 1 ? "" : "s"}</button>`
     : "";
   $("concord").innerHTML =
-    `<div class="sx-concord-line">most in <b style="color:${topColor}">${escapeHtml(topAlbum)}</b> ` +
+    `<div class="sx-concord-line">most in <b>${escapeHtml(topAlbum)}</b> ` +
     `(${plural(topCount, "line")}) &middot; <span class="sx-rarity">${rarityNote(groups.length)}</span></div>` +
     `<div class="sx-concord-legend">${legend}${moreBtn}</div>`;
 }
@@ -580,14 +578,14 @@ function render(terms, groups) {
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">` +
     `<path d="M9 15l6-6"/><path d="M11 6l1-1a4 4 0 0 1 6 6l-1 1"/><path d="M13 18l-1 1a4 4 0 0 1-6-6l1-1"/></svg>` +
     `<span class="sx-copy-label">${SHARE_LABEL}</span></button>`;
-  $("counter").innerHTML = `found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b>${play}${share}`;
+  $("counter").innerHTML = `<span>found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b></span><span class="sx-result-actions">${play}${share}</span>`;
   const counts = albumLineCounts(groups);
   LAST_COUNTS = counts;
   pinnedAlbum = null;                         // a new result set clears any locked album
   $("results").classList.remove("sx-iso");   // drop any stale isolation from the previous search
   $("bar").innerHTML = albumBar(counts);
   const bl = $("barlabel");
-  if (bl) { bl.dataset.hint = counts.size > 1 ? "hover a colour to isolate that album, click to lock it" : ""; bl.textContent = bl.dataset.hint; }
+  if (bl) { bl.dataset.hint = counts.size > 1 ? "choose an album below to see its lines; choose it again to show all" : ""; bl.textContent = bl.dataset.hint; }
   renderConcord(groups, counts);
   const top = topAlbum(counts);
   setEraTint(top ? ALBUM_COLORS[top[0]] : null);
@@ -672,8 +670,11 @@ function shareBlurb() {
 
 /* ---------- wiring ---------- */
 function syncToggles() {
-  for (const b of document.querySelectorAll("[data-mode]")) b.classList.toggle("on", b.dataset.mode === state.mode);
-  for (const b of document.querySelectorAll("[data-view]")) b.classList.toggle("on", (b.dataset.view === "flat") === !state.grouped);
+  for (const b of document.querySelectorAll("[data-mode], [data-view]")) {
+    const selected = b.dataset.mode ? b.dataset.mode === state.mode : (b.dataset.view === "flat") === !state.grouped;
+    b.classList.toggle("on", selected);
+    b.setAttribute("aria-pressed", String(selected));
+  }
   $("section").classList.toggle("active", state.section !== "any");
   $("pos").classList.toggle("active", state.pos !== "any");
 }
@@ -774,6 +775,7 @@ function init() {
     const btn = e.target.closest("#moreAlbums");
     if (!btn) return;
     const expanded = btn.closest(".sx-concord-legend").classList.toggle("expanded");
+    btn.setAttribute("aria-expanded", String(expanded));
     const n = btn.dataset.more;
     btn.textContent = expanded ? "show fewer" : `+${n} more album${n === "1" ? "" : "s"}`;
   });

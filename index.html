@@ -3100,12 +3100,13 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- Common Thread challenge only: three lyric lines from three songs — type the shared word. -->
       <div id="commonLines" class="common-lines" role="group" aria-label="Three lyric lines that share one word" hidden></div>
       <div class="input-area">
-        <input id="songInput" class="song-input" type="search" autocomplete="off" spellcheck="false"
+        <input id="songInput" class="song-input" type="search" enterkeyhint="go" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
                data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other"
                placeholder="write the line…"
                role="combobox" aria-expanded="false" aria-controls="dropdown"
                aria-haspopup="listbox" aria-autocomplete="list"
                aria-label="Type a song title or a lyric line" />
+        <button id="answerSubmit" type="button" class="answer-submit" aria-label="Submit answer">write it in</button>
         <div id="rejectFlash" class="reject-flash" aria-live="assertive"></div>
         <div id="dropdown" class="dropdown" role="listbox" aria-label="Matching songs"></div>
       </div>
@@ -3742,7 +3743,20 @@ if (location.pathname.endsWith('/index.html')) {
 </main>
 
 <script type="module" src="js/app.js"></script>
-<script type="module" src="js/scatter.js"></script>
+<script type="module">
+  // Gutter decorations have no mobile surface. Import them when a wide desk is available.
+  const desk = matchMedia("(min-width: 1120px)");
+  let scatterLoad;
+  const loadDesk = () => {
+    if (!desk.matches || scatterLoad) return;
+    scatterLoad = import("./js/scatter.js").catch((err) => {
+      scatterLoad = null;
+      console.warn("desk decorations failed to load", err);
+    });
+  };
+  desk.addEventListener("change", loadDesk);
+  loadDesk();
+</script>
 <!-- The stickers stuck to the closed notebook cover. Loaded on its own rather than through
      app.js: the cover is on screen before the game data is, and this must not wait for it. -->
 <script type="module" src="js/stickercover.js"></script>

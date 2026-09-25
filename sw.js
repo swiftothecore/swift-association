@@ -42,7 +42,11 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v214";
+const CACHE = "stta-v215";
+const GUEST_CACHE = "stta-guests";
+const guestRoot = new URL("data/guests/", self.registration.scope);
+const isGuest = (url) => url.origin === guestRoot.origin &&
+  url.pathname.startsWith(guestRoot.pathname) && /^[a-z0-9-]+\.json$/.test(url.pathname.slice(guestRoot.pathname.length));
 // The game's panel routes. These are sections of index.html, not files, so a navigation to one
 // has nothing on the server to fetch: 404.html bounces it back through a ?/slug marker. Once
 // this worker is installed we can do better and answer with index.html directly, so a deep link
@@ -70,6 +74,7 @@ const ASSETS = [
   "fonts/courierprime-700-latin.woff2",
   "fonts/courierprime-italic-latin.woff2",
   "js/app.js",
+  "js/offline.js",
   "js/cta.js",   // Shared start-button contents and decorative finish layers.
   // Imported at module evaluation time by both app.js and search/search.js.
   // Missing it makes either surface fail on its first offline reload.
@@ -159,6 +164,7 @@ const ASSETS = [
   "data/songs.json",
   "data/producers.json",
   "data/writers.json",
+  "data/nashville.json",
   "data/words.json",
   // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg
   // is first caught (see loadSecretMessages in js/app.js).
@@ -221,13 +227,35 @@ self.addEventListener("install", (e) => {
   );
 });
 
+// Downloaded guest catalogues survive a notebook update. Only their successful responses
+// cross versions; the app shell and all of its modules stay in one atomic precache.
 self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+  e.waitUntil((async () => {
+    const guests = await caches.open(GUEST_CACHE);
+    const old = (await caches.keys()).filter((key) => key.startsWith("stta-") && key !== CACHE && key !== GUEST_CACHE);
+    for (const key of old.reverse()) {
+      const cache = await caches.open(key);
+      for (const req of await cache.keys()) {
+        if (!isGuest(new URL(req.url)) || await guests.match(req)) continue;
+        const res = await cache.match(req);
+        if (res?.ok) await guests.put(req, res);
+      }
+      await caches.delete(key);
+    }
+    await self.clients.claim();
+  })());
+});
+
+// Settings and dev tools ask the controlling worker about the copy actually on disk.
+self.addEventListener("message", (e) => {
+  if (e.data?.type !== "offline-status" || !e.ports?.[0]) return;
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    const saved = await Promise.all(ASSETS.map((path) => cache.match(path)));
+    const guests = await caches.open(GUEST_CACHE);
+    e.ports[0].postMessage({ version: CACHE, ready: saved.every((res) => res?.ok),
+      guests: (await guests.keys()).map((req) => req.url) });
+  })());
 });
 
 /* Cache-first against THIS version's cache.
@@ -266,6 +294,22 @@ self.addEventListener("fetch", (e) => {
     // index.html rather than a file, so there is nothing at that path to ask for: the precached
     // shell is the answer, and the route only decides which panel app.js opens.
     e.respondWith(cacheFirst("index.html", new Request("index.html")));
+  } else if (url.origin === location.origin && req.mode === "navigate" &&
+      ["search", "search/index.html"].includes(routeSlug(url))) {
+    // A saved search carries query parameters; its document is still the same offline shell.
+    e.respondWith(cacheFirst("search/index.html", new Request("search/index.html")));
+  } else if (url.origin === location.origin && isGuest(url)) {
+    e.respondWith((async () => {
+      const cache = await caches.open(GUEST_CACHE);
+      try {
+        const res = await fetch(req, { cache: "reload" });
+        if (res.ok) {
+          try { await cache.put(req, res.clone()); } catch (_) { /* Storage can be full. Keep online play available. */ }
+          return res;
+        }
+        return (await cache.match(req)) || res;
+      } catch (_) { return (await cache.match(req)) || Response.error(); }
+    })());
   } else if (isPrecachedAsset) {
     // The fast path, and the reason this worker exists. Everything in ASSETS was fetched fresh
     // at install time and is keyed to this CACHE version, so there is nothing to revalidate:
@@ -282,8 +326,10 @@ self.addEventListener("fetch", (e) => {
     e.respondWith(
       fetch(req, { cache: "reload" })
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy));
+          if (res.ok) {
+            const copy = res.clone();
+            e.waitUntil(caches.open(CACHE).then((c) => c.put(req, copy)));
+          }
           return res;
         })
         .catch(() =>

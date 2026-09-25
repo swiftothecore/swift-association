@@ -454,11 +454,13 @@ export const LINEUP_INKS = {
 // ultra out to a window of 18-54 songs, which is not rare, it is just a different word.
 export const BLEND_BUCKETS = { easy: 38, hard: [3, 9], ultra: [1, 3] };
 
+// Shelf counts avoid fetching every catalogue. tests/mobile-loading.test.mjs checks these.
 export const GUESTS = [
   {
     id: "olivia-rodrigo",
     name: "Olivia Rodrigo",
     file: "data/guests/olivia-rodrigo.json",
+    songCount: 42,
     // pass ink: band gradient (deep → accent), the strap, the name, and the three
     // record ticks. Violet, which is SOUR/GUTS as a mood and nothing more.
     ink: { deep: "#2f1c47", accent: "#7a55b0", strap: "#5b3c88", pen: "#4a2f6b",
@@ -472,6 +474,7 @@ export const GUESTS = [
     id: "wicked-soundtrack",
     name: "Wicked",
     file: "data/guests/wicked.json",
+    songCount: 22,
     // Two shades each of emerald and rose keep the pass rooted in Elphaba and Glinda.
     ink: { deep: "#234b3f", accent: "#c5799b", strap: "#527a50", pen: "#315746",
            ticks: ["#4f8b63", "#c5799b", "#315746", "#a85e82"] },
@@ -481,6 +484,7 @@ export const GUESTS = [
     id: "hannah-montana",
     name: "Hannah Montana",
     file: "data/guests/hannah-montana.json",
+    songCount: 46,
     // The show's violet wordmark and warm yellow star translated into the pass hardware.
     ink: { deep: "#56346f", accent: "#e2b63d", strap: "#76528e", pen: "#5a3971",
            ticks: ["#8a63a2", "#e2b63d", "#c78b35", "#6a4c88"] },
@@ -494,6 +498,7 @@ export const GUESTS = [
     id: "billie-eilish",
     name: "Billie Eilish",
     file: "data/guests/billie-eilish.json",
+    songCount: 64,
     // Near-black, acid green, and cold grey-green: a nocturnal palette translated into pass ink.
     ink: { deep: "#101512", accent: "#b6d62b", strap: "#26332b", pen: "#17211c",
            ticks: ["#b6d62b", "#6f8d37", "#26332b", "#899788"] },
@@ -506,6 +511,7 @@ export const GUESTS = [
     id: "ariana-grande",
     name: "Ariana Grande",
     file: "data/guests/ariana-grande.json",
+    songCount: 135,
     // Cocoa, rose and champagne translate the catalogue's warm neutrals and pinks
     // into pass hardware while the full nine-record palette stays in the data file.
     // The ticks are four rungs off that palette — blush, mauve, caramel, near-black.
@@ -517,6 +523,7 @@ export const GUESTS = [
     id: "harry-styles",
     name: "Harry Styles",
     file: "data/guests/harry-styles.json",
+    songCount: 47,
     // The band runs dusk to sand, which is the sky on the fourth record's sleeve. Four
     // albums means the ticks can simply BE the palette, one rung per record, which no
     // other guest on the shelf is small enough to do.
@@ -528,6 +535,7 @@ export const GUESTS = [
     id: "sabrina-carpenter",
     name: "Sabrina Carpenter",
     file: "data/guests/sabrina-carpenter.json",
+    songCount: 105,
     // Espresso brown, cream and a lipstick accent give the pass its own hardware, and the
     // espresso now answers Man's Best Friend directly. The ticks take the four corners of
     // the nine-record palette: cobalt, burnt orange, pale sky, dark brown.

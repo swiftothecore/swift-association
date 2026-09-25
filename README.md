@@ -46,7 +46,8 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
 - A graveyard of everything the notebook used to have, each plot carrying the argument that ended it
 - A night version of the whole desk, and a high-contrast setting that works in either light
-- Installable as a phone or desktop app and works offline once loaded
+- Installable as a phone or desktop app, with offline readiness in Settings; guest catalogues download when opened
+- Runs pause when you switch away; Classic and Infinite keep progress from finished pages
 
 More mini-games, easter eggs, sound design and achievements are on the way.
 

@@ -1,6 +1,7 @@
 "use strict";
 import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote } from "./util.js";
 import "./credential-guard.js";
+import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
 import { launchFlock } from "./messengers.js";
@@ -239,8 +240,9 @@ let lyricApostrophes = new Map();
 let titleIndex = new Map();   // normalizeTitle(title|alias) -> song, built in loadData
 let spacelessIndex = new Map(); // titleIndex key with spaces removed -> song (space-error fallback)
 let playableWords = [];
-let titleWordList = [];  // playable words that appear in at least one song title (Title...? challenge pool)
-let shortTitleWordLists = {}; // maxTitleWords -> playable words with a valid (lyrics) song whose title fits it (Short n' Sweet pools; 2 = base, 1 = dark)
+// A corpus-owned cache, built only when its title challenge is first played.
+// null disables these Taylor-only pools for guests and the blended lineup.
+let challengeWordPools = null;
 let albumWordMap = {};   // album -> playable words with a valid (lyrics) song in that album (On Tour! pool)
 let albumOrder = [];     // album names in canonical songs.json order (On Tour! setlist order)
 let score = 0;
@@ -285,6 +287,7 @@ let roundClockTotal = 0; // this page's clock in seconds, as startTimer built it
 let runStartHour = -1;   // wall-clock hour the run opened on (3 AM And I'm Still Awake wants BOTH ends)
 let hintsUsed = 0;       // count of rounds this game where a hint was taken
 let hintBudgetLeft = Infinity; // Custom mode: total hint reveals still allowed this run (Infinity = uncapped, every other mode)
+let runProgressId = null;
 let runFolded = false;   // partial/full stats already saved for the current run (quit / unload / endGame)
 // The word that had beaten the player most often BEFORE this run opened, snapshotted at run
 // start so a word missed on page three and answered on page nine cannot crown itself and be
@@ -645,9 +648,50 @@ function phoneViewport() {
   return !!(window.matchMedia && window.matchMedia("(max-width: 760px)").matches);
 }
 function focusRoundInput(input, preventScroll = false) {
-  if (!input || (phoneViewport() && settings.openKeyboard === false)) return;
+  if (settingsPauseActive || !input || (phoneViewport() && settings.openKeyboard === false)) return;
   if (!preventScroll) { input.focus(); return; }
   try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); }
+}
+
+// Touch scrolling must not choose the title a finger happened to land on. Prevent mouse
+// focus theft on press, but commit on click so pointer cancellation remains native.
+function wireSuggestion(option, choose) {
+  option.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse") e.preventDefault();
+  });
+  option.addEventListener("click", (e) => { e.preventDefault(); choose(); });
+}
+
+function fitAnswerDropdown(dd, input) {
+  if (!dd || !input || !dd.classList.contains("show")) return;
+  const viewport = window.visualViewport;
+  const top = viewport ? viewport.offsetTop : 0;
+  const bottom = top + (viewport ? viewport.height : window.innerHeight);
+  const box = input.getBoundingClientRect();
+  const parent = dd.parentElement.getBoundingClientRect();
+  const below = Math.max(0, bottom - parent.bottom - 12);
+  const above = Math.max(0, box.top - top - 12);
+  const up = below < 150 && above > below;
+  dd.dataset.side = up ? "above" : "below";
+  dd.style.top = up ? "auto" : "100%";
+  dd.style.bottom = up ? Math.max(0, parent.bottom - box.top) + "px" : "auto";
+  dd.style.maxHeight = Math.min(320, up ? above : below) + "px";
+  dd.style.overflowY = "auto";
+  const selected = dd.querySelector('[aria-selected="true"]');
+  if (selected) {
+    const item = selected.getBoundingClientRect(), list = dd.getBoundingClientRect();
+    if (item.top < list.top) dd.scrollTop -= list.top - item.top;
+    else if (item.bottom > list.bottom) dd.scrollTop += item.bottom - list.bottom;
+  }
+}
+
+function refreshAnswerViewport() {
+  const viewport = window.visualViewport;
+  // iOS overlays the visual viewport while Android may resize the layout viewport.
+  const inset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
+  document.documentElement.style.setProperty("--keyboard-inset", inset + "px");
+  fitAnswerDropdown($("dropdown"), $("songInput"));
+  fitAnswerDropdown($("bonusDropdown"), $("bonusInput"));
 }
 
 /* ---------- December snowfall ---------- */
@@ -914,6 +958,7 @@ if ("ResizeObserver" in window) {
 }
 updateDeskTail();
 
+let explicitScreenReveal = null;
 function focusScreen(name) {
   if (name === "game") return;
   const sec = screens[name];
@@ -921,6 +966,9 @@ function focusScreen(name) {
   // A dialog owns focus until it closes. A page turn can finish behind Settings when the
   // animation was already under way, and must not pull focus out of that modal.
   if (document.querySelector(".settings-modal.open, .song-modal.open, .firstrun.open")) return;
+  // Ordinary chapter doors open at the heading, even when their link was at the foot of
+  // the front page. A targeted reveal owns its own scroll position instead.
+  if (ROUTE_SLUGS[name] && explicitScreenReveal !== name) window.scrollTo({ top: 0, behavior: "instant" });
   try { sec.focus({ preventScroll: true }); } catch (_) { sec.focus(); }
 }
 
@@ -950,6 +998,7 @@ function activeScreenName() {
   return Object.keys(screens).find((k) => screens[k].classList.contains("active")) || "start";
 }
 function showScreen(name, options = {}) {
+  explicitScreenReveal = null;
   const deferFocus = !!options.deferFocus;
   const deferPresentation = !!options.deferPresentation;
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
@@ -3250,7 +3299,7 @@ function scheduleToastDismiss() {
     if (!toasts.length) { toastDismissTimer = null; return; }
     const bottom = toasts[toasts.length - 1];   // last child = bottom of the stack
     const above = toasts.slice(0, -1);
-    const beforeTops = above.map((el) => el.getBoundingClientRect().top);
+    const beforeTops = above.map((el) => el.getClientRects().length ? el.getBoundingClientRect().top : null);
     bottom.classList.add("leaving");
     setTimeout(() => {
       bottom.remove();
@@ -3260,6 +3309,7 @@ function scheduleToastDismiss() {
       // toasts above from their old positions down into their new ones.
       if (!motionReduced()) {
         above.forEach((el, i) => {
+          if (beforeTops[i] === null || !el.getClientRects().length) return;
           const dy = beforeTops[i] - el.getBoundingClientRect().top;   // <0: moved down
           if (!dy) return;
           // The tumblr banner sits square (it is a screen, not a slip of paper), so it keeps no tilt.
@@ -7661,13 +7711,14 @@ function renderBonusPageRegister() {
    same stationery. `hint` mirrors the round screen's hint line under the input. */
 function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
   return `<div class="input-area bg-write${dropdown ? " bg-write--sug" : ""}">` +
-      `<input id="bonusInput" class="song-input" type="search" autocomplete="off" autocapitalize="off" ` +
+      `<input id="bonusInput" class="song-input" type="search" enterkeyhint="go" autocomplete="off" autocapitalize="off" autocorrect="off" ` +
              `data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" ` +
              `spellcheck="false" placeholder="${escapeHtml(placeholder)}" aria-label="${escapeHtml(aria)}"` +
              (dropdown
                ? ` role="combobox" aria-expanded="false" aria-controls="bonusDropdown" ` +
                  `aria-haspopup="listbox" aria-autocomplete="list"`
                : "") + ` />` +
+      `<button type="button" class="bonus-submit answer-submit" aria-label="Submit answer">write it in</button>` +
       `<div id="bonusReject" class="bg-reject"></div>` +
       (dropdown ? `<div id="bonusDropdown" class="dropdown" role="listbox" aria-label="Matching songs"></div>` : "") +
     `</div>` +
@@ -8710,12 +8761,13 @@ function renderBonusDropdown() {
     div.setAttribute("role", "option");
     div.setAttribute("aria-selected", i === bonusDdIndex ? "true" : "false");
     div.textContent = censor(song.title);
-    div.addEventListener("mousedown", (e) => { e.preventDefault(); judgeName(song); });
+    wireSuggestion(div, () => judgeName(song));
     dd.appendChild(div);
   });
   dd.classList.add("show");
   input.setAttribute("aria-expanded", "true");
   input.setAttribute("aria-activedescendant", "bg-dd-opt-" + bonusDdIndex);
+  fitAnswerDropdown(dd, input);
 }
 
 function hideBonusDropdown() {
@@ -8753,7 +8805,7 @@ function bonusDropdownKey(e) {
 // `picked` is a suggestion clicked outright; otherwise Enter takes the highlighted one, and
 // failing that whatever was typed is resolved as a title.
 function judgeName(picked = null) {
-  if (bonusLocked) return;
+  if (settingsPauseActive || bonusLocked) return;
   const raw = $("bonusInput").value;
   const key = normalizeTitle(raw);
   // Same forgiving title resolution the main game uses, so aliases, misplaced spaces and a
@@ -8802,7 +8854,7 @@ function judgeName(picked = null) {
 }
 
 function judgeGap() {
-  if (bonusLocked) return;
+  if (settingsPauseActive || bonusLocked) return;
   const raw = $("bonusInput").value.trim();
   // Enter on an empty line is a slip of the hand, not an answer — never burn the page on it.
   if (!raw) return;
@@ -9449,9 +9501,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
       : passed
         ? `<div class="banner pass">— ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`
       : `<div class="banner bad">✗ ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`) +
+    `<div class="feedback-advance">${advanceUI}</div>` +
     (detail ? `<p class="bg-detail">${detail}</p>` : "") +
-    bonusAnswerCard() +
-    advanceUI;
+    bonusAnswerCard();
   $("bonusScore").textContent = bonusScoreText();
   $(auto ? "bonusSkipBtn" : "bonusNextBtn").addEventListener("click", advanceFromBonusFeedback);
   if (auto) runBonusCountdown();
@@ -9507,7 +9559,7 @@ function runBonusCountdown() {
 // Leave the verdict and turn the page — the skip button, the "next page" button and Enter all
 // come through here. Guarded so it only fires while a verdict is actually on screen.
 function advanceFromBonusFeedback() {
-  if (!bonusLocked || bonusEnded || !bonusGame) return;
+  if (settingsPauseActive || !bonusLocked || bonusEnded || !bonusGame) return;
   stopBonusCountdown();
   nextBonusRound();
 }
@@ -10814,6 +10866,7 @@ function scrollChallengeGroupIntoView(id) {
 //     simply be where it belongs by the time the flip lands.
 function revealAfterFlip(find, opts) {
   const o = opts || {};
+  if (!o.keepWindow) explicitScreenReveal = activeScreenName();
   const pad = o.pad || 0;
   // Doors into a SCREEN are reached by a page turn, and the window is left wherever the page
   // you came from was scrolled to, so it has to be reset before anything is measured. A door
@@ -11713,7 +11766,7 @@ function trackPenStroke() {
   `</svg>`;
 }
 
-function renderTrackSheet(finished = false) {
+function renderTrackSheet(finished = false, preserveInput = false) {
   if (!trackSheet) return;
   const rows = trackSheet.slots.map((slot, i) => {
     const written = trackWritten[i];
@@ -11740,6 +11793,15 @@ function renderTrackSheet(finished = false) {
     `</li>`;
   }).join("");
 
+  const existingList = preserveInput && !finished && $("bonusPlayBody").querySelector(".tbt-list");
+  if (existingList && $("bonusInput")) {
+    existingList.innerHTML = rows;
+    $("bonusInput").placeholder = "track " + trackSheet.slots[trackAt].n + "…";
+    $("bonusReject").classList.remove("show");
+    paintTrackProgress();
+    snapTrackGrid();
+    return;
+  }
   $("bonusPlayBody").innerHTML =
     `<div class="tbt-sheet" style="--era:${albumColor(trackSheet.album) || "#999"}">` +
       // The album keeps its OWN casing (reputation, folklore) rather than the typewriter capitals
@@ -11800,9 +11862,7 @@ function snapTrackGrid() {
 }
 
 function focusTrackInput() {
-  const i = $("bonusInput");
-  if (i && !prefersReducedMotion()) setTimeout(() => i.focus(), 60);
-  else if (i) i.focus();
+  focusRoundInput($("bonusInput"), true);
 }
 
 function wireTrackInput() {
@@ -11827,7 +11887,7 @@ function trackTyped() {
 }
 
 function submitTrack() {
-  if (bonusLocked || !trackSheet || trackDone()) return;
+  if (settingsPauseActive || bonusLocked || !trackSheet || trackDone()) return;
   const input = $("bonusInput");
   const raw = input ? input.value.trim() : "";
   if (!raw) return;
@@ -11866,7 +11926,7 @@ function submitTrack() {
   skipToNextBlank();
   sfx.play("correct");
   if (trackDone()) { endTrackRun(); return; }
-  renderTrackSheet();
+  renderTrackSheet(false, true);
   focusTrackInput();
   /* `nearest` rather than `center`: the sheet should only move when the pen has actually walked
      off the window. Centring every row means the whole list slides on every single answer, which
@@ -12614,9 +12674,8 @@ for (let offset = 0; offset < GUEST_SHELF_ENTRIES.length; offset += GUEST_STRAP_
   });
 }
 
-// Lazy-load a guest's catalogue. Rejections are swallowed by the caller (the pass just keeps
-// its em-dashes) but NOT cached as a failure, so a flaky first fetch can be retried by
-// reopening the shelf.
+// Fetch only when a guest is opened or a lineup is requested. Failed requests are not
+// retained, so reopening a guest can retry after the connection returns.
 function loadGuest(id) {
   const guest = GUESTS.find((g) => g.id === id);
   if (!guest) return Promise.reject(new Error("unknown guest " + id));
@@ -12628,7 +12687,7 @@ function loadGuest(id) {
   return guestFiles.get(id);
 }
 
-// The counts a pass shows, derived from the file rather than stored anywhere.
+// Detail counts come from the loaded catalogue; shelf song counts are checked by tests.
 function guestCounts(cat) {
   const albums = Array.isArray(cat.albums) ? cat.albums : [];
   return {
@@ -12749,15 +12808,6 @@ function renderGuestShelfPage() {
     b.addEventListener("click", () => selectGuest(b.dataset.guest)));
   const lam = el.querySelector(".guest-pass[data-lineup]");
   if (lam) lam.addEventListener("click", () => selectGuest(LINEUP_PASS.id));
-
-  // Fill the counts in as the files land. Each pass renders with em-dashes first so the rail
-  // never waits on the network to draw.
-  GUESTS.forEach((g) => {
-    loadGuest(g.id)
-      .then((cat) => { paintGuestCounts(g.id, guestCounts(cat)); })
-      .catch(() => {});
-  });
-
 }
 
 // One hanger: a ring, a woven strap of its own length, and the pass. The strap length and
@@ -12786,7 +12836,7 @@ function guestPassMarkup(g, slot) {
           `<span class="guest-face">` +
             `<span class="guest-name">${escapeHtml(g.name).replace(" ", "<br>")}</span>` +
             `<span class="guest-ticks" aria-hidden="true">${ticks}</span>` +
-            `<span class="guest-line"><span data-count="songs"><strong class="guest-song-count">—</strong> songs</span></span>` +
+            `<span class="guest-line"><span data-count="songs"><strong class="guest-song-count">${g.songCount}</strong> songs</span></span>` +
             stub +
           `</span>` +
         `</span>` +
@@ -12883,17 +12933,6 @@ function guestStrapMarkup(len) {
       `<rect class="crimp" x="31" y="${len - 22}" width="34" height="15" rx="2"/>` +
     `</svg>`
   );
-}
-
-// Drop the real numbers onto a pass once its file has landed.
-function paintGuestCounts(id, counts) {
-  const body = $("guestBody");
-  if (!body) return;
-  const pass = body.querySelector(`.guest-pass[data-guest="${CSS.escape(id)}"]`);
-  if (pass) {
-    const songs = pass.querySelector('.guest-song-count');
-    if (songs) songs.textContent = counts.songs;
-  }
 }
 
 function selectGuest(id) {
@@ -13157,7 +13196,7 @@ function renderGuestDetail(id) {
   }).catch(() => {
     if (guestSelected !== id || !$("guestDetailBody")) return;
     $("guestDetailBody").innerHTML =
-      `<p class="guest-detail-note">couldn't fetch this catalogue. check your connection and reopen the shelf</p>`;
+      `<p class="guest-detail-note">This catalogue is not available offline yet. Check your connection and open this guest again to download it.</p>`;
   });
   if (!el.innerHTML) el.innerHTML = `<p class="guest-detail-note">reading the sleeve…</p>`;
 }
@@ -14396,13 +14435,14 @@ function installSecretMessages(byAlbum, grouped) {
 }
 
 async function loadData() {
+  // Optional shelf data must not prevent the core notebook opening after a network failure.
   const [wordsRes, songsRes, credsRes, secretsRes, writersRes, nashRes] = await Promise.all([
     fetch("data/words.json"),
     fetch("data/songs.json"),
-    fetch("data/producers.json"),
-    fetch("data/secret-messages.json"),
-    fetch("data/writers.json"),
-    fetch("data/nashville.json"),
+    fetch("data/producers.json").catch(() => null),
+    fetch("data/secret-messages.json").catch(() => null),
+    fetch("data/writers.json").catch(() => null),
+    fetch("data/nashville.json").catch(() => null),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
@@ -14414,7 +14454,7 @@ async function loadData() {
      must not carry it.
      A failure here is survivable on purpose — the file is one game's data, and the rest of the
      notebook should not refuse to open because a zine cannot be dealt. */
-  if (credsRes.ok) {
+  if (credsRes?.ok) {
     try { installProducerCredits(await credsRes.json(), grouped); }
     catch (e) { console.warn("producer credits failed to load", e); }
   } else console.warn("producer credits missing: Aaron or Jack will have nothing to deal");
@@ -14426,7 +14466,7 @@ async function loadData() {
      not arrived — the bottle egg could be lazy about it precisely because a flourish that does
      not surface costs nothing. A failure here is survivable on purpose: the file is one zine's
      data, and the notebook should not refuse to open because a zine cannot be dealt. */
-  if (secretsRes.ok) {
+  if (secretsRes?.ok) {
     try { installSecretMessages(await secretsRes.json(), grouped); }
     catch (e) { console.warn("secret messages failed to load", e); }
   } else console.warn("secret messages missing: The Capitals will have nothing to deal");
@@ -14435,7 +14475,7 @@ async function loadData() {
      by her titles, never swapped for a guest's, and a guest run cannot reach the shelf. So
      snapshotCorpus does not and must not carry it. Survivable on failure, again for that
      reason — one zine's data should not stop the notebook opening. */
-  if (writersRes.ok) {
+  if (writersRes?.ok) {
     try { installWriterCredits(await writersRes.json(), grouped); }
     catch (e) { console.warn("writer credits failed to load", e); }
   } else console.warn("writer credits missing: Who Held The Pen will have nothing to deal");
@@ -14443,7 +14483,7 @@ async function loadData() {
      even clearer here: NONE of this is Taylor's catalogue — half of it is other people's
      records — so it could not live inside the corpus even if somebody wanted it to, and a guest
      swap must never see it. Survivable on failure like the rest. */
-  if (nashRes.ok) {
+  if (nashRes?.ok) {
     try { installNashvillePool(await nashRes.json()); }
     catch (e) { console.warn("Nashville pools failed to load", e); }
   } else console.warn("Nashville pools missing: Nashville will have nothing to deal");
@@ -14475,13 +14515,13 @@ const guestCorpora = new Map();       // guest id -> its built corpus, one build
 let activeCorpus = "taylor";          // which catalogue the globals currently hold
 
 function snapshotCorpus() {
-  return { allSongs, titleIndex, spacelessIndex, playableWords, titleWordList,
-           shortTitleWordLists, albumWordMap, albumOrder, wordBuckets, lyricVocab, lyricApostrophes };
+  return { allSongs, titleIndex, spacelessIndex, playableWords, challengeWordPools,
+           albumWordMap, albumOrder, wordBuckets, lyricVocab, lyricApostrophes };
 }
 function applyCorpus(c) {
   allSongs = c.allSongs; titleIndex = c.titleIndex; spacelessIndex = c.spacelessIndex;
-  playableWords = c.playableWords; titleWordList = c.titleWordList;
-  shortTitleWordLists = c.shortTitleWordLists; albumWordMap = c.albumWordMap;
+  playableWords = c.playableWords; challengeWordPools = c.challengeWordPools;
+  albumWordMap = c.albumWordMap;
   albumOrder = c.albumOrder; wordBuckets = c.wordBuckets; lyricVocab = c.lyricVocab;
   lyricApostrophes = c.lyricApostrophes;
   promptRxCache = new Map();          // built from the index above, so it changes with it
@@ -14599,44 +14639,32 @@ function installCorpus(grouped, words, opts = {}) {
   // Lenient playability (Easy/Medium/Hard use derived forms).
   playableWords = words.filter((w) => songsContainingWord(w, false).length >= 1);
   if (!playableWords.length) throw new Error("No playable words found in data");
-  /* THE TWO CHALLENGE POOLS, AND THE ONE CORPUS THAT NEEDS THEM. Both are read from exactly
-     one place each (pickWord, gated on `gameType === "challenge"` and on the pool being
-     non-empty), and a challenge only ever runs on Taylor's catalogue. So on a guest corpus and
-     on the blend these are three full passes over every word against every song, built to be
-     read by nothing.
-
-     Measured on the blend, where it hurts most: 324ms for the title pool and 930ms for the two
-     short-title pools, out of a 2357ms install. Half the wait before a lineup run was for
-     pools that run could not use. Taylor's own boot still builds them, because she is the one
-     corpus that plays challenges, and there it is 570ms of a 1620ms install that is real work.
-
-     Skipping leaves them EMPTY in the snapshot, which is correct rather than merely tolerable:
-     applyCorpus installs empty lists alongside that corpus's songs, so a stale Taylor pool can
-     never sit beside a guest's catalogue, restoreCorpus hands the real ones back, and both
-     readers already fall through to the ordinary bucket on an empty pool. */
-  titleWordList = [];
-  shortTitleWordLists = {};
-  if (opts.challengePools !== false) {
-    // Title...? challenge pool: words that appear in at least one song title (so every
-    // round can be won by naming a title that holds the word). Strict, because the challenge
-    // judges titles strictly — a word whose only title is a derived form ("crazy" → "Crazier")
-    // has no legal answer and must never be dealt.
-    titleWordList = playableWords.filter((w) => titleSongsForWord(w, true).length >= 1);
-    // Short n' Sweet pool: words with at least one valid (lyrics) song whose title is ≤2 words,
-    // so every round can be won with a one- or two-word title.
-    // One pool per title-length rule, so the dark side's one-word-only run is guaranteed a
-    // winnable page just as the base ≤2-word run is.
-    for (const max of [1, 2]) {
-      shortTitleWordLists[max] = playableWords.filter((w) =>
-        validSongs(w, false, false).some((s) => titleWordCount(s.title) <= max));
-    }
-  }
+  // Ordinary play needs none of these three catalogue scans. Each title challenge builds
+  // only its own pool on first use, before its first clock starts. Keep the cache in the
+  // corpus snapshot by reference so later guest restores retain already-built Taylor pools.
+  // A guest or blend carries null and can never build a Taylor challenge pool.
+  challengeWordPools = opts.challengePools === false ? null : { titleWordList: null, shortTitleWordLists: {} };
   albumOrder = grouped.map((g) => g.album);
   // The rarity buckets, plus the On Tour! pools: for each album, the playable words that
   // have a valid (lyrics) song in it, so each tour stop can be handed a winnable word.
   // One walk of the catalogue per word feeds both (see indexPlayableWords).
   indexPlayableWords(opts.buckets);
   return snapshotCorpus();
+}
+
+// These builders run synchronously against the installed corpus, with explicit matching
+// rules so the active difficulty and stem preference cannot change their membership. There
+// is no deferred callback that could finish after a guest has replaced the catalogue.
+function titleChallengeWords() {
+  if (!challengeWordPools) return [];
+  // Title...? requires the word itself in the title; a derived form is not a legal answer.
+  return challengeWordPools.titleWordList ??= playableWords.filter((w) => titleSongsForWord(w, true).length >= 1);
+}
+function shortTitleChallengeWords(max) {
+  if (!challengeWordPools) return [];
+  // Separate cached pools keep both the two-word base and one-word dark side winnable.
+  return challengeWordPools.shortTitleWordLists[max] ??= playableWords.filter((w) =>
+    validSongs(w, false, false).some((s) => titleWordCount(s.title) <= max));
 }
 
 // Bucket words by how many songs contain them, so each mode draws from an
@@ -14856,18 +14884,9 @@ function buildBlendGrouped(cats) {
 let blendCorpus = null;               // built once per session, like a guest's
 let blendMerges = [];                 // what the dedupe folded together, for the dev panel
 
-/* THE COST IS CPU, NOT NETWORK, and that is worth stating because it is the opposite of what
-   it looks like. The blend pulls 1.4MB across seven guest files, which reads like a download
-   problem, but the files are already in hand by the time anybody can ask for a lineup: the
-   guest shelf fetches all seven to paint the counts on its passes, blendFiles() goes through
-   the same loadGuest session cache, and the laminate is ON that shelf, so the way in is also
-   the prefetch. Measured cold on a local server: 14ms fetching, 30ms deduping, and 2426ms
-   building the indexes. Ninety-eight per cent of the wait is installCorpus, which walks 919
-   words against 745 songs five times over and blocks the main thread solidly while it does.
-
-   So the two halves are split. fetchBlendCats is the part that can FAIL and is nearly free;
-   buildBlend is the part that COSTS and cannot fail. Splitting them is what lets the failure
-   be reported early and the cost be paid somewhere the player is not waiting on it. */
+/* The shelf uses lightweight song counts. Guest catalogues download only when opened,
+   so the lineup first fetches the catalogues, then builds its indexes while its detail
+   panel is visible. Keep the fallible download separate from the synchronous corpus swap. */
 async function fetchBlendCats() {
   return Promise.all(blendFiles());
 }
@@ -16252,6 +16271,8 @@ function resetRunState() {
   hintsUsed = 0;
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
+  runProgressId = TAB_ID + ":" + Math.random().toString(36).slice(2);
+  clearRunCheckpoint();
   // Read before a single page of this run exists, which is the whole point of it.
   runNemesis = topTallyEntry(loadSongTally().misses || {});
   runNemesisNoted = false;
@@ -16379,6 +16400,65 @@ function foldCatalogue(rounds) {
   return foldsCatalogue() ? recordGameTally(rounds) : loadSongTally();
 }
 
+// A tab-local checkpoint protects completed ordinary pages if a mobile browser discards the
+// process without pagehide. It deliberately uses the existing abandoned-run fold: no record,
+// best, skill XP or completion reward is minted from an unfinished notebook. Daily keeps its
+// own richer resume snapshot and ownership protocol.
+const RUN_CHECKPOINT_KEY = "swiftSongAssociation.runCheckpoint";
+const RUN_RECEIPTS_KEY = "swiftSongAssociation.runCheckpointReceipts";
+function clearRunCheckpoint() {
+  try { sessionStorage.removeItem(RUN_CHECKPOINT_KEY); } catch (_) { /* storage unavailable */ }
+}
+function runCheckpointReceipts() {
+  try {
+    const value = JSON.parse(localStorage.getItem(RUN_RECEIPTS_KEY) || "[]");
+    return Array.isArray(value) ? value.filter((id) => typeof id === "string").slice(-100) : [];
+  } catch (_) { return []; }
+}
+function consumeRunCheckpoint(id) {
+  const receipts = runCheckpointReceipts();
+  if (receipts.includes(id)) return false;
+  try { localStorage.setItem(RUN_RECEIPTS_KEY, JSON.stringify([...receipts, id].slice(-100))); }
+  catch (_) { /* the in-memory fold still works if storage is blocked */ }
+  clearRunCheckpoint();
+  return true;
+}
+function checkpointRunProgress() {
+  if (runFolded || !["classic", "infinite"].includes(gameType) || !roundResults.length) return;
+  if (!runProgressId) runProgressId = TAB_ID + ":" + Math.random().toString(36).slice(2);
+  const checkpoint = {
+    version: 1, id: runProgressId, type: gameType, mode: boardMode(),
+    score: gameType === "infinite" ? roundResults.length : score, streak: gameMaxStreak,
+    rounds: roundResults.map((correct, i) => ({ correct, title: roundSongs[i] || null,
+      album: roundAlbums[i] || null, word: roundWords[i] || null })),
+  };
+  try { sessionStorage.setItem(RUN_CHECKPOINT_KEY, JSON.stringify(checkpoint)); }
+  catch (_) { /* private browsing may provide no writable session storage */ }
+}
+function recoverRunProgress() {
+  let checkpoint;
+  try { checkpoint = JSON.parse(sessionStorage.getItem(RUN_CHECKPOINT_KEY) || "null"); }
+  catch (_) { clearRunCheckpoint(); return false; }
+  if (!checkpoint) return false;
+  const navigation = performance.getEntriesByType("navigation")[0];
+  // A new tab can inherit its opener's sessionStorage. Only a restored/reloaded document may
+  // adopt it; a fresh navigation must never bank another tab's still-live game.
+  if (navigation && !["reload", "back_forward"].includes(navigation.type)) {
+    clearRunCheckpoint(); return false;
+  }
+  if (checkpoint.version !== 1 || typeof checkpoint.id !== "string" ||
+      !["classic", "infinite"].includes(checkpoint.type) || typeof checkpoint.mode !== "string" ||
+      !Number.isFinite(checkpoint.score) || checkpoint.score < 0 ||
+      !Number.isFinite(checkpoint.streak) || !Array.isArray(checkpoint.rounds) ||
+      !checkpoint.rounds.length || checkpoint.rounds.some((r) => !r || typeof r.correct !== "boolean")) {
+    clearRunCheckpoint(); return false;
+  }
+  if (!consumeRunCheckpoint(checkpoint.id)) { clearRunCheckpoint(); return false; }
+  updateStats(checkpoint.score, checkpoint.mode, checkpoint.streak, false);
+  recordGameTally(checkpoint.rounds);
+  return true;
+}
+
 // Fold the rounds completed so far into the lifetime stats (songs/words
 // discovered, played count, score distribution). Shared by quitGame and the
 // page-unload handler so leaving mid-game never throws away progress. An
@@ -16391,6 +16471,8 @@ function foldRunProgress() {
   // a partial here would double-count the same rounds once the run is finished.
   if (gameType === "challenge" || gameType === "album" || gameType === "daily" || gameType === "custom" || gameType === "guest" || gameType === "ruthless" || gameType === "lineup") { runFolded = true; return; }
   runFolded = true;
+  if (runProgressId && !consumeRunCheckpoint(runProgressId)) return;
+  clearRunCheckpoint();
   const partialScore = gameType === "infinite" ? roundResults.length : score;
   updateStats(partialScore, boardMode(), gameMaxStreak, false);
   foldCatalogue(roundResults.map((correct, i) => ({
@@ -17956,8 +18038,8 @@ function revealTapKnowledge(correct) {
   const fb = $("feedback");
   fb.innerHTML =
     `<div class="banner ${correct ? "good" : "bad"}">${banner}</div>` +
-    `<p class="red-note">${note}</p>` +
-    advanceUI;
+    `<div class="feedback-advance">${advanceUI}</div>` +
+    `<p class="red-note">${note}</p>`;
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -18220,9 +18302,9 @@ function revealCommon(correct) {
     : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
   fb.innerHTML =
     `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>` +
+    `<div class="feedback-advance">${advanceUI}</div>` +
     `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
-    `<div class="common-reveal">${cards}</div>` +
-    advanceUI;
+    `<div class="common-reveal">${cards}</div>`;
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -20444,19 +20526,19 @@ function pickWord() {
   // Album Focus draws only words with a valid in-album answer (honouring the difficulty's
   // title rule), so every round is winnable from the chosen album.
   if (gameType === "album" && focusAlbum) { const w = pickAlbumWord(); if (w) return w; }
-  // Title...? draws only from words that appear in some song title, so each round is winnable.
+  // Build only the pool this challenge needs. A classic run never scans for title rules.
+  const rule = gameType === "challenge" ? currentChallenge?.rule : null;
+  const titleWords = rule === "titleHas" ? titleChallengeWords() : null;
+  const shortWords = rule === "shorttitle" ? shortTitleChallengeWords(maxTitleWordsNow()) : null;
   let bucket;
-  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas"
-      && titleWordList.length) {
-    bucket = titleWordList;
-  } else if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "shorttitle"
-      && (shortTitleWordLists[maxTitleWordsNow()] || []).length) {
+  if (titleWords?.length) {
+    bucket = titleWords;
+  } else if (shortWords?.length) {
     // Short n' Sweet: keep the easy-pool feel but guarantee a title short enough to win exists.
-    const shortList = shortTitleWordLists[maxTitleWordsNow()];
     const poolBucket = wordBuckets[effectivePool()] || playableWords;
-    const set = new Set(shortList);
+    const set = new Set(shortWords);
     const narrowed = poolBucket.filter((w) => set.has(w));
-    bucket = narrowed.length >= TOTAL_ROUNDS ? narrowed : shortList;
+    bucket = narrowed.length >= TOTAL_ROUNDS ? narrowed : shortWords;
   } else {
     bucket = wordBuckets[effectivePool()] || playableWords;
   }
@@ -22528,8 +22610,7 @@ function renderDropdown() {
     div.setAttribute("role", "option");
     div.setAttribute("aria-selected", i === activeIndex ? "true" : "false");
     div.innerHTML = `${escapeHtml(censor(song.title))}` + (off ? `<span class="dd-tag">in the title</span>` : "");
-    div.addEventListener("mousedown", (e) => {
-      e.preventDefault();
+    wireSuggestion(div, () => {
       // Took The Money reads which rung of the list was taken. Set around the call and cleared
       // straight after it, so a pick that gets soft-rejected can't leave a stale rung behind for
       // whatever the player types next (submitAnswer reads it synchronously, before any reveal).
@@ -22547,6 +22628,7 @@ function renderDropdown() {
   input.setAttribute("aria-expanded", "true");
   if (activeIndex >= 0) input.setAttribute("aria-activedescendant", "dd-opt-" + activeIndex);
   else input.removeAttribute("aria-activedescendant");
+  fitAnswerDropdown(dd, input);
 }
 function hideDropdown() {
   $("dropdown").classList.remove("show");
@@ -23559,8 +23641,8 @@ function flagImpostor() {
   const fb = $("feedback");
   fb.innerHTML =
     `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>` +
-    `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>` +
-    `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+    `<div class="feedback-advance"><button id="continueBtn" class="btn-ghost">next page →</button></div>` +
+    `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>`;
   playSound("correct");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -23797,7 +23879,7 @@ function checkCatalogueEggs(raw, song, correct) {
 }
 
 function submitAnswer(song, isTimeout) {
-  if (roundLocked) return;
+  if (settingsPauseActive || roundLocked) return;
   // During an animated page turn the next page is already writable, but its clock waits for the
   // sheet to clear. Snapshot an early Enter so later typing cannot silently change the answer
   // that will be judged when beginRoundClock makes the page live.
@@ -24399,6 +24481,8 @@ function submitAnswer(song, isTimeout) {
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
   if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("answer-rain-on-monday");
 
+  checkpointRunProgress();
+
   // Daily: persist every decided page before showing its verdict. Pages 1-12 resume at the
   // next word; page 13 is marked settled and finalizes from the snapshot after a reload/quit.
   // The key is the seed date captured at start, never a fresh reading of "today" mid-run.
@@ -24940,14 +25024,14 @@ function showCorrectFeedback(song, lyricMatch) {
   const revenge = revengeNote();
   fb.innerHTML = `
     <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>
+    <div class="feedback-advance">${advanceUI}</div>
     ${revenge}
     ${inkNote}
     ${firstNote}
     ${card}
     ${deepCutNote}
     ${formsNote}
-    ${more}
-    ${advanceUI}`;
+    ${more}`;
   if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   playSound("correct");
@@ -25018,9 +25102,9 @@ function showWrongFeedback(song, isTimeout) {
   }
   fb.innerHTML = `
     <div class="banner bad">✗ ${reason}</div>
+    <div class="feedback-advance"><button id="continueBtn" class="btn-ghost">next page →</button></div>
     ${submitted}
-    ${help}
-    <button id="continueBtn" class="btn-ghost">next page →</button>`;
+    ${help}`;
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -25029,7 +25113,7 @@ function showWrongFeedback(song, isTimeout) {
 // "next page" button, and the Enter key. Guarded so it only fires while a
 // verdict is on screen (and clears any running countdown first).
 function advanceFromFeedback() {
-  if (!roundLocked) return;
+  if (settingsPauseActive || !roundLocked) return;
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   nextRound();
 }
@@ -25039,7 +25123,7 @@ function runCountdown() {
   const el = $("cd");
   if (countdownId) clearInterval(countdownId);
   countdownId = setInterval(() => {
-    if ($("settingsModal").classList.contains("open")) return;   // paused while settings is open
+    if (settingsPauseActive) return;   // Settings and hidden-page interruptions share this pause
     n--;
     if (n <= 0) {
       clearInterval(countdownId);
@@ -25204,6 +25288,8 @@ function endGame() {
     dailyPerfectCelebrated = false;
   }
   runFolded = true;   // this run's stats are saved here in full; block any unload re-fold
+  if (runProgressId) consumeRunCheckpoint(runProgressId);
+  clearRunCheckpoint();
   clearTimer();
   clearTimeout(hintUrgeTimer);
   clearVanish();
@@ -26574,6 +26660,22 @@ function clearPerfectFX() {
 
 /* ---------- Input wiring ---------- */
 function wireInput() {
+  $("answerSubmit").addEventListener("click", () => submitAnswer(null, false));
+  $("bonusPlayBody").addEventListener("click", (e) => {
+    if (!e.target.closest(".bonus-submit") || settingsPauseActive || bonusLocked) return;
+    if (isTrackRun()) submitTrack();
+    else if (bonusGame && bonusGame.id === "sing-it-back") judgeGap();
+    else judgeName();
+  });
+  // Composition Enter confirms an IME word, it does not submit the page.
+  document.addEventListener("keydown", (e) => {
+    if (settingsPauseActive && e.target.matches("#songInput, #bonusInput")) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+    if ((e.isComposing || e.keyCode === 229) && e.target.matches("#songInput, #bonusInput")) e.stopImmediatePropagation();
+  }, true);
+  window.visualViewport?.addEventListener("resize", refreshAnswerViewport);
+  window.visualViewport?.addEventListener("scroll", refreshAnswerViewport);
+  window.addEventListener("resize", refreshAnswerViewport);
+  document.addEventListener("focusin", refreshAnswerViewport);
   const input = $("songInput");
   input.addEventListener("input", () => {
     // Hard/Ultra have no autocomplete — you type the full title.
@@ -27249,6 +27351,7 @@ function renderSettingsBody() {
       ])
     );
   panels.data =
+    setSection("On your phone", offlineSettingsHTML()) +
     setSection("",
       `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof: clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
       `<div class="set-actions"><button class="btn-ghost" data-action="export">Export backup</button>` +
@@ -27319,6 +27422,7 @@ function renderSettingsBody() {
   ).join("");
   renderSettingsTabs();
   wireSettingsBody();
+  mountOfflineSettings($("settingsBody"), GUESTS);
   if (wasSel) {
     const back = $("settingsBody").querySelector(wasSel);
     if (back) { try { back.focus({ preventScroll: true }); } catch (_) { back.focus(); } }
@@ -27537,7 +27641,10 @@ function resumeBonusFromSettings(state) {
 }
 
 // Pause the round timer while the modal is open; resume from where it left off.
-function pauseForSettings() {
+const runPauseOwners = new Set();
+function pauseForSettings(owner = "settings") {
+  runPauseOwners.add(owner);
+  if (settingsPauseActive) return;
   settingsPauseActive = true;
   pausedClockState = null;
   pausedStopwatchAt = null;
@@ -27562,7 +27669,9 @@ function pauseForSettings() {
     clearTimer();
   }
 }
-function resumeFromSettings() {
+function resumeFromSettings(owner = "settings") {
+  runPauseOwners.delete(owner);
+  if (runPauseOwners.size || !settingsPauseActive) return;
   settingsPauseActive = false;
   if (pausedStopwatchAt != null) {
     roundStart += performance.now() - pausedStopwatchAt;   // push the page's start forward by the time spent in the modal
@@ -27588,6 +27697,54 @@ function resumeFromSettings() {
   pausedBonusState = null;
   resumeBonusFromSettings(bonusState);
 }
+// Cover a hidden run before the browser suspends timers. Coming back never spends the
+// player's next second until they explicitly pick the notebook up again.
+function liveRunScreen() {
+  if (screens.game.classList.contains("active")) return screens.game;
+  if (screens.bonusplay.classList.contains("active") && bonusGame && !bonusEnded) return screens.bonusplay;
+  return null;
+}
+function interruptRun() {
+  checkpointRunProgress();
+  if (!liveRunScreen() || runPauseOwners.has("background")) return;
+  pauseForSettings("background");
+  const overlay = document.createElement("div");
+  overlay.id = "runPauseOverlay";
+  overlay.className = "run-pause-overlay open";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-labelledby", "runPauseTitle");
+  overlay.innerHTML = `<div class="run-pause-card"><h2 id="runPauseTitle">Your page is waiting</h2>` +
+    `<p>The clock is paused. Carry on when you're ready.</p>` +
+    `<button type="button" class="btn-primary" id="runResumeBtn">carry on →</button></div>`;
+  document.body.appendChild(overlay);
+  containDialogBackground(overlay);
+  overlay.addEventListener("keydown", (e) => { trapDialogTab(e, overlay, overlay); e.stopPropagation(); });
+  $("runResumeBtn").addEventListener("click", resumeInterruptedRun);
+  document.activeElement?.blur();
+}
+function resumeInterruptedRun() {
+  if (document.hidden) return;
+  const overlay = $("runPauseOverlay");
+  if (!overlay) return;
+  // The hidden tab may have lost its Daily claim while suspended. Verify before handing any
+  // input back to it, without ever releasing the claim merely because it was backgrounded.
+  if (gameType === "daily" && liveRunScreen() === screens.game &&
+      !claimDailyRun(dailyRunDate || todayKey(), TAB_ID)) surrenderDailyRun();
+  releaseDialogBackground(overlay);
+  overlay.remove();
+  resumeFromSettings("background");
+  if ($("settingsModal").classList.contains("open")) $("settingsCloseBtn").focus();
+  else if (liveRunScreen() === screens.game) {
+    if (roundLocked) ($("continueBtn") || $("skipBtn"))?.focus();
+    else focusRoundInput($("songInput"));
+  } else if (liveRunScreen()) focusBonusRoundInput();
+}
+function handleRunVisibility() {
+  if (document.hidden) interruptRun();
+  else if ($("runResumeBtn")) $("runResumeBtn").focus({ preventScroll: true });
+}
+
 // Element focused before the modal opened, so focus can be returned there on close
 // (usually #songInput mid-game or the gear) instead of being lost to the hidden page.
 let lastFocusedBeforeSettings = null;
@@ -28845,12 +29002,12 @@ function firstRunWelcomeHTML() {
     `<p class="fr-sub">First time? We'd start you in <b>Relaxed</b>, so there's no clock, suggestions and hints stay on, and every song is in play. You can turn the difficulty up whenever you're ready.</p>` +
     // A pointer, not a fourth button. Nothing here needs the longer version to get started, and
     // an extra control on the welcome buys a slower first two minutes for very little.
-    `<p class="fr-sub fr-aside">Want more than that? There's a <b>how to play</b> card in the bottom-left corner, whenever you fancy it.</p>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed &rarr;</button>` +
       `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
-      `<button type="button" class="btn-link" data-fr="knowit-quiet">I know it &mdash; skip the tips</button>` +
-    `</div>`;
+      `<button type="button" class="btn-link" data-fr="knowit-quiet">I know it, skip the tips</button>` +
+    `</div>` +
+    `<p class="fr-sub fr-aside">Want more than that? Open <b>how to play</b> whenever you fancy it.</p>`;
 }
 // Silence the gentle first-game pointers by spending each beat's one-time coachmark up front, for
 // a player who's told us they don't want them. Leaves the "a few games in" prompts (era, ready
@@ -29397,6 +29554,12 @@ function buildDevApi() {
     return challengeSlips();
   };
   return {
+    lifecycle: {
+      state: () => ({ paused: settingsPauseActive, owners: [...runPauseOwners],
+        checkpoint: (() => { try { return JSON.parse(sessionStorage.getItem(RUN_CHECKPOINT_KEY)); } catch (_) { return null; } })() }),
+      interrupt: interruptRun,
+      resume: resumeInterruptedRun,
+    },
     MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS, STUDIO_ALBUMS, ALBUM_FOCUS_DIFFS,
     GUIDE_BEAT_IDS: Object.keys(GUIDE_BEATS),
     getState: () => ({
@@ -33046,6 +33209,7 @@ function buildDevApi() {
         return window.__dev.ink.set(slugs[(at + 1) % slugs.length]);
       },
     },
+    offline: { status: readOfflineStatus },
     // Seeding
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,
             infinite: devSeedInfinite,
@@ -33280,6 +33444,7 @@ async function init() {
       if ((settings.reduceMotion || "auto") === "auto") applySettings();
     });
   }
+  recoverRunProgress();
   migrateRecordsFromStats();   // seed records from pre-existing stats once, before any game runs
   seedRandomFromBoards();      // backfill the randomiser's ledger from play history, once
   console.log("%c♡ written in the margins · 13 pages of you ♡", "font-size:14px;color:#a9791f;font-family:cursive;");
@@ -33515,10 +33680,14 @@ async function init() {
     trapDialogTab(e, $("customModal"), document.querySelector("#customModal .settings-card"));
   });
 
+  document.addEventListener("visibilitychange", handleRunVisibility);
+  window.addEventListener("pageshow", handleRunVisibility);
+
   // Leaving the page mid-game (reload / close) still banks the progress made so
   // far, exactly like the quit button. Skipped for bfcache restores (persisted),
   // where the in-memory game just resumes.
   window.addEventListener("pagehide", (e) => {
+    interruptRun();
     if (e.persisted) return;   // a bfcache restore keeps the same tab, and its claim with it
     if (screens.game.classList.contains("active")) foldRunProgress();
     // Hand today's daily back on the way out. Without this a plain refresh mid-daily would
