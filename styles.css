@@ -2133,8 +2133,8 @@
   .mode-tab:nth-child(even) { transform: translateY(1px) rotate(0.5deg); }
   .mode-tab:hover { color: var(--ink); }
   .mode-tab.active {
-    color: var(--ink); background: var(--highlighter);
-    border-color: rgba(43,39,34,0.32); transform: translateY(0) rotate(0deg);
+    color: var(--ink); background: var(--tab-wash, var(--highlighter));
+    border-color: var(--tab-edge, rgba(43,39,34,0.32)); transform: translateY(0) rotate(0deg);
   }
   /* Pen-stroke glyphs before a mode label (Infinite's ∞, Custom's levers). They
      inherit the tab's ink via currentColor: soft when resting, full ink on
@@ -2143,7 +2143,10 @@
     fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   /* ∞ is wider than tall, so it gets its own box; rounder loops keep it from
      running too long horizontally next to the label. */
-  .type-glyph--inf { width: 22px; height: 18px; vertical-align: -4px; }
+  /* It sits a pixel lower than the others, but by a nudge rather than a deeper vertical-align:
+     sinking it through the baseline stretched its line and stood the Infinite tab half a
+     pixel taller than Classic and Custom beside it. */
+  .type-glyph--inf { width: 22px; height: 18px; position: relative; top: 1px; }
   /* Levers: paper-filled knobs so the rails read as sliders you can slide. */
   .type-glyph--levers circle { fill: var(--paper); }
   /* Gauge: its content sits low in the box, so nudge it up; the hub is inked. */
@@ -2157,20 +2160,27 @@
     align-self: flex-end; width: 0; height: 30px; margin: 0 5px;
     border-left: 1px dashed rgba(43,39,34,0.24);
   }
-  .mode-tab--modality.active {
-    background: rgba(212,108,152,0.28); border-color: rgba(188,78,128,0.5);
-  }
   /* Each ladder rung and each game type carries its own highlighter wash when active, so the
      picked mode reads by colour, not just by position. Normal (medium) and Classic keep the
-     canonical gold highlighter as the "home base"; the rest get a tuned marker tint + inked-in
-     border echoing MODE_COLORS (denim / green / coral / violet). Lyricist keeps its rose-pink
-     modality rule above. The Infinite variant sub-tabs get their own read below. */
-  .mode-tab.active[data-mode="relaxed"]  { background: rgba(103,150,190,0.36); border-color: rgba(63,111,163,0.5); }
-  .mode-tab.active[data-mode="easy"]     { background: rgba(133,173,96,0.40);  border-color: rgba(96,131,62,0.5); }
-  .mode-tab.active[data-mode="hard"]     { background: rgba(202,92,74,0.34);   border-color: rgba(155,54,46,0.5); }
-  .mode-tab.active[data-mode="ultra"]    { background: rgba(122,98,182,0.34);   border-color: rgba(90,72,152,0.5); }
-  .mode-tab.active[data-type="infinite"] { background: rgba(64,150,146,0.34);   border-color: rgba(40,120,116,0.52); }
-  .mode-tab.active[data-type="custom"]   { background: rgba(176,104,150,0.32);  border-color: rgba(150,74,124,0.52); }
+     canonical gold highlighter as the "home base", edged in the era's own accent ink so both
+     follow the era together; the rest get a tuned marker tint + inked-in
+     border echoing MODE_COLORS (denim / green / coral / violet), and Lyricist, off the ladder,
+     a rose pink. The Infinite variant sub-tabs get their own read below.
+
+     They are stated as tokens on the ROW, not as a background on the tab, because on the front
+     page the picked difficulty's colour has to reach past its tab: the rule-terms strip under
+     it is that tab's page and wears the same ink (see "The front page's pickers" below). */
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-type="classic"])  { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="hard"])     { --tab-wash: rgba(202,92,74,0.34);   --tab-edge: color-mix(in srgb, #9b362e 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="ultra"])    { --tab-wash: rgba(122,98,182,0.34);  --tab-edge: color-mix(in srgb, #5a4898 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab--modality.active)             { --tab-wash: rgba(212,108,152,0.28); --tab-edge: color-mix(in srgb, #bc4e80 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-type="infinite"]) { --tab-wash: rgba(64,150,146,0.34);  --tab-edge: color-mix(in srgb, #287874 52%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-type="custom"])   { --tab-wash: rgba(176,104,150,0.32); --tab-edge: color-mix(in srgb, #964a7c 52%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-variant="3lives"]) { --tab-edge: color-mix(in srgb, #786e46 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: color-mix(in srgb, #0c0907 80%, var(--paper)); }
   /* The stats page's "All" view sums every mode, so it wears every mode's wash at once: the
      ladder's colours laid side by side, relaxed denim through ultra violet. */
   .mode-tab.active[data-type="all"] {
@@ -2191,6 +2201,87 @@
   .mode-blurb {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
     margin: 8px 0 0;
+  }
+
+  /* ---- The front page's pickers -------------------------------------------------
+     An index tab is drawn with an open bottom edge, and an open edge has to open ONTO
+     something. Left on bare paper the tabs floated with their corners hanging, and the picked
+     one's wash stopped in a straight cut against nothing. So every tab here stands on a line.
+
+     The difficulty row stands on a page: the rule-terms strip is the picked difficulty's own
+     divider page, a sheet of the same ink laid over the notebook, and its tab runs down into it
+     with no seam. The mode and lives rows have no page of their own to open, so they stand on a
+     shelf, and the picked tab stands in front of it: the shelf breaks under it.
+
+     Three things here are exact on purpose, because every one of them showed at 2x when it wasn't:
+     - Tabs that stand on a line have FLAT feet. The tilt the tabs wear elsewhere (their own, and
+       ink.css's on top) leaves one corner hanging and one sunk, and tilts the tab's own stretch
+       of shelf with it, so the hand is put into their tops instead: each has its own corner
+       radii. Not its own height: a height cycle always lands on the same tab of a short row,
+       and a tab that stands taller than its neighbours reads as the special one.
+     - Every stroke is a SOLID colour, pre-mixed onto the paper (color-mix against --paper, never
+       an alpha). Two translucent strokes darken wherever they cross, and a tab's side, the page's
+       edge and a ruled line all cross here, which printed as a checkerboard at the joins.
+     - A shelf is drawn per tab, reaching 3.5px into each gap so neighbours overlap by a pixel
+       (solid, so the overlap cannot show). Per tab rather than once under the row because the rows
+       wrap on a phone and a tab on the first of two lines needs a line of its own; in the
+       difficulty row, app.js marks those `.is-back` (rankTabs) and they get a shelf instead. */
+  .mode-picker {
+    --tab-pencil: color-mix(in srgb, var(--ink) 18%, var(--paper));
+    --tab-wash: var(--highlighter);
+    --tab-edge: color-mix(in srgb, var(--ink) 32%, var(--paper));
+    /* The divider sheet: the tab and its page are one piece of paper in one ink. */
+    --tab-sheet: color-mix(in srgb, var(--tab-wash) 62%, transparent);
+    --tab-rim: color-mix(in srgb, var(--tab-edge) 78%, var(--paper));
+  }
+  .mode-picker > .mode-tabs { position: relative; padding-left: 7px; }
+  /* Square to the line: none of the tab's own tilt, and none of ink.css's either, which tilts
+     every handwritten box by a fraction of a degree and so tilted each tab's stretch of shelf. */
+  .mode-picker > .mode-tabs > .mode-tab { position: relative; transform: none; rotate: none; translate: none; }
+  .mode-picker > .mode-tabs > .mode-tab:nth-child(3n+1) { border-radius: 6px 7px 0 0; }
+  .mode-picker > .mode-tabs > .mode-tab:nth-child(3n+2) { border-radius: 7px 5px 0 0; }
+  .mode-picker > .mode-tabs > .mode-tab:nth-child(3n)   { border-radius: 5px 6px 0 0; }
+  .mode-picker > .mode-tabs > .mode-tab:not(.active) { border-color: var(--tab-pencil); }
+  /* The mode and lives shelves are inked in the picked tab's edge colour. */
+  #typeTabs, #variantTabs { --tab-shelf: var(--tab-edge); }
+  /* The shelf. The box is measured from the tab's padding edge, which sits inside its 1.5px side
+     border, hence -5px: 1.5 of border and 3.5 of gap. It hangs just below the tab's foot. */
+  #typeTabs > .mode-tab::after, #variantTabs > .mode-tab::after, #modeTabs > .mode-tab.is-back::after {
+    content: ""; position: absolute; left: -5px; right: -5px; bottom: -1.5px; height: 1.5px;
+    background: var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
+  }
+  /* In front of the shelf: the tab reaches down through the line's depth (the padding pays back
+     the margin, so picking never shifts the row), its sides run to the line's foot, and only its
+     own 3.5px either side of the shelf is kept, level with its neighbours'. */
+  #typeTabs > .mode-tab.active, #variantTabs > .mode-tab.active, #modeTabs > .mode-tab.active.is-back {
+    margin-bottom: -1.5px; padding-bottom: 8.5px;
+  }
+  #typeTabs > .mode-tab.active::after, #variantTabs > .mode-tab.active::after, #modeTabs > .mode-tab.active.is-back::after {
+    bottom: 0;
+    background: linear-gradient(to right, var(--tab-shelf, var(--tab-pencil)) 3.5px, transparent 3.5px calc(100% - 3.5px), var(--tab-shelf, var(--tab-pencil)) calc(100% - 3.5px));
+  }
+  /* The page. Opaque, because it is a sheet laid over the notebook rather than ink on it. */
+  #difficultyRow .mode-blurb {
+    margin: 0; padding: 9px 12px 10px;
+    border: 1.5px solid var(--tab-rim); border-radius: 3px 7px 6px 5px;
+    background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
+  }
+  /* A picked difficulty wrapped onto a line above its page (a phone) cannot reach it, so it
+     stands on its shelf like the rows above; it still wears the page's colour, so the two read
+     as a pair across the line between them. */
+  #modeTabs > .mode-tab.active.is-back { border-color: var(--tab-rim); background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper); }
+  #difficultyRow .blurb-clause { white-space: nowrap; }
+  /* Lyricist's divider stands in the gap between tabs, not on the page: held off the strip by
+     the same margin it keeps from the tabs' tops, so it reads as a mark between two tabs rather
+     than a crease running into the sheet. */
+  #modeTabs > .mode-tab-sep { height: 22px; margin-bottom: 6px; }
+  #modeTabs { z-index: 1; }
+  /* Its tab is the top of the same sheet: dropped 1.5px over the page's top edge in the page's own
+     colour, so the edge under it disappears. Its sides are the page's rim, so where they cross the
+     page's top edge the two are one colour and the corner closes clean. */
+  #modeTabs > .mode-tab.active:not(.is-back) {
+    margin-bottom: -1.5px; padding-bottom: 8.5px; border-color: var(--tab-rim);
+    background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
   }
   /* the tab rows reused on the stats page — two tiers (view / difficulty) */
   .stats-tabs { margin-bottom: 16px; }
@@ -8260,11 +8351,13 @@
      land on the podium's own text. The eyebrow is typewriter (functional), the note
      handwritten (creative). */
   .start-podium-row { display: flex; align-items: flex-end; gap: 22px; }
-  /* Nudged up 4px to centre the best line's ink between the rule-terms row and the Start
-     writing button: the handwritten line box carries more air above its glyphs than below.
-     A relative offset, not a margin, so nothing else on the page moves (a bottom margin
-     here just collapses into the play row's own). */
-  .start-podium-row { position: relative; top: -4px; }
+  /* Nudged up 1.5px to centre the best line's ink between the rule-terms sheet's bottom edge
+     and the Start writing button: the handwritten line box carries more air above its glyphs
+     than below. (It was 4px when the rule terms were bare text; the sheet's edge now sits
+     below the text, so less of a lift evens the two gaps.) A relative offset, not a margin,
+     so nothing else on the page moves (a bottom margin here just collapses into the play
+     row's own). */
+  .start-podium-row { position: relative; top: -1.5px; }
   /* The front page has very little vertical room, so the start screen's best line lies
      DOWN: the handwritten heading, the score and the meta all share one baseline instead
      of stacking three rows. (The results page keeps the stacked block — it has the room,

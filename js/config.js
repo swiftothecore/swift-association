@@ -264,7 +264,7 @@ export const MODES = {
   // sit in the title (noTitle: false), which turns half the pages into a gimme you still have to
   // spot. What it gives up is the hint ladder — that is Relaxed's alone now, the one place the
   // page will answer for you, which is also what stops Relaxed reading as Easy with the clock off.
-  easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, hint: false, blurb: "15s · suggestions · common words · may be in the title" },
+  easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, hint: false, blurb: "15s · suggestions · common words" },
   medium: { id: "medium", label: "Normal", seconds: 10, dropdown: true,  pool: "all",   strict: false, noTitle: true,  examples: 3, hint: false, blurb: "10s · suggestions · all words · not in the title" },
   // Hard's suggestions are LATE (`dropdown: "late"`, see DROPDOWN_LATE_MIN), and that is a
   // deliberate softening of the Normal→Hard step. Three levers move at once on that step —
@@ -278,12 +278,12 @@ export const MODES = {
   // word, so it can finish your sentence but never start it. That keeps three real rungs —
   // Normal completes from the first letter and matches mid-title, Hard waits and only ever
   // completes a beginning, Ultra never helps at all.
-  hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: "late", pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · suggestions once you start the title · rarer words · not in the title" },
+  hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: "late", pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · late suggestions · rarer words · not in the title" },
   // `moreExamples: false` is Ultra's alone: every other mode lets a missed page open out into
   // the rest of the field (see MORE_EXAMPLES_BATCH). Ultra shows its one card and closes. The
   // reveal is post-mortem either way, so this isn't about difficulty — it's that Ultra's whole
   // manner is one glance and gone, and a page you can sit and study contradicts it.
-  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 1, hint: false, moreExamples: false, blurb: "5s · type the full title · rarest · not in the title" },
+  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 1, hint: false, moreExamples: false, blurb: "5s · no suggestions · rarest words · not in the title" },
   // Lyric-only: no title input (lyricOnly), longer clock. You answer by typing a lyric
   // line (a few words around the prompt word are enough — the matcher is fuzzy).
   lyricist: { id: "lyricist", label: "Lyricist", seconds: 20, dropdown: false, pool: "all", strict: false, noTitle: false, examples: 3, hint: false, lyricOnly: true, blurb: "20s · type a lyric line, not the title" },

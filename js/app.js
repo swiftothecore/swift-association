@@ -15532,15 +15532,17 @@ function updateBlurb() {
   } else {
     const b = $("modeBlurb");
     if (b) {
-      const text = gameType === "infinite"
-        ? (infiniteVariant === "sudden" ? "one miss ends it" : "three lives") + " · " + currentMode.blurb
-        : currentMode.blurb;
       // The marks ride WITH the blurb, never instead of it. Prose teaches and marks remind,
       // and choosing a difficulty is the one moment the player has time to read both — which
       // is what makes the mark legible later, in a row of the round's chrome with no words in
       // it. The blurb is the accessible reading of the pair, so the marks stay aria-hidden.
+      // It no longer restates Infinite's lives: the lives row sits directly above it.
+      // Each clause is kept whole and carries its own trailing dot, so when the strip wraps
+      // (always, on a phone) it breaks BETWEEN clauses and never opens a line on a "·".
+      const clauses = currentMode.blurb.split(" · ");
       b.innerHTML = ruleTermsMarkup(modeRuleTerms(currentMode), { labelled: false, cls: "mode-terms" }) +
-        escapeHtml(text);
+        clauses.map((c, i) =>
+          `<span class="blurb-clause">${escapeHtml(c)}${i < clauses.length - 1 ? " ·" : ""}</span>`).join(" ");
     }
   }
   updateTagline();
@@ -15585,6 +15587,24 @@ function updateTagline() {
     el.textContent = line;
   }
 }
+// A front-page tab row wraps on a phone, and a tab on any line but the last has nothing under
+// it: the page (or the shelf the row stands on) is only under the last line. Those tabs are
+// marked `.is-back` so styles.css gives each one a shelf of its own. It is layout, not state, so
+// it is re-measured whenever a row changes height as well as after every render.
+const tabRankWatch = typeof ResizeObserver === "function"
+  ? new ResizeObserver((entries) => entries.forEach((e) => rankTabs(e.target)))
+  : null;
+function rankTabs(row) {
+  const tabs = [...row.querySelectorAll(".mode-tab")];
+  if (!tabs.length) return;
+  const foot = (t) => t.offsetTop + t.offsetHeight;
+  const last = foot(tabs[tabs.length - 1]);
+  tabs.forEach((t) => t.classList.toggle("is-back", foot(t) < last - 8));
+}
+function standTabs(row) {
+  rankTabs(row);
+  if (tabRankWatch) tabRankWatch.observe(row);
+}
 function renderModePicker() {
   const tabs = $("modeTabs");
   if (!tabs) return;
@@ -15600,6 +15620,7 @@ function renderModePicker() {
   tabs.innerHTML = ladder + modality;
   tabs.querySelectorAll("[data-mode]").forEach((b) =>
     b.addEventListener("click", () => setMode(b.dataset.mode)));
+  standTabs(tabs);
   updateBlurb();
 }
 function renderTypePicker() {
@@ -15610,6 +15631,7 @@ function renderTypePicker() {
   ).join("");
   tabs.querySelectorAll("[data-type]").forEach((b) =>
     b.addEventListener("click", () => setGameType(b.dataset.type)));
+  standTabs(tabs);
 }
 function renderVariantPicker() {
   const tabs = $("variantTabs");
@@ -15619,6 +15641,7 @@ function renderVariantPicker() {
   ).join("");
   tabs.querySelectorAll("[data-variant]").forEach((b) =>
     b.addEventListener("click", () => setVariant(b.dataset.variant)));
+  standTabs(tabs);
 }
 // Render all three start-screen pickers + the board for the current selection.
 function renderStartPickers() {
