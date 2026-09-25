@@ -262,71 +262,54 @@ const COVERS = {
     return s;
   },
 
-  /* THE CAPITALS — the letters standing up out of the type.
+  /* THE CAPITALS — the booklet's leaves fanned open, and the letters standing up out of the type.
 
      The game is a message hidden inside a printed page by setting a handful of its letters in
-     capitals, and that is drawn literally: a block of type, and four letters that stand a head
+     capitals, and that is drawn literally: three leaves of a lyric booklet fanned out from the
+     bottom-left corner, a block of type on the top one, and three red letters standing a head
      taller than the line they are set in. Nothing is spelled and nothing is readable, which is
-     deliberate twice over — a cover with real letters on it would eventually be a cover with one
-     of the seventy-three ANSWERS on it, and the idea ("something has been picked out of this
-     text") survives being 24px wide exactly because it never depended on reading.
+     deliberate twice over: a cover with real letters on it would eventually be a cover with one
+     of the ANSWERS on it, and the idea ("something has been picked out of this text") survives
+     being 24px wide exactly because it never depended on reading.
 
-     IT IS NOT A PAGE, AND THAT IS THE WHOLE COMPOSITION DECISION. Redacted is already the page
-     of type on this shelf — cream stock, dark bars laid ACROSS it — and two covers built on the
-     same silhouette is the one failure this file's header names. So the value is inverted: the
-     ink is the full bleed and the field is tobacco rather than bone, the type is a shade of the
-     ground rather than a mark on paper, and the only pale objects are the three risers. Where
-     Redacted reads as a page with things hidden on it, this reads as ink with things coming out
-     of it, and the marks are VERTICAL where Redacted's are horizontal. At thumbnail size the two
-     share neither value, hue nor mark direction, which is three more differences than the
-     header asks for.
+     WHY IT WAS REDRAWN. The first cover was one flat tobacco field, dashes a step off it and three
+     blank bone slips. It obeyed every rule in this file and still stood out on the shelf as the one
+     that was not a picture: every other cover is several tones of torn paper deep with one thing to
+     look at, and that one had no layers and nothing to find, so it read as a loading placeholder.
+     The fan is what fixes it. Each leaf is a tone paler than the one under it, the same stacked
+     depth Then What's ridges and Only Here's contours are built from, and the leaves beneath show
+     only as two torn edges down the right, which is what makes it a BOOKLET rather than a sheet.
 
-     THE GROUND IS TOBACCO (#5e4126) AND THE TYPE IS DERIVED FROM IT, not picked beside it. The
-     first pass stood this drawing on a rose plum, which was Sing It Back's own ground (#57203f)
-     a few steps lighter — the same hue two rows along the shelf, which is the collision these
-     covers exist to avoid. Brown was free: no cover is brown, it is the colour a lyric booklet's
-     stock actually ages to, and it is warm without reaching for Nashville's rust or Running
-     Order's gold, both of which are bright cards rather than dark ones.
-     The rule the type follows is worth keeping if the ground is ever moved again: step AWAY from
-     the ground, toward whichever end it has room for — down toward black from a mid-toned field
-     (this one, a quarter of the way), up toward paper from a near-black one. Darkening a ground
-     that is already almost black does not make a cleaner card, it deletes the block of type the
-     whole drawing is about, which is what the ground board showed the moment near-black was
-     tried. The roster's `tint` is the same arithmetic the other way, the ground lifted toward
-     paper, and it is the back cover's wash rather than anything on the collage.
+     THE NEIGHBOUR TO WATCH IS REDACTED, a pale page of type with dark marks on it. This is kept apart
+     from it by three things, and a retune should not take any of them away: the ground is dark
+     tobacco where Redacted's is manila, the page is fanned over a stack instead of lying flat, and
+     the marks are small, red and VERTICAL where Redacted's are big, black and horizontal. The
+     capitals were gold on the board and went red on the pick; gold also sat too close to Running
+     Order's marigold, which stands immediately to the left of this cover on the shelf.
 
-     The risers are not evenly spaced and not on consecutive lines, because a message hidden in a
-     booklet is not either — the whole trick is that the capitals fall where the words happen to
-     put them. Four of them, and not more: a page with a dozen highlighted letters reads as a
-     stripe pattern rather than as something picked out of something else. */
+     The capitals are not evenly spaced and not on consecutive lines, because a message hidden in a
+     booklet is not either: the whole trick is that the capitals fall where the words happen to put
+     them. Three and not more, because a page with a dozen highlighted letters reads as a stripe
+     pattern rather than as something picked out of something else. */
   "the-capitals": (r) => {
-    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#5e4126", r, { shadow: false, crisp: true });
-    /* The type. Set as short dashes with gaps rather than as full-width rules, so the block
-       reads as WORDS and the risers have something word-shaped to stand in the middle of; a page
-       of unbroken rules is a ledger. The ink is only a step off the ground for the reason above:
-       the type is what the field is made of, and a high-contrast block here would turn the cover
-       back into a page with writing on it. */
-    const dash = (x, y, w) => sheet([[x, y], [x + w, y - 0.5], [x + w, y + 3.8], [x, y + 4.3]],
-      "#47311d", r, { amp: 0.5, step: 3, shadow: false, fibre: false });
-    const rows = [[56, [14, 26], [46, 16], [68, 34]],
-                  [78, [14, 18], [38, 30], [74, 26]],
-                  [100, [14, 32], [52, 14], [72, 28]],
-                  [122, [14, 22], [42, 28], [76, 24]]];
-    rows.forEach(([y, ...runs]) => runs.forEach(([x, w]) => { s += dash(x, y, w); }));
-    /* The capitals. THREE, AND BIG, and both of those are the 24px audit rather than taste. The
-       first pass drew four slim risers a line and a half tall over six rows of type, which reads
-       beautifully at 200px and turns to a smudge at 24 — the size the shelf tile actually
-       ships at, and the one a collage has to survive. So the type lost two rows and the risers
-       took the space: each one is now wide enough to be a shape rather than a tick, and tall
-       enough to cross the rows above and below its own, which is the only way a letter can be
-       seen to be BIGGER when there are no letterforms to compare it with. Bone on tobacco is the
-       cover's only real contrast, so these three are what the eye finds first at every size.
-       Do not add a fourth to fill the gap bottom-right: the quiet corner is what stops the three
-       reading as a pattern, and a message hidden in a booklet falls where the words put it. */
-    const riser = (x, y) => sheet([[x, y - 21], [x + 12.6, y - 22.5], [x + 12.6, y + 6.2], [x, y + 7.4]],
-      "#f2e9d6", r, { amp: 0.7, step: 5, sx: 1.6, sy: 2.1 });
-    s += riser(38, 56) + riser(78, 100) + riser(18, 122);
-    return s;
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#5b3f25", r, { shadow: false, crisp: true });
+    // The leaves, back to front, all turned about the corner the booklet is held by.
+    const leaf = (rot, fill) => `<g transform="rotate(${rot} 12 168)">` +
+      sheet([[16, 38], [104, 36], [106, 170], [14, 172]], fill, r, { amp: 1.3, step: 6, sx: 1.8, sy: 2.4 }) + `</g>`;
+    s += leaf(16, "#8e6a40") + leaf(8, "#b99466") + leaf(-1, "#ecdfc2");
+    /* The type, as short dashes with gaps rather than full-width rules, so the block reads as WORDS
+       and the capitals have something word-shaped to stand in the middle of; a page of unbroken
+       rules is a ledger. It rides the top leaf's own turn so it lies on the paper. */
+    s += `<g transform="rotate(-1 12 168)">`;
+    const dash = (x, y, w) => sheet([[x, y], [x + w, y - 0.5], [x + w, y + 3.6], [x, y + 4]],
+      "#a8916c", r, { amp: 0.45, step: 3, shadow: false, fibre: false });
+    [[60, [24, 22], [50, 14], [68, 26]], [78, [24, 14], [42, 28], [74, 20]],
+     [96, [24, 30], [58, 12], [74, 20]], [114, [24, 20], [48, 26], [78, 16]], [132, [24, 26], [54, 22]]]
+      .forEach(([y, ...runs]) => runs.forEach(([x, w]) => { s += dash(x, y, w); }));
+    const cap = (x, y) => sheet([[x, y - 17], [x + 11, y - 18], [x + 11, y + 4.6], [x, y + 5.4]],
+      "#c4452f", r, { amp: 0.6, step: 4, sx: 1.2, sy: 1.6, fibre: false });
+    s += cap(40, 60) + cap(84, 96) + cap(30, 114);
+    return s + `</g>`;
   },
 
   /* ONLY HERE — the map. Torn contour islands rising out of a dark sea, with a single
@@ -673,9 +656,9 @@ const LABELS = {
   // label lands over the tail of one run and nothing else — which is the right amount of
   // overlap: a label floating clear of the art is a caption, one pasted over it is a label.
   "who-held-the-pen": { x: 12, y: 130, w: 96, h: 22, rot: -1.4 },
-  // The top band is the quiet one here: the type block starts at y=52 and the risers stand up
-  // into it, so a label anywhere lower would sit on the four things the cover is about.
-  "the-capitals":   { x: 13, y: 14,  w: 94, h: 23, rot: 1.5, fill: "#e9e0cb" },
+  // The top band is the quiet one here: the top leaf's type starts at y=56 and the first capital
+  // stands up into it, so a label anywhere lower would sit on the three things the cover is about.
+  "the-capitals":   { x: 12, y: 10,  w: 96, h: 22, rot: 1.4 },
   "ruthless-game":  { x: 12, y: 16,  w: 96, h: 23, rot: -1.8 },
 };
 const BLANK_LABEL = { x: 16, y: 28, w: 88, h: 20, rot: -1, fill: "#cdb489", ink: "rgba(52,42,30,0.68)" };
