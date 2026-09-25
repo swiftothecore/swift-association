@@ -2579,19 +2579,6 @@
     display: flex; justify-content: flex-end; color: var(--tp-dim);
   }
   .tpost-foot svg { display: block; width: 66px; height: 18px; }
-  /* The caption sits on the PAGE under the screenshot, so it goes back to handwriting: the
-     card is the picture, this is the note somebody wrote beneath it. Same two lines, same
-     faces and same sizes as the sticker shelf's captions, left-aligned because a post card is
-     a full-width block rather than a centred object. */
-  .tpost-cap { display: flex; flex-direction: column; gap: 1px; padding: 0 2px; }
-  .tpost-cap-name {
-    font-family: var(--hand); font-weight: 600; font-size: calc(16px + var(--text-size-adjust));
-    line-height: 1.05; color: var(--ink);
-  }
-  .tpost-cap-sub {
-    font-family: var(--hand); font-weight: 500; font-size: calc(12px + var(--text-size-adjust));
-    line-height: 1.1; color: var(--ink-soft);
-  }
   /* The unlock toast: a notification banner from her blog (see showTumblrToast). Square, opaque
      and in the screen face like the card, so it reads as something that arrived on a phone rather
      than a slip of paper. No clamp and no timestamp, on purpose. */

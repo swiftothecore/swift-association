@@ -3349,7 +3349,7 @@ function foundRecapItems() {
       if (p && pol[f.id]) out.push({ kind: "polaroid", id: f.id, name: p.name, how: p.how, art: p.art, state: polaroidState(f.id, pol) });
     } else if (f.kind === "tumblr") {
       const t = TUMBLR_BY_ID[f.id];
-      if (t && tum[f.id]) out.push({ kind: "tumblr", id: f.id, name: t.name, how: t.how, post: t });
+      if (t && tum[f.id]) out.push({ kind: "tumblr", id: f.id, how: t.how, post: t });
     } else {
       const st = STICKER_BY_ID[f.id];
       if (st && sti[f.id]) out.push({ kind: "sticker", id: f.id, name: st.name, how: st.how, sticker: st });
@@ -3377,8 +3377,8 @@ function foundRecapHTML(items) {
   const extra = items.length > FOUND_RECAP_SHOWN
     ? `<button type="button" class="found-chip--more">+${items.length - FOUND_RECAP_SHOWN}</button>`
     : "";
-  // A tumblr post has no name of its own: the shelf's caption for it is ours, not hers, and her
-  // blog name is already on the chip. So posts are left out of the names, and a run that found
+  // A tumblr post has no name of its own, only her words, and her blog name is already on the
+  // chip. So posts are left out of the names, and a run that found
   // only posts prints no names line at all.
   const names = items.filter((f) => f.kind !== "tumblr")
     .map((f) => `<li class="found-recap-name-item"><span class="found-recap-name">${escapeHtml(f.name)}</span></li>`).join("");
@@ -5713,10 +5713,6 @@ function tumblrShelfHTML() {
     // while a post has no trigger yet — an empty `how` prints no tip rather than a fib. A
     // locked card gets the standard unearned line, because it is meant to be the question.
     const label = has ? (post.how || "") : "a message not yet found";
-    const cap = has
-      ? `<span class="tpost-cap"><span class="tpost-cap-name">${escapeHtml(post.name)}</span>` +
-        `<span class="tpost-cap-sub">${escapeHtml(post.sub)}</span></span>`
-      : "";
     // A stable, tiny tilt hashed off the id, the same trick the wall and the shelf use. It is
     // an order of magnitude smaller than theirs on purpose: a polaroid is pinned by hand and a
     // sticker is stuck down by hand, but a screenshot was pasted in straight and only ever
@@ -5724,7 +5720,7 @@ function tumblrShelfHTML() {
     const rot = ((mulberry32(fnv1a(post.id))() * 1.6) - 0.8).toFixed(2);
     return `<div class="tpost-cell" data-id="${post.id}" data-state="${has ? "found" : "locked"}" style="--rot:${rot}deg"` +
       (label ? ` title="${escapeHtml(label)}"` : "") + `>` +
-      tumblrPostMarkup(post, has, { small: true }) + cap + `</div>`;
+      tumblrPostMarkup(post, has, { small: true }) + `</div>`;
   }).join("");
 
   return `<div class="tpost-shelf">${intro}${counter}<div class="tpost-list">${cards}</div></div>`;
@@ -31884,7 +31880,7 @@ function buildDevApi() {
     // look at a card without playing into the moment it replies to.
     // `earn` is the real path, toast and chime included; the rest write the store directly.
     tumblr: {
-      list: () => { const e = loadTumblr(); return TUMBLR_POSTS.map((t) => ({ id: t.id, name: t.name, blog: t.blog, found: !!e[t.id], at: e[t.id] || null, how: t.how || "(no trigger yet)" })); },
+      list: () => { const e = loadTumblr(); return TUMBLR_POSTS.map((t) => ({ id: t.id, blog: t.blog, found: !!e[t.id], at: e[t.id] || null, how: t.how || "(no trigger yet)" })); },
       state: (id) => (TUMBLR_BY_ID[id] ? (tumblrFound(id) ? "found" : "locked") : "unknown post: " + id),
       earn: (id) => (earnTumblrPost(id) ? "found" : devSetTumblr(id, true)),
       remove: (id) => devSetTumblr(id, false),

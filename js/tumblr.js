@@ -6,11 +6,10 @@
 // object of hers, it is a picture of her talking. That is the whole reason the family exists:
 // the other two shelves are things from the notebook, this one is her voice on a screen.
 //
-// Each entry: { id, blog, name, sub, how, text }.
+// Each entry: { id, blog, how, text }. There is no caption: a post speaks for itself, and any
+// line we wrote under it would be us talking over her.
 //   id   — kebab-case handle, matches the unlock trigger and the TUMBLR store key.
 //   blog — the url the post came from, printed in the card's header row.
-//   name — the card's own lowercase caption (main line); also the toast subject.
-//   sub  — the second caption line, fainter and smaller: what the post IS, not what it says.
 //   how  — what you did to find it, in the achievement descs' voice, shown on the unlock toast
 //          and an earned card's hover tip. Left unset until the post has a real trigger: an
 //          empty `how` prints nothing, which is honest, where a written-ahead one would be a
@@ -27,96 +26,72 @@ export const TUMBLR_POSTS = [
   {
     id: "figure-out-my-tumblr",
     blog: "taylorswift",
-    name: "i am FOCUSED",
-    sub: "the day she took the site on",
     how: "Get halfway through a run on Normal",
     text: "Taylor here. I'm locking myself in my room and not leaving until I figure out how to use my Tumblr. Well, I might leave for a second to get a snack or something but that is IT. I am FOCUSED. I have lots of questions, help me.",
   },
   {
     id: "rethinking-the-album-cover",
     blog: "taylorswift",
-    name: "rethinking the album cover",
-    sub: "on the shirt with the meme of her face on it",
     how: "Change the stickers on the notebook cover",
     text: "I'm kind of rethinking the album cover.",
   },
   {
     id: "beautiful-mind",
     blog: "taylorswift",
-    name: "your beautiful mind",
-    sub: "a reply to a fan being bullied",
     how: "Win Both Of Us or Short n' Sweet after being turned away",
     text: "Don't let their ugly words into your beautiful mind.",
   },
   {
     id: "the-block-feature",
     blog: "taylorswift",
-    name: "the 'block' feature",
-    sub: "breakup advice, unsentimental",
     how: "Mute the sound in the middle of a run",
     text: "I know it's hard but I think it's time to utilize the 'block' feature on your phone.",
   },
   {
     id: "one-job-test-people",
     blog: "taylorswift",
-    name: "you had one job, test people",
-    sub: "on a test book misquoting her",
     how: "Sing a line the gauge lit up for, and still get it wrong",
     text: "Not the right lyrics at all pssshhhh. You had one job, test people. One job.",
   },
   {
     id: "normal-today",
     blog: "taylorswift",
-    name: "no one should expect you to feel normal",
-    sub: "a mother's day reply to a fan whose mother had died",
     how: "Finish a thirteen-page run with one page right, or none",
     text: "No one should ever expect you to feel normal today.",
   },
   {
     id: "hiked-it-backwards",
     blog: "taylorswift",
-    name: "i hiked the whole trail backwards",
-    sub: "on being photographed on a hike",
     how: "Write a record out in Track by Track from the last track up",
     text: "I saw the guy with the camera and wasn't in the mood so I hiked the whole trail backwards",
   },
   {
     id: "harness-life",
     blog: "taylorswift",
-    name: "HARNESS LIFE 2015",
-    sub: "on wearing a leather harness to lunch",
     how: "Get halfway through an Ultra run with more right than wrong",
     text: "Are you ready for extreme adventure should it present itself? HARNESS LIFE 2015",
   },
   {
     id: "keep-groovin",
     blog: "taylorswift",
-    name: "keep groovin",
-    sub: "answering a troll, grammar intact",
     how: "Take a replay within two seconds of losing",
     text: "We must now forget about this and keep groovin/using correct grammar",
   },
   {
     id: "the-mom-croon",
     blog: "taylorswift",
-    name: "the mom croon",
-    sub: "on how she dances at awards shows",
     how: "Win a run singing every answer, never naming a title",
     text: "Once you perfect the mom croon, you are truly free.",
   },
   {
     id: "only-one-that-could-stop-it",
     blog: "taylorswift",
-    name: "the only one that could stop it is ME!",
-    sub: "on the things fans were spotting in ME!",
     how: "Keep an Infinite run going to page 113",
     text: "The only one that could stop it is ME!\nAnd I can't.",
   },
   {
     id: "stars-do-u-like-dem",
     blog: "taylorswift",
-    name: "stars do u like dem",
-    sub: "doodles, posted without further comment",
     how: "Catch her stars doodled in your margin",
     text: "Stars do u like dem",
   },
