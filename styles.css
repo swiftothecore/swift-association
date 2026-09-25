@@ -12119,7 +12119,7 @@
   /* A 3-column grid: five cards lay out 3 + 2 today, with room for a sixth to make 3 + 3. */
   /* Six half-width tracks (each card spans two), so a trailing row that doesn't fill all
      three columns can be centred under the row above instead of clinging left. */
-  .see-also { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 22px -12px 0; }
+  .see-also { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin: 22px 0 0; }
   /* Scoped away from the results row, which shares the .see-also class but wants one
      tile per track (see .see-also--row below). */
   .see-also:not(.see-also--row) > .nav-card { grid-column: span 2; }
@@ -12431,7 +12431,7 @@
   [data-reduce-motion="on"] .nav-card { transition: none; }
   [data-reduce-motion="on"] .nav-card:hover, [data-reduce-motion="on"] .nav-card:focus-visible { transform: none; }
   @media (max-width: 480px) {
-    .see-also { gap: 7px; margin: 18px -10px 0; }
+    .see-also { gap: 7px; margin: 18px 0 0; }
   }
   /* STACKED: seat over title over kicker, centred. Side by side, a card needs about
      180px (190px with large text, where "bonus games" is the one that runs out), and the
