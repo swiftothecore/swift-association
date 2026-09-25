@@ -2618,24 +2618,24 @@
     background: #001935; color: #e8ecf1;
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 8px 22px rgba(0, 0, 0, 0.45);
   }
-  /* The results recap is a ROW of chips — a polaroid at 54px beside a sticker at 64px — and it
-     only works while everything in it is one glanceable object. A whole post card is two and a
-     half times that tall and turns the row into a column with two badges in it, so here the
-     card is cropped instead: the top corner of a screenshot, header and the first couple of
-     lines, foot cut off by the crop. Nobody reads a chip; the names underneath say which one
-     it is, and the shelf is where the post is actually read. */
-  .found-chip--tumblr .tpost {
-    width: 92px; max-width: none; height: 62px; overflow: hidden;
-    padding: 6px 7px 0; border-radius: 3px;
+  /* The results recap is a ROW of chips (a polaroid at 54px beside a sticker at 64px) and it
+     only works while everything in it is one glanceable object. So the chip is the unlock
+     banner, cropped: blog name up top and the first lines of the post cut off by the edge. Nobody
+     reads a chip; the drawer is where the post is read. It carries no caption underneath,
+     because the shelf's name for a post is ours and her blog name is already on it. */
+  .found-chip--tumblr .tn-chip {
+    display: block; width: 96px; height: 62px; overflow: hidden; text-align: left;
+    background: #ffffff; color: #1c1c1c; border-radius: 8px; padding: 6px 8px 0;
+    box-shadow: 0 1px 0 rgba(43, 39, 34, 0.1), 0 3px 8px rgba(43, 39, 34, 0.16);
   }
-  .found-chip--tumblr .tpost-head { gap: 4px; margin-bottom: 5px; }
-  .found-chip--tumblr .tpost-av { width: 11px; height: 11px; }
-  .found-chip--tumblr .tpost-blog { font-size: calc(6px + var(--text-size-adjust)); }
-  .found-chip--tumblr .tpost-blog--bar { width: 42px; height: 6px; }
-  .found-chip--tumblr .tpost-p { font-size: calc(6px + var(--text-size-adjust)); line-height: 1.32; }
-  .found-chip--tumblr .tpost-p--bars { gap: 3px; }
-  .found-chip--tumblr .tpost-bar { height: 6px; }
-  .found-chip--tumblr .tpost-foot { display: none; }
+  :root[data-theme="dark"] .found-chip--tumblr .tn-chip {
+    background: #001935; color: #e8ecf1;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 3px 8px rgba(0, 0, 0, 0.4);
+  }
+  .found-chip--tumblr .tn-head { gap: 4px; margin-bottom: 3px; }
+  .found-chip--tumblr .tn-av { width: 11px; height: 11px; }
+  .found-chip--tumblr .tn-blog { font-size: calc(7px + var(--text-size-adjust)); line-height: 1.2; }
+  .found-chip--tumblr .tn-text { font-size: calc(6.5px + var(--text-size-adjust)); line-height: 1.35; margin-bottom: 2px; }
   /* Dark: the site's own night card. NOT paper — a screenshot does not become notebook stock
      because the room got dark — and not the white one either, which would glare. */
   :root[data-theme="dark"] .tpost {

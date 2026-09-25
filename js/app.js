@@ -3366,21 +3366,26 @@ function foundRecapHTML(items) {
     const art = f.kind === "sticker"
       ? stickerMarkup(f.sticker, false)
       : f.kind === "tumblr"
-      ? tumblrPostMarkup(f.post, true, { small: true })
+      ? `<span class="tn-chip">${tumblrNoteMarkup(f.post)}</span>`
       : `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${f.art || ""}` +
         (f.state === "developed" ? "" : `<span class="pol-thumb-veil"></span>`) + `</span></span>`;
     const tip = f.how ? ` data-tip="${escapeHtml(f.how)}" data-tip-delay="120"` : "";
+    const label = f.kind === "tumblr" ? `a message from ${f.post.blog}` : `${f.name} · ${f.kind}`;
     return `<button type="button" class="found-chip found-chip--${f.kind}${i >= FOUND_RECAP_SHOWN ? " found-folded" : ""}" ` +
-      `aria-label="${escapeHtml(f.name)} · ${f.kind}"${tip}>${art}</button>`;
+      `aria-label="${escapeHtml(label)}"${tip}>${art}</button>`;
   }).join("");
   const extra = items.length > FOUND_RECAP_SHOWN
     ? `<button type="button" class="found-chip--more">+${items.length - FOUND_RECAP_SHOWN}</button>`
     : "";
-  const names = items.map((f) => `<li class="found-recap-name-item"><span class="found-recap-name">${escapeHtml(f.name)}</span></li>`).join("");
+  // A tumblr post has no name of its own: the shelf's caption for it is ours, not hers, and her
+  // blog name is already on the chip. So posts are left out of the names, and a run that found
+  // only posts prints no names line at all.
+  const names = items.filter((f) => f.kind !== "tumblr")
+    .map((f) => `<li class="found-recap-name-item"><span class="found-recap-name">${escapeHtml(f.name)}</span></li>`).join("");
   return `<div class="found-recap">` +
     `<p class="sr-lab found-recap-lab">also found · ${items.length}</p>` +
     `<div class="found-recap-row">${chips}${extra}</div>` +
-    `<ul class="found-recap-names" aria-label="Keepsakes found this game">${names}</ul>` +
+    (names ? `<ul class="found-recap-names" aria-label="Keepsakes found this game">${names}</ul>` : "") +
     `</div>`;
 }
 
@@ -5577,9 +5582,8 @@ const TUMBLR_FOOT = `<svg viewBox="0 0 66 18" aria-hidden="true">
            q0 3.4 -6.6 7.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
 </svg>`;
 
-// One post card. `found` false draws the redacted version. `small` is the shelf size; the results
-// recap uses the same markup cropped, so the card never gets a second drawing. (The unlock toast
-// is not a card at all; see showTumblrToast.)
+// One post card. `found` false draws the redacted version. `small` is the shelf size. (The unlock
+// toast and the results recap chip are not cards at all; see tumblrNoteMarkup.)
 function tumblrPostMarkup(post, found, opts = {}) {
   const body = found
     ? String(post.text || "").split(/\n+/)
@@ -5666,17 +5670,21 @@ function foldRunTumblr(isInfinite, won, pages) {
 // "now" would be a made-up detail, and no line clamp, because the longest post is five lines and
 // a banner that cuts her off mid-sentence loses the part worth reading. Her words and her blog
 // name are the only text on it; what you did to find it stays on the hover tip.
+// The banner's contents, shared by the toast and the results recap chip (which crops it).
+function tumblrNoteMarkup(post) {
+  return `<div class="tn-head"><span class="tn-av">${TUMBLR_AVATAR}</span>` +
+    `<span class="tn-blog">${escapeHtml(post.blog)}</span></div>` +
+    String(post.text || "").split(/\n+/)
+      .map((para) => `<p class="tn-text">${escapeHtml(para)}</p>`).join("");
+}
+
 function showTumblrToast(post) {
   const layer = $("toastLayer");
   if (!layer) return;
   const t = document.createElement("div");
   t.className = "toast toast-tumblr";
   if (post.how) { t.setAttribute("data-tip", post.how); t.setAttribute("data-tip-delay", "500"); }
-  t.innerHTML =
-    `<div class="tn-head"><span class="tn-av">${TUMBLR_AVATAR}</span>` +
-    `<span class="tn-blog">${escapeHtml(post.blog)}</span></div>` +
-    String(post.text || "").split(/\n+/)
-      .map((para) => `<p class="tn-text">${escapeHtml(para)}</p>`).join("");
+  t.innerHTML = tumblrNoteMarkup(post);
   layer.appendChild(t);
   scheduleToastDismiss();
 }
