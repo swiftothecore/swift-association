@@ -1,8 +1,8 @@
 {
   "note": [
-    "Songwriting credits for the 255 songs on the twelve studio albums, as data/songs.json",
+    "Songwriting credits for the 259 songs on the twelve studio albums, as data/songs.json",
     "groups and spells them. `writers` is the full credited songwriter line in credit order,",
-    "Taylor first. She is a credited writer on all 255, so a one-name list means she wrote it",
+    "Taylor first. She is a credited writer on all 259, so a one-name list means she wrote it",
     "alone and the list's length is the co-writer count — there is no separate solo flag, and",
     "nothing here is reduced to a yes/no.",
     "",
@@ -1909,6 +1909,36 @@
         },
         {
           "title": "The Life of a Showgirl",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Patient Zero",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Cleveland!",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Pink Clouding",
+          "writers": [
+            "Taylor Swift",
+            "Max Martin",
+            "Shellback"
+          ]
+        },
+        {
+          "title": "Babylon",
           "writers": [
             "Taylor Swift",
             "Max Martin",

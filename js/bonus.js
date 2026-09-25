@@ -1037,7 +1037,7 @@ export function ruthlessBar(song) {
    it is here because the give-up has to be priced against it (see `ruthlessGiveUp`). It is the
    one number to re-measure if the catalogue grows, or if the pool is narrowed under it: these
    six were re-stamped off `__dev.ruthless.lenses()` when the shelf went studio-only and four of
-   them moved (76→77, 79→80, 22→23, 48→51).
+   them moved (76→77, 79→80, 22→23, 48→51). The Encore's four tracks moved Bridge again, 68→69.
 
    OUTRO IS NOT A LENS, and is barred by the endable-page rule above rather than by taste: 181
    songs have one, but only 43% can be named from it and the median stream left behind it is 19
@@ -1046,19 +1046,19 @@ export function ruthlessBar(song) {
 
    FROM THE TOP carries no `section` at all, and that is what makes it the song's own first word
    rather than a seventh place to drop in. It was called Verse 1 and it should not have been:
-   opening on the first section labelled "verse 1" SKIPS THE INTRO, and 50 of 287 songs open on
-   something else (39 on an intro, 8 on a chorus, 3 on a refrain or an unnumbered verse). So the
+   opening on the first section labelled "verse 1" SKIPS THE INTRO, and 51 of 291 songs open on
+   something else (39 on an intro, 9 on a chorus, 3 on a refrain or an unnumbered verse). So the
    old lens quietly started Cruel Summer, Getaway Car and Lavender Haze a few lines in, and for
-   the other 237 it was the top of the song wearing a name that only happened to be true. Naming
+   the other 240 it was the top of the song wearing a name that only happened to be true. Naming
    it for where it starts instead of for what is written there also drops the "no verse 1" bar,
-   which is why this lens deals 247 where Verse 1 would deal 244 — the whole endable pool, since
+   which is why this lens deals 251 where Verse 1 would deal 248 — the whole endable pool, since
    every song has a first word. It is the lens the shelf's own Ruthless Game used to be, which is why
    that game left the shelf rather than sitting beside its own duplicate. */
 export const RUTHLESS_LENSES = [
   { id: "from-the-top", label: "From the Top", section: null,         median: 77 },
   { id: "verse-2",     label: "Verse 2",     section: "verse 2",     median: 80 },
   { id: "chorus",      label: "Chorus",      section: "chorus",      median: 23 },
-  { id: "bridge",      label: "Bridge",      section: "bridge",      median: 68 },
+  { id: "bridge",      label: "Bridge",      section: "bridge",      median: 69 },
   { id: "pre-chorus",  label: "Pre-Chorus",  section: "pre-chorus",  median: 51 },
   { id: "post-chorus", label: "Post-Chorus", section: "post-chorus", median: 39 },
 ];

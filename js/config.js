@@ -364,7 +364,7 @@ export const DIFF_RANK = { relaxed: 0, easy: 1, medium: 2, hard: 3, ultra: 4, ly
 /* ---------- Guest shelf ----------
    Other artists as opt-in catalogues, NEVER blended into Taylor's pool: a blended second
    catalogue makes every prompt easier (more valid answers), invalidates the rarity tunings
-   words.json derives from a 287-song corpus, and turns "not in the catalogue" from a reliable
+   words.json derives from Taylor's corpus, and turns "not in the catalogue" from a reliable
    "not a Taylor song" into an ambiguous shrug. So a guest is its own catalogue, played on its
    own, the way Album Focus already points the same machinery at a 12-song pool.
 
@@ -450,7 +450,7 @@ export const LINEUP_INKS = {
 // MEASURED, not scaled — see scripts/lineup/blend-lab.html, which counts with the game's own
 // wordRegex. Easy rises with the shelf because abundance scales with it; hard and ultra keep
 // Taylor's ranges untouched because scarcity does NOT — three songs is three songs whether the
-// shelf holds 287 or 745. Do not "fix" this by matching Taylor's bucket shares: that slides
+// shelf holds 291 or 749. Do not "fix" this by matching Taylor's bucket shares: that slides
 // ultra out to a window of 18-54 songs, which is not rare, it is just a different word.
 export const BLEND_BUCKETS = { easy: 38, hard: [3, 9], ultra: [1, 3] };
 
@@ -555,7 +555,7 @@ export const GUEST_DIFFS = ALBUM_FOCUS_DIFFS;
 // has only the one mark, set at a perfect run. A 42-song catalogue is small enough that 9/13
 // arrives quickly once you know it, and ADMITTED should mean you know the whole shelf.
 export const GUEST_TARGET = TOTAL_ROUNDS;
-// The bucket thresholds Taylor's 287-song corpus is tuned to. A guest carries its own in its
+// The bucket thresholds Taylor's 291-song corpus is tuned to. A guest carries its own in its
 // file (see loadGuest / indexPlayableWords) because these numbers do not survive the trip: at
 // 42 songs `easy >= 18` matches nine words and `ultra` swallows most of the vocabulary.
 export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3] };
@@ -778,16 +778,16 @@ export const BONUS_GAMES = [
      four records, this one is the shape of a whole credit line over eight. Nashville still ends
      the family, because it steps off the records altogether.
 
-     SHE IS A CREDITED WRITER ON ALL 255 SONGS, so the question is only ever how many names are
+     SHE IS A CREDITED WRITER ON ALL 259 SONGS, so the question is only ever how many names are
      beside hers, and the three cards are the only three answers there are. That is also why the
      data is stored as names rather than as a solo flag — see data/writers.json.
 
      THE POOL IS THE THREE COUNTRY RECORDS PLUS AN AUTHORED HANDFUL (PEN_ALBUMS + PEN_GUESTS),
      and it is Aaron or Jack's fairness decision in a different disguise. Solo writing is
      clustered by era far harder than production is: Speak Now is 22 songs for 22, reputation
-     and The Life of a Showgirl are none out of 15 and 12. Deal the whole catalogue and a player
-     who knows nothing but each record's habit scores 61% against a blind 33% — the game answered
-     without being played. On this pool that falls to 38% — five points of edge for having
+     is none out of 15 and The Life of a Showgirl one out of 16. Deal the whole catalogue and a
+     player who knows nothing but each record's habit scores 61% against a blind 33% — the game
+     answered without being played. On this pool that falls to 38% — five points of edge for having
      learned every record's habit perfectly, against sixty-one on the open catalogue, which is
      the shortcut gone. `__dev.bonus.penPool()` re-measures it, and anything much above 38 means
      a record has been added that had already made its mind up.
@@ -1149,8 +1149,9 @@ export const PEN_ALBUMS = ["Taylor Swift", "Fearless", "Red"];
 
    A RECORD CAN ONLY JOIN IF IT CAN ANSWER BOTH WAYS. Speak Now is absent for that reason and not
    by an oversight: it has no co-writes to pair its solos with, so any Speak Now page is a solo
-   page and a player who knows one fact about her catalogue knows it. reputation and The Life of
-   a Showgirl are absent from the other side, having no solos at all.
+   page and a player who knows one fact about her catalogue knows it. reputation is absent from
+   the other side, having no solos at all, and The Life of a Showgirl for the same reason in all
+   but name: one solo in sixteen, and not a single co-write to pair it with.
 
    Spelled exactly as songs.json spells them, and validated at load (see installWriterCredits) —
    a title that does not match does not throw, it silently stops being a page. */
@@ -2697,11 +2698,11 @@ export const STUDIO_ALBUMS = [
    asked without it is a page asked about a record that does not exist. The debut stops at its
    Deluxe (14), Fearless and Speak Now and Red and 1989 at their Taylor's Versions (26, 22, 30,
    21), folklore and evermore at their deluxes (17, 17), Midnights at 3am (20), The Tortured
-   Poets Department at The Anthology (31), and reputation, Lover and The Life of a Showgirl at
-   the only pressing they have. The cut-offs are where a pressing stops being the one everybody
-   has: Midnights stops at 20 because Hits Different sits at 21 on the Lavender edition and at
-   a different number again on Til Dawn and Late Night, and the debut stops at 14 because
-   Beautiful Eyes is an EP rather than a track on this record.
+   Poets Department at The Anthology (31), The Life of a Showgirl at The Encore (16), and
+   reputation and Lover at the only pressing they have. The cut-offs are where a pressing stops
+   being the one everybody has: Midnights stops at 20 because Hits Different sits at 21 on the
+   Lavender edition and at a different number again on Til Dawn and Late Night, and the debut
+   stops at 14 because Beautiful Eyes is an EP rather than a track on this record.
 
    WHAT SITS INSIDE A CAP IS STILL NOT ALWAYS ASKABLE — see TRACK_ALT_TAKES below, which is the
    other half of the same fairness story. If a re-recording ever reorders the half of itself
@@ -2710,7 +2711,7 @@ export const ALBUM_TRACKS = {
   "Taylor Swift": 14, "Fearless": 26, "Speak Now": 22, "Red": 30,
   "1989": 21, "reputation": 15, "Lover": 18, "folklore": 17,
   "evermore": 17, "Midnights": 20,
-  "The Tortured Poets Department": 31, "The Life of a Showgirl": 12,
+  "The Tortured Poets Department": 31, "The Life of a Showgirl": 16,
 };
 
 /* WHAT TO CALL THE PRESSING each of those numbers is counted against, which is the other half
@@ -2734,6 +2735,7 @@ export const TRACK_PRESSINGS = {
   "evermore": "evermore (deluxe version)",
   "Midnights": "Midnights (3am Edition)",
   "The Tortured Poets Department": "The Tortured Poets Department: The Anthology",
+  "The Life of a Showgirl": "The Life of a Showgirl: The Encore",
 };
 
 /* The name to print for an album whose track numbers are being asked about. Everything that

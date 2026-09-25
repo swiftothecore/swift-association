@@ -206,7 +206,7 @@ const STICKER_LINGER_SECONDS = 90;
 // the live verse gauge. The gauge is a climb, so it has to light BEFORE the word is typed
 // or it goes dark for every line that ends on the word — but every extra word of reach is
 // more of the song confirmed as an answer just for being typed at. Measured over the real
-// corpus (287 songs, 733 words, 13.4k word/song pairs, median line 7 words): at 10 the
+// corpus (287 songs at the time, 733 words, 13.4k word/song pairs, median line 7 words): at 10 the
 // gauge is live from the first keystroke on 97% of word occurrences when you start at the
 // top of the word's line, and lights as you cross into it when the line is split in two.
 // Deliberately NOT the lever that guards against title probing — the cost curve has no
@@ -8268,7 +8268,8 @@ function ruthlessSkip() { return ruthlessGiveUp(activeLens()); }
 function updateRuthlessMeta() {
   const n = $("bonusWords");
   if (n) n.textContent = ruthlessShown;
-  /* A page CAN run dry: 26 of the 287 songs never sing their own title, so for those the stream
+  /* A page CAN run dry: 7 of the 291 songs never sing their own title, and a lens that opens
+     past the last time a song does leaves more, so for those the stream
      ends without ever handing the answer over. Said out loud rather than left to look like a
      stalled metronome — a page that has stopped giving and doesn't say so reads as broken, and
      it is also the moment the give-up stops being a mercy and becomes the only move. */
@@ -8896,7 +8897,7 @@ function whoDetail() {
    from-scratch set had to be rebuilt twice to arrive at.
 
    THE FOUNTAIN PEN IS FIRST AND IS THE SAME PEN ON ALL THREE CARDS. She is a credited writer on
-   all 255 songs, so hers is the instrument always on the desk and the cards differ only by who
+   all 259 songs, so hers is the instrument always on the desk and the cards differ only by who
    joined it. It is drawn at ONE SIZE on every card for the same reason: scaling it down as the
    row fills would quietly make it a different pen each time.
 
@@ -9005,7 +9006,7 @@ function nashvilleDetail() {
    answer; "Taylor Swift, Liz Rose" is the thing the player actually wanted to know, and on a
    page they got wrong it is the only thing that will make the next one easier.
 
-   HER OWN NAME IS LEFT IN, though it is on all 255 and carries no information. Dropping it
+   HER OWN NAME IS LEFT IN, though it is on all 259 and carries no information. Dropping it
    would print "Liz Rose" under a song Taylor wrote with Liz Rose, which reads as the answer
    being somebody else. The line is a credit, and a credit starts with her.
 
@@ -11483,7 +11484,7 @@ function trackGame() { return BONUS_GAMES.find((g) => g.id === "track-by-track")
    SWAPS the corpus `allSongs` points at, so an index built during one and kept would leave
    Taylor's albums being numbered off somebody else's catalogue for the rest of the session —
    the exact shape of bug the guest-shelf notes warn about for any derived index. It is a walk
-   over 287 songs twice a run, which is nothing, and it cannot go stale. */
+   over 291 songs twice a run, which is nothing, and it cannot go stale. */
 function trackIndexNow() { return buildTrackIndex(allSongs); }
 
 /* Every album that can be written out: the twelve studio records, in the order the shelf's own
@@ -14284,11 +14285,11 @@ function installProducerCredits(doc, grouped) {
 }
 
 /* The songwriting credits, for Who Held The Pen. data/writers.json holds the full credited
-   name list for all 255 songs on the twelve studio albums, and this flattens it to
+   name list for all 259 songs on the twelve studio albums, and this flattens it to
    title -> { writers, credit, album, bucket }.
 
    THE BUCKET IS DERIVED HERE AND NOT STORED. Taylor is a credited writer on every one of the
-   255, so the answer the game wants is only ever how many names sit beside hers: one name is
+   259, so the answer the game wants is only ever how many names sit beside hers: one name is
    "solo", two is "one", three or more is "room". Keeping it out of the file is the point of
    the file — a stored flag could not tell you who the co-writer WAS, which is what the reveal
    prints and what any later game off this data would need.
@@ -14633,7 +14634,7 @@ function installCorpus(grouped, words, opts = {}) {
 // too thin to sustain a 13-round, no-repeat game.
 // `cfg` is a threshold set: TAYLOR_BUCKETS for the main catalogue, or a guest's own out of
 // its file. The numbers are per-catalogue and deliberately NOT scaled off catalogue size —
-// no clean formula fits both 287 songs and 42, and one bent through two points would be a
+// no clean formula fits both 291 songs and 42, and one bent through two points would be a
 // false generalisation waiting to misfit the third guest.
 //
 // The four indexes are built together because they were all asking the catalogue the same
@@ -32291,7 +32292,7 @@ function buildDevApi() {
       reset: () => { resetGuests(); if ($("guestBody")) renderGuestShelfPage(); },
       // Which catalogue the matching globals are holding right now, and how big it is. During
       // a guest run this reads the guest; anywhere else it must read "taylor" with the full
-      // 287. Anything else means a swap leaked (see restoreCorpus).
+      // 291. Anything else means a swap leaked (see restoreCorpus).
       corpus: () => ({ active: activeCorpus, songs: allSongs.length, words: playableWords.length,
         // Who the live corpus believes sang its songs. One name here on a guest run or on the
         // desk; several only once a blended lineup corpus exists. A null means installCorpus
@@ -32302,7 +32303,7 @@ function buildDevApi() {
         buckets: Object.fromEntries(Object.entries(wordBuckets).map(([k, v]) => [k, v.length])) }),
       // Everything the shelf believes about a catalogue, checked against the file: records
       // with their song counts, plus the per-catalogue bucket thresholds a guest round would
-      // use (which are deliberately NOT the hardcoded ones tuned for 287 songs).
+      // use (which are deliberately NOT the hardcoded ones tuned for Taylor's catalogue).
       inspect: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then((c) => ({
         ...guestCounts(c),
         buckets: c.buckets,
