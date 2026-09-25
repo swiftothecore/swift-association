@@ -8260,6 +8260,11 @@
      land on the podium's own text. The eyebrow is typewriter (functional), the note
      handwritten (creative). */
   .start-podium-row { display: flex; align-items: flex-end; gap: 22px; }
+  /* Nudged up 4px to centre the best line's ink between the rule-terms row and the Start
+     writing button: the handwritten line box carries more air above its glyphs than below.
+     A relative offset, not a margin, so nothing else on the page moves (a bottom margin
+     here just collapses into the play row's own). */
+  .start-podium-row { position: relative; top: -4px; }
   /* The front page has very little vertical room, so the start screen's best line lies
      DOWN: the handwritten heading, the score and the meta all share one baseline instead
      of stacking three rows. (The results page keeps the stacked block — it has the room,
