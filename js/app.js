@@ -3262,11 +3262,13 @@ function scheduleToastDismiss() {
         above.forEach((el, i) => {
           const dy = beforeTops[i] - el.getBoundingClientRect().top;   // <0: moved down
           if (!dy) return;
+          // The tumblr banner sits square (it is a screen, not a slip of paper), so it keeps no tilt.
+          const tilt = el.classList.contains("toast-tumblr") ? "" : " rotate(-1deg)";
           el.style.transition = "none";
-          el.style.transform = `translateY(${dy}px) rotate(-1deg)`;
+          el.style.transform = `translateY(${dy}px)${tilt}`;
           requestAnimationFrame(() => {
             el.style.transition = "transform 0.34s cubic-bezier(.34,1.1,.64,1)";
-            el.style.transform = "rotate(-1deg)";
+            el.style.transform = tilt.trim() || "none";
           });
         });
       }
@@ -5575,8 +5577,9 @@ const TUMBLR_FOOT = `<svg viewBox="0 0 66 18" aria-hidden="true">
            q0 3.4 -6.6 7.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
 </svg>`;
 
-// One post card. `found` false draws the redacted version. `small` is the shelf size; the toast
-// and the results recap use the same markup unscaled, so the card never gets a second drawing.
+// One post card. `found` false draws the redacted version. `small` is the shelf size; the results
+// recap uses the same markup cropped, so the card never gets a second drawing. (The unlock toast
+// is not a card at all; see showTumblrToast.)
 function tumblrPostMarkup(post, found, opts = {}) {
   const body = found
     ? String(post.text || "").split(/\n+/)
@@ -5657,21 +5660,25 @@ function foldRunTumblr(isInfinite, won, pages) {
   if (won && !runNamedTitle && !currentMode.lyricOnly) earnTumblrPost("the-mom-croon");
 }
 
-// The unlock toast. Same surface as the sticker toast, with the post card where the art goes,
-// held small: the toast has room for the shape of a post, not for reading one, and the shelf is
-// where you actually read it.
+// The unlock toast: a notification from her blog, not a notebook card. The complaint it answers
+// was that a card-in-a-toast looked like a mock-up, and a toast already IS a notification, so it
+// wears that shape. Two honesty rules: no timestamp, because these posts are years old and a
+// "now" would be a made-up detail, and no line clamp, because the longest post is five lines and
+// a banner that cuts her off mid-sentence loses the part worth reading. Her words and her blog
+// name are the only text on it; what you did to find it stays on the hover tip.
 function showTumblrToast(post) {
   const layer = $("toastLayer");
   if (!layer) return;
   const t = document.createElement("div");
   t.className = "toast toast-tumblr";
   if (post.how) { t.setAttribute("data-tip", post.how); t.setAttribute("data-tip-delay", "500"); }
-  t.innerHTML = tumblrPostMarkup(post, true, { small: true }) +
-    `<div><div class="t-label">message found</div>` +
-    `<div class="t-name">${escapeHtml(post.name)}</div></div>`;
+  t.innerHTML =
+    `<div class="tn-head"><span class="tn-av">${TUMBLR_AVATAR}</span>` +
+    `<span class="tn-blog">${escapeHtml(post.blog)}</span></div>` +
+    String(post.text || "").split(/\n+/)
+      .map((para) => `<p class="tn-text">${escapeHtml(para)}</p>`).join("");
   layer.appendChild(t);
-  setTimeout(() => t.classList.add("show"), 20);
-  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 400); }, 4200);
+  scheduleToastDismiss();
 }
 
 // The shelf: a lead, the found counter, then the posts as a column of cards. A COLUMN, not a
