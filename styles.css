@@ -2132,7 +2132,8 @@
   .mode-tabs { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-end; }
   .mode-tab {
     font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft);
-    background: transparent; cursor: pointer; padding: 6px 13px 7px;
+    --tab-foot: 7px;
+    background: transparent; cursor: pointer; padding: 6px 13px var(--tab-foot);
     border: 1.5px solid rgba(43,39,34,0.18);
     border-bottom: none; border-radius: 6px 6px 0 0;
     transform: translateY(1px) rotate(-0.4deg);
@@ -2191,9 +2192,9 @@
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: color-mix(in srgb, #0c0907 80%, var(--paper)); }
   /* The stats page's "All" view sums every mode, so it wears every mode's wash at once: the
      ladder's colours laid side by side, relaxed denim through ultra violet. */
+  .mode-tabs:has(.mode-tab.active[data-type="all"]) { --tab-edge: color-mix(in srgb, #5a505a 50%, var(--paper)); }
   .mode-tab.active[data-type="all"] {
     background: linear-gradient(100deg, rgba(103,150,190,0.36) 0%, rgba(133,173,96,0.40) 25%, rgba(247,201,72,0.5) 50%, rgba(202,92,74,0.34) 75%, rgba(122,98,182,0.34) 100%);
-    border-color: rgba(90,80,90,0.5);
   }
   /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
      wash — a health meter draining from safe to danger. "Sudden death" takes the same wash +
@@ -2221,6 +2222,11 @@
      with no seam. The mode and lives rows have no page of their own to open, so they stand on a
      shelf, and the picked tab stands in front of it: the shelf breaks under it.
 
+     The shelf is a class, `.mode-tabs--shelf`, not a list of ids, because the same tabs are
+     picked up elsewhere (the stats page's two tiers, the Album Focus, guest and lineup
+     "written at" rows) and every one of them opens onto nothing without it. A class also rides
+     through a page turn untouched, where an id is renamed and has to be aliased.
+
      Three things here are exact on purpose, because every one of them showed at 2x when it wasn't:
      - Tabs that stand on a line have FLAT feet. The tilt the tabs wear elsewhere (their own, and
        ink.css's on top) leaves one corner hanging and one sunk, and tilts the tab's own stretch
@@ -2234,7 +2240,7 @@
        (solid, so the overlap cannot show). Per tab rather than once under the row because the rows
        wrap on a phone and a tab on the first of two lines needs a line of its own; in the
        difficulty row, app.js marks those `.is-back` (rankTabs) and they get a shelf instead. */
-  .mode-picker {
+  :is(.mode-picker, .mode-tabs--shelf) {
     --tab-pencil: color-mix(in srgb, var(--ink) 18%, var(--paper));
     --tab-wash: var(--highlighter);
     --tab-edge: color-mix(in srgb, var(--ink) 32%, var(--paper));
@@ -2245,16 +2251,16 @@
   .mode-picker > .mode-tabs { position: relative; padding-left: 7px; }
   /* Square to the line: none of the tab's own tilt, and none of ink.css's either, which tilts
      every handwritten box by a fraction of a degree and so tilted each tab's stretch of shelf. */
-  .mode-picker > .mode-tabs > .mode-tab { position: relative; transform: none; rotate: none; translate: none; }
-  .mode-picker > .mode-tabs > .mode-tab:nth-child(3n+1) { border-radius: 6px 7px 0 0; }
-  .mode-picker > .mode-tabs > .mode-tab:nth-child(3n+2) { border-radius: 7px 5px 0 0; }
-  .mode-picker > .mode-tabs > .mode-tab:nth-child(3n)   { border-radius: 5px 6px 0 0; }
-  .mode-picker > .mode-tabs > .mode-tab:not(.active) { border-color: var(--tab-pencil); }
-  /* The mode and lives shelves are inked in the picked tab's edge colour. */
-  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) { --tab-shelf: var(--tab-edge); }
+  :is(.mode-picker > .mode-tabs, .mode-tabs--shelf) > .mode-tab { position: relative; transform: none; rotate: none; translate: none; }
+  :is(.mode-picker > .mode-tabs, .mode-tabs--shelf) > .mode-tab:nth-child(3n+1) { border-radius: 6px 7px 0 0; }
+  :is(.mode-picker > .mode-tabs, .mode-tabs--shelf) > .mode-tab:nth-child(3n+2) { border-radius: 7px 5px 0 0; }
+  :is(.mode-picker > .mode-tabs, .mode-tabs--shelf) > .mode-tab:nth-child(3n)   { border-radius: 5px 6px 0 0; }
+  :is(.mode-picker > .mode-tabs, .mode-tabs--shelf) > .mode-tab:not(.active) { border-color: var(--tab-pencil); }
+  /* A shelf is inked in the picked tab's edge colour. */
+  .mode-tabs--shelf { --tab-shelf: var(--tab-edge); }
   /* The shelf. The box is measured from the tab's padding edge, which sits inside its 1.5px side
      border, hence -5px: 1.5 of border and 3.5 of gap. It hangs just below the tab's foot. */
-  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) > .mode-tab::after,
+  .mode-tabs--shelf > .mode-tab::after,
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.is-back::after {
     content: ""; position: absolute; left: -5px; right: -5px; bottom: -1.5px; height: 1.5px;
     background: var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
@@ -2262,11 +2268,11 @@
   /* In front of the shelf: the tab reaches down through the line's depth (the padding pays back
      the margin, so picking never shifts the row), its sides run to the line's foot, and only its
      own 3.5px either side of the shelf is kept, level with its neighbours'. */
-  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) > .mode-tab.active,
+  .mode-tabs--shelf > .mode-tab.active,
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back {
-    margin-bottom: -1.5px; padding-bottom: 8.5px;
+    margin-bottom: -1.5px; padding-bottom: calc(var(--tab-foot) + 1.5px);
   }
-  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) > .mode-tab.active::after,
+  .mode-tabs--shelf > .mode-tab.active::after,
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back::after {
     bottom: 0;
     background: linear-gradient(to right, var(--tab-shelf, var(--tab-pencil)) 3.5px, transparent 3.5px calc(100% - 3.5px), var(--tab-shelf, var(--tab-pencil)) calc(100% - 3.5px));
@@ -2285,13 +2291,20 @@
   /* Lyricist's divider stands in the gap between tabs, not on the page: held off the strip by
      the same margin it keeps from the tabs' tops, so it reads as a mark between two tabs rather
      than a crease running into the sheet. */
-  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab-sep { height: 22px; margin-bottom: 6px; }
+  :is(#modeTabs, [data-flip-id="modeTabs"], .mode-tabs--shelf) > .mode-tab-sep { height: 22px; margin-bottom: 6px; }
+  /* On a shelf the divider stands in a 22px gap the tabs' own shelves don't reach across, so it
+     carries the line over it: dropped the 6px it is lifted by, plus the shelf's own hang. */
+  .mode-tabs--shelf > .mode-tab-sep { position: relative; }
+  .mode-tabs--shelf > .mode-tab-sep::after {
+    content: ""; position: absolute; left: -12px; right: -11px; bottom: -7.5px; height: 1.5px;
+    background: var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
+  }
   :is(#modeTabs, [data-flip-id="modeTabs"]) { z-index: 1; }
   /* Its tab is the top of the same sheet: dropped 1.5px over the page's top edge in the page's own
      colour, so the edge under it disappears. Its sides are the page's rim, so where they cross the
      page's top edge the two are one colour and the corner closes clean. */
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active:not(.is-back) {
-    margin-bottom: -1.5px; padding-bottom: 8.5px; border-color: var(--tab-rim);
+    margin-bottom: -1.5px; padding-bottom: calc(var(--tab-foot) + 1.5px); border-color: var(--tab-rim);
     background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
   }
   /* the tab rows reused on the stats page — two tiers (view / difficulty) */
@@ -6482,10 +6495,9 @@
   }
   .af-stamp { color: rgba(60,90,70,0.85); border-color: rgba(60,90,70,0.55); }
   /* The picker itself is .mode-tabs, borrowed whole from the front page (see difficultyTabs
-     in app.js). All this adds is the line the tabs stand on: an index tab is drawn with an
-     open bottom edge, so without a rule under the row the six of them float with their
-     corners hanging. Same dashed pencil rule the sections above are divided by. */
-  .af-diffs { border-bottom: 1.5px solid rgba(43,39,34,0.18); margin-top: 3px; }
+     in app.js), shelf and all: it stands on the front page's line, inked in the picked
+     difficulty's edge colour and broken under the picked tab. */
+  .af-diffs { margin-top: 3px; }
   /* the picker is the last thing before the action row, so it carries the gap to it */
   .chall-sec--pick { margin-bottom: 18px; }
 
@@ -6518,9 +6530,8 @@
   }
   :root[data-theme="dark"] .af-corner--tl,
   :root[data-theme="dark"] .af-corner--tr { border-top-color: #c9a435; }
-  /* The difficulty row needs no dark rule of its own: it is the front page's .mode-tabs, which
-     already reads in both themes. Only the rule it stands on is local, so only that inverts. */
-  :root[data-theme="dark"] .af-diffs { border-bottom-color: rgba(236, 229, 214, 0.24); }
+  /* The difficulty row needs no dark rule of its own: it is the front page's .mode-tabs--shelf,
+     whose strokes are mixed onto --paper and so already read in both themes. */
 
   /* ---------- Guest shelf — catalogues hung as backstage passes ----------
      The one place in the notebook where another artist's name appears, so it is deliberately
@@ -14968,7 +14979,11 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .corner-link, .feedback-link { min-height: 44px; gap: 7px; padding: 8px 12px; }
   .corner-link-label, .feedback-link .corner-link-label { max-width: 160px; opacity: 1; }
   .mode-tabs { gap: 5px; }
-  .mode-tab { min-height: 40px; padding: 8px 10px; }
+  .mode-tab { --tab-foot: 8px; min-height: 40px; padding: 8px 10px var(--tab-foot); }
+  /* A tab that reaches down through its line has to grow by that reach here, or the min-height
+     swallows its longer foot and the tab drops 1.5px below its neighbours' tops. */
+  .mode-tabs--shelf > .mode-tab.active,
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active { min-height: 41.5px; }
   :is(#typeTabs, [data-flip-id="typeTabs"]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   :is(#typeTabs, [data-flip-id="typeTabs"]) .mode-tab { padding-inline: 4px; font-size: calc(18px + var(--text-size-adjust)); white-space: nowrap; }
   :is(#typeTabs, [data-flip-id="typeTabs"]) .type-glyph { width: 16px; margin-right: 3px; }

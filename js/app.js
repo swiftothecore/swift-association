@@ -2055,13 +2055,13 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   // All · Classic · Infinite. Tier 2 = difficulty, shown only under Classic.
   // Each tab also carries the front page's data-type / data-mode so it wears the same
   // highlighter wash there (hard is coral, Infinite teal, and so on).
-  const tier1 = `<div class="mode-tabs stats-tabs">` +
+  const tier1 = `<div class="mode-tabs mode-tabs--shelf stats-tabs">` +
     `<button type="button" class="mode-tab${isAll ? " active" : ""}" data-statmode="all" data-type="all">All</button>` +
     `<button type="button" class="mode-tab${isClassic ? " active" : ""}" data-statmode="classic" data-type="classic">Classic</button>` +
     `<button type="button" class="mode-tab${isInf ? " active" : ""}" data-statmode="infinite" data-type="infinite">${INF_GLYPH}Infinite</button>` +
     `</div>`;
   const tier2 = isClassic
-    ? `<div class="mode-tabs stats-subtabs">` + MODE_ORDER.map((m) =>
+    ? `<div class="mode-tabs mode-tabs--shelf stats-subtabs">` + MODE_ORDER.map((m) =>
         `<button type="button" class="mode-tab${MODALITY_MODES.includes(m) ? " mode-tab--modality" : ""}` +
         `${m === viewMode ? " active" : ""}" data-statmode="${m}" data-mode="${m}">${MODES[m].label}</button>`
       ).join("") + `</div>`
@@ -12609,7 +12609,7 @@ function renderAlbumDetail(album) {
     `</div>` +
     `<div class="chall-sec chall-sec--pick">` +
       `<div class="chall-eyebrow">Written at</div>` +
-      `<div class="mode-tabs af-diffs">${tabs}</div>` +
+      `<div class="mode-tabs mode-tabs--shelf af-diffs">${tabs}</div>` +
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${escapeHtml(meta)}</span>` +
@@ -13096,7 +13096,7 @@ function renderLineupDetail() {
     lineupBoardStubHTML() +
     `<div class="chall-sec chall-sec--pick">` +
       `<div class="chall-eyebrow">Written at</div>` +
-      `<div class="mode-tabs af-diffs">${tabs}</div>` +
+      `<div class="mode-tabs mode-tabs--shelf af-diffs">${tabs}</div>` +
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${escapeHtml(diffLabel(guestSelectedDiff))}` +
@@ -13182,7 +13182,7 @@ function renderGuestDetail(id) {
       `</div>` +
       `<div class="chall-sec chall-sec--pick">` +
         `<div class="chall-eyebrow">Written at</div>` +
-        `<div class="mode-tabs af-diffs">${tabs}</div>` +
+        `<div class="mode-tabs mode-tabs--shelf af-diffs">${tabs}</div>` +
       `</div>` +
       `<div class="chall-act">` +
         `<span class="chall-meta">${escapeHtml(meta)}</span>` +
