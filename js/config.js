@@ -1279,8 +1279,17 @@ export const RANDOM_CATEGORIES = [
    history and can be unlocked again later; quitting and dark-side runs never count. */
 export const CHALLENGE_RETURN_RUNS = 7;
 
+/* `tagline`: what the masthead says after the challenge's name while it is being played. Most
+   challenges leave it out and the line reads the run's terms (pages and clock, see
+   challengeTagline in app.js). A challenge sets it when its GOAL is the thing worth knowing
+   and the terms say nothing about it: Deep Cut is "5 songs from one album", not "13 pages".
+   It is also set where the terms would be untrue, as on the sudden-death runs, which only
+   last thirteen pages if you survive them. `{field}` is filled from the dark-resolved entry,
+   so a dark side that moves the number moves the line; one that changes the goal's shape
+   sets its own `tagline` in `hard`. */
 export const CHALLENGES = [
   { id: "vanishing-word", name: "Vanishing Word", rule: "vanishing", mode: "medium",
+    tagline: "{target} of 13 to win",
     free: true,  cost: 1, target: 10, revealMs: 1500, tapes: 1,
     // Dark: less time AND less to read. `wordScale` is the fraction of normal size the prompt
     // renders at. It stays a DIFFERENT thing to Smallest Song, though: small and centred, and
@@ -1306,6 +1315,7 @@ export const CHALLENGES = [
     desc: "The word vanishes quickly, so pay attention.",
     win: "Score 10 / 13 with disappearing words." },
   { id: "deep-cut", name: "Deep Cut", rule: "album5", mode: "easy",
+    tagline: "{need} songs from one album",
     free: false, cost: 1, album: null /* any single album */, need: 5, tapes: 1,
     hint: false, blurb: "15s · suggestions · common words",
     // Dark: the album is DEALT, not chosen. `randomAlbum` makes startChallenge pick a studio
@@ -1313,7 +1323,7 @@ export const CHALLENGES = [
     // album happens to be going well — and it wants six, not five.
     // The copy is overridden too, unlike most dark sides: this card's wording states the
     // number out loud ("five"), so reusing it on a dark run would misstate the win condition.
-    hard: { need: 6, randomAlbum: true,
+    hard: { tagline: "{need} songs from the album you're dealt", need: 6, randomAlbum: true,
       desc: "Guess six correct songs from one album, and the album is dealt to you.",
       win: "Answer 6 correct songs from the album you were dealt." },
     desc: "Guess five correct songs from the same album.",
@@ -1330,6 +1340,7 @@ export const CHALLENGES = [
     desc: "The word becomes more warped every round, can you still beat it when it becomes nonsense?",
     win: "Score 9 / 13 through the distortion." },
   { id: "one-of-a-kind", name: "One Of A Kind", rule: "newsong", mode: "easy",
+    tagline: "the named song in {guesses} guesses",
     free: false, cost: 1, guesses: 3, tapes: 1,
     // The run ENDS on the named song, and the page it landed on is the score — low wins, and
     // it is the one card on the shelf scored that way (see markChallengeDefeated's `lower`).
@@ -1338,7 +1349,7 @@ export const CHALLENGES = [
     // the card kept was a page tally that had nothing to do with the win. Ending on the answer
     // makes the record "found it on page four" — a thing to beat rather than a thing to sit out.
     // One guess, not three. The copy states the number out loud, so it has to move with it.
-    hard: { guesses: 1,
+    hard: { tagline: "the named song in one guess", guesses: 1,
       desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word, and the run ends the moment you do. You get ONE guess, so be sure before you commit.",
       win: "Answer the named song first time, with a single guess. The earlier the page, the better." },
     desc: "You're given one specific song you've never answered before. Answer it on a round where it fits the word, and the run ends the moment you do. You have three guesses, and getting it wrong costs you a guess.",
@@ -1396,6 +1407,7 @@ export const CHALLENGES = [
     desc: "Only songs with one-word or two-word titles are allowed. Keep it short and sweet.",
     win: "Score 9 / 13 using only short titles." },
   { id: "lyric-lover", name: "Lyric Lover", rule: "verse", mode: "lyricist",
+    tagline: "{target} lines word for word",
     free: false, cost: 1, target: 6, tapes: 3,
     hard: { target: 8,
       desc: "Answer by typing the lyric line, and do it word-for-word eight times.",
@@ -1403,6 +1415,7 @@ export const CHALLENGES = [
     desc: "Answer by typing the lyric line, and do it word-for-word six times.",
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
   { id: "lyric-ink", name: "Long Story Long", rule: "ink", mode: "medium",
+    tagline: "{ink} characters in 13 pages",
     free: false, cost: 1, ink: 1100, seconds: 18, noTitle: false, dropdown: true, tapes: 3,
     // The only challenge scored in CHARACTERS rather than pages. Clearing a page and scoring
     // it are deliberately different things here: the lyric path already accepts any contiguous
@@ -1444,6 +1457,7 @@ export const CHALLENGES = [
     desc: "Every page is scored by how much you WRITE. Sing the line around the word and keep going as far as you can: every character of it counts. Naming the song banks its title instead, quick and small. Submit before the clock dies, or the page banks nothing.",
     win: "Write 1100 characters across 13 pages." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
+    tagline: "a chain of {target} songs",
     free: false, cost: 1, target: 6, noTitle: false, pool: "easy", tapes: 3,
     // Dark, REWORKED 2026-09-01 after playtest (fun 1/5, fairness 2/5). The first version took
     // the suggestions away, and that turned out to be the wrong thing to take. rankMatches
@@ -1520,6 +1534,7 @@ export const CHALLENGES = [
     desc: "Sometimes answer with a lyric line, sometimes answer with the song's title. It switches up randomly, so read the switch before you answer.",
     win: "Score 9 / 13 as the answer type keeps switching." },
   { id: "double-trouble", name: "Double Trouble", rule: "multi", mode: "medium",
+    tagline: "{target} pages, {need} songs each",
     free: false, cost: 1, target: 8, need: 2, pool: "easy", seconds: 18, tapes: 2,
     // Dark: still TWO songs a page, on a tighter clock, but every song named is spent for
     // the rest of the run. Deliberately not `need: 3`, which lands on Name Three's headline.
@@ -1530,7 +1545,7 @@ export const CHALLENGES = [
     // twenty to thirty-five holders, so spending two of them a page is a rule the player would
     // never once feel; off the whole word list the holder lists are short enough that a title
     // burned on page three is a title genuinely missing on page nine.
-    hard: { seconds: 15, noRepeats: true, pool: null,
+    hard: { tagline: "{target} pages, {need} songs each, no repeats", seconds: 15, noRepeats: true, pool: null,
       blurb: "15s · suggestions · rarer words · two songs a page · no repeats all run · not in the title",
       desc: "Rarer words, two songs a page, and each song you name is spent for the rest of the run.",
       win: "Clear 8 pages, naming two songs each and never repeating one." },
@@ -1538,6 +1553,7 @@ export const CHALLENGES = [
     desc: "One song isn't enough! Answer two songs per word or fail the round.",
     win: "Clear 8 pages, naming two different songs each." },
   { id: "devils-path", name: "Devil's Path", rule: "devil", mode: "medium",
+    tagline: "{target} of 13 to win",
     free: false, cost: 1, target: 9, forks: [4, 8], tapes: 2,
     // Four forks instead of two. Curses are permanent and stack, so this relies on the
     // one-`time`-curse-per-run cap in the offer pool: two time curses already bottom the
@@ -1560,6 +1576,7 @@ export const CHALLENGES = [
     desc: "You start with a 10 second timer, but every wrong answer is a home invasion that steals 3 seconds from the timer. Four wrong answers ends the run.",
     win: "Score 9 / 13 before the clock runs dry." },
   { id: "thirty-one", name: "Thirty-One", rule: "survive", mode: "infinite",
+    tagline: "reach page {target}",
     mastery: 6, target: 31, tapes: 4,
     blurb: "Infinite sudden-death rules · reach round 31",
     desc: "Picture infinite mode's rules with sudden death enabled, and you have to get to round 31. That's what this is.",
@@ -1571,6 +1588,7 @@ export const CHALLENGES = [
     win: "Score 9 / 13 hunting the tiny word." },
   // ---- Tier C minigames (own input / lose-state). ----
   { id: "impostor", name: "Impostor", rule: "impostor", mode: "medium",
+    tagline: "{target} real words, every fake flagged",
     free: false, cost: 1, target: 7, seconds: 15, tapes: 2,
     // Dark: more fakes, and cannier ones. `impostorCount` lifts the fakes from 4 to 5 (read
     // through impostorCountNow — one more chance to mis-flag, still one real page of slack
@@ -1675,6 +1693,7 @@ export const CHALLENGES = [
     desc: "Two words on the page instead of one. Name a single song whose lyrics hold both of them, because half doesn't count.",
     win: "Score 9 / 13 naming songs that hold both words." },
   { id: "name-three", name: "Name Three", rule: "multi", mode: "medium",
+    tagline: "{target} pages, {need} songs each",
     free: false, cost: 1, target: 8, need: 3, seconds: 30, noTitle: false, tapes: 3,
     // Double Trouble's rule, taken deeper: three songs a page instead of two, and drawn from
     // the whole word pool rather than the common one. `need` already drives the banner, the
@@ -1708,6 +1727,7 @@ export const CHALLENGES = [
   //      also the one place a dark number is pinned to a base that is still a first guess, so
   //      if a base target moves, move its dark one by the same delta rather than leaving it. ----
   { id: "press-your-luck", name: "Press Your Luck", rule: "press", mode: "medium",
+    tagline: "bank {target} beads",
     free: false, cost: 1, target: 20, seconds: 12, noTitle: false, tapes: 1,
     // Dark: no shallow banking. The base's dominant line is "ride to three, bank, repeat" —
     // four cycles of three pages at a pot of 6 is 24, past the target, and never more than
@@ -1732,6 +1752,7 @@ export const CHALLENGES = [
     desc: "Every correct answer drops beads into a pot, and each one you ride is worth more than the last. Bank the pot whenever you like, but one miss wipes everything you haven't banked. Whatever is still riding when the 13 pages run out is yours.",
     win: "Bank 20 beads across the run." },
   { id: "confidence-wager", name: "Confidence Wager", rule: "wager", mode: "medium",
+    tagline: "finish on {target} beads",
     free: false, cost: 1, target: 20, seconds: 12, noTitle: false, maxStake: 3, startBeads: 3, tapes: 1,
     // Dark: the axis here is INFORMATION, so that is what it takes. wagerTease sells two
     // readings of a face-down word — the rarity band worded, and your own lifetime record with
@@ -1778,6 +1799,7 @@ export const CHALLENGES = [
     win: "Finish the run on 20 beads." },
   */
   { id: "insurance", name: "Insurance", rule: "insurance", mode: "easy",
+    tagline: "survive all {target} pages",
     free: false, cost: 1, target: 13, seconds: 15, tokens: 3, tapes: 2,
     // REWORKED 2026-09-01 after playtest (fairness 1/5, both sides). The bead economy is GONE
     // from this challenge — no tokenValue, no end-of-run cash-in for shields you never spent,

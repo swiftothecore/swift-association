@@ -15575,6 +15575,17 @@ function updateBlurb() {
   }
   updateTagline();
 }
+// What follows a challenge's name in the masthead: its authored goal when it has one (see
+// `tagline` on CHALLENGES), otherwise its terms. `c` is the dark-resolved entry, so a dark side's
+// numbers come through. Three clocks don't tick "N seconds each" and say so in their own words.
+function challengeTagline(c, clock) {
+  if (c.tagline) return c.tagline.replace(/\{(\w+)\}/g, (m, k) => (c[k] != null ? c[k] : m));
+  const terms = c.rule === "accelerate" ? `${c.accelFrom} seconds down to ${c.accelTo}`
+    : c.rule === "combo" ? "one shared clock"
+    : c.rule === "spite" ? `${c.seconds} seconds, ${c.penalty} off per miss`
+    : clock;
+  return `${TOTAL_ROUNDS} pages · ${terms}`;
+}
 // Masthead tagline reflects the active/selected game config.
 function updateTagline() {
   const el = $("tagline");
@@ -15604,6 +15615,15 @@ function updateTagline() {
     // name at a time and this one cannot: there are eight of them.
     : gameType === "lineup"
     ? `${TOTAL_ROUNDS} pages · ${clock} · everybody at once`
+    // Outside Classic the difficulty is a lever the run borrowed, not what the player picked,
+    // so these lines lead with the thing they did pick. A challenge on medium used to read
+    // "Normal difficulty", which named nothing the player chose and hid the challenge itself.
+    : gameType === "challenge" && currentChallenge
+    ? `${currentChallenge.name} · ${challengeTagline(currentChallenge, clock)}`
+    : gameType === "daily"
+    ? `today's daily · ${TOTAL_ROUNDS} pages · ${clock}`
+    : gameType === "album" && focusAlbum
+    ? `${focusAlbum} · ${TOTAL_ROUNDS} pages · ${clock}`
     : `${TOTAL_ROUNDS} pages · ${clock} · ${currentMode.label} difficulty`;
   // Without this a dark run is indistinguishable from the base challenge: same tagline, same
   // page count, just quietly harder numbers. The eclipse + "dark side" is the only thing on
@@ -32560,6 +32580,13 @@ function buildDevApi() {
       // written, lines recalled word-for-word, rounds survived. Reads state, changes nothing.
       // null on One Of A Kind, which has no number to hit.
       tally: () => (gameType === "challenge" ? challengeTally(currentChallenge) : null),
+      // Every challenge's masthead line, base and dark, without starting a run (four of them are
+      // Mastery-gated, so walking the shelf with `start` can't reach them).
+      taglines: () => CHALLENGES.flatMap((b) => [false, true].filter((d) => !d || b.hard).map((d) => {
+        const c = resolveChallenge(b, d);
+        const secs = c.seconds != null ? c.seconds : (MODES[c.mode] || MODES.medium).seconds;
+        return `${d ? "  (dark) " : ""}${c.name} · ${challengeTagline(c, `${secs} seconds each`)}`;
+      })).join("\n"),
       /* The margin — what the run can still afford to get wrong. `state` is the live reading
          and touches nothing; the other three burn pages to reach a state worth looking at.
          Null on the rules the margin stays silent on (see MARGIN_BLIND), which is itself the
