@@ -4658,8 +4658,11 @@ function appendHistoryRows(hist) {
       `<span class="hist-date">${histDateLabel(h.d)}</span></div>`;
   }).join(""));
   historyShown += next.length;
+  // The tab says how many runs are still folded away, not how many the next pull brings.
   const more = $("histMore");
-  if (more && historyShown >= hist.length) more.style.display = "none";
+  const left = hist.length - historyShown;
+  if (more && left <= 0) more.parentElement.style.display = "none";
+  else if (more) more.textContent = `${left} older run${left === 1 ? "" : "s"} ↓`;
 }
 
 /* ---------- Records calendar heatmap (games played per day / per hour) ----------
@@ -5580,7 +5583,7 @@ function stickerShelfHTML() {
     `<div class="stick-cover-cta">` +
     `<p class="stick-cover-line">${admire}</p>` +
     (onFront
-      ? `<button type="button" class="btn-ghost" data-close-notebook>Look at the cover</button>`
+      ? `<button type="button" class="cover-strip" data-close-notebook>Look at the cover</button>`
       : `<p class="stick-cover-foot">Shut it from the front page for a proper look.</p>`) +
     `</div>`;
 
@@ -5849,7 +5852,7 @@ function renderRecordsPage() {
   const titleHTML = (name && title) ? `<span class="rec-sig-title">${escapeHtml(title)}</span>` : "";
   const sigText = name
     ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span><span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
-    : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" /><button id="recSignSave" class="btn-ghost">sign</button></div>`;
+    : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" /><button id="recSignSave" class="sign-pen"><i class="sign-pen-clip" aria-hidden="true"></i>sign</button></div>`;
   const sig =
     `<button type="button" id="recPolBtn" class="rec-pol-btn" aria-label="${avatar ? "change your photo" : "add a photo"}">${polaroidHTML(avatar, name)}</button>` +
     `<div class="rec-sig-text">${sigText}</div>`;
@@ -5946,7 +5949,7 @@ function renderRecordsPage() {
     ? `<p class="rec-group-label">history · ${hist.length} run${hist.length === 1 ? "" : "s"}</p>` +
       `<div class="hist-head"><span>score</span><span>time</span><span>verse</span><span>mode</span><span>date</span></div>` +
       `<div id="histRows" class="hist-rows"></div>` +
-      (hist.length > HISTORY_PAGE ? `<button id="histMore" class="btn-ghost">load more</button>` : "")
+      (hist.length > HISTORY_PAGE ? `<div class="hist-more-row"><button id="histMore" class="hist-more"></button></div>` : "")
     : `<p class="rec-group-label">history</p><p class="stats-empty">no runs yet. finish a game to start your log.</p>${playCTA()}`;
 
   $("recordsBody").innerHTML =
@@ -7845,7 +7848,7 @@ function renderBonusRound() {
         `<span id="bonusOut" class="bg-out"></span></p>` +
       bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
                          hint: "a wrong guess costs nothing but the seconds it took", dropdown: true }) +
-      `<button type="button" id="bonusGiveUp" class="btn-ghost bg-giveup"></button>`;
+      `<button type="button" id="bonusGiveUp" class="giveup-ticket bg-giveup"></button>`;
     const input = $("bonusInput");
     input.addEventListener("input", updateBonusDropdown);
     input.addEventListener("keydown", (e) => {
@@ -8342,9 +8345,10 @@ function updateRuthlessMeta() {
   const { after, penalty } = ruthlessSkip();
   const left = after - ruthlessShown;
   b.disabled = left > 0;
-  b.textContent = left > 0
-    ? `give up in ${left} word${left === 1 ? "" : "s"}`
-    : `give up · +${fmtTime(penalty)}`;
+  // A penalty ticket: the fine on the stub once it can be taken, the words still to come before then.
+  b.innerHTML = `<span>give up</span><b>${left > 0
+    ? `in ${left} word${left === 1 ? "" : "s"}`
+    : `+${fmtTime(penalty)}`}</b>`;
 }
 
 /* What this page has cost, read off the clock ONCE and then held, IN HUNDREDTHS. It used to round
@@ -27313,6 +27317,26 @@ function coverStickerSettingsHTML() {
     `<div class="set-cover-grid" aria-describedby="coverStickerStatus">${cards}</div></section>`;
 }
 
+/* The backup pair are the two sides of one envelope's life. Export is the back of it sealed
+   shut, wax on the flap's point; Import is the same envelope opened, flap folded back and the
+   notebook's ruled sheet standing out of the pocket. Drawn to stretch to either half of the row
+   (preserveAspectRatio none, non-scaling strokes), with the wax and the label kept in HTML so
+   neither is squashed with it. */
+const ENVELOPE_SEALED = `<svg viewBox="0 0 200 62" preserveAspectRatio="none" aria-hidden="true">` +
+  `<rect class="kr ln" x=".5" y=".5" width="199" height="61" rx="2"/>` +
+  `<path class="fib" d="M16 44l9 .7M150 52l12-.5M38 55l7 .4M172 40l8-.6"/>` +
+  `<path class="fold" d="M.5 61.5 88 22M199.5 61.5 112 22"/>` +
+  `<path class="kr-dk ln" d="M.5 .5H199.5L104.5 24.2Q100 26.2 95.5 24.2Z"/>` +
+  `<path class="fib" d="M40 6l10 .5M140 8l9-.6M78 14l6 .3"/></svg>` +
+  `<span class="env-wax" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M5 1.2v7.6M1.7 3.1l6.6 3.8M8.3 3.1 1.7 6.9"/></svg></span>`;
+const ENVELOPE_OPENED = `<svg viewBox="0 0 200 62" preserveAspectRatio="none" aria-hidden="true">` +
+  `<path class="kr-in ln" d="M.5 22.5 97 1.2Q100 .4 103 1.2L199.5 22.5Z"/>` +
+  `<g class="env-sheet"><rect class="sheet ln" x="24" y="7" width="152" height="40"/>` +
+  `<path class="rule" d="M36 14.5H170M36 21H170M36 27.5H170"/><path class="marg" d="M33 7V47"/></g>` +
+  `<rect class="kr ln" x=".5" y="22.5" width="199" height="39"/>` +
+  `<path class="fold" d="M.5 22.5 88 43M199.5 22.5 112 43M.5 61.5 100 38.5 199.5 61.5"/>` +
+  `<path class="fib" d="M20 34l8 .5M166 33l9-.4M60 56l7 .3"/></svg>`;
+
 function renderSettingsBody() {
   disarmBookplateTitle();   // the re-render replaces the bookplate, so no arm may outlive it
   const diffOpts = [{ val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
@@ -27390,8 +27414,8 @@ function renderSettingsBody() {
     setSection("On your phone", offlineSettingsHTML()) +
     setSection("",
       `<p class="set-note">Your stats, achievements, and records live in this browser’s storage. That’s safe day-to-day, but not fool-proof: clearing your browser data, switching devices, or some private-browsing modes can wipe it. If you’d hate to lose your progress, export a backup now and then.</p>` +
-      `<div class="set-actions"><button class="btn-ghost" data-action="export">Export backup</button>` +
-      `<button class="btn-ghost" data-action="import">Import backup</button></div>`
+      `<div class="set-actions"><button class="env-btn sealed" data-action="export">${ENVELOPE_SEALED}<span class="env-lab">Export backup</span></button>` +
+      `<button class="env-btn opened" data-action="import">${ENVELOPE_OPENED}<span class="env-lab">Import backup</span></button></div>`
     ) +
     `<div class="set-danger">` +
       `<p class="danger-head">the ledger</p>` +
@@ -28077,6 +28101,22 @@ function restoreCustomModalFocus(selector) {
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
+/* New and Delete are the two ends of one pencil: the point writes a new preset, the rubber on
+   the far end rubs one out. Each half is its own button, drawn in three flat facets with the
+   paint cut in scallops where it was sharpened; hover draws that half away from the other. */
+const PENCIL_FACETS = (x0, x1) =>
+  `<path fill="#f2cb5c" d="M${x0} 3.5H${x1}V10.5H${x0}Z"/><path fill="#e5b23c" d="M${x0} 10.5H${x1}V19.5H${x0}Z"/>` +
+  `<path fill="#c99429" d="M${x0} 19.5H${x1}V26.5H${x0}Z"/><path d="M${x0} 10.5H${x1}M${x0} 19.5H${x1}" stroke="rgba(43,38,34,.3)" stroke-width=".8"/>`;
+const PENCIL_POINT = `<svg viewBox="0 0 84 30" aria-hidden="true">` +
+  `<path fill="#e1bd85" d="M1.5 15 24 3.5V26.5Z"/><path fill="#2b2622" d="M1.5 15 9.3 11V19Z"/>` +
+  `<path fill="#f2cb5c" d="M24 3.5C20.4 5 20.4 9 24 10.5Z"/><path fill="#e5b23c" d="M24 10.5C19.6 12.4 19.6 17.6 24 19.5Z"/>` +
+  `<path fill="#c99429" d="M24 19.5C20.4 21 20.4 25 24 26.5Z"/>${PENCIL_FACETS(24, 84)}` +
+  `<path class="o" d="M84 3.5H24L1.5 15 24 26.5H84M24 3.5V26.5"/></svg>`;
+const PENCIL_RUBBER = `<svg viewBox="0 0 96 30" aria-hidden="true">${PENCIL_FACETS(0, 70)}` +
+  `<path fill="#bdb7ab" d="M70 3H81V27H70Z"/><path d="M73 3.4V26.6M75.5 3.4V26.6M78 3.4V26.6" stroke="#8d877a" stroke-width="1"/>` +
+  `<path fill="#e8a4a0" d="M81 3.5H87C90.5 3.5 91.5 7 91.5 15S90.5 26.5 87 26.5H81Z"/>` +
+  `<path class="o" d="M0 3.5H70V3H81V3.5H87C90.5 3.5 91.5 7 91.5 15S90.5 26.5 87 26.5H81V27H70V26.5H0M70 3V27"/></svg>`;
+
 function renderCustomModalBody() {
   const body = $("customModalBody");
   if (!body) return;
@@ -28103,8 +28143,8 @@ function renderCustomModalBody() {
           `value="${escapeHtml(preset.name || "")}" placeholder="name this mode" aria-label="Preset name" autocomplete="off" spellcheck="false" ` +
           `data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other">` +
         `<div class="cm-preset-acts">` +
-          `<button type="button" class="btn-ghost" data-cm-act="new"${atCap ? " disabled" : ""}>+ New</button>` +
-          `<button type="button" class="btn-ghost" data-cm-act="delete"${canDelete ? "" : " disabled"}>Delete</button>` +
+          `<button type="button" class="pencil-half point" data-cm-act="new"${atCap ? " disabled" : ""}>${PENCIL_POINT}<span class="pencil-lab">new</span></button>` +
+          `<button type="button" class="pencil-half rubber" data-cm-act="delete"${canDelete ? "" : " disabled"}>${PENCIL_RUBBER}<span class="pencil-lab">delete</span></button>` +
         `</div>` +
       `</div>` +
       (store.presets.length > 1 ? `<div class="cm-preset-chips" role="group" aria-label="Presets">${chips}</div>` : "") +

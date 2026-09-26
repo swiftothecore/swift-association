@@ -35,11 +35,14 @@ export function readOfflineStatus() {
 export function offlineSettingsHTML() {
   return `<p class="set-note" id="offlineStatus" role="status">Checking the offline copy…</p>` +
     `<p class="set-note" id="offlineGuests"></p>` +
-    `<div class="set-actions"><button type="button" class="btn-ghost" id="offlineCheck">Check again</button>` +
-    `<button type="button" class="btn-ghost" id="installNotebook" hidden>Add to home screen</button></div>` +
+    `<div class="set-actions"><button type="button" class="date-stamp" id="offlineCheck">check again<small id="offlineChecked">checking…</small></button>` +
+    `<button type="button" class="date-stamp" id="installNotebook" hidden>keep it close<small>add to home screen</small></button></div>` +
     `<p class="set-note">Keep the notebook close: on iPhone or iPad, open it in Safari and choose Share, then Add to Home Screen. In other browsers, look for Install or Add to Home Screen in the browser menu.</p>` +
     `<p class="set-note">Offline files and your progress belong to this browser. Keep a backup of your notebook before changing browsers or clearing storage.</p>`;
 }
+
+// The check-again stamp's date, in the three-letter months a rubber date stamp carries.
+const STAMP_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function mountOfflineSettings(body, guests) {
   const status = body.querySelector("#offlineStatus");
@@ -53,6 +56,11 @@ export function mountOfflineSettings(body, guests) {
     install.hidden = !installPrompt || matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
     const result = await readOfflineStatus();
     if (!status.isConnected || current !== request) return;
+    const checked = body.querySelector("#offlineChecked");
+    if (checked) {
+      const now = new Date();
+      checked.textContent = `last · ${now.getDate()} ${STAMP_MONTHS[now.getMonth()]}`;
+    }
     status.textContent = result?.ready
       ? "Ready for offline play. The main notebook and lyric search are saved on this device."
       : "The offline copy is not ready yet. Stay online while the notebook downloads, then check again.";

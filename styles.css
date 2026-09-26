@@ -1847,12 +1847,6 @@
     55%      { transform: rotate(-12deg) translateY(-1px); }
   }
 
-  .btn-ghost {
-    width: 100%; margin-top: 14px; padding: 12px;
-    font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink);
-    background: transparent; border: 1.5px dashed var(--ink-soft); border-radius: 2px;
-  }
-  .btn-ghost:hover { background: var(--highlighter); border-style: solid; }
 
   /* ---------- The "next page" slip ----------
      The button a run presses thirteen times is a strip of the next sheet: the era
@@ -2376,7 +2370,25 @@
   .rec-sig-sub { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); display: block; margin-top: 5px; }
   .rec-sign-row { display: flex; align-items: center; gap: 8px; }
   .rec-sign-row .set-text { text-align: left; width: 190px; }
-  .rec-sign-row .btn-ghost { width: auto; margin: 0; padding: 4px 16px; }
+  /* Signing is done with the pen itself: a fountain pen lying on the page, its gold nib touching
+     the end of the signature line, the label on the barrel and the clip along the cap. Hover
+     lifts it to write. The pen's colours are the object's, so they hold at night. */
+  .sign-pen {
+    position: relative; flex: none; height: 30px; margin-left: 26px; padding: 0 26px 0 16px;
+    font-size: calc(11px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: #f4ecd9;
+    background: linear-gradient(90deg, #1f1c19 0 10px, #c9a24a 10px 12px, #2c3a52 12px); border-radius: 3px 15px 15px 3px;
+    box-shadow: 2px 2px 0 rgba(43, 39, 34, 0.18);
+    transition: transform 0.14s ease;
+  }
+  .sign-pen::before {
+    content: ""; position: absolute; left: -24px; top: 50%; width: 26px; height: 20px; margin-top: -10px;
+    background: radial-gradient(circle 2px at 17px 50%, #2b2622 97%, transparent),
+      linear-gradient(transparent calc(50% - 0.7px), #2b2622 calc(50% - 0.7px) calc(50% + 0.7px), transparent calc(50% + 0.7px)) 0 0 / 17px 100% no-repeat,
+      #d4ae55;
+    clip-path: polygon(0 50%, 60% 0, 100% 12%, 100% 88%, 60% 100%);
+  }
+  .sign-pen-clip { position: absolute; top: -4px; right: 16px; width: 38%; height: 6px; border-radius: 3px 1px 1px 3px; background: #c9a24a; box-shadow: 0 0 0 1px #8d6f2a; }
+  .sign-pen:hover, .sign-pen:focus-visible { transform: translateX(-5px) rotate(-2deg); }
   .rec-pol-btn { flex: none; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; line-height: 0; }
   .rec-pol-btn:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 4px; border-radius: 3px; }
 
@@ -2553,7 +2565,26 @@
     font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust));
     color: var(--ink-soft); margin: 0;
   }
-  .stick-cover-cta .btn-ghost { width: auto; padding: 9px 18px; margin-top: 9px; }
+  /* The door is a strip of the cover it opens onto: the board, the spine down the left, the
+     elastic down the right and the bookmark ribbon over the top edge, all in the cover's own
+     flat colours (the ribbon wears the era, as it does on the cover). They are the material's
+     colours, not the paper's, so they stay put at night the way the cover does. */
+  .cover-strip {
+    position: relative; margin-top: 12px; padding: 11px 56px 11px 22px;
+    font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1px; color: #2b2014;
+    background: #c4a676; border-radius: 2px 5px 5px 2px;
+    box-shadow: inset 7px 0 0 #6a5029, 2px 3px 0 rgba(43, 39, 34, 0.2);
+    transform: rotate(-0.6deg);
+  }
+  .cover-strip::after { content: ""; position: absolute; top: -3px; bottom: -3px; right: 14px; width: 8px; border-radius: 2px; background: #2b2622; }
+  .cover-strip::before {
+    content: ""; position: absolute; top: -5px; right: 34px; width: 9px; height: calc(100% + 13px);
+    background: var(--cover-ribbon, #b23a3a); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  }
+  .cover-strip:hover, .cover-strip:focus-visible {
+    transform: rotate(-1.6deg) translateY(-2px);
+    box-shadow: inset 7px 0 0 #6a5029, 3px 5px 0 rgba(43, 39, 34, 0.16);
+  }
   .stick-cover-foot {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
     color: var(--ink-soft); opacity: 0.85; margin: 7px 0 0;
@@ -5143,8 +5174,22 @@
     color: var(--ink); white-space: nowrap; transform-origin: center;
     -webkit-user-select: none; user-select: none;
   }
-  .bg-giveup { display: block; width: max-content; max-width: 100%; margin: 12px auto 0; }
-  .bg-giveup[disabled] { opacity: 0.4; cursor: default; }
+  .bg-giveup { display: flex; width: max-content; max-width: 100%; margin: 12px auto 0; }
+  /* Walking away is paid for, so give up is a penalty ticket, notched either side, with the
+     fine printed on its stub. Grey, and counting the words still to come, until it can be
+     taken; then it goes red pen and names what it adds to the clock. */
+  .giveup-ticket {
+    align-items: stretch; padding: 0;
+    font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1px; color: var(--red-pen);
+    background: color-mix(in srgb, var(--red-pen) 16%, var(--paper)); border: 2px solid currentColor; border-radius: 3px;
+    -webkit-mask: radial-gradient(circle 6px at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 6px at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+    mask: radial-gradient(circle 6px at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 6px at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+    transition: background 0.14s;
+  }
+  .giveup-ticket > span { padding: 8px 14px 8px 17px; }
+  .giveup-ticket > b { padding: 8px 17px 8px 12px; border-left: 1.5px solid currentColor; letter-spacing: 0.5px; }
+  .giveup-ticket:not(:disabled):is(:hover, :focus-visible) { background: color-mix(in srgb, var(--red-pen) 26%, var(--paper)); }
+  .giveup-ticket:disabled { cursor: default; opacity: 0.7; color: var(--ink-soft); background: color-mix(in srgb, var(--ink) 8%, var(--paper)); }
   @media (max-width: 560px) {
     .bg-stream { font-size: calc(20px + var(--text-size-adjust)); height: 8em; }
   }
@@ -6917,7 +6962,20 @@
   }
   .cm-name-input:focus { outline: none; border-bottom-color: var(--ink); }
   .cm-preset-acts { display: flex; gap: 6px; flex-shrink: 0; }
-  .cm-preset-acts .btn-ghost { width: auto; margin-top: 0; padding: 6px 12px; font-size: calc(11px + var(--text-size-adjust)); }
+  .cm-preset-acts { align-items: center; gap: 2px; }
+  .pencil-half {
+    position: relative; flex: none; height: 30px; padding: 0; text-align: left;
+    font-size: calc(11px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.8px; color: #2b2014;
+    background: none; transition: transform 0.14s ease;
+  }
+  .pencil-half > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .pencil-half .o { fill: none; stroke: #2b2622; stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
+  .pencil-lab { position: relative; }
+  .pencil-half.point { width: 84px; padding: 0 8px 0 30px; }
+  .pencil-half.rubber { width: 96px; padding: 0 32px 0 10px; }
+  .pencil-half.point:not(:disabled):is(:hover, :focus-visible) { transform: translateX(-4px); }
+  .pencil-half.rubber:not(:disabled):is(:hover, :focus-visible) { transform: translateX(4px); }
+  .pencil-half:disabled { cursor: default; opacity: 0.4; filter: grayscale(0.7); }
   .cm-preset-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .cm-preset-chip {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
@@ -7675,7 +7733,17 @@
   /* Hint stub — graphite, not an accent: the row is noting how the run went, not flagging it. */
   .hist-hinted { display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: -1px; color: var(--ink-soft); opacity: 0.75; }
   .hist-hinted .hint-mark-svg { width: 100%; height: 100%; display: block; }
-  :is(#histMore, [data-flip-id="histMore"]) { margin-top: 12px; }
+  /* More history is a tab hanging off the log's bottom rule, highlighted, saying how many
+     older runs are still folded away. Pulling it (hover) draws it down a little. */
+  .hist-more-row { margin-top: 12px; border-top: 1.5px solid var(--ink); text-align: center; }
+  .hist-more {
+    margin-top: -1.5px; padding: 6px 20px 7px;
+    font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1px; color: var(--ink);
+    background: linear-gradient(var(--highlighter), var(--highlighter)), var(--paper);
+    border: 1.5px solid var(--ink); border-top: 0; border-radius: 0 0 9px 9px;
+    transition: padding-top 0.14s ease;
+  }
+  .hist-more:hover, .hist-more:focus-visible { padding-top: 11px; }
 
   /* ---------- Records calendar heatmap (games played per day / per hour) ----------
      A contribution-grid in the notebook's gold "ink density". The grid spans the full
@@ -9008,7 +9076,8 @@
   .hint-line mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
   @media (prefers-reduced-motion: reduce) {
     .hint-btn.urge { animation: none; }
-    .hint-btn, .flag-btn, .path-skip-btn { transition: none; }
+    .hint-btn, .flag-btn, .path-skip-btn, .cover-strip, .hist-more, .date-stamp,
+    .sign-pen, .giveup-ticket, .env-btn, .env-sheet, .pencil-half { transition: none; }
     .feedback .sticker { animation: none; }
   }
 
@@ -14471,7 +14540,55 @@
   .set-slider-val { font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); color: var(--ink-accent); min-width: 26px; text-align: right; }
 
   .set-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-  .set-actions .btn-ghost { width: auto; flex: 1 1 0; margin-top: 0; }
+  .env-btn {
+    position: relative; flex: 1 1 0; min-width: 0; height: 70px; padding: 0; background: none;
+    font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.6px; color: #2b2014;
+    filter: drop-shadow(2px 2px 0 rgba(43, 39, 34, 0.16));
+    transition: transform 0.14s ease;
+  }
+  .env-btn > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .env-btn .kr { fill: #d8bb87; }
+  .env-btn .kr-dk { fill: #cba96f; }
+  .env-btn .kr-in { fill: #e7d3a8; }
+  .env-btn .ln { stroke: #6d5430; stroke-width: 1.3; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .env-btn .fold { fill: none; stroke: #8e7244; stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .env-btn .fib { fill: none; stroke: #b8965d; stroke-width: 0.8; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: 0.7; }
+  .env-btn .sheet { fill: #fffdf7; }
+  .env-btn .rule { stroke: #b9c6d8; stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .env-btn .marg { stroke: #d99a95; stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .env-lab {
+    position: absolute; left: 50%; bottom: 7px; translate: -50% 0; white-space: nowrap; padding: 1px 7px;
+    background: #fffdf7; box-shadow: 0 0 0 1px rgba(109, 84, 48, 0.55);
+  }
+  .env-wax {
+    position: absolute; left: 50%; top: 41.5%; width: 20px; height: 20px; margin: -10px 0 0 -10px;
+    background: var(--red-pen); border-radius: 46% 54% 52% 48% / 55% 45% 55% 45%;
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--red-pen) 80%, #000), 0 0 0 1.5px color-mix(in srgb, var(--red-pen) 85%, #000);
+  }
+  .env-wax svg { position: absolute; inset: 5px; width: 10px; height: 10px; fill: none; stroke: color-mix(in srgb, var(--red-pen) 55%, #fff); stroke-width: 1.6; stroke-linecap: round; }
+  .env-sheet { transition: transform 0.18s ease; }
+  .env-btn.opened:is(:hover, :focus-visible) .env-sheet { transform: translateY(-5px); }
+  .env-btn.sealed:is(:hover, :focus-visible) { transform: translateY(-2px) rotate(-0.8deg); }
+  /* The offline copy's buttons are rubber stamps in the era's ink: checking again stamps the
+     date it was last checked, and the install stamp says what it is for before how. */
+  .date-stamp {
+    display: inline-flex; flex-direction: column; align-items: center; padding: 5px 13px 4px;
+    font-size: calc(11px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase;
+    color: var(--ink-accent); background: color-mix(in srgb, var(--ink-accent) 7%, var(--paper));
+    border: 2px solid currentColor; border-radius: 3px;
+    box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3.3px currentColor;
+    transform: rotate(-1.2deg);
+  }
+  .date-stamp[hidden] { display: none; }
+  .date-stamp + .date-stamp { transform: rotate(1deg); }
+  .date-stamp small {
+    font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.8px;
+    margin-top: 3px; padding-top: 2px; border-top: 1.5px solid currentColor;
+  }
+  .date-stamp:hover, .date-stamp:focus-visible {
+    background: var(--ink-accent); color: var(--paper);
+    box-shadow: inset 0 0 0 2px var(--ink-accent), inset 0 0 0 3.3px var(--paper);
+  }
 
   /* ---------- Danger zone: the ledger ----------
      An accounts book ruled into three columns (entry / figure / void), not a row of
@@ -15075,7 +15192,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .tap-tile { min-width: 0; }
   .tap-tile-title { overflow-wrap: anywhere; }
   .feedback-advance { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
-  .feedback-advance > :is(.btn-ghost, .turn-slip) { width: 100%; margin: 0; min-height: 46px; }
+  .feedback-advance > .turn-slip { width: 100%; margin: 0; min-height: 46px; }
   .feedback-advance .countdown { display: flex; align-items: center; gap: 8px; margin: 0; }
   .feedback-advance .countdown b { display: inline; font-size: calc(28px + var(--text-size-adjust)); transform: none; }
   .feedback-advance .countdown-skip { margin: 0; }
