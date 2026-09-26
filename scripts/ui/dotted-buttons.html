@@ -23,12 +23,6 @@
     .source { margin-top:auto; padding-top:7px; font-size:10px; letter-spacing:.03em; text-transform:none; }
     button, a { font:inherit; }
     button { cursor:default; }
-    .ghost { padding:10px 13px; color:var(--ink); background:transparent; border:1.5px dashed var(--ink-soft); border-radius:2px; font-size:13px; letter-spacing:1px; }
-    .ghost.small { padding:6px 10px; font-size:11px; }
-    .hint { font:20px var(--hand); color:var(--ink-accent); background:transparent; border:1.5px dashed var(--ink-accent); border-radius:3px; padding:3px 16px; }
-    .flag { font:21px var(--hand); color:var(--red-pen); background:transparent; border:1.5px dashed #be8985; border-radius:3px; padding:3px 18px; }
-    .answer { min-height:44px; padding:8px 16px; font-size:12px; background:transparent; border:1px dashed var(--ink-soft); border-radius:3px; }
-    .skip-path { color:var(--ink-soft); background:transparent; border:1px dashed var(--ink-soft); border-radius:3px; padding:3px 10px; font-size:12px; }
     .cover { width:92px; min-height:83px; padding:9px 5px; border:1px dashed var(--ink-soft); border-radius:3px; background:transparent; font:17px var(--hand); }
     .cover span { display:block; font:9px var(--type); margin-top:5px; }
     .sealed { width:100%; max-width:255px; text-align:left; color:var(--ink-soft); background:transparent; border:1.5px dashed #b8ae9d; padding:13px; font:18px var(--hand); opacity:.82; }
@@ -47,6 +41,7 @@
     .search { font-size:12px; padding:8px 0; min-height:44px; border:0; background:transparent; border-bottom:1px dashed #be8279; color:#b9402f; }
     .search.muted { color:var(--ink-soft); border-bottom-color:#a49b8d; }
     .search-link { text-decoration:none; display:inline-flex; align-items:center; }
+    .intro.done { margin-top:-18px; color:var(--ink-soft); font-size:12px; }
     .foot { margin:30px 0 0; color:var(--ink-soft); font-size:11px; line-height:1.5; }
     @media(max-width:600px) { .page { margin:0; border-left-width:4px; padding-top:30px; } }
   </style>
@@ -56,21 +51,16 @@
   <div class="eyebrow">UI inventory / 26 September 2026</div>
   <h1>Dotted line buttons</h1>
   <p class="intro">Buttons and button-like links whose normal appearance uses a dashed or dotted line. Repeated labels sharing one style are shown together. These are visual samples; pressing them does not change the game. Focus-only outlines, decorative dividers, and locked swatches that cannot be pressed are called out separately below.</p>
+  <p class="intro done">Already replaced and taken off this page: next page, the seven other ghost buttons (look at the cover, older runs, sign, give up, backups, custom presets, offline check), the hint, flag the impostor, swap this word, and the countdown skip. "Write it in" was removed from the game.</p>
 
   <div class="section-label">Dashed frames / actions</div>
   <div class="grid">
-    <section class="card"><h2>Page advance and utility</h2><p>The shared ghost button moves through game and bonus pages, opens the notebook cover, loads more history, signs records, manages backups and custom presets, and retries offline loading.</p><div class="sample"><button class="ghost">next page →</button><button class="ghost small">Look at the cover</button><button class="ghost small">Export backup</button></div><div class="source">.btn-ghost · styles.css:1864 · js/app.js, js/offline.js</div></section>
-    <section class="card"><h2>Hint</h2><p>Below the answer field on eligible game pages. The label changes as the progressive hint ladder is used.</p><div class="sample"><button class="hint">need a hint?</button></div><div class="source">.hint-btn · styles.css:8683 · index.html:3137</div></section>
-    <section class="card"><h2>Flag the impostor</h2><p>The red pen action on an Impostor challenge page.</p><div class="sample"><button class="flag">⚑ flag the impostor</button></div><div class="source">.flag-btn · styles.css:8720 · index.html:3123</div></section>
-    <section class="card"><h2>Write it in</h2><p>Explicit submit control for typed answers in the main game and bonus games.</p><div class="sample"><button class="answer">write it in</button></div><div class="source">.answer-submit · styles.css:15069 · index.html:3109, js/app.js:7721</div></section>
-    <section class="card"><h2>Swap this word</h2><p>Uses one remaining mulligan on a Choose Your Path challenge page.</p><div class="sample"><button class="skip-path">↻ swap this word (2 left)</button></div><div class="source">.path-skip-btn · styles.css:7001 · js/app.js:21205</div></section>
     <section class="card"><h2>Cover sticker slot</h2><p>Choose where an earned sticker sits on the notebook cover. The selected slot becomes solid.</p><div class="sample"><button class="cover">sticker<span>cover position</span></button></div><div class="source">.set-cover-sticker · styles.css:14113 · js/app.js:27266</div></section>
     <section class="card"><h2>Sealed charm group</h2><p>A dashed row in the Charms drawer opens a still hidden achievement group.</p><div class="sample"><button class="sealed">✧ &nbsp; sealed for now</button></div><div class="source">.ach-sealed · styles.css:11012 · js/app.js:3741</div></section>
   </div>
 
   <div class="section-label">Dotted or dashed underlines / actions</div>
   <div class="grid">
-    <section class="card"><h2>Skip countdown</h2><p>Advances early while the next page is counting down, in both regular and bonus runs.</p><div class="sample"><button class="under tiny">skip →</button></div><div class="source">.countdown-skip · styles.css:9336 · js/app.js</div></section>
     <section class="card"><h2>Challenge return</h2><p>Offers an eligible undefeated challenge back to the shelf for its token. Appears in challenge details.</p><div class="sample"><button class="under red">Return to the shelf, get back ◇1</button></div><div class="source">.chall-refund · styles.css:3437 · js/app.js:11224</div></section>
     <section class="card"><h2>Start writing</h2><p>Shared invitation on empty records, stats, and other panels before a first run has supplied data.</p><div class="sample"><button class="under accent">start writing →</button></div><div class="source">.empty-cta · styles.css:10179 · js/app.js:2044</div></section>
     <section class="card"><h2>More verse lines</h2><p>Unfolds lyric lines in the verse answer anthology.</p><div class="sample"><button class="under dot tiny">+ 4 more lines</button></div><div class="source">.va-more · styles.css:8019 · js/app.js:3350</div></section>
