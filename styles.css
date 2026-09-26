@@ -2178,17 +2178,17 @@
      They are stated as tokens on the ROW, not as a background on the tab, because on the front
      page the picked difficulty's colour has to reach past its tab: the rule-terms strip under
      it is that tab's page and wears the same ink (see "The front page's pickers" below). */
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-type="classic"])  { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="hard"])     { --tab-wash: rgba(202,92,74,0.34);   --tab-edge: color-mix(in srgb, #9b362e 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-mode="ultra"])    { --tab-wash: rgba(122,98,182,0.34);  --tab-edge: color-mix(in srgb, #5a4898 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab--modality.active)             { --tab-wash: rgba(212,108,152,0.28); --tab-edge: color-mix(in srgb, #bc4e80 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-type="infinite"]) { --tab-wash: rgba(64,150,146,0.34);  --tab-edge: color-mix(in srgb, #287874 52%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-type="custom"])   { --tab-wash: rgba(176,104,150,0.32); --tab-edge: color-mix(in srgb, #964a7c 52%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-variant="3lives"]) { --tab-edge: color-mix(in srgb, #786e46 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: color-mix(in srgb, #0c0907 80%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="classic"])  { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="hard"])     { --tab-wash: rgba(202,92,74,0.34);   --tab-edge: color-mix(in srgb, #9b362e 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="ultra"])    { --tab-wash: rgba(122,98,182,0.34);  --tab-edge: color-mix(in srgb, #5a4898 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab--modality.active)             { --tab-wash: rgba(212,108,152,0.28); --tab-edge: color-mix(in srgb, #bc4e80 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="infinite"]) { --tab-wash: rgba(64,150,146,0.34);  --tab-edge: color-mix(in srgb, #287874 52%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="custom"])   { --tab-wash: rgba(176,104,150,0.32); --tab-edge: color-mix(in srgb, #964a7c 52%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="3lives"]) { --tab-edge: color-mix(in srgb, #786e46 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: color-mix(in srgb, #0c0907 80%, var(--paper)); }
   /* The stats page's "All" view sums every mode, so it wears every mode's wash at once: the
      ladder's colours laid side by side, relaxed denim through ultra violet. */
   .mode-tab.active[data-type="all"] {
@@ -2251,25 +2251,28 @@
   .mode-picker > .mode-tabs > .mode-tab:nth-child(3n)   { border-radius: 5px 6px 0 0; }
   .mode-picker > .mode-tabs > .mode-tab:not(.active) { border-color: var(--tab-pencil); }
   /* The mode and lives shelves are inked in the picked tab's edge colour. */
-  #typeTabs, #variantTabs { --tab-shelf: var(--tab-edge); }
+  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) { --tab-shelf: var(--tab-edge); }
   /* The shelf. The box is measured from the tab's padding edge, which sits inside its 1.5px side
      border, hence -5px: 1.5 of border and 3.5 of gap. It hangs just below the tab's foot. */
-  #typeTabs > .mode-tab::after, #variantTabs > .mode-tab::after, #modeTabs > .mode-tab.is-back::after {
+  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) > .mode-tab::after,
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.is-back::after {
     content: ""; position: absolute; left: -5px; right: -5px; bottom: -1.5px; height: 1.5px;
     background: var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
   }
   /* In front of the shelf: the tab reaches down through the line's depth (the padding pays back
      the margin, so picking never shifts the row), its sides run to the line's foot, and only its
      own 3.5px either side of the shelf is kept, level with its neighbours'. */
-  #typeTabs > .mode-tab.active, #variantTabs > .mode-tab.active, #modeTabs > .mode-tab.active.is-back {
+  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) > .mode-tab.active,
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back {
     margin-bottom: -1.5px; padding-bottom: 8.5px;
   }
-  #typeTabs > .mode-tab.active::after, #variantTabs > .mode-tab.active::after, #modeTabs > .mode-tab.active.is-back::after {
+  :is(#typeTabs, [data-flip-id="typeTabs"], #variantTabs, [data-flip-id="variantTabs"]) > .mode-tab.active::after,
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back::after {
     bottom: 0;
     background: linear-gradient(to right, var(--tab-shelf, var(--tab-pencil)) 3.5px, transparent 3.5px calc(100% - 3.5px), var(--tab-shelf, var(--tab-pencil)) calc(100% - 3.5px));
   }
   /* The page. Opaque, because it is a sheet laid over the notebook rather than ink on it. */
-  #difficultyRow .mode-blurb {
+  :is(#difficultyRow, [data-flip-id="difficultyRow"]) .mode-blurb {
     margin: 0; padding: 9px 12px 10px;
     border: 1.5px solid var(--tab-rim); border-radius: 3px 7px 6px 5px;
     background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
@@ -2277,17 +2280,17 @@
   /* A picked difficulty wrapped onto a line above its page (a phone) cannot reach it, so it
      stands on its shelf like the rows above; it still wears the page's colour, so the two read
      as a pair across the line between them. */
-  #modeTabs > .mode-tab.active.is-back { border-color: var(--tab-rim); background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper); }
-  #difficultyRow .blurb-clause { white-space: nowrap; }
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back { border-color: var(--tab-rim); background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper); }
+  :is(#difficultyRow, [data-flip-id="difficultyRow"]) .blurb-clause { white-space: nowrap; }
   /* Lyricist's divider stands in the gap between tabs, not on the page: held off the strip by
      the same margin it keeps from the tabs' tops, so it reads as a mark between two tabs rather
      than a crease running into the sheet. */
-  #modeTabs > .mode-tab-sep { height: 22px; margin-bottom: 6px; }
-  #modeTabs { z-index: 1; }
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab-sep { height: 22px; margin-bottom: 6px; }
+  :is(#modeTabs, [data-flip-id="modeTabs"]) { z-index: 1; }
   /* Its tab is the top of the same sheet: dropped 1.5px over the page's top edge in the page's own
      colour, so the edge under it disappears. Its sides are the page's rim, so where they cross the
      page's top edge the two are one colour and the corner closes clean. */
-  #modeTabs > .mode-tab.active:not(.is-back) {
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active:not(.is-back) {
     margin-bottom: -1.5px; padding-bottom: 8.5px; border-color: var(--tab-rim);
     background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
   }
@@ -14966,9 +14969,9 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .corner-link-label, .feedback-link .corner-link-label { max-width: 160px; opacity: 1; }
   .mode-tabs { gap: 5px; }
   .mode-tab { min-height: 40px; padding: 8px 10px; }
-  #typeTabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  #typeTabs .mode-tab { padding-inline: 4px; font-size: calc(18px + var(--text-size-adjust)); white-space: nowrap; }
-  #typeTabs .type-glyph { width: 16px; margin-right: 3px; }
+  :is(#typeTabs, [data-flip-id="typeTabs"]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  :is(#typeTabs, [data-flip-id="typeTabs"]) .mode-tab { padding-inline: 4px; font-size: calc(18px + var(--text-size-adjust)); white-space: nowrap; }
+  :is(#typeTabs, [data-flip-id="typeTabs"]) .type-glyph { width: 16px; margin-right: 3px; }
   .see-also { margin-inline: 0; }
   .nav-card-title { white-space: normal; }
   .nav-card-kicker { letter-spacing: 0.6px; }
