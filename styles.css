@@ -11056,18 +11056,33 @@
   /* The sealed stub: the slot a theme's secret charms would sit in if they were not filed
      in the locked drawer. Pencilled dashes rather than the solid rule its neighbours wear,
      no fill and no shadow, so it reads as a gap in the row that has been annotated rather
-     than as another charm. It is a button, but it never becomes one visually: the only
-     things that move on hover are the ink and the dashes. */
+     than as another charm. The words stay pencil-soft; the red wax seal is the one thing on
+     it at full strength, so the eye finds the signpost without the slot becoming a charm.
+     Hover inks the words and dashes in and gives the seal a twist, as if lifting it. */
   .ach-sealed {
     width: 100%; text-align: left; cursor: pointer; background: transparent;
-    border: 1.5px dashed rgba(43,39,34,0.22); opacity: 0.72;
-    transition: opacity 0.15s ease, border-color 0.15s ease;
+    border: 1.5px dashed rgba(43,39,34,0.16);
+    transition: border-color 0.15s ease;
   }
-  .ach-sealed .ach-group-mark { width: 30px; height: 28px; opacity: 0.55; }
-  .ach-sealed .ach-group-mark .ach-mark-glyph { width: 30px; height: 30px; }
+  :root[data-theme="dark"] .ach-sealed { border-color: rgba(236,229,214,0.2); }
+  .ach-sealed .ach-text { opacity: 0.72; transition: opacity 0.15s ease; }
   .ach-sealed .ach-nm { color: var(--ink-soft); }
-  .ach-sealed:hover { opacity: 1; border-color: rgba(43,39,34,0.36); }
+  .sealed-wax {
+    width: 32px; height: 32px; flex: none; overflow: visible;
+    transform: rotate(-9deg); transition: transform 0.2s ease;
+  }
+  .sealed-wax .wx { fill: #a8322d; }
+  .sealed-wax .wx-rim { fill: none; stroke: #7e211d; stroke-width: 1.2; }
+  .sealed-wax .wx-mark { fill: none; stroke: #f0b9ac; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  :root[data-theme="dark"] .sealed-wax .wx { fill: #9a2e2a; }
+  .ach-sealed:hover { border-color: rgba(43,39,34,0.36); }
+  :root[data-theme="dark"] .ach-sealed:hover { border-color: rgba(236,229,214,0.4); }
+  .ach-sealed:hover .ach-text { opacity: 1; }
+  .ach-sealed:hover .sealed-wax { transform: rotate(7deg) scale(1.06); }
   .ach-sealed:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .ach-sealed, .ach-sealed .ach-text, .sealed-wax { transition: none; }
+  }
 
   .ach.secret .charm-q { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); color: var(--ink-soft); width: 30px; text-align: center; flex: none; }
   /* Secret charm with the level-10 hints reward earned: the how-to is shown (still masked name). */

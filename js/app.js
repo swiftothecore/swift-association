@@ -3735,12 +3735,19 @@ const achSealedInTheme = (themeId) => ACHIEVEMENTS.filter((a) =>
    geometry as its neighbours, ruled with a pencil dash instead of a border, saying how many
    of this theme's charms are sealed and taking you to them. It is a signpost, not a charm —
    no ??? name, no charm well — because a second masked tile in the grid would read as a
-   sixth charm you could be told about, when the point is that it is filed somewhere else. */
+   sixth charm you could be told about, when the point is that it is filed somewhere else.
+   Its mark is a red wax seal with the locked drawer's own mark pressed into it: the one
+   thing on the tile at full strength, so the signpost is found without the slot turning
+   into a charm. */
+const SEALED_WAX = `<svg class="sealed-wax" viewBox="0 0 32 32" aria-hidden="true">` +
+  `<path class="wx" d="M16.6 1.4C19.8 2 21.6.9 24.2 2.9 26.6 4.7 29.4 5.6 30.2 8.9 31 11.9 30.7 13.9 30.8 16.9 30.5 20.3 30.2 23 27.8 25.7 25.4 28.6 22.8 30.1 18.9 30.6 15.7 31.1 13.2 30.8 10.1 29.4 6.9 28.1 4.6 26.6 2.9 23.2 1.4 20.2 1 17.5 1.4 14.3 1.9 10.4 3.1 7.9 5.8 5.4 8.6 2.5 12.5.9 16.6 1.4Z"/>` +
+  `<path class="wx-rim" d="M16 5.6C21.9 5.5 26.6 10 26.7 16 26.8 21.9 22.2 26.6 16.2 26.7 10.2 26.8 5.5 22.2 5.4 16.2 5.3 10.3 10 5.7 16 5.6Z"/>` +
+  `<use class="wx-mark" href="#theme-secret" x="7" y="6.4" width="18" height="18"/></svg>`;
 function achSealedStubHTML(themeId, n) {
   const plural = n === 1 ? "charm" : "charms";
   return `<button type="button" class="ach ach-sealed" data-ach-sealed="${themeId}"` +
     ` aria-label="${n} secret ${plural} from this theme, kept in the locked drawer below">` +
-    achThemeMarkHTML("secret", "ach-group-mark ach-group-mark--secret") +
+    SEALED_WAX +
     `<div class="ach-text"><div class="ach-nm">${n} sealed</div>` +
     `<div class="ach-dc">In the locked drawer</div></div></button>`;
 }
