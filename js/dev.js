@@ -1488,41 +1488,6 @@ export function initDev(api) {
     row(snowBtn, leafBtn),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
 
-  // ---- The scrolling desk ------------------------------------------------------
-  // Composition tooling, because the whole thing is a judgement call: reseed to
-  // see whether the rhythm survives a different draw, "only" to judge one
-  // incident type on its own, and showcase to look at the drawings with the
-  // composition taken out of the way.
-  const scDensN = num(1, 40);
-  const scTypeSel = select(["", "spill", "strand", "row", "handful", "stray"], (x) => x, (x) => x || "all types");
-  const scStat = () => {
-    const s = api.scatter.stats();
-    return `${s.incidents} incidents · ${s.beads} beads · ${s.props} props · ${s.marks} marks`;
-  };
-  const scPropsBtn = btn("props", () => scPropsBtn.classList.toggle("on", api.scatter.props()));
-  const scMarksBtn = btn("marks", () => scMarksBtn.classList.toggle("on", api.scatter.marks()));
-  const scDbgBtn = btn("bands", () => scDbgBtn.classList.toggle("on", api.scatter.debug()));
-  // The reveal frontier is invisible by design, so it needs a readout: the desk
-  // is only ever built out of sight, and "built" short of "page" is the rule
-  // working rather than a stalled walk. Turning the gate off builds the whole
-  // page at once, which is the only way to judge a tall composition without
-  // scrolling it into being first.
-  const scGateBtn = btn("reveal gate", () => scGateBtn.classList.toggle("on", api.scatter.gate()));
-  scPropsBtn.classList.add("on");
-  scMarksBtn.classList.add("on");
-  scGateBtn.classList.add("on");
-  body.append(section("desk",
-    row(btn("rebuild", () => { api.scatter.rebuild(); toast(scStat()); }),
-        btn("reseed", () => { api.scatter.reseed(); toast(scStat()); })),
-    row("density", scDensN, btn("set", () => { api.scatter.density(+scDensN.value); toast(scStat()); })),
-    row(scTypeSel, btn("only", () => { api.scatter.only(scTypeSel.value); toast(scStat()); })),
-    row(scPropsBtn, scMarksBtn, scDbgBtn),
-    row(scGateBtn, btn("frontier", () => {
-      const f = api.scatter.frontier();
-      toast(f ? `built ${f.built} of ${f.page} · fold at ${Math.round(f.fold)}` : "no desk");
-    })),
-    row(btn("showcase", () => { api.scatter.showcase(); toast("one of everything, top to bottom"); }))));
-
   // ---- Guest stamp ink ---------------------------------------------------------
   // The plate is rolled once per page load, so without this you would be reloading to
   // see the other eight. The select is the whole palette in order.

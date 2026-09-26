@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v223";
+const CACHE = "stta-v224";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -132,18 +132,13 @@ const ASSETS = [
   "js/cassette.js",
   // The desk placard's engraved count, likewise (see js/placard.js).
   "js/placard.js",
-  // The desk below the first screenful: the incident placer and the prop/mark
-  // drawings it works from. Precached together, since scatter.js imports
-  // deskprops.js and a half-cached pair would throw on an offline load.
-  "js/scatter.js",
-  "js/deskprops.js",
   // The polaroid and sticker artwork. app.js imports both at load, so an uncached copy
   // breaks a cold offline start rather than just the keepsakes drawer.
   "js/polaroids.js",
   "js/stickers.js",
   "js/tumblr.js",
-  // The stickers stuck to the closed notebook cover. Pairs with js/stickers.js above the
-  // same way scatter.js pairs with deskprops.js, and it is wanted earlier than either:
+  // The stickers stuck to the closed notebook cover. Pairs with js/stickers.js above,
+  // and it is wanted earlier than either:
   // the cover is the first thing drawn on a cold start, so a missing half of this pair
   // breaks the load screen itself.
   "js/stickercover.js",

@@ -593,7 +593,7 @@ function applySettings() {
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
   paintCoverRibbon();  // the bookmark wears the player's era, once they have named one
-  window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+  window.dispatchEvent(new CustomEvent("desk:refresh"));
 }
 
 // The bookmark ribbon on the closed cover. Red is the notebook's own silk, so no favourite
@@ -946,11 +946,11 @@ function updateDeskTail() {
   // settle anyway, but it would settle a frame later and through a ResizeObserver warning.
   if (document.body.dataset.tail !== tail) document.body.dataset.tail = tail;
 }
-/* Every signal that can change either side of that sum. The refresh event is the one the
-   desk scatter already listens for and is fired on every screen change, so a page swap is
+/* Every signal that can change either side of that sum. The refresh event is fired on
+   every screen change, so a page swap is
    covered without touching each call site; the observer catches growth WITHIN a screen
    (expanding sections, a list that just gained a row) that fires no event at all. */
-window.addEventListener("deskscatter:refresh", updateDeskTail);
+window.addEventListener("desk:refresh", updateDeskTail);
 window.addEventListener("resize", updateDeskTail);
 if ("ResizeObserver" in window) {
   const appEl = document.querySelector(".app");
@@ -989,7 +989,7 @@ function commitScreenPresentation(name, refresh = true) {
   // top of the card — and there is no flag that can get stuck up after a run that ended oddly.
   document.body.classList.toggle("in-game", name === "game" || name === "bonusplay");
   updateMastheadHome(name);
-  if (refresh) window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+  if (refresh) window.dispatchEvent(new CustomEvent("desk:refresh"));
 }
 
 // Which screen is up, by its `screens` key. Used by anything that opens a page from wherever
@@ -1296,7 +1296,7 @@ function beginPageTurn(anchor) {
         if (had) el.setAttribute(name, value == null ? "" : value);
         else el.removeAttribute(name);
       });
-      window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+      window.dispatchEvent(new CustomEvent("desk:refresh"));
       const done = callback;
       callback = null;
       if (done) done();
@@ -12181,9 +12181,9 @@ function fitRuthlessDoc() {
   requestAnimationFrame(fitRuthlessPass);
   setTimeout(() => {
     fitRuthlessPass();
-    // The notebook is a different height than it was when showScreen told the desk to re-fill, and
-    // gutter props left below a now-shorter page are enough to put the scrollbar back on their own.
-    window.dispatchEvent(new CustomEvent("deskscatter:refresh"));
+    // The notebook is a different height than it was when showScreen told the desk to re-measure,
+    // so the desk tail has to be settled again against the page it actually ended up.
+    window.dispatchEvent(new CustomEvent("desk:refresh"));
   }, 60);
 }
 let rlFitTimer = null;
@@ -27388,7 +27388,7 @@ function renderSettingsBody() {
     setSection("",
       setChoiceHTML("theme", "Theme", "a dark notebook for low light", [{ val: "light", label: "Light" }, { val: "system", label: "System" }, { val: "dark", label: "Dark" }]) +
       setChoiceHTML("textSize", "Text size", "across the notebook and menus", [{ val: "small", label: "Small" }, { val: "standard", label: "Standard" }, { val: "large", label: "Large" }]) +
-      setChoiceHTML("deskDensity", "Desk decorations", "objects and bracelet-making incidents beside the page", [{ val: "full", label: "Full" }, { val: "quiet", label: "Quiet" }, { val: "bare", label: "Bare" }]) +
+      setChoiceHTML("deskDensity", "Desk decorations", "objects on the desk beside the page", [{ val: "full", label: "Full" }, { val: "quiet", label: "Quiet" }, { val: "bare", label: "Bare" }]) +
       setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
       setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setChecklistHTML([
@@ -33330,8 +33330,6 @@ function buildDevApi() {
       ink: setGuestShelfInk,
       reroll: () => { frankGuestStamp(); return guestShelfInk(); },
     },
-    // The scrolling desk (js/scatter.js) — cosmetic gutter incidents, props and
-    // marks. All cosmetic: nothing here touches game state or storage.
     // The coffee's bubble raft. It is dealt on load and only changes on its own slow clock, so
     // reshuffling it by hand is the only way to see a run of different rafts, and popping on
     // demand saves waiting out an uneven several-second gap for the one animation.
@@ -33339,24 +33337,6 @@ function buildDevApi() {
       raft: () => { const svg = document.querySelector(".di-mug svg"); if (svg) seedMugRaft(svg); return MUG_RAFT_SIZE; },
       pop: () => { const layer = document.querySelector(".di-mug .mg-bubbles"); if (layer) popMugBubble(layer); },
       clumps: () => mugRaftClumps.map((c) => ({ x: +c.x.toFixed(1), y: +c.y.toFixed(1), spread: +c.spread.toFixed(1), share: +c.share.toFixed(2) })),
-    },
-    scatter: {
-      rebuild: () => window.__deskScatter && window.__deskScatter.rebuild(),
-      reseed: (n) => window.__deskScatter && window.__deskScatter.reseed(n),
-      density: (m) => window.__deskScatter && window.__deskScatter.density(m),
-      count: () => (window.__deskScatter ? window.__deskScatter.count() : 0),
-      stats: () => (window.__deskScatter ? window.__deskScatter.stats() : { beads: 0, props: 0, marks: 0, incidents: 0 }),
-      only: (t) => window.__deskScatter && window.__deskScatter.only(t),
-      types: () => (window.__deskScatter ? window.__deskScatter.types() : []),
-      props: (on) => window.__deskScatter && window.__deskScatter.props(on),
-      marks: (on) => window.__deskScatter && window.__deskScatter.marks(on),
-      debug: (on) => window.__deskScatter && window.__deskScatter.debug(on),
-      // The reveal frontier: how far down the desk has actually been built.
-      // Desk is only ever created out of sight, so built() sitting well short
-      // of the page bottom is correct; gate(false) builds it all at once.
-      frontier: () => (window.__deskScatter ? window.__deskScatter.frontier() : null),
-      gate: (on) => window.__deskScatter && window.__deskScatter.gate(on),
-      showcase: () => window.__deskScatter && window.__deskScatter.showcase(),
     },
     // Theme (light / dark notebook). set() writes the real setting so a reload keeps it;
     // toggle() flips light<->dark; cycle() walks light -> system -> dark for eyeballing all

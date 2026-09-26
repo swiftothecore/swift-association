@@ -162,7 +162,7 @@ function layout(geo) {
     // the order the player earned them, so every subset has to hold up, not just the full set.
     //
     // The rest go on by CLUSTER PULL: hang off something already there. Without these the
-    // field reads as evenly salted, which is the desk-scatter failure mode: perfectly spaced
+    // field reads as evenly salted, and perfectly spaced
     // is a metronome, and a couple of deliberate pairs are what make the gaps read as gaps.
     const cluster = placed.length > 1 && rng() < CLUSTER_ODDS;
     let spot = null, spotScore = -1, curRad = rad;

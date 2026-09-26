@@ -8,7 +8,7 @@
 // pigeon, a bottle, a stamp, a tin-can phone, an airmail envelope. The bottle is
 // already an egg in this game (see js/app.js surfaceBottle), so the family holds.
 //
-// Drawing rules, the same ones the desk props follow (js/deskprops.js):
+// Drawing rules, the same ones the desk props in index.html follow:
 //   - real objects, lit from the upper left, with a shaded side and a warm palette
 //     taken from the paper. Nothing here is flat line-art.
 //   - each entry is the INNER markup of its own viewBox; the launcher wraps it,

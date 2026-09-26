@@ -397,18 +397,15 @@
      keep their own colours — but at night the desk is barely lit, and a fully-lit
      cream pad glows brighter than the notebook and steals the eye. Dim the fixed
      props with brightness (their per-variant drop-shadows are preserved, just
-     deepened) and the scrolling scatter with opacity, so everything reads as
-     lit-but-dim. The multiply-blended stains (.desk-mark) are left alone. */
+     deepened), so everything reads as lit-but-dim. */
   :root[data-theme="dark"] .desk-item {
     filter: drop-shadow(3px 8px 8px rgba(0, 0, 0, 0.55)) saturate(0.82) brightness(0.6);
   }
-  :root[data-theme="dark"] .desk-drop,
-  :root[data-theme="dark"] .bead-scatter { opacity: 0.58; }
   :root[data-theme="dark"] .stamp { filter: brightness(0.82) saturate(0.9); }
 
   * { box-sizing: border-box; }
 
-  /* Pin the page to one axis. Both desk layers (.desk-items, .desk-scatter) are
+  /* Pin the page to one axis. The desk layer (.desk-items) is
      absolute/left:0/right:0 with overflow:hidden, so their clip box is the
      initial containing block: exactly the viewport, never the scrollable area.
      Props are deliberately drawn hanging past that edge, so the moment the page
@@ -491,8 +488,8 @@
      stays with the viewport. */
   .desk-items { position: absolute; top: 0; left: 0; right: 0; height: 100vh; z-index: 0; pointer-events: none; display: none; overflow: hidden; }
   /* Player-facing decoration density. Quiet keeps the desk's working story but removes the
-     largest edge objects; the scrolling layer separately lengthens its deliberate voids. */
-  .desk-items, .desk-scatter { --text-size-adjust: 0px; }
+     largest edge objects. */
+  .desk-items { --text-size-adjust: 0px; }
   body[data-desk-density="quiet"] :is(.di-glasses, .di-mug, .di-cassette, .di-crumple) { display: none; }
   body[data-desk-density="bare"] .desk-items { display: none !important; }
   /* December snowfall: full-viewport decorative canvas, above the notebook but
@@ -728,125 +725,6 @@
     filter: drop-shadow(4px 7px 6px rgba(46,32,14,0.28))
             drop-shadow(1px 2px 1.5px rgba(46,32,14,0.30)) saturate(0.9);
   }
-
-  /* ---------- The scrolling desk (js/scatter.js + js/deskprops.js) ----------
-     Everything on the wood below the first screenful: bead incidents, dropped
-     objects, and the stains under both. Document-anchored like .desk-items but
-     spanning the full scroll height; the module sets its pixel height and
-     places every child. Purely decorative, non-interactive, desktop-only.
-
-     overflow:hidden is load-bearing, not tidiness: props are deliberately
-     placed to hang past the window edge so the desk reads as continuing beyond
-     it, and this is what crops them without opening a horizontal scrollbar.
-
-     Layering inside here is painter's-algorithm by screen Y (see zFor in
-     scatter.js), so nothing below needs a z-index of its own except the marks,
-     which sit under the whole stack because a stain IS the desk surface. */
-  .desk-scatter {
-    position: absolute; top: 0; left: 0; right: 0; z-index: 0;
-    pointer-events: none; overflow: hidden; display: none;
-  }
-  @media (min-width: 1120px) { .desk-scatter { display: block; } }
-
-  /* Every bead on the wood is one <use> of the sprite in js/deskprops.js, which
-     is the same drawing as the fixed spill in index.html. These used to be divs
-     with three radial gradients each, and beside the designed spill upstairs
-     they read as stickers: no chamfer, no glint, no countersink, no acrylic
-     thickness past the face, and a letter printed on the plastic instead of cut
-     into it. None of those are things a stack of gradients can draw. */
-  .bead-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
-  .bead-scatter {
-    position: absolute;
-    /* --sz is the BEAD's diameter; the sprite's box is a shade wider than the
-       bead it holds, so the element has to be scaled up by the same fraction
-       for --sz to keep meaning what it says. */
-    width: calc(var(--sz, 20px) * 26 / 21); height: calc(var(--sz, 20px) * 26 / 21);
-    transform: translate(-50%, -50%);
-    overflow: visible;
-    opacity: 0.94;
-    /* --sh scales the whole shadow with the bead, so a big bead visibly sits
-       higher off the wood than a small one. One shared shadow for every bead is
-       what used to flatten the spill into stickers at a single depth. */
-    filter:
-      drop-shadow(calc(1.4px * var(--sh, 1)) calc(2.8px * var(--sh, 1)) calc(2px * var(--sh, 1)) rgba(46,32,14,0.32))
-      saturate(0.9);
-  }
-  /* The stamp, in the fixed spill's own metrics, because the sprite is drawn in
-     the space those were measured in. Two passes: the ink, and half a unit
-     under it the lower lip of the groove, which is the only part of the cut
-     that faces the lamp. */
-  .bead-scatter .bead-stamp {
-    font: 700 calc(14px + var(--text-size-adjust)) "Courier Prime", monospace;
-    fill: #2e2b26; text-anchor: middle; opacity: 0.92;
-  }
-  .bead-scatter .bead-stamp-lip { fill: #fffdf3; opacity: 0.75; }
-  /* a bead alone in a lot of empty wood. Nothing is crowding it, so its shadow
-     gets to run long and soft, which is what reads as "this one rolled here". */
-  .bead-scatter.lonely {
-    filter:
-      drop-shadow(calc(2.2px * var(--sh, 1)) calc(4.4px * var(--sh, 1)) calc(4px * var(--sh, 1)) rgba(46,32,14,0.26))
-      saturate(0.9);
-  }
-  /* the floss a strand's beads are threaded on. Drawn as an SVG so the cord can
-     curve; the shadow is thin and tight because thread lies flat on the wood. */
-  .scatter-thread {
-    position: absolute; overflow: visible;
-    filter: drop-shadow(1px 2px 1.4px rgba(46,32,14,0.26));
-  }
-
-  /* ---------- Dropped objects (DESK_PROPS) ----------
-     Same treatment as the fixed .desk-item props, because they are the same
-     desk: lit from the upper left, slightly desaturated so nothing on the wood
-     competes with the paper. Rationed to about one per screenful by scatter.js,
-     which is what keeps the gutter a desk rather than a junk shop. */
-  .desk-drop {
-    position: absolute; opacity: 0.93;
-    filter: drop-shadow(3px 6px 5px rgba(46,32,14,0.30)) saturate(0.88);
-  }
-  .desk-drop svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  /* the ruler is a thick solid block of wood, so it earns a heavier shadow than
-     a coil of string does */
-  .desk-drop.dp-ruler { filter: drop-shadow(4px 7px 5px rgba(46,32,14,0.34)) saturate(0.88); }
-  .desk-drop.dp-lead,
-  .desk-drop.dp-string { filter: drop-shadow(2px 4px 3px rgba(46,32,14,0.28)) saturate(0.88); }
-  /* prop lettering: the bracelet's own bead stamps, and the printed numbers on
-     the spool card and the ruler. Same typewriter face the functional UI uses. */
-  .dp-bead-letter text {
-    font: 700 11px "Courier Prime", monospace;
-    fill: #2e2b26; text-anchor: middle; dominant-baseline: middle;
-  }
-  .dp-spool-no {
-    font: 400 11px "Courier Prime", monospace;
-    fill: #8b7f63; text-anchor: middle;
-  }
-  .dp-ruler-no text {
-    font: 400 11px "Courier Prime", monospace;
-    fill: #5f4a22; text-anchor: middle;
-  }
-
-  /* ---------- Marks (DESK_MARKS) ----------
-     Stains and debris. These are the desk's history rather than things resting
-     on it, so they are frequent, low-contrast, and painted under everything.
-     The two families need opposite treatment: a stain is IN the wood and gets
-     multiply so the grain shows through it, while shavings and crumbs are
-     objects lying on top and keep a faint shadow of their own. */
-  .desk-mark { position: absolute; z-index: 0; }
-  .desk-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .desk-mark.dm-ring-full,
-  .desk-mark.dm-ring-half,
-  .desk-mark.dm-blot { mix-blend-mode: multiply; }
-  .desk-mark.dm-shavings,
-  .desk-mark.dm-crumbs,
-  .desk-mark.dm-offcuts {
-    filter: drop-shadow(1px 2px 1.5px rgba(46,32,14,0.24)) saturate(0.9);
-  }
-
-  /* dev overlay (__deskScatter.debug): band guides plus a tint per layer, so a
-     bare stretch of wood can be read as a deliberate void rather than a bug */
-  .scatter-band { position: absolute; z-index: 0; outline: 1px dashed rgba(38,90,180,0.5); background: rgba(38,90,180,0.05); }
-  .desk-scatter.dbg .desk-drop { outline: 1px dashed rgba(20,110,255,0.75); }
-  .desk-scatter.dbg .desk-mark { outline: 1px dashed rgba(20,150,70,0.7); }
-  .desk-scatter.dbg .bead-scatter { outline: 1px solid rgba(220,30,90,0.55); }
 
   /* mug steam - four wisps drifting up, each starting a beat after the last so
      the column never pulses as one object. The keyframes own opacity outright,
