@@ -7059,13 +7059,25 @@
   .cpc-icon { font-family: var(--type); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); color: #b23a3a; }
   .cpc-name { font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); color: var(--ink); }
   .cpc-desc { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.35; color: var(--ink-soft); }
+  /* Choose Your Path's mulligan is an eraser: rub the word out and write another. The label
+     is on its paper sleeve and the swaps left on the rubber end. Built by renderPathSkip. */
   .path-skip-btn {
-    display: block; margin: 8px auto 0; cursor: pointer;
-    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.4px;
-    color: var(--ink-soft); background: transparent; border: 1px dashed var(--ink-soft);
-    border-radius: 3px; padding: 3px 10px;
+    --eraser: #ecc1b8;
+    display: flex; align-items: stretch; margin: 12px auto 0; padding: 0; cursor: pointer;
+    font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.6px;
+    color: var(--ink); background: none;
+    border: 2px solid var(--ink); border-radius: 3px 7px 7px 3px; overflow: hidden;
+    box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.16);
+    transform: rotate(1deg); transition: transform 0.15s ease;
   }
-  .path-skip-btn:hover { color: var(--ink); border-color: var(--ink); }
+  :root[data-theme="dark"] .path-skip-btn { --eraser: #6b4540; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.35); }
+  .path-skip-btn:is(:hover, :focus-visible) { transform: rotate(-2deg) translateX(-3px); }
+  .pse-sleeve { display: flex; align-items: center; gap: 7px; padding: 7px 12px 7px 10px; background: var(--paper); border-right: 2px solid var(--ink); }
+  .pse-rubber { display: flex; align-items: center; padding: 7px 14px; background: var(--eraser); font-weight: 400; }
+  .pse-mark {
+    width: 18px; height: 18px; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+  }
   /* Devil's Path — the same fork overlay, but every choice is a curse: a darker,
      red-tinted wash so a fork visibly reads as a threat, not a treat. */
   .chall-path-overlay.is-devil { background: rgba(58, 30, 28, 0.93); }
@@ -8741,18 +8753,38 @@
 
   /* ---------- Hints (progressive ladder) ---------- */
   .hint-btn[hidden] { display: none; }
+  /* A stamp in the era accent, the Insurance shield's sibling in the same slot under the
+     answer line. The ladder's three rungs are pips beneath the label (paintHintBtn in
+     app.js), filled for each reveal still to come on this page, so the ladder can be read
+     before it is touched. The nudge rocks the stamp rather than pulsing a wash behind it. */
   .hint-btn {
-    display: block; margin: 10px auto 0; cursor: pointer;
-    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-accent);
-    background: transparent; border: 1.5px dashed var(--ink-accent);
-    border-radius: 3px; padding: 3px 16px; transition: background 0.15s, opacity 0.15s;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+    margin: 12px auto 0; padding: 7px 14px 7px 12px; cursor: pointer;
+    color: var(--ink-accent); background: color-mix(in srgb, var(--ink-accent) 7%, var(--paper));
+    border: 2px solid var(--ink-accent); border-radius: 3px;
+    box-shadow: 0 0 0 1.5px var(--paper) inset, 2px 3px 0 color-mix(in srgb, var(--ink-accent) 22%, transparent);
+    transform: rotate(-0.8deg);
+    transition: background 0.14s ease, color 0.14s ease, transform 0.12s ease, opacity 0.15s;
   }
-  .hint-btn:hover { background: var(--page-wash); }
-  .hint-btn:disabled { color: var(--ink-soft); border-color: var(--ink-soft); cursor: default; opacity: 0.7; }
-  .hint-btn.urge { animation: hintPulse 1.4s ease-in-out infinite; }
-  @keyframes hintPulse {
-    0%, 100% { transform: scale(1); background: transparent; }
-    50% { transform: scale(1.05); background: var(--highlighter); }
+  .hint-btn:is(:hover, :focus-visible):not(:disabled) {
+    background: var(--ink-accent); color: var(--paper); transform: rotate(-0.8deg) translateY(-1px);
+  }
+  .hint-btn:disabled { cursor: default; opacity: 0.5; }
+  .hint-lab {
+    font-family: var(--type); font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase;
+    font-size: calc(12px + var(--text-size-adjust)); line-height: 1.1;
+  }
+  .hint-sub {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px; opacity: 0.85;
+  }
+  .hint-pips { display: inline-flex; gap: 3px; }
+  .hint-pips i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .hint-pips i.spent { background: none; box-shadow: inset 0 0 0 1.2px currentColor; }
+  .hint-btn.urge { animation: hintNudge 1.4s ease-in-out infinite; }
+  @keyframes hintNudge {
+    0%, 100% { transform: rotate(-0.8deg); }
+    50% { transform: rotate(-2.2deg) scale(1.04); }
   }
   .hint-box { text-align: center; margin-top: 10px; }
   .hint-tier {
@@ -8778,16 +8810,33 @@
   /* The one control on an Impostor page, so it is the last thing that can afford to be a
      literal: as #7a2b2b on a dashed #a86a6a it measured 1.62:1 on the night sheet. Both are
      --red-pen now, and the hover wash is mixed into --paper instead of being a fixed pink. */
+  /* Drawn as what it says: an index flag in red pen, pointing at the word it calls out.
+     The body is the button; the point is two pseudo-elements, an ink triangle and a fill
+     triangle inset from it by the border's width (so the fill's corners are worked out for
+     this 44px height, and move with it). Hover pushes the flag in. */
   .flag-btn {
-    cursor: pointer; font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); color: var(--red-pen);
-    background: transparent; border: 1.5px dashed color-mix(in srgb, var(--red-pen) 62%, var(--paper)); border-radius: 3px;
-    padding: 3px 18px; transition: background 0.15s, transform 0.1s;
+    --flag-ink: var(--red-pen);
+    --flag-fill: color-mix(in srgb, var(--flag-ink) 12%, var(--paper));
+    position: relative; height: 44px; margin-right: 22px; padding: 0 16px 0 20px; cursor: pointer;
     display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); color: var(--flag-ink);
+    background: var(--flag-fill);
+    border: 2px solid var(--flag-ink); border-right: 0; border-radius: 2px 0 0 2px;
+    transition: transform 0.15s ease;
   }
-  .flag-btn .flag-flag { font-size: calc(15px + var(--text-size-adjust)); }
-  .flag-btn:hover { background: color-mix(in srgb, var(--red-pen) 14%, var(--paper)); }
-  .flag-btn:active { transform: scale(0.97); }
-  .flag-btn:disabled { color: var(--ink-soft); border-color: var(--ink-soft); cursor: default; opacity: 0.6; }
+  .flag-btn::before, .flag-btn::after {
+    content: ""; position: absolute; top: -2px; left: 100%; width: 21px; height: 44px; pointer-events: none;
+  }
+  .flag-btn::before { background: var(--flag-ink); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+  .flag-btn::after { background: var(--flag-fill); clip-path: polygon(0 2.9px, 18.24px 22px, 0 41.1px); }
+  .flag-btn:is(:hover, :focus-visible):not(:disabled) { --flag-fill: color-mix(in srgb, var(--flag-ink) 24%, var(--paper)); transform: translateX(5px); }
+  .flag-btn:active:not(:disabled) { transform: translateX(8px); }
+  .flag-btn:disabled { --flag-ink: var(--ink-soft); cursor: default; opacity: 0.6; }
+  .flag-btn .flag-flag {
+    width: 20px; height: 20px; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .flag-btn .flag-flag .fl { fill: currentColor; fill-opacity: 0.18; }
   .flag-note { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.3px; color: var(--ink-soft); }
   /* the "you caught a fake" verdict card */
   .impostor-caught {
@@ -8973,6 +9022,7 @@
   .hint-line mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
   @media (prefers-reduced-motion: reduce) {
     .hint-btn.urge { animation: none; }
+    .hint-btn, .flag-btn, .path-skip-btn { transition: none; }
     .feedback .sticker { animation: none; }
   }
 
@@ -9394,14 +9444,19 @@
        Pull the glyph back onto the typewritten caption's optical centre. */
     transform: translateX(-8px);
   }
+  /* A solid ink underline, with the highlighter laid behind the word on hover. Both are drawn
+     on the text rather than on the box, so the taller touch target coarse pointers get (see
+     the pointer: coarse block) moves neither of them away from the word. */
   .countdown-skip {
     margin-top: 8px;
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1px;
-    color: var(--ink-soft); background: transparent;
-    border: none; border-bottom: 1px dashed var(--ink-soft);
-    padding: 2px 1px; cursor: pointer;
+    font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
+    color: var(--ink); background: none;
+    text-decoration: underline 2px; text-underline-offset: 4px;
+    border: none; padding: 3px 3px; cursor: pointer;
   }
-  .countdown-skip:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  .countdown-skip:is(:hover, :focus-visible) {
+    background: linear-gradient(transparent 30%, var(--highlighter) 30%) center / 100% 1.25em no-repeat;
+  }
 
   /* ---------- Results ---------- */
   /* The tally centres on the same axis as the finished bracelet below it (both are a
@@ -15113,7 +15168,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* Keep the drawn marks small while their touch area is comfortable. */
 @media (pointer: coarse) {
-  .btn-link, .countdown-skip, .hint-btn, .ts-reset, .pride-picker-top button { min-height: 44px; padding-block: 10px; }
+  .btn-link, .countdown-skip, .ts-reset, .pride-picker-top button { min-height: 44px; padding-block: 10px; }
   .ts-arw { width: 44px; height: 44px; }
   .rb-rand { min-width: 44px; min-height: 44px; }
   .rb-row, .rb-sw-col, .rb-medal { min-height: 44px; }

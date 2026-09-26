@@ -16703,7 +16703,7 @@ function renderHintAffordance() {
   if (hintsAllowed() && roundHintSong) {
     btn.hidden = false;
     btn.disabled = false;
-    btn.textContent = hintBudgetActive() ? `need a hint? (${hintBudgetLeft} left)` : "need a hint?";
+    paintHintBtn(btn, "need a hint?", 3);
     // Relaxed has no clock — nudge after a few idle seconds instead of at half-time.
     if (!(currentMode.seconds > 0) && !motionReduced()) {
       hintUrgeTimer = setTimeout(() => {
@@ -16762,15 +16762,25 @@ function useHint() {
   // has just moved the budget the hint chip is reading out.
   applyInputHints();
   if (btn && hintTier >= 3) {
-    btn.textContent = "no more hints";
+    paintHintBtn(btn, "no more hints", 0);
     btn.disabled = true;
   } else if (btn && outOfBudget) {
     // Custom mode ran the hint budget dry before the full ladder — retire the affordance.
-    btn.textContent = "no more hints";
+    paintHintBtn(btn, "no more hints", 0);
     btn.disabled = true;
   } else if (btn) {
-    btn.textContent = hintBudgetActive() ? `another hint? (${hintBudgetLeft} left)` : "another hint?";
+    paintHintBtn(btn, "another hint?", 3 - hintTier);
   }
+}
+
+// The hint stamp (styles.css, "Hints"): the label, then the ladder's three rungs as pips, one
+// filled per reveal still to come on this page, so the ladder is visible before it is touched.
+// Custom mode's budget is run-wide, not per page, so it is said in words beside the pips.
+function paintHintBtn(btn, label, left) {
+  const pips = [0, 1, 2].map((i) => `<i${i < left ? "" : ` class="spent"`}></i>`).join("");
+  const budget = hintBudgetActive() ? ` · ${hintBudgetLeft} in the run` : "";
+  btn.innerHTML = `<span class="hint-lab">${label}</span>` +
+    `<span class="hint-sub"><span class="hint-pips" aria-hidden="true">${pips}</span>${left} of 3 left${budget}</span>`;
 }
 
 /* ---------- The randomiser ----------
@@ -21222,6 +21232,8 @@ function usePathSkip() {
   startTimer();
 }
 
+// Two arrows chasing each other round: the swap, drawn rather than set as a ↻ glyph.
+const SWAP_MARK = `<svg class="pse-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.7 8.9A7.1 7.1 0 0 0 6.1 7.2"/><path d="M5.4 3.4l.6 4.1 4-.9"/><path d="M5.4 15.1a7 7 0 0 0 12.7 1.5"/><path d="M18.8 20.7l-.6-4.1-3.9.8"/></svg>`;
 // Show/refresh the Mulligan button during a Choose Your Path run (only while swaps remain).
 function renderPathSkip() {
   let btn = $("pathSkipBtn");
@@ -21236,7 +21248,9 @@ function renderPathSkip() {
     const hintBtn = $("hintBtn");
     hintBtn.parentNode.insertBefore(btn, hintBtn);
   }
-  btn.textContent = `↻ swap this word (${skipTokens} left)`;
+  // An eraser in its paper sleeve (styles.css, .path-skip-btn): rub the word out, write another.
+  btn.setAttribute("aria-label", `swap this word (${skipTokens} left)`);
+  btn.innerHTML = `<span class="pse-sleeve">${SWAP_MARK}swap this word</span><span class="pse-rubber">${skipTokens} left</span>`;
 }
 
 /* ---------- Devil's Path: choose the lesser of two evils ---------- */

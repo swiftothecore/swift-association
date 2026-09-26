@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v220";
+const CACHE = "stta-v221";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
