@@ -8955,7 +8955,7 @@
   @media (prefers-reduced-motion: reduce) {
     .hint-btn.urge { animation: none; }
     .hint-btn, .flag-btn, .path-skip-btn, .cover-strip, .hist-more, .date-stamp,
-    .sign-pen, .giveup-ticket, .env-btn, .env-sheet, .pencil-half { transition: none; }
+    .sign-pen, .giveup-ticket, .env-btn, .env-sheet, .pencil-half, .set-cover-sticker { transition: none; }
     .feedback .sticker { animation: none; }
   }
 
@@ -14136,16 +14136,29 @@
   }
   .set-cover-count { color: var(--ink); }
   .set-cover-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(94px, 1fr)); gap: 10px; }
+  /* A sticker chosen for the cover sits on a square of the cover itself: the same kraft board
+     as the "Look at the cover" strip, its spine ruled down the left edge. One left in the drawer
+     is plain paper, and hovering it tints the board in to show where a press will put it. The
+     board keeps dark ink in both themes, because it is card, not the page. */
   .set-cover-sticker {
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
     gap: 6px; padding: 12px 5px 9px; min-width: 0;
-    border: 1px dashed var(--rule-soft, var(--ink-soft)); border-radius: 3px; background: transparent;
-    color: var(--ink); cursor: pointer;
+    border: 1.5px solid color-mix(in srgb, var(--ink) 20%, transparent); border-radius: 3px;
+    background: var(--paper); color: var(--ink); cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
   }
-  .set-cover-sticker[aria-pressed="true"] { border-style: solid; border-color: var(--ink-soft); background: var(--paper-edge); }
-  .set-cover-sticker[aria-disabled="true"] { cursor: default; }
+  .set-cover-sticker[aria-pressed="true"] {
+    background: #c4a676; border-color: #6a5029; color: #2b2622;
+    box-shadow: inset 6px 0 0 #6a5029, 2px 2px 0 rgba(106, 80, 41, 0.3);
+  }
+  :root[data-theme="dark"] .set-cover-sticker[aria-pressed="true"] { background: #9d855a; }
+  .set-cover-sticker[aria-pressed="true"] .set-cover-state { color: #4a3a22; font-weight: 700; }
+  .set-cover-sticker[aria-disabled="true"] { cursor: default; opacity: 0.5; }
   .set-cover-sticker:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-  .set-cover-sticker:hover { border-color: var(--ink); }
+  .set-cover-sticker[aria-pressed="false"]:not([aria-disabled="true"]):hover {
+    border-color: #6a5029; background: color-mix(in srgb, #c4a676 26%, var(--paper));
+  }
+  .set-cover-sticker[aria-pressed="true"]:hover { transform: translateY(-2px); }
   .set-cover-sticker .sticker { width: 70px; height: 70px; margin-bottom: 5px; }
   .set-cover-sticker .sticker svg { width: 100%; height: 100%; }
   .set-cover-name { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1.15; }
