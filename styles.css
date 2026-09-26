@@ -1868,6 +1868,55 @@
   }
   .btn-ghost:hover { background: var(--highlighter); border-style: solid; }
 
+  /* ---------- The "next page" slip ----------
+     The button a run presses thirteen times is a strip of the next sheet: the era
+     highlighter under that sheet's own ruling and red margin line, with its top corner
+     already turned down, ready to go over. Hover folds the corner further.
+     The corner is cut off .turn-sheet with clip-path and the flap drawn back in over it,
+     plain on its back the way a folded page is. The drop shadow lives on the button, outside
+     the clip, which is the only place it can follow the cut instead of being cut with it.
+     Half the crease stroke is clipped away with the corner, so it is drawn twice as wide.
+     Built by turnSlip() in app.js. */
+  @property --turn-ear { syntax: "<length>"; inherits: true; initial-value: 16px; }
+  .turn-slip {
+    --turn-ear: 16px;
+    --turn-paper: #fbf7ec;
+    --turn-rule: rgba(43, 39, 34, 0.09);
+    --turn-shade: rgba(43, 39, 34, 0.18);
+    display: block; width: 100%; min-height: 46px; margin-top: 14px; padding: 0;
+    font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 1px; font-weight: 700;
+    color: var(--ink); background: none; border: 0;
+    filter: drop-shadow(3px 3px 0 var(--turn-shade));
+    transition: --turn-ear 0.22s ease, filter 0.12s, translate 0.12s;
+  }
+  :root[data-theme="dark"] .turn-slip {
+    --turn-paper: #332c22;
+    --turn-rule: rgba(236, 229, 214, 0.07);
+    --turn-shade: rgba(0, 0, 0, 0.35);
+  }
+  body[data-contrast="high"] .turn-slip { --turn-paper: var(--paper); }
+  .turn-slip:is(:hover, :focus-visible) { --turn-ear: 27px; }
+  .turn-slip:active { translate: 2px 2px; filter: drop-shadow(1px 1px 0 var(--turn-shade)); }
+  .turn-sheet {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    min-height: 46px; padding: 10px 14px;
+    background:
+      linear-gradient(90deg, transparent 21px, var(--margin) 21px 22.5px, transparent 22.5px),
+      repeating-linear-gradient(180deg, transparent 0 8px, var(--turn-rule) 8px 9px),
+      linear-gradient(var(--highlighter), var(--highlighter)), var(--turn-paper);
+    border: 2px solid var(--ink); border-radius: 1px;
+    clip-path: polygon(0 0, calc(100% - var(--turn-ear)) 0, 100% var(--turn-ear), 100% 100%, 0 100%);
+  }
+  .turn-ear { position: absolute; top: -2px; right: -2px; width: var(--turn-ear); height: var(--turn-ear); pointer-events: none; }
+  .turn-ear svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .turn-ear .flap { fill: var(--turn-paper); }
+  .turn-ear .fold { fill: none; stroke: var(--ink); stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .turn-ear .crease { stroke-width: 4; }
+  body[data-reduce-motion="on"] .turn-slip { transition: none; }
+  @media (prefers-reduced-motion: reduce) {
+    body:not([data-reduce-motion="off"]) .turn-slip { transition: none; }
+  }
+
   /* ---------- The result stamps: TAKE (replay) and ENCORE (keep going) ----------
      The finished tally gets marked the way a teacher stamps a page: big rubber stamps
      (the rarity stamp's hero siblings — same typewriter caps, double ring, multiply ink),
@@ -15008,7 +15057,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .tap-tile { min-width: 0; }
   .tap-tile-title { overflow-wrap: anywhere; }
   .feedback-advance { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
-  .feedback-advance > .btn-ghost { width: 100%; margin: 0; min-height: 46px; }
+  .feedback-advance > :is(.btn-ghost, .turn-slip) { width: 100%; margin: 0; min-height: 46px; }
   .feedback-advance .countdown { display: flex; align-items: center; gap: 8px; margin: 0; }
   .feedback-advance .countdown b { display: inline; font-size: calc(28px + var(--text-size-adjust)); transform: none; }
   .feedback-advance .countdown-skip { margin: 0; }
@@ -15081,14 +15130,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   #settingsModal .settings-card { max-height: calc(100dvh - 70px); }
 }
 
-/* Typed answers have the same explicit action with or without a software keyboard. */
-.answer-submit {
-  display: block; min-height: 44px; margin: 8px auto 0; padding: 8px 16px;
-  font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
-  color: var(--ink); background: transparent; border: 1px dashed var(--ink-soft); border-radius: 3px;
-}
-.answer-submit[hidden] { display: none; }
-.answer-submit:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .dropdown { overflow-y: auto; overscroll-behavior: contain; }
 .dropdown[data-side="above"] { box-shadow: 0 -5px 12px rgba(43,39,34,0.12); }
 
@@ -15118,8 +15159,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   }
   .corner-link { min-height: 44px; }
 }
-.input-area:has(.answer-submit)::before { top: 10px; bottom: auto; }
-.answer-submit:disabled { opacity: 0.55; cursor: default; }
 .tbt-pen { bottom: var(--keyboard-inset, 0px); }
 @media (max-width: 560px) {
   .tbt-row { margin-left: -26px; grid-template-columns: 15px minmax(0, 1fr) auto; column-gap: 11px; }

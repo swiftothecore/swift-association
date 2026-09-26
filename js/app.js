@@ -7718,7 +7718,6 @@ function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
                ? ` role="combobox" aria-expanded="false" aria-controls="bonusDropdown" ` +
                  `aria-haspopup="listbox" aria-autocomplete="list"`
                : "") + ` />` +
-      `<button type="button" class="bonus-submit answer-submit" aria-label="Submit answer">write it in</button>` +
       `<div id="bonusReject" class="bg-reject"></div>` +
       (dropdown ? `<div id="bonusDropdown" class="dropdown" role="listbox" aria-label="Matching songs"></div>` : "") +
     `</div>` +
@@ -9273,6 +9272,16 @@ function bonusBannerText(correct, isTimeout) {
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
+// The "next page" button every verdict ends on, when auto-advance is off: a ruled slip with
+// its corner turned down (styles.css, "next page" slip). One builder so the game, the bonus
+// shelf and the impostor page can never draw it three different ways.
+function turnSlip(id, label = "next page") {
+  return `<button type="button" id="${id}" class="turn-slip"><span class="turn-sheet">${label} →` +
+    `<span class="turn-ear" aria-hidden="true"><svg viewBox="0 0 20 20" preserveAspectRatio="none">` +
+    `<path class="flap" d="M0 0L20 20H0Z"/><path class="fold" d="M1 0V19H20"/><path class="fold crease" d="M0 0L20 20"/>` +
+    `</svg></span></span></button>`;
+}
+
 function settleBonusRound(correct, detail, isTimeout = false) {
   bonusLocked = true;
   stopBonusClock();
@@ -9485,7 +9494,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     ? `<div class="countdown">${last ? "the back cover" : "next page"} in ` +
         `<b id="bonusCd">${settings.countdownSecs}</b></div>` +
       `<button type="button" id="bonusSkipBtn" class="countdown-skip">skip →</button>`
-    : `<button type="button" id="bonusNextBtn" class="btn-ghost">${last ? "the back cover" : "next page"} →</button>`;
+    : turnSlip("bonusNextBtn", last ? "the back cover" : "next page");
   resetLyricReveals();
   const fb = $("bonusFeedback");
   /* A PASSED PAGE IS THE THIRD STATE HERE TOO, and it is the last place on the shelf that had
@@ -18031,7 +18040,7 @@ function revealTapKnowledge(correct) {
   const auto = settings.autoAdvance;
   const advanceUI = auto
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
-    : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+    : turnSlip("continueBtn");
   const banner = correct
     ? (oddOneRuleActive() ? "✓ that's the odd one" : "✓ that's the one")
     : (oddOneRuleActive() ? "✗ that one sings it" : "✗ not that one");
@@ -18299,7 +18308,7 @@ function revealCommon(correct) {
   const auto = settings.autoAdvance;
   const advanceUI = auto
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
-    : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+    : turnSlip("continueBtn");
   fb.innerHTML =
     `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>` +
     `<div class="feedback-advance">${advanceUI}</div>` +
@@ -23641,7 +23650,7 @@ function flagImpostor() {
   const fb = $("feedback");
   fb.innerHTML =
     `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>` +
-    `<div class="feedback-advance"><button id="continueBtn" class="btn-ghost">next page →</button></div>` +
+    `<div class="feedback-advance">${turnSlip("continueBtn")}</div>` +
     `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>`;
   playSound("correct");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
@@ -25018,7 +25027,7 @@ function showCorrectFeedback(song, lyricMatch) {
   const auto = settings.autoAdvance;
   const advanceUI = auto
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
-    : `<button id="continueBtn" class="btn-ghost">next page →</button>`;
+    : turnSlip("continueBtn");
   // Scribbled between the banner and the lyric card, where the eye already is, and above
   // everything that explains the page — it is a margin aside, not part of the verdict.
   const revenge = revengeNote();
@@ -25102,7 +25111,7 @@ function showWrongFeedback(song, isTimeout) {
   }
   fb.innerHTML = `
     <div class="banner bad">✗ ${reason}</div>
-    <div class="feedback-advance"><button id="continueBtn" class="btn-ghost">next page →</button></div>
+    <div class="feedback-advance">${turnSlip("continueBtn")}</div>
     ${submitted}
     ${help}`;
   playSound("wrong");
@@ -26660,13 +26669,6 @@ function clearPerfectFX() {
 
 /* ---------- Input wiring ---------- */
 function wireInput() {
-  $("answerSubmit").addEventListener("click", () => submitAnswer(null, false));
-  $("bonusPlayBody").addEventListener("click", (e) => {
-    if (!e.target.closest(".bonus-submit") || settingsPauseActive || bonusLocked) return;
-    if (isTrackRun()) submitTrack();
-    else if (bonusGame && bonusGame.id === "sing-it-back") judgeGap();
-    else judgeName();
-  });
   // Composition Enter confirms an IME word, it does not submit the page.
   document.addEventListener("keydown", (e) => {
     if (settingsPauseActive && e.target.matches("#songInput, #bonusInput")) { e.preventDefault(); e.stopImmediatePropagation(); return; }
