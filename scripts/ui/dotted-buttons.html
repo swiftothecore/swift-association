@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dotted line buttons | Swift to the Song Association</title>
+  <link rel="stylesheet" href="../fonts.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23e6d09f' d='M12 1C18 1 23 6 23 12s-5 11-11 11S1 18 1 12 6 1 12 1Z'/><g fill='none' stroke='%23675121' stroke-width='1.7' stroke-linecap='round' stroke-dasharray='1 3'><path d='M4 7h16M4 12h16M4 17h16'/></g></svg>">
+  <style>
+    :root { --paper:#f7f1e2; --sheet:#fffaf0; --ink:#2b2722; --ink-soft:#6f675a; --ink-accent:#735733; --red-pen:#9f3d38; --rule:#ded1b9; --highlighter:#f5e6a7; --hand:"Caveat",cursive; --type:"Courier Prime",monospace; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); font-family:var(--type); background:repeating-linear-gradient(0deg,transparent 0 29px,rgba(101,136,174,.09) 30px 31px),#e8dcc5; }
+    .page { max-width:1220px; margin:30px auto; padding:46px clamp(20px,5vw,68px) 70px; background:var(--sheet); box-shadow:0 15px 45px #45351d26; border-left:2px solid #bf5954; }
+    .eyebrow, .section-label, .source { color:var(--ink-soft); font-size:11px; letter-spacing:.11em; text-transform:uppercase; }
+    h1 { font:700 clamp(38px,6vw,66px)/.92 var(--hand); margin:12px 0 16px; }
+    .intro { max-width:75ch; line-height:1.5; font-size:14px; margin:0 0 30px; }
+    .section-label { margin:38px 0 13px; padding-bottom:8px; border-bottom:1px solid var(--rule); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr)); gap:14px; }
+    .card { background:var(--paper); border:1px solid var(--rule); padding:18px; min-height:182px; display:flex; flex-direction:column; }
+    .card h2 { font:700 24px/1 var(--hand); margin:0 0 6px; }
+    .card p { font-size:12px; line-height:1.45; margin:0; }
+    .sample { min-height:76px; display:flex; align-items:center; justify-content:center; gap:9px; flex-wrap:wrap; padding:13px 4px; }
+    .source { margin-top:auto; padding-top:7px; font-size:10px; letter-spacing:.03em; text-transform:none; }
+    button, a { font:inherit; }
+    button { cursor:default; }
+    .ghost { padding:10px 13px; color:var(--ink); background:transparent; border:1.5px dashed var(--ink-soft); border-radius:2px; font-size:13px; letter-spacing:1px; }
+    .ghost.small { padding:6px 10px; font-size:11px; }
+    .hint { font:20px var(--hand); color:var(--ink-accent); background:transparent; border:1.5px dashed var(--ink-accent); border-radius:3px; padding:3px 16px; }
+    .flag { font:21px var(--hand); color:var(--red-pen); background:transparent; border:1.5px dashed #be8985; border-radius:3px; padding:3px 18px; }
+    .answer { min-height:44px; padding:8px 16px; font-size:12px; background:transparent; border:1px dashed var(--ink-soft); border-radius:3px; }
+    .skip-path { color:var(--ink-soft); background:transparent; border:1px dashed var(--ink-soft); border-radius:3px; padding:3px 10px; font-size:12px; }
+    .cover { width:92px; min-height:83px; padding:9px 5px; border:1px dashed var(--ink-soft); border-radius:3px; background:transparent; font:17px var(--hand); }
+    .cover span { display:block; font:9px var(--type); margin-top:5px; }
+    .sealed { width:100%; max-width:255px; text-align:left; color:var(--ink-soft); background:transparent; border:1.5px dashed #b8ae9d; padding:13px; font:18px var(--hand); opacity:.82; }
+    .locked-row { width:100%; max-width:240px; text-align:left; padding:8px 11px; border:1px dashed #b8ae9d; border-radius:10px; background:#2b272207; color:var(--ink-soft); font:700 17px var(--hand); }
+    .locked-row small { float:right; font:9px var(--type); padding-top:6px; }
+    .locked-finish { width:80px; height:46px; display:grid; place-items:center; color:var(--ink-soft); background:#2b272209; border:1px dashed #b8ae9d; }
+    .locked-title { padding:8px 18px; border:1px dashed #b8ae9d; border-radius:4px; background:transparent; color:var(--ink-soft); font-size:12px; }
+    .challenge-need { border:1px dashed #b3a584; background:#ece3d080; padding:9px 18px; font-size:11px; color:var(--ink-soft); }
+    .under { border:0; border-bottom:1px dashed var(--ink-soft); background:transparent; color:var(--ink-soft); padding:3px 1px; font-size:12px; }
+    .under.red { color:#8a2f22; border-bottom:1.5px dashed #b77a6f; font-weight:700; }
+    .under.accent { color:var(--ink-accent); border-bottom-color:var(--ink-accent); }
+    .under.dot { border-bottom-style:dotted; }
+    .under.tiny { font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+    .under.hand { font:16px var(--hand); }
+    .nav-title { font:700 23px var(--hand); border-bottom:2px dotted var(--ink-soft); padding:0 0 3px; }
+    .search { font-size:12px; padding:8px 0; min-height:44px; border:0; background:transparent; border-bottom:1px dashed #be8279; color:#b9402f; }
+    .search.muted { color:var(--ink-soft); border-bottom-color:#a49b8d; }
+    .search-link { text-decoration:none; display:inline-flex; align-items:center; }
+    .foot { margin:30px 0 0; color:var(--ink-soft); font-size:11px; line-height:1.5; }
+    @media(max-width:600px) { .page { margin:0; border-left-width:4px; padding-top:30px; } }
+  </style>
+</head>
+<body>
+<main class="page">
+  <div class="eyebrow">UI inventory / 26 September 2026</div>
+  <h1>Dotted line buttons</h1>
+  <p class="intro">Buttons and button-like links whose normal appearance uses a dashed or dotted line. Repeated labels sharing one style are shown together. These are visual samples; pressing them does not change the game. Focus-only outlines, decorative dividers, and locked swatches that cannot be pressed are called out separately below.</p>
+
+  <div class="section-label">Dashed frames / actions</div>
+  <div class="grid">
+    <section class="card"><h2>Page advance and utility</h2><p>The shared ghost button moves through game and bonus pages, opens the notebook cover, loads more history, signs records, manages backups and custom presets, and retries offline loading.</p><div class="sample"><button class="ghost">next page →</button><button class="ghost small">Look at the cover</button><button class="ghost small">Export backup</button></div><div class="source">.btn-ghost · styles.css:1864 · js/app.js, js/offline.js</div></section>
+    <section class="card"><h2>Hint</h2><p>Below the answer field on eligible game pages. The label changes as the progressive hint ladder is used.</p><div class="sample"><button class="hint">need a hint?</button></div><div class="source">.hint-btn · styles.css:8683 · index.html:3137</div></section>
+    <section class="card"><h2>Flag the impostor</h2><p>The red pen action on an Impostor challenge page.</p><div class="sample"><button class="flag">⚑ flag the impostor</button></div><div class="source">.flag-btn · styles.css:8720 · index.html:3123</div></section>
+    <section class="card"><h2>Write it in</h2><p>Explicit submit control for typed answers in the main game and bonus games.</p><div class="sample"><button class="answer">write it in</button></div><div class="source">.answer-submit · styles.css:15069 · index.html:3109, js/app.js:7721</div></section>
+    <section class="card"><h2>Swap this word</h2><p>Uses one remaining mulligan on a Choose Your Path challenge page.</p><div class="sample"><button class="skip-path">↻ swap this word (2 left)</button></div><div class="source">.path-skip-btn · styles.css:7001 · js/app.js:21205</div></section>
+    <section class="card"><h2>Cover sticker slot</h2><p>Choose where an earned sticker sits on the notebook cover. The selected slot becomes solid.</p><div class="sample"><button class="cover">sticker<span>cover position</span></button></div><div class="source">.set-cover-sticker · styles.css:14113 · js/app.js:27266</div></section>
+    <section class="card"><h2>Sealed charm group</h2><p>A dashed row in the Charms drawer opens a still hidden achievement group.</p><div class="sample"><button class="sealed">✧ &nbsp; sealed for now</button></div><div class="source">.ach-sealed · styles.css:11012 · js/app.js:3741</div></section>
+  </div>
+
+  <div class="section-label">Dotted or dashed underlines / actions</div>
+  <div class="grid">
+    <section class="card"><h2>Skip countdown</h2><p>Advances early while the next page is counting down, in both regular and bonus runs.</p><div class="sample"><button class="under tiny">skip →</button></div><div class="source">.countdown-skip · styles.css:9336 · js/app.js</div></section>
+    <section class="card"><h2>Challenge return</h2><p>Offers an eligible undefeated challenge back to the shelf for its token. Appears in challenge details.</p><div class="sample"><button class="under red">Return to the shelf, get back ◇1</button></div><div class="source">.chall-refund · styles.css:3437 · js/app.js:11224</div></section>
+    <section class="card"><h2>Start writing</h2><p>Shared invitation on empty records, stats, and other panels before a first run has supplied data.</p><div class="sample"><button class="under accent">start writing →</button></div><div class="source">.empty-cta · styles.css:10179 · js/app.js:2044</div></section>
+    <section class="card"><h2>More verse lines</h2><p>Unfolds lyric lines in the verse answer anthology.</p><div class="sample"><button class="under dot tiny">+ 4 more lines</button></div><div class="source">.va-more · styles.css:8019 · js/app.js:3350</div></section>
+    <section class="card"><h2>More run charms</h2><p>Unfolds extra charm chips on the results recap.</p><div class="sample"><button class="under dot tiny">+3</button></div><div class="source">.ach-chip--more · styles.css:10836 · js/app.js:3464</div></section>
+    <section class="card"><h2>More charm names</h2><p>Expands the handwritten list of earned charm names below that recap.</p><div class="sample"><button class="under dot hand">3 more</button></div><div class="source">.ach-names-more · styles.css:10851 · js/app.js:3536</div></section>
+    <section class="card"><h2>More found keepsakes</h2><p>Unfolds extra stickers and polaroids found during the run.</p><div class="sample"><button class="under dot tiny">+2</button></div><div class="source">.found-chip--more · styles.css:10886 · js/app.js:3428</div></section>
+    <section class="card"><h2>Front page navigation</h2><p>The dotted rule sits under each title inside the six navigation buttons. The same cards appear on the results screen.</p><div class="sample"><span class="nav-title">records</span><span class="nav-title">charms</span><span class="nav-title">bonus games</span></div><div class="source">.nav-card-title inside .nav-card · styles.css:12508 · index.html:2915, 3342</div></section>
+    <section class="card"><h2>Find more songs</h2><p>A dashed underline on the link from a word's full song list to the lyric searcher.</p><div class="sample"><span class="under search-link">all songs in search →</span></div><div class="source">.more-songs-all · styles.css:9220, 9231 · js/app.js:24868</div></section>
+    <section class="card"><h2>Look up nemesis</h2><p>From catalogue stats, opens the lyric searcher for the player's most missed word.</p><div class="sample"><span class="under search-link">look it up →</span></div><div class="source">.cat-search-link · styles.css:10257 · js/app.js:2247</div></section>
+  </div>
+
+  <div class="section-label">Lyric searcher / result actions</div>
+  <div class="grid">
+    <section class="card"><h2>More albums</h2><p>Expands the album legend below a searcher's word concordance.</p><div class="sample"><button class="search">+4 more albums</button></div><div class="source">.sx-leg-more · search/search.css:394 · search/search.js:529</div></section>
+    <section class="card"><h2>Play this word</h2><p>Starts a game round using the searched word.</p><div class="sample"><span class="search search-link">play this word in the game →</span></div><div class="source">.sx-play · search/search.css:402 · search/search.js:575</div></section>
+    <section class="card"><h2>Copy link</h2><p>Copies a shareable link for the current lyric search.</p><div class="sample"><button class="search muted">copy link</button></div><div class="source">.sx-copy · search/search.css:409 · search/search.js:577</div></section>
+  </div>
+
+  <div class="section-label">Dashed frames / unavailable states</div>
+  <div class="grid">
+    <section class="card"><h2>Need a challenge token</h2><p>Display in the challenge detail panel when a locked challenge costs a token. This is a status label, not a working button.</p><div class="sample"><span class="challenge-need">need a token · ◇ 1</span></div><div class="source">.chall-need · styles.css:3263 · js/app.js:11105</div></section>
+    <section class="card"><h2>Locked reward row</h2><p>Unusable pen and start button label choices in the Mastery rewards panel.</p><div class="sample"><span class="locked-row">Locked <small>Mastery 8</small></span></div><div class="source">.rb-row.locked · styles.css:13011 · js/app.js:6406, 6664</div></section>
+    <section class="card"><h2>Locked button finish</h2><p>An unavailable start button finish shown as a swatch in Mastery rewards.</p><div class="sample"><span class="locked-finish">♧</span></div><div class="source">.rb-btn-sw.locked · styles.css:13166 · js/app.js:6544</div></section>
+    <section class="card"><h2>Locked title action</h2><p>Shows how many Mastery levels remain before a title can be worn.</p><div class="sample"><span class="locked-title">♧ 2 levels to go</span></div><div class="source">.ts-act.lock · styles.css:13252 · js/app.js:6815</div></section>
+  </div>
+  <p class="foot">Scope: the shipped game and <em>Swift To The Lyric</em> searcher. The samples reproduce the relevant line treatments without loading game logic. Decorative rules and focus-only outlines are excluded.</p>
+</main>
+</body>
+</html>
