@@ -103,6 +103,20 @@ if (location.pathname.endsWith('/index.html')) {
     <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.5" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
+  <!-- The keepsake cards' pen: the records cup is inked through this. Half charmWobble's
+       strength, because the cup's lines are drawn with a 1.4 floor for 38-50px and the
+       wobble only has to take the ruler out of them, not move them. -->
+  <!-- Everything OUTSIDE the records cup's bowl. The handles are drawn a little way into the
+       bowl and clipped here, so each one stops exactly at the bowl's edge and tucks under its
+       outline. Ending them on the edge instead left their round caps sitting on top of the
+       outline as knots, with a stub poking into the gold. -->
+  <clipPath id="navCupOut" clipPathUnits="userSpaceOnUse">
+    <path clip-rule="evenodd" d="M-4,-4 H52 V52 H-4 Z M12.8,9.4 C12.9,17.2 15.4,24.2 21,27.3 C21.9,27.8 22.4,28.5 22.4,29.4 L22.5,33.4 C22.2,35.2 19.9,36.3 17.6,36.9 L30.4,36.7 C28.3,36.2 26,35.2 25.8,33.3 L25.8,29.3 C25.8,28.4 26.3,27.7 27.2,27.2 C32.8,24.1 35.2,17 35.3,9 Q24,8.3 12.8,9.4 Z"/>
+  </clipPath>
+  <filter id="navInk" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.1" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
   <!-- The at-a-glance panel's triangle wash. Coarser and stronger than charmWobble because
        it disturbs a filled silhouette rather than a pen line: a wandering edge is the whole
        point, and there is no lettering inside it to go fuzzy. Its effect is subtle at the
@@ -333,23 +347,6 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M28.9 9.3 C28.9 7.8 28.7 6.3 28.5 4.8"/>
     </g>
   </symbol>
-</svg>
-<!-- THE KEEPSAKE BRACELET'S BEAD — one drawing, placed six times by the charms card's icon,
-     which appears twice in this page (the board's nav row and the results row). A bead is a
-     body in its own era colour plus a crescent of that colour pushed toward ink, sitting
-     against the inside of the pen outline and tapering to nothing at both ends. That crescent
-     is the whole reason the drawing is shared: six hand-placed shade lines drift, and a line
-     floating inside the bead only thickens the bottom of the outline at 50px.
-     Unlike the page and theme marks above, this one DOES carry fills, but they are var()
-     references rather than colours: --bead comes off the class on each <use> and --bead-shade
-     is derived from it once in styles.css, so the colour is still CSS's to set and night
-     restates it by moving --bead alone. The pen outline is still pure inheritance. -->
-<svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
-  <g id="nav-bead">
-    <circle r="3.5" fill="var(--nav-bead)"/>
-    <path d="M1.62 -2.47 A2.95 2.95 0 1 1 -2.47 1.62 A2.95 2.95 0 0 0 1.62 -2.47 Z"
-          fill="var(--nav-bead-shade)" stroke="none"/>
-  </g>
 </svg>
 <!-- THEME MARKS — one per charm theme, used twice on the charm page: in the at-a-glance
      panel's rows, and again on the section heading of the theme each row points at. Same pen as the
@@ -2915,28 +2912,38 @@ if (location.pathname.endsWith('/index.html')) {
         <button id="recordsBtn" class="nav-card" data-era-tint="gold">
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-              <!-- A loving cup, drawn as one turned object rather than a stack of parts.
-                   The bowl is a single curve with a real waist: it flares under the rim, pulls
-                   in through the belly and lands narrow on the knop, which is what separates a
-                   cup from the straight-sided beaker the first version actually drew. The
-                   HANDLES are closed loops that spring off the rim lip and tuck back in BEHIND
-                   the bowl — open arcs read as bent wire, and a handle that stops short of the
-                   silhouette floats. They are deliberately unequal; the right one is the larger
-                   and rounder of the two. The bowl is drawn twice, once in paper and once in
-                   tint, because the tint fills are translucent: without the paper copy beneath
-                   it the handles' inner ends show straight through the bowl. Below it the stem
-                   reads as turned work — knop, taper, flared foot, bevelled plinth. -->
-              <path class="wash fine" d="M12.2,10.6 C6.4,11.4 4.2,16.4 5.8,20.6 C7.1,24.2 11.6,27.2 17,27.6 L17.4,25.2 C13.4,24.8 10,22.2 9,19.2 C8,15.9 9.3,13.2 12.6,12.9 Z"/>
-              <path class="wash fine" d="M35.6,10.7 C41.8,11.6 44.2,16.8 42.4,21.1 C41,24.8 35.6,27.6 30.4,27.9 L30.1,25.5 C34.2,25.1 38.6,22.3 39.5,19.3 C40.5,16 39.1,13.3 35.4,13 Z"/>
-              <path class="paper flat" d="M13.9,13.4 C13.7,19 14.6,24.4 16.6,28 C17.4,29.4 18.2,30.1 19.2,30.4 L28.8,30.4 C29.9,30.1 30.7,29.3 31.5,27.8 C33.4,24.2 34.3,18.9 34.1,13.4 Z"/>
-              <path class="solid" d="M13.9,13.4 C13.7,19 14.6,24.4 16.6,28 C17.4,29.4 18.2,30.1 19.2,30.4 L28.8,30.4 C29.9,30.1 30.7,29.3 31.5,27.8 C33.4,24.2 34.3,18.9 34.1,13.4 Z"/>
-              <path class="hair" d="M19.2,16.6 C18.9,21.4 19.9,25.6 21.9,28.2" opacity=".5"/>
-              <path class="deep" d="M11.8,9.2 C18,8.6 30,8.6 36.2,9.2 C36.4,10.5 36.4,12.2 36.2,13.4 C30,14 18,14 11.8,13.4 C11.6,12.2 11.6,10.5 11.8,9.2 Z"/>
-              <ellipse cx="24" cy="32.2" rx="3.5" ry="2" class="mid fine"/>
-              <path class="mid" d="M21.9,33.6 L26.1,33.6 L27.1,36.2 L20.9,36.2 Z"/>
-              <path class="wash" d="M20.9,36.2 L27.1,36.2 C29.4,36.8 30.9,37.9 31.3,39.3 L16.7,39.3 C17.2,37.9 18.7,36.8 20.9,36.2 Z"/>
-              <path class="mid" d="M14.4,39.3 L33.6,39.3 C34,40.5 34.1,41.8 33.8,43 L14.2,43 C13.9,41.8 14,40.5 14.4,39.3 Z"/>
-              <path class="hair" d="M18.4,41.2 C22.4,41 26.4,41 29.6,41.1" opacity=".55"/>
+              <!-- A loving cup, inked. The cup this replaced was built as a stack of separately
+                   outlined parts (rim band, bowl, knop, stem, foot, plinth), and every place two parts met
+                   became a doubled black seam, with a 0.9px glint on the bowl that rendered as a crack. So
+                   the cup is now ONE outline, bowl through foot, and the plinth is the only second shape
+                   because that edge is real. Nothing inside is finer than 1.4: at 38px anything thinner
+                   turns to grey mush. The handles are two separate strokes, never one mirrored, and the
+                   right one lands a little lower; both run into the bowl and are clipped at its edge
+                   (#navCupOut), so they tuck under the outline instead of knotting on top of it. The
+                   stem is solid ink with the knop as a solid ring across it: drawn as two outlines it
+                   left a hair of gold between them that read as a crack, and the tuck into the knop
+                   left little gold wedges at every turn. The gold is a flat spot laid UNDER the ink and knocked
+                   a unit down and right, the way a two-colour print sits out of register; it is pre-mixed
+                   onto the card (.spot) so nothing translucent overlaps itself. The star is engraved in
+                   ink. #navInk is the pen's wobble. -->
+              <!-- PARKED: the stamped silhouette, the runner-up, kept in case the ink loses. The same cup
+                   as one solid rubber-stamp impression in the card's gold, lip, knop, foot line and star
+                   cut out, worn at the edge. To bring it back, replace everything below this comment with:
+                <defs><filter id="navStampWorn" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.62" numOctaves="2" seed="13" result="speck"/><feColorMatrix in="speck" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.1 -0.62" result="holes"/><feComposite in="SourceGraphic" in2="holes" operator="out" result="patchy"/><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="4" result="warp"/><feDisplacementMap in="patchy" in2="warp" scale="1.6" xChannelSelector="R" yChannelSelector="G"/></filter>
+                <mask id="navStampCut" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><g fill="none" stroke="#000" stroke-linecap="round"><path d="M13.2,9.6 C19,12.2 29.4,12 34.9,9.2" stroke-width="1.6"/><path d="M15.6,37 C21.4,36.6 27,36.6 32.6,36.8" stroke-width="1.3"/><path d="M21.6,30.3 C23.2,30.6 24.9,30.6 26.4,30.2" stroke-width="1.1"/></g><path d="M23.5,14.13 L24.85,16.67 L27.72,16.47 L25.72,18.53 L26.8,21.2 L24.21,19.94 L22.01,21.79 L22.41,18.94 L19.98,17.42 L22.81,16.92 Z" fill="#000"/></mask></defs>
+                <g filter="url(#navStampWorn)"><g mask="url(#navStampCut)" style="fill: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink)); stroke: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink));"><path d="M13.4,12.6 C6.4,11.2 5,20.4 16.2,22.4" fill="none" stroke-width="3"/><path d="M34.8,12.1 C42.3,11.2 42.5,21.6 31.8,23.3" fill="none" stroke-width="2.8"/><path d="M12.8,9.4 C12.9,17.2 15.4,24.2 21.3,27.3 C21.6,28.1 22.2,28.7 22.6,29.1 C21.2,29.5 21,31.2 22.7,31.6 L22.9,33.5 C22.6,35.3 20,36.3 17.6,36.9 L30.4,36.7 C28.1,36.2 25.6,35.2 25.3,33.4 L25.4,31.6 C27.1,31.2 26.9,29.4 25.5,29 C25.9,28.6 26.5,28 26.8,27.2 C32.7,24.1 35.2,17 35.3,9 Q24,8.3 12.8,9.4 Z" stroke-width="0.8"/><path d="M15.1,37.1 C21,36.8 27,36.8 32.9,36.9 L33.4,41.5 C27,41.9 21,41.9 14.7,41.6 Z" stroke-width="0.8"/></g></g>
+                   Before it ships, check night: the cut lip nearly vanishes into the lifted gold. The ids are
+                   page-wide, so if it comes back the defs belong in one hidden svg, not in both copies. -->
+              <g class="spot" transform="translate(1.1 1)"><path d="M12.8,9.4 C12.9,17.2 15.4,24.2 21,27.3 C21.9,27.8 22.4,28.5 22.4,29.4 L22.5,33.4 C22.2,35.2 19.9,36.3 17.6,36.9 L30.4,36.7 C28.3,36.2 26,35.2 25.8,33.3 L25.8,29.3 C25.8,28.4 26.3,27.7 27.2,27.2 C32.8,24.1 35.2,17 35.3,9 Q24,8.3 12.8,9.4 Z"/><path d="M15.1,37.1 C21,36.8 27,36.8 32.9,36.9 L33.4,41.5 C27,41.9 21,41.9 14.7,41.6 Z"/></g>
+              <g filter="url(#navInk)">
+                <path d="M15.8,13.1 C6.4,11.2 5,20.4 18.2,23.2" stroke-width="2.3" clip-path="url(#navCupOut)"/>
+                <path d="M32.6,12.7 C42.3,11.2 42.5,21.6 29.8,24.6" stroke-width="2.1" clip-path="url(#navCupOut)"/>
+                <path d="M12.8,9.4 C12.9,17.2 15.4,24.2 21,27.3 C21.9,27.8 22.4,28.5 22.4,29.4 L22.5,33.4 C22.2,35.2 19.9,36.3 17.6,36.9 L30.4,36.7 C28.3,36.2 26,35.2 25.8,33.3 L25.8,29.3 C25.8,28.4 26.3,27.7 27.2,27.2 C32.8,24.1 35.2,17 35.3,9 Q24,8.3 12.8,9.4 Z" stroke-width="1.9"/>
+                <path d="M22.4,28.2 C23.5,28.5 24.7,28.5 25.8,28.2 L25.8,33.3 C25.9,34.1 26.3,34.8 26.9,35.3 C25,35.7 23.2,35.7 21.4,35.4 C22,34.9 22.4,34.2 22.5,33.4 Z" fill="currentColor" stroke-width="1"/><ellipse cx="24.1" cy="30.7" rx="3.3" ry="1.6" fill="currentColor" stroke-width="1"/>
+                <path d="M15.1,37.1 C21,36.8 27,36.8 32.9,36.9 L33.4,41.5 C27,41.9 21,41.9 14.7,41.6 Z" stroke-width="1.8"/>
+                <path d="M13.2,9.6 C19,12.2 29.4,12 34.9,9.2" stroke-width="1.4"/>
+                <path d="M23.5,14.13 L24.85,16.67 L27.72,16.47 L25.72,18.53 L26.8,21.2 L24.21,19.94 L22.01,21.79 L22.41,18.94 L19.98,17.42 L22.81,16.92 Z" fill="currentColor" stroke-width="0.6"/>
+              </g>
             </svg>
           </span>
           <span class="nav-card-title">records</span>
@@ -2945,15 +2952,29 @@ if (location.pathname.endsWith('/index.html')) {
         <button id="statsBtn" class="nav-card" data-era-tint="denim">
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-              <!-- The chart, with the plotted line in the card's own denim rather than a hardcoded
-                   blue. Four points, not three: three read as an unfinished series. -->
-              <path class="hair" d="M18 12 L18 38 M26 12 L26 38 M34 12 L34 38 M12 19 L38 19 M12 29 L38 29" opacity=".28"/>
-              <path class="wash flat" d="M13 35 L20 30 L27 22 L35 13 L35 39 L13 39 Z"/>
-              <path d="M11 8 L11 39 L40 39"/>
-              <path class="tintstroke" d="M13 35 L20 30 L27 22 L35 13" stroke-width="2.1"/>
-              <g class="solid fine tintstroke">
-                <circle cx="13" cy="35" r="2.3"/><circle cx="20" cy="30" r="2.3"/>
-                <circle cx="27" cy="22" r="2.3"/><circle cx="35" cy="13" r="2.3"/>
+              <!-- The line chart, inked in the records cup's register (see the note there). What
+                   it replaced was a stock chart part for part: a ruled grid at 28%, a translucent wash, a
+                   tint-stroked line and four ringed points. Here the axes are one pen stroke that leans
+                   and sags a hair rather than a ruled L, the line climbs with one dip so it reads as
+                   numbers rather than an arrow, the points are solid ink, and the last, highest one is
+                   a size up. The denim is a .spot under the ground the line
+                   covers, knocked out of register like the cup's gold. -->
+              <!-- PARKED: the stamped silhouette of the same chart, kept for safekeeping beside the
+                   records cup's. Axes, ground, line and points as one solid impression in the card's
+                   denim; a cut runs under the line so it stands off the ground, and each point has its
+                   centre knocked out. It shares #navStampWorn with the cup, whose filter markup is
+                   parked above #recordsBtn: if both come back, that filter goes once in a hidden svg.
+                   To bring it back, replace everything below this comment with:
+                <defs><mask id="navStampCutStats" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><path d="M15.2,36.2 L21.2,30.8 L27.4,33.6 L34.4,20.8" fill="none" stroke="#000" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><g fill="#000"><circle cx="14.6" cy="33.4" r="1.1"/><circle cx="21" cy="27.6" r="1.1"/><circle cx="27.2" cy="30.4" r="1.1"/><circle cx="35.6" cy="15" r="1.1"/></g></mask></defs>
+                <g filter="url(#navStampWorn)"><g mask="url(#navStampCutStats)" style="fill: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink)); stroke: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink));" stroke-linecap="round" stroke-linejoin="round"><path d="M10.4,7.4 C10.6,18 10.5,29 10.8,39.6 C20,39.3 30,39.6 40.8,39.2" fill="none" stroke-width="2.8"/><path d="M14.6,33.4 L21,27.6 L27.2,30.4 L35.6,15 L35.8,38.6 L14.4,38.8 Z" stroke-width="0.8"/><path d="M14.6,33.4 L21,27.6 L27.2,30.4 L35.6,15" fill="none" stroke-width="2.6"/><g stroke="none"><circle cx="14.6" cy="33.4" r="2.9"/><circle cx="21" cy="27.6" r="2.9"/><circle cx="27.2" cy="30.4" r="2.9"/><circle cx="35.6" cy="15" r="3.3"/></g></g></g> -->
+              <g class="spot" transform="translate(1.1 1)"><path d="M14.6,33.4 L21,27.6 L27.2,30.4 L35.6,15 L35.8,38.6 L14.4,38.8 Z"/></g>
+              <g filter="url(#navInk)">
+                <path d="M10.4,7.4 C10.6,18 10.5,29 10.8,39.6 C20,39.3 30,39.6 40.8,39.2" stroke-width="2"/>
+                <path d="M14.6,33.4 L21,27.6 L27.2,30.4 L35.6,15" stroke-width="1.9"/>
+                <circle cx="14.6" cy="33.4" r="2" fill="currentColor" stroke="none"/>
+                <circle cx="21" cy="27.6" r="2" fill="currentColor" stroke="none"/>
+                <circle cx="27.2" cy="30.4" r="2" fill="currentColor" stroke="none"/>
+                <circle cx="35.6" cy="15" r="2.4" fill="currentColor" stroke="none"/>
               </g>
             </svg>
           </span>
@@ -2963,24 +2984,30 @@ if (location.pathname.endsWith('/index.html')) {
         <button id="achievementsBtn" class="nav-card" data-era-tint="lavender">
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-              <!-- The bracelet. Its beads are the ONE deliberate exception to the tint rule: a beaded
-                   bracelet's whole point is that every bead is a different colour, so these take the
-                   era palette instead of inheriting the card's lavender. They are OPAQUE and shaded
-                   (see #nav-bead at the top of this file), so the class on each <use> is the whole
-                   bead. Painted RIGHT TO LEFT, which is not decoration: beads overlap by design, and
-                   this order puts every bead in front of the one on its right, so no bead's shaded
-                   side is ever clipped by its neighbour. Six evenly spaced beads rather than six
-                   huddled ones, and no white speckle highlights, which at 20px were just noise. -->
-              <path d="M7 15 Q24 40 41 15"/>
-              <circle cx="7" cy="15" r="2.4" class="paper fine"/>
-              <circle cx="41" cy="15" r="2.4" class="paper fine"/>
-              <g class="fine">
-                <use href="#nav-bead" x="36.1" y="21.6" class="nav-bead nav-bead-gold"/>
-                <use href="#nav-bead" x="31.6" y="26.6" class="nav-bead nav-bead-sage"/>
-                <use href="#nav-bead" x="26.4" y="29.6" class="nav-bead nav-bead-crimson"/>
-                <use href="#nav-bead" x="21.6" y="29.6" class="nav-bead nav-bead-denim"/>
-                <use href="#nav-bead" x="16.4" y="26.6" class="nav-bead nav-bead-violet"/>
-                <use href="#nav-bead" x="11.9" y="21.6" class="nav-bead nav-bead-gold"/>
+              <!-- A charm bracelet, inked in the records cup's register: a chain swag with a heart,
+                   a star and a disc hanging off it at three different drops, spotted in the card's
+                   lavender. It replaced a strand of six shaded beads bunched at the bottom of a U, which
+                   sat in the top half of its disc and read as a smile as easily as a bracelet. The chain's
+                   links are short ticks across the swag; at 38px a drawn link is only a smudge. Each drop
+                   ends ON its charm's outline (the heart's notch, the star's top point, the disc's rim),
+                   never inside it, so no round cap sits on top of a line. -->
+              <!-- PARKED: the stamped version, kept for safekeeping beside the cup's and the chart's.
+                   Chain, drops and charms as one worn impression in the card's lavender, with a ring cut
+                   into the disc and a puff cut into the heart. It shares #navStampWorn, whose filter
+                   markup is parked above #recordsBtn. To bring it back, replace everything below this
+                   comment with:
+                <defs><mask id="navStampCutCharms" maskUnits="userSpaceOnUse" x="0" y="-4" width="48" height="56"><rect y="-4" width="48" height="56" fill="#fff"/><g fill="none" stroke="#000" stroke-linecap="round"><circle cx="36.15" cy="25.37" r="1.9" stroke-width="1.1"/><path d="M13.61,23.13 C14.64,23.69 15.15,24.64 14.98,25.71" stroke-width="1.1"/></g></mask></defs>
+                <g transform="translate(0 2.5)"><g filter="url(#navStampWorn)"><g mask="url(#navStampCutCharms)" style="fill: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink)); stroke: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink));" stroke-linecap="round" stroke-linejoin="round"><path d="M5.4,11.4 Q24,25.6 42.6,11" fill="none" stroke-width="2.6"/><path d="M7.53,11.7 L7.73,14.3 M10.32,13.41 L10.52,16.01 M13.11,14.79 L13.31,17.39 M15.9,15.85 L16.1,18.45 M18.69,16.59 L18.89,19.19 M21.48,17 L21.68,19.6 M24.27,17.09 L24.47,19.69 M27.06,16.86 L27.26,19.46 M29.85,16.3 L30.05,18.9 M32.64,15.42 L32.84,18.02 M35.43,14.21 L35.63,16.81 M38.22,12.68 L38.42,15.28 M41.01,10.82 L41.21,13.42" fill="none" stroke-width="1.9"/><path d="M11.8,15.43 L11.92,22.83 M24,18.4 L24.36,23 M36,15.27 L36.15,21.47" fill="none" stroke-width="2"/><path d="M11.8,29.8 C10.3,28.51 7.5,26.57 7.5,24.21 C7.5,22.27 9.22,21.41 10.51,21.41 C11.37,21.41 11.8,22.06 11.8,22.83 C11.8,22.06 12.32,21.41 13.18,21.41 C14.47,21.41 16.1,22.4 16.1,24.3 C16.1,26.7 13.35,28.51 11.8,29.8 Z" stroke-width="1"/><path d="M24.36,23.01 L25.45,26.48 L29.05,26.94 L26.09,29.04 L26.76,32.61 L23.84,30.44 L20.66,32.18 L21.82,28.74 L19.18,26.25 L22.81,26.29 Z" stroke-width="1"/><circle cx="36.15" cy="25.37" r="3.9" stroke-width="1"/></g></g></g> -->
+              <g transform="translate(0 2.5)">
+                <g class="spot" transform="translate(1.1 1)"><path d="M11.8,29.8 C10.3,28.51 7.5,26.57 7.5,24.21 C7.5,22.27 9.22,21.41 10.51,21.41 C11.37,21.41 11.8,22.06 11.8,22.83 C11.8,22.06 12.32,21.41 13.18,21.41 C14.47,21.41 16.1,22.4 16.1,24.3 C16.1,26.7 13.35,28.51 11.8,29.8 Z"/><path d="M24.36,23.01 L25.45,26.48 L29.05,26.94 L26.09,29.04 L26.76,32.61 L23.84,30.44 L20.66,32.18 L21.82,28.74 L19.18,26.25 L22.81,26.29 Z"/><circle cx="36.15" cy="25.37" r="3.9"/></g>
+                <g filter="url(#navInk)">
+                  <path d="M5.4,11.4 Q24,25.6 42.6,11" stroke-width="1.8"/>
+                  <path d="M7.53,11.7 L7.73,14.3 M10.32,13.41 L10.52,16.01 M13.11,14.79 L13.31,17.39 M15.9,15.85 L16.1,18.45 M18.69,16.59 L18.89,19.19 M21.48,17 L21.68,19.6 M24.27,17.09 L24.47,19.69 M27.06,16.86 L27.26,19.46 M29.85,16.3 L30.05,18.9 M32.64,15.42 L32.84,18.02 M35.43,14.21 L35.63,16.81 M38.22,12.68 L38.42,15.28 M41.01,10.82 L41.21,13.42" stroke-width="1.4"/>
+                  <path d="M11.8,15.43 L11.92,22.83 M24,18.4 L24.36,23 M36,15.27 L36.15,21.47" stroke-width="1.5"/>
+                  <path d="M11.8,29.8 C10.3,28.51 7.5,26.57 7.5,24.21 C7.5,22.27 9.22,21.41 10.51,21.41 C11.37,21.41 11.8,22.06 11.8,22.83 C11.8,22.06 12.32,21.41 13.18,21.41 C14.47,21.41 16.1,22.4 16.1,24.3 C16.1,26.7 13.35,28.51 11.8,29.8 Z" stroke-width="1.8"/>
+                  <path d="M24.36,23.01 L25.45,26.48 L29.05,26.94 L26.09,29.04 L26.76,32.61 L23.84,30.44 L20.66,32.18 L21.82,28.74 L19.18,26.25 L22.81,26.29 Z" stroke-width="1.7"/>
+                  <circle cx="36.15" cy="25.37" r="3.9" stroke-width="1.8"/>
+                </g>
               </g>
             </svg>
           </span>
@@ -2990,13 +3017,29 @@ if (location.pathname.endsWith('/index.html')) {
         <button id="challengesBtn" class="nav-card" data-era-tint="graphite">
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-              <!-- The target. Graphite is the flattest tint in the set, so the three rings step
-                   .16 / .3 / .78 rather than sitting close together: at the old spacing this was the
-                   one icon that read as grey on grey. -->
-              <circle cx="24" cy="24" r="13.4" class="wash"/>
-              <circle cx="24" cy="24" r="8.6" class="mid fine"/>
-              <circle cx="24" cy="24" r="4.2" class="deep fine"/>
-              <path d="M24 10.6 L24 5.4 M24 37.4 L24 42.6 M10.6 24 L5.4 24 M37.4 24 L42.6 24"/>
+              <!-- The target, inked in the records cup's register. The picture is the one it replaced,
+                   kept on purpose: rings, a dark bull, four ticks. What changed is the drawing. The old one
+                   was three translucent grey fills with 1.2 lines on the inner rings, and its ticks started
+                   ON the outer ring, so every join was a knot. Here the graphite is one .spot under the outer
+                   ring, the middle ring is a finer pen, the bull is solid ink, and the ticks are four separate
+                   strokes of different lengths that stop short of the ring. The rings are true circles: the
+                   pen's wobble is the only hand in them, because a hand-plotted ring reads as a potato. -->
+              <!-- PARKED: the stamped version, kept for safekeeping beside the others. The target as one
+                   worn graphite impression, two rings cut into it so the bull stands solid in the middle,
+                   and the ticks struck heavier. It shares #navStampWorn, whose filter markup is parked above
+                   #recordsBtn. To bring it back, replace everything below this comment with:
+                <defs><mask id="navStampCutChallenges" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><g fill="none" stroke="#000"><circle cx="24.05" cy="24.05" r="9.2" stroke-width="1.5"/><circle cx="24" cy="24.1" r="5.3" stroke-width="1.3"/></g></mask></defs>
+                <g filter="url(#navStampWorn)"><g mask="url(#navStampCutChallenges)" style="fill: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink)); stroke: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink));" stroke-linecap="round"><circle cx="24" cy="24.1" r="13.9" stroke="none"/><path d="M24.2,9.6 C24.1,7.9 24.1,6.3 24,4.8 M38.6,23.8 C40.2,23.9 41.6,24 43,24.2 M23.8,38.7 C23.9,40.1 23.9,41.4 24.1,42.6 M9.4,24.2 C8,24.1 6.6,24 5.1,23.9" fill="none" stroke-width="2.6"/></g></g> -->
+              <g class="spot" transform="translate(1.1 1)"><circle cx="24" cy="24.1" r="13.5"/></g>
+              <g filter="url(#navInk)">
+                <circle cx="24" cy="24.1" r="13.5" stroke-width="2"/>
+                <circle cx="24.05" cy="24.05" r="8.65" stroke-width="1.6"/>
+                <circle cx="24" cy="24.1" r="4.2" fill="currentColor" stroke-width="1"/>
+                <path d="M24.2,9.6 C24.1,7.9 24.1,6.3 24,4.8" stroke-width="1.9"/>
+                <path d="M38.6,23.8 C40.2,23.9 41.6,24 43,24.2" stroke-width="1.9"/>
+                <path d="M23.8,38.7 C23.9,40.1 23.9,41.4 24.1,42.6" stroke-width="1.9"/>
+                <path d="M9.4,24.2 C8,24.1 6.6,24 5.1,23.9" stroke-width="1.9"/>
+              </g>
             </svg>
           </span>
           <span class="nav-card-title">challenges</span>
@@ -3005,14 +3048,37 @@ if (location.pathname.endsWith('/index.html')) {
         <button id="masteryBtn" class="nav-card" data-era-tint="rose">
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-              <!-- A medal hung from a banner: one wide ribbon with a swallow-tail notch cut into its
-                   lower edge, the milled-rim medallion sitting below it. The two hem creases show the
-                   ribbon's fold, and the beaded-ring dash on the disc reuses the bonus-shelf pressings. -->
-              <path class="wash" d="M16.6,5.6 L31.4,5.6 L31.4,21.4 L24,17.6 L16.6,21.4 Z"/>
-              <path class="hair" d="M20.4,6.2 L20.4,19.4 M27.6,6.2 L27.6,19.4" opacity=".5"/>
-              <circle cx="24" cy="31.6" r="9.6" class="wash"/>
-              <circle cx="24" cy="31.6" r="9.6" class="tintstroke" stroke-width="1.9" stroke-dasharray="0.1 2.5" stroke-linecap="round" fill="none"/>
-              <circle cx="24" cy="31.6" r="6.2" class="solid fine"/>
+              <!-- A mortarboard, inked in the records cup's register: mastery as graduating, which is
+                   what the track's levels and titles are. It replaced a medal on a banner whose creases
+                   were 0.9 hairlines and whose dotted rim read as a bottle cap at 38px. The board is a
+                   lopsided diamond laid on paper over the cap, so the cap's sides stop at its edge instead
+                   of showing through, and the rose is one .spot on the board. The tassel's cord rounds
+                   the board's edge mid-curve rather than turning a corner on the outline, and hangs to a
+                   solid tassel. -->
+              <!-- PARKED, two of them, kept for safekeeping.
+                   1. The stamped mortarboard, beside the other icons' stamps: board, cap and tassel as one
+                      worn rose impression, a cut between board and cap, the cord and its button cut into
+                      the board and only the drop struck solid. It shares #navStampWorn, whose filter markup
+                      is parked above #recordsBtn. To bring it back, replace everything below with:
+                <defs><mask id="navStampCutMastery" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round"><path d="M6,19.2 L23.8,27.4 L42,18.8" stroke-width="1.3"/><path d="M24,18.4 C29,18.8 33.6,19.2 37.2,19.8" stroke-width="1.5"/><circle cx="24" cy="18.4" r="2.4" stroke-width="1"/></g></mask></defs>
+                <g filter="url(#navStampWorn)"><g mask="url(#navStampCutMastery)" style="fill: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink)); stroke: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink));" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4,20.6 L13.6,31.4 C17.4,34.6 30.6,34.6 34.4,31.2 L34.4,20.4 Z" stroke-width="0.8"/><path d="M4.8,18.6 L24.2,10.2 L43.2,18.2 L23.8,26.8 Z" stroke-width="0.8"/><path d="M37.2,19.8 C38.2,20.2 38.6,21.2 38.7,22.6 L38.8,30.6" fill="none" stroke-width="1.8"/><path d="M37.4,30.4 L37.2,34.6 L40.4,34.6 L40.2,30.4 Z" stroke-width="0.8"/></g></g>
+                   2. The inked MEDAL, the runner-up, in case the mortarboard loses: two ribbon straps
+                      crossing in a V behind a medal, each strap its own drawing, the right one and then the
+                      medal laid on paper so no line runs through what is in front, one engraved ring on the
+                      disc. To bring it back, replace everything below with:
+                <g class="spot" transform="translate(1.1 1)"><path d="M11.6,4.4 L18.2,4.3 L27.4,24.6 L20.8,24.8 Z"/></g><g filter="url(#navInk)"><path d="M11.6,4.4 L18.2,4.3 L27.4,24.6 L20.8,24.8 Z" stroke-width="1.8"/></g>
+                <path d="M29.4,4.2 L36.4,4.4 L27.6,24.8 L20.6,24.5 Z" fill="var(--card-bg)" stroke="none"/><g class="spot" transform="translate(1.1 1)"><path d="M29.4,4.2 L36.4,4.4 L27.6,24.8 L20.6,24.5 Z"/></g><g filter="url(#navInk)"><path d="M29.4,4.2 L36.4,4.4 L27.6,24.8 L20.6,24.5 Z" stroke-width="1.8"/></g>
+                <circle cx="24" cy="30.4" r="9.6" fill="var(--card-bg)" stroke="none"/><g class="spot" transform="translate(1.1 1)"><circle cx="24" cy="30.4" r="9.6"/></g>
+                <g filter="url(#navInk)"><circle cx="24" cy="30.4" r="9.6" stroke-width="2"/><circle cx="24.05" cy="30.35" r="5.6" stroke-width="1.5"/></g> -->
+              <g filter="url(#navInk)"><path d="M13.4,20.6 L13.6,31.4 C17.4,34.6 30.6,34.6 34.4,31.2 L34.4,20.4" stroke-width="1.9"/></g>
+              <path d="M4.8,18.6 L24.2,10.2 L43.2,18.2 L23.8,26.8 Z" fill="var(--card-bg)" stroke="none"/>
+              <g class="spot" transform="translate(1.1 1)"><path d="M4.8,18.6 L24.2,10.2 L43.2,18.2 L23.8,26.8 Z"/></g>
+              <g filter="url(#navInk)">
+                <path d="M4.8,18.6 L24.2,10.2 L43.2,18.2 L23.8,26.8 Z" stroke-width="2"/>
+                <circle cx="24" cy="18.4" r="1.5" fill="currentColor" stroke-width="1"/>
+                <path d="M24,18.4 C29,18.8 33.6,19.2 37.2,19.8 C38.2,20.2 38.6,21.2 38.7,22.6 L38.8,30.6" stroke-width="1.6"/>
+                <path d="M37.4,30.4 L37.2,34.6 L40.4,34.6 L40.2,30.4 Z" fill="currentColor" stroke-width="1.6"/>
+              </g>
             </svg>
           </span>
           <span class="nav-card-title">mastery</span>
@@ -3021,17 +3087,28 @@ if (location.pathname.endsWith('/index.html')) {
         <button id="bonusBtn" class="nav-card" data-era-tint="teal">
           <span class="nav-card-seat">
             <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-              <!-- The fanned cards, with the deco diamond the bonus shelf's own pressings already
-                   use in place of the gold star that used to sit on every icon in this row. Every
-                   card sits on a paper-filled copy of itself, because the tints are translucent
-                   and without it the fan behind shows straight through the card in front. -->
-              <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(-17 24 40)"/>
-              <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(-17 24 40)"/>
-              <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(17 24 40)"/>
-              <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(17 24 40)"/>
-              <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat"/>
-              <rect x="15" y="12" width="18" height="25" rx="3" class="mid"/>
-              <path class="solid fine" d="M24 19.4 L28.2 24.6 L24 29.8 L19.8 24.6 Z"/>
+              <!-- The fanned cards, inked in the records cup's register. The picture is the one it
+                   replaced, kept on purpose; the drawing is new. Three cards fan from one pivot and are not
+                   a mirrored pair (the left leans 15, the right 19). Each is laid on paper, spotted in the
+                   card's teal and inked, in order left, right, front, so the card in front hides what is
+                   behind it and no line runs through another card. The old set got the same effect from
+                   translucent fills over paper copies. The deco diamond sits solid on the front card. -->
+              <!-- PARKED: the stamped version, kept for safekeeping beside the others. The fan as one worn
+                   teal impression, each card's edge cut where it overlaps the one behind, the diamond cut
+                   out of the front card. It shares #navStampWorn, whose filter markup is parked above
+                   #recordsBtn. To bring it back, replace everything below this comment with:
+                <defs><mask id="navStampCutBonus" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><rect width="48" height="48" fill="#fff"/><path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z" fill="none" stroke="#000" stroke-width="1.3"/><path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z" fill="#fff"/><path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z" fill="none" stroke="#000" stroke-width="1.4"/><path d="M24.1,18.6 L28.6,24.2 L24,29.8 L19.6,24.1 Z" fill="#000"/></mask></defs>
+                <g filter="url(#navStampWorn)"><g mask="url(#navStampCutBonus)" style="fill: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink)); stroke: color-mix(in srgb, rgb(var(--tint)) 88%, var(--ink));" stroke-width="0.8" stroke-linejoin="round"><path d="M10.85,14.12 L22.45,11.01 Q25.34,10.24 26.12,13.14 L31.14,31.88 Q31.92,34.77 29.02,35.55 L17.43,38.66 Q14.53,39.43 13.75,36.53 L8.73,17.79 Q7.96,14.9 10.85,14.12 Z"/><path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z"/><path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z"/></g></g> -->
+              <path d="M10.85,14.12 L22.45,11.01 Q25.34,10.24 26.12,13.14 L31.14,31.88 Q31.92,34.77 29.02,35.55 L17.43,38.66 Q14.53,39.43 13.75,36.53 L8.73,17.79 Q7.96,14.9 10.85,14.12 Z" fill="var(--card-bg)" stroke="none"/>
+              <g class="spot" transform="translate(1.1 1)"><path d="M10.85,14.12 L22.45,11.01 Q25.34,10.24 26.12,13.14 L31.14,31.88 Q31.92,34.77 29.02,35.55 L17.43,38.66 Q14.53,39.43 13.75,36.53 L8.73,17.79 Q7.96,14.9 10.85,14.12 Z"/></g>
+              <g filter="url(#navInk)"><path d="M10.85,14.12 L22.45,11.01 Q25.34,10.24 26.12,13.14 L31.14,31.88 Q31.92,34.77 29.02,35.55 L17.43,38.66 Q14.53,39.43 13.75,36.53 L8.73,17.79 Q7.96,14.9 10.85,14.12 Z" stroke-width="1.8"/></g>
+              <path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z" fill="var(--card-bg)" stroke="none"/>
+              <g class="spot" transform="translate(1.1 1)"><path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z"/></g>
+              <g filter="url(#navInk)"><path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z" stroke-width="1.8"/></g>
+              <path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z" fill="var(--card-bg)" stroke="none"/>
+              <g class="spot" transform="translate(1.1 1)"><path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z"/></g>
+              <g filter="url(#navInk)"><path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z" stroke-width="2"/></g>
+              <g filter="url(#navInk)"><path d="M24.1,18.6 L28.6,24.2 L24,29.8 L19.6,24.1 Z" fill="currentColor" stroke-width="1"/></g>
             </svg>
           </span>
           <span class="nav-card-title">bonus games</span>
@@ -3342,21 +3419,17 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="viewRecordsBtn" class="nav-card" data-tip="records · best runs" data-era-tint="gold">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-            <!-- A loving cup. Four details carry the "struck metal" read and none are decoration:
-                 the RIM LIP banded across the top and sitting proud of the bowl, CLOSED LOOP HANDLES
-                 that spring off that lip and land back on the shoulder (open arcs float and read as
-                 wire), a KNOP between bowl and stem, and a TWO-TIER PLINTH. The bowl waists in and
-                 back out rather than tapering straight. -->
-            <path class="wash fine" d="M14.6,13.4 C9.4,13.4 7.6,16.6 8.6,19.6 C9.6,22.6 12.4,24 15.6,24 C13.4,23 11.4,21.6 10.9,19.4 C10.3,17 11.6,15.4 14.6,15.4 Z"/>
-            <path class="wash fine" d="M33.4,13.4 C38.6,13.4 40.4,16.6 39.4,19.6 C38.4,22.6 35.6,24 32.4,24 C34.6,23 36.6,21.6 37.1,19.4 C37.7,17 36.4,15.4 33.4,15.4 Z"/>
-            <path class="solid" d="M14.4,13.4 L33.6,13.4 C33.6,20.4 32.2,25.4 29.4,28.6 L18.6,28.6 C15.8,25.4 14.4,20.4 14.4,13.4 Z"/>
-            <path class="hair" d="M19.2,16.6 C19,21 19.9,24.6 21.8,26.6" opacity=".5"/>
-            <path class="deep" d="M12.6,9.6 L35.4,9.6 L35.4,13.6 L12.6,13.6 Z"/>
-            <ellipse cx="24" cy="30.4" rx="3.2" ry="1.9" class="mid fine"/>
-            <path class="mid" d="M22.2,31.8 L25.8,31.8 L26.8,35 L21.2,35 Z"/>
-            <path class="wash" d="M17.6,35 L30.4,35 L30.4,38 L17.6,38 Z"/>
-            <path class="mid" d="M14.6,38 L33.4,38 L33.4,42 L14.6,42 Z"/>
-            <path class="hair" d="M18.4,40 L29.6,40" opacity=".55"/>
+            <!-- Same drawing as the front page's records card (the stamped runner-up is parked there). -->
+            <g class="spot" transform="translate(1.1 1)"><path d="M12.8,9.4 C12.9,17.2 15.4,24.2 21,27.3 C21.9,27.8 22.4,28.5 22.4,29.4 L22.5,33.4 C22.2,35.2 19.9,36.3 17.6,36.9 L30.4,36.7 C28.3,36.2 26,35.2 25.8,33.3 L25.8,29.3 C25.8,28.4 26.3,27.7 27.2,27.2 C32.8,24.1 35.2,17 35.3,9 Q24,8.3 12.8,9.4 Z"/><path d="M15.1,37.1 C21,36.8 27,36.8 32.9,36.9 L33.4,41.5 C27,41.9 21,41.9 14.7,41.6 Z"/></g>
+            <g filter="url(#navInk)">
+              <path d="M15.8,13.1 C6.4,11.2 5,20.4 18.2,23.2" stroke-width="2.3" clip-path="url(#navCupOut)"/>
+              <path d="M32.6,12.7 C42.3,11.2 42.5,21.6 29.8,24.6" stroke-width="2.1" clip-path="url(#navCupOut)"/>
+              <path d="M12.8,9.4 C12.9,17.2 15.4,24.2 21,27.3 C21.9,27.8 22.4,28.5 22.4,29.4 L22.5,33.4 C22.2,35.2 19.9,36.3 17.6,36.9 L30.4,36.7 C28.3,36.2 26,35.2 25.8,33.3 L25.8,29.3 C25.8,28.4 26.3,27.7 27.2,27.2 C32.8,24.1 35.2,17 35.3,9 Q24,8.3 12.8,9.4 Z" stroke-width="1.9"/>
+              <path d="M22.4,28.2 C23.5,28.5 24.7,28.5 25.8,28.2 L25.8,33.3 C25.9,34.1 26.3,34.8 26.9,35.3 C25,35.7 23.2,35.7 21.4,35.4 C22,34.9 22.4,34.2 22.5,33.4 Z" fill="currentColor" stroke-width="1"/><ellipse cx="24.1" cy="30.7" rx="3.3" ry="1.6" fill="currentColor" stroke-width="1"/>
+              <path d="M15.1,37.1 C21,36.8 27,36.8 32.9,36.9 L33.4,41.5 C27,41.9 21,41.9 14.7,41.6 Z" stroke-width="1.8"/>
+              <path d="M13.2,9.6 C19,12.2 29.4,12 34.9,9.2" stroke-width="1.4"/>
+              <path d="M23.5,14.13 L24.85,16.67 L27.72,16.47 L25.72,18.53 L26.8,21.2 L24.21,19.94 L22.01,21.79 L22.41,18.94 L19.98,17.42 L22.81,16.92 Z" fill="currentColor" stroke-width="0.6"/>
+            </g>
           </svg>
         </span>
         <span class="nav-card-title">records</span>
@@ -3365,15 +3438,15 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="resultsStatsBtn" class="nav-card" data-tip="stats · your numbers" data-era-tint="denim">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-            <!-- The chart, with the plotted line in the card's own denim rather than a hardcoded
-                 blue. Four points, not three: three read as an unfinished series. -->
-            <path class="hair" d="M18 12 L18 38 M26 12 L26 38 M34 12 L34 38 M12 19 L38 19 M12 29 L38 29" opacity=".28"/>
-            <path class="wash flat" d="M13 35 L20 30 L27 22 L35 13 L35 39 L13 39 Z"/>
-            <path d="M11 8 L11 39 L40 39"/>
-            <path class="tintstroke" d="M13 35 L20 30 L27 22 L35 13" stroke-width="2.1"/>
-            <g class="solid fine tintstroke">
-              <circle cx="13" cy="35" r="2.3"/><circle cx="20" cy="30" r="2.3"/>
-              <circle cx="27" cy="22" r="2.3"/><circle cx="35" cy="13" r="2.3"/>
+            <!-- Same drawing as the front page's stats card (the stamped version is parked there). -->
+            <g class="spot" transform="translate(1.1 1)"><path d="M14.6,33.4 L21,27.6 L27.2,30.4 L35.6,15 L35.8,38.6 L14.4,38.8 Z"/></g>
+            <g filter="url(#navInk)">
+              <path d="M10.4,7.4 C10.6,18 10.5,29 10.8,39.6 C20,39.3 30,39.6 40.8,39.2" stroke-width="2"/>
+              <path d="M14.6,33.4 L21,27.6 L27.2,30.4 L35.6,15" stroke-width="1.9"/>
+              <circle cx="14.6" cy="33.4" r="2" fill="currentColor" stroke="none"/>
+              <circle cx="21" cy="27.6" r="2" fill="currentColor" stroke="none"/>
+              <circle cx="27.2" cy="30.4" r="2" fill="currentColor" stroke="none"/>
+              <circle cx="35.6" cy="15" r="2.4" fill="currentColor" stroke="none"/>
             </g>
           </svg>
         </span>
@@ -3383,24 +3456,17 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="viewAchievementsBtn" class="nav-card" data-tip="charms · achievements" data-era-tint="lavender">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-            <!-- The bracelet. Its beads are the ONE deliberate exception to the tint rule: a beaded
-                 bracelet's whole point is that every bead is a different colour, so these take the
-                 era palette instead of inheriting the card's lavender. They are OPAQUE and shaded
-                 (see #nav-bead at the top of this file), so the class on each <use> is the whole
-                 bead. Painted RIGHT TO LEFT, which is not decoration: beads overlap by design, and
-                 this order puts every bead in front of the one on its right, so no bead's shaded
-                 side is ever clipped by its neighbour. Six evenly spaced beads rather than six
-                 huddled ones, and no white speckle highlights, which at 20px were just noise. -->
-            <path d="M7 15 Q24 40 41 15"/>
-            <circle cx="7" cy="15" r="2.4" class="paper fine"/>
-            <circle cx="41" cy="15" r="2.4" class="paper fine"/>
-            <g class="fine">
-              <use href="#nav-bead" x="36.1" y="21.6" class="nav-bead nav-bead-gold"/>
-              <use href="#nav-bead" x="31.6" y="26.6" class="nav-bead nav-bead-sage"/>
-              <use href="#nav-bead" x="26.4" y="29.6" class="nav-bead nav-bead-crimson"/>
-              <use href="#nav-bead" x="21.6" y="29.6" class="nav-bead nav-bead-denim"/>
-              <use href="#nav-bead" x="16.4" y="26.6" class="nav-bead nav-bead-violet"/>
-              <use href="#nav-bead" x="11.9" y="21.6" class="nav-bead nav-bead-gold"/>
+            <!-- Same drawing as the front page's charms card (the stamped version is parked there). -->
+            <g transform="translate(0 2.5)">
+              <g class="spot" transform="translate(1.1 1)"><path d="M11.8,29.8 C10.3,28.51 7.5,26.57 7.5,24.21 C7.5,22.27 9.22,21.41 10.51,21.41 C11.37,21.41 11.8,22.06 11.8,22.83 C11.8,22.06 12.32,21.41 13.18,21.41 C14.47,21.41 16.1,22.4 16.1,24.3 C16.1,26.7 13.35,28.51 11.8,29.8 Z"/><path d="M24.36,23.01 L25.45,26.48 L29.05,26.94 L26.09,29.04 L26.76,32.61 L23.84,30.44 L20.66,32.18 L21.82,28.74 L19.18,26.25 L22.81,26.29 Z"/><circle cx="36.15" cy="25.37" r="3.9"/></g>
+              <g filter="url(#navInk)">
+                <path d="M5.4,11.4 Q24,25.6 42.6,11" stroke-width="1.8"/>
+                <path d="M7.53,11.7 L7.73,14.3 M10.32,13.41 L10.52,16.01 M13.11,14.79 L13.31,17.39 M15.9,15.85 L16.1,18.45 M18.69,16.59 L18.89,19.19 M21.48,17 L21.68,19.6 M24.27,17.09 L24.47,19.69 M27.06,16.86 L27.26,19.46 M29.85,16.3 L30.05,18.9 M32.64,15.42 L32.84,18.02 M35.43,14.21 L35.63,16.81 M38.22,12.68 L38.42,15.28 M41.01,10.82 L41.21,13.42" stroke-width="1.4"/>
+                <path d="M11.8,15.43 L11.92,22.83 M24,18.4 L24.36,23 M36,15.27 L36.15,21.47" stroke-width="1.5"/>
+                <path d="M11.8,29.8 C10.3,28.51 7.5,26.57 7.5,24.21 C7.5,22.27 9.22,21.41 10.51,21.41 C11.37,21.41 11.8,22.06 11.8,22.83 C11.8,22.06 12.32,21.41 13.18,21.41 C14.47,21.41 16.1,22.4 16.1,24.3 C16.1,26.7 13.35,28.51 11.8,29.8 Z" stroke-width="1.8"/>
+                <path d="M24.36,23.01 L25.45,26.48 L29.05,26.94 L26.09,29.04 L26.76,32.61 L23.84,30.44 L20.66,32.18 L21.82,28.74 L19.18,26.25 L22.81,26.29 Z" stroke-width="1.7"/>
+                <circle cx="36.15" cy="25.37" r="3.9" stroke-width="1.8"/>
+              </g>
             </g>
           </svg>
         </span>
@@ -3410,13 +3476,17 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="viewChallengesBtn" class="nav-card" data-tip="challenges · unlock &amp; beat" data-era-tint="graphite">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-            <!-- The target. Graphite is the flattest tint in the set, so the three rings step
-                 .16 / .3 / .78 rather than sitting close together: at the old spacing this was the
-                 one icon that read as grey on grey. -->
-            <circle cx="24" cy="24" r="13.4" class="wash"/>
-            <circle cx="24" cy="24" r="8.6" class="mid fine"/>
-            <circle cx="24" cy="24" r="4.2" class="deep fine"/>
-            <path d="M24 10.6 L24 5.4 M24 37.4 L24 42.6 M10.6 24 L5.4 24 M37.4 24 L42.6 24"/>
+            <!-- Same drawing as the front page's challenges card (the stamped version is parked there). -->
+            <g class="spot" transform="translate(1.1 1)"><circle cx="24" cy="24.1" r="13.5"/></g>
+            <g filter="url(#navInk)">
+              <circle cx="24" cy="24.1" r="13.5" stroke-width="2"/>
+              <circle cx="24.05" cy="24.05" r="8.65" stroke-width="1.6"/>
+              <circle cx="24" cy="24.1" r="4.2" fill="currentColor" stroke-width="1"/>
+              <path d="M24.2,9.6 C24.1,7.9 24.1,6.3 24,4.8" stroke-width="1.9"/>
+              <path d="M38.6,23.8 C40.2,23.9 41.6,24 43,24.2" stroke-width="1.9"/>
+              <path d="M23.8,38.7 C23.9,40.1 23.9,41.4 24.1,42.6" stroke-width="1.9"/>
+              <path d="M9.4,24.2 C8,24.1 6.6,24 5.1,23.9" stroke-width="1.9"/>
+            </g>
           </svg>
         </span>
         <span class="nav-card-title">challenges</span>
@@ -3425,14 +3495,16 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="viewMasteryBtn" class="nav-card" data-tip="mastery · skill levels" data-era-tint="rose">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-            <!-- A medal hung from a banner: one wide ribbon with a swallow-tail notch cut into its
-                 lower edge, the milled-rim medallion sitting below it. The two hem creases show the
-                 ribbon's fold, and the beaded-ring dash on the disc reuses the bonus-shelf pressings. -->
-            <path class="wash" d="M16.6,5.6 L31.4,5.6 L31.4,21.4 L24,17.6 L16.6,21.4 Z"/>
-            <path class="hair" d="M20.4,6.2 L20.4,19.4 M27.6,6.2 L27.6,19.4" opacity=".5"/>
-            <circle cx="24" cy="31.6" r="9.6" class="wash"/>
-            <circle cx="24" cy="31.6" r="9.6" class="tintstroke" stroke-width="1.9" stroke-dasharray="0.1 2.5" stroke-linecap="round" fill="none"/>
-            <circle cx="24" cy="31.6" r="6.2" class="solid fine"/>
+            <!-- Same drawing as the front page's mastery card (the parked versions are there). -->
+            <g filter="url(#navInk)"><path d="M13.4,20.6 L13.6,31.4 C17.4,34.6 30.6,34.6 34.4,31.2 L34.4,20.4" stroke-width="1.9"/></g>
+            <path d="M4.8,18.6 L24.2,10.2 L43.2,18.2 L23.8,26.8 Z" fill="var(--card-bg)" stroke="none"/>
+            <g class="spot" transform="translate(1.1 1)"><path d="M4.8,18.6 L24.2,10.2 L43.2,18.2 L23.8,26.8 Z"/></g>
+            <g filter="url(#navInk)">
+              <path d="M4.8,18.6 L24.2,10.2 L43.2,18.2 L23.8,26.8 Z" stroke-width="2"/>
+              <circle cx="24" cy="18.4" r="1.5" fill="currentColor" stroke-width="1"/>
+              <path d="M24,18.4 C29,18.8 33.6,19.2 37.2,19.8 C38.2,20.2 38.6,21.2 38.7,22.6 L38.8,30.6" stroke-width="1.6"/>
+              <path d="M37.4,30.4 L37.2,34.6 L40.4,34.6 L40.2,30.4 Z" fill="currentColor" stroke-width="1.6"/>
+            </g>
           </svg>
         </span>
         <span class="nav-card-title">mastery</span>
@@ -3441,17 +3513,17 @@ if (location.pathname.endsWith('/index.html')) {
       <button id="viewBonusBtn" class="nav-card" data-tip="bonus games · quick play" data-era-tint="teal">
         <span class="nav-card-seat">
           <svg class="nav-ic" width="50" height="50" viewBox="0 0 48 48" aria-hidden="true">
-            <!-- The fanned cards, with the deco diamond the bonus shelf's own pressings already
-                 use in place of the gold star that used to sit on every icon in this row. Every
-                   card sits on a paper-filled copy of itself, because the tints are translucent
-                   and without it the fan behind shows straight through the card in front. -->
-            <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(-17 24 40)"/>
-            <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(-17 24 40)"/>
-            <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat" transform="rotate(17 24 40)"/>
-            <rect x="15" y="12" width="18" height="25" rx="3" class="wash" transform="rotate(17 24 40)"/>
-            <rect x="15" y="12" width="18" height="25" rx="3" class="paper flat"/>
-            <rect x="15" y="12" width="18" height="25" rx="3" class="mid"/>
-            <path class="solid fine" d="M24 19.4 L28.2 24.6 L24 29.8 L19.8 24.6 Z"/>
+            <!-- Same drawing as the front page's bonus games card (the stamped version is parked there). -->
+            <path d="M10.85,14.12 L22.45,11.01 Q25.34,10.24 26.12,13.14 L31.14,31.88 Q31.92,34.77 29.02,35.55 L17.43,38.66 Q14.53,39.43 13.75,36.53 L8.73,17.79 Q7.96,14.9 10.85,14.12 Z" fill="var(--card-bg)" stroke="none"/>
+            <g class="spot" transform="translate(1.1 1)"><path d="M10.85,14.12 L22.45,11.01 Q25.34,10.24 26.12,13.14 L31.14,31.88 Q31.92,34.77 29.02,35.55 L17.43,38.66 Q14.53,39.43 13.75,36.53 L8.73,17.79 Q7.96,14.9 10.85,14.12 Z"/></g>
+            <g filter="url(#navInk)"><path d="M10.85,14.12 L22.45,11.01 Q25.34,10.24 26.12,13.14 L31.14,31.88 Q31.92,34.77 29.02,35.55 L17.43,38.66 Q14.53,39.43 13.75,36.53 L8.73,17.79 Q7.96,14.9 10.85,14.12 Z" stroke-width="1.8"/></g>
+            <path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z" fill="var(--card-bg)" stroke="none"/>
+            <g class="spot" transform="translate(1.1 1)"><path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z"/></g>
+            <g filter="url(#navInk)"><path d="M27.7,11.45 L39.04,15.35 Q41.88,16.33 40.9,19.17 L34.65,37.32 Q33.68,40.16 30.84,39.18 L19.49,35.28 Q16.66,34.3 17.63,31.46 L23.88,13.31 Q24.86,10.47 27.7,11.45 Z" stroke-width="1.8"/></g>
+            <path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z" fill="var(--card-bg)" stroke="none"/>
+            <g class="spot" transform="translate(1.1 1)"><path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z"/></g>
+            <g filter="url(#navInk)"><path d="M18.76,11.05 L30.75,11.37 Q33.75,11.45 33.67,14.44 L33.16,34.04 Q33.08,37.04 30.08,36.96 L18.09,36.64 Q15.09,36.57 15.17,33.57 L15.68,13.97 Q15.76,10.97 18.76,11.05 Z" stroke-width="2"/></g>
+            <g filter="url(#navInk)"><path d="M24.1,18.6 L28.6,24.2 L24,29.8 L19.6,24.1 Z" fill="currentColor" stroke-width="1"/></g>
           </svg>
         </span>
         <span class="nav-card-title">bonus games</span>

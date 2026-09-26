@@ -381,24 +381,10 @@
      floating with no disc under it and its fills gone. At night it turns to the pale side
      of graphite instead, which is what the same pencil looks like on dark paper. */
   :root[data-theme="dark"] .nav-card[data-era-tint="graphite"] { --tint: 176, 168, 152; }
-  /* The icon fills are alphas of the card tint over paper. On a dark card the same alphas
-     land on #2f281f and the washed shapes all but vanish, leaving bare outlines, so each
-     step is lifted. The stroke weights are NOT touched: they read the same either way. */
-  :root[data-theme="dark"] .nav-ic .wash  { fill: rgba(var(--tint), 0.3); }
-  :root[data-theme="dark"] .nav-ic .mid   { fill: rgba(var(--tint), 0.45); }
-  :root[data-theme="dark"] .nav-ic .solid { fill: rgba(var(--tint), 0.65); }
-  :root[data-theme="dark"] .nav-ic .deep  { fill: rgba(var(--tint), 0.85); }
-  /* Same reason for the bracelet beads, the other way round: the day beads are era colours
-     knocked back into cream, and on #2f281f even a fifth of cream reads as chalk. Night
-     takes the era palette nearly neat, off the dark card instead of the paper, and shades
-     into something darker than the ink for the same reason the tint steps are all lifted:
-     a shade mixed toward #2b2722 disappears against a card that is nearly that colour. */
-  :root[data-theme="dark"] .nav-ic .nav-bead { --nav-bead-shade: color-mix(in srgb, var(--nav-bead) 58%, #17130d); }
-  :root[data-theme="dark"] .nav-ic .nav-bead-gold    { --nav-bead: #c79626; }
-  :root[data-theme="dark"] .nav-ic .nav-bead-violet  { --nav-bead: #8f77c6; }
-  :root[data-theme="dark"] .nav-ic .nav-bead-denim   { --nav-bead: #5f89b6; }
-  :root[data-theme="dark"] .nav-ic .nav-bead-crimson { --nav-bead: #b23a3f; }
-  :root[data-theme="dark"] .nav-ic .nav-bead-sage    { --nav-bead: #7d9f60; }
+  /* The icons' spot is pre-mixed onto the card. Onto #2f281f, 52% of the tint reads as mud,
+     so at night the spot takes most of it. The pen needs nothing: it is --ink, which night
+     already turns pale. */
+  :root[data-theme="dark"] .nav-ic .spot  { fill: color-mix(in srgb, rgb(var(--tint)) 72%, var(--card-bg)); }
   :root[data-theme="dark"] .nav-card:hover .nav-card-seat,
   :root[data-theme="dark"] .nav-card:focus-visible .nav-card-seat { background: rgba(var(--tint), 0.34); }
   :root[data-theme="dark"] .nav-card:hover,
@@ -12578,49 +12564,26 @@
     background: rgba(var(--tint), 0.13);
   }
   /* ===== One drawing rule for the whole keepsake icon set ==========================
-     Every mark in all six icons is drawn to these weights and these fills, and the
-     markup carries nothing but classes. The reason is that the previous set was six
-     independently hand-tuned drawings: stroke widths had spread from 1.0 to 1.9 with no
-     rule behind the spread, so records read as heavy black linework beside a challenges
-     target that had gone invisible, and every colour was a hardcoded rgba() repeated
-     twelve times across the two rows. Weights: 1.7 for an object's contour, 1.2 for
-     interior detail, 0.9 for a hairline. Fills: the CARD'S OWN --tint at four strengths,
-     so an icon takes the era colour of the card it sits on and a retint is one edit here
-     rather than twelve in the markup. Only the trinket bracelet's beads opt out, and they
-     opt out down here with the rest of the fills rather than in the markup. */
+     All six icons are drawn as INK ON PAPER, the register the records cup set (its note in
+     index.html has the long version). One pen outline per object through #navInk's wobble,
+     at a weight set on each path, because a pen's pressure is not a class, and nothing under
+     1.4, because anything finer turns to grey mush at the 38px a phone shows. Colour is one
+     .spot of the card's own --tint laid UNDER the ink and knocked a unit down and right, so
+     an icon still takes the era colour of the card it sits on and a retint is one edit here.
+     Two joins rule out the mess the old set had, and a new drawing has to keep them. Never end
+     a stroke ON another line: a round cap sitting on an outline reads as a knot. Either stop
+     short (the target's ticks), clip at the edge (the cup's handles, #navCupOut), or lay the
+     thing in front on paper so what is behind stops at its edge (the fan's cards, the cap's
+     board). And never overlap translucent fills: the spot is pre-mixed onto the card stock,
+     so where two cross there is no darker lens.
+     The set this replaced drew every object with the same 1.7 outline and four alpha
+     strengths of the tint, which is what made it read as a downloaded icon library. Each
+     icon also carries a stamped version parked in a comment above its front-page copy. */
   .nav-ic {
     display: block; fill: none; stroke: currentColor; stroke-width: 1.7;
     stroke-linecap: round; stroke-linejoin: round;
   }
-  .nav-ic .fine  { stroke-width: 1.2; }
-  .nav-ic .hair  { stroke-width: 0.9; }
-  .nav-ic .flat  { stroke: none; }
-  .nav-ic .wash  { fill: rgba(var(--tint), 0.16); }
-  .nav-ic .mid   { fill: rgba(var(--tint), 0.3); }
-  .nav-ic .solid { fill: rgba(var(--tint), 0.55); }
-  .nav-ic .deep  { fill: rgba(var(--tint), 0.78); }
-  .nav-ic .paper { fill: var(--card-bg); }
-  .nav-ic .tintstroke { stroke: rgba(var(--tint), 0.95); }
-  /* The trinket bracelet's beads, the one exception the rule above allows: six era colours
-     rather than six strengths of one tint. They are flat and OPAQUE. Era rgba() over the
-     lavender seat was the obvious way to keep them at the icon set's weight and the wrong
-     one: alpha in this set means STRENGTH of a single hue, so six different hues at .5-.62
-     only washed each one toward a lavender that was not theirs, and the beads overlap by
-     design, which turned every join into a darker lens.
-     Knocked back a fifth into the cream card and no further. Two fifths was the first
-     attempt, matching the weight of the old alphas exactly, and matching that weight is
-     what made them chalky: mixing white into a colour is how paint is made matte, so the
-     beads read as flat discs rather than as beads.
-     Each bead is one custom property, because the drawing needs the colour twice: --bead
-     is the body and --bead-shade is the crescent on its underside, derived here rather
-     than stated ten times. Nothing here is a gradient or a sheen; the shade is a second
-     flat tone, the way a pen shades a round thing on paper. Night moves --bead alone. */
-  .nav-ic .nav-bead { --nav-bead-shade: color-mix(in srgb, var(--nav-bead) 64%, #2b2722); }
-  .nav-ic .nav-bead-gold    { --nav-bead: #d1a847; }
-  .nav-ic .nav-bead-violet  { --nav-bead: #a18dcf; }
-  .nav-ic .nav-bead-denim   { --nav-bead: #7b9dc2; }
-  .nav-ic .nav-bead-crimson { --nav-bead: #c16061; }
-  .nav-ic .nav-bead-sage    { --nav-bead: #94b07a; }
+  .nav-ic .spot  { fill: color-mix(in srgb, rgb(var(--tint)) 52%, var(--card-bg)); stroke: none; }
   .nav-card-title {
     grid-area: title; align-self: end; justify-self: start;
     display: inline-block; font-family: var(--hand); font-weight: 700;
