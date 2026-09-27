@@ -3330,8 +3330,10 @@ function scheduleToastDismiss() {
 
 // The results keepsake: lines the player recalled word-for-word this run, re-written
 // in faint handwriting like verses pressed into the notebook. Skipped when empty or on
-// a held-back daily score (it would leak how the round went). ★ = word-perfect line,
-// ★★ = a whole verse.
+// a held-back daily score (it would leak how the round went). Each line is tagged in
+// typewriter with what it was: "line" for a word-perfect line, "verse" for a whole verse.
+// A word rather than a mark, because the tier is information and a star says nothing
+// about which of the two it means without a key.
 const VA_SHOWN = 3;   // keepsake lines shown before the rest fold behind "+ N more"
 function renderVerseAnthology() {
   const el = $("verseAnthology");
@@ -3340,7 +3342,7 @@ function renderVerseAnthology() {
     el.style.display = "none"; el.innerHTML = ""; return;
   }
   const rows = verseKeepsake.map((k, i) => {
-    const mark = k.tier === "verse" ? "★★" : "★";
+    const mark = k.tier === "verse" ? "verse" : "line";
     return `<li class="va-row${i >= VA_SHOWN ? " va-folded" : ""}"><span class="va-mark">${mark}</span>` +
       `<span class="va-text">${lyricBreaks(highlightWord(k.line, k.word))}</span></li>`;
   }).join("");
@@ -4553,9 +4555,9 @@ function renderBestLine(el, mode, opts = {}) {
   const unit = isInfiniteToken(mode) ? " rounds" : " / " + TOTAL_ROUNDS;
   const timePart = rec.time != null ? " · " + fmtTime(rec.time) : "";
   const hintPart = rec.hints ? " · " + hintCountLabel(rec.hints) : "";
-  // The start screen sets this line beside its own "Your best" heading, so the ★ best
+  // The start screen sets this line beside its own "Your best" heading, so the "best"
   // badge would only say the heading again; the stacked results line keeps it.
-  const badge = opts.compact ? "" : "★ best · ";
+  const badge = opts.compact ? "" : "best · ";
   el.innerHTML =
     `<div class="best-line"><span class="best-num">${rec.score}<span class="best-unit">${unit}</span></span>` +
     `<span class="best-meta">${badge}${escapeHtml(modeLabel(mode))}${timePart}${hintPart}` +
@@ -13818,7 +13820,7 @@ function buildCardMeta() {
     if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
   } else if (gameType === "album" && focusAlbum) {
     const perfect = correct === TOTAL_ROUNDS;
-    title = perfect ? focusAlbum + ", start to finish ★" : "an album, in beads";
+    title = perfect ? focusAlbum + ", start to finish" : "an album, in beads";
     stats.push({ v: "Album Focus", l: "mode" });
     stats.push({ v: focusAlbum, l: "the album" });
     stats.push({ v: currentMode.label, l: "difficulty" });
@@ -13826,7 +13828,7 @@ function buildCardMeta() {
   } else if (gameType === "guest" && guestRunId) {
     const guest = GUESTS.find((x) => x.id === guestRunId);
     const perfect = correct === TOTAL_ROUNDS;
-    title = perfect ? "admitted to the shelf ★" : "a night on someone else's catalogue";
+    title = perfect ? "admitted to the shelf" : "a night on someone else's catalogue";
     stats.push({ v: "Guest shelf", l: "mode" });
     stats.push({ v: (guest && guest.name) || "Guest", l: "the catalogue" });
     stats.push({ v: currentMode.label, l: "difficulty" });
@@ -13843,7 +13845,7 @@ function buildCardMeta() {
     // touches: the bonus loop keeps its pages in bonusLog and would otherwise hand the card
     // the last classic run's thirteen.
     const clean = ruthlessCard.named === ruthlessCard.pages;
-    title = clean ? "ten named, nothing handed back ★" : "ten pages against the clock";
+    title = clean ? "ten named, nothing handed back" : "ten pages against the clock";
     stats.push({ v: "Ruthless Game", l: ruthlessCard.lens || "mode" });
     stats.push({ v: fmtTimeFine(ruthlessCard.secs), l: "the run" });
     stats.push({ v: ruthlessCard.named + "/" + ruthlessCard.pages, l: "named" });
@@ -13867,9 +13869,9 @@ function buildCardMeta() {
       secs: runTime, survive: surviveRuleActive(),
     };
     darkRun = !!ch.dark;
-    title = ch.survive ? (ch.won ? "thirty-one unbroken ★" : "the long strand")
-          : ch.dark    ? (ch.won ? "the dark side, defeated ★" : "a card with the light taken out")
-          : ch.won     ? "the challenge, defeated ★"
+    title = ch.survive ? (ch.won ? "thirty-one unbroken" : "the long strand")
+          : ch.dark    ? (ch.won ? "the dark side, defeated" : "a card with the light taken out")
+          : ch.won     ? "the challenge, defeated"
                        : "a challenge, on paper";
     stats.push({ v: ch.name, l: ch.dark ? "dark side" : "challenge" });
     // A risk challenge is scored in beads against a target rather than out of its pages, the
@@ -13892,7 +13894,7 @@ function buildCardMeta() {
     const perfect = correct === TOTAL_ROUNDS;
     const hidden = dailyResultIsSealed();
     title = hidden ? "today's Daily, sealed"
-          : perfect ? "thirteen for thirteen ★"
+          : perfect ? "thirteen for thirteen"
           : gameType === "daily" ? "today's daily" : "the bracelet you made";
     stats.push({ v: gameType === "daily" ? "Daily" : (GAMETYPE_LABELS[gameType] || "Classic"), l: "mode" });
     stats.push({ v: currentMode.label, l: "difficulty" });
@@ -15452,7 +15454,7 @@ function endLineup() {
     : "nobody: not a page landed";
   const status = verdict.length
     ? `<div class="chall-result-status${won === verdict.length ? " win" : ""}">` +
-      (won === verdict.length ? "the whole hand, held ★" : `${won} of ${verdict.length} held`) +
+      (won === verdict.length ? "the whole hand, held" : `${won} of ${verdict.length} held`) +
       "</div>"
     : "";
   // New to the board, said plainly and only when there is something to say. This is the whole
@@ -19839,7 +19841,7 @@ function endAlbumFocus() {
   let status;
   if (beat && hintFree) {
     status = perfect
-      ? `<div class="chall-result-status win">perfect! album complete ★</div>`
+      ? `<div class="chall-result-status win">perfect! album complete</div>`
       : `<div class="chall-result-status win">album beaten!</div>`;
   } else if (beat && !hintFree) {
     status = `<div class="chall-result-status">beaten, but hinted runs don't count toward completion</div>`;
@@ -19919,7 +19921,7 @@ function endGuest() {
   document.querySelector("#screen-results .podium-title").textContent = g.name;
   let status;
   if (admitted && hintFree) {
-    status = `<div class="chall-result-status win">a perfect run, admitted to the shelf ★</div>`;
+    status = `<div class="chall-result-status win">a perfect run, admitted to the shelf</div>`;
   } else if (admitted && !hintFree) {
     status = `<div class="chall-result-status">perfect, but hinted runs don't earn the stamp</div>`;
   } else {
@@ -20003,7 +20005,7 @@ function endCustom() {
 
   const name = preset && preset.name ? preset.name : "Custom";
   document.querySelector("#screen-results .podium-title").textContent = name;
-  const statusTxt = perfect ? "a flawless custom run ★"
+  const statusTxt = perfect ? "a flawless custom run"
     : infinite ? `${score} named before your lives ran out`
     : score >= Math.ceil(total * 0.7) ? "a strong run on your own rules"
     : "your mode, your rules";
@@ -25747,7 +25749,7 @@ function endGame() {
     else draw();
     if (isBest) {
       const improvedScore = !prevBest || boardScore > prevBest.score;
-      showNewBestBanner((improvedScore ? "a new personal best ★" : "a new best time ★") +
+      showNewBestBanner((improvedScore ? "a new personal best" : "a new best time") +
         (recTime != null ? " · " + fmtTime(recTime) : "") +
         (hintsUsed > 0 ? " · " + hintCountLabel(hintsUsed) : ""));
       // R-E-V-E-N-G-E — actually beat a previous high score (not just shaved time), and did it
@@ -25788,7 +25790,7 @@ function promptSignOnce(after) {
 function showNewBestBanner(text) {
   const el = $("newBestBanner");
   if (!el) return;
-  el.textContent = text || "a new personal best ★";
+  el.textContent = text || "a new personal best";
   el.style.display = "";
   el.classList.remove("pop");
   if (!motionReduced()) { void el.offsetWidth; el.classList.add("pop"); }   // restart the animation
