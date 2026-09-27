@@ -429,17 +429,20 @@
     min-height: 100vh;
     font-family: var(--type);
     color: var(--ink);
-    /* Blonde oak: a long, transparent growth figure over a finer seamless
-       surface. Their 4800 / 1733 heights keep knots, pores and fibres from
-       repeating together. Both scroll 1:1 with the notebook and desk props.
-       Noise stitches at its edges and drawn details stay clear of the
-       horizontal join, so a repeat reads as another gap between rings.
-       Lighting stays viewport-fixed in body::before, separate from the wood.
-       Both tiles come out of scripts/art/make_oak.py; edit there, never here,
-       and keep them at the same CSS width or the two periods stop agreeing. */
-    background:
-      url("textures/oak-figure.svg") top center / 1200px auto repeat-y,
-      url("textures/oak-surface.svg") top center / 1200px auto repeat-y;
+    /* Blonde oak, as ONE image: the stitched turbulence ground and the
+       drawn growth figure above it live in a single 4800-tall tile that
+       scrolls 1:1 with the notebook and desk props. It used to be two
+       layers, and that was the lag on long pages: with a second image
+       under it Chrome stopped keeping the drawn tile and re-ran every
+       noise filter for each strip of desk scrolled into view (~85ms a
+       frame on the charms page). As one image it is drawn once and kept.
+       Never split it back into layers, and never add a second background
+       image here. Noise stitches at the tile's edges and drawn details
+       stay clear of the horizontal join, so a repeat reads as another gap
+       between rings. Lighting stays viewport-fixed in body::before,
+       separate from the wood. The tile comes out of
+       scripts/art/make_oak.py; edit there, never here. */
+    background: url("textures/oak-figure.svg") top center / 1200px auto repeat-y;
     background-color: #cdb389;
     display: flex;
     justify-content: center;
