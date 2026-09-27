@@ -41,7 +41,7 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
 - Five marks in the corner of every page saying what it will take, so you don't learn the rules by breaking them
 - A streak in the margin that climbs from pencil to your era's own pen to gold
-- A start button that can turn with the seasons where you live, southern hemisphere included
+- A start button that turns with the seasons where you live, southern hemisphere included
 - A rubber stamp on your results when a run has a story worth one
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song

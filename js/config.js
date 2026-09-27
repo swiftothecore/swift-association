@@ -251,7 +251,7 @@ export const DEFAULT_SETTINGS = {
                             // (a MAST_INKS slug; "" = the house brand gold). See MAST_INKS.
   masteryTrinket: "",         // chosen bracelet trinket, unlocked via Mastery ("" = the default star)
   masteryTitle: "",         // chosen prestige title, unlocked via Mastery ("" = follows your mastery: the highest tier's default)
-  masteryButton: "",        // chosen "start writing" button finish, unlocked via Mastery ("" = the default gold marker)
+  masteryButton: "",        // chosen "start writing" button finish ("" = the default, Seasons by the calendar; the rest unlock via Mastery)
   masteryLabel: "",         // chosen start-button words (a CTA_LABELS key), unlocked via Mastery ("" = the default "Start writing")
 };
 
@@ -2329,6 +2329,15 @@ export const PRIDE_BUTTONS = [
   { id: "pride-asexual",   name: "Asexual",       bands: ["#000000", "#a3a3a3", "#ffffff", "#800080"] },
 ];
 export const PRIDE_BUTTON_BY_ID = Object.fromEntries(PRIDE_BUTTONS.map((f) => [f.id, f]));
+// The four seasons, as the Seasons reward's set: pinning one keeps it on the button all year.
+// The ids are the finishes themselves (the data-startbtn values js/cta.js draws), the same way
+// a Pride flag's id is its finish.
+export const SEASON_BUTTONS = [
+  { id: "spring", name: "Spring blossom" },
+  { id: "summer", name: "Summer tide" },
+  { id: "autumn", name: "Autumn gust" },
+  { id: "winter", name: "Winter storm" },
+];
 // The gradient for a button finish, or "" if that finish is not a flag (every other finish
 // paints itself from CSS and wants no inline stripes at all).
 export function prideStripes(finish) {
@@ -2380,14 +2389,16 @@ export const MASTERY_REWARDS = [
   // home-screen hero CTA (CSS .play-cta[data-startbtn="…"], set on the button itself so the
   // reward board can preview them all side by side). Persists in settings.masteryButton,
   // applied by applySettings.
+  { level: 8,  id: "btn-gold",   kind: "button", name: "Gold marker", desc: "The notebook's gold, swept with a marker as you hover.", payload: { button: "gold" } },
   { level: 8,  id: "btn-ink",    kind: "button", name: "Ink press", desc: "A solid ink-stamped start button.",   payload: { button: "ink" } },
   { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "Rose paper that takes a watercolour wash as you hover.", payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
-  // One pick, four finishes: "seasons" is worn as spring, summer, autumn or winter by the
-  // month and the player's hemisphere (js/season.js), turning on the first of March, June,
-  // September and December. It replaced the single Snowfall finish, which became its winter.
-  { level: 8, id: "btn-seasons", kind: "button", name: "Seasons", desc: "Blossom, tide, falling leaves or a snowstorm, whichever season it is where you are.", payload: { button: "seasons" } },
+  // The default button follows the seasons by the calendar (""; see wornFinish in app.js).
+  // What level 8 adds is the choice to keep ONE of them all year, held as a set the way the
+  // Pride flags are: its variants are the four seasons, and a pinned season is stored under
+  // its own id. The gold marker, the default before Seasons, is a level-8 finish now.
+  { level: 8, id: "btn-seasons", kind: "button", name: "Seasons", desc: "Keep one season on your start button all year.", payload: { button: "winter" }, variants: SEASON_BUTTONS },
   { level: 8, id: "btn-ivy", kind: "button", name: "Ivy house", desc: "Warm brickwork with ivy climbing over the edges.", payload: { button: "ivy" } },
   // The only reward with a set inside it. `variants` is what chooseMasteryCosmetic will
   // accept in place of the payload's default, so a flag pick runs through the same unlock

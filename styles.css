@@ -13197,22 +13197,19 @@
   .rb-prog { display: block; width: 120px; height: 5px; border-radius: 3px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin-top: 6px; }
   .rb-prog i { display: block; height: 100%; border-radius: 3px; background: rgba(var(--m-accent), 0.78); }
 
-  /* The start-button WORDS tile is the tall one — eight label rows — so it spans the left
-     column's short tiles rather than sitting beside one and leaving a hole. That span is
-     load-bearing and is why the two knowledge vaults live in that column: the button-finish
-     tile can't take up the slack itself, since a swatch is a real button held at a fixed
-     width (see .rb-button below), so widening it just leaves it hollow. Adding the sticker
-     vault to the stack lengthens the column and brings the two sides CLOSER to level, not
-     further apart. It also lands the level-9 vault directly above the level-10 one, which is
-     the pairing: the shelf starts nudging, then the charms tell you outright. */
+  /* The two start-button tiles each take the full width, finishes above words, because they
+     dress one object and read as a pair: the finish swatches sit four across and the word rows
+     two across, so neither tile is a tall column beside a short one. The two knowledge vaults
+     then share a row below them, level 9 beside level 10, which is still the pairing: the shelf
+     starts nudging, then the charms tell you outright. */
   .rb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
     grid-template-areas:
       "pens pens paper paper"
       "trinket trinket trinket trinket"
       "hard hard hard hard"
-      "button button cta cta"
-      "stick stick cta cta"
-      "hint hint cta cta"
+      "button button button button"
+      "cta cta cta cta"
+      "stick stick hint hint"
       "title title title title"; }
 
   .rb-tile { position: relative; border-radius: 12px; padding: 14px 16px;
@@ -13360,6 +13357,8 @@
      as --text-size-adjust climbs. max-content lets the widest words push the button out
      instead, and left:50% + translateX keeps whatever width results centred in the slot. */
   .rb-rows--cta .rb-row { padding: 7px 11px; min-height: 52px; }
+  /* Full width, the rows go two across rather than stretching a small button over a long row. */
+  .rb-rows--cta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rb-rows--cta .rb-row-ic {
     flex: 1 1 auto; width: auto; height: auto; min-width: 0; min-height: 40px;
     display: flex; flex-direction: column; align-items: stretch; justify-content: center;
@@ -13480,12 +13479,15 @@
   }
   .rb-ms-go:hover { border-color: var(--v-foil); }
 
-  /* Start-writing button — swatches of the real CTA (reuses .rb-sw-col). Eight finishes, so
-     they sit in two columns and centred rather than wrapping; the grid is scoped to this tile because
-     the paper tile shares .rb-swatches and wants its own free-flowing wrap. Two columns, not
-     three: each swatch is a real button scaled down, so it is ~116px wide however narrow its
-     column gets, and a third column would have them overlapping each other. */
-  .rb-button .rb-swatches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); justify-items: center; }
+  /* Start-writing button: swatches of the real CTA (reuses .rb-sw-col). Eight swatches, four
+     across now that the tile has the full width, and two across on a phone; the grid is scoped
+     to this tile because the paper tile shares .rb-swatches and wants its own free-flowing wrap.
+     Each swatch is a real button scaled down, ~116px wide however narrow its column gets, so the
+     column count must drop before the columns get narrower than that, or they overlap. The
+     Seasons tray leads with "By the calendar" across the whole row, the default above the four
+     seasons it pins. */
+  .rb-button .rb-swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); justify-items: center; }
+  #seasonPicker .rb-sw-col:first-child { grid-column: 1 / -1; }
   .rb-button .rb-sw-col { width: 100%; }
   /* Each swatch is a real .play-cta drawn at a fixed width and scaled down to fit, so the
      preview stays the button rather than an impression of it. */
@@ -13505,12 +13507,12 @@
      grid holding the flags. The tray's chips are the same .rb-sw-col swatches the tile above
      it uses, each a real scaled-down .play-cta, so a flag previews as the button it will
      actually become and there is no second drawing of a ramp to drift. */
-  .pride-picker { margin-top: 14px; padding-top: 13px; border-top: 1px dashed rgba(43, 39, 34, 0.2); }
-  .pride-picker[hidden] { display: none; }
-  .pride-picker-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-  .pride-picker-top > span { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); }
-  .pride-picker-top button { border: 0; background: none; padding: 2px 0; cursor: pointer; color: var(--ink-soft); font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; }
-  .pride-picker-top button:hover, .pride-picker-top button:focus-visible { color: rgb(var(--m-accent)); text-decoration: underline; text-underline-offset: 3px; }
+  .set-picker { margin-top: 14px; padding-top: 13px; border-top: 1px dashed rgba(43, 39, 34, 0.2); }
+  .set-picker[hidden] { display: none; }
+  .set-picker-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .set-picker-top > span { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); }
+  .set-picker-top button { border: 0; background: none; padding: 2px 0; cursor: pointer; color: var(--ink-soft); font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; }
+  .set-picker-top button:hover, .set-picker-top button:focus-visible { color: rgb(var(--m-accent)); text-decoration: underline; text-underline-offset: 3px; }
 
   /* Prestige titles — rank-medallion ladder above the picker */
   .rb-ladder { position: relative; display: flex; justify-content: space-between; align-items: flex-start; margin: 18px 4px 6px; padding: 0 6px; }
@@ -13548,6 +13550,8 @@
   .rb-titles .title-stepper { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(43, 39, 34, 0.1); }
   @media (max-width: 560px) {
     .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "trinket" "paper" "hard" "button" "cta" "stick" "hint" "title"; }
+    .rb-button .rb-swatches, .rb-rows--cta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rb-rows--cta { grid-template-columns: minmax(0, 1fr); }
     .rb-bead { width: 34px; height: 34px; }
     .rb-bead .trinket-preview, .rb-bead > .charm { width: 24px; height: 24px; }
     .rb-swatches { gap: 10px; }
@@ -15448,7 +15452,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* Keep the drawn marks small while their touch area is comfortable. */
 @media (pointer: coarse) {
-  .btn-link, .countdown-skip, .ts-reset, .pride-picker-top button { min-height: 44px; padding-block: 10px; }
+  .btn-link, .countdown-skip, .ts-reset, .set-picker-top button { min-height: 44px; padding-block: 10px; }
   .ts-arw { width: 44px; height: 44px; }
   .rb-rand { min-width: 44px; min-height: 44px; }
   .rb-row, .rb-sw-col, .rb-medal { min-height: 44px; }

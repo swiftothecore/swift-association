@@ -543,7 +543,7 @@ function paintStartButton() {
   if (!playCta) return;
   // activeButtonFinish/activeCtaLabel, not the raw settings: either may hold "random", in
   // which case what the button wears is this page load's roll. wornFinish then turns
-  // "seasons" into the season it is.
+  // the default into the season it is and "gold" into the bare marker.
   const finish = wornFinish(activeButtonFinish());
   if (finish) playCta.setAttribute("data-startbtn", finish);
   else playCta.removeAttribute("data-startbtn");
@@ -6052,7 +6052,7 @@ const MASTERY_COSMETICS = {
   pen:       { setting: "masteryPen",       field: "pen",       resetLabel: "Default pen",    resetMeta: "the everyday hand", resetIcon: "nib" },
   paper:     { setting: "masteryPaper",     field: "paper",     resetLabel: "Plain paper",    resetMeta: "the everyday page" },
   trinket:   { setting: "masteryTrinket",   field: "trinket",   resetLabel: "Star trinket",   resetMeta: "the everyday trinket" },
-  button:    { setting: "masteryButton",    field: "button",    resetLabel: "Gold marker",    resetMeta: "the everyday button" },
+  button:    { setting: "masteryButton",    field: "button",    resetLabel: "Seasons",        resetMeta: "turns with the calendar" },
   label:     { setting: "masteryLabel",     field: "label",     resetLabel: "Start writing", resetMeta: "the everyday words" },
 };
 
@@ -6137,17 +6137,20 @@ function renderMasteryPage() {
   body.querySelectorAll("[data-reward-random]").forEach((el) => {
     el.addEventListener("click", () => chooseRandomCosmetic(el.getAttribute("data-reward-random")));
   });
-  // The Pride tray is pure disclosure: it opens and shuts in the DOM without re-rendering,
-  // and picking a flag re-renders the page from scratch with it shut again.
-  const prideTray = body.querySelector("#pridePicker");
-  const prideDoor = body.querySelector("[data-open-pride-picker][aria-controls]");
-  body.querySelectorAll("[data-open-pride-picker]").forEach((el) => {
+  // The set trays (Seasons, Pride) are pure disclosure: they open and shut in the DOM without
+  // re-rendering, one at a time, and a pick re-renders the page from scratch with all shut.
+  body.querySelectorAll("[data-open-set-picker]").forEach((el) => {
     el.addEventListener("click", () => {
-      if (!prideTray) return;
-      prideTray.hidden = !prideTray.hidden;
-      if (prideDoor) prideDoor.setAttribute("aria-expanded", String(!prideTray.hidden));
-      if (!prideTray.hidden) prideTray.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      else if (prideDoor) prideDoor.focus();
+      const id = el.getAttribute("data-open-set-picker");
+      const tray = body.querySelector("#" + id);
+      if (!tray) return;
+      const opening = tray.hidden;
+      body.querySelectorAll(".set-picker").forEach((t) => { t.hidden = t === tray ? !opening : true; });
+      body.querySelectorAll("[data-open-set-picker][aria-controls]").forEach((d) =>
+        d.setAttribute("aria-expanded", String(opening && d.getAttribute("aria-controls") === id)));
+      const door = body.querySelector(`[data-open-set-picker="${id}"][aria-controls]`);
+      if (opening) tray.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      else if (door) door.focus();
     });
   });
   // ...and the rank ladder above the stepper: data-title-tier scrolls the stepper to that
@@ -6490,11 +6493,14 @@ rollRandomCosmetics();
 function activeButtonFinish() {
   return settings.masteryButton === COSMETIC_RANDOM ? rolledFinish : (settings.masteryButton || "");
 }
-// The Seasons finish is stored as "seasons" and worn as whichever season it is today, so every
-// surface that paints a start button asks this for the finish it should actually draw. It
-// reads todayKey(), which is what keeps it on the player's timezone and the dev date.
+// The finish a stored pick actually draws. The default ("") is Seasons by the calendar,
+// worn as whichever season it is today; "gold" is the gold marker, which is the button with no
+// finish attribute at all (its rules are .play-cta:not([data-startbtn])). Every surface that
+// paints or previews a start button asks this, never the raw setting. It reads todayKey(),
+// which keeps it on the player's timezone and the dev date.
 function wornFinish(finish) {
-  return finish === "seasons" ? seasonOn(todayKey()) : finish;
+  if (!finish) return seasonOn(todayKey());
+  return finish === "gold" ? "" : finish;
 }
 function activeCtaLabel() {
   return settings.masteryLabel === COSMETIC_RANDOM ? rolledLabel : (settings.masteryLabel || "");
@@ -6602,34 +6608,46 @@ function buildMilestoneTile(r, opts) {
     `<div class="rb-ms-sub">${opts.earned ? opts.earnedCopy : opts.lockedCopy}</div>${act}</div>`;
 }
 
-// Start-writing button finishes — swatches of the real CTA (default plus each unlockable
-// finish). Selecting one restyles the home-screen hero button globally.
-// Pride is the one finish that is a set, so its swatch is a doorway rather than a choice: it
-// opens a tray of the eight flags below the grid. The tray is always in the markup and merely
-// hidden, so opening it is a DOM change and not app state — the only thing that re-renders
-// this page is picking a flag, which closes the tray anyway.
+// Start-writing button finishes: swatches of the real CTA. The first is Seasons, the default,
+// which follows the calendar. Two of the level-8 rewards are SETS rather than finishes (the
+// four seasons to pin, the eight Pride flags), and a set's swatch is a doorway rather than a
+// choice: it opens a tray of its members below the grid. The Seasons doorway is the tile's
+// first swatch and is open to everyone, because its tray also holds the default ("By the
+// calendar"); the four pinned seasons in it wait for level 8. Trays are always in the markup
+// and merely hidden, so opening one is a DOM change and not app state; the only thing that
+// re-renders this page is a pick, which shuts every tray anyway.
 function buildButtonTile(buttons, m) {
   const setUnlocked = buttons.length ? !!m.unlocked[buttons[0].id] : false;
   const active = settings.masteryButton || "";
-  const wornFlag = PRIDE_BUTTON_BY_ID[active] || null;
-  let sw = rbSwatch(`data-reward-reset="button"`, buttonChip(""), "gold marker", active === "", true, 0);
-  let pride = "";
+  let sw = "", trays = "";
+  const tray = (id, title, members) => `<div class="set-picker" id="${id}" hidden>` +
+    `<div class="set-picker-top"><span>${escapeHtml(title)}</span>` +
+    `<button type="button" data-open-set-picker="${id}">‹ button finishes</button></div>` +
+    `<div class="rb-swatches">${members}</div></div>`;
+  const door = (id, chip, name, worn, available, level, wornName) =>
+    rbSwatch(`data-open-set-picker="${id}" aria-expanded="false" aria-controls="${id}"`, chip, name, worn, available, level, wornName);
+  // Seasons first: the default, and the doorway to pinning one.
+  const seasons = buttons.find((r) => r.id === "btn-seasons");
+  if (seasons) {
+    const pinned = seasons.variants.find((v) => v.id === active) || null;
+    sw += door("seasonPicker", buttonChip(pinned ? pinned.id : ""), "Seasons", active === "" || !!pinned, true, 0,
+      pinned ? `${pinned.name}, all year` : "by the calendar");
+    trays += tray("seasonPicker", "Seasons",
+      rbSwatch(`data-reward-reset="button"`, buttonChip(""), "By the calendar", active === "", true, 0) +
+      seasons.variants.map((v) => rbSwatch(`data-reward="${seasons.id}" data-variant="${v.id}"`, buttonChip(v.id),
+        v.name, active === v.id, setUnlocked, seasons.level)).join(""));
+  }
   buttons.forEach((r) => {
-    if (r.id === "btn-pride") {
-      sw += rbSwatch(`data-open-pride-picker aria-expanded="false" aria-controls="pridePicker"`,
-        buttonChip(wornFlag ? wornFlag.id : r.payload.button),
-        "Pride flags", !!wornFlag, setUnlocked, r.level, wornFlag ? wornFlag.name : "");
-      // Flag rows are the same swatch shape as the tile's own, and route through the same
-      // data-reward guard: the variant is the flag, the unlock is still btn-pride's.
-      if (!setUnlocked) return;   // no doorway while the set is locked, so no tray behind it
-      const flags = PRIDE_BUTTONS.map((flag) =>
-        rbSwatch(`data-reward="${r.id}" data-variant="${flag.id}"`, buttonChip(flag.id),
-          flag.name, active === flag.id, setUnlocked, r.level)
-      ).join("");
-      pride = `<div class="pride-picker" id="pridePicker" hidden>` +
-        `<div class="pride-picker-top"><span>Pride flags</span>` +
-        `<button type="button" data-open-pride-picker>‹ button finishes</button></div>` +
-        `<div class="rb-swatches">${flags}</div></div>`;
+    if (r === seasons) return;
+    if (r.variants) {
+      const worn = r.variants.find((v) => v.id === active) || null;
+      const id = `setPicker-${r.id}`;
+      sw += door(id, buttonChip(worn ? worn.id : r.payload.button), r.name, !!worn, setUnlocked, r.level, worn ? worn.name : "");
+      // No doorway while the set is locked, so no tray behind it. Members route through the
+      // same data-reward guard as every finish: the variant is the member, the unlock is still
+      // the set's.
+      if (setUnlocked) trays += tray(id, r.name, r.variants.map((v) =>
+        rbSwatch(`data-reward="${r.id}" data-variant="${v.id}"`, buttonChip(v.id), v.name, active === v.id, setUnlocked, r.level)).join(""));
     } else {
       sw += rbSwatch(`data-reward="${r.id}"`, buttonChip(r.payload.button), r.name, active === r.payload.button, setUnlocked, r.level);
     }
@@ -6639,7 +6657,7 @@ function buildButtonTile(buttons, m) {
       rbRandChip("button", "Mastery 8", active === COSMETIC_RANDOM, setUnlocked, "A different finish every visit") +
     `</div>` +
     `<div class="rb-tt-sub">Restyles your home-screen button · random redraws it every visit</div>` +
-    `<div class="rb-swatches">${sw}</div>${pride}</div>`;
+    `<div class="rb-swatches">${sw}</div>${trays}</div>`;
 }
 // One row's preview: a real start button, scaled down, wearing the words on offer and the
 // mark that comes with them. It is the button itself rather than a picture of one, for the
@@ -15789,7 +15807,7 @@ function refreshDateSurfaces() {
   refreshSnow();
   refreshLeaves();
   // The Seasons start button turns on the first of the month, so it is a dated surface too.
-  if (activeButtonFinish() === "seasons") {
+  if (activeButtonFinish() === "") {
     paintStartButton();
     if ($("masteryBody")) renderMasteryPage();
   }
@@ -30532,17 +30550,18 @@ function buildDevApi() {
       // pass), as a list of trinket ids — the strand without playing the run that earns it.
       strand: (n = TOTAL_ROUNDS, seed = braceletSeed) =>
         Array.from({ length: n | 0 }, (_, i) => randomTrinketForBead(seed, i)),
-      // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky/meadow/ivy/seasons, or
-      // any dev.mastery.flags() id) or "" for the default gold marker.
+      // Preview a start-button finish without unlocking it: pass an id (gold/ink/rose/sky/meadow/ivy,
+      // a season to pin, or any dev.mastery.flags() id) or "" for the default, Seasons by the calendar.
       button: (id) => { settings.masteryButton = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
-      // Wear the Seasons finish and pin which season it shows, for this session only
-      // (window.__devSeason, never stored): spring/summer/autumn/winter, or anything else to
-      // hand it back to the date and timezone. Returns the season now being worn.
+      // Wear the default Seasons button and force which season it shows, for this session
+      // only (window.__devSeason, never stored): spring/summer/autumn/winter, or anything else
+      // to hand it back to the date and timezone. Returns the season now being worn. (Pinning
+      // a season for real is the level-8 reward: button("winter") and so on.)
       season: (which) => {
         window.__devSeason = SEASONS.includes(which) ? which : null;
-        settings.masteryButton = "seasons"; saveSettings(settings); applySettings();
+        settings.masteryButton = ""; saveSettings(settings); applySettings();
         if ($("masteryBody")) renderMasteryPage();
-        return wornFinish("seasons");
+        return wornFinish("");
       },
       // The Pride flag ids, for feeding to button() above — the one finish that is a set, so
       // the ids are not guessable from the reward ladder.

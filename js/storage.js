@@ -1184,7 +1184,7 @@ export function loadMastery() {
           // New finishes belong to the existing level-8 set, including on older notebooks.
           unlocked: {
             ...migrateTrinketRewards((o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {}),
-            ...(masteryLevelFromXp(o.masteryXp || 0) >= 8 ? { "btn-seasons": true, "btn-ivy": true } : {}),
+            ...(masteryLevelFromXp(o.masteryXp || 0) >= 8 ? { "btn-gold": true, "btn-seasons": true, "btn-ivy": true } : {}),
           },
         };
       }
@@ -1620,8 +1620,10 @@ export function loadSettings() {
         // point of use keeps one spelling of a flag finish in the codebase.
         if (o.masteryButton === "pride") o.masteryButton = "pride-rainbow";
         // Snowfall grew into the Seasons finish and is now its winter, so a notebook wearing
-        // it keeps a snowy button through the winter and gets the rest of the year with it.
-        if (o.masteryButton === "snow") o.masteryButton = "seasons";
+        // it keeps winter pinned. "seasons" was briefly its own pick before it became the
+        // default, which is "" now.
+        if (o.masteryButton === "snow") o.masteryButton = "winter";
+        if (o.masteryButton === "seasons") o.masteryButton = "";
         // The bracelet dangle used to be called a charm, which collided with the achievement
         // charms on the same results screen. It is a trinket now; the ids it holds (heart,
         // moon, "random") never changed, only the setting it lives in.
