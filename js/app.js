@@ -17028,25 +17028,108 @@ function goalLean() {
 // One roll at a time. A guest draw waits on its catalogue download while the start screen, dice
 // and all, stays live, and a second tap in that window used to run a second draw: it could start
 // a Classic run, and then the first download would finish and install the guest's catalogue
-// over it. So a roll holds the button until it has dealt or given up, and says so: the dice
-// tumble on every throw, and keep tumbling while a download is outstanding. The short pause
-// before the draw is the throw itself, so a roll that deals instantly still reads as a roll;
-// with reduced motion there is no tumble to wait for, so there is no pause either.
+// over it. So a roll holds the button until it has dealt or given up, and says so.
+// The throw comes before the draw, so a roll that deals instantly still reads as a roll: a hard
+// shake in the hand (is-rolling), then the landing (is-landing), a hop, a bounce and a rock onto
+// the bottom edge (styles.css, THE THROW). The faces change while the dice tumble and stop on
+// the last one painted, so the pair on the button shows a new roll afterwards. If the deal is
+// still waiting on a download once they are down, the shake picks up again until it is done.
+// With reduced motion there is no throw to wait for, so there is no pause either; the faces
+// still change, which costs no movement.
 let diceRolling = false;
-const DICE_THROW_MS = 380;
+const DICE_SHAKE_MS = 180;
+const DICE_LAND_MS = 400;     // written onto the button as --dice-land, so CSS never disagrees
+const DICE_TUMBLE_MS = 80;    // how often a tumbling die shows a new face
+// The faces a die can show, as pip offsets from its centre in units of DICE_PIP_STEP. The
+// drawing's own pair (a one behind a three) is what these are measured from.
+const DICE_FACES = [
+  null,
+  [[0, 0]],
+  [[-1, -1], [1, 1]],
+  [[-1, -1], [0, 0], [1, 1]],
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]],
+  [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]],
+  [[-1, -1], [-1, 0], [-1, 1], [1, -1], [1, 0], [1, 1]],
+];
+const DICE_PIP_STEP = 2.7;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function paintDie(pips, face) {
+  const cx = +pips.dataset.cx, cy = +pips.dataset.cy, r = face === 1 ? 1.5 : 1.35;
+  pips.innerHTML = DICE_FACES[face].map(([x, y]) =>
+    `<circle cx="${+(cx + x * DICE_PIP_STEP).toFixed(2)}" cy="${+(cy + y * DICE_PIP_STEP).toFixed(2)}" r="${r}"/>`).join("");
+  pips.dataset.face = face;
+}
+// A new face on each die, never the one it is already showing, or a tumble frame is wasted.
+function tumbleDice(btn) {
+  for (const pips of btn.querySelectorAll(".chance-mark .pips")) {
+    let face;
+    do face = 1 + Math.floor(Math.random() * 6); while (String(face) === pips.dataset.face);
+    paintDie(pips, face);
+  }
+}
+function shakeDice(btn) {
+  btn.classList.add("is-rolling");
+  tumbleDice(btn);
+  return setInterval(() => tumbleDice(btn), DICE_TUMBLE_MS);
+}
+// The idle rattle restarts when the throw hands it back, and it would then run out of step with
+// the board's bob for as long as the page stays up. Put it back on the bob's clock.
+function resyncDice(btn) {
+  const bob = btn.getAnimations().find((a) => a.animationName === "chanceBob");
+  if (!bob) return;
+  for (const a of btn.getAnimations({ subtree: true })) {
+    if (a !== bob && a.animationName?.startsWith("chanceRattle")) a.currentTime = bob.currentTime;
+  }
+}
+// The shake and the landing, with nothing dealt. rollRandom's throw, and the dev panel's.
+async function throwDice(btn) {
+  btn.style.setProperty("--dice-land", `${DICE_LAND_MS}ms`);
+  const tumble = shakeDice(btn);
+  try {
+    await wait(DICE_SHAKE_MS);
+    btn.classList.replace("is-rolling", "is-landing");
+    // The faces keep turning through the hop and stop as the die comes down.
+    await wait(DICE_LAND_MS * 0.45);
+  } finally { clearInterval(tumble); }
+  await wait(DICE_LAND_MS * 0.55);
+  btn.classList.remove("is-rolling", "is-landing");
+}
+// Every lap of the bob, the rattle is redrawn a little: reach and turn for each die, and which
+// way the turns go, so the loop never plays the same twice. Swapped at the lap boundary, where
+// both dice are at rest and a new value cannot make them jump.
+function varyDiceRattle(e) {
+  if (e.animationName !== "chanceBob") return;
+  const s = e.currentTarget.style;
+  const between = (lo, hi) => lo + Math.random() * (hi - lo);
+  const turn = () => (Math.random() < 0.5 ? -1 : 1) * between(0.7, 1.2);
+  s.setProperty("--ra-f", between(0.75, 1.15).toFixed(2));
+  s.setProperty("--rr-f", turn().toFixed(2));
+  s.setProperty("--ra-b", between(0.75, 1.15).toFixed(2));
+  s.setProperty("--rr-b", turn().toFixed(2));
+}
+
 async function rollRandom() {
   if (diceRolling) return;
   diceRolling = true;
   const btn = $("randomGear");
-  btn?.classList.add("is-rolling");
   btn?.setAttribute("aria-busy", "true");
+  const moving = !!btn && !motionReduced();
+  let tumble = null, reshake = null;
   try {
-    if (!motionReduced()) await new Promise((r) => setTimeout(r, DICE_THROW_MS));
+    if (moving) await throwDice(btn);
+    else if (btn) tumbleDice(btn);
+    // Most deals leave the page at once. One that is still waiting on a download a beat after
+    // the landing shakes the dice again, so the tap visibly took.
+    if (moving) reshake = setTimeout(() => { tumble = shakeDice(btn); }, 150);
     await dealRandom();
   } finally {
+    clearTimeout(reshake);
+    clearInterval(tumble);
     diceRolling = false;
-    btn?.classList.remove("is-rolling");
+    btn?.classList.remove("is-rolling", "is-landing");
     btn?.removeAttribute("aria-busy");
+    if (moving) resyncDice(btn);
   }
 }
 
@@ -31960,6 +32043,7 @@ function buildDevApi() {
         return dispatchRandom(entry);
       },
       roll: () => rollRandom(),                        // the button, from the console
+      throwDice: () => throwDice($("randomGear")),     // the throw alone, nothing dealt
       seen: () => loadRandomSeen(),                    // the raw ledger
       // Mark everything playable as seen — the "played it all" end state, where the lean
       // switches off and the draw is the category shares alone. Check with sample().
@@ -33671,6 +33755,7 @@ async function init() {
   // Keepsakes modal — opened from the camera icon beside the gear, closed by ✕, scrim, or ESC.
   $("keepsakesGear").addEventListener("click", openKeepsakes);
   $("randomGear").addEventListener("click", () => { rollRandom(); });
+  $("randomGear").addEventListener("animationiteration", varyDiceRattle);
   $("keepsakesCloseBtn").addEventListener("click", closeKeepsakes);
   $("keepsakesModalScrim").addEventListener("click", closeKeepsakes);
   $("keepsakesModal").addEventListener("keydown", (e) => {

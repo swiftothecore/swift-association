@@ -2213,12 +2213,24 @@
      as it lifts, while the gold bar holds its own -0.6deg the whole way, so the timing is
      shared and the gesture still is not.
 
-     THE RATTLE RIDES THE LIFT. The dice get their own scribble of movement, on the same
-     2.8s clock so it can never drift out of the bob it belongs to, and placed across the
-     rise and the top of it — the box is picked up, the dice knock about inside, everything
-     settles on the way back down. Uneven steps rotating both ways, for the same reason the
-     ornaments elsewhere are drawn uneven. It is small on purpose: the board is what carries
-     the movement and this is the detail inside it, not a second animation competing.
+     THE RATTLE RIDES THE LIFT, AND THE DICE ARE TWO THINGS. Each die moves on its own (.die,
+     wrapped round its drawn tilt in index.html), on the same 2.8s clock as the bob so it can
+     never drift out of it. The box is picked up, the dice knock about inside, everything
+     settles on the way back down. Four things make it read as dice rather than a wobble:
+       - They slide, and only turn when they hit something. Most of the travel is along one
+         slightly tipped line, and each turn is a small jump at a contact, not a sway.
+       - The hits are hard. Travel eases IN, so a die is still speeding up when it arrives, and
+         the reversal happens inside 1.5% of the loop. Eased both ways, every hit went soft.
+       - The back die is a beat behind the front one (1.5%, about 40ms) and shorter in reach,
+         so the pair knock into each other instead of moving as a single rigid print.
+       - They trail the board. When it starts to lift they sit low, when it tops out they float
+         and when it lands they are pressed down, the way weight in a box behaves.
+     Reach and turn are scaled by --a and --r, which varyDiceRattle (js/app.js) redraws for
+     each die at every loop boundary, when the dice are at rest and a new value cannot jump.
+     They are custom properties rather than alternate keyframe sets on purpose: swapping the
+     animation name restarts it on the next frame, and that small lag piles up every loop until
+     the dice are out of step with the board.
+     It stays small: the board carries the movement and this is the detail inside it.
 
      THE REST ANGLE LIVES IN THE KEYFRAMES. An infinite animation on the button outranks the
      transform on the rule above, so every frame here has to carry the 0.7deg itself or the
@@ -2226,40 +2238,126 @@
      :active transform would lose the same argument, so the animation stands down there and
      hands the transform back — and the dice stand down with it, since a rattle continuing
      under a pressed button is the one frame where it reads as a glitch. */
+  .chance-mark .die { transform-box: fill-box; transform-origin: center; }
+  /* A settling die tips over the edge it lands on, not about its middle. */
+  .chance-mark .die-rock { transform-box: fill-box; transform-origin: 50% 100%; }
+  .chance-mark .die-front { --a: var(--ra-f, 1); --r: var(--rr-f, 1); }
+  .chance-mark .die-back  { --a: var(--ra-b, 1); --r: var(--rr-b, 1); }
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.chance-cta { animation: chanceBob 2.8s ease-in-out infinite; }
-    .chance-mark { animation: chanceRattle 2.8s ease-in-out infinite; }
+    .chance-mark .die-front { animation: chanceRattleFront 2.8s ease-in-out infinite; }
+    .chance-mark .die-back  { animation: chanceRattleBack 2.8s ease-in-out infinite; }
     .btn-primary.chance-cta:active,
-    .btn-primary.chance-cta:active .chance-mark { animation: none; }
+    .btn-primary.chance-cta:active .die { animation: none; }
   }
   body[data-reduce-motion="on"] .btn-primary.chance-cta,
-  body[data-reduce-motion="on"] .chance-mark { animation: none; }
-  /* THE THROW. A click tumbles the dice before the draw (js/app.js, rollRandom), and they keep
-     tumbling for as long as a guest catalogue is downloading, which is also what tells the
-     player the tap took and a second one is not needed. */
-  @media (prefers-reduced-motion: no-preference) {
-    body:not([data-reduce-motion="on"]) .btn-primary.chance-cta.is-rolling .chance-mark { animation: chanceThrow .38s ease-out infinite; }
-  }
-  body[data-reduce-motion="off"] .btn-primary.chance-cta.is-rolling .chance-mark { animation: chanceThrow .38s ease-out infinite; }
-  @keyframes chanceThrow {
-    0%   { transform: translate(0, 0) rotate(0deg); }
-    30%  { transform: translate(-2px, -3px) rotate(-38deg); }
-    60%  { transform: translate(2px, -1px) rotate(24deg); }
-    82%  { transform: translate(-1px, 0.5px) rotate(-8deg); }
-    100% { transform: translate(0, 0) rotate(0deg); }
-  }
+  body[data-reduce-motion="on"] .chance-mark .die { animation: none; }
+
+  /* THE THROW, IN TWO PARTS. A click shakes the dice hard (is-rolling), then throws them
+     (is-landing): a hop that tumbles them a quarter turn, a smaller bounce, and a rock over the
+     bottom edge before they sit square. rollRandom (js/app.js) owns the timing and repaints the
+     faces while they tumble, so they land showing a new roll. The quarter turn ends on 0deg, not
+     90, so the idle loop takes over without the pips snapping round. If a guest catalogue is
+     still downloading after the landing, the shake picks up again, which is also what tells the
+     player the tap took and a second one is not needed. JS only adds these classes when motion
+     is allowed, so they need no reduced-motion gate of their own. The shake runs the two dice
+     on different periods so they never fall into step. */
+  .btn-primary.chance-cta.is-rolling .die-front { animation: chanceShakeFront .12s linear infinite; }
+  .btn-primary.chance-cta.is-rolling .die-back  { animation: chanceShakeBack .14s linear infinite; }
+  .btn-primary.chance-cta.is-landing .die-front { animation: chanceLandFront var(--dice-land, .4s) linear; }
+  .btn-primary.chance-cta.is-landing .die-back  { animation: chanceLandBack var(--dice-land, .4s) linear; }
+  .btn-primary.chance-cta.is-landing .die-front .die-rock { animation: chanceRockFront var(--dice-land, .4s) linear; }
+  .btn-primary.chance-cta.is-landing .die-back .die-rock  { animation: chanceRockBack var(--dice-land, .4s) linear; }
+
   @keyframes chanceBob {
     0%, 100% { transform: rotate(0.7deg) translateY(0); box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.22); }
     50%      { transform: rotate(2.3deg) translateY(-3px); box-shadow: 3px 6px 0 rgba(43, 39, 34, 0.18); }
   }
-  @keyframes chanceRattle {
-    0%, 22%  { transform: translate(0, 0) rotate(0deg); }
-    30%      { transform: translate(-1px, 0.5px) rotate(-5deg); }
-    38%      { transform: translate(1.1px, -0.6px) rotate(6deg); }
-    46%      { transform: translate(-0.8px, -0.3px) rotate(-4deg); }
-    54%      { transform: translate(0.7px, 0.5px) rotate(3.4deg); }
-    62%      { transform: translate(-0.4px, 0.2px) rotate(-1.5deg); }
-    70%, 100% { transform: translate(0, 0) rotate(0deg); }
+  /* The slide line is x against -0.35x. A keyframe that STARTS a travel eases in, so the die
+     arrives at speed; one that ends it is linear, the quick turn at the wall. */
+  @keyframes chanceRattleFront {
+    0%    { transform: translate(0, 0) rotate(0deg); }
+    12%   { transform: translate(0, 0.5px) rotate(0deg); }
+    26%   { transform: translate(0, 0.2px) rotate(0deg); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    31%   { transform: translate(calc(var(--a) * -1.8px), calc(var(--a) * 0.63px)) rotate(0deg); animation-timing-function: linear; }
+    32.5% { transform: translate(calc(var(--a) * -1.6px), calc(var(--a) * 0.56px)) rotate(calc(var(--r) * -5deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    38%   { transform: translate(calc(var(--a) * 1.7px), calc(var(--a) * -0.6px)) rotate(calc(var(--r) * -5deg)); animation-timing-function: linear; }
+    39.5% { transform: translate(calc(var(--a) * 1.5px), calc(var(--a) * -0.52px)) rotate(calc(var(--r) * 3.5deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    45%   { transform: translate(calc(var(--a) * -1.3px), calc(var(--a) * 0.45px)) rotate(calc(var(--r) * 3.5deg)); animation-timing-function: linear; }
+    46.5% { transform: translate(calc(var(--a) * -1.1px), calc(var(--a) * 0.38px)) rotate(calc(var(--r) * -2.5deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    52%   { transform: translate(calc(var(--a) * 1px), calc(var(--a) * -0.35px)) rotate(calc(var(--r) * -2.5deg)); animation-timing-function: linear; }
+    53.5% { transform: translate(calc(var(--a) * 0.8px), calc(var(--a) * -0.28px)) rotate(calc(var(--r) * 1.2deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    59%   { transform: translate(calc(var(--a) * -0.5px), calc(var(--a) * 0.18px)) rotate(calc(var(--r) * 1.2deg)); animation-timing-function: linear; }
+    60.5% { transform: translate(calc(var(--a) * -0.35px), calc(var(--a) * 0.12px)) rotate(0deg); animation-timing-function: ease-out; }
+    66%   { transform: translate(0, -0.2px) rotate(0deg); }
+    78%   { transform: translate(0, -0.4px) rotate(0deg); }
+    93%   { transform: translate(0, 0.35px) rotate(0deg); }
+    100%  { transform: translate(0, 0) rotate(0deg); }
+  }
+  @keyframes chanceRattleBack {
+    0%    { transform: translate(0, 0) rotate(0deg); }
+    12%   { transform: translate(0, 0.4px) rotate(0deg); }
+    27.5% { transform: translate(0, 0.15px) rotate(0deg); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    32.5% { transform: translate(calc(var(--a) * -1.35px), calc(var(--a) * 0.47px)) rotate(0deg); animation-timing-function: linear; }
+    34%   { transform: translate(calc(var(--a) * -1.2px), calc(var(--a) * 0.42px)) rotate(calc(var(--r) * 4deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    39.5% { transform: translate(calc(var(--a) * 1.3px), calc(var(--a) * -0.45px)) rotate(calc(var(--r) * 4deg)); animation-timing-function: linear; }
+    41%   { transform: translate(calc(var(--a) * 1.1px), calc(var(--a) * -0.38px)) rotate(calc(var(--r) * -5.5deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    46.5% { transform: translate(calc(var(--a) * -1px), calc(var(--a) * 0.35px)) rotate(calc(var(--r) * -5.5deg)); animation-timing-function: linear; }
+    48%   { transform: translate(calc(var(--a) * -0.85px), calc(var(--a) * 0.3px)) rotate(calc(var(--r) * 2.5deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    53.5% { transform: translate(calc(var(--a) * 0.7px), calc(var(--a) * -0.25px)) rotate(calc(var(--r) * 2.5deg)); animation-timing-function: linear; }
+    55%   { transform: translate(calc(var(--a) * 0.55px), calc(var(--a) * -0.19px)) rotate(calc(var(--r) * -1deg)); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    60.5% { transform: translate(calc(var(--a) * -0.35px), calc(var(--a) * 0.12px)) rotate(calc(var(--r) * -1deg)); animation-timing-function: linear; }
+    62%   { transform: translate(calc(var(--a) * -0.2px), calc(var(--a) * 0.07px)) rotate(0deg); animation-timing-function: ease-out; }
+    68%   { transform: translate(0, -0.15px) rotate(0deg); }
+    80%   { transform: translate(0, -0.35px) rotate(0deg); }
+    94%   { transform: translate(0, 0.3px) rotate(0deg); }
+    100%  { transform: translate(0, 0) rotate(0deg); }
+  }
+  @keyframes chanceShakeFront {
+    0%   { transform: translate(-2px, 0.7px) rotate(-8deg); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    44%  { transform: translate(2.1px, -1.2px) rotate(-8deg); animation-timing-function: linear; }
+    50%  { transform: translate(1.8px, -1px) rotate(11deg); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    94%  { transform: translate(-2.1px, 0.9px) rotate(11deg); animation-timing-function: linear; }
+    100% { transform: translate(-2px, 0.7px) rotate(-8deg); }
+  }
+  @keyframes chanceShakeBack {
+    0%   { transform: translate(1.6px, -0.5px) rotate(9deg); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    46%  { transform: translate(-1.8px, 0.9px) rotate(9deg); animation-timing-function: linear; }
+    52%  { transform: translate(-1.5px, 0.7px) rotate(-12deg); animation-timing-function: cubic-bezier(.55, 0, 1, .45); }
+    95%  { transform: translate(1.7px, -0.8px) rotate(-12deg); animation-timing-function: linear; }
+    100% { transform: translate(1.6px, -0.5px) rotate(9deg); }
+  }
+  /* Out of the hand, up and tumbling, down hard, one smaller bounce, down. Rising eases out and
+     falling eases in, which is what makes it a hop rather than a slide up and back. */
+  @keyframes chanceLandFront {
+    0%   { transform: translate(-1px, 0) rotate(-100deg); animation-timing-function: cubic-bezier(.2, .6, .4, 1); }
+    28%  { transform: translate(0.6px, -4.5px) rotate(-52deg); animation-timing-function: cubic-bezier(.6, 0, .8, .4); }
+    52%  { transform: translate(0.9px, 0) rotate(-6deg); animation-timing-function: cubic-bezier(.2, .6, .4, 1); }
+    63%  { transform: translate(0.5px, -1.3px) rotate(-2deg); animation-timing-function: cubic-bezier(.6, 0, .8, .4); }
+    74%, 100% { transform: translate(0, 0) rotate(0deg); }
+  }
+  @keyframes chanceLandBack {
+    0%   { transform: translate(1px, 0) rotate(102deg); animation-timing-function: cubic-bezier(.2, .6, .4, 1); }
+    24%  { transform: translate(-0.4px, -3.6px) rotate(60deg); animation-timing-function: cubic-bezier(.6, 0, .8, .4); }
+    46%  { transform: translate(-0.7px, 0) rotate(10deg); animation-timing-function: cubic-bezier(.2, .6, .4, 1); }
+    58%  { transform: translate(-0.3px, -1px) rotate(4deg); animation-timing-function: cubic-bezier(.6, 0, .8, .4); }
+    68%, 100% { transform: translate(0, 0) rotate(0deg); }
+  }
+  /* The settle, on .die-rock about the bottom edge: it only starts once the die is down, and
+     each rock is smaller than the last. */
+  @keyframes chanceRockFront {
+    0%, 74% { transform: rotate(0deg); }
+    82%  { transform: rotate(4deg); }
+    90%  { transform: rotate(-1.8deg); }
+    96%  { transform: rotate(0.6deg); }
+    100% { transform: rotate(0deg); }
+  }
+  @keyframes chanceRockBack {
+    0%, 68% { transform: rotate(0deg); }
+    77%  { transform: rotate(-3.5deg); }
+    86%  { transform: rotate(1.5deg); }
+    94%  { transform: rotate(-0.5deg); }
+    100% { transform: rotate(0deg); }
   }
 
   @media (max-width: 480px) {

@@ -2888,21 +2888,30 @@ if (location.pathname.endsWith('/index.html')) {
                The front die KNOCKS A HOLE in the one behind it (class="knock", filled with the
                board's own colour) rather than being drawn on top of it, so the two read as
                objects at different depths instead of two outlines crossing. Everything else is
-               currentColor, which is what makes the hover inversion free. -->
+               currentColor, which is what makes the hover inversion free.
+               Each die sits in two wrappers of its own: .die moves it (rattle, shake, hop) and
+               .die-rock tips it over its bottom edge as it settles. They have to be wrappers,
+               because a CSS transform on the inner group would replace its drawn tilt. The
+               pips are repainted by paintDie (js/app.js) when the dice are thrown, about the
+               die centre held in data-cx/data-cy. -->
           <span class="cta-mark chance-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false">
-              <g transform="rotate(-13 8.2 8.6)">
-                <rect class="ink" x="2" y="2.4" width="12.4" height="12.4" rx="2.8"/>
-                <g class="ink-fill"><circle cx="8.2" cy="8.6" r="1.5"/></g>
-              </g>
-              <g transform="rotate(12 15.6 15.4)">
-                <rect class="knock" x="9.4" y="9.2" width="12.4" height="12.4" rx="2.8"/>
-                <rect class="ink" x="9.4" y="9.2" width="12.4" height="12.4" rx="2.8"/>
-                <g class="ink-fill">
-                  <circle cx="12.9" cy="12.7" r="1.35"/><circle cx="15.6" cy="15.4" r="1.35"/>
-                  <circle cx="18.3" cy="18.1" r="1.35"/>
+              <g class="die die-back"><g class="die-rock">
+                <g transform="rotate(-13 8.2 8.6)">
+                  <rect class="ink" x="2" y="2.4" width="12.4" height="12.4" rx="2.8"/>
+                  <g class="ink-fill pips" data-cx="8.2" data-cy="8.6"><circle cx="8.2" cy="8.6" r="1.5"/></g>
                 </g>
-              </g>
+              </g></g>
+              <g class="die die-front"><g class="die-rock">
+                <g transform="rotate(12 15.6 15.4)">
+                  <rect class="knock" x="9.4" y="9.2" width="12.4" height="12.4" rx="2.8"/>
+                  <rect class="ink" x="9.4" y="9.2" width="12.4" height="12.4" rx="2.8"/>
+                  <g class="ink-fill pips" data-cx="15.6" data-cy="15.4">
+                    <circle cx="12.9" cy="12.7" r="1.35"/><circle cx="15.6" cy="15.4" r="1.35"/>
+                    <circle cx="18.3" cy="18.1" r="1.35"/>
+                  </g>
+                </g>
+              </g></g>
             </svg>
           </span>
         </button>
