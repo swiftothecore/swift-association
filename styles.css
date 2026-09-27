@@ -1612,47 +1612,278 @@
   @keyframes ctaBreeze { 0%, 100% { transform: skewX(0); } 40% { transform: skewX(12deg); } 75% { transform: skewX(-6deg); } }
   @keyframes ctaFlowerSway { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(-7deg); } 75% { transform: rotate(3deg); } }
 
-  /* Snow rests on the sill until the pointer or keyboard arrives, then the sky comes over:
-     the fill deepens so the flakes read against it, and they fall for a few passes and stop,
-     like every other finish, rather than snowing for as long as the button keeps focus. The
-     face gets a lighter sheen and glare than the other finishes, because both are white and
-     would wash the ice blue out to slate and swallow the flakes where they start. */
-  .play-cta[data-startbtn="snow"] {
-    --cta-fill: #9dc0d4; --cta-text: #253e4b; --cta-hover-text: #253e4b;
-    --cta-hover-fill: #8fb6cc;
-    --cta-art: radial-gradient(ellipse at 18% 0, #ffffff47, transparent 60%);
-    --drift: #f5fafb; --drift-shade: #bcd3de; --flake: #fff; --flake-edge: #4f7d9459;
-    background-image: linear-gradient(168deg, #ffffff2e 0%, #ffffff00 46%, #2b27221f 100%), var(--cta-art);
+  /* The Seasons finish: one Mastery pick that wears four finishes, spring, summer, autumn and
+     winter, resolved from the month and the player's hemisphere (js/season.js) and drawn in
+     js/cta.js. Four sets of rules rather than one, because each season is its own material,
+     but one grammar: a quiet scene at rest, and on hover that season's weather arrives, runs
+     for a few seconds and holds its end state. Winter replaced the old Snowfall finish. */
+  .play-cta:is([data-startbtn="spring"], [data-startbtn="summer"], [data-startbtn="autumn"], [data-startbtn="winter"])::after { content: none; }
+  /* =====================================================================
+     SPRING: Blossom
+     A cherry bough reaches in from the top-left and a second, sparer sprig
+     hangs from the top-right. At rest most of it is still in bud. On hover
+     the buds open one after another, the boughs give in the breeze, and
+     petals come off and ride the wind across and down, tumbling as they
+     go. Some land and stay on the sill, the way the snow settles.
+     ===================================================================== */
+  .play-cta[data-startbtn="spring"] {
+    --cta-fill: #c8dcc0; --cta-hover-fill: #d0e3c6; --cta-text: #283a2b; --cta-hover-text: #283a2b;
+    --bark: #4e3c35; --petal-edge: #d98ea6; --eye: #c65f80; --bud: #ec9fb6; --calyx: #7c9a62;
+    --cta-art: radial-gradient(ellipse 60% 90% at 12% 0, #ffffff55, transparent 70%);
+    padding-inline: clamp(18px, 9%, 48px);
   }
-  /* Night: plain pale snow would be a 0.5-luminance slab on a 0.02 desk, the same glare the
-     default gold is taken down for (see above). Snow at night is a dark sky with the lettering
-     and flakes lit instead, which also makes it the one finish where the flakes read best. */
-  :root[data-theme="dark"] .play-cta[data-startbtn="snow"] {
-    --cta-fill: #3e5a6c; --cta-hover-fill: #34505f;
-    --cta-text: #eef4f6; --cta-hover-text: #eef4f6;
-    --cta-art: radial-gradient(ellipse at 18% 0, #ffffff1a, transparent 60%);
-    --drift: #d7e3e8; --drift-shade: #9fb6c1; --flake-edge: transparent;
+  :root[data-theme="dark"] .play-cta[data-startbtn="spring"] {
+    --cta-fill: #5c7465; --cta-hover-fill: #627a6b; --cta-text: #f4efe4; --cta-hover-text: #f4efe4;
+    --bark: #241c19; --cta-art: radial-gradient(ellipse 60% 90% at 12% 0, #ffffff14, transparent 70%);
+  }
+  .cta-bough { top: 0; height: auto; overflow: visible; }
+  .cta-bough--left { left: 0; width: clamp(82px, 28%, 150px); }
+  .cta-bough--right { right: 0; width: clamp(58px, 19%, 104px); }
+  .cta-wood { fill: var(--bark); }
+  .cta-petal-vein path { stroke: #d98ea6; stroke-width: .4; stroke-linecap: round; opacity: .55; }
+  .cta-anther { fill: #b0476a; }
+  .cta-bough-sway { transition: transform 1s cubic-bezier(.3,.7,.3,1); }
+  .cta-bough--left .cta-bough-sway { transform-origin: 0 0; }
+  .cta-bough--right .cta-bough-sway { transform-origin: 100% 0; }
+  .cta-bark { fill: none; stroke: var(--bark); stroke-linecap: round; stroke-linejoin: round; }
+  .cta-bloom path { stroke: var(--petal-edge); stroke-width: .45; }
+  .cta-bloom-eye { fill: var(--eye); }
+  .cta-stamen { stroke: #a8506c; stroke-width: .5; fill: none; }
+  .cta-bud-shape { fill: var(--bud); stroke: var(--petal-edge); stroke-width: .4; }
+  .cta-calyx { fill: var(--calyx); }
+  .cta-opens, .cta-bud { transform-box: fill-box; transform-origin: 50% 50%; }
+  .cta-opens { transform: scale(.15) rotate(-50deg); opacity: 0;
+    transition: transform .3s ease, opacity .2s ease; }
+  .cta-bud { transition: transform .3s ease .1s, opacity .3s ease .1s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-opens {
+    transform: scale(1) rotate(0); opacity: 1;
+    transition: transform .7s cubic-bezier(.2,.9,.3,1.15) var(--open-at), opacity .35s ease var(--open-at); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bud {
+    transform: scale(.2); opacity: 0; transition: transform .4s ease var(--open-at), opacity .3s ease var(--open-at); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bough--left .cta-bough-sway { animation: ctaBoughL 1.8s .35s ease-in-out 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bough--right .cta-bough-sway { animation: ctaBoughR 1.9s .55s ease-in-out 2; }
+  @keyframes ctaBoughL { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(2.2deg); } 70% { transform: rotate(-.8deg); } }
+  @keyframes ctaBoughR { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(-2.6deg); } 72% { transform: rotate(1deg); } }
+
+  .cta-petalfall { inset: 0 0 3px; overflow: hidden; }
+  .cta-petal { position: absolute; width: var(--ps); height: var(--ps); opacity: 0; }
+  .cta-petal b { display: block; width: 100%; height: 72%; background: var(--pc);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; box-shadow: inset -.6px -.6px 0 #d98ea655; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-petal {
+    animation: ctaPetalRide var(--pt) var(--pd) cubic-bezier(.35,.15,.6,.95) 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-petal b {
+    animation: ctaPetalTumble var(--pf) var(--pd) linear 4; }
+  @keyframes ctaPetalRide {
+    0% { opacity: 0; transform: translate(0, 0); }
+    7% { opacity: 1; }
+    30% { transform: translate(calc(var(--px) * .22 + var(--pw)), 15px); }
+    58% { transform: translate(calc(var(--px) * .58 - var(--pw)), 33px); }
+    86% { opacity: .95; }
+    100% { opacity: 0; transform: translate(var(--px), 60px); }
+  }
+  @keyframes ctaPetalTumble {
+    0% { transform: rotate(var(--pr)) rotate3d(1, .35, 0, 0deg); }
+    100% { transform: rotate(calc(var(--pr) + 160deg)) rotate3d(1, .35, 0, 360deg); }
+  }
+  .cta-sill { left: 0; bottom: 0; width: 100%; height: 9px; }
+  .cta-sill-late { opacity: 0; transition: opacity .3s ease; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-sill-late { opacity: 1; transition: opacity .5s ease var(--land); }
+
+  /* =====================================================================
+     SUMMER: Tide
+     ===================================================================== */
+  .play-cta[data-startbtn="summer"] {
+    --cta-fill: #52b9bd; --cta-hover-fill: #52b9bd; --cta-text: #0d3337; --cta-hover-text: #0d3337;
+    --cta-art: linear-gradient(180deg, #dcf3f1 0 22%, #2e93a0 22% 24.5%, #3aa5ae 24.5%, #4fb7bb 55%, #6ccac7 100%);
+    --sand-dry: #f1dca8; --sand-wet: #dfc690; --sand-soak: #cfb07a; --foam: #ffffff; --sea-edge: #64c4c3; --shallows: #a3e1d6; --gull: #35565b; --glint: #ffffff;
+    background-image: linear-gradient(168deg, #ffffff30 0%, #ffffff00 46%, #0000001a 100%), var(--cta-art);
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="summer"] {
+    --cta-fill: #1c5664; --cta-hover-fill: #1c5664; --cta-text: #eef8f6; --cta-hover-text: #eef8f6;
+    --cta-art: linear-gradient(180deg, #1b2c42 0 22%, #0c3441 22% 24.5%, #144655 24.5%, #1b5867 55%, #236877 100%);
+    --sand-dry: #a99a7a; --sand-wet: #928467; --sand-soak: #7e7157; --foam: #dbe9ea; --sea-edge: #216575; --shallows: #3a8791; --gull: #c9d6dc; --glint: #e6eef8;
+    background-image: linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #0000002e 100%), var(--cta-art);
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="summer"] .cta-label { text-shadow: 0 1px 2px #0b2a31; }
+  .cta-sand { left: 0; bottom: 0; width: 100%; height: 20px; }
+  .cta-sand-dry { fill: var(--sand-dry); }
+  .cta-sand-damp { fill: var(--sand-wet); }
+  .cta-sand-soak { fill: var(--sand-soak); opacity: 0; }
+  .cta-lace-left { fill: var(--foam); opacity: 0; }
+  .cta-lace-left path { fill: none; stroke: var(--foam); stroke-width: .7; stroke-dasharray: 5 3 2 4 9 3; }
+  .cta-surf { left: 0; bottom: 0; width: 100%; height: 29px; }
+  .cta-surf-deep { stop-color: var(--sea-edge); }
+  .cta-surf-shallow { stop-color: var(--shallows); }
+  .cta-surf-lip { fill: none; stroke: var(--foam); stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+  .cta-surf-trail path { fill: none; stroke: var(--foam); stroke-linecap: round; opacity: .75; }
+  .cta-surf-bubbles { fill: var(--foam); opacity: .8; }
+  /* Rushes up quickly, hangs, draws back slowly: the swash is fast and the backwash is not. */
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-surf { animation: ctaSwash 2.9s .15s linear 2; }
+  @keyframes ctaSwash {
+    0% { transform: translateY(0); animation-timing-function: cubic-bezier(.2,.7,.35,1); }
+    38% { transform: translateY(5px); animation-timing-function: ease-in-out; }
+    48% { transform: translateY(5.2px); animation-timing-function: cubic-bezier(.5,.1,.6,1); }
+    100% { transform: translateY(0); }
+  }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-surf-trail { animation: ctaTrail 2.9s .15s ease-in-out 2; }
+  @keyframes ctaTrail { 0%, 100% { opacity: .75; } 40% { opacity: .95; } 70% { opacity: .35; } }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-sand-soak { animation: ctaSoak 2.9s .15s linear 2; }
+  @keyframes ctaSoak { 0%, 40% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-lace-left { animation: ctaLaceLeft 2.9s .15s linear 2; }
+  @keyframes ctaLaceLeft { 0%, 46% { opacity: 0; } 54% { opacity: .9; } 85%, 100% { opacity: 0; } }
+  .cta-glint { height: 1.4px; border-radius: 1px; background: var(--glint); opacity: var(--g0); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-glint { animation: ctaGlint 1s var(--gd) ease-in-out 5 alternate; }
+  @keyframes ctaGlint { 0% { opacity: var(--g0); transform: scaleX(1); } 100% { opacity: 1; transform: scaleX(1.7); } }
+  .cta-boat { left: 66%; top: calc(23% - 12px); width: 17px; height: 13px; transition: transform .8s ease; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-boat { transform: translateX(26px); transition: transform 7s linear; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-boat path { animation: ctaBob 1.4s ease-in-out 4 alternate; }
+  @keyframes ctaBob { 0% { transform: translateY(0); } 100% { transform: translateY(.6px); } }
+  .cta-gull { width: 12px; height: 5px; transition: transform .8s ease; }
+  .cta-gull--a { left: 14%; top: 3px; }
+  .cta-gull--b { left: 21%; top: 7px; width: 9px; }
+  .cta-gull path { transform-box: fill-box; transform-origin: 50% 70%; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gull { transform: translate(18px, -1px); transition: transform 4s ease-out; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gull path { animation: ctaFlap .32s ease-in-out 8 alternate; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gull--b path { animation-delay: .12s; }
+  @keyframes ctaFlap { 0% { transform: scaleY(1); } 100% { transform: scaleY(-.5); } }
+  .cta-starfish { left: 7%; bottom: 0; width: 12px; height: 12px; transform: rotate(-14deg); }
+  .cta-shell { right: 10%; bottom: 0; width: 11px; height: 10px; transform: rotate(9deg); }
+
+  /* =====================================================================
+     AUTUMN: Gust
+     Woodland green with the year's leaves banked up in both corners and a
+     few strays along the sill, and one twig still holding its last three.
+     On hover a gust comes through from the left: curls of wind drawn in
+     the air, leaves tumbling across the face, the heaps rustling in the
+     order the wind reaches them, and two of the twig's leaves letting go
+     and coming to rest on the sill. The third holds on.
+     ===================================================================== */
+  .play-cta[data-startbtn="autumn"] {
+    --cta-fill: #3d5646; --cta-hover-fill: #425c4b; --cta-text: #f7ecd4; --cta-hover-text: #f7ecd4;
+    --wind: #f3e3c3; --twig: #2a1f19; --litter: #6b3a22;
+    --cta-art: radial-gradient(ellipse 50% 110% at 85% 0, #ffffff12, transparent 70%);
+    background-image: linear-gradient(168deg, #ffffff1c 0%, #ffffff00 46%, #0000002a 100%), var(--cta-art);
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="autumn"] {
+    --cta-fill: #3a5243; --cta-hover-fill: #3e5747; --wind: #e9dcc0; --litter: #54301c;
+  }
+  .play-cta[data-startbtn="autumn"] .cta-label { text-shadow: 0 1px 2px #1d2b22; }
+  .play-cta[data-startbtn="autumn"] .cta-fx { container-type: size; }
+  .cta-leaf-v { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .cta-litter { left: 0; bottom: 0; width: 100%; height: 22px; overflow: visible; }
+  .cta-litter-bed { fill: var(--litter); }
+  .cta-twig-wood { fill: var(--twig); }
+  .cta-heap-leaf { transform-box: fill-box; transform-origin: 50% 80%; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-heap-leaf { animation: ctaRustle .55s var(--rd) ease-in-out 2 alternate; }
+  @keyframes ctaRustle { 0% { transform: rotate(0) translateY(0); } 100% { transform: rotate(var(--rt)) translateY(-1.4px); } }
+  .cta-winds { inset: 0; width: 100%; height: 100%; }
+  .cta-wind { fill: none; stroke: var(--wind); stroke-width: 1.3; stroke-linecap: round; opacity: 0;
+    stroke-dasharray: 100 100; stroke-dashoffset: 100; vector-effect: non-scaling-stroke; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-wind { animation: ctaWind var(--wt) var(--wd) cubic-bezier(.4,.1,.5,1) both; }
+  @keyframes ctaWind { 0% { stroke-dashoffset: 100; opacity: .55; } 55% { stroke-dashoffset: 0; opacity: .5; } 100% { stroke-dashoffset: -100; opacity: 0; } }
+  .cta-gust { width: var(--gs); height: var(--gs); left: calc(var(--gs) * -1.4); top: var(--gy0); }
+  .cta-gust svg, .cta-fall svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .cta-gust > span, .cta-fall > span { display: block; width: 100%; height: 100%; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gust { animation: ctaGustAcross var(--gt) var(--gd) cubic-bezier(.3,.05,.55,1) both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gust > span { animation: ctaLeafTumble var(--gf) var(--gd) linear 4; }
+  @keyframes ctaGustAcross {
+    0% { transform: translate(0, 0); }
+    30% { transform: translate(38cqw, var(--gy1)); }
+    62% { transform: translate(72cqw, var(--gy2)); }
+    100% { transform: translate(calc(100cqw + var(--gs) * 3), var(--gy3)); }
+  }
+  @keyframes ctaLeafTumble {
+    0% { transform: rotate(var(--gr)) rotate3d(.4, 1, .15, 0deg); }
+    100% { transform: rotate(calc(var(--gr) + 220deg)) rotate3d(.4, 1, .15, 360deg); }
+  }
+  .cta-twig { right: 4px; top: 0; width: 76px; height: 40px; }
+  .cta-twig > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .cta-twig-sway { transform-origin: 72px 0; }
+  /* On a phone the label runs nearly edge to edge, so the twig hangs from further out. */
+  @container (max-width: 330px) { .cta-twig { right: -18px; top: -3px; } }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-twig-sway { animation: ctaTwig 1.4s .15s ease-in-out 2; }
+  @keyframes ctaTwig { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-5deg); } 65% { transform: rotate(2deg); } }
+  .cta-fall { position: absolute; width: var(--fs); height: var(--fs); left: var(--fx); top: var(--fy); margin: calc(var(--fs) / -2) 0 0 calc(var(--fs) / -2); }
+  .cta-fall > span { transform: rotate(var(--fr0)); transform-origin: 50% 10%; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-fall { animation: ctaLetGo var(--ft) var(--fd) cubic-bezier(.45,.05,.6,1) both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-fall > span { animation: ctaLetGoSpin var(--ft) var(--fd) ease-in-out both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-fall--holds > span { animation: ctaHoldOn .5s .25s ease-in-out 3 alternate; }
+  @keyframes ctaLetGo {
+    0% { transform: translate(0, 0); }
+    25% { transform: translate(calc(var(--lx) * .35), calc((100cqh - var(--fy) - var(--ly)) * .22)); }
+    55% { transform: translate(calc(var(--lx) * .5), calc((100cqh - var(--fy) - var(--ly)) * .6)); }
+    80% { transform: translate(calc(var(--lx) * .85), calc((100cqh - var(--fy) - var(--ly)) * .88)); }
+    100% { transform: translate(var(--lx), calc(100cqh - var(--fy) - var(--ly))); }
+  }
+  @keyframes ctaLetGoSpin {
+    0% { transform: rotate(var(--fr0)) rotate3d(.3, 1, 0, 0deg); }
+    40% { transform: rotate(calc(var(--fr0) - 70deg)) rotate3d(.3, 1, 0, 200deg); }
+    100% { transform: rotate(var(--fr1)) rotate3d(.3, 1, 0, 360deg); }
+  }
+  @keyframes ctaHoldOn { 0% { transform: rotate(var(--fr0)); } 100% { transform: rotate(calc(var(--fr0) - 16deg)); } }
+  /* =====================================================================
+     WINTER: Snowstorm
+     Ice blue with two drifts on the sill, the back one a shade darker, and
+     hoarfrost feathered in from both top corners. On hover the storm comes
+     in: the sky goes to slate, snow blows through on a slant in three
+     depths (soft far flakes, a middle layer that lands in the drift, and a
+     few big near crystals that turn as they pass), two gusts of whiteout
+     sweep across, the frost creeps further in and the drifts build. The
+     snow blows itself out in about five seconds; the frost and the deeper
+     drifts stay while the pointer does.
+     ===================================================================== */
+  .play-cta[data-startbtn="winter"] {
+    --cta-fill: #a8c6d7; --cta-hover-fill: #a8c6d7; --cta-text: #22394a; --cta-hover-text: #f5f9fb;
+    --cta-art: radial-gradient(ellipse 20% 75% at 0 0, #ffffff85, transparent 72%), radial-gradient(ellipse 15% 65% at 100% 0, #ffffff70, transparent 72%), radial-gradient(ellipse at 30% 0, #ffffff40, transparent 60%);
+    --storm-sky: linear-gradient(180deg, #33485a 0%, #4b687c 55%, #7391a4 100%);
+    --frost: #ffffff; --drift-back: #d3e3eb; --drift-front: #f7fbfc; --drift-line: #b7cfdb; --whiteout: #ffffffa8;
+    background-image: linear-gradient(168deg, #ffffff2e 0%, #ffffff00 46%, #2b27221f 100%), var(--cta-art);
+    transition: background-color .45s ease, color .6s ease .3s, transform .2s, box-shadow .2s;
+  }
+  :root[data-theme="dark"] .play-cta[data-startbtn="winter"] {
+    --cta-fill: #3e5a6c; --cta-hover-fill: #3e5a6c; --cta-text: #eef4f6; --cta-hover-text: #f5f9fb;
+    --cta-art: radial-gradient(ellipse 20% 75% at 0 0, #ffffff2e, transparent 72%), radial-gradient(ellipse 15% 65% at 100% 0, #ffffff24, transparent 72%), radial-gradient(ellipse at 30% 0, #ffffff14, transparent 60%);
+    --storm-sky: linear-gradient(180deg, #131d25 0%, #1f303c 55%, #33505f 100%);
+    --frost: #dfeaf0; --drift-back: #9db4bf; --drift-front: #d7e3e8; --drift-line: #88a1ad; --whiteout: #dfe9ef66;
     background-image: linear-gradient(168deg, #ffffff14 0%, #ffffff00 46%, #0000002e 100%), var(--cta-art);
   }
-  .play-cta:is([data-startbtn="snow"], [data-startbtn="ivy"])::after { content: none; }
-  /* A fixed-height drift, cropped rather than stretched (see js/cta.js). */
-  .cta-snowdrift { left: 0; bottom: 0; width: 100%; height: 22px; }
-  .cta-drift { fill: var(--drift); }
-  .cta-drift-shade { fill: none; stroke: var(--drift-shade); stroke-width: 1; }
-  /* The flakes' layer ends at the drift's lowest trough, and the drift is painted over it, so
-     a flake disappears into the snow wherever it lands instead of crossing in front of it. */
-  .cta-snowfall { inset: 0 0 5px; overflow: hidden; }
-  .cta-snowflake { position: absolute; top: -4px; width: var(--snow-size); height: var(--snow-size); border-radius: 50%;
-    background: var(--flake); box-shadow: 0 0 0 .6px var(--flake-edge); opacity: 0; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-snowflake {
-    animation: ctaSnowfall var(--snow-time) var(--snow-delay) linear 3;
+  .play-cta[data-startbtn="winter"] .cta-fx { container-type: size; }
+  .play-cta[data-startbtn="winter"] .cta-label { transition: text-shadow .6s ease .3s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta)[data-startbtn="winter"] .cta-label { text-shadow: 0 1px 3px #16222b; }
+  .cta-storm-sky { inset: 0; background: var(--storm-sky); opacity: 0; transition: opacity .9s ease; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-storm-sky { opacity: .95; transition: opacity 1.1s ease .05s; }
+  .cta-frost { top: 0; height: auto; overflow: visible; }
+  .cta-frost--left { left: 0; width: clamp(64px, 22%, 110px); }
+  .cta-frost--right { right: 0; width: clamp(52px, 18%, 96px); }
+  .cta-frost path { fill: none; stroke: var(--frost); stroke-linecap: round; opacity: .92;
+    stroke-dasharray: 1 1; stroke-dashoffset: var(--rest); transition: stroke-dashoffset .6s ease; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-frost path { stroke-dashoffset: 0; transition: stroke-dashoffset 2.4s cubic-bezier(.3,.6,.4,1) var(--fz); }
+  .cta-flurry { inset: 0; overflow: hidden; opacity: 0; transition: opacity .5s ease; }
+  .cta-flurry--mid { inset: 0 0 5px; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-flurry { opacity: 1; transition: none; }
+  .cta-flake { position: absolute; top: 0; left: 0; width: var(--fsz); height: var(--fsz); border-radius: 50%; background: #fff; opacity: 0; }
+  .cta-flurry--far .cta-flake { background: #eef5f9; filter: blur(.45px); }
+  .cta-flake--crystal { background: none; border-radius: 0; }
+  .cta-flake svg { display: block; width: 100%; height: 100%; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-flake { animation: ctaBlow var(--ft) var(--fd) linear var(--fn); }
+  @keyframes ctaBlow {
+    0% { opacity: 0; transform: translate(var(--x0), -12px) rotate(0); }
+    10% { opacity: .95; }
+    50% { transform: translate(calc(var(--x0) + var(--fw) * .5 + var(--fsway)), calc(50cqh - 6px)) rotate(calc(var(--fspin) * .5)); }
+    88% { opacity: .95; }
+    100% { opacity: 0; transform: translate(calc(var(--x0) + var(--fw)), calc(100cqh + 4px)) rotate(var(--fspin)); }
   }
-  @keyframes ctaSnowfall {
-    0% { opacity: 0; transform: translate(0, 0); }
-    6%, 100% { opacity: .95; }
-    50% { transform: translate(var(--sway-a), 46px); }
-    100% { transform: translate(var(--sway-b), 96px); }
-  }
+  .cta-whiteout { top: -30%; bottom: -30%; left: 0; width: 55cqw; opacity: 0; transform: translateX(-60cqw);
+    background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--whiteout), #fff0 72%); filter: blur(2px); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-whiteout { animation: ctaWhiteout 1.5s .7s ease-in-out both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-whiteout--2 { animation-duration: 1.9s; animation-delay: 2.5s; }
+  @keyframes ctaWhiteout { 0% { opacity: 0; transform: translateX(-60cqw); } 30%, 65% { opacity: .8; } 100% { opacity: 0; transform: translateX(105cqw); } }
+  .cta-drifts { left: 0; bottom: 0; width: 100%; height: 24px; transform-origin: 50% 100%; transition: transform .6s ease; }
+  .cta-drifts--back path { fill: var(--drift-back); }
+  .cta-drifts--front path { fill: var(--drift-front); }
+  .cta-drifts--front .cta-drift-line { fill: none; stroke: var(--drift-line); stroke-width: 1; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-drifts--back { transform: scaleY(1.22); transition: transform 4s cubic-bezier(.3,.5,.4,1) .8s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-drifts--front { transform: scaleY(1.32); transition: transform 4.4s cubic-bezier(.3,.5,.4,1) 1.1s; }
 
   /* Ivy is deliberately allowed out of the frame, like a cutting laid on brick. The brick is
      dark enough to carry cream lettering at 4.8:1, and a soft shade sits under the label so the
@@ -1666,6 +1897,7 @@
     /* The vines own the corners, so the label keeps out of their reach at every width. */
     padding-inline: clamp(18px, 10%, 52px);
   }
+  .play-cta[data-startbtn="ivy"]::after { content: none; }
   .play-cta[data-startbtn="ivy"] .cta-label { text-shadow: 0 1px 2px #482b20; }
   .play-cta[data-startbtn="ivy"] .cta-fx { overflow: visible; }
   /* Sized off the button, but pinned by the root to its own bottom corner, so a narrow phone

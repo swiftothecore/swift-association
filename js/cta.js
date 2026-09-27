@@ -132,20 +132,285 @@ const grassBlades = (() => {
   return blades.join("");
 })();
 const garden = `<svg class="cta-garden" viewBox="0 0 600 30" preserveAspectRatio="xMidYMax slice">${grassBlades}</svg>${MEADOW_FLOWERS.map(flower).join("")}`;
-// The drift is drawn once at its real size and cropped, never stretched, so a phone button
-// shows a narrower stretch of the same sill instead of the whole drift squeezed into steep
-// lumps. Its humps are deliberately uneven. The flakes fall inside a layer that stops at the
-// drift's lowest trough and draw behind the drift, so they land in the snow, not through it.
-// Every flake gets its own size, sway and start, so the first second is not a row of dots.
-const SNOW_DRIFT = "M0 12.8C22 10.4 41 16.4 66 14S112 6.8 146 9.2S190 16.4 228 15.2S268 8 298 9.2S344 16.4 376 14S424 5.6 458 8S512 15.2 544 14S584 8 600 10.4V22H0Z";
-const snowflakes = Array.from({ length: 26 }, (_, i) => {
-  const next = seededRandom(1213 + i * 97), draws = Array.from({ length: 6 }, next);
-  const r = (n) => draws[n - 1];
-  return `<i class="cta-snowflake" style="left:${(r(1) * 98 + 1).toFixed(1)}%;--snow-size:${(1.6 + r(2) * 2.4).toFixed(1)}px;` +
-    `--snow-time:${(2.3 + r(3) * 1.9).toFixed(2)}s;--snow-delay:${(r(4) * 2.2).toFixed(2)}s;` +
-    `--sway-a:${(r(5) * 16 - 7).toFixed(1)}px;--sway-b:${(r(6) * 12 - 6).toFixed(1)}px"></i>`;
-}).join("");
-const snow = `<span class="cta-snowfall">${snowflakes}</span><svg class="cta-snowdrift" viewBox="0 0 600 22" preserveAspectRatio="xMidYMax slice"><path class="cta-drift" d="${SNOW_DRIFT}"/><path class="cta-drift-shade" d="M0 19.4C40 18.2 76 20 118 18.8S196 18.3 240 19.5S330 20 372 18.8S468 18.3 512 19.5S578 19.5 600 18.8"/></svg>`;
+// ---- The Seasons finish ---------------------------------------------------------------
+// One Mastery pick, four finishes: settings.masteryButton holds "seasons", and app.js resolves
+// it through js/season.js to whichever of spring/summer/autumn/winter the player is living in,
+// so the button changes on the first of March, June, September and December (the other way
+// round in a southern timezone), exactly when the desk calendar's marks do. Each season is a
+// quiet material at rest and its own weather on hover, which runs a few seconds and holds.
+const f = (n, d = 1) => Number(n).toFixed(d);
+const bump = (x, c, w) => Math.exp(-(((x - c) / w) ** 2));
+// A tapered limb: a Catmull-Rom spine through [x, y, width] points, outlined and filled, so a
+// branch thins from trunk to tip the way wood does instead of being one even stroke.
+const limb = (pts, steps = 8) => {
+  const at = (i) => pts[Math.max(0, Math.min(pts.length - 1, i))], spine = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps, t2 = t * t, t3 = t2 * t;
+      const cr = (k) => .5 * (2 * p1[k] + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3);
+      spine.push([cr(0), cr(1), p1[2] + (p2[2] - p1[2]) * t]);
+    }
+  }
+  spine.push(pts[pts.length - 1]);
+  const L = [], R = [];
+  spine.forEach((p, i) => {
+    const a = spine[Math.max(0, i - 1)], b = spine[Math.min(spine.length - 1, i + 1)];
+    let dx = b[0] - a[0], dy = b[1] - a[1]; const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+    const h = p[2] / 2;
+    L.push([p[0] - dy * h, p[1] + dx * h]); R.push([p[0] + dy * h, p[1] - dx * h]);
+  });
+  return "M" + [...L, ...R.reverse()].map(([x, y]) => `${f(x, 2)} ${f(y, 2)}`).join("L") + "Z";
+};
+const ridge = (fn, w, h, step = 6) => {
+  let d = `M0 ${f(fn(0), 2)}`;
+  for (let x = step; x <= w; x += step) d += `L${x} ${f(fn(x), 2)}`;
+  return `${d}V${h}H0Z`;
+};
+
+// Spring: cherry boughs in bud; on hover they open, sway, and shed petals on the wind.
+const PETAL_TINTS = ["#fbe0e8", "#f7cad7", "#f3b8ca", "#fff4f7", "#efa6bc"];
+const PETAL = "M0 0C-3.6 -1.4 -4.3 -6.6 -1.5 -8.5L0 -7.4L1.4 -8.6C4.3 -6.8 3.8 -1.5 0 0Z";
+const blossom = (rand, tint) => {
+  const turn = rand() * 72;
+  let petals = "", veins = "";
+  for (let i = 0; i < 5; i++) {
+    const a = turn + i * 72 + (rand() * 16 - 8), k = .86 + rand() * .26;
+    petals += `<path fill="${tint}" transform="rotate(${f(a)}) scale(${f(k, 2)})" d="${PETAL}"/>`;
+    veins += `<path transform="rotate(${f(a)})" d="M0 -1.2L0 -4.2"/>`;
+  }
+  let stamens = "", tips = "";
+  for (let i = 0; i < 8; i++) {
+    const a = rand() * Math.PI * 2, r = 2.4 + rand() * 1.5, x = Math.cos(a) * r, y = Math.sin(a) * r;
+    stamens += `M0 0L${f(x)} ${f(y)}`; tips += `<circle cx="${f(x)}" cy="${f(y)}" r=".45"/>`;
+  }
+  return `<g class="cta-bloom">${petals}<g class="cta-petal-vein">${veins}</g><path class="cta-stamen" d="${stamens}"/><g class="cta-anther">${tips}</g><circle class="cta-bloom-eye" r="1.4"/></g>`;
+};
+const bud = (rand) => `<g class="cta-bud" transform="rotate(${f(rand() * 70 - 35)})"><path class="cta-calyx" d="M-1.5 2C-.9 .5 .9 .5 1.5 2L0 3.4Z"/><path class="cta-bud-shape" d="M0 1.6C-2.4 0 -2 -3.6 0 -5.2C2 -3.6 2.4 0 0 1.6Z"/></g>`;
+// Each bough is its own drawing, never one flipped. Flowers are [x, y, scale, state], where
+// state is "open" at rest or the delay at which that bud opens on hover.
+const BOUGHS = {
+  left: { w: 150, h: 56,
+    limbs: [[[-8, 1, 6.4], [14, 9, 5.6], [37, 20, 4.4], [60, 20.5, 3.4], [86, 15, 2.4], [110, 11, 1.6], [132, 12.5, .7]],
+            [[36, 19, 2.6], [33, 30, 1.9], [29, 41, 1.1], [27, 47, .5]],
+            [[73, 17.5, 1.9], [81, 10, 1.3], [89, 4, .8], [94, 1, .4]],
+            [[103, 12, 1.2], [111, 19, .8], [116, 23, .4]]],
+    flowers: [[44, 27, 1.25, "open"], [31, 17, .95, .25], [55, 32, .9, .55], [28, 45, 1.05, "open"], [20, 36, .8, .75],
+              [80, 19, 1.02, "open"], [69, 11, .82, .4], [91, 3.5, .86, .9], [114, 11, .86, .62], [120, 24, .72, "open"]],
+    buds: [[40, 10], [62, 14], [100, 8], [129, 10], [108, 21]] },
+  right: { w: 104, h: 50,
+    limbs: [[[110, -3, 5.4], [92, 6, 4.3], [72, 14, 3.2], [50, 17, 2.2], [30, 17, 1.3], [15, 15, .5]],
+            [[70, 14, 2.1], [67, 25, 1.4], [63, 35, .8], [61, 39, .4]],
+            [[45, 17, 1.1], [39, 9, .7], [35, 5, .3]]],
+    flowers: [[62, 39, 1.12, "open"], [71, 30, .86, .45], [52, 21, 1.02, "open"], [29, 20, .86, .8], [86, 10, .95, .3], [36, 5, .62, 1]],
+    buds: [[17, 15], [79, 21], [42, 25]] },
+};
+const bough = (side, seed) => {
+  const rand = seededRandom(seed), { w, h, limbs, flowers, buds } = BOUGHS[side];
+  const wood = limbs.map((pts) => `<path class="cta-wood" d="${limb(pts)}"/>`).join("");
+  const budMarks = buds.map(([x, y]) => `<g transform="translate(${x} ${y})">${bud(rand)}</g>`).join("");
+  const blooms = flowers.map(([x, y, s, state]) => {
+    const flower = blossom(rand, PETAL_TINTS[Math.floor(rand() * PETAL_TINTS.length)]);
+    if (state === "open") return `<g transform="translate(${x} ${y}) scale(${s})">${flower}</g>`;
+    return `<g transform="translate(${x} ${y}) scale(${s})"><g style="--open-at:${state}s">${bud(rand)}<g class="cta-opens">${flower}</g></g></g>`;
+  }).join("");
+  return `<svg class="cta-bough cta-bough--${side}" viewBox="0 0 ${w} ${h}" style="aspect-ratio:${w}/${h}"><g class="cta-bough-sway">${wood}${budMarks}${blooms}</g></svg>`;
+};
+const petalShower = (() => {
+  const rand = seededRandom(415);
+  return Array.from({ length: 30 }, () => {
+    // Most petals leave from under the two boughs; the rest arrive on the wind from further up.
+    const zone = rand();
+    const left = zone < .45 ? 2 + rand() * 24 : zone < .72 ? 76 + rand() * 20 : 24 + rand() * 50;
+    return `<i class="cta-petal" style="left:${f(left)}%;top:${f(-4 + rand() * 20)}px;--ps:${f(5 + rand() * 3)}px;` +
+      `--pc:${PETAL_TINTS[Math.floor(rand() * PETAL_TINTS.length)]};--px:${f(46 + rand() * 70)}px;--pw:${f(rand() * 10 - 5)}px;` +
+      `--pt:${f(2.4 + rand() * 1.5, 2)}s;--pd:${f(.5 + rand() * 2, 2)}s;--pf:${f(.9 + rand() * .8, 2)}s;--pr:${Math.round(rand() * 360)}deg"><b></b></i>`;
+  }).join("");
+})();
+const petalSill = (() => {
+  const rand = seededRandom(1204);
+  const lay = (x, cls = "", land = 0) => `<ellipse class="${cls}" ${land ? `style="--land:${f(land, 2)}s"` : ""} cx="${f(x)}" cy="${f(5.5 + rand() * 3)}" rx="${f(2.2 + rand() * 1.2)}" ry="${f(1.2 + rand() * .5)}" fill="${PETAL_TINTS[Math.floor(rand() * 5)]}" stroke="#d98ea6" stroke-width=".4" transform="rotate(${Math.round(rand() * 60 - 30)} ${f(x)} 6)"/>`;
+  let out = "";
+  for (let i = 0; i < 12; i++) out += lay(rand() < .6 ? 30 + rand() * 130 : 450 + rand() * 120);
+  for (let i = 0; i < 36; i++) out += lay(40 + rand() * 520, "cta-sill-late", 1.6 + rand() * 3.4);
+  return `<svg class="cta-sill" viewBox="0 0 600 10" preserveAspectRatio="xMidYMax slice">${out}</svg>`;
+})();
+const spring = `<span class="cta-petalfall">${petalShower}</span>${petalSill}${bough("left", 31)}${bough("right", 77)}`;
+
+// Summer: sea to the horizon over a sandy shore; on hover a wave washes up the sand.
+// Sea to the horizon, a shore of sand along the sill. The shoreline is one function so the
+// dry sand, the wet band and the wave's reach all follow the same curve.
+const shore = (x) => 7.6 + 1.4 * Math.sin(x / 41) + 1.1 * Math.sin(x / 97 + 1.3) - 2.2 * bump(x, 90, 70) - 1.8 * bump(x, 520, 80);
+const shoreLine = (fn) => { let d = `M0 ${f(fn(0), 2)}`; for (let x = 6; x <= 600; x += 6) d += `L${x} ${f(fn(x), 2)}`; return d; };
+// The sand, the band of damp sand at the water's edge, and a soak mark that shows where the
+// last wave reached: it appears as the water pulls back and dries out before the next.
+const REACH = 5.2;
+const soakEdge = (x) => shore(x) + REACH + .7 * Math.sin(x / 11) + .5 * Math.sin(x / 4.7);
+const soakPath = `M0 ${f(shore(0), 2)}${shoreLine(shore).slice(shoreLine(shore).indexOf("L"))}` +
+  Array.from({ length: 101 }, (_, i) => 600 - i * 6).map((x) => `L${x} ${f(soakEdge(x), 2)}`).join("") + "Z";
+const sandLace = (() => {
+  const rand = seededRandom(909);
+  let dots = "";
+  for (let x = 2; x < 600; x += 2.5 + rand() * 4.5) dots += `<circle cx="${f(x)}" cy="${f(soakEdge(x) - .4 - rand() * 1.4)}" r="${f(.35 + rand() * .55, 2)}"/>`;
+  return `<g class="cta-lace-left">${dots}<path d="${shoreLine((x) => soakEdge(x) - .3)}"/></g>`;
+})();
+const sand = `<svg class="cta-sand" viewBox="0 0 600 20" preserveAspectRatio="xMidYMax slice"><path class="cta-sand-dry" d="${ridge(shore, 600, 20)}"/><path class="cta-sand-damp" d="${ridge(shore, 600, 20).replace(/V20H0Z$/, "")}${Array.from({ length: 101 }, (_, i) => 600 - i * 6).map((x) => `L${x} ${f(shore(x) + 2.4 + .5 * Math.sin(x / 9), 2)}`).join("")}Z"/><path class="cta-sand-soak" d="${soakPath}"/>${sandLace}</svg>`;
+// The water itself comes up the beach. It is solid and joined to the sea, painted in the sea's
+// own colour going pale in the shallows, and it ends in a foam lip with a second, broken line
+// of foam riding just behind it. Only its front is ever seen: the element runs up well into
+// the sea, so pushing it down the sand leaves nothing but more sea behind it.
+const wash = (() => {
+  const rand = seededRandom(707), top = 9, lip = (x) => top + shore(x) - .2 + .6 * Math.sin(x / 17 + 1) + .4 * Math.sin(x / 6.1);
+  const trail = (x) => lip(x) - 2.6 - .8 * Math.sin(x / 9 + 2);
+  let bubbles = "";
+  for (let x = 1; x < 600; x += 2 + rand() * 5) bubbles += `<circle cx="${f(x)}" cy="${f(lip(x) - 1.2 - rand() * 3.4)}" r="${f(.3 + rand() * .7, 2)}"/>`;
+  // the trailing foam is broken into runs, never one even line
+  let runs = "";
+  for (let x = 0; x < 600;) {
+    const len = 14 + rand() * 40, gap = 5 + rand() * 18;
+    let d = `M${f(x)} ${f(trail(x), 2)}`;
+    for (let xx = x + 3; xx < Math.min(600, x + len); xx += 3) d += `L${f(xx)} ${f(trail(xx), 2)}`;
+    runs += `<path d="${d}" stroke-width="${f(.7 + rand() * .8, 2)}"/>`;
+    x += len + gap;
+  }
+  return `<svg class="cta-surf" viewBox="0 0 600 ${top + 20}" preserveAspectRatio="xMidYMax slice">` +
+    `<defs><linearGradient id="__SURF__" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="${top + 12}"><stop class="cta-surf-deep" offset="0" stop-opacity="0"/><stop class="cta-surf-deep" offset=".32"/><stop class="cta-surf-shallow" offset="1"/></linearGradient></defs>` +
+    `<path class="cta-surf-water" fill="url(#__SURF__)" d="M0 0L0 ${f(lip(0), 2)}${shoreLine(lip).slice(shoreLine(lip).indexOf("L"))}L600 0Z"/>` +
+    `<g class="cta-surf-trail">${runs}</g><g class="cta-surf-bubbles">${bubbles}</g><path class="cta-surf-lip" d="${shoreLine(lip)}"/></svg>`;
+})();
+const glints = (() => {
+  const rand = seededRandom(1116);
+  return Array.from({ length: 18 }, () => `<i class="cta-glint" style="left:${f(2 + rand() * 94)}%;top:${f(30 + rand() * 36)}%;width:${f(3 + rand() * 7)}px;--g0:${f(.08 + rand() * .3, 2)};--gd:${f(rand() * 1.4, 2)}s"></i>`).join("");
+})();
+const sailboat = `<svg class="cta-boat" viewBox="0 0 20 15"><path d="M9.6 1L9.6 11.4" stroke="#274a50" stroke-width=".8"/><path d="M9 1.6L9 10.2L2.6 10.2Z" fill="#fbf7ee" stroke="#274a50" stroke-width=".5"/><path d="M10.3 3.2L10.3 10.2L15.4 10.2Z" fill="#ef8a6c" stroke="#274a50" stroke-width=".5"/><path d="M2.4 11.2L17.6 11.2L15.6 13.6L4.6 13.6Z" fill="#274a50"/></svg>`;
+const gull = (cls) => `<svg class="cta-gull ${cls}" viewBox="0 0 14 6"><path d="M.6 4.8C2.2 1.6 4.8 1.2 7 4C9.2 1 11.8 1.4 13.4 4.4" fill="none" stroke="var(--gull)" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const starfish = `<svg class="cta-starfish" viewBox="-7 -7 14 14"><path d="M0 -6.4L1.6 -2.1L6.2 -2L2.5 .9L3.9 5.4L0 2.8L-3.9 5.2L-2.6 .8L-6.1 -2.1L-1.6 -2.2Z" fill="#e98763" stroke="#a9502f" stroke-width=".6" stroke-linejoin="round"/><g fill="#fbd2b8"><circle cx="0" cy="-3.4" r=".5"/><circle cx="2.6" cy=".2" r=".5"/><circle cx="-2.5" cy=".3" r=".5"/><circle cx="1.6" cy="3" r=".45"/><circle cx="-1.6" cy="3" r=".45"/></g></svg>`;
+const shell = `<svg class="cta-shell" viewBox="-7 -7 14 12"><path d="M0 4C-3.8 3.4 -6.4 .4 -6 -2.6C-4.6 -5.4 4.6 -5.4 6 -2.6C6.4 .4 3.8 3.4 0 4Z" fill="#f7e4d2" stroke="#b58867" stroke-width=".6"/><path d="M0 3.6L0 -4.2M0 3.6L-2.6 -4M0 3.6L2.6 -4M0 3.6L-4.6 -2.8M0 3.6L4.6 -2.8" stroke="#c99b78" stroke-width=".5" fill="none"/><path d="M-1.6 4.6L1.6 4.6L1 3.6L-1 3.6Z" fill="#e8c8ab" stroke="#b58867" stroke-width=".5"/></svg>`;
+const tideArt = `${glints}${sailboat}${gull("cta-gull--a")}${gull("cta-gull--b")}${sand}${starfish}${shell}${wash}`;
+
+// Autumn: leaf litter on woodland green; on hover a gust, and two leaves let go of the twig.
+const LEAF = {
+  maple: { d: "M0 -10.5L1.8 -5.6L5.6 -7.9L5 -2.6L10.2 -2.3L7.4 .8L9.3 4.2L3.6 3.3L1.3 7.8L.5 4.4L-.6 4.5L-1.7 7.5L-3.4 3.4L-8.8 4.7L-7.1 1L-10 -2.5L-5 -2.8L-5.8 -8.1L-1.9 -5.3Z",
+           v: "M0 10.6V-8.6M0 3.4L7.6 -1.3M0 3.4L-7.4 -1.5M0 -2L3.8 -5.8M0 -2L-3.9 -6" },
+  oak:   { d: "M0 -10.4C2.6 -10.4 2.4 -7.6 3.8 -7C6.4 -6.4 4.6 -3.8 6.2 -2.8C8.8 -1.6 6.2 1.6 5.6 2.4C7.4 4.6 3.6 6.6 1.2 7.4L.4 8.2L-.6 8.2C-3 6.8 -7 5.2 -5.4 2.6C-6.4 1.8 -8.6 -1.2 -6.2 -2.4C-4.8 -3.6 -6.8 -6.2 -3.8 -6.8C-2.2 -7.4 -2.8 -10.4 0 -10.4Z",
+           v: "M0 11V-9M0 -3L4.8 -4.6M0 -3L-4.6 -4.2M0 2L4.6 1M0 2L-4.4 1.2" },
+  beech: { d: "M0 -10.4C4.8 -7.6 6.4 -.6 3.4 4.6C2.2 6.6 .9 7.8 0 8.6C-1 7.6 -2.6 6.4 -3.6 4.4C-6.2 -.8 -4.6 -7.6 0 -10.4Z",
+           v: "M0 11V-9.4M0 -5L3 -6.8M0 -1.6L4 -3.6M0 1.8L3.6 .2M0 -3.4L-3 -5M0 0L-3.8 -1.8M0 3.4L-3.2 2" },
+  ginkgo:{ d: "M0 8.8C-.3 4.6 -.4 1.8 -.9 -.2C-5.4 -1.6 -9 -4.4 -9.4 -7.6C-5.6 -10.2 -1.8 -9.8 -.2 -7.8L.3 -9.4C2 -10.4 6.4 -10.2 9.6 -7.2C8.6 -4 5.2 -1.4 .9 -.2C.4 1.8 .3 4.6 0 8.8Z",
+           v: "M0 8.6V-.4M-.4 -.6L-6 -6.6M.4 -.6L6 -6.8M0 -.6L-2.4 -8M0 -.6L2.8 -8.4" },
+};
+const LEAF_TONES = [["#c65a2e", "#7a2f14"], ["#e0922f", "#8a5012"], ["#e8bb44", "#8e6c16"], ["#a9352b", "#5c1912"], ["#8f5d2f", "#4c3016"], ["#b9a43c", "#675717"], ["#d4702c", "#7d3a11"]];
+const leafShape = (kind, [fill, vein]) => `<path d="${LEAF[kind].d}" fill="${fill}" stroke="${vein}" stroke-width=".55" stroke-opacity=".7"/><path class="cta-leaf-v" d="${LEAF[kind].v}" stroke="${vein}" stroke-width=".75" stroke-opacity=".75"/>`;
+const pickLeaf = (rand) => {
+  const kinds = ["maple", "maple", "oak", "beech", "beech", "ginkgo"];
+  const kind = kinds[Math.floor(rand() * kinds.length)];
+  const tone = kind === "ginkgo" ? LEAF_TONES[2] : LEAF_TONES[Math.floor(rand() * LEAF_TONES.length)];
+  return leafShape(kind, tone);
+};
+// Leaf litter banked along the sill like the snow drift: one solid mound, deep at the ends and
+// low under the label, with whole leaves lying along its crest and a few half-buried in it.
+// Each leaf rustles when the gust reaches it, left to right.
+const litterCrest = (x) => 16 - 8 * bump(x, 95, 72) - 8.8 * bump(x, 505, 78) - 2.4 * bump(x, 300, 120) - 3 * bump(x, 0, 36) - 3 * bump(x, 600, 36);
+const litter = (() => {
+  const rand = seededRandom(64), leaves = [];
+  const density = (x) => Math.max(bump(x, 95, 90), bump(x, 505, 95));
+  for (let x = -4; x < 604; x += 3.5 + rand() * 5 + 13 * (1 - density(x))) {
+    leaves.push({ x, y: litterCrest(x) + rand() * 3.4 - .6, s: .5 + rand() * .28, leaf: pickLeaf(rand), buried: false });
+  }
+  for (let i = 0; i < 26; i++) {
+    const x = rand() < .5 ? 30 + rand() * 140 : 430 + rand() * 150, top = litterCrest(x) + 4;
+    if (top < 20) leaves.push({ x, y: top + rand() * (22 - top), s: .42 + rand() * .2, leaf: pickLeaf(rand), buried: true });
+  }
+  leaves.sort((a, b) => (a.buried - b.buried) || a.y - b.y);
+  const body = leaves.map(({ x, y, s, leaf, buried }) =>
+    `<g transform="translate(${f(x)} ${f(y)}) rotate(${Math.round(rand() * 360)}) scale(${f(s, 2)})"${buried ? ' opacity=".55"' : ""}><g class="cta-heap-leaf" style="--rd:${f(.3 + x / 600 * 1.1, 2)}s;--rt:${f((rand() < .5 ? -1 : 1) * (8 + rand() * 12))}deg">${leaf}</g></g>`).join("");
+  return `<svg class="cta-litter" viewBox="0 0 600 22" preserveAspectRatio="xMidYMax slice"><path class="cta-litter-bed" d="${ridge(litterCrest, 600, 22)}"/>${body}</svg>`;
+})();
+// Curls of wind, the way a picture book draws a gust: a long stroke that turns over on itself
+// at the end. Drawn on and then off from the tail, so each one passes rather than lingers.
+const WINDS = [
+  ["M-10 15C40 9 96 19 150 13C176 10 190 2 178 -1.6C166 -3.6 162 8 178 10", 1.4, .05],
+  ["M250 49C300 45 356 52 410 46C438 42 446 33 434 31C422 30 420 42 434 44", 1.3, .4],
+  ["M360 12C400 8 460 15 540 7C566 4 580 9 612 5", 1.2, .7],
+  ["M-12 38C30 34 70 40 110 36", 1.5, 1.05],
+];
+const winds = `<svg class="cta-winds" viewBox="0 0 600 60" preserveAspectRatio="xMidYMid slice">${WINDS.map(([d, t, delay]) => `<path class="cta-wind" pathLength="100" d="${d}" style="--wt:${t}s;--wd:${delay}s"/>`).join("")}</svg>`;
+const gust = (() => {
+  const rand = seededRandom(1031);
+  return Array.from({ length: 18 }, (_, i) => {
+    const y0 = 2 + rand() * 30;
+    return `<i class="cta-gust" style="--gs:${f(11 + rand() * 7)}px;--gy0:${f(y0)}px;--gy1:${f(rand() * 14 - 4)}px;--gy2:${f(rand() * 18 - 2)}px;--gy3:${f(4 + rand() * 18)}px;` +
+      `--gt:${f(1.5 + rand() * 1.1, 2)}s;--gd:${f(.1 + i * .075 + rand() * .25, 2)}s;--gf:${f(.55 + rand() * .5, 2)}s;--gr:${Math.round(rand() * 360)}deg">` +
+      `<span><svg viewBox="-11 -11 22 22">${pickLeaf(rand)}</svg></span></i>`;
+  }).join("");
+})();
+// The twig holds three leaves. Two let go and land on the litter, the third only swings.
+const twigLeaves = [
+  // [kind, tone, x, y, size, rest angle, landed angle, land dx, land lift, delay, dur, holds]
+  ["maple", LEAF_TONES[0], 20, 24, 16, 172, 404, -34, 10, .45, 1.9, false],
+  ["beech", LEAF_TONES[2], 40, 27, 13, 196, 470, -62, 9, 1.05, 2.2, false],
+  ["oak",   LEAF_TONES[3], 57, 10, 12, 128, 128, 0, 0, 0, 0, true],
+];
+const twig = `<span class="cta-twig"><svg viewBox="0 0 76 40"><g class="cta-twig-sway"><path class="cta-twig-wood" d="${limb([[80, -3, 3.2], [64, 5, 2.4], [48, 9.5, 1.8], [34, 13, 1.3], [21, 17, .7]])}"/><path class="cta-twig-wood" d="${limb([[50, 9, 1.3], [46, 15, 1], [41, 21, .5]])}"/><path class="cta-twig-wood" d="${limb([[64, 5, 1], [59, 6, .7], [57, 7, .4]])}"/></g></svg>` +
+  twigLeaves.map(([kind, tone, x, y, s, r0, r1, lx, ly, d, t, holds]) =>
+    `<i class="cta-fall${holds ? " cta-fall--holds" : ""}" style="--fx:${x}px;--fy:${y}px;--fs:${s}px;--fr0:${r0}deg;--fr1:${r1}deg;--lx:${lx}px;--ly:${ly}px;--fd:${d}s;--ft:${t}s"><span><svg viewBox="-11 -11 22 22">${leafShape(kind, tone)}</svg></span></i>`).join("") + `</span>`;
+const autumn = `${winds}${gust}${litter}${twig}`;
+
+// Winter: drifts and hoarfrost; on hover a snowstorm in three depths, and the drifts build.
+// Hoarfrost feathered in from both top corners: spines with barbs at sixty degrees, each its
+// own length, and every stroke drawn with pathLength=1 so the frost can creep further in while
+// the storm blows and draw back when it passes.
+const frost = (side, seed) => {
+  const rand = seededRandom(seed), w = 110, h = 56, paths = [], ox = side === "left" ? -2 : w + 2, oy = -2;
+  // At rest only the crystals nearest the corner are there, drawn solid; the rest grow in on
+  // hover, in order of their distance from the corner, so the frost creeps rather than fades.
+  const reach = 30 + rand() * 6;
+  const grow = (x, y, ang, len, depth) => {
+    const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+    const near = Math.hypot(x - ox, y - oy), far = Math.hypot(x2 - ox, y2 - oy);
+    const rest = far < reach ? 0 : 1;
+    paths.push(`<path pathLength="1" d="M${f(x)} ${f(y)}L${f(x2)} ${f(y2)}" stroke-width="${f([1.7, 1.15, .75, .5][depth], 2)}" style="--rest:${rest};--fz:${f(.1 + near / 80 * 1.6, 2)}s"/>`);
+    if (depth > 2) return;
+    const barbs = 3 + Math.floor(rand() * 3);
+    for (let i = 1; i <= barbs; i++) {
+      const t = i / (barbs + 1) + rand() * .08, bx = x + Math.cos(ang) * len * t, by = y + Math.sin(ang) * len * t;
+      const bl = len * (.3 + rand() * .22) * (1 - t * .5);
+      grow(bx, by, ang + Math.PI / 3 + rand() * .15, bl, depth + 1);
+      grow(bx, by, ang - Math.PI / 3 - rand() * .15, bl * (.7 + rand() * .5), depth + 1);
+    }
+  };
+  const spines = side === "left" ? [[.16, 58], [.52, 46], [.92, 32], [1.3, 22]] : [[Math.PI - .2, 50], [Math.PI - .6, 38], [Math.PI - 1.02, 26]];
+  spines.forEach(([a, len]) => grow(ox, oy, a + rand() * .1, len * (.85 + rand() * .3), 0));
+  return `<svg class="cta-frost cta-frost--${side}" viewBox="0 0 ${w} ${h}" style="aspect-ratio:${w}/${h}">${paths.join("")}</svg>`;
+};
+// Snow in three depths, blown on a slant: small soft far flakes drifting slow, a middle layer,
+// and a few big near flakes that are drawn as real six-armed crystals and turn as they pass.
+// Every flake spawns upwind of the face and leaves downwind, measured in the button's own
+// width (cqw), so a phone and a desktop both get the whole slant.
+const CRYSTAL = `<svg viewBox="-6 -6 12 12"><g stroke="#fff" stroke-width="1" stroke-linecap="round" fill="none"><path d="M0 -5.4V5.4M-4.7 -2.7L4.7 2.7M-4.7 2.7L4.7 -2.7"/><path d="M0 -3.4L-1.3 -4.6M0 -3.4L1.3 -4.6M0 3.4L-1.3 4.6M0 3.4L1.3 4.6M-2.9 -1.7L-4.7 -1.2M2.9 1.7L4.7 1.2M-2.9 1.7L-4.7 1.2M2.9 -1.7L4.7 -1.2" stroke-width=".8"/></g></svg>`;
+const flurry = (layer, count, seed, [s0, s1], [t0, t1], crystals = 0) => {
+  const rand = seededRandom(seed);
+  return `<span class="cta-flurry cta-flurry--${layer}">${Array.from({ length: count }, (_, i) => {
+    const t = t0 + rand() * (t1 - t0), reps = Math.ceil(4.6 / t), size = s0 + rand() * (s1 - s0);
+    return `<i class="cta-flake${i < crystals ? " cta-flake--crystal" : ""}" style="--x0:${f(-40 + rand() * 120)}cqw;--fsz:${f(size)}px;--ft:${f(t, 2)}s;--fd:${f(rand() * t + .1, 2)}s;--fn:${reps};` +
+      `--fw:${f(26 + rand() * 30)}cqw;--fsway:${f(rand() * 10 - 5)}px;--fspin:${Math.round(180 + rand() * 360)}deg">${i < crystals ? CRYSTAL : ""}</i>`;
+  }).join("")}</span>`;
+};
+const DRIFT_BACK = (x) => 12.5 - 4.5 * bump(x, 130, 90) - 3.5 * bump(x, 400, 70) - 5 * bump(x, 580, 60) + 2 * bump(x, 290, 70);
+const DRIFT_FRONT = (x) => 17 - 7 * bump(x, 40, 70) - 5.5 * bump(x, 230, 85) - 6.5 * bump(x, 490, 90) + 1.2 * bump(x, 360, 50);
+const drifts = `<svg class="cta-drifts cta-drifts--back" viewBox="0 0 600 24" preserveAspectRatio="xMidYMax slice"><path d="${ridge(DRIFT_BACK, 600, 24)}"/></svg>` +
+  `<svg class="cta-drifts cta-drifts--front" viewBox="0 0 600 24" preserveAspectRatio="xMidYMax slice"><path d="${ridge(DRIFT_FRONT, 600, 24)}"/><path class="cta-drift-line" d="M0 21.6C60 20.8 120 22 190 21.2S320 20.6 380 21.6S520 22 600 21"/></svg>`;
+const storm = `<i class="cta-storm-sky"></i>${frost("left", 26)}${frost("right", 1213)}` +
+  flurry("far", 46, 11, [1.2, 2], [2.2, 3.2]) + `<i class="cta-whiteout"></i><i class="cta-whiteout cta-whiteout--2"></i>` +
+  flurry("mid", 30, 22, [2.2, 3.2], [1.3, 1.9]) + drifts + flurry("near", 12, 33, [7, 10], [.95, 1.35], 6);
+
+
+// Every copy of the summer finish gets its own gradient id: the home button and the Mastery
+// swatches are all on the page together, and a url(#id) that resolves to a copy inside a
+// hidden screen paints nothing.
+let surfSerial = 0;
+const tide = () => tideArt.replaceAll("__SURF__", `ctaSurf${++surfSerial}`);
+
 // Two separately drawn vines, never one vine flipped: each is rooted in its own bottom corner
 // (the stem's first point, which is also its hover pivot) and the right one is shorter and
 // sparser, so the pair reads as grown rather than printed. Leaves are [x, y, rotate, scale].
@@ -169,8 +434,11 @@ const FINISH_ART = {
   rose: rosePaint,
   sky: `${dayClouds}${stormBank}<span class="cta-rain cta-rain--far">${rain(18, 1311)}</span><span class="cta-rain">${rain(24, 1989)}</span>${bolt}`,
   meadow: garden,
-  snow,
   ivy,
+  spring,
+  summer: tide,
+  autumn,
+  winter: storm,
   pride: `<i class="cta-ribbon"></i>`,
 };
 
@@ -189,7 +457,8 @@ export function ctaContentHTML(labelId = "", finish = "") {
   const mark = markId ? `<span class="cta-mark${opt ? "" : " cta-mark--pencil"}" aria-hidden="true">${CTA_MARKS[markId] || ""}</span>` : "";
   const words = `${mark}${opt ? escapeHtml(opt.text) : "Start writing"}`;
   const key = finish.startsWith("pride-") ? "pride" : finish;
-  const art = FINISH_ART[key] ?? goldStroke(words);
+  const drawn = FINISH_ART[key];
+  const art = typeof drawn === "function" ? drawn() : drawn ?? goldStroke(words);
   return `<span class="cta-fx" aria-hidden="true">${art}</span><span class="cta-label">${words}</span>`;
 }
 

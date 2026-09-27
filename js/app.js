@@ -4,6 +4,7 @@ import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
+import { seasonOn, SEASONS, southernSeasons } from "./season.js";
 import { launchFlock } from "./messengers.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
    js/lineuphand.js for what a hand of them costs and what cannot sit beside what, and
@@ -533,6 +534,27 @@ function writeCtaLabel(btn, labelId) {
   btn.innerHTML = ctaContentHTML(labelId, btn.dataset.startbtn || "");
 }
 
+// The start-button finish sits on the button itself, not the body: the Mastery reward board
+// previews every finish at once, and each swatch is a real .play-cta carrying its own.
+// Painted from applySettings, and again from refreshDateSurfaces, because the Seasons finish
+// changes with the date: a page left open over the first of the month turns with it.
+function paintStartButton() {
+  const playCta = $("playBtn");
+  if (!playCta) return;
+  // activeButtonFinish/activeCtaLabel, not the raw settings: either may hold "random", in
+  // which case what the button wears is this page load's roll. wornFinish then turns
+  // "seasons" into the season it is.
+  const finish = wornFinish(activeButtonFinish());
+  if (finish) playCta.setAttribute("data-startbtn", finish);
+  else playCta.removeAttribute("data-startbtn");
+  // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
+  // left with no inline stripes at all, or a stale gradient would outlive the switch away.
+  const stripes = prideStripes(finish);
+  if (stripes) playCta.style.setProperty("--cta-stripes", stripes);
+  else playCta.style.removeProperty("--cta-stripes");
+  writeCtaLabel(playCta, activeCtaLabel());
+}
+
 function applySettings() {
   const body = document.body;
   // A settings change can replace inherited paper, ink, motion, or layout tokens. Finish any
@@ -569,22 +591,7 @@ function applySettings() {
   if (ink) body.setAttribute("data-ink", ink);
   else body.removeAttribute("data-ink");
   paintTitleGild();   // after data-ink, which it and the favicon both read back off the body
-  // The start-button finish sits on the button itself, not the body: the Mastery reward board
-  // previews every finish at once, and each swatch is a real .play-cta carrying its own.
-  const playCta = $("playBtn");
-  if (playCta) {
-    // activeButtonFinish/activeCtaLabel, not the raw settings: either may hold "random", in
-    // which case what the button wears is this page load's roll.
-    const finish = activeButtonFinish();
-    if (finish) playCta.setAttribute("data-startbtn", finish);
-    else playCta.removeAttribute("data-startbtn");
-    // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
-    // left with no inline stripes at all, or a stale gradient would outlive the switch away.
-    const stripes = prideStripes(finish);
-    if (stripes) playCta.style.setProperty("--cta-stripes", stripes);
-    else playCta.style.removeProperty("--cta-stripes");
-    writeCtaLabel(playCta, activeCtaLabel());
-  }
+  paintStartButton();
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
   // The boombox only pays out for a run played with the sound on, so turning it off mid-run
   // spends the flag. Turning it back ON does not re-arm it: the next run does that.
@@ -6483,6 +6490,12 @@ rollRandomCosmetics();
 function activeButtonFinish() {
   return settings.masteryButton === COSMETIC_RANDOM ? rolledFinish : (settings.masteryButton || "");
 }
+// The Seasons finish is stored as "seasons" and worn as whichever season it is today, so every
+// surface that paints a start button asks this for the finish it should actually draw. It
+// reads todayKey(), which is what keeps it on the player's timezone and the dev date.
+function wornFinish(finish) {
+  return finish === "seasons" ? seasonOn(todayKey()) : finish;
+}
 function activeCtaLabel() {
   return settings.masteryLabel === COSMETIC_RANDOM ? rolledLabel : (settings.masteryLabel || "");
 }
@@ -6554,12 +6567,13 @@ const paperChip = (paper) => (locked) => locked
 // will look there, with no second description of the four fills to drift out of step.
 const buttonChip = (style) => (locked) => locked
   ? `<span class="rb-btn-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
-  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${finishAttrs(style)} aria-hidden="true">${ctaContentHTML("", style)}</span></span>`;
+  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${finishAttrs(style)} aria-hidden="true">${ctaContentHTML("", wornFinish(style))}</span></span>`;
 // What a .play-cta has to be told to wear a finish: the finish itself, plus — for the Pride
 // set, whose eight ramps live in PRIDE_BUTTONS rather than in CSS — that flag's gradient.
 // Everything that previews a start button goes through this, so a preview cannot wear a
 // finish differently from the real button.
 function finishAttrs(finish) {
+  finish = wornFinish(finish);
   if (!finish) return "";
   const stripes = prideStripes(finish);
   return ` data-startbtn="${escapeHtml(finish)}"` +
@@ -6641,7 +6655,7 @@ function buildButtonTile(buttons, m) {
 // width, or the longest label would run through the right border.
 function ctaPreviewHTML(labelId, finish) {
   return `<span class="cta-prev"><span class="btn-primary play-cta"` +
-    `${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML(labelId, finish)}</span></span>`;
+    `${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML(labelId, wornFinish(finish))}</span></span>`;
 }
 
 // A start-button words row. The preview is aria-hidden (it is a decorative copy of a button
@@ -15774,6 +15788,11 @@ function refreshDateSurfaces() {
   // days in November. Each refresher re-asks its own gate.
   refreshSnow();
   refreshLeaves();
+  // The Seasons start button turns on the first of the month, so it is a dated surface too.
+  if (activeButtonFinish() === "seasons") {
+    paintStartButton();
+    if ($("masteryBody")) renderMasteryPage();
+  }
 }
 // The day turning under a page that is already open. This is deliberately a POLL against
 // todayKey() rather than one long setTimeout aimed at midnight, because a timer is the one
@@ -30221,11 +30240,19 @@ function buildDevApi() {
         return window.__devDate;
       },
       clear: () => { window.__devDate = null; refreshDateSurfaces(); return todayKey(); },
-      // Which way the desk calendar reads its seasons. No argument reports the
-      // live guess (which is the point: the timezone list behind it is hand-kept
-      // and worth checking), "north"/"south" forces it for the session, anything
-      // else hands it back to the zone.
-      hemisphere: (which) => window.deskCalendar?.hemisphere(which) ?? "north",
+      // Which way the seasons turn, for the desk calendar and the Seasons start button
+      // alike (js/season.js). No argument reports the live guess (which is the point: the
+      // timezone list behind it is hand-kept and worth checking), "north"/"south" forces it
+      // for the session, anything else hands it back to the zone.
+      hemisphere: (which) => {
+        if (which !== undefined) {
+          window.__devHemisphere = (which === "north" || which === "south") ? which : null;
+          window.deskCalendar?.refresh();
+          paintStartButton();
+          if ($("masteryBody")) renderMasteryPage();
+        }
+        return southernSeasons() ? "south" : "north";
+      },
       // Every day the calendar marks, as this year's date keys: the real milestones, the
       // guest shelf's birthdays and the lyric days, ordered through the year. This is also
       // what fills the dev panel's jump dropdown, which is why a guest day needs no control
@@ -30505,9 +30532,18 @@ function buildDevApi() {
       // pass), as a list of trinket ids — the strand without playing the run that earns it.
       strand: (n = TOTAL_ROUNDS, seed = braceletSeed) =>
         Array.from({ length: n | 0 }, (_, i) => randomTrinketForBead(seed, i)),
-      // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky/meadow, or
+      // Preview a start-button finish without unlocking it: pass an id (ink/rose/sky/meadow/ivy/seasons, or
       // any dev.mastery.flags() id) or "" for the default gold marker.
       button: (id) => { settings.masteryButton = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
+      // Wear the Seasons finish and pin which season it shows, for this session only
+      // (window.__devSeason, never stored): spring/summer/autumn/winter, or anything else to
+      // hand it back to the date and timezone. Returns the season now being worn.
+      season: (which) => {
+        window.__devSeason = SEASONS.includes(which) ? which : null;
+        settings.masteryButton = "seasons"; saveSettings(settings); applySettings();
+        if ($("masteryBody")) renderMasteryPage();
+        return wornFinish("seasons");
+      },
       // The Pride flag ids, for feeding to button() above — the one finish that is a set, so
       // the ids are not guessable from the reward ladder.
       flags: () => PRIDE_BUTTONS.map((f) => f.id),

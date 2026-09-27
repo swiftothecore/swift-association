@@ -33,6 +33,7 @@
 import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, ALBUM_COLORS, CB_ALBUM_COLORS,
          SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D } from "./config.js";
 import { loadSettings } from "./storage.js";
+import { MONTH_SEASON, southernSeasons, seasonMonth } from "./season.js";
 
 const SVG = "http://www.w3.org/2000/svg";
 const svg = document.querySelector(".di-calendar svg");
@@ -218,59 +219,9 @@ const MONTH_MARKS = [
 // which month it is — so it does not need a colour-blind alternative the way
 // the album-coloured hearts below do.
 const MARK_WASH_D = "M3.4 8.6 C5.4 5.6 9 4.6 13.4 4.9 C18 5.2 20.6 7.4 20.4 11.6 C20.2 15.8 18.4 19 14.2 19.6 C9.4 20.3 5.2 19.2 3.6 16.2 C2.4 14 2.2 10.4 3.4 8.6 Z";
-const MONTH_SEASON = ["winter", "winter", "spring", "spring", "spring", "summer",
-                      "summer", "summer", "autumn", "autumn", "autumn", "winter"];
 const SEASON_WASH = { spring: "#6f8f4a", summer: "#c8912a", autumn: "#b0603a", winter: "#5a7c94" };
-
-// Which hemisphere's seasons the pad keeps. A browser will not answer this: the
-// timezone is the only signal on offer, and an IANA id names a place, not a
-// latitude. So this is a hand-kept list rather than a clever test, and it lists
-// COUNTRIES whose seasons are lived as southern rather than every zone that
-// happens to sit below the equator. Somewhere tropical has no four seasons to
-// be wrong about, so nothing equatorial is here and anything unlisted keeps the
-// northern set. The zone comes from the same place the daily reset takes it:
-// the Settings override first, the detected zone otherwise.
-const SOUTHERN_PREFIX = ["Australia/", "Antarctica/", "America/Argentina/"];
-const SOUTHERN_ZONES = new Set([
-  // New Zealand and the southern Pacific
-  "Pacific/Auckland", "Pacific/Chatham", "Pacific/Norfolk", "Pacific/Fiji", "Pacific/Noumea",
-  "Pacific/Port_Moresby", "Pacific/Bougainville", "Pacific/Guadalcanal", "Pacific/Efate",
-  "Pacific/Tongatapu", "Pacific/Apia", "Pacific/Niue", "Pacific/Rarotonga", "Pacific/Tahiti",
-  "Pacific/Marquesas", "Pacific/Gambier", "Pacific/Pitcairn", "Pacific/Pago_Pago", "Pacific/Easter",
-  // South America
-  "America/Sao_Paulo", "America/Bahia", "America/Fortaleza", "America/Recife", "America/Maceio",
-  "America/Araguaina", "America/Belem", "America/Santarem", "America/Manaus", "America/Boa_Vista",
-  "America/Porto_Velho", "America/Rio_Branco", "America/Eirunepe", "America/Campo_Grande",
-  "America/Cuiaba", "America/Noronha", "America/Santiago", "America/Punta_Arenas",
-  "America/Montevideo", "America/Asuncion", "America/La_Paz", "America/Lima",
-  // the pre-2009 Argentine ids, still handed out by older browsers
-  "America/Buenos_Aires", "America/Cordoba", "America/Rosario", "America/Mendoza",
-  "America/Catamarca", "America/Jujuy",
-  // southern Africa and the southern Indian Ocean
-  "Africa/Johannesburg", "Africa/Windhoek", "Africa/Gaborone", "Africa/Maseru", "Africa/Mbabane",
-  "Africa/Harare", "Africa/Lusaka", "Africa/Blantyre", "Africa/Maputo", "Africa/Luanda",
-  "Africa/Lubumbashi", "Indian/Antananarivo", "Indian/Mauritius", "Indian/Reunion",
-  "Indian/Kerguelen",
-]);
-
-function zoneName() {
-  try {
-    const tz = loadSettings().timezone;
-    if (tz && tz !== "auto") return tz;
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-  } catch (e) { return ""; }
-}
-// Session-only override, in the spirit of the date one: it lives on window and
-// never in storage, so a reload is always honestly where you actually are.
-function southernSeasons() {
-  const dev = typeof window !== "undefined" && window.__devHemisphere;
-  if (dev === "south" || dev === "north") return dev === "south";
-  const zone = zoneName();
-  return !!zone && (SOUTHERN_ZONES.has(zone) || SOUTHERN_PREFIX.some((p) => zone.startsWith(p)));
-}
-// The index into the drawings and the washes: the real month up north, half a
-// year around it down south. Every other date on the sheet is untouched.
-const seasonMonth = (m) => southernSeasons() ? (m + 6) % 12 : m;
+// The hemisphere list and the month-to-season table live in js/season.js, shared with the
+// Seasons start button so the pad and the button always agree.
 const MARK_SCALE = 0.92;                // the 24-box drawn at ~22px, the height of the whole title line
 const MARK_GAP = 8;                     // paper between the mark and the M of the month
 

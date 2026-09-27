@@ -2384,7 +2384,10 @@ export const MASTERY_REWARDS = [
   { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "Rose paper that takes a watercolour wash as you hover.", payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
-  { level: 8, id: "btn-snow", kind: "button", name: "Snowfall", desc: "Settled snow, with flakes falling as you hover.", payload: { button: "snow" } },
+  // One pick, four finishes: "seasons" is worn as spring, summer, autumn or winter by the
+  // month and the player's hemisphere (js/season.js), turning on the first of March, June,
+  // September and December. It replaced the single Snowfall finish, which became its winter.
+  { level: 8, id: "btn-seasons", kind: "button", name: "Seasons", desc: "Blossom, tide, falling leaves or a snowstorm, whichever season it is where you are.", payload: { button: "seasons" } },
   { level: 8, id: "btn-ivy", kind: "button", name: "Ivy house", desc: "Warm brickwork with ivy climbing over the edges.", payload: { button: "ivy" } },
   // The only reward with a set inside it. `variants` is what chooseMasteryCosmetic will
   // accept in place of the payload's default, so a flag pick runs through the same unlock

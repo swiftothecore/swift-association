@@ -1299,6 +1299,12 @@ export function initDev(api) {
     row("start words", mLabelSel,
         btn("set", () => { api.mastery.label(mLabelSel.value); toast("button says: " + (mLabelSel.value || "Start writing")); }),
         btn("default", () => { api.mastery.label(""); toast("back to Start writing"); })),
+    // The Seasons finish shows one season at a time, three months apart, so these wear it
+    // and pin a season for the session; "by date" hands it back to the month and timezone.
+    // The date section's hemisphere forces turn it the other way round.
+    row("seasons", ...["spring", "summer", "autumn", "winter"].map((s) =>
+        btn(s, () => toast("button wears " + api.mastery.season(s)))),
+        btn("by date", () => toast("button wears " + api.mastery.season(null)))),
     // The level-13 finale: the gold-foil hero only ever renders at the cap, which is the one
     // state a testing session can't reach honestly. Each button also sets the motion pair
     // that decides how much of it draws, so all three renders are one press apart.
