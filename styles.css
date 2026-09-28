@@ -10125,7 +10125,23 @@
   .nb-cover-sub {
     margin: 12px 0 0; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.6px;
     color: #7b7062;
+    display: grid; place-items: center;
   }
+  .nb-cover-sub > span { grid-area: 1 / 1; }
+  /* The cover is only ever on screen shut for three reasons. Loading and the turn that follows
+     it (the flip sheet is a clone without .loading) say it is opening; admiring it and the
+     notebook that would not open are a book sitting shut, so they wear the tagline. */
+  .nb-cover-tagline { visibility: hidden; }
+  .loading:is(.is-admiring, .is-stuck) .nb-cover-tagline { visibility: visible; }
+  .loading:is(.is-admiring, .is-stuck) .nb-cover-opening { visibility: hidden; }
+  /* typed a dot at a time, the way the typewriter face would, then cleared; never a spinner */
+  .nb-cover-dots i { font-style: normal; animation: coverDot1 1.6s steps(1, end) infinite; }
+  .nb-cover-dots i:nth-child(2) { animation-name: coverDot2; }
+  .nb-cover-dots i:nth-child(3) { animation-name: coverDot3; }
+  @keyframes coverDot1 { 0% { opacity: 0; } 25%, 100% { opacity: 1; } }
+  @keyframes coverDot2 { 0% { opacity: 0; } 50%, 100% { opacity: 1; } }
+  @keyframes coverDot3 { 0% { opacity: 0; } 75%, 100% { opacity: 1; } }
+  body[data-reduce-motion="on"] .nb-cover-dots i { animation: none; }
   /* Dark notebook: the same object, seen under a lower lamp. The label keeps its cream
      stock, so only the era accent needs pulling down to stay legible on it. */
   :root[data-theme="dark"] .nb-cover {

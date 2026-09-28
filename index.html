@@ -2811,7 +2811,10 @@ if (location.pathname.endsWith('/index.html')) {
           </svg>
           <p class="nb-cover-kicker">a songwriter's notebook</p>
           <p class="nb-cover-title">Swift to the <span class="nb-cover-gold">Song</span> Association</p>
-          <p class="nb-cover-sub">thirteen songs · one word at a time</p>
+          <!-- Two lines stacked in one slot, so the plate is the same height whichever shows and no
+               sticker ever moves for it: "opening" while the cover is the loading state and while
+               it turns, the tagline while it is admired or stuck shut. -->
+          <p class="nb-cover-sub"><span class="nb-cover-tagline">thirteen songs · one word at a time</span><span class="nb-cover-opening">opening the notebook<span class="nb-cover-dots"><i>.</i><i>.</i><i>.</i></span></span></p>
         </div>
       </div>
       <!-- The way back out of the admiring view (see js/stickercover.js). It sits on the free
