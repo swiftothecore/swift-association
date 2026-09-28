@@ -9559,8 +9559,10 @@
     background: rgba(178,58,58,0.15); color: var(--ink);
   }
 
+  /* Sits under the red-pen verdict, above the turn slip: it is the evidence for the verdict,
+     so it reads with it rather than as a caption hanging off the button. */
   .wrong-submission {
-    margin: -8px 0 13px; color: var(--ink-soft);
+    margin: -6px 0 0; color: var(--ink-soft);
     font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
   }
   .wrong-submission span {

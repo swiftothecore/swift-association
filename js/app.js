@@ -25321,8 +25321,8 @@ function showWrongFeedback(song, isTimeout) {
   }
   fb.innerHTML = `
     <div class="banner bad">✗ ${reason}</div>
-    <div class="feedback-advance">${turnSlip("continueBtn")}</div>
     ${submitted}
+    <div class="feedback-advance">${turnSlip("continueBtn")}</div>
     ${help}`;
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
