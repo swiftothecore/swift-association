@@ -9516,6 +9516,11 @@
     display: block; margin: 0 0 14px;
   }
   .feedback .red-note b { font-weight: 700; }
+  /* Straight under the turn slip it needs its own air: the slip only carries margins on
+     phones (the 560px block), so on desktop the note would sit in the slip's shadow. */
+  @media (min-width: 561px) {
+    .feedback .feedback-advance + .red-note { margin-top: 26px; }
+  }
 
   /* Lyric cards — shared base */
   .lyric-card {
