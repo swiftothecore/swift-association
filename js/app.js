@@ -16111,8 +16111,11 @@ function renderDailyButtonState() {
   // the pages already played, which makes the next one round + 1. A run that reached
   // page 13 and only has its fold outstanding is left out: there is no page to go back to.
   const progress = undone ? loadDailyProgress(dateStr) : null;
-  const pageNext = progress && progress.startDate === dateStr
-    && progress.round > 0 && progress.round < TOTAL_ROUNDS ? progress.round + 1 : 0;
+  // A page walked out of mid-clock (`live`, see stampDailyLiveClock) counts too, which is the
+  // only way page one can show here.
+  const pageNext = !progress || progress.startDate !== dateStr ? 0
+    : progress.round > 0 && progress.round < TOTAL_ROUNDS ? progress.round + 1
+    : progress.live && progress.live.round === 1 ? 1 : 0;
   btn.classList.toggle("day--resume", pageNext > 0);
 
   let restHTML, ariaLabel;
@@ -17387,6 +17390,41 @@ function restoreDailyProgress(p) {
     : [];
   verseKeepsake = Array.isArray(p.verseKeepsake) ? p.verseKeepsake.slice() : [];
   lyricAnswerSongs = Array.isArray(p.lyricAnswerSongs) ? p.lyricAnswerSongs.slice() : [];
+}
+
+// The live page's clock, pinned into today's resume record. The snapshot above is only written
+// once a page is decided, so walking out mid-page used to deal the same word back on resume
+// under a FULL clock: quit with three seconds left, come back, and the player had the whole
+// page again on a word they had already seen. `live` names the page by number, so the next
+// decided page's snapshot (which carries no `live`) retires it without anyone clearing it.
+// Written when the clock starts (so even a killed tab leaves a mark) and again on every way
+// out: quit, backgrounding and pagehide. Only a running or paused clock is read, never the
+// previous page's stale timerStart, which is what a page still mid-flip would report.
+function stampDailyLiveClock() {
+  if (gameType !== "daily" || !screens.game.classList.contains("active") || roundLocked) return;
+  if (round !== roundResults.length + 1) return;
+  const clock = pausedClockState
+    ? { remaining: pausedClockState.remaining, total: pausedClockState.total }
+    : timerId ? { remaining: clockRemaining(), total: roundClockTotal } : null;
+  if (!clock || clock.remaining == null || !(clock.total > 0)) return;
+  const dateStr = dailyRunDate || todayKey();
+  if (!claimDailyRun(dateStr, TAB_ID)) return;   // another tab holds the day; its record is its own
+  const saved = loadDailyProgress(dateStr);
+  // Page one has no decided snapshot yet, so it gets a bare record: round 0 is not a resume
+  // (startDaily deals it fresh off the same seed) but the pinned clock is still honoured. The
+  // empty roundResults is load-bearing: loadDailyProgress drops any record without one.
+  const base = saved && saved.startDate === dateStr
+    ? saved : { version: DAILY_PROGRESS_VERSION, startDate: dateStr, round: 0, roundResults: [] };
+  saveDailyProgress(dateStr, { ...base,
+    live: { round, remaining: Math.max(0, +clock.remaining.toFixed(2)), total: clock.total } });
+}
+// The pinned clock for the page now being dealt, or null for an untouched page.
+function dailyPinnedClock() {
+  if (gameType !== "daily") return null;
+  const p = loadDailyProgress(dailyRunDate || todayKey());
+  const live = p && p.live;
+  if (!live || live.round !== round || !(live.total > 0) || !Number.isFinite(live.remaining)) return null;
+  return { remaining: Math.max(0, Math.min(live.total, live.remaining)), total: live.total };
 }
 
 /* ---------- One tab holds the day ----------
@@ -21182,8 +21220,13 @@ function beginRoundClock() {
     }
     input.disabled = false;
     focusRoundInput(input);
-    roundStart = performance.now();
-    startTimer();
+    // A daily page walked out of mid-clock comes back on the clock it was left on, and the
+    // stopwatch is backdated to match so the page's time still counts what was spent before.
+    const pinned = dailyPinnedClock();
+    roundStart = performance.now() - (pinned ? (pinned.total - pinned.remaining) * 1000 : 0);
+    if (pinned) startTimer(pinned.remaining, pinned.total);
+    else startTimer();
+    stampDailyLiveClock();
     // Typing was allowed beneath the turning sheet, but the flip was not clock time. Stamp
     // that first key against the just-started clock instead of recording an untimed sentinel.
     if (input.value && roundFirstKeyLeft[round - 1] == null) {
@@ -25970,6 +26013,9 @@ function quitGame() {
   // pays nothing a sandbox exists to protect (see STICKERS.md).
   if (!devNoLog && !dailySurrendered && roundResults.length > 0 && roundResults.every(Boolean)) earnSticker("jewel-bathtub");
 
+  // Pin a daily page's clock before the teardown below stops it (see stampDailyLiveClock).
+  stampDailyLiveClock();
+
   // Save the progress made before quitting, so a partial run still credits the
   // lifetime stats (see foldRunProgress).
   foldRunProgress();
@@ -27895,6 +27941,7 @@ function liveRunScreen() {
 }
 function interruptRun() {
   checkpointRunProgress();
+  stampDailyLiveClock();
   if (!liveRunScreen() || runPauseOwners.has("background")) return;
   pauseForSettings("background");
   const overlay = document.createElement("div");
