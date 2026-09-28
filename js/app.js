@@ -27939,6 +27939,43 @@ function liveRunScreen() {
   if (screens.bonusplay.classList.contains("active") && bonusGame && !bonusEnded) return screens.bonusplay;
   return null;
 }
+// What the clock was doing when the player walked away: the one thing the sheet says that the
+// page's own head (still showing above it) and the masthead do not.
+function pausedClockLine() {
+  const secs = (n) => `${n.toFixed(1)} seconds left on the clock`;
+  if (pausedClockState && pausedClockState.remaining > 0) return secs(pausedClockState.remaining);
+  const c = pausedBonusState && pausedBonusState.clock;
+  if (c && c.kind === "countdown" && c.remaining > 0) return secs(c.remaining / 1000);
+  if (c && c.kind === "ruthless") return `the stopwatch stopped at ${c.elapsed.toFixed(1)}s`;
+  return "nothing ticks while you're away";
+}
+// The sheet lies over the live page from just under its head to its foot, so the page count,
+// the bracelet and the page's edges stay in view round it while the word, the answer line and
+// anything dealt below them are covered. It is clamped to the screen, because a page taller
+// than the phone would otherwise hang the note and its button below the fold; the overlay eats
+// scrolling, so nothing under the clamp can be scrolled into view either.
+function placeRunPauseSheet() {
+  const overlay = $("runPauseOverlay");
+  const screen = liveRunScreen();
+  const sheet = overlay && overlay.querySelector(".run-pause-sheet");
+  if (!sheet || !screen) return;
+  const card = screen.getBoundingClientRect();
+  const shown = (el) => el && el.offsetParent !== null && el.getBoundingClientRect().height > 0;
+  const head = screen === screens.game
+    ? screen.querySelector(".bracelet-wrap")
+    : [$("bonusTimer"), $("bonusHud"), screen.querySelector(".stats-nav")].find(shown);
+  const vh = window.innerHeight;
+  const bottom = Math.min(card.bottom - 12, vh - 12);
+  let top = Math.max(shown(head) ? head.getBoundingClientRect().bottom + 4 : card.top + 36, 12);
+  const need = sheet.querySelector(".run-pause-note").offsetHeight + 56;
+  if (bottom - top < need) top = Math.max(12, bottom - need);
+  const inset = card.width < 480 ? 8 : 18;
+  Object.assign(sheet.style, {
+    left: `${card.left + inset}px`, width: `${Math.max(0, card.width - inset * 2)}px`,
+    top: `${top}px`, height: `${Math.max(need, bottom - top)}px`,
+  });
+}
+const swallowScroll = (e) => e.preventDefault();
 function interruptRun() {
   checkpointRunProgress();
   stampDailyLiveClock();
@@ -27950,23 +27987,51 @@ function interruptRun() {
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
   overlay.setAttribute("aria-labelledby", "runPauseTitle");
-  overlay.innerHTML = `<div class="run-pause-card"><h2 id="runPauseTitle">Your page is waiting</h2>` +
-    `<p>The clock is paused. Carry on when you're ready.</p>` +
-    `<button type="button" class="btn-primary" id="runResumeBtn">carry on →</button></div>`;
+  overlay.innerHTML = `<div class="run-pause-sheet"><span class="run-pause-tape" aria-hidden="true"></span>` +
+    `<div class="run-pause-note"><h2 id="runPauseTitle">Your page is waiting</h2>` +
+    `<p class="run-pause-clock">${escapeHtml(pausedClockLine())}</p>` +
+    `<button type="button" class="btn-primary play-cta run-pause-go" id="runResumeBtn"></button></div></div>`;
+  // The way back in is the player's own start button, in whatever finish it is wearing.
+  const go = overlay.querySelector("#runResumeBtn");
+  const finish = $("playBtn")?.dataset.startbtn || "";
+  if (finish) go.dataset.startbtn = finish;
+  const stripes = $("playBtn")?.style.getPropertyValue("--cta-stripes");
+  if (stripes) go.style.setProperty("--cta-stripes", stripes);
+  go.innerHTML = ctaContentHTML("", finish, "carry on");
   document.body.appendChild(overlay);
+  placeRunPauseSheet();
   containDialogBackground(overlay);
   overlay.addEventListener("keydown", (e) => { trapDialogTab(e, overlay, overlay); e.stopPropagation(); });
-  $("runResumeBtn").addEventListener("click", resumeInterruptedRun);
+  overlay.addEventListener("wheel", swallowScroll, { passive: false });
+  overlay.addEventListener("touchmove", swallowScroll, { passive: false });
+  window.addEventListener("resize", placeRunPauseSheet);
+  window.addEventListener("scroll", placeRunPauseSheet, { passive: true });
+  go.addEventListener("click", resumeInterruptedRun);
   document.activeElement?.blur();
 }
 function resumeInterruptedRun() {
   if (document.hidden) return;
   const overlay = $("runPauseOverlay");
-  if (!overlay) return;
+  if (!overlay || overlay.classList.contains("is-lifting")) return;
+  // The sheet comes off before the clock restarts, so no second is spent on a half-hidden word.
+  if (document.body.getAttribute("data-reduce-motion") !== "on") {
+    overlay.classList.add("is-lifting");
+    setTimeout(() => {
+      if (!overlay.isConnected) return;
+      overlay.classList.remove("is-lifting");
+      if (!document.hidden) liftRunPause(overlay);
+    }, 230);
+    return;
+  }
+  liftRunPause(overlay);
+}
+function liftRunPause(overlay) {
   // The hidden tab may have lost its Daily claim while suspended. Verify before handing any
   // input back to it, without ever releasing the claim merely because it was backgrounded.
   if (gameType === "daily" && liveRunScreen() === screens.game &&
       !claimDailyRun(dailyRunDate || todayKey(), TAB_ID)) surrenderDailyRun();
+  window.removeEventListener("resize", placeRunPauseSheet);
+  window.removeEventListener("scroll", placeRunPauseSheet);
   releaseDialogBackground(overlay);
   overlay.remove();
   resumeFromSettings("background");
@@ -27977,8 +28042,15 @@ function resumeInterruptedRun() {
   } else if (liveRunScreen()) focusBonusRoundInput();
 }
 function handleRunVisibility() {
-  if (document.hidden) interruptRun();
-  else if ($("runResumeBtn")) $("runResumeBtn").focus({ preventScroll: true });
+  if (document.hidden) { interruptRun(); return; }
+  if (!$("runResumeBtn")) return;
+  // The page may have been laid out afresh while away (a rotated phone, a closed keyboard).
+  placeRunPauseSheet();
+  const sheet = document.querySelector(".run-pause-sheet");
+  sheet.classList.remove("is-landing");
+  void sheet.offsetWidth;
+  sheet.classList.add("is-landing");
+  $("runResumeBtn").focus({ preventScroll: true });
 }
 
 // Element focused before the modal opened, so focus can be returned there on close

@@ -450,12 +450,14 @@ const FINISH_ART = {
 // whole label cream while half of it still sat on gold, which is about 1.6:1.
 const goldStroke = (words) => `<i class="cta-stroke"><span class="cta-stroke-copy"><span class="cta-copy-label">${words}</span><i class="cta-stroke-line"></i></span></i>`;
 
-export function ctaContentHTML(labelId = "", finish = "") {
-  const opt = labelId ? CTA_LABELS[labelId] : null;
+// `text` puts other words on the same stamp (the paused page's "carry on"). Those always wear the
+// pencil, whatever words the player chose for the start button: it is the pen being picked back up.
+export function ctaContentHTML(labelId = "", finish = "", text = "") {
+  const opt = labelId && !text ? CTA_LABELS[labelId] : null;
   // No chosen words means the default, which wears the drawn pencil (the one mark that wiggles).
   const markId = opt ? opt.mark : "pencil";
   const mark = markId ? `<span class="cta-mark${opt ? "" : " cta-mark--pencil"}" aria-hidden="true">${CTA_MARKS[markId] || ""}</span>` : "";
-  const words = `${mark}${opt ? escapeHtml(opt.text) : "Start writing"}`;
+  const words = `${mark}${escapeHtml(text || (opt ? opt.text : "Start writing"))}`;
   const key = finish.startsWith("pride-") ? "pride" : finish;
   const drawn = FINISH_ART[key];
   const art = typeof drawn === "function" ? drawn() : drawn ?? goldStroke(words);

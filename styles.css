@@ -15593,22 +15593,107 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .dropdown { overflow-y: auto; overscroll-behavior: contain; }
 .dropdown[data-side="above"] { box-shadow: 0 -5px 12px rgba(43,39,34,0.12); }
 
-/* An interrupted run is covered completely until its owner resumes it. */
+/* An interrupted run: a sheet torn off a legal pad is laid over the open page, the way you
+   cover your work when you get up from the desk. The notebook stays open under it, so its head
+   (page count, bracelet) and its edges show round the sheet, but the word, the answer line and
+   whatever is dealt below them are under it until its owner resumes. js/app.js places the sheet
+   on the live page (placeRunPauseSheet); the overlay itself is clear and only catches input.
+
+   The pad is yellow on purpose. Cream on cream read as the page itself gone blank; a different
+   stock reads as a different piece of paper lying on top. */
 .run-pause-overlay {
-  position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center;
-  background: var(--paper); padding: max(18px, env(safe-area-inset-top, 0px))
-    max(18px, env(safe-area-inset-right, 0px)) max(18px, env(safe-area-inset-bottom, 0px))
-    max(18px, env(safe-area-inset-left, 0px));
+  position: fixed; inset: 0; z-index: 500; overscroll-behavior: contain; touch-action: none;
 }
 .run-pause-overlay[hidden] { display: none; }
-.run-pause-card {
-  max-width: 420px; width: 100%; max-height: 100%; overflow-y: auto; padding: 24px;
-  border: 1px solid var(--paper-edge); border-left: 2px solid var(--red-pen);
-  background: var(--paper-light), var(--paper); box-shadow: 2px 3px 0 rgba(43,39,34,0.12);
+.run-pause-sheet {
+  --pad: #f6ebb9; --pad-top: #fbf4d6;
+  --pad-rule: rgba(84, 116, 150, 0.2); --pad-margin: rgba(192, 64, 58, 0.42);
+  --pad-ink: #2b2722; --pad-soft: #6b5d3a;
+  --pad-rise: 32px;
+  position: fixed; box-sizing: border-box; overflow: visible;
+  padding: 26px 24px 24px 70px;
+  color: var(--pad-ink);
+  transform: rotate(-1.1deg); transform-origin: 50% 0;
+  filter: drop-shadow(0 1px 1px rgba(43, 39, 34, 0.16)) drop-shadow(0 10px 16px rgba(43, 39, 34, 0.2));
 }
-.run-pause-card h2 { margin: 0 0 10px; font-family: var(--hand); font-size: calc(30px + var(--text-size-adjust)); }
-.run-pause-card p { font-size: calc(13px + var(--text-size-adjust)); line-height: 1.5; }
-.run-pause-card .btn-primary { width: 100%; margin: 18px 0 0; min-height: 46px; }
+/* The paper itself, on its own layer so the torn head can clip it without clipping the tape.
+   Rules sit every 32px from the top of the note, so the handwriting below lands on them. */
+.run-pause-sheet::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(90deg, transparent 50px, var(--pad-margin) 50px 51px, transparent 51px 54px,
+      var(--pad-margin) 54px 55px, transparent 55px),
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--pad-rule) 31px 32px),
+    linear-gradient(180deg, var(--pad-top), var(--pad) 40%);
+  background-position: 0 0, 0 26px, 0 0;
+  background-repeat: no-repeat, repeat-x, no-repeat;
+  background-size: 100% 100%, 100% calc(100% - 26px), 100% 100%;
+  /* torn along the pad's perforation: small, even-ish teeth, not a jagged rip */
+  clip-path: polygon(0 5px, 3% 2px, 6% 5px, 10% 1px, 13% 4px, 17% 2px, 21% 5px, 25% 1px, 29% 4px,
+    33% 2px, 37% 5px, 41% 2px, 45% 4px, 49% 1px, 53% 5px, 57% 2px, 61% 4px, 65% 1px, 69% 5px,
+    73% 2px, 77% 4px, 81% 1px, 85% 5px, 89% 2px, 93% 4px, 97% 1px, 100% 4px, 100% 100%, 0 100%);
+}
+.run-pause-tape {
+  position: absolute; top: -11px; left: 50%; width: 118px; height: 26px; z-index: 1;
+  transform: translateX(-50%) rotate(2.4deg);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 252, 238, 0.22) 0 1px, rgba(0, 0, 0, 0) 1px 3px),
+    linear-gradient(180deg, rgba(236, 220, 176, 0.9), rgba(208, 186, 136, 0.86));
+  clip-path: polygon(3% 0, 100% 0, 97% 22%, 100% 46%, 96% 70%, 100% 100%, 4% 100%, 0 74%, 3% 50%, 0 26%);
+  box-shadow: 0 1px 2px rgba(60, 44, 20, 0.2);
+}
+.run-pause-note { display: flex; flex-direction: column; align-items: flex-start; }
+/* Line heights are whole rules; each nudge drops the baseline onto its rule. */
+.run-pause-sheet h2 {
+  margin: 0; height: 64px; font-family: var(--hand); font-weight: 700; line-height: 64px;
+  font-size: calc(40px + var(--text-size-adjust)); color: var(--pad-ink);
+  transform: translateY(6px);
+}
+.run-pause-clock {
+  margin: 0; height: 32px; font-family: var(--hand); line-height: 32px;
+  font-size: calc(22px + var(--text-size-adjust)); color: var(--pad-soft);
+  transform: translateY(-6px);
+}
+.run-pause-sheet .btn-primary.run-pause-go {
+  width: auto; min-width: min(230px, 100%); margin: 18px 0 0; padding: 12px 30px;
+}
+@media (max-width: 480px) {
+  .run-pause-sheet { padding: 26px 16px 20px 50px; }
+  .run-pause-sheet::before {
+    background-image:
+      linear-gradient(90deg, transparent 34px, var(--pad-margin) 34px 35px, transparent 35px 38px,
+        var(--pad-margin) 38px 39px, transparent 39px),
+      repeating-linear-gradient(180deg, transparent 0 31px, var(--pad-rule) 31px 32px),
+      linear-gradient(180deg, var(--pad-top), var(--pad) 40%);
+  }
+  .run-pause-sheet h2 { font-size: calc(33px + var(--text-size-adjust)); transform: translateY(17px); }
+  .run-pause-clock { font-size: calc(19px + var(--text-size-adjust)); transform: translateY(4px); }
+  .run-pause-sheet .btn-primary.run-pause-go { align-self: stretch; }
+}
+/* Laid down when the player comes back to it, and lifted off when they carry on. The landing
+   never lets go of the page: it only settles, so the word is not glimpsed underneath. */
+.run-pause-sheet.is-landing { animation: runPauseLand 0.34s cubic-bezier(.2, .8, .3, 1); }
+.run-pause-overlay.is-lifting .run-pause-sheet { animation: runPauseLift 0.23s ease-in forwards; }
+@keyframes runPauseLand {
+  from { transform: translate(3px, -6px) rotate(-2.4deg); }
+  to   { transform: rotate(-1.1deg); }
+}
+@keyframes runPauseLift {
+  to { transform: translate(26px, -34px) rotate(2.5deg); opacity: 0; }
+}
+body[data-reduce-motion="on"] .run-pause-sheet { animation: none !important; }
+:root[data-theme="dark"] .run-pause-sheet {
+  --pad: #463d26; --pad-top: #4d432b;
+  --pad-rule: rgba(236, 229, 214, 0.09); --pad-margin: rgba(223, 107, 100, 0.4);
+  --pad-ink: #ece5d6; --pad-soft: #b8ab8a;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)) drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
+}
+:root[data-theme="dark"] .run-pause-tape { filter: brightness(0.72); }
+body[data-contrast="high"] .run-pause-sheet {
+  --pad: var(--paper); --pad-top: var(--paper); --pad-rule: transparent; --pad-margin: var(--ink);
+  --pad-ink: var(--ink); --pad-soft: var(--ink);
+}
+body[data-contrast="high"] .run-pause-sheet::before { outline: 2px solid var(--ink); outline-offset: -2px; }
 
 @media (min-width: 561px) and (max-width: 1000px) and (pointer: coarse) {
   body { flex-direction: column; align-items: center; justify-content: flex-start; }
