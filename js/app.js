@@ -16750,6 +16750,13 @@ function hintsAllowed() {
     gameType !== "daily" && !roundLocked && hintBudgetLeft > 0;
 }
 
+// Album Focus drops the ladder's album rung: every song on the page is from the album the
+// player picked, so "one's from ..." would spend a hint to repeat the board's own title. The
+// ladder there is two rungs, the first press landing straight on tier 2 (count and shape), so
+// every `hintTier >= 3` check below still means "the line is on the page".
+function albumHintLadder() { return gameType === "album" && !!focusAlbum; }
+function hintRungs() { return albumHintLadder() ? 2 : 3; }
+
 // Reset the hint UI for a fresh round; show the affordance only when hints apply.
 function renderHintAffordance() {
   clearTimeout(hintUrgeTimer);
@@ -16764,7 +16771,7 @@ function renderHintAffordance() {
   if (hintsAllowed() && roundHintSong) {
     btn.hidden = false;
     btn.disabled = false;
-    paintHintBtn(btn, "need a hint?", 3);
+    paintHintBtn(btn, "need a hint?", hintRungs());
     // Relaxed has no clock — nudge after a few idle seconds instead of at half-time.
     if (!(currentMode.seconds > 0) && !motionReduced()) {
       hintUrgeTimer = setTimeout(() => {
@@ -16776,7 +16783,8 @@ function renderHintAffordance() {
   }
 }
 
-// Reveal the next hint tier (1 = count + album, 2 = title shape, 3 = lyric line).
+// Reveal the next hint tier (1 = count + album, 2 = title shape, 3 = lyric line). Album Focus
+// skips tier 1 (see albumHintLadder), so its first press reveals the count with the shape.
 function useHint() {
   if (roundClockPending || !hintsAllowed() || hintTier >= 3 || !roundHintSong) return;
   if (hintTier === 0 && !roundHinted[round - 1]) {
@@ -16784,6 +16792,7 @@ function useHint() {
     hintsUsed++;
   }
   hintTier++;
+  if (hintTier === 1 && albumHintLadder()) hintTier = 2;
   if (hintBudgetActive()) hintBudgetLeft--;   // Custom mode: each reveal spends one from the run's budget
   const btn = $("hintBtn");
   clearTimeout(hintUrgeTimer);
@@ -16797,7 +16806,7 @@ function useHint() {
     const n = currentSongs.length;
     const album = roundHintSong.album || "";
     const color = albumColor(album) || "var(--bead)";
-    const chip = album
+    const chip = album && !albumHintLadder()
       ? ` · one's from <span class="hint-chip" style="--chip:${color}">${escapeHtml(album)}</span>`
       : "";
     tiers.push(`<p class="hint-tier">in <b>${n}</b> song${n === 1 ? "" : "s"}${chip}</p>`);
@@ -16834,14 +16843,15 @@ function useHint() {
   }
 }
 
-// The hint stamp (styles.css, "Hints"): the label, then the ladder's three rungs as pips, one
+// The hint stamp (styles.css, "Hints"): the label, then the ladder's rungs as pips, one
 // filled per reveal still to come on this page, so the ladder is visible before it is touched.
 // Custom mode's budget is run-wide, not per page, so it is said in words beside the pips.
 function paintHintBtn(btn, label, left) {
-  const pips = [0, 1, 2].map((i) => `<i${i < left ? "" : ` class="spent"`}></i>`).join("");
+  const rungs = hintRungs();
+  const pips = Array.from({ length: rungs }, (_, i) => i).map((i) => `<i${i < left ? "" : ` class="spent"`}></i>`).join("");
   const budget = hintBudgetActive() ? ` · ${hintBudgetLeft} in the run` : "";
   btn.innerHTML = `<span class="hint-lab">${label}</span>` +
-    `<span class="hint-sub"><span class="hint-pips" aria-hidden="true">${pips}</span>${left} of 3 left${budget}</span>`;
+    `<span class="hint-sub"><span class="hint-pips" aria-hidden="true">${pips}</span>${left} of ${rungs} left${budget}</span>`;
 }
 
 /* ---------- The randomiser ----------
