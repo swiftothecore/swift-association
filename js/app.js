@@ -9327,6 +9327,15 @@ function turnSlip(id, label = "next page") {
     `</svg></span></span></button>`;
 }
 
+// Where a verdict's way off goes. On a desktop it comes last, under everything that explains
+// the page. On a phone that would be a scroll away past the song cards, so there it rides
+// straight under the verdict, in reach of the thumb. Read at render time: a phone that rotates
+// mid-verdict keeps the page it was dealt, which is harmless for the few seconds it is up.
+function verdictMarkup(head, body, advanceUI) {
+  const adv = `<div class="feedback-advance">${advanceUI}</div>`;
+  return matchMedia("(max-width: 560px)").matches ? head + adv + body : head + body + adv;
+}
+
 function settleBonusRound(correct, detail, isTimeout = false) {
   bonusLocked = true;
   stopBonusClock();
@@ -9549,15 +9558,14 @@ function settleBonusRound(correct, detail, isTimeout = false) {
      the neutral class, because nothing about the page was right or wrong. */
   const passed = bonusGame && bonusGame.id === "nashville" && nashvillePassed;
   fb.className = "bg-feedback show " + (correct ? "ok" : passed ? "pass" : "no");
-  fb.innerHTML =
-    (correct
+  fb.innerHTML = verdictMarkup(
+    correct
       ? `<div class="banner good">✓ ${escapeHtml(bonusBannerText(true, isTimeout))}</div>`
       : passed
         ? `<div class="banner pass">— ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`
-      : `<div class="banner bad">✗ ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`) +
-    (detail ? `<p class="bg-detail">${detail}</p>` : "") +
-    bonusAnswerCard() +
-    `<div class="feedback-advance">${advanceUI}</div>`;
+      : `<div class="banner bad">✗ ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`,
+    (detail ? `<p class="bg-detail">${detail}</p>` : "") + bonusAnswerCard(),
+    advanceUI);
   $("bonusScore").textContent = bonusScoreText();
   $(auto ? "bonusSkipBtn" : "bonusNextBtn").addEventListener("click", advanceFromBonusFeedback);
   if (auto) runBonusCountdown();
@@ -18246,10 +18254,10 @@ function revealTapKnowledge(correct) {
     ? (oddOneRuleActive() ? "✓ that's the odd one" : "✓ that's the one")
     : (oddOneRuleActive() ? "✗ that one sings it" : "✗ not that one");
   const fb = $("feedback");
-  fb.innerHTML =
-    `<div class="banner ${correct ? "good" : "bad"}">${banner}</div>` +
-    `<p class="red-note">${note}</p>` +
-    `<div class="feedback-advance">${advanceUI}</div>`;
+  fb.innerHTML = verdictMarkup(
+    `<div class="banner ${correct ? "good" : "bad"}">${banner}</div>`,
+    `<p class="red-note">${note}</p>`,
+    advanceUI);
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -18510,11 +18518,11 @@ function revealCommon(correct) {
   const advanceUI = auto
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
     : turnSlip("continueBtn");
-  fb.innerHTML =
-    `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>` +
+  fb.innerHTML = verdictMarkup(
+    `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>`,
     `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
-    `<div class="common-reveal">${cards}</div>` +
-    `<div class="feedback-advance">${advanceUI}</div>`;
+    `<div class="common-reveal">${cards}</div>`,
+    advanceUI);
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -23858,10 +23866,10 @@ function flagImpostor() {
   renderImpostorBanner();
   celebrateCorrect(1, 0);
   const fb = $("feedback");
-  fb.innerHTML =
-    `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>` +
-    `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>` +
-    `<div class="feedback-advance">${turnSlip("continueBtn")}</div>`;
+  fb.innerHTML = verdictMarkup(
+    `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>`,
+    `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>`,
+    turnSlip("continueBtn"));
   playSound("correct");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -25241,16 +25249,15 @@ function showCorrectFeedback(song, lyricMatch) {
   // Scribbled between the banner and the lyric card, where the eye already is, and above
   // everything that explains the page — it is a margin aside, not part of the verdict.
   const revenge = revengeNote();
-  fb.innerHTML = `
-    <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>
+  fb.innerHTML = verdictMarkup(`
+    <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>`, `
     ${revenge}
     ${inkNote}
     ${firstNote}
     ${card}
     ${deepCutNote}
     ${formsNote}
-    ${more}
-    <div class="feedback-advance">${advanceUI}</div>`;
+    ${more}`, advanceUI);
   if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   playSound("correct");
@@ -25319,11 +25326,9 @@ function showWrongFeedback(song, isTimeout) {
         moreSongsBlock(ordered, examples, currentWord);
     }
   }
-  fb.innerHTML = `
+  fb.innerHTML = verdictMarkup(`
     <div class="banner bad">✗ ${reason}</div>
-    ${submitted}
-    ${help}
-    <div class="feedback-advance">${turnSlip("continueBtn")}</div>`;
+    ${submitted}`, help, turnSlip("continueBtn"));
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }

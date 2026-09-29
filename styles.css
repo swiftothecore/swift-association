@@ -9730,8 +9730,8 @@
   }
   .countdown-skip:is(:hover, :focus-visible) { text-decoration-color: var(--ink-accent); }
 
-  /* The way off a verdict comes last, under everything that explains the page, the way the
-     notebook always had it. The countdown and its skip stack on one centre line so the skip
+  /* On a desktop the way off a verdict comes last, under everything that explains the page
+     (phones get it straight under the verdict instead: verdictMarkup in app.js). The countdown and its skip stack on one centre line so the skip
      reads as part of the countdown instead of a stray link on the next card's shoulder. */
   .feedback-advance { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
   .feedback-advance .countdown { margin-top: 0; }
