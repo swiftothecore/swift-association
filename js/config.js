@@ -2571,6 +2571,10 @@ export const TS_MILESTONES = [
   // shaker, on the sticky and in the desk calendar's square.
   { md: "08-01", kind: "songday", title: "August",          album: "folklore",   day: "August 1st",
     headline: "get in the car it's august", icon: "salt", mark: "salt", caption: "it's august" },
+  // The song is named for the day rather than dated inside it, which is the one way this row
+  // differs from the two above. Its line says where it sits: the last track on reputation.
+  { md: "01-01", kind: "songday", title: "New Year's Day",  album: "reputation", day: "New Year's Day",
+    line: "the last song on reputation", caption: "happy new year" },
 ];
 
 // The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
