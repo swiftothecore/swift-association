@@ -28007,10 +28007,20 @@ function runPauseHasStakes() {
   return !!(settingsDeferredBonusClock
     || (b && (b.clock || b.chainRemaining != null || b.feedbackRemaining != null)));
 }
-function interruptRun() {
+// Leaving the page only pauses the run on a touch-first device. There, leaving is mostly
+// something that happens to the player (a call, a notification, the screen locking). With a
+// mouse it is a choice, and a frozen clock turns that choice into a free window for looking the
+// word up in another tab, so on desktop the clock simply keeps running while they are gone.
+// Every clock is deadline-based, so a throttled background tab still runs out on time.
+function pausesWhenAway() {
+  return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+}
+// `force` is the dev panel's, so the touch path can be walked through from a desktop.
+function interruptRun(force = false) {
   checkpointRunProgress();
   stampDailyLiveClock();
   if (!liveRunScreen() || runPauseOwners.has("background")) return;
+  if (!force && !pausesWhenAway()) return;
   pauseForSettings("background");
   if (runPauseHasStakes()) showRunPauseSheet();
 }
@@ -28094,11 +28104,14 @@ function resumeInterruptedRun() {
   }
   liftRunPause();
 }
-function liftRunPause() {
-  // The hidden tab may have lost its Daily claim while suspended. Verify before handing any
-  // input back to it, without ever releasing the claim merely because it was backgrounded.
+// The hidden tab may have lost its Daily claim while suspended. Verify before handing any
+// input back to it, without ever releasing the claim merely because it was backgrounded.
+function reclaimDailyOnReturn() {
   if (gameType === "daily" && liveRunScreen() === screens.game &&
       !claimDailyRun(dailyRunDate || todayKey(), TAB_ID)) surrenderDailyRun();
+}
+function liftRunPause() {
+  reclaimDailyOnReturn();
   dropRunPause();
   if ($("settingsModal").classList.contains("open")) $("settingsCloseBtn").focus();
   else if (liveRunScreen() === screens.game) {
@@ -28108,7 +28121,7 @@ function liftRunPause() {
 }
 function handleRunVisibility() {
   if (document.hidden) { interruptRun(); return; }
-  if (!runPauseOwners.has("background")) return;
+  if (!runPauseOwners.has("background")) { reclaimDailyOnReturn(); return; }
   if (!$("runResumeBtn")) {
     // Paused silently, with nothing running. A clock that tried to start while the tab was
     // hidden (a page turn landing late) makes it a timed page after all, so it gets the card.
@@ -29952,7 +29965,8 @@ function buildDevApi() {
     lifecycle: {
       state: () => ({ paused: settingsPauseActive, owners: [...runPauseOwners],
         checkpoint: (() => { try { return JSON.parse(sessionStorage.getItem(RUN_CHECKPOINT_KEY)); } catch (_) { return null; } })() }),
-      interrupt: interruptRun,
+      interrupt: () => interruptRun(true),   // pauses as a phone would, whatever this device is
+      pausesWhenAway,
       resume: resumeInterruptedRun,
     },
     MODES, MODE_ORDER, ERAS, ACHIEVEMENTS, SKILL_IDS, STUDIO_ALBUMS, ALBUM_FOCUS_DIFFS,
