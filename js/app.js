@@ -4,6 +4,7 @@ import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
+import { anniversaryFinishFor, anniversaryFinishList, layoutAnniversaryArt } from "./anniversarycta.js";
 import { seasonOn, SEASONS, southernSeasons } from "./season.js";
 import { launchFlock } from "./messengers.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
@@ -544,7 +545,13 @@ function paintStartButton() {
   // activeButtonFinish/activeCtaLabel, not the raw settings: either may hold "random", in
   // which case what the button wears is this page load's roll. wornFinish then turns
   // the default into the season it is and "gold" into the bare marker.
-  const finish = wornFinish(activeButtonFinish());
+  //
+  // Except on an album's release day, when the album's own finish is FORCED over all of that,
+  // Mastery pick and random roll included, to show support for the album on its anniversary
+  // (the reasoning is at the top of js/anniversarycta.js). Only this button wears it: the
+  // Mastery board still previews the player's own choice, which is untouched and comes back
+  // the next day.
+  const finish = anniversaryFinishFor(todayKey()) || wornFinish(activeButtonFinish());
   if (finish) playCta.setAttribute("data-startbtn", finish);
   else playCta.removeAttribute("data-startbtn");
   // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
@@ -553,6 +560,7 @@ function paintStartButton() {
   if (stripes) playCta.style.setProperty("--cta-stripes", stripes);
   else playCta.style.removeProperty("--cta-stripes");
   writeCtaLabel(playCta, activeCtaLabel());
+  layoutAnniversaryArt(playCta);
 }
 
 function applySettings() {
@@ -15814,11 +15822,12 @@ function refreshDateSurfaces() {
   // days in November. Each refresher re-asks its own gate.
   refreshSnow();
   refreshLeaves();
-  // The Seasons start button turns on the first of the month, so it is a dated surface too.
-  if (activeButtonFinish() === "") {
-    paintStartButton();
-    if ($("masteryBody")) renderMasteryPage();
-  }
+  // The start button is a dated surface twice over: the Seasons finish turns on the first of
+  // the month, and every finish gives way to an album's on its release day and comes back the
+  // day after. Repainting it is cheap, so it always repaints; the Mastery page only previews
+  // Seasons by the date, so it redraws only for that.
+  paintStartButton();
+  if (activeButtonFinish() === "" && $("masteryBody")) renderMasteryPage();
 }
 // The day turning under a page that is already open. This is deliberately a POLL against
 // todayKey() rather than one long setTimeout aimed at midnight, because a timer is the one
@@ -30597,6 +30606,20 @@ function buildDevApi() {
         return window.__devDate;
       },
       clear: () => { window.__devDate = null; refreshDateSurfaces(); return todayKey(); },
+      // The album-anniversary Start writing finishes (js/anniversarycta.js). No argument lists
+      // every album with its day and finish; an album name or finish id ("Red", "anv-red" or
+      // "red") moves the dev date to that album's release day this year, so the front page's
+      // button can be seen wearing it. The dev panel's jump dropdown reaches the same days.
+      anniversaryButton: (which) => {
+        const list = anniversaryFinishList();
+        if (!which) return list.map((r) => `${r.md}  ${r.finish.padEnd(14)}${r.album} (${r.year})`);
+        const want = String(which).toLowerCase();
+        const hit = list.find((r) => r.album.toLowerCase() === want || r.finish === want || r.finish === `anv-${want}`);
+        if (!hit) return `No album or finish called "${which}".`;
+        window.__devDate = `${todayKey().slice(0, 4)}-${hit.md}`;
+        refreshDateSurfaces();
+        return `${window.__devDate}: ${anniversaryFinishFor(todayKey())}`;
+      },
       // Which way the seasons turn, for the desk calendar and the Seasons start button
       // alike (js/season.js). No argument reports the live guess (which is the point: the
       // timezone list behind it is hand-kept and worth checking), "north"/"south" forces it

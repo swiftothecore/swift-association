@@ -2,6 +2,7 @@
 // Decorative layers never own the label, take pointer input, or enter the accessible name.
 import { CTA_LABELS, CTA_MARKS } from "./config.js";
 import { escapeHtml } from "./util.js";
+import { anniversaryArt } from "./anniversarycta.js";
 
 // mulberry32: fixed draws from load to load, so hand-scattered art never re-deals on reload,
 // without the lockstep patterns an index formula leaves between one property and the next.
@@ -456,6 +457,17 @@ export function ctaContentHTML(labelId = "", finish = "") {
   const markId = opt ? opt.mark : "pencil";
   const mark = markId ? `<span class="cta-mark${opt ? "" : " cta-mark--pencil"}" aria-hidden="true">${CTA_MARKS[markId] || ""}</span>` : "";
   const words = `${mark}${opt ? escapeHtml(opt.text) : "Start writing"}`;
+  // An album-anniversary finish (js/anniversarycta.js) brings its own art, and two of them need
+  // more than the clipped layer: Red's fringe and Lover's butterflies hang past the button's
+  // edge, and Tortured Poets types the words out again a letter at a time.
+  const anniversary = anniversaryArt(finish);
+  if (anniversary) {
+    const text = opt ? opt.text : "Start writing";
+    const typed = anniversary.label === "typed"
+      ? `${mark}${[...text].map((ch, i) => `<span class="anv-ch" style="--i:${i}">${escapeHtml(ch)}</span>`).join("")}` : words;
+    return `<span class="cta-fx" aria-hidden="true">${anniversary.fx}</span><span class="cta-label">${typed}</span>` +
+      (anniversary.out ? `<span class="anv-out" aria-hidden="true">${anniversary.out}</span>` : "");
+  }
   const key = finish.startsWith("pride-") ? "pride" : finish;
   const drawn = FINISH_ART[key];
   const art = typeof drawn === "function" ? drawn() : drawn ?? goldStroke(words);
