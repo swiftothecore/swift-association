@@ -15844,27 +15844,31 @@ function watchDayRollover() {
   window.addEventListener("focus", checkDayRollover);
   window.addEventListener("pageshow", checkDayRollover);
 }
-// Dated marginalia at the top of today's page: a torn slip for real Taylor milestones and
-// sacred-13 days, with milestone album names tinted to their eras. Most days it is silent
-// (hidden). Keyed on todayKey() so it flips on the player's day.
+// Dated marginalia beside the best line: two short lines pencilled straight onto the page,
+// the day's mark drawn small in front of its name, album names tinted to their eras. Most
+// days it is silent (hidden). Keyed on todayKey() so it flips on the player's day.
 function renderAnniversaryNote() {
   const el = $("anniversaryNote");
   if (!el) return;
   const note = dayNote(todayKey());
+  el.classList.toggle("anniversary-note--minor", note?.tone === "minor");
   if (!note) { el.hidden = true; el.innerHTML = ""; return; }
   const accent = noteInk(note)?.deep || milestoneColor(note.album);
-  const name = accent
-    ? `<span class="an-name" style="color:${accent}">${escapeHtml(note.headline)}</span>`
-    : `<span class="an-name">${escapeHtml(note.headline)}</span>`;
   el.innerHTML =
-    `<div class="an-slip${note.tone === "minor" ? " an-slip--minor" : ""}">` +
-      `<span class="an-tape an-tape-l" aria-hidden="true"></span>` +
-      `<span class="an-tape an-tape-r" aria-hidden="true"></span>` +
-      `<div class="an-eyebrow">${escapeHtml(note.eyebrow)}</div>` +
-      `<div class="an-headline">${name}${note.headlineRest ? " " + escapeHtml(note.headlineRest) : ""}</div>` +
-      (note.note ? `<div class="an-note">${escapeHtml(note.note)}</div>` : "") +
-    `</div>`;
+    `<div class="an-head"><span class="an-mark">${dayNoteIcon(note)}</span>` +
+      `<span class="an-name"${accent ? ` style="--an-ink:${accent}"` : ""}>${escapeHtml(note.headline)}</span></div>` +
+    (note.line ? `<div class="an-line">${escapeHtml(note.line)}</div>` : "");
   el.hidden = false;
+}
+// The day's mark, shared by the margin note and the game sticky so the two surfaces always
+// draw the same thing: the era heart, the cake, the 13, the guest's crown or the salt shaker.
+function dayNoteIcon(note) {
+  const ink = noteInk(note);
+  return note.icon === "cake" ? cakeSvg()
+    : note.icon === "thirteen" ? thirteenSvg()
+    : note.icon === "crown" ? crownSvg(ink?.accent || "var(--ink-soft)", ink?.deep, note.soon)
+    : note.icon === "salt" ? saltSvg(milestoneColor(note.album) || "var(--bead)")
+    : heartSvg(milestoneColor(note.album) || "var(--bead)");
 }
 // The game-screen counterpart: a tiny taped corner sticky on a milestone day. An era-
 // coloured heart for an album/re-record, the "13" birthday cake on Dec 13, with a short
@@ -15874,12 +15878,7 @@ function renderMilestoneSticky() {
   if (!el) return;
   const note = dayNote(todayKey());
   if (!note) { el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label"); return; }
-  const ink = noteInk(note);
-  const icon = note.icon === "cake" ? cakeSvg()
-    : note.icon === "thirteen" ? thirteenSvg()
-    : note.icon === "crown" ? crownSvg(ink?.accent || "var(--ink-soft)", ink?.deep, note.soon)
-    : note.icon === "salt" ? saltSvg(milestoneColor(note.album) || "var(--bead)")
-    : heartSvg(milestoneColor(note.album) || "var(--bead)");
+  const icon = dayNoteIcon(note);
   el.innerHTML =
     `<div class="ms-slip${note.tone === "minor" ? " ms-slip--minor" : ""}"><span class="ms-tape"></span>${icon}</div>` +
     `<div class="ms-cap">${escapeHtml(note.caption)}</div>`;

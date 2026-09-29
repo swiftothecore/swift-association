@@ -2535,11 +2535,13 @@ export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // roun
    ALBUM_ERA / ALBUM_COLORS so a milestone note can wear that era's colour (re-records
    borrow their original album's era). Dec 13 doubles as the game's sacred 13.
    `songday` entries are the fan-loved dates Taylor sings outright (High Infidelity's
-   April 29th, Last Kiss's July 9th): no release year, they carry their own blurb/caption
+   April 29th, Last Kiss's July 9th): no release year, they carry their own line/caption
    and wear the song's era colour, but they never tint the anniversary daily (guarded in
-   anniversaryAlbumFor). `blurb`/`caption` must paraphrase, never quote the lyric. A songday
-   may also carry `headline` (a line to show instead of the song title) and `icon`/`mark`
-   (a sticky/calendar mark other than the era heart).
+   anniversaryAlbumFor). `line`/`caption` must paraphrase, never quote the lyric, and `line`
+   is the front page's second handwritten line, so it stays short enough to sit beside the
+   best line (about thirty-five characters). `day` names the date for screen readers. A
+   songday may also carry `headline` (a line to show instead of the song title) and
+   `icon`/`mark` (a sticky/calendar mark other than the era heart).
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const TS_MILESTONES = [
   { md: "12-13", year: 1989, kind: "birthday", title: "Taylor Swift",                  album: null },
@@ -2559,15 +2561,15 @@ export const TS_MILESTONES = [
   { md: "10-27", year: 2023, kind: "tv",       title: "1989 (Taylor's Version)",       album: "1989" },
   { md: "04-19", year: 2024, kind: "album",    title: "The Tortured Poets Department", album: "The Tortured Poets Department" },
   { md: "10-03", year: 2025, kind: "album",    title: "The Life of a Showgirl",        album: "The Life of a Showgirl" },
-  { md: "04-29", kind: "songday", title: "High Infidelity", album: "Midnights",  eyebrow: "High Infidelity Day",
-    blurb: "April 29th, the one date Taylor names outright on Midnights. Where were you?", caption: "April 29th" },
-  { md: "07-09", kind: "songday", title: "Last Kiss",       album: "Speak Now",  eyebrow: "Last Kiss Day",
-    blurb: "July 9th, the date Speak Now can never quite stop remembering.", caption: "July 9th" },
-  // The one songday whose note is the whole joke: no blurb, just the line fans say to each
-  // other the moment the month turns. `headline` overrides the song title in the slip so the
+  { md: "04-29", kind: "songday", title: "High Infidelity", album: "Midnights",  day: "High Infidelity Day",
+    line: "the one date she names on Midnights", caption: "April 29th" },
+  { md: "07-09", kind: "songday", title: "Last Kiss",       album: "Speak Now",  day: "Last Kiss Day",
+    line: "the date Speak Now can't stop remembering", caption: "July 9th" },
+  // The one songday whose note is the whole joke: no line, just the words fans say to each
+  // other the moment the month turns. `headline` overrides the song title in the margin so the
   // dev milestone list still reads "August"; `icon`/`mark` swap the era heart for a salt
   // shaker, on the sticky and in the desk calendar's square.
-  { md: "08-01", kind: "songday", title: "August",          album: "folklore",   eyebrow: "August 1st",
+  { md: "08-01", kind: "songday", title: "August",          album: "folklore",   day: "August 1st",
     headline: "get in the car it's august", icon: "salt", mark: "salt", caption: "it's august" },
 ];
 
@@ -2643,15 +2645,15 @@ export const TS_LORE_DAYS = [
    stand in for a birthday where there is no person to have one. It covers the ANNOUNCED
    names too, not just the playable ones: the shelf already prints Beyoncé and Miley on a
    hanger, so the margin saying happy birthday to a name the player can read on that shelf
-   is telling the truth. `soon: true` marks those two, the slip changes its eyebrow to
-   "Coming to the guest shelf" and the crown is drawn HOLLOW, in plain ink, because they
+   is telling the truth. `soon: true` marks those two, the margin note's line says
+   "coming to the guest shelf" and the crown is drawn HOLLOW, in plain ink, because they
    have no pass to be coloured by and pretending otherwise would be the lie. The flag is
    deliberately written down rather than inferred from GUESTS_COMING_SOON so that a stale
    one is catchable: __dev.guestday.missing() cross-checks every row against both rosters
    and shouts the day a coming-soon name goes playable with `soon` still on it. Deliberately kept OUT of
    TS_MILESTONES for the same reason TS_LORE_DAYS is: that table is her release history and
    it skews the daily challenge's album, which somebody else's birthday has no business
-   doing. These only ever reach the start-page slip, the in-game sticky and the desk
+   doing. These only ever reach the start-page margin note, the in-game sticky and the desk
    calendar, and they always yield to a real Taylor milestone on the same square.
 
    `guest` keys into GUESTS, which is where the colour comes from: nothing here carries a
@@ -2660,7 +2662,7 @@ export const TS_LORE_DAYS = [
 
    Two of the seven are not people and are not pretended to be. Wicked has an opening night
    and Hannah Montana has a premiere, so each names its own `headline` and the `arrived`
-   phrase that builds its line, exactly the way a songday overrides its slip. The remaining
+   phrase its screen-reader line is built from, exactly the way a songday overrides its note. The remaining
    five take the default "Happy birthday, <first name>".
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const GUEST_DAYS = [

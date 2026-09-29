@@ -225,12 +225,16 @@ function yearsTodayPhrase(n) {
 // Anniversary marginalia for a "YYYY-MM-DD" date key, matched against a TS_MILESTONES
 // table (month-day, so it recurs every year). Pure: no DOM, no globals — the milestones
 // table is passed in, the year drives the count. Returns null on a quiet day, else a
-// structured object the UI turns into a pinned note (home) and a corner sticky (gameplay):
-//   { icon, album, eyebrow, headline, headlineRest, note, caption, aria }
+// structured object the UI turns into a margin note (home) and a corner sticky (gameplay):
+//   { icon, album, headline, line, caption, aria }
+// The margin note is two short handwritten lines, `headline` then `line`, and both stay short
+// on purpose: it shares a row with the best line and must not be taller than it. Say a thing
+// once. The headline names the day, the line says what it is, and nothing repeats the date
+// back (the desk calendar and the daily ticket already carry it).
 // `icon` is "cake" on her birthday, else "heart"; `album` keys the era colour (null on the
 // birthday, which wears plain ink). When an original and its Taylor's Version share a day
 // (Oct 27: 1989 + 1989 TV) the two collapse into one note rather than fighting for the margin.
-// A "songday" hit (a date Taylor sings, e.g. April 29th) returns its own blurb and carries a
+// A "songday" hit (a date Taylor sings, e.g. April 29th) returns its own line and carries a
 // songday:true flag so callers can tell it apart from a real release (see anniversaryAlbumFor).
 // A songday may override the headline (August 1st shows its line, not the song title) and the
 // icon (a salt shaker rather than the era heart).
@@ -244,37 +248,32 @@ export function anniversaryNote(dateKey, milestones) {
   const birthday = hits.find((m) => m.kind === "birthday");
   if (birthday) {
     const age = year - birthday.year;
-    // Dec 13 is also the game's sacred number — lean into the coincidence.
     const born = age > 0
       ? `Born this day ${age} years ago, in ${birthday.year}.`
       : "Born this day.";
     return {
       icon: "cake", album: null,
-      eyebrow: "On this day",
       headline: "Happy birthday, Taylor",
-      headlineRest: "",
-      note: `${born} Today's notebook runs to 13 pages.`,
+      line: `born this day in ${birthday.year}`,
       caption: "happy birthday!",
       aria: `Happy birthday, Taylor. ${born}`,
     };
   }
 
   // A date Taylor sings outright (High Infidelity's April 29th, Last Kiss's July 9th):
-  // its own blurb + caption, wearing the song's era colour, but flagged songday so the
+  // its own line + caption, wearing the song's era colour, but flagged songday so the
   // anniversary daily never skews toward it (it's a lyric wink, not a release).
   const songday = hits.find((m) => m.kind === "songday");
   if (songday) {
     const headline = songday.headline || songday.title;
     return {
       icon: songday.icon || "heart", album: songday.album, songday: true,
-      eyebrow: songday.eyebrow || "On this day",
       headline,
-      headlineRest: "",
-      note: songday.blurb || "",
+      line: songday.line || "",
       caption: songday.caption,
-      // A songday with no blurb (August 1st is only its line) still has to say something
-      // past the eyebrow, so the headline stands in for the missing sentence.
-      aria: `${songday.eyebrow || headline}. ${songday.blurb || (songday.eyebrow ? headline : "")}`.trim(),
+      // A songday with no line (August 1st is only its headline) still has to say something
+      // past the day's name, so the headline stands in for the missing sentence.
+      aria: `${songday.day || headline}. ${songday.line || (songday.day ? headline : "")}`.trim(),
     };
   }
 
@@ -284,46 +283,36 @@ export function anniversaryNote(dateKey, milestones) {
   const caption = yearsTodayPhrase(year - primary.year);
 
   if (albums.length > 1) {
-    const parts = albums.map((m) => {
+    // "turned 12, and its Taylor's Version 3": the original's age, then the re-record's.
+    const line = albums.map((m, i) => {
       const ago = year - m.year;
-      const tail = ago <= 0 ? "out today" : `${ago === 1 ? "1 year" : ago + " years"} ago`;
-      const nm = m.kind === "tv" ? "its Taylor's Version" : "the album";
-      return `${nm} (${tail})`;
-    });
-    const note = parts.join(", and ");
+      if (i === 0) return ago <= 0 ? "out today" : `turned ${ago}`;
+      const age = ago <= 0 ? "out today" : String(ago);
+      return m.kind === "tv" ? `its Taylor's Version ${age}` : age;
+    }).join(", and ");
     return {
       icon: "heart", album: primary.album,
-      eyebrow: "On this day",
       headline: primary.title,
-      headlineRest: "twice over",
-      note,
+      line,
       caption,
-      aria: `On this day: ${primary.title}, ${note}.`,
+      aria: `On this day: ${primary.title} ${line}.`,
     };
   }
 
   const m = primary;
   const ago = year - m.year;
   const isTV = m.kind === "tv";
-  const headlineRest = ago <= 0
-    ? "is out today"
-    : (ago === 1 ? "turned 1 today" : `turned ${ago} today`);
-  let note;
-  if (ago <= 0) {
-    note = isTV ? "her re-record" : (m.aka || "");
-  } else {
-    note = isTV
-      ? `her re-record, out this day in ${m.year}`
-      : (m.aka ? `${m.aka}, out this day in ${m.year}` : `out this day in ${m.year}`);
-  }
+  const age = ago <= 0 ? "is out today" : `turned ${ago} today`;
+  // The debut shares her name, so its line says which Taylor Swift turned twenty, or the
+  // note reads as her age.
+  const line = m.aka ? `${m.aka} ${age}` : age;
   return {
     icon: "heart", album: m.album,
-    eyebrow: "On this day",
     headline: m.title,
-    headlineRest,
-    note,
+    line,
     caption,
-    aria: `${m.title} ${headlineRest}.${note ? " " + note + "." : ""}`,
+    aria: `${m.title}${m.aka ? `, ${m.aka},` : ""} ${age}.` +
+      (ago > 0 ? ` ${isTV ? "Her re-record, out" : "Out"} this day in ${m.year}.` : ""),
   };
 }
 
@@ -363,15 +352,15 @@ export function guestDayNote(dateKey, guestDays) {
   const opening = g.arrived
     ? `${g.name} ${g.arrived} this day in ${g.year}${age > 0 ? `, ${ago}` : ""}.`
     : (age > 0 ? `Born this day in ${g.year}, ${ago}.` : "Born this day.");
-  const note = `${opening} We all got crowns.`;
   return {
     icon: "crown", album: null, guest: g.guest, soon: !!g.soon,
-    // An announced name has a hanger on the shelf but no catalogue behind it, and the slip
-    // says so rather than implying the player could go and play them this afternoon.
-    eyebrow: g.soon ? "Coming to the guest shelf" : "On the guest shelf",
     headline,
-    headlineRest: "",
-    note,
+    // The margin note's second line has room for one fact and the Long Live line, and the fact
+    // it spends it on is WHY somebody else's birthday is in her notebook: the shelf. An
+    // announced name has a hanger there but no catalogue behind it, so its line says "coming"
+    // rather than implying the player could go and play them this afternoon. The year the
+    // line gives up is still in the aria.
+    line: `${g.soon ? "coming to the guest shelf" : "from the guest shelf"}, we all got crowns`,
     caption: "we all got crowns",
     aria: `${headline}. ${opening}`,
   };
@@ -420,15 +409,14 @@ export function thirteenNote(dateKey) {
 
   const monthName = MONTH_NAMES[month - 1];
   const sumPhrase = isSum ? [...sumAddends(day, month), month].join(" + ") + " = 13" : "";
-  const base = { icon: "thirteen", album: null, tone: "minor", headlineRest: "" };
+  const base = { icon: "thirteen", album: null, tone: "minor" };
 
   // A 13th that also adds up (13 Sep: the date is 13, and 1+3+9 = 13 too).
   if (isThirteenth && isSum) {
     return {
       ...base,
-      eyebrow: "The thirteenth",
       headline: "The 13th, twice over",
-      note: `It's the 13th, and the date adds up too: ${sumPhrase}.`,
+      line: `and ${sumPhrase} too`,
       caption: "lucky 13",
       aria: `It's the 13th of ${monthName}, and the date adds up to 13.`,
     };
@@ -436,18 +424,16 @@ export function thirteenNote(dateKey) {
   if (isThirteenth) {
     return {
       ...base,
-      eyebrow: "The thirteenth",
       headline: "It's the 13th",
-      note: "Taylor's lucky number. A good day to play.",
+      line: "Taylor's lucky number",
       caption: "the 13th",
       aria: `It's the 13th of ${monthName}, Taylor's lucky number.`,
     };
   }
   return {
     ...base,
-    eyebrow: "Lucky math",
     headline: "Today adds up to 13",
-    note: `${ordinalDay(day)} of ${monthName}: ${sumPhrase}.`,
+    line: `${ordinalDay(day)} of ${monthName}: ${sumPhrase}`,
     caption: "adds up to 13",
     aria: `Today's date adds up to 13. ${sumPhrase}.`,
   };
