@@ -2663,7 +2663,7 @@ export const TS_LORE_DAYS = [
    Two of the seven are not people and are not pretended to be. Wicked has an opening night
    and Hannah Montana has a premiere, so each names its own `headline` and the `arrived`
    phrase its screen-reader line is built from, exactly the way a songday overrides its note. The remaining
-   five take the default "Happy birthday, <first name>".
+   five take the default "Happy <nth> birthday, <first name>".
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const GUEST_DAYS = [
   { md: "02-01", year: 1994, kind: "guest", guest: "harry-styles",      name: "Harry Styles" },

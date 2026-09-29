@@ -253,7 +253,7 @@ export function anniversaryNote(dateKey, milestones) {
       : "Born this day.";
     return {
       icon: "cake", album: null,
-      headline: "Happy birthday, Taylor",
+      headline: `Happy ${age > 0 ? `${ordinalDay(age)} ` : ""}birthday, Taylor`,
       line: `born this day in ${birthday.year}`,
       caption: "happy birthday!",
       aria: `Happy birthday, Taylor. ${born}`,
@@ -346,7 +346,9 @@ export function guestDayNote(dateKey, guestDays) {
   // A first name for the headline, which is why the table stores full names: "Happy birthday,
   // Sabrina Carpenter" reads like an envelope, and the slip is a note to a friend.
   const first = g.name.split(" ")[0];
-  const headline = g.headline || `Happy birthday, ${first}`;
+  // The age goes in the wish ("Happy 25th birthday, Sabrina"), which is also why an arrival
+  // day names its own headline: a show does not have a 23rd birthday.
+  const headline = g.headline || `Happy ${age > 0 ? `${ordinalDay(age)} ` : ""}birthday, ${first}`;
   // An arrival day (Wicked's opening night, Hannah's premiere) is written as the thing it was;
   // only a person gets "born".
   const opening = g.arrived
@@ -369,7 +371,8 @@ const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-// Ordinal day-of-month, e.g. 1 → "1st", 24 → "24th" (11/12/13 are the -th exceptions).
+// Ordinal, e.g. 1 → "1st", 24 → "24th" (11/12/13 are the -th exceptions). Written for the
+// day of the month and reused for birthday ages.
 function ordinalDay(n) {
   const t = n % 100;
   const s = t >= 11 && t <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] || "th");
