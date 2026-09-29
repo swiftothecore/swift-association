@@ -356,13 +356,12 @@ export function guestDayNote(dateKey, guestDays) {
     icon: "crown", album: null, guest: g.guest, soon: !!g.soon,
     headline,
     // The margin note's second line has room for one fact and the Long Live line, and the fact
-    // it spends it on is WHY somebody else's birthday is in her notebook: the shelf. An
-    // announced name has a hanger there but no catalogue behind it, so its line says "coming"
-    // rather than implying the player could go and play them this afternoon. The year the
-    // line gives up is still in the aria.
-    line: `${g.soon ? "coming to the guest shelf" : "from the guest shelf"}, we all got crowns`,
+    // is the year: a person from the year they were born, an arrival from its first night.
+    // Nothing on it implies the player could go and play an announced name this afternoon,
+    // and the hollow crown already marks one; the aria says "coming" outright.
+    line: `${g.arrived ? "since" : "born in"} ${g.year}, we all got crowns`,
     caption: "we all got crowns",
-    aria: `${headline}. ${opening}`,
+    aria: `${headline}. ${opening}${g.soon ? " Coming to the guest shelf." : ""}`,
   };
 }
 

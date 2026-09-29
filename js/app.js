@@ -15859,6 +15859,55 @@ function renderAnniversaryNote() {
       `<span class="an-name"${accent ? ` style="--an-ink:${accent}"` : ""}>${escapeHtml(note.headline)}</span></div>` +
     (note.line ? `<div class="an-line">${escapeHtml(note.line)}</div>` : "");
   el.hidden = false;
+  watchAnniversaryFit(el);
+  fitAnniversaryNote();
+}
+// On desktop the note takes no height (see .anniversary-note in styles.css): it overflows its
+// row by up to AN_SPILL px above and below, into the air between the rule-terms sheet and the
+// button. Most days two lines fit that with room to spare, but a long best line ("Relaxed ·
+// 12:40 · 11 hints") leaves the note narrow enough to wrap to four, and a larger text size
+// makes every line taller, and either would write over the sheet or the button. So after
+// every draw, and whenever the row changes size, it measures its own ink and steps down
+// only as far as it has to: a smaller hand, then the headline alone, and as a last resort
+// nothing, because a note written over the button is worse than no note. The row itself
+// never gives way; that is the whole point.
+// About twenty pixels of air sit above and below the row, so a nine-pixel spill still leaves
+// the ink ten clear of the sheet and the button. Three tight lines fit at twelve, but read
+// as crammed against the button.
+const AN_SPILL = 9;
+const AN_FITS = ["", "an-fit-tight", "an-fit-head", "an-fit-none"];
+let anniversaryFitObserver = null;
+function watchAnniversaryFit(el) {
+  if (anniversaryFitObserver || typeof ResizeObserver === "undefined") return;
+  const row = el.parentElement;
+  anniversaryFitObserver = new ResizeObserver(() => fitAnniversaryNote());
+  // The row changes size with the window, the text-size setting and the best line (a mode
+  // switch); the column is what changes when the best line does, so both are watched.
+  anniversaryFitObserver.observe(row);
+  row.querySelector(".start-podium-col") && anniversaryFitObserver.observe(row.querySelector(".start-podium-col"));
+  // Caveat can land after the first draw and change every line's height.
+  document.fonts?.ready.then(() => fitAnniversaryNote());
+}
+function fitAnniversaryNote() {
+  const el = $("anniversaryNote");
+  if (!el) return;
+  el.classList.remove(...AN_FITS.filter(Boolean));
+  if (el.hidden) return;
+  const row = el.parentElement;
+  // Stacked on a phone the note takes its own room like any line of text, so there is
+  // nothing to fit; and a hidden start screen measures zero, which the observer catches
+  // the moment it is shown.
+  if (getComputedStyle(row).display !== "flex") return;
+  const rowH = row.getBoundingClientRect().height;
+  if (!rowH) return;
+  const budget = rowH + 2 * AN_SPILL;
+  for (const fit of AN_FITS) {
+    if (fit) el.classList.add(fit);
+    const kids = [...el.children].filter((k) => k.offsetParent !== null);
+    if (!kids.length) return;
+    const ink = kids[kids.length - 1].getBoundingClientRect().bottom - kids[0].getBoundingClientRect().top;
+    if (ink <= budget) return;
+  }
 }
 // The day's mark, shared by the margin note and the game sticky so the two surfaces always
 // draw the same thing: the era heart, the cake, the 13, the guest's crown or the salt shaker.

@@ -8738,17 +8738,25 @@
   /* It was a taped paper slip once, and that is the thing NOT to go back to: a slip needs an
      eyebrow, padding and a card's worth of height, and at four times the best line's height
      it set the whole row's height, dropped "Your best" to the bottom of a gap and pushed
-     the board down on every dated day. Written on the page it costs two lines, the same as
-     the best line beside it.
-     The cap keeps the best line whole beside it ("13 / 13 | Normal · 1:20 · Sep 3" needs
-     about half the row). A percentage is safe here because this element IS the flex item,
-     so it resolves against the row, not against a parent waiting on its own content. If a
-     note outgrows the cap it wraps, balanced; that is the budget the `line` copy in
-     util.js and config.js is written to. */
+     the board down on every dated day.
+     On desktop the note now costs NO height at all: a dated day and a quiet day put Start
+     writing on the same pixel. The box is zero tall, centred on the best line, and its two
+     lines overflow it evenly up and down (a column flexbox centres its overflow; there is
+     no `safe` keyword on purpose). The row takes its height from the best line alone, and
+     the note spills a few pixels into the air above and below that row, which has about
+     twenty pixels on each side. So the budget is two lines: a third would reach the rule
+     terms sheet and the button. It still takes WIDTH, so the best line can't run under it,
+     and the best line never gives that width up (`flex-shrink: 0` below): if the two don't
+     fit, the note wraps, never the score, because a wrapped best line would be the row
+     growing again. The cap is a percentage, which is safe because this element IS the flex
+     item, so it resolves against the row. The `line` copy in util.js and config.js is
+     written to that budget. */
   .anniversary-note {
-    flex: none; max-width: 47%; margin: 0; padding-right: 4px;
-    text-align: right; transform: rotate(-1.2deg);
+    flex: 0 1 auto; min-width: 0; max-width: 47%; height: 0; align-self: center;
+    display: flex; flex-direction: column; justify-content: center;
+    margin: 0; padding-right: 4px; text-align: right; transform: rotate(-1.2deg);
   }
+  .start-podium-row:has(> .anniversary-note:not([hidden])) .start-podium-col { flex-shrink: 0; }
   .an-head {
     font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 1.05;
     color: var(--ink); text-wrap: balance;
@@ -8765,11 +8773,21 @@
     font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1.1;
     color: var(--ink-soft); margin-top: 2px; text-wrap: balance;
   }
+  /* The steps fitAnniversaryNote (app.js) takes when the two lines would spill past the
+     row's air onto the sheet or the button: a smaller hand, then the headline alone (which
+     may wrap to two lines of its own), then nothing. Each is only reached when the one
+     before it measured too tall. */
+  .anniversary-note.an-fit-tight .an-head { font-size: calc(17px + var(--text-size-adjust)); }
+  .anniversary-note.an-fit-tight .an-line { font-size: calc(13px + var(--text-size-adjust)); }
+  .anniversary-note.an-fit-tight .an-mark svg { width: 18px; height: 18px; vertical-align: -3px; }
+  .anniversary-note.an-fit-head .an-line { display: none; }
+  .anniversary-note.an-fit-none { visibility: hidden; }
   /* Too narrow to sit beside the podium, so it drops under it, still right-aligned and
-     still just above the button. */
+     still just above the button. Here it does take its own height: on a phone there is no
+     empty margin beside the best line to write into. */
   @media (max-width: 700px) {
     .start-podium-row { display: block; }
-    .anniversary-note { max-width: none; margin: 10px 0 0; }
+    .anniversary-note { display: block; height: auto; max-width: none; margin: 10px 0 0; }
   }
 
   /* ---------- Milestone sticky (game screen, milestone days only) ----------
