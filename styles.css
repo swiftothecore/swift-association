@@ -15648,6 +15648,17 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .run-pause-go:hover { background: var(--card-ink); color: var(--card); }
 .run-pause-go:focus-visible { outline: 1.5px dashed var(--card-ink); outline-offset: 4px; }
 .run-pause-go:active { transform: rotate(-1deg) translate(2px, 2px); box-shadow: 1px 1px 0 var(--card-ink); }
+/* The way out, written the way the run's own quit link is: small typewriter caps, quiet until
+   hovered, the margin's red once armed. The card makes that link unreachable, so this stands in. */
+.run-pause-quit {
+  margin: 12px 0 0; padding: 4px 6px; cursor: pointer; background: transparent; border: none;
+  font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--card-soft); opacity: 0.8; transition: color 0.15s, opacity 0.15s;
+}
+.run-pause-quit::before { content: "\2715  "; }
+.run-pause-quit:hover { color: var(--card-ink); opacity: 1; }
+.run-pause-quit:focus-visible { outline: 1.5px dashed var(--card-ink); outline-offset: 2px; }
+.run-pause-quit.armed { color: #b8423b; opacity: 1; font-weight: 700; }
 @media (max-width: 480px) {
   .run-pause-sheet { padding: 0 14px 16px; }
   .run-pause-sheet h2 { font-size: calc(32px + var(--text-size-adjust)); }

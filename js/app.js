@@ -27993,11 +27993,28 @@ function placeRunPauseSheet() {
   });
 }
 const swallowScroll = (e) => e.preventDefault();
+// Whether anything on the page was actually running down when the player walked away: the
+// round's countdown, a vanishing word, a curtain, the verdict's auto-advance, or any of the
+// bonus loop's clocks. Only then is there time to protect, and only then does the card go up.
+// A Relaxed page, a verdict with no countdown, or a Track by Track sheet before its first
+// keystroke still pause (the hidden stopwatches must not count time away), but silently.
+function runPauseHasStakes() {
+  if (liveRunScreen() === screens.game) {
+    return !!(pausedClockState || pausedVanishRemaining != null || countdownId
+      || settingsDeferredRoundClock || curtainTimers.length > 0);
+  }
+  const b = pausedBonusState;
+  return !!(settingsDeferredBonusClock
+    || (b && (b.clock || b.chainRemaining != null || b.feedbackRemaining != null)));
+}
 function interruptRun() {
   checkpointRunProgress();
   stampDailyLiveClock();
   if (!liveRunScreen() || runPauseOwners.has("background")) return;
   pauseForSettings("background");
+  if (runPauseHasStakes()) showRunPauseSheet();
+}
+function showRunPauseSheet() {
   const overlay = document.createElement("div");
   overlay.id = "runPauseOverlay";
   overlay.className = "run-pause-overlay open";
@@ -28005,10 +28022,14 @@ function interruptRun() {
   overlay.setAttribute("aria-modal", "true");
   overlay.setAttribute("aria-labelledby", "runPauseTitle");
   const tape = [1, 2, 3, 4].map((n) => `<span class="run-pause-tape t${n}" aria-hidden="true"></span>`).join("");
+  // The card makes the page behind it inert, the run's own quit link included, so the way out
+  // has to be on the card too. It says what the link it stands in for says.
+  const quitLabel = liveRunScreen() === screens.game ? "close the notebook" : "quit";
   overlay.innerHTML = `<div class="run-pause-sheet">${tape}` +
     `<div class="run-pause-note"><h2 id="runPauseTitle">Your page is waiting</h2>` +
     `<p class="run-pause-clock">${escapeHtml(pausedClockLine())}</p>` +
     `<button type="button" class="run-pause-go" id="runResumeBtn">carry on <span aria-hidden="true">&rarr;</span></button>` +
+    `<button type="button" class="run-pause-quit" id="runPauseQuitBtn" data-label="${quitLabel}">${quitLabel}</button>` +
     `</div></div>`;
   const go = overlay.querySelector("#runResumeBtn");
   document.body.appendChild(overlay);
@@ -28021,7 +28042,41 @@ function interruptRun() {
   window.addEventListener("resize", placeRunPauseSheet);
   window.addEventListener("scroll", placeRunPauseSheet, { passive: true });
   go.addEventListener("click", resumeInterruptedRun);
+  overlay.querySelector("#runPauseQuitBtn").addEventListener("click", armRunPauseQuit);
   document.activeElement?.blur();
+}
+// The same two-tap guard as the run's own quit link, with the same opt-out. Once confirmed the
+// card is taken down without the clock restarting under it, and the run is left exactly as the
+// real link would leave it.
+let runPauseQuitTimer = null;
+function armRunPauseQuit() {
+  const btn = $("runPauseQuitBtn");
+  if (!btn) return;
+  if (settings.confirmLeave !== false && !btn.classList.contains("armed")) {
+    btn.classList.add("armed");
+    btn.textContent = "give up? tap again";
+    clearTimeout(runPauseQuitTimer);
+    runPauseQuitTimer = setTimeout(() => {
+      btn.classList.remove("armed");
+      btn.textContent = btn.dataset.label;
+    }, 3000);
+    return;
+  }
+  clearTimeout(runPauseQuitTimer);
+  const screen = liveRunScreen();
+  dropRunPause();
+  if (screen === screens.game) quitGame();
+  else if (screen) leaveBonusGame();
+}
+// Take the card (if any) and the page's cover down and release the background owner. Every
+// timer it resumes is torn down straight after by the quit paths above.
+function dropRunPause() {
+  const overlay = $("runPauseOverlay");
+  window.removeEventListener("resize", placeRunPauseSheet);
+  window.removeEventListener("scroll", placeRunPauseSheet);
+  document.querySelectorAll(".is-put-away").forEach((el) => el.classList.remove("is-put-away"));
+  if (overlay) { releaseDialogBackground(overlay); overlay.remove(); }
+  resumeFromSettings("background");
 }
 function resumeInterruptedRun() {
   if (document.hidden) return;
@@ -28033,23 +28088,18 @@ function resumeInterruptedRun() {
     setTimeout(() => {
       if (!overlay.isConnected) return;
       overlay.classList.remove("is-lifting");
-      if (!document.hidden) liftRunPause(overlay);
+      if (!document.hidden) liftRunPause();
     }, 230);
     return;
   }
-  liftRunPause(overlay);
+  liftRunPause();
 }
-function liftRunPause(overlay) {
+function liftRunPause() {
   // The hidden tab may have lost its Daily claim while suspended. Verify before handing any
   // input back to it, without ever releasing the claim merely because it was backgrounded.
   if (gameType === "daily" && liveRunScreen() === screens.game &&
       !claimDailyRun(dailyRunDate || todayKey(), TAB_ID)) surrenderDailyRun();
-  window.removeEventListener("resize", placeRunPauseSheet);
-  window.removeEventListener("scroll", placeRunPauseSheet);
-  document.querySelectorAll(".is-put-away").forEach((el) => el.classList.remove("is-put-away"));
-  releaseDialogBackground(overlay);
-  overlay.remove();
-  resumeFromSettings("background");
+  dropRunPause();
   if ($("settingsModal").classList.contains("open")) $("settingsCloseBtn").focus();
   else if (liveRunScreen() === screens.game) {
     if (roundLocked) ($("continueBtn") || $("skipBtn"))?.focus();
@@ -28058,7 +28108,13 @@ function liftRunPause(overlay) {
 }
 function handleRunVisibility() {
   if (document.hidden) { interruptRun(); return; }
-  if (!$("runResumeBtn")) return;
+  if (!runPauseOwners.has("background")) return;
+  if (!$("runResumeBtn")) {
+    // Paused silently, with nothing running. A clock that tried to start while the tab was
+    // hidden (a page turn landing late) makes it a timed page after all, so it gets the card.
+    if (!liveRunScreen() || !runPauseHasStakes()) { liftRunPause(); return; }
+    showRunPauseSheet();
+  }
   // The page may have been laid out afresh while away (a rotated phone, a closed keyboard).
   placeRunPauseSheet();
   const sheet = document.querySelector(".run-pause-sheet");
