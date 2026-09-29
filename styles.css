@@ -9516,11 +9516,6 @@
     display: block; margin: 0 0 14px;
   }
   .feedback .red-note b { font-weight: 700; }
-  /* Straight under the turn slip it needs its own air: the slip only carries margins on
-     phones (the 560px block), so on desktop the note would sit in the slip's shadow. */
-  @media (min-width: 561px) {
-    .feedback .feedback-advance + .red-note { margin-top: 26px; }
-  }
 
   /* Lyric cards — shared base */
   .lyric-card {
@@ -9723,9 +9718,9 @@
        Pull the glyph back onto the typewritten caption's optical centre. */
     transform: translateX(-8px);
   }
-  /* A solid ink underline, with the highlighter laid behind the word on hover. Both are drawn
-     on the text rather than on the box, so the taller touch target coarse pointers get (see
-     the pointer: coarse block) moves neither of them away from the word. */
+  /* A solid ink underline, drawn on the text rather than on the box, so the taller touch
+     target coarse pointers get (see the pointer: coarse block) doesn't move it off the word.
+     Hover only recolours that line: a highlighter swiped behind it read as a flash. */
   .countdown-skip {
     margin-top: 8px;
     font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
@@ -9733,9 +9728,15 @@
     text-decoration: underline 2px; text-underline-offset: 4px;
     border: none; padding: 3px 3px; cursor: pointer;
   }
-  .countdown-skip:is(:hover, :focus-visible) {
-    background: linear-gradient(transparent 30%, var(--highlighter) 30%) center / 100% 1.25em no-repeat;
-  }
+  .countdown-skip:is(:hover, :focus-visible) { text-decoration-color: var(--ink-accent); }
+
+  /* The way off a verdict comes last, under everything that explains the page, the way the
+     notebook always had it. The countdown and its skip stack on one centre line so the skip
+     reads as part of the countdown instead of a stray link on the next card's shoulder. */
+  .feedback-advance { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+  .feedback-advance .countdown { margin-top: 0; }
+  .feedback-advance .countdown-skip { margin-top: 2px; }
+  .feedback-advance > .turn-slip { margin-top: 0; }
 
   /* ---------- Results ---------- */
   /* The tally centres on the same axis as the finished bracelet below it (both are a
@@ -15520,7 +15521,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   }
   .tap-tile { min-width: 0; }
   .tap-tile-title { overflow-wrap: anywhere; }
-  .feedback-advance { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
+  .feedback-advance { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
   .feedback-advance > .turn-slip { width: 100%; margin: 0; min-height: 46px; }
   .feedback-advance .countdown { display: flex; align-items: center; gap: 8px; margin: 0; }
   .feedback-advance .countdown b { display: inline; font-size: calc(28px + var(--text-size-adjust)); transform: none; }

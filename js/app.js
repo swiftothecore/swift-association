@@ -9555,9 +9555,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
       : passed
         ? `<div class="banner pass">— ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`
       : `<div class="banner bad">✗ ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`) +
-    `<div class="feedback-advance">${advanceUI}</div>` +
     (detail ? `<p class="bg-detail">${detail}</p>` : "") +
-    bonusAnswerCard();
+    bonusAnswerCard() +
+    `<div class="feedback-advance">${advanceUI}</div>`;
   $("bonusScore").textContent = bonusScoreText();
   $(auto ? "bonusSkipBtn" : "bonusNextBtn").addEventListener("click", advanceFromBonusFeedback);
   if (auto) runBonusCountdown();
@@ -18248,8 +18248,8 @@ function revealTapKnowledge(correct) {
   const fb = $("feedback");
   fb.innerHTML =
     `<div class="banner ${correct ? "good" : "bad"}">${banner}</div>` +
-    `<div class="feedback-advance">${advanceUI}</div>` +
-    `<p class="red-note">${note}</p>`;
+    `<p class="red-note">${note}</p>` +
+    `<div class="feedback-advance">${advanceUI}</div>`;
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -18512,9 +18512,9 @@ function revealCommon(correct) {
     : turnSlip("continueBtn");
   fb.innerHTML =
     `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>` +
-    `<div class="feedback-advance">${advanceUI}</div>` +
     `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
-    `<div class="common-reveal">${cards}</div>`;
+    `<div class="common-reveal">${cards}</div>` +
+    `<div class="feedback-advance">${advanceUI}</div>`;
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -23860,8 +23860,8 @@ function flagImpostor() {
   const fb = $("feedback");
   fb.innerHTML =
     `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>` +
-    `<div class="feedback-advance">${turnSlip("continueBtn")}</div>` +
-    `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>`;
+    `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>` +
+    `<div class="feedback-advance">${turnSlip("continueBtn")}</div>`;
   playSound("correct");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -25243,14 +25243,14 @@ function showCorrectFeedback(song, lyricMatch) {
   const revenge = revengeNote();
   fb.innerHTML = `
     <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>
-    <div class="feedback-advance">${advanceUI}</div>
     ${revenge}
     ${inkNote}
     ${firstNote}
     ${card}
     ${deepCutNote}
     ${formsNote}
-    ${more}`;
+    ${more}
+    <div class="feedback-advance">${advanceUI}</div>`;
   if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   playSound("correct");
@@ -25322,8 +25322,8 @@ function showWrongFeedback(song, isTimeout) {
   fb.innerHTML = `
     <div class="banner bad">✗ ${reason}</div>
     ${submitted}
-    <div class="feedback-advance">${turnSlip("continueBtn")}</div>
-    ${help}`;
+    ${help}
+    <div class="feedback-advance">${turnSlip("continueBtn")}</div>`;
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
