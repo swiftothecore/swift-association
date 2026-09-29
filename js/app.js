@@ -30607,16 +30607,21 @@ function buildDevApi() {
       },
       clear: () => { window.__devDate = null; refreshDateSurfaces(); return todayKey(); },
       // The album-anniversary Start writing finishes (js/anniversarycta.js). No argument lists
-      // every album with its day and finish; an album name or finish id ("Red", "anv-red" or
-      // "red") moves the dev date to that album's release day this year, so the front page's
-      // button can be seen wearing it. The dev panel's jump dropdown reaches the same days.
+      // every record with its day and finish; a title, album name or finish id ("Red", "anv-red",
+      // "red", "Red (Taylor's Version)" or "red-tv") moves the dev date to that record's release
+      // day, so the front page's button can be seen wearing it. A bare album name means the
+      // original. That is this year's day, except for a day a later release has taken over (1989's,
+      // since its Taylor's Version came out on it): there it is the last year the record still had
+      // the day, or its finish could never be seen. The dev panel's jump dropdown reaches the days.
       anniversaryButton: (which) => {
         const list = anniversaryFinishList();
-        if (!which) return list.map((r) => `${r.md}  ${r.finish.padEnd(14)}${r.album} (${r.year})`);
+        if (!which) return list.map((r) => `${r.md}  ${r.finish.padEnd(18)}${r.title} (${r.year})`);
         const want = String(which).toLowerCase();
-        const hit = list.find((r) => r.album.toLowerCase() === want || r.finish === want || r.finish === `anv-${want}`);
+        const hit = list.find((r) => r.title.toLowerCase() === want || r.album.toLowerCase() === want || r.finish === want || r.finish === `anv-${want}`);
         if (!hit) return `No album or finish called "${which}".`;
-        window.__devDate = `${todayKey().slice(0, 4)}-${hit.md}`;
+        let year = new Date().getFullYear();   // the real year: a dev date already set must not stick
+        while (year > hit.year && anniversaryFinishFor(`${year}-${hit.md}`) !== hit.finish) year--;
+        window.__devDate = `${year}-${hit.md}`;
         refreshDateSurfaces();
         return `${window.__devDate}: ${anniversaryFinishFor(todayKey())}`;
       },

@@ -1929,14 +1929,15 @@
   @keyframes ctaFlagWave { 0% { transform: translateX(-66.67%); opacity: 0; } 18%, 72% { opacity: 1; } 100% { transform: translateX(0); opacity: 0; } }
 
   /* ---------- Album anniversaries ----------
-     The twelve finishes the Start writing button is made to wear on each studio album's release
-     day (anniversaryFinishFor in js/anniversarycta.js decides the day, and says why it overrides
-     the player's own pick). Each rides the ordinary .play-cta: the label, the ink border, the tilt,
-     the bob and the hover lift are all the button's own. Each supplies a fill, a lettering colour,
-     a material at rest and one moment of weather on hover, and holds its end state while held.
-     Every class is anv- (or fk-/sn- for folklore's wood and Speak Now's castle), and every
-     finish id is anv-<album>, which is what the [data-startbtn^="anv-"] rules key on.
-     Designed on scripts/cta/chosen-board.html. */
+     The sixteen finishes the Start writing button is made to wear on each studio album's release
+     day and each Taylor's Version's (anniversaryFinishFor in js/anniversarycta.js decides the day,
+     and says why it overrides the player's own pick). Each rides the ordinary .play-cta: the label,
+     the ink border, the tilt, the bob and the hover lift are all the button's own. Each supplies a
+     fill, a lettering colour, a material at rest and one moment of weather on hover, and holds its
+     end state while held. Every class is anv- (or fk-/sn- for folklore's wood and Speak Now's
+     castle, and tvf-/tvr-/tvs-/tv9- for the four Taylor's Versions), and every finish id is
+     anv-<album> or anv-<album>-tv, which is what the [data-startbtn^="anv-"] rules key on.
+     The twelve were designed on scripts/cta/chosen-board.html, the four on tv-board.html. */
   .btn-primary.play-cta[data-startbtn^="anv-"]::after { content:none; }
   .anv-out { position:absolute; inset:0; z-index:2; pointer-events:none; }
   .anv-out > * { position:absolute; }
@@ -2222,6 +2223,179 @@
   .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .anv-bulb { opacity:1; box-shadow:0 0 0 .7px #6b300a66, 0 0 6px 2px var(--glow); animation:anvChase .5s var(--cd) linear 5; }
   @keyframes anvChase { 0%, 33% { opacity:1; box-shadow:0 0 0 .7px #6b300a66, 0 0 6px 2px var(--glow); }
     34%, 100% { opacity:.35; box-shadow:0 0 0 .7px #6b300a66; } }
+
+  /* ============ Fearless (Taylor's Version): Gold fringe ============
+     The beaded fringe of the Fearless dress on the Eras Tour, in three tiers hung one over the next
+     and covering the whole face, each strand a run of gold bugle beads with a drop on the end. On
+     hover the dress turns: the fringe swings out and back across the face, left to right, the
+     lowest tier furthest, and light runs over the beads. */
+  .play-cta[data-startbtn="anv-fearless-tv"] { --cta-fill:#6d4815; --cta-text:#261602; --cta-hover-text:#261602;
+    --fr1:#fff2c6; --fr2:#e2b456; --fr3:#7e5314; --fr-seed:#a87a2c; --fr-drop:#f7dc8c; --fr-halo:#f0cf7d;
+    --fr1b:#ffe7a4; --fr2b:#cf9c3c; --fr1c:#fff9e6; --fr2c:#ecc873;
+    background-image:none; }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-fearless-tv"] { --cta-fill:#2c1c07; --cta-text:#fff4d8; --cta-hover-text:#fff4d8;
+    --fr1:#e8cf8c; --fr2:#b1843a; --fr3:#4a300b; --fr-seed:#7a5620; --fr-drop:#d8b664; --fr-halo:#2c1c07;
+    --fr1b:#d9b86c; --fr2b:#9a6f2b; --fr1c:#f1dea6; --fr2c:#c49a4c; }
+  .play-cta[data-startbtn="anv-fearless-tv"] .cta-label { text-shadow:0 0 3px var(--fr-halo), 0 0 7px var(--fr-halo), 0 0 12px var(--fr-halo); }
+  .tvf-b1 { stop-color:var(--fr1); } .tvf-b2 { stop-color:var(--fr2); } .tvf-b3 { stop-color:var(--fr3); }
+  .tvf-b1.t2 { stop-color:var(--fr1b); } .tvf-b2.t2 { stop-color:var(--fr2b); } .tvf-b1.t3 { stop-color:var(--fr1c); } .tvf-b2.t3 { stop-color:var(--fr2c); }
+  .tvf-seed { fill:var(--fr-seed); } .tvf-drop { fill:var(--fr-drop); stroke:var(--fr3); stroke-width:.3; }
+  .tvf-swing { transform-box:fill-box; transform-origin:50% 0; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvf-swing { animation:tvfSwing 1.9s var(--d) cubic-bezier(.35,0,.4,1) both; }
+  @keyframes tvfSwing { 0% { transform:rotate(0); } 16% { transform:rotate(calc(var(--a) * 1deg)); } 38% { transform:rotate(calc(var(--a) * -.62deg)); }
+    58% { transform:rotate(calc(var(--a) * .34deg)); } 78% { transform:rotate(calc(var(--a) * -.14deg)); } 100% { transform:rotate(0); } }
+  .tvf-sheen { inset:0 -40%; background:linear-gradient(104deg, #fff0 38%, #fff7da 50%, #fff0 62%); mix-blend-mode:soft-light; transform:translateX(-80%); opacity:0; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvf-sheen { animation:tvfSheen 1.6s .15s ease-in-out both; }
+  @keyframes tvfSheen { 0% { transform:translateX(-80%); opacity:0; } 15% { opacity:1; } 85% { opacity:1; } 100% { transform:translateX(80%); opacity:0; } }
+
+  /* ============ Red (Taylor's Version): Upstate ============
+     The drive upstate in the fall, from the cover and the short film: a road running along under the
+     words between two stands of autumn trees, and a vintage car pulled in on the left. On hover its
+     lights come on and it drives off along the road, the leaves it passes kicking up behind it, and
+     pulls in again on the right with its brake lights lit. */
+  .play-cta[data-startbtn="anv-red-tv"] { --cta-fill:#f1cdb0; --cta-text:#2e0c13; --cta-hover-text:#2e0c13;
+    --up-hill:#d4a39a; --up-verge:#8a4a34; --up-road:#4a2126; --up-dash:#f1cdb0; --up-trunk:#3b1d19; --up-birch:#f4ece0;
+    --up-car:#7a1b2a; --up-car-dark:#4d0f19; --up-glass:#f6e3d2; --up-chrome:#efe6da; --up-tyre:#231012; --up-beam:#fff1b8;
+    --up-t1:#8a2230; --up-t1s:#5e1420; --up-t2:#b9482f; --up-t2s:#8a2f1f; --up-t3:#d98c35; --up-t3s:#aa6420; --up-t4:#e4b24c; --up-t4s:#b88427; --up-pine:#3d3a2a;
+    --cta-art:linear-gradient(180deg, #e7ae9a 0%, #f0c7ad 42%, #f7e0c6 78%);
+    background-image:linear-gradient(168deg, #ffffff2a 0%, #ffffff00 46%, #0000001a 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-red-tv"] { --cta-fill:#4a2029; --cta-text:#fbeae0; --cta-hover-text:#fbeae0;
+    --up-hill:#5e2f38; --up-verge:#3a1a1c; --up-road:#1f0c10; --up-dash:#7e5a50; --up-trunk:#1c0c0c; --up-birch:#b7aca0;
+    --up-car:#5e1522; --up-car-dark:#34070f; --up-glass:#e8b879; --up-chrome:#b8aca0;
+    --up-t1:#5a1520; --up-t1s:#3c0c14; --up-t2:#7a2e1e; --up-t2s:#551d12; --up-t3:#8e5a22; --up-t3s:#693f15; --up-t4:#9b7832; --up-t4s:#72561f; --up-pine:#1d1c14;
+    --cta-art:linear-gradient(180deg, #2c1320 0%, #4c2330 50%, #7a3f3e 85%);
+    background-image:linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #0000002a 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-red-tv"] .cta-label { text-shadow:0 1px 2px #1a080bcc; }
+  .tvr-hill { fill:var(--up-hill); } .tvr-verge { fill:var(--up-verge); } .tvr-road { fill:var(--up-road); }
+  .tvr-dash { fill:none; stroke:var(--up-dash); stroke-width:.8; stroke-dasharray:6 8; opacity:.55; }
+  .tvr-trunk { fill:var(--up-trunk); } .tvr-birch { fill:var(--up-birch); } .tvr-birch-mark { fill:none; stroke:var(--up-trunk); stroke-width:.6; stroke-linecap:round; }
+  .tvr-t1 { fill:var(--up-t1); } .tvr-t1.s { fill:var(--up-t1s); } .tvr-t2 { fill:var(--up-t2); } .tvr-t2.s { fill:var(--up-t2s); }
+  .tvr-t3 { fill:var(--up-t3); } .tvr-t3.s { fill:var(--up-t3s); } .tvr-t4 { fill:var(--up-t4); } .tvr-t4.s { fill:var(--up-t4s); } .tvr-pine { fill:var(--up-pine); }
+  .tvr-t1.l, .tvr-t2.l, .tvr-t3.l, .tvr-t4.l { fill:#ffe9c8; opacity:.22; } .tvr-limb { fill:none; stroke:var(--up-trunk); stroke-width:1; stroke-linecap:round; }
+  .tvr-car { fill:var(--up-car); } .tvr-car-dark { fill:var(--up-car-dark); } .tvr-glass { fill:var(--up-glass); } .tvr-chrome { fill:none; stroke:var(--up-chrome); stroke-width:.55; stroke-linecap:round; }
+  .tvr-tyre { fill:var(--up-tyre); } .tvr-hub { fill:var(--up-chrome); } .tvr-spoke { fill:none; stroke:var(--up-tyre); stroke-width:.45; }
+  .tvr-head { fill:#f6e8c8; } .tvr-tail { fill:#9a2a22; }
+  .tvr-beam { opacity:0; }
+  .tvr-leaf { transform-box:fill-box; transform-origin:center; }
+  .tvr-drive { transition:transform 1.2s cubic-bezier(.5,0,.3,1); }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvr-drive { transform:translateX(230px); transition:transform 2.8s cubic-bezier(.55,0,.35,1) .35s; }
+  .tvr-wheel { transform-box:fill-box; transform-origin:center; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvr-wheel { animation:tvrRoll .42s .45s linear 6; }
+  @keyframes tvrRoll { to { transform:rotate(360deg); } }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvr-beam { opacity:.8; transition:opacity .3s .1s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvr-head { fill:#fff8d8; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvr-tail { animation:tvrBrake .5s 2.75s ease-out both; }
+  @keyframes tvrBrake { to { fill:#ff4a3a; filter:drop-shadow(0 0 1.5px #ff5a3a); } }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvr-leaf { animation:tvrKick 1.3s var(--d) cubic-bezier(.3,.6,.4,1) both; }
+  @keyframes tvrKick { 0% { transform:translate(0, 0) rotate(0); } 30% { transform:translate(calc(var(--kx) * .5), var(--ky)) rotate(calc(var(--kr) * .6)); }
+    100% { transform:translate(var(--kx), 0) rotate(var(--kr)); } }
+
+  /* ============ Speak Now (Taylor's Version): Fireworks ============
+     The fireworks drawn for Speak Now before the castle took its place, carried to the
+     re-recording's deeper violet and set over water: a night sky with the faint dotted trails of
+     four rockets rising in the gaps, a thin moon, and a lake along the bottom with the far shore
+     lying on it. Speak Now (Taylor's Version) came out the week of the Fourth of July. On hover each
+     rocket bursts in turn, in gold, pink, violet and white, its sparks falling and fading, and each
+     burst shows on the water as a flickering column of broken glints, never as a lit patch. */
+  .play-cta[data-startbtn="anv-speaknow-tv"] { --cta-fill:#43236b; --cta-text:#fbf4ff; --cta-hover-text:#fbf4ff; --trail:#f3e6ff;
+    --fw-water:#26103f; --fw-water-far:#5a3786; --fw-ripple:#9a7cc6; --fw-star:#fff6e4; --fw-shore:#1d0b33;
+    --cta-art:linear-gradient(180deg, #2e1650 0%, #4a2776 58%, #6a3f94 80%);
+    background-image:linear-gradient(168deg, #ffffff14 0%, #ffffff00 46%, #0000002a 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-speaknow-tv"] { --cta-fill:#2c1649; --fw-water:#170927; --fw-water-far:#3c2260; --fw-ripple:#7a5ca6;
+    --cta-art:linear-gradient(180deg, #1c0b33 0%, #2f1750 58%, #46296a 80%); }
+  .play-cta[data-startbtn="anv-speaknow-tv"] .cta-label { text-shadow:0 1px 2px #1a0730cc; }
+  .tvs-star { fill:var(--fw-star); }
+  .tvs-w0 { stop-color:var(--fw-water-far); } .tvs-w1 { stop-color:var(--fw-water); }
+  .tvs-ripple { fill:none; stroke:var(--fw-ripple); stroke-width:.4; stroke-linecap:round; opacity:.6; }
+  .tvs-shore { fill:var(--fw-shore); } .tvs-shore-reflect { fill:var(--fw-shore); opacity:.45; }
+  .tvs-trail { fill:none; stroke:var(--trail); stroke-width:.95; stroke-linecap:round; stroke-dasharray:1.4 2.6; opacity:.62; }
+  .tvs-rocket { fill:#fff6dc; transform-box:fill-box; transform-origin:center; }
+  .tvs-burst--g { --fw:#ffd77e; } .tvs-burst--p { --fw:#ffaed6; } .tvs-burst--v { --fw:#cfb2ff; } .tvs-burst--w { --fw:#fffaf0; }
+  .tvs-ray { fill:none; stroke:var(--fw); stroke-width:1.35; stroke-linecap:round; stroke-dasharray:.45 2; stroke-dashoffset:.45; filter:drop-shadow(0 0 1px var(--fw)); }
+  .tvs-spark { fill:var(--fw); opacity:0; }
+  .tvs-reflect { opacity:0; } .tvs-reflect rect { fill:var(--fw); } .tvs-reflect rect.w { fill:#fffaf0; }
+  .tvs-pool { fill:var(--fw); opacity:.28; filter:blur(1.2px); }
+  .tvs-shim { transform-box:view-box; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-trail { animation:tvsTrail 1s var(--d) ease-out both; }
+  @keyframes tvsTrail { 0% { opacity:.62; } 25% { opacity:1; } 100% { opacity:.15; } }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-rocket { animation:tvsPop .35s calc(var(--d) + .2s) ease-out both; }
+  @keyframes tvsPop { 0% { transform:scale(1); opacity:1; } 45% { transform:scale(2.3); opacity:1; } 100% { transform:scale(.2); opacity:0; } }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-ray { animation:tvsRay 1.2s calc(var(--d) + .25s) cubic-bezier(.12,.7,.3,1) both; }
+  @keyframes tvsRay { 0% { stroke-dashoffset:.45; opacity:1; } 65% { opacity:1; } 100% { stroke-dashoffset:-.8; opacity:0; } }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-spark { animation:tvsSpark 1.8s calc(var(--d) + .7s) ease-in both; }
+  @keyframes tvsSpark { 0% { opacity:0; transform:translateY(0); } 12% { opacity:1; } 100% { opacity:0; transform:translateY(9px); } }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-reflect { animation:tvsReflect 1.8s calc(var(--d) + .3s) ease-out both; }
+  /* Light on moving water flickers and slides, so each column is two sets of glints shimmying
+     against each other while the whole of it comes up with the burst and dies away with the sparks. */
+  @keyframes tvsReflect { 0% { opacity:0; } 8% { opacity:.95; } 16% { opacity:.55; } 24% { opacity:.85; } 34% { opacity:.45; } 46% { opacity:.7; }
+    60% { opacity:.35; } 78% { opacity:.18; } 100% { opacity:0; } }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-shim { animation:tvsShim .36s calc(var(--d) + .3s) ease-in-out 5 alternate; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-shim.b { animation-name:tvsShimB; }
+  @keyframes tvsShim { from { transform:translateX(-.5px); } to { transform:translateX(.6px); } }
+  @keyframes tvsShimB { from { transform:translateX(.5px); } to { transform:translateX(-.6px); } }
+  .tvs-haze { opacity:0; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tvs-haze { animation:tvsHaze 3.4s .6s ease-out both; }
+  @keyframes tvsHaze { 0% { opacity:0; } 40% { opacity:.55; } 100% { opacity:.35; } }
+
+  /* The gull the 1989 finish shares with its sky: two wings, crooked at the wrist and swept back
+     to black tips, beating from the body while it flies. */
+  .tv9-wing { fill:var(--gl-body); stroke:var(--gl-edge); stroke-width:.4; stroke-linejoin:round; }
+  .tv9-tip { fill:var(--gl-tip); } .tv9-gbody { fill:var(--gl-body); stroke:var(--gl-edge); stroke-width:.35; }
+  .tv9-flap { transform-box:fill-box; transform-origin:50% 62%; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-flap { animation:tv9Flap .19s var(--d) ease-in-out 14 alternate; }
+  @keyframes tv9Flap { from { transform:scaleY(1); } to { transform:scaleY(-.55); } }
+
+  /* ============ 1989 (Taylor's Version): Across the water ============
+     The beach in front, the city across the bay. Dunes and marram grass at the ends, a strip of
+     sand and sea, and on the far shore the original 1989's skyline, small and pale, its stepped
+     tower and its water tower kept where a phone shows them. On hover the original's own weather
+     plays out over there, seen from the beach: dusk comes down over the city, its windows light one
+     at a time, the sea takes the colour, a pair of gulls already up drifts off along the shore
+     and the ones on the sand lift off. 27 October is both albums' day, and this is the finish that
+     belongs to both (anniversaryFinishFor gives it the day). */
+  .play-cta[data-startbtn="anv-1989-tv"] { --cta-fill:#a6d5ef; --cta-text:#10304a; --cta-hover-fill:#a6d5ef; --cta-hover-text:#fff4e4;
+    --ac-city:#94b5cd; --ac-city-dusk:#27365c; --ac-sea:#4f9fcf; --ac-sea-dusk:#5a5687; --ac-sand:#efdcae; --ac-sand-dusk:#b09a95; --ac-dune:#e5cd98; --ac-dune-dusk:#8d7b85;
+    --ac-grass:#7c8f4d; --ac-grass-dusk:#3e4a3c; --ac-gull:#ffffff; --ac-gull-edge:#4d6b82; --ac-window:#ffd98a; --ac-glint:#ffffff;
+    --gl-body:#ffffff; --gl-edge:#4d6b82; --gl-tip:#23303b;
+    --cta-art:linear-gradient(180deg, #7cc4ec 0%, #a6d5ef 50%, #d9f0fa 76%);
+    --dusk:linear-gradient(180deg, #2f4776 0%, #5a6497 42%, #c58a93 74%);
+    background-image:linear-gradient(168deg, #ffffff30 0%, #ffffff00 46%, #0000001a 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-1989-tv"] { --cta-fill:#2d5779; --cta-text:#f2f7fa; --cta-hover-fill:#2d5779; --cta-hover-text:#f3ecd9;
+    --ac-city:#3d6386; --ac-city-dusk:#141f38; --ac-sea:#23507a; --ac-sea-dusk:#2e3259; --ac-sand:#8e8570; --ac-sand-dusk:#5c5363; --ac-dune:#7d7460; --ac-dune-dusk:#4a4252;
+    --ac-grass:#3f4a2c; --ac-grass-dusk:#20261f; --ac-gull:#dfe8ef; --ac-glint:#b9d2e6; --gl-body:#dfe8ef; --gl-edge:#18324a;
+    --cta-art:linear-gradient(180deg, #213f5f 0%, #2d5779 55%, #3f6b90 80%);
+    --dusk:linear-gradient(180deg, #1b2747 0%, #3b4577 45%, #86607a 76%);
+    background-image:linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #0000002a 100%), var(--cta-art); }
+  .play-cta[data-startbtn="anv-1989-tv"] .cta-label { transition:text-shadow .6s; }
+  .play-cta[data-startbtn="anv-1989-tv"]:is(:hover, :focus-visible) .cta-label { text-shadow:0 1px 2px #1b274799; }
+  .tv9-dusk { inset:0; background:var(--dusk); opacity:0; transition:opacity .5s ease; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-dusk { opacity:1; transition:opacity 1.4s ease .1s; }
+  .tv9-city { fill:var(--ac-city); transition:fill .5s; }
+  .tv9-city-legs { fill:none; stroke:var(--ac-city); stroke-width:.5; transition:stroke .5s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-city { fill:var(--ac-city-dusk); transition:fill 1.4s .1s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-city-legs { stroke:var(--ac-city-dusk); transition:stroke 1.4s .1s; }
+  .tv9-win { fill:var(--ac-window); opacity:0; transition:opacity .2s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-win { opacity:1; transition:opacity .25s var(--d); }
+  .tv9-asea { fill:var(--ac-sea); transition:fill .5s; } .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-asea { fill:var(--ac-sea-dusk); transition:fill 1.4s .1s; }
+  .tv9-reflect { fill:var(--ac-window); opacity:0; transition:opacity .3s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-reflect { opacity:.55; transition:opacity .6s var(--d); }
+  .tv9-aglint { fill:none; stroke:var(--ac-glint); stroke-width:.5; stroke-linecap:round; opacity:.75; transition:opacity .6s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-aglint { opacity:.15; transition:opacity 1.2s .2s; }
+  .tv9-sand { fill:var(--ac-sand); transition:fill .5s; } .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-sand { fill:var(--ac-sand-dusk); transition:fill 1.4s .1s; }
+  .tv9-dune { fill:var(--ac-dune); transition:fill .5s; } .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-dune { fill:var(--ac-dune-dusk); transition:fill 1.4s .1s; }
+  .tv9-grass { fill:none; stroke:var(--ac-grass); stroke-width:.7; stroke-linecap:round; transition:stroke .5s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-grass { stroke:var(--ac-grass-dusk); transition:stroke 1.4s .1s; }
+  .tv9-sgull { fill:var(--ac-gull); stroke:var(--ac-gull-edge); stroke-width:.35; }
+  .tv9-sgull .tv9-tip { fill:#23303b; stroke:none; }
+  .tv9-glide { transition:transform 1.2s ease; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-glide { transform:translate(var(--mx), var(--my)); transition:transform 3s cubic-bezier(.3,.1,.4,1) var(--d); }
+  .tv9-lift { opacity:0; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-lift { animation:tv9Lift 2.2s var(--d) cubic-bezier(.4,.1,.6,1) forwards; }
+  @keyframes tv9Lift { 0% { opacity:1; transform:translate(0, 0); } 65% { opacity:1; } 100% { opacity:0; transform:translate(var(--lx), var(--ly)); } }
+  .tv9-perch { transition:opacity .2s .1s; }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-perch { opacity:0; transition:opacity .1s var(--d); }
+  .tv9-lift .tv9-flap { transform:scaleY(.2); }
+  .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-lift .tv9-flap { animation:tv9Flap .17s var(--d) ease-in-out 14 alternate; }
 
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.play-cta { animation: playBob 2.8s ease-in-out infinite; }

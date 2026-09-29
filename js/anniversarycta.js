@@ -1,5 +1,5 @@
-// The album-anniversary Start writing button: twelve finishes, one per studio album, and the
-// rule that puts each on the button on its album's release day.
+// The album-anniversary Start writing button: sixteen finishes, one per studio album and one per
+// Taylor's Version, and the rule that puts each on the button on its record's release day.
 //
 // THE FINISH IS FORCED, AND THAT IS THE POINT. On each album's anniversary the button wears
 // that album's finish over whatever the player has chosen: Seasons, the gold marker, any
@@ -9,8 +9,9 @@
 // never touches the stored choice, so nothing is lost by it.
 //
 // Every finish is drawn on a 600 x 60 strip cropped from the middle, never stretched, exactly as
-// js/cta.js draws its own. The art was designed on scripts/cta/chosen-board.html; change a
-// finish there first and carry it across, so the board and the button do not drift apart.
+// js/cta.js draws its own. The twelve were designed on scripts/cta/chosen-board.html and the four
+// Taylor's Versions on scripts/cta/tv-board.html; change a finish there first and carry it
+// across, so the board and the button do not drift apart.
 import { TS_MILESTONES } from "./config.js";
 
 const R = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
@@ -394,6 +395,230 @@ function showgirl() {
   return { fx: strip('anv-glitter', specks) + bulbs };
 }
 
+/* ---------- the Taylor's Versions ----------
+   The four re-recordings, each drawn from what its Taylor's Version is known for rather than what
+   the original was: the fringe of the Fearless dress, the drive upstate from Red's cover, Speak
+   Now's fireworks over water, and 1989's beach. Designed on scripts/cta/tv-board.html. */
+const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+/* ---- Fearless (Taylor's Version): Gold fringe ---- */
+function fearlessTV() {
+  const rand = R(2021), id = `tvfF${++serial}`, gap = 3.75;
+  // One strand's beads: a long bugle bead, then a small round seed bead, over and over. Each
+  // strand takes one of three golds, so the face is never a printed stripe.
+  const defs = `<defs>${[1, 2, 3].map((k) => `<linearGradient id="${id}g${k}" x1="0" x2="1" y1="0" y2="0"><stop offset="0" class="tvf-b1 t${k}"/><stop offset=".45" class="tvf-b2 t${k}"/><stop offset="1" class="tvf-b3"/></linearGradient>` +
+    `<pattern id="${id}p${k}" width="2.8" height="5.6" patternUnits="userSpaceOnUse"><rect x=".3" y=".2" width="2.2" height="4.1" rx="1" fill="url(#${id}g${k})"/><circle cx="1.4" cy="4.95" r=".62" class="tvf-seed"/></pattern>`).join('')}</defs>`;
+  // [top, length, swing in degrees]. Drawn lowest tier first, so every tier hangs over the top
+  // of the one beneath it, as on the dress. The drops of each tier land clear of the words, one
+  // row above them and one below.
+  const tiers = [[38, 25, 12], [15.5, 27, 9], [-5, 24.5, 6.5]];
+  let body = '';
+  tiers.forEach(([top, len, swing], t) => {
+    let x = -3 + t * 1.2;
+    while (x < 604) {
+      let g = '';
+      const x0 = x;
+      for (let s = 0; s < 2 && x < 604; s++, x += gap + rand() * .3) {
+        const L = len + rand() * 2.4 - 1.2, tone = 1 + Math.floor(rand() * 3);
+        // The pattern tiles from the strand's own origin, so shifting the origin up by a random
+        // part of a bead starts every strand at its own point in the run. Without it the beads
+        // line up across the face into rows, and the fringe reads as woven cane.
+        const off = rand() * 5.6;
+        g += `<g transform="translate(${f(x)} ${f(top - off)}) rotate(${f(rand() * 3 - 1.5)} 1.4 ${f(off)})"><rect y="${f(off)}" width="2.8" height="${f(L)}" fill="url(#${id}p${tone})"/><circle class="tvf-drop" cx="1.4" cy="${f(off + L + .9)}" r="1.35"/></g>`;
+      }
+      body += `<g class="tvf-swing" style="--d:${f(x0 / 600 * .6 + (2 - t) * .08)}s;--a:${f(swing * (.8 + rand() * .45))}">${g}</g>`;
+    }
+  });
+  return { fx: strip('tvf-fringe', defs + body) + `<i class="tvf-sheen"></i>` };
+}
+
+/* ---- Red (Taylor's Version): Upstate ---- */
+// An autumn crown built out of clumps of leaves rather than one round lollipop: a few big clumps
+// fill the middle, many small ones make a ragged edge, and a shade and a lit side sit inside it.
+// Every crown is thrown fresh, so no two trees come out of the same stamp.
+const clumps = (rand, cx, cy, rx, ry, n, [r0, r1], bias = [0, 0], k = 1) => {
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const a = rand() * Math.PI * 2, rr = Math.sqrt(rand()) * k;
+    const x = cx + Math.cos(a) * rx * rr + bias[0], y = cy + Math.sin(a) * ry * rr + bias[1], r = r0 + rand() * (r1 - r0);
+    d += `M${f(x - r)} ${f(y)}a${f(r)} ${f(r)} 0 1 0 ${f(2 * r)} 0a${f(r)} ${f(r)} 0 1 0 ${f(-2 * r)} 0`;
+  }
+  return d;
+};
+const crown = (rand, cx, cy, rx, ry, tone) => {
+  const big = Math.min(rx, ry);
+  return `<path class="tvr-${tone}" d="${clumps(rand, cx, cy, rx * .55, ry * .5, 5, [big * .4, big * .55])}${clumps(rand, cx, cy, rx * .86, ry * .84, Math.round(rx * 2.2), [1.4, 3.2])}"/>` +
+    `<path class="tvr-${tone} s" d="${clumps(rand, cx, cy, rx * .6, ry * .45, Math.round(rx * .9), [1.2, 2.6], [rx * .2, ry * .35])}"/>` +
+    `<path class="tvr-${tone} l" d="${clumps(rand, cx, cy, rx * .5, ry * .4, Math.round(rx * .6), [.9, 2], [-rx * .3, -ry * .3])}"/>`;
+};
+function redTV() {
+  const rand = R(1112), id = `tvrU${++serial}`;
+  let trees = '';
+  const tree = (x, cy, rx, ry, tone, ground = 51) => {
+    const w = Math.max(1.6, rx * .14);
+    trees += `<path class="tvr-trunk" d="M${f(x - w / 2)} ${ground}L${f(x - w * .3)} ${f(cy)}L${f(x + w * .3)} ${f(cy)}L${f(x + w / 2)} ${ground}Z"/>`;
+    // A couple of limbs reaching up into the crown, so it sits on a tree and not a stick.
+    trees += `<path class="tvr-limb" d="M${f(x)} ${f(cy + ry * .5)}L${f(x - rx * .35)} ${f(cy - ry * .15)}M${f(x)} ${f(cy + ry * .3)}L${f(x + rx * .3)} ${f(cy - ry * .25)}"/>`;
+    trees += crown(rand, x, cy, rx, ry, `t${tone}`);
+  };
+  const birch = (x, top, cy, rx, ry) => {
+    trees += `<path class="tvr-birch" d="M${f(x - .9)} 51L${f(x - .5)} ${top}L${f(x + .5)} ${top}L${f(x + 1)} 51Z"/>`;
+    let marks = '';
+    for (let y = top + 3; y < 49; y += 2.4 + rand() * 2.6) marks += `M${f(x - .5)} ${f(y)}h${f(.5 + rand() * .8)}`;
+    trees += `<path class="tvr-birch-mark" d="${marks}"/><path class="tvr-t4" d="${clumps(rand, x, cy, rx * .8, ry * .85, Math.round(rx * 2.4), [1, 2.4])}"/>`;
+  };
+  const pine = (x, top, w) => { trees += `<path class="tvr-pine" d="M${f(x)} ${top}L${f(x + w * .28)} ${f(top + 9)}L${f(x + w * .16)} ${f(top + 9)}L${f(x + w * .42)} ${f(top + 19)}L${f(x + w * .22)} ${f(top + 19)}L${f(x + w / 2)} 51L${f(x - w / 2)} 51L${f(x - w * .22)} ${f(top + 19)}L${f(x - w * .42)} ${f(top + 19)}L${f(x - w * .16)} ${f(top + 9)}L${f(x - w * .28)} ${f(top + 9)}Z"/>`; };
+  // The left: a big maple cropped by the end, a birch, and a rust tree kept inside a phone's
+  // margin over where the car waits.
+  tree(40, 16, 30, 22, 1); birch(84, 12, 20, 11, 13); tree(116, 22, 19, 17, 3); pine(146, 14, 16);
+  tree(178, 25, 17, 15, 2);
+  // The right: a low red bush at the words, a maple and a pine a phone still shows, then gold,
+  // a birch, and another big one at the end.
+  tree(407, 39, 8, 7, 2); tree(424, 22, 16, 17, 1); pine(450, 10, 17); tree(478, 24, 18, 16, 4); birch(508, 10, 18, 10, 12); tree(546, 15, 28, 21, 2); tree(588, 26, 16, 16, 3);
+  let hills = 'M-6 52';
+  for (let x = -6; x <= 606; x += 6) hills += `L${x} ${f(44.5 + 3.2 * Math.sin(x / 47) + 2.4 * Math.sin(x / 19 + 1) + 3 * (1 - smooth(60, 150, Math.abs(x - 300))))}`;
+  hills += 'L606 52Z';
+  // Leaves lying on the road; the car kicks up the ones it passes.
+  let leaves = '';
+  const tones = ['t1', 't2', 't3', 't4'];
+  for (let k = 0; k < 22; k++) {
+    const x = 166 + rand() * 276, y = 53 + rand() * 5.5, t = tones[Math.floor(rand() * 4)], kick = x > 206 && x < 436;
+    const d = .35 + (x - 170) / 230 * 2.8 * .92;
+    // Only a leaf in the car's path takes the kick: the animation replaces the leaf's own
+    // rotation while it runs, so a leaf that stays put must not carry it.
+    leaves += `<ellipse class="tvr-${t}${kick ? ' tvr-leaf' : ''}" cx="${f(x)}" cy="${f(y)}" rx="1.3" ry=".7" transform="rotate(${f(rand() * 180)} ${f(x)} ${f(y)})"` +
+      (kick ? ` style="--d:${f(d)}s;--kx:${f(6 + rand() * 12)}px;--ky:${f(-5 - rand() * 7)}px;--kr:${f(200 + rand() * 300)}deg"` : '') + '/>';
+  }
+  const wheel = (x) => `<g class="tvr-wheel"><circle class="tvr-tyre" cx="${x}" cy="-2.9" r="2.9"/><circle class="tvr-hub" cx="${x}" cy="-2.9" r="1.35"/><path class="tvr-spoke" d="M${f(x - 1.3)} -2.9H${f(x + 1.3)}"/></g>`;
+  // A late-sixties saloon in profile, facing right, its rear wheel's foot at the origin.
+  const car = `<g class="tvr-drive"><g transform="translate(163 56.6) scale(1.12)">` +
+    `<path class="tvr-beam" d="M38 -4.6L70 -10L70 1.5Z" fill="url(#${id}b)"/>` +
+    `<path class="tvr-car" d="M.4 -3.4C.4 -5.2 1 -6.1 2.6 -6.3L9.4 -6.8C11.3 -9.6 13.6 -11.3 17 -11.5L24.4 -11.5C27.2 -11.3 29 -9.8 30.5 -7.3L35.5 -6.7C37 -6.4 37.9 -5.5 37.9 -4.1L37.9 -2.6C37.9 -1.8 37.3 -1.4 36.5 -1.4L1.3 -1.4C.7 -1.4 .4 -1.9 .4 -2.6Z"/>` +
+    `<path class="tvr-car-dark" d="M.4 -2.9H37.9V-2.4C37.9 -1.8 37.3 -1.4 36.5 -1.4L1.3 -1.4C.7 -1.4 .4 -1.9 .4 -2.4Z"/>` +
+    `<path class="tvr-glass" d="M11.2 -7C12.8 -9.3 14.6 -10.4 17.3 -10.5L20.1 -10.5L20.1 -7ZM21.3 -10.5L24.3 -10.5C26.4 -10.3 27.8 -9.2 29 -7L21.3 -7Z"/>` +
+    `<path class="tvr-chrome" d="M1.2 -4.2H37.2M-.5 -2.2H1.4M36.9 -2.2H38.8"/>` +
+    `<circle class="tvr-head" cx="37.4" cy="-5" r=".75"/><rect class="tvr-tail" x=".2" y="-5.6" width=".9" height="1.5" rx=".3"/>` +
+    wheel(8) + wheel(30.4) + `</g></g>`;
+  const defs = `<defs><linearGradient id="${id}b" x1="0" x2="1"><stop offset="0" stop-color="#fff6c4" stop-opacity=".9"/><stop offset="1" stop-color="#fff6c4" stop-opacity="0"/></linearGradient></defs>`;
+  return { fx: strip('tvr-upstate', `${defs}<path class="tvr-hill" d="${hills}"/>${trees}<path class="tvr-verge" d="M-6 49.6C120 50.4 300 49.2 606 50V52H-6Z"/>` +
+    `<rect class="tvr-road" x="-6" y="51.4" width="612" height="10"/><path class="tvr-dash" d="M-6 56.6H606"/>${leaves}${car}`) };
+}
+
+/* ---- Speak Now (Taylor's Version): Fireworks ---- */
+function speakNowTV() {
+  const rand = R(7723), hid = `tvsH${++serial}`;
+  // Two bursts sit in the gaps a phone still shows; the outer two are desktop only.
+  const plan = [[76, 24, 17, 'g', .15], [186, 15, 11.5, 'p', 0], [416, 17, 12.5, 'v', .38], [528, 23, 18, 'w', .58]];
+  let stars = '', trails = '', bursts = '', reflects = '', haze = '';
+  for (let k = 0; k < 64; k++) { let x = rand() * 600; const y = 1.5 + rand() * 40; if (x > 204 && x < 396 && y > 17) continue; stars += `<circle class="tvs-star" cx="${f(x)}" cy="${f(y)}" r="${f(.22 + rand() * .42)}" opacity="${f(.3 + rand() * .55)}"/>`; }
+  plan.forEach(([cx, cy, r, c, d], b) => {
+    const lean = b % 2 ? 6 : -6;
+    trails += `<path class="tvs-trail" style="--d:${d}s" d="M${cx + lean} 50Q${cx + lean * .6} ${f((50 + cy) / 2)} ${cx} ${cy + 4}"/><circle class="tvs-rocket" style="--d:${d}s" cx="${cx}" cy="${cy + 4}" r="1.25"/>`;
+    let rays = '';
+    for (let i = 0, n = 16; i < n; i++) {
+      const a = i / n * Math.PI * 2 + rand() * .2, rr = r * (.78 + rand() * .32);
+      const [x1, y1, x2, y2] = [cx + Math.cos(a) * 2.4, cy + Math.sin(a) * 2.4, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr];
+      rays += `<path class="tvs-ray" pathLength="1" d="M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}"/><circle class="tvs-spark" cx="${f(x2)}" cy="${f(y2)}" r="${f(.55 + rand() * .45)}"/>`;
+    }
+    bursts += `<g class="tvs-burst--${c}" style="--d:${d}s">${rays}</g>`;
+    // The burst on the water: never a solid shape, which reads as a lamp lighting the ground, but
+    // a column of broken glints straight under it, as wide as the burst at the far edge and
+    // thinning as it comes nearer, over a faint pool of its colour.
+    const rows = ['', ''];
+    for (let y = 52.2, row = 0; y < 60.5; y += 1.15, row++) {
+      const near = (y - 52.2) / 8.3, span = r * (1 - near * .4);
+      for (let n = 0, m = 2 + Math.floor(rand() * 3); n < m; n++) {
+        const x = cx + (rand() * 2 - 1) * span, w = .8 + rand() * 3.4 * (1 - near * .5);
+        rows[row % 2] += `<rect${rand() < .2 ? ' class="w"' : ''} x="${f(x - w / 2)}" y="${f(y)}" width="${f(w)}" height=".5" rx=".25"/>`;
+      }
+    }
+    reflects += `<g class="tvs-reflect tvs-burst--${c}" style="--d:${d}s"><ellipse class="tvs-pool" cx="${cx}" cy="53" rx="${f(r * 1.05)}" ry="1.8"/>` +
+      `<g class="tvs-shim" style="--d:${d}s">${rows[0]}</g><g class="tvs-shim b" style="--d:${d}s">${rows[1]}</g></g>`;
+    haze += `<circle cx="${cx}" cy="${cy}" r="${f(r * 1.3)}" fill="url(#${hid})"/>`;
+  });
+  // Long low ripples, closer together toward the far edge the way water foreshortens.
+  let ripples = '';
+  for (let k = 0; k < 30; k++) { const t = rand(), x = rand() * 600, y = 52 + t * t * 8, l = 8 + rand() * 26 * (1 - t * .5); ripples += `M${f(x)} ${f(y)}h${f(l)}`; }
+  // The far shore: a low line of trees and a boathouse roof, dark against the water's edge.
+  let shore = 'M-6 50.8';
+  for (let x = -6; x <= 606; x += 3) shore += `L${x} ${f(50.8 - (Math.abs(x - 300) > 110 ? 1.2 + rand() * 2.4 * smooth(110, 200, Math.abs(x - 300)) : rand() * .5))}`;
+  shore += 'L606 51.6L-6 51.6Z';
+  // The shore again, upside down and fainter, lying on the water under itself.
+  const shoreReflect = `<path class="tvs-shore-reflect" d="${shore}" transform="translate(0 102.4) scale(1 -1)"/>`;
+  const wid = `tvsW${++serial}`;
+  const defs = `<defs><radialGradient id="${hid}"><stop offset="0" stop-color="#ffe9f6" stop-opacity=".22"/><stop offset="1" stop-color="#ffe9f6" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="${wid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="tvs-w0"/><stop offset=".55" class="tvs-w1"/></linearGradient></defs>`;
+  const moon = '<path class="tvs-star" d="M126.6 4.2A4.2 4.2 0 1 0 131 10.6A3.4 3.4 0 0 1 126.6 4.2Z"/>';
+  return { fx: strip('tvs-fireworks', `${defs}${stars}${moon}<g class="tvs-haze">${haze}</g>${trails}${bursts}<rect x="-6" y="51" width="612" height="11" fill="url(#${wid})"/>${shoreReflect}<path class="tvs-ripple" d="${ripples}"/>${reflects}<path class="tvs-shore" d="${shore}"/>`) };
+}
+
+
+/* ---- 1989 (Taylor's Version): a gull ---- */
+// A gull in flight seen from below and a little behind: two wings, each crooked at the wrist and
+// swept back to a black tip, and a short body between. The two wings are drawn separately.
+const GULL = {
+  l: 'M-.9 .2C-2.4 -1.8 -3.9 -2.9 -5 -2.8C-6.2 -2.1 -7.4 -.4 -8.6 1.3C-7 .5 -5.8 -.3 -4.8 -.5C-3.6 -.2 -2.3 .6 -1 1.3Z',
+  r: 'M.9 .2C2.3 -1.6 3.8 -2.7 5 -2.7C6.3 -2 7.5 -.1 8.4 1.5C7 .6 5.8 -.2 4.7 -.4C3.5 -.1 2.2 .7 1 1.3Z',
+  lt: 'M-7.3 -.2C-7.8 .3 -8.2 .8 -8.6 1.3C-7.8 .9 -7 .5 -6.4 .2Z', rt: 'M7.2 -.1C7.7 .4 8.1 1 8.4 1.5C7.6 1 6.9 .6 6.3 .3Z',
+  body: 'M0 -.5C.8 -.5 1.2 .4 1 1.4C.8 2.2 .4 2.6 0 2.6C-.4 2.6 -.8 2.2 -1 1.4C-1.2 .4 -.8 -.5 0 -.5Z',
+};
+const gull = (x, y, s, d, cls = '', style = '') => `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})"><g class="${cls}" style="--d:${f(d)}s;${style}">` +
+  `<g class="tv9-flap" style="--d:${f(d)}s"><path class="tv9-wing" d="${GULL.l}"/><path class="tv9-wing" d="${GULL.r}"/><path class="tv9-tip" d="${GULL.lt}"/><path class="tv9-tip" d="${GULL.rt}"/></g>` +
+  `<path class="tv9-gbody" d="${GULL.body}"/></g></g>`;
+
+/* ---- 1989 (Taylor's Version): Across the water ---- */
+function n1989TV() {
+  const rand = R(2023);
+  // The far shore: the original 1989's city, small and pale. Low under the words, taller in the
+  // gaps, with its stepped tower and its water tower where a phone still shows them.
+  const shore = 47.2;
+  let city = '', legs = '', wins = '';
+  const bld = (x, w, h) => {
+    city += `<rect x="${f(x)}" y="${f(shore - h)}" width="${f(w)}" height="${f(h + .4)}"/>`;
+    for (let wy = shore - h + 1.4; wy < shore - .8; wy += 1.9) for (let wx = x + .9; wx < x + w - .9; wx += 1.7)
+      if (rand() < .5) wins += `<rect class="tv9-win" x="${f(wx)}" y="${f(wy)}" width=".7" height=".9" style="--d:${f(.3 + rand() * 1.4)}s"/>`;
+  };
+  for (let x = 120; x < 480;) {
+    const w = 4 + rand() * 7, mid = x + w / 2, low = Math.abs(mid - 300) < 92;
+    bld(x, w, low ? 1.6 + rand() * 2.8 : 4 + rand() * 7 * smooth(92, 140, Math.abs(mid - 300)) + rand() * 2);
+    x += w + (rand() < .3 ? .8 : 0);
+  }
+  // The stepped tower with its mast, and a water tower on a roof.
+  city += `<rect x="424" y="${f(shore - 15)}" width="6.4" height="15.4"/><rect x="425.4" y="${f(shore - 18)}" width="3.6" height="3.4"/><rect x="426.9" y="${f(shore - 23)}" width=".5" height="5.4"/>`;
+  wins += `<rect class="tv9-win" x="425.4" y="${f(shore - 13)}" width=".7" height=".9" style="--d:.5s"/><rect class="tv9-win" x="427.8" y="${f(shore - 9)}" width=".7" height=".9" style="--d:.9s"/>`;
+  const wt = 186, wtop = shore - 7.6;
+  city += `<rect x="${wt - 2}" y="${f(wtop - 4.2)}" width="4" height="3.4" rx=".4"/><path d="M${wt - 2.3} ${f(wtop - 4.2)}L${wt} ${f(wtop - 6.2)}L${wt + 2.3} ${f(wtop - 4.2)}Z"/>`;
+  legs += `M${wt - 1.6} ${f(wtop)}L${wt - 1.3} ${f(wtop - 1)}M${wt + 1.6} ${f(wtop)}L${wt + 1.3} ${f(wtop - 1)}`;
+  // The sea: glints by day, the lit windows laid on it by night.
+  let glints = '', reflect = '';
+  for (let k = 0; k < 22; k++) { const x = rand() * 600, y = 48.4 + rand() * 4.4; glints += `M${f(x)} ${f(y)}h${f(1.4 + rand() * 3.5)}`; }
+  for (let k = 0; k < 26; k++) { const x = 130 + rand() * 340; if (Math.abs(x - 300) < 80 && rand() < .6) continue; reflect += `<rect class="tv9-reflect" x="${f(x)}" y="${f(48.2 + rand() * 4)}" width="${f(.8 + rand() * 1.6)}" height=".45" style="--d:${f(.5 + rand() * 1.2)}s"/>`; }
+  // Dunes at the ends, marram grass along their crests, and a strip of sand between.
+  const dune = (x) => 54.5 - 11 * smooth(0, 1, (150 - x) / 150) - 12 * smooth(0, 1, (x - 450) / 150) - 1.4 * Math.sin(x / 13);
+  let d = 'M-6 62';
+  for (let x = -6; x <= 606; x += 3) d += `L${x} ${f(Math.min(54.5, dune(x)))}`;
+  d += 'L606 62Z';
+  let grass = '';
+  for (let x = -4; x < 604; x += 1.2 + rand() * 2.4) {
+    const g = dune(x);
+    if (g > 52.2) continue;
+    const n = 2 + Math.floor(rand() * 3);
+    for (let k = 0; k < n; k++) { const h = 3 + rand() * 5 * (g < 50 ? 1.2 : .6), lean = (rand() - .4) * 3; grass += `M${f(x)} ${f(g + .6)}Q${f(x + lean * .3)} ${f(g - h * .6)} ${f(x + lean)} ${f(g - h)}`; }
+  }
+  // Two gulls standing on the sand, and a third on the dune; on hover they lift off over the water.
+  const standing = (x, y, s) => `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})"><g class="tv9-sgull"><path d="M-2.6 -2.4C-2.2 -3.6 -.8 -4 .6 -3.6L2.4 -4.2C3.2 -4.8 4 -4.4 3.9 -3.7L3.4 -3.3C3 -2 1.6 -.9 -.2 -.9L-3.4 -1.2Z"/><path class="tv9-tip" d="M-3.4 -1.2L-5 -1.5L-2.6 -2.4Z"/><path d="M-.2 -.9V0M.8 -1V0" stroke="#d48a5a" stroke-width=".35" fill="none"/></g></g>`;
+  const perched = [[176, 56.6, 1, .2, -40, -30], [196, 57.4, .9, .45, 60, -34], [430, 56, 1, .1, -70, -28]];
+  // And a pair already up over the water, gliding where a phone still shows them. On hover they
+  // drift off along the shore, away from the words, as the light goes.
+  const pair = [[176, 12.5, 1.05, .15, -22, -4], [193, 19, .8, .3, -18, -1.5]].map(([x, y, sc, dl, mx, my]) =>
+    gull(x, y, sc, dl, 'tv9-glide', `--mx:${f(mx / sc)}px;--my:${f(my / sc)}px`)).join('');
+  const birds = pair + perched.map(([x, y, sc, dl, lx, ly]) => `<g class="tv9-perch" style="--d:${dl}s">${standing(x, y, sc)}</g>` +
+    gull(x, y - 3.4, sc * .82, dl, 'tv9-lift', `--lx:${f(lx / sc / .82)}px;--ly:${f(ly / sc / .82)}px`)).join('');
+  return { fx: `<i class="tv9-dusk"></i>` + strip('tv9-across', `<g class="tv9-city">${city}</g><path class="tv9-city-legs" d="${legs}"/>${wins}` +
+    `<rect class="tv9-asea" x="-6" y="${shore}" width="612" height="10"/><path class="tv9-aglint" d="${glints}"/>${reflect}` +
+    `<path class="tv9-sand" d="M-6 53.2C150 52.6 300 54 606 53.2V62H-6Z"/><path class="tv9-dune" d="${d}"/><path class="tv9-grass" d="${grass}"/>${birds}`) };
+}
+
 /* ---------- which finish, on which day ---------- */
 // Keyed by the TS_MILESTONES album name, so the release dates live in one table and a date fix
 // there moves the button with the margin note.
@@ -411,22 +636,36 @@ const ANNIVERSARY_FINISHES = {
   "The Tortured Poets Department": ["anv-ttpd", ttpd],
   "The Life of a Showgirl": ["anv-showgirl", showgirl],
 };
-const ART = Object.fromEntries(Object.values(ANNIVERSARY_FINISHES));
+// The four Taylor's Versions, keyed the same way off their own TS_MILESTONES rows (kind "tv").
+const TV_FINISHES = {
+  "Fearless": ["anv-fearless-tv", fearlessTV],
+  "Red": ["anv-red-tv", redTV],
+  "Speak Now": ["anv-speaknow-tv", speakNowTV],
+  "1989": ["anv-1989-tv", n1989TV],
+};
+const BY_KIND = { album: ANNIVERSARY_FINISHES, tv: TV_FINISHES };
+const finishOf = (m) => BY_KIND[m.kind]?.[m.album]?.[0] || "";
+const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES)]);
 
 // The finish the button is forced into on `dateKey` (YYYY-MM-DD, the player's own day), or "" on
-// every other day. Original studio releases only: a Taylor's Version day keeps the player's own
-// finish, because these twelve were drawn for the day each record first came out. A year before
-// the album existed (only reachable with the dev date) is not its anniversary.
+// every other day. Every studio album's release day counts, and so does every Taylor's Version's.
+// A year before a record existed (only reachable with the dev date) is not its anniversary.
+//
+// One day belongs to two records: 1989 (Taylor's Version) came out on 1989's ninth birthday. The
+// later release has the day from its own release on, and that is deliberate rather than a tie
+// broken by list order: its finish, Across the water, is drawn to carry both, the beach in front
+// and the original's skyline over the bay, going through the original's own dusk on hover. So the
+// original's Skyline shows on 27 October only in the years before 2023.
 export function anniversaryFinishFor(dateKey) {
   if (!dateKey || dateKey.length < 10) return "";
   const md = dateKey.slice(5), year = +dateKey.slice(0, 4);
-  const release = TS_MILESTONES.find((m) => m.kind === "album" && m.md === md && year >= m.year);
-  return (release && ANNIVERSARY_FINISHES[release.album]?.[0]) || "";
+  const release = TS_MILESTONES.filter((m) => m.md === md && year >= m.year && finishOf(m)).sort((a, b) => b.year - a.year)[0];
+  return release ? finishOf(release) : "";
 }
 
-// Every album and its finish and release day, for the dev tools.
-export const anniversaryFinishList = () => TS_MILESTONES.filter((m) => m.kind === "album" && ANNIVERSARY_FINISHES[m.album])
-  .map((m) => ({ album: m.album, finish: ANNIVERSARY_FINISHES[m.album][0], md: m.md, year: m.year }));
+// Every record with a finish, with its release day, for the dev tools.
+export const anniversaryFinishList = () => TS_MILESTONES.filter(finishOf)
+  .map((m) => ({ album: m.album, title: m.title, finish: finishOf(m), md: m.md, year: m.year }));
 
 // The drawing for an anniversary finish: { fx, out?, label? }, or null for any other finish. `fx`
 // goes in the clipped art layer, `out` in a layer allowed past the button's edge (Red's fringe,
