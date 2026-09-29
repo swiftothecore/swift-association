@@ -14158,14 +14158,17 @@
      weaker still. The fix is opacity, not hue: the swipe keeps its gold and stops
      pretending to be translucent, which is the same trade the lamp makes a few rules up.
      2.32:1 puts it mid-pack between lavender and denim, and black ink still reads 9:1
-     over the mark. The searcher copies this pair verbatim, so it moves in both or neither. */
+     over the mark. The searcher copies this pair verbatim, so it moves in both or neither.
+     Debut then inherited the floor at 1.86:1, the same yellow-green-on-white problem, and
+     took the same lever: 0.62 to 0.84 on an unchanged hue gives 2.36:1 beside gold and
+     denim, with black ink still 8.9:1 over the mark. Lover is the floor now, at 2.09:1. */
   body[data-contrast="high"][data-era="gold"]     { --ink-accent:#7a5300; --highlighter:rgba(202,152,0,0.88); --bead:#7a5300; }
   body[data-contrast="high"][data-era="lavender"] { --ink-accent:#3f2c80; --highlighter:rgba(150,120,225,0.7); --bead:#3f2c80; }
   body[data-contrast="high"][data-era="red"]      { --ink-accent:#8a0008; --highlighter:rgba(210,40,45,0.6);  --bead:#8a0008; }
   body[data-contrast="high"][data-era="denim"]    { --ink-accent:#0d3f73; --highlighter:rgba(60,130,200,0.65); --bead:#0d3f73; }
   body[data-contrast="high"][data-era="graphite"] { --ink-accent:#222222; --highlighter:rgba(90,90,90,0.6);   --bead:#222222; }
   body[data-contrast="high"][data-era="midnight"] { --ink-accent:#101d4d; --highlighter:rgba(60,80,170,0.6);  --bead:#101d4d; }
-  body[data-contrast="high"][data-era="debut"]      { --ink-accent:#14512c; --highlighter:rgba(60,175,95,0.62); --bead:#14512c; }
+  body[data-contrast="high"][data-era="debut"]      { --ink-accent:#14512c; --highlighter:rgba(60,175,95,0.84); --bead:#14512c; }
   body[data-contrast="high"][data-era="reputation"] { --ink-accent:#000000; --highlighter:rgba(64,64,72,0.6);   --bead:#000000; }
   body[data-contrast="high"][data-era="lover"]      { --ink-accent:#8a0050; --highlighter:rgba(230,90,165,0.62); --bead:#8a0050; }
   body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#452a10; --highlighter:rgba(175,115,50,0.62); --bead:#452a10; }
