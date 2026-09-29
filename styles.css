@@ -15662,9 +15662,20 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   font-size: calc(21px + var(--text-size-adjust)); color: var(--card-soft);
   transform: translateY(8px);
 }
-.run-pause-sheet .btn-primary.run-pause-go {
-  width: auto; min-width: min(220px, 100%); margin: auto 0 0; padding: 12px 30px;
+/* The way back in belongs to the card: its own stock, a hard edge in its ink and a hard shadow,
+   typewriter caps. It fills with ink on hover so it never reads as a disabled grey block. Focus
+   only rings it: coming back to the tab focuses it, and a card that always greeted the player
+   with a solid black button would never show its resting face. */
+.run-pause-go {
+  min-width: min(210px, 100%); margin: auto 0 0; padding: 12px 26px;
+  background: var(--card); color: var(--card-ink);
+  border: 2px solid var(--card-ink); border-radius: 3px; box-shadow: 3px 3px 0 var(--card-ink);
+  font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 2.5px; text-transform: uppercase;
+  transform: rotate(-1deg);
 }
+.run-pause-go:hover { background: var(--card-ink); color: var(--card); }
+.run-pause-go:focus-visible { outline: 1.5px dashed var(--card-ink); outline-offset: 4px; }
+.run-pause-go:active { transform: rotate(-1deg) translate(2px, 2px); box-shadow: 1px 1px 0 var(--card-ink); }
 @media (max-width: 480px) {
   .run-pause-sheet { padding: 0 14px 16px; }
   .run-pause-sheet h2 { font-size: calc(32px + var(--text-size-adjust)); }

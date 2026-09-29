@@ -27999,14 +27999,9 @@ function interruptRun() {
   overlay.innerHTML = `<div class="run-pause-sheet">${tape}` +
     `<div class="run-pause-note"><h2 id="runPauseTitle">Your page is waiting</h2>` +
     `<p class="run-pause-clock">${escapeHtml(pausedClockLine())}</p>` +
-    `<button type="button" class="btn-primary play-cta run-pause-go" id="runResumeBtn"></button></div></div>`;
-  // The way back in is the player's own start button, in whatever finish it is wearing.
+    `<button type="button" class="run-pause-go" id="runResumeBtn">carry on <span aria-hidden="true">&rarr;</span></button>` +
+    `</div></div>`;
   const go = overlay.querySelector("#runResumeBtn");
-  const finish = $("playBtn")?.dataset.startbtn || "";
-  if (finish) go.dataset.startbtn = finish;
-  const stripes = $("playBtn")?.style.getPropertyValue("--cta-stripes");
-  if (stripes) go.style.setProperty("--cta-stripes", stripes);
-  go.innerHTML = ctaContentHTML("", finish, "carry on");
   document.body.appendChild(overlay);
   liveRunScreen().classList.add("is-put-away");
   placeRunPauseSheet();
