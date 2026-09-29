@@ -12956,18 +12956,18 @@
   .nav-card:hover .nav-hl, .nav-card:focus-visible .nav-hl {
     background-size: 104% 1.18em;
   }
-  #recordsBtn .nav-hl      { --hl: var(--hl-records); }
-  #statsBtn .nav-hl        { --hl: var(--hl-stats); }
-  #achievementsBtn .nav-hl { --hl: var(--hl-charms); }
-  #challengesBtn .nav-hl   { --hl: var(--hl-challenges); --hl-b: 0.03em; }
-  #masteryBtn .nav-hl      { --hl: var(--hl-mastery); }
-  #bonusBtn .nav-hl        { --hl: var(--hl-bonus); }
-  :root[data-theme="dark"] #recordsBtn .nav-hl      { --hl: var(--hl-records-dark); }
-  :root[data-theme="dark"] #statsBtn .nav-hl        { --hl: var(--hl-stats-dark); }
-  :root[data-theme="dark"] #achievementsBtn .nav-hl { --hl: var(--hl-charms-dark); }
-  :root[data-theme="dark"] #challengesBtn .nav-hl   { --hl: var(--hl-challenges-dark); }
-  :root[data-theme="dark"] #masteryBtn .nav-hl      { --hl: var(--hl-mastery-dark); }
-  :root[data-theme="dark"] #bonusBtn .nav-hl        { --hl: var(--hl-bonus-dark); }
+  :is(#recordsBtn, [data-flip-id="recordsBtn"]) .nav-hl           { --hl: var(--hl-records); }
+  :is(#statsBtn, [data-flip-id="statsBtn"]) .nav-hl               { --hl: var(--hl-stats); }
+  :is(#achievementsBtn, [data-flip-id="achievementsBtn"]) .nav-hl { --hl: var(--hl-charms); }
+  :is(#challengesBtn, [data-flip-id="challengesBtn"]) .nav-hl     { --hl: var(--hl-challenges); --hl-b: 0.03em; }
+  :is(#masteryBtn, [data-flip-id="masteryBtn"]) .nav-hl           { --hl: var(--hl-mastery); }
+  :is(#bonusBtn, [data-flip-id="bonusBtn"]) .nav-hl               { --hl: var(--hl-bonus); }
+  :root[data-theme="dark"] :is(#recordsBtn, [data-flip-id="recordsBtn"]) .nav-hl           { --hl: var(--hl-records-dark); }
+  :root[data-theme="dark"] :is(#statsBtn, [data-flip-id="statsBtn"]) .nav-hl               { --hl: var(--hl-stats-dark); }
+  :root[data-theme="dark"] :is(#achievementsBtn, [data-flip-id="achievementsBtn"]) .nav-hl { --hl: var(--hl-charms-dark); }
+  :root[data-theme="dark"] :is(#challengesBtn, [data-flip-id="challengesBtn"]) .nav-hl     { --hl: var(--hl-challenges-dark); }
+  :root[data-theme="dark"] :is(#masteryBtn, [data-flip-id="masteryBtn"]) .nav-hl           { --hl: var(--hl-mastery-dark); }
+  :root[data-theme="dark"] :is(#bonusBtn, [data-flip-id="bonusBtn"]) .nav-hl               { --hl: var(--hl-bonus-dark); }
   /* ONE LINE, always. Left to wrap, three of the six broke onto a second line even at
      desktop width and the other three did not, and on a narrow card "0 / 40 to unlock"
      stacked four words deep; a row of cards with its kickers at three different depths
