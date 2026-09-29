@@ -1937,7 +1937,9 @@
      end state while held. Every class is anv- (or fk-/sn- for folklore's wood and Speak Now's
      castle, and tvf-/tvr-/tvs-/tv9- for the four Taylor's Versions), and every finish id is
      anv-<album> or anv-<album>-tv, which is what the [data-startbtn^="anv-"] rules key on.
-     The twelve were designed on scripts/cta/chosen-board.html, the four on tv-board.html. */
+     The twelve were designed on scripts/cta/chosen-board.html, the four on tv-board.html.
+     Last comes the 13th of every month's, anv-13th (ch- classes), forced the same way by
+     thirteenthFinishFor and designed on thirteenth-board.html. */
   .btn-primary.play-cta[data-startbtn^="anv-"]::after { content:none; }
   .anv-out { position:absolute; inset:0; z-index:2; pointer-events:none; }
   .anv-out > * { position:absolute; }
@@ -2396,6 +2398,38 @@
   .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-perch { opacity:0; transition:opacity .1s var(--d); }
   .tv9-lift .tv9-flap { transform:scaleY(.2); }
   .play-cta[data-startbtn^="anv-"]:is(:hover, :focus-visible) .tv9-lift .tv9-flap { animation:tv9Flap .17s var(--d) ease-in-out 14 alternate; }
+
+  /* ============ The 13th: Thirteen marks ============
+     A slate with twelve chalked on it, two gates before the words and two strokes after, last
+     month's count rubbed out at each end and a stick of chalk on the ledge. On hover the
+     thirteenth is struck almost at once and a little dust falls off it. The two halves of the
+     count are laid beside the label by layCount (js/anniversarycta.js), never cropped, so the
+     count is thirteen at every width; a phone gets them split evenly, a gate and two strokes
+     before the words and a gate and the thirteenth after. */
+  .play-cta[data-startbtn="anv-13th"] { --cta-fill:#2e3b34; --cta-text:#f4f1e6; --cta-hover-text:#f4f1e6; --chalk:#eeebe0;
+    --ch-w0:#9a7449; --ch-w1:#6c4d2c; --ch-w-hi:#c29c6c;
+    --cta-art:radial-gradient(ellipse 60% 140% at 22% 30%, #3d4d44 0%, #3d4d4400 72%), radial-gradient(ellipse 50% 120% at 80% 70%, #37463e 0%, #37463e00 70%), linear-gradient(180deg, #33423a 0%, #2a362f 100%);
+    background-image:linear-gradient(168deg, #ffffff0d 0%, #ffffff00 46%, #0000002a 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-13th"] { --cta-fill:#212b26; --chalk:#d9d6cb; --ch-w0:#6e5234; --ch-w1:#4a341d; --ch-w-hi:#8a6a46;
+    --cta-art:radial-gradient(ellipse 60% 140% at 22% 30%, #2c3832 0%, #2c383200 72%), linear-gradient(180deg, #25302a 0%, #1d2621 100%);
+    background-image:linear-gradient(168deg, #ffffff08 0%, #ffffff00 46%, #00000030 100%), var(--cta-art); }
+  .play-cta[data-startbtn="anv-13th"] .cta-label { text-shadow:0 1px 1px #141b17; }
+  /* Nothing until layCount has sized a pair: an SVG with no size is drawn 300 x 150. */
+  .ch-count { overflow:visible; width:0; height:0; }
+  .ch-mark { fill:none; stroke:var(--chalk); stroke-linecap:round; }
+  .ch-ghost { opacity:.1; }
+  .ch-smear rect { fill:#f4f1e6; }
+  /* The dash starts a shade past the stroke's start, or its round cap would leave a dot of chalk
+     where the thirteenth is about to go. */
+  .ch-13 { stroke-dasharray:1 1.2; stroke-dashoffset:1.06; }
+  .play-cta[data-startbtn="anv-13th"]:is(:hover, :focus-visible) .ch-13 { stroke-dashoffset:0; transition:stroke-dashoffset .2s .1s cubic-bezier(.45,0,.75,.55); }
+  .ch-dust { fill:var(--chalk); opacity:0; }
+  .play-cta[data-startbtn="anv-13th"]:is(:hover, :focus-visible) .ch-dust { animation:chDust 1s calc(.26s + var(--d)) cubic-bezier(.4,0,.9,.6) both; }
+  @keyframes chDust { 0% { opacity:0; transform:translate(0, 0); } 10% { opacity:.85; } 100% { opacity:0; transform:translate(var(--dx), var(--dy)); } }
+  .ch-w0 { stop-color:var(--ch-w0); } .ch-w1 { stop-color:var(--ch-w1); }
+  .ch-ledge-hi { fill:none; stroke:var(--ch-w-hi); stroke-width:.7; opacity:.8; }
+  .ch-crumb { fill:var(--chalk); opacity:.35; }
+  .ch-stick { fill:#f6f3ea; } .ch-stick-shade { fill:#b8b3a6; } .ch-stick-end { fill:#e2ded2; }
 
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.play-cta { animation: playBob 2.8s ease-in-out infinite; }

@@ -1,16 +1,19 @@
-// The album-anniversary Start writing button: sixteen finishes, one per studio album and one per
-// Taylor's Version, and the rule that puts each on the button on its record's release day.
+// The dated Start writing button: sixteen finishes, one per studio album and one per Taylor's
+// Version, and the rule that puts each on the button on its record's release day; and one more,
+// Thirteen marks, for the 13th of every month.
 //
 // THE FINISH IS FORCED, AND THAT IS THE POINT. On each album's anniversary the button wears
 // that album's finish over whatever the player has chosen: Seasons, the gold marker, any
 // Mastery finish, the random roll. It is there to show support for the album on its release
 // day, the notebook dressing up for her record the way a fan does, and support you can switch
 // off would only be a theme. It lasts the one day and hands the button straight back, and it
-// never touches the stored choice, so nothing is lost by it.
+// never touches the stored choice, so nothing is lost by it. The 13th is forced the same way, for
+// her lucky number, on the 13th only.
 //
 // Every finish is drawn on a 600 x 60 strip cropped from the middle, never stretched, exactly as
-// js/cta.js draws its own. The twelve were designed on scripts/cta/chosen-board.html and the four
-// Taylor's Versions on scripts/cta/tv-board.html; change a finish there first and carry it
+// js/cta.js draws its own (the 13th's count is the one exception, and says why). The twelve were
+// designed on scripts/cta/chosen-board.html, the four Taylor's Versions on scripts/cta/tv-board.html
+// and the 13th on scripts/cta/thirteenth-board.html; change a finish there first and carry it
 // across, so the board and the button do not drift apart.
 import { TS_MILESTONES } from "./config.js";
 
@@ -619,6 +622,96 @@ function n1989TV() {
     `<path class="tv9-sand" d="M-6 53.2C150 52.6 300 54 606 53.2V62H-6Z"/><path class="tv9-dune" d="${d}"/><path class="tv9-grass" d="${grass}"/>${birds}`) };
 }
 
+/* ---------- the 13th of every month: Thirteen marks ----------
+   A slate with a count chalked on it: two gates of five before the words and two strokes after
+   them, twelve, and on hover the thirteenth is struck. The slate (last month's count rubbed out
+   at each end, the eraser's smears, the ledge and its chalk) is a strip cropped from the middle
+   like every other finish. The count is NOT: it is two small drawings that layoutAnniversaryArt
+   lays either side of the words, measured off the label, splits more evenly on a phone, and
+   shrinks together when a gutter is too narrow for them. A count with a mark cropped off is a
+   different number, so every one of the thirteen shows at every width, for every choice of
+   words. Designed on
+   scripts/cta/thirteenth-board.html. */
+const chalkMarks = (rand) => {
+  const stroke = (x1, y1, x2, y2, w, cls = '') => {
+    const mx = (x1 + x2) / 2 + (rand() - .5) * .9, my = (y1 + y2) / 2 + (rand() - .5) * .6;
+    return `<path class="ch-mark${cls ? ` ${cls}` : ''}" d="M${f(x1)} ${f(y1)}Q${f(mx)} ${f(my)} ${f(x2)} ${f(y2)}" stroke-width="${f(w)}"${cls ? ' pathLength="1"' : ''}/>`;
+  };
+  // Each stroke its own length, lean and weight, and each gate's bar at its own angle.
+  const vert = (x, cls) => { const top = 16.2 + rand() * 2.8, bot = 41.4 + rand() * 2.6, lean = (rand() - .4) * 2.4; return stroke(x + lean * .5, top, x - lean * .5, bot, 3.1 + rand() * .9, cls); };
+  const gate = (x0, xs) => xs.map((dx) => vert(x0 + dx)).join('') + stroke(x0 - 6 + rand(), 37.6 + rand() * 2.6, x0 + xs[3] + 5 + rand(), 20.4 + rand() * 2, 3.3 + rand() * .5);
+  return { vert, gate };
+};
+// The grit a stick of chalk leaves: the stroke eaten into by the slate's grain, its edge roughed.
+const chalkGrit = (id) => `<filter id="${id}" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="13" result="n"/>` +
+  `<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -2.6 0 0 0 1.75" result="grit"/><feComposite in="SourceGraphic" in2="grit" operator="in" result="g"/>` +
+  `<feDisplacementMap in="g" in2="n" scale="1.2" xChannelSelector="G" yChannelSelector="B"/></filter>`;
+// The halves of the count, in the strip's own units so that at full size they match the slate's
+// scale: [viewBox x, y, width, height]. Two ways of splitting the thirteen. l and r are the one
+// drawn for the button, two gates before the words and three strokes after, and it is used
+// wherever it fits nearly full size. That lopsided split needs a wide left gutter, and a phone's
+// has about half of it, so there l2 and r2 even it out, a gate and two strokes each side of the
+// words, then a gate and the thirteenth, which lets the marks stay large enough to read as chalk.
+const COUNT_BOX = { l: [123, 13.5, 70, 33], r: [411, 13.5, 24, 33], l2: [123, 13.5, 50, 33], r2: [407, 13.5, 43, 33] };
+function thirteenMarks() {
+  const rand = R(3939), id = `anvCh${++serial}`;
+  const { vert, gate } = chalkMarks(rand);
+  const halves = {
+    l: gate(131.4, [0, 6.9, 13.6, 20.2]) + gate(164.6, [0, 6.6, 13.4, 19.8]),
+    r: vert(415.4) + vert(423) + vert(430.8, 'ch-13'),
+    l2: gate(131.4, [0, 6.8, 13.7, 20.3]) + vert(161.8) + vert(169.2),
+    r2: gate(415.2, [0, 6.7, 13.3, 19.9]) + vert(446.2, 'ch-13'),
+  };
+  // Last month's count, rubbed out but not quite gone, out at each end of a wide button.
+  const ghosts = gate(18, [0, 7, 14, 21.4]) + gate(58, [0, 7.6, 14.6, 22]) + vert(96) + vert(103.4) + vert(110.6) +
+    gate(470, [0, 7.2, 14.4, 21.6]) + gate(510, [0, 7.4, 14.8, 22.2]) + vert(548) + vert(555.6) + vert(562.8);
+  const smears = [[96, 14, 150, 8, -2], [300, 50, 250, 9, 1], [486, 22, 170, 10, -1.5], [220, 7, 130, 6, 1], [560, 44, 110, 8, 2], [40, 44, 90, 9, -1]]
+    .map(([cx, cy, w, h, r]) => `<rect x="${f(cx - w / 2)}" y="${f(cy - h / 2)}" width="${w}" height="${h}" rx="${h / 2}" transform="rotate(${r} ${cx} ${cy})" opacity="${f(.035 + rand() * .035)}"/>`).join('');
+  // The dust knocked off as the thirteenth lands, falling toward the ledge.
+  const dust = (x) => { let d = ''; for (let k = 0; k < 12; k++) d += `<circle class="ch-dust" cx="${f(x + (rand() - .5) * 3.4)}" cy="${f(40 + rand() * 3)}" r="${f(.4 + rand() * .5)}" style="--d:${f(rand() * .2)}s;--dx:${f((rand() - .5) * 8)}px;--dy:${f(8 + rand() * 5)}px"/>`; return d; };
+  const falls = { r: dust(431), r2: dust(446.6) };
+  let crumbs = '';
+  for (let k = 0; k < 60; k++) crumbs += `<circle class="ch-crumb" cx="${f(rand() * 600)}" cy="${f(55.2 + rand() * .9)}" r="${f(.2 + rand() * .35)}"/>`;
+  const stick = `<g transform="translate(452 54.7) rotate(-3)"><rect class="ch-stick" x="-12" y="-3.6" width="24" height="3.6" rx="1.7"/><rect class="ch-stick-shade" x="-11.6" y="-1.2" width="23.2" height="1.2" rx=".6"/><ellipse class="ch-stick-end" cx="11.6" cy="-1.8" rx=".9" ry="1.75"/></g>`;
+  const defs = chalkGrit(`${id}c`) + `<filter id="${id}s" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter>` +
+    `<linearGradient id="${id}w" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="ch-w0"/><stop offset="1" class="ch-w1"/></linearGradient>`;
+  const half = (side) => { const [x, y, w, h] = COUNT_BOX[side];
+    return `<svg class="ch-count ch-count--${side}" viewBox="${x} ${y} ${w} ${h}"><defs>${chalkGrit(`${id}${side}`)}</defs><g filter="url(#${id}${side})">${halves[side]}</g>${falls[side] || ''}</svg>`; };
+  return { fx: strip('ch-slate', `<defs>${defs}</defs><g class="ch-smear" filter="url(#${id}s)">${smears}</g><g class="ch-ghost" filter="url(#${id}c)">${ghosts}</g>` +
+    `<rect x="-6" y="54.6" width="612" height="8" fill="url(#${id}w)"/><path class="ch-ledge-hi" d="M-6 55H606"/>${crumbs}${stick}`) + Object.keys(COUNT_BOX).map(half).join('') };
+}
+// Lays the count beside the words: the left half ends a gap short of the label, the right half
+// starts a gap past it, and both share one scale, the largest that lets each fit its gutter. The
+// drawn split is kept while it fits at nine tenths of full size or better; below that the even
+// split takes over, with a tighter gap, since it keeps the marks larger.
+function layCount(btn) {
+  const fx = btn.querySelector('.cta-fx'), label = btn.querySelector('.cta-label');
+  const counts = btn.querySelectorAll('.ch-count');
+  if (!fx || !label || counts.length !== 4 || !btn.offsetWidth) return;
+  const box = btn.getBoundingClientRect(), text = label.getBoundingClientRect();
+  if (!box.width) return;
+  const k0 = btn.offsetWidth / box.width; // undo a preview's scale: work in the button's own pixels
+  const W = fx.clientWidth, H = fx.clientHeight, u = H / 60;
+  const from = (x) => (x - box.left) * k0 - btn.clientLeft;
+  const labelL = from(text.left), labelR = from(text.right);
+  const fit = (a, b, gap, edge) => Math.min(1, (labelL - gap - edge) / (COUNT_BOX[a][2] * u), (W - labelR - gap - edge) / (COUNT_BOX[b][2] * u));
+  const drawn = fit('l', 'r', 7, 5);
+  const [a, b, gap, k] = drawn >= .9 ? ['l', 'r', 7, drawn] : ['l2', 'r2', 5, Math.max(.2, fit('l2', 'r2', 5, 3))];
+  const top = H / 2 - (30 - COUNT_BOX[a][1]) * u * k, h = COUNT_BOX[a][3] * u * k;
+  const put = (side, left) => Object.assign(btn.querySelector(`.ch-count--${side}`).style,
+    { display: '', left: `${f(left)}px`, top: `${f(top)}px`, width: `${f(COUNT_BOX[side][2] * u * k)}px`, height: `${f(h)}px` });
+  counts.forEach((el) => { el.style.display = 'none'; });
+  put(a, labelL - gap - COUNT_BOX[a][2] * u * k);
+  put(b, labelR + gap);
+}
+
+// The finish the button is forced into on the 13th of every month, or "". A release day outranks
+// it, the way a record's day outranks the 13th in the margin note: paintStartButton asks
+// anniversaryFinishFor first. Only the 13th itself counts; the days that add up to 13 keep their
+// margin note and the player's own button, since forcing the finish on those too would take the
+// button away from the player on some forty days a year.
+export const thirteenthFinishFor = (dateKey) => dateKey?.slice(8, 10) === "13" ? "anv-13th" : "";
+
 /* ---------- which finish, on which day ---------- */
 // Keyed by the TS_MILESTONES album name, so the release dates live in one table and a date fix
 // there moves the button with the margin note.
@@ -645,7 +738,7 @@ const TV_FINISHES = {
 };
 const BY_KIND = { album: ANNIVERSARY_FINISHES, tv: TV_FINISHES };
 const finishOf = (m) => BY_KIND[m.kind]?.[m.album]?.[0] || "";
-const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES)]);
+const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks]]);
 
 // The finish the button is forced into on `dateKey` (YYYY-MM-DD, the player's own day), or "" on
 // every other day. Every studio album's release day counts, and so does every Taylor's Version's.
@@ -675,15 +768,23 @@ export function anniversaryArt(finish) {
   return draw ? draw() : null;
 }
 
-// Anything that has to measure the button once it is on the page. Only Red needs it: the fringe
-// keeps one spacing at every width, so it is hung by the button's width and re-hung when that
-// changes. Safe to call on every paint; the watcher is attached once per button.
+// Anything that has to measure the button once it is on the page. Red's fringe keeps one spacing
+// at every width, so it is hung by the button's width; the 13th's count is laid beside the words,
+// so it is laid by where the label sits, which moves with the button's size and with the face
+// once it has loaded. Safe to call on every paint; the watcher is attached once per button.
 const watched = new WeakSet();
 export function layoutAnniversaryArt(btn) {
-  const hang = () => btn.querySelectorAll(".anv-fringe").forEach((el) => { if (el.offsetWidth) hangFringe(el); });
-  hang();
+  const lay = () => {
+    btn.querySelectorAll(".anv-fringe").forEach((el) => { if (el.offsetWidth) hangFringe(el); });
+    if (btn.querySelector(".ch-count")) layCount(btn);
+  };
+  lay();
   if (watched.has(btn) || typeof ResizeObserver === "undefined") return;
   watched.add(btn);
-  let width = btn.offsetWidth;
-  new ResizeObserver(() => { if (btn.offsetWidth !== width) { width = btn.offsetWidth; hang(); } }).observe(btn);
+  document.fonts?.ready.then(lay);
+  let width = btn.offsetWidth, height = btn.offsetHeight;
+  new ResizeObserver(() => {
+    if (btn.offsetWidth === width && btn.offsetHeight === height) return;
+    width = btn.offsetWidth; height = btn.offsetHeight; lay();
+  }).observe(btn);
 }

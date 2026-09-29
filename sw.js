@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v254";
+const CACHE = "stta-v255";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -75,7 +75,7 @@ const ASSETS = [
   "js/app.js",
   "js/offline.js",
   "js/cta.js",   // Shared start-button contents and decorative finish layers.
-  "js/anniversarycta.js",   // The sixteen album-anniversary start-button finishes.
+  "js/anniversarycta.js",   // The sixteen album-anniversary start-button finishes and the 13th's.
   // Imported at module evaluation time by both app.js and search/search.js.
   // Missing it makes either surface fail on its first offline reload.
   "js/credential-guard.js",
