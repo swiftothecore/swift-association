@@ -15854,8 +15854,11 @@ function renderAnniversaryNote() {
   el.classList.toggle("anniversary-note--minor", note?.tone === "minor");
   if (!note) { el.hidden = true; el.innerHTML = ""; return; }
   const accent = noteInk(note)?.deep || milestoneColor(note.album);
+  // A 13 day writes its headline bare: the ringed "13" beside "Today adds up to 13" said the
+  // number twice and read as a scribble, where the heart, cake and crown each add something.
+  const mark = note.icon === "thirteen" ? "" : `<span class="an-mark">${dayNoteIcon(note)}</span>`;
   el.innerHTML =
-    `<div class="an-head"><span class="an-mark">${dayNoteIcon(note)}</span>` +
+    `<div class="an-head">${mark}` +
       `<span class="an-name"${accent ? ` style="--an-ink:${accent}"` : ""}>${escapeHtml(note.headline)}</span></div>` +
     (note.line ? `<div class="an-line">${escapeHtml(note.line)}</div>` : "");
   el.hidden = false;

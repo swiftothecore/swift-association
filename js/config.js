@@ -2545,7 +2545,7 @@ export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // roun
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const TS_MILESTONES = [
   { md: "12-13", year: 1989, kind: "birthday", title: "Taylor Swift",                  album: null },
-  { md: "10-24", year: 2006, kind: "album",    title: "Taylor Swift", aka: "the debut", album: "Taylor Swift" },
+  { md: "10-24", year: 2006, kind: "album",    title: "Taylor Swift", aka: "her debut", album: "Taylor Swift" },
   { md: "11-11", year: 2008, kind: "album",    title: "Fearless",                      album: "Fearless" },
   { md: "10-25", year: 2010, kind: "album",    title: "Speak Now",                     album: "Speak Now" },
   { md: "10-22", year: 2012, kind: "album",    title: "Red",                           album: "Red" },
