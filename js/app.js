@@ -27949,11 +27949,11 @@ function pausedClockLine() {
   if (c && c.kind === "ruthless") return `the stopwatch stopped at ${c.elapsed.toFixed(1)}s`;
   return "nothing ticks while you're away";
 }
-// The sheet lies over the live page from just under its head to its foot, so the page count,
-// the bracelet and the page's edges stay in view round it while the word, the answer line and
-// anything dealt below them are covered. It is clamped to the screen, because a page taller
-// than the phone would otherwise hang the note and its button below the fold; the overlay eats
-// scrolling, so nothing under the clamp can be scrolled into view either.
+// The page's body is put away while the run is paused (.is-put-away), so the card has nothing
+// to cover and is sized like a card: centred on the notebook, in the space between the page's
+// head and its foot. It is clamped to the screen, because on a page taller than the phone that
+// middle would hang the card and its button below the fold; the overlay eats scrolling, so the
+// page cannot be scrolled out from under it either.
 function placeRunPauseSheet() {
   const overlay = $("runPauseOverlay");
   const screen = liveRunScreen();
@@ -27965,14 +27965,17 @@ function placeRunPauseSheet() {
     ? screen.querySelector(".bracelet-wrap")
     : [$("bonusTimer"), $("bonusHud"), screen.querySelector(".stats-nav")].find(shown);
   const vh = window.innerHeight;
-  const bottom = Math.min(card.bottom - 12, vh - 12);
-  let top = Math.max(shown(head) ? head.getBoundingClientRect().bottom + 4 : card.top + 36, 12);
-  const need = sheet.querySelector(".run-pause-note").offsetHeight + 56;
-  if (bottom - top < need) top = Math.max(12, bottom - need);
-  const inset = card.width < 480 ? 8 : 18;
+  const width = Math.min(440, card.width - 40);
+  sheet.style.width = `${width}px`;
+  sheet.style.height = "";
+  // An index card is five by three, unless the note needs more room than that.
+  const height = Math.max(sheet.offsetHeight + 26, Math.round(width * 0.6));
+  const headBottom = shown(head) ? head.getBoundingClientRect().bottom : card.top + 36;
+  const foot = Math.min(card.bottom, vh);
+  let top = headBottom + (foot - headBottom - height) / 2;
+  top = Math.max(12, Math.min(top, vh - height - 16), Math.min(headBottom + 14, vh - height - 16));
   Object.assign(sheet.style, {
-    left: `${card.left + inset}px`, width: `${Math.max(0, card.width - inset * 2)}px`,
-    top: `${top}px`, height: `${Math.max(need, bottom - top)}px`,
+    left: `${card.left + (card.width - width) / 2}px`, top: `${top}px`, height: `${height}px`,
   });
 }
 const swallowScroll = (e) => e.preventDefault();
@@ -27987,7 +27990,8 @@ function interruptRun() {
   overlay.setAttribute("role", "dialog");
   overlay.setAttribute("aria-modal", "true");
   overlay.setAttribute("aria-labelledby", "runPauseTitle");
-  overlay.innerHTML = `<div class="run-pause-sheet"><span class="run-pause-tape" aria-hidden="true"></span>` +
+  const tape = [1, 2, 3, 4].map((n) => `<span class="run-pause-tape t${n}" aria-hidden="true"></span>`).join("");
+  overlay.innerHTML = `<div class="run-pause-sheet">${tape}` +
     `<div class="run-pause-note"><h2 id="runPauseTitle">Your page is waiting</h2>` +
     `<p class="run-pause-clock">${escapeHtml(pausedClockLine())}</p>` +
     `<button type="button" class="btn-primary play-cta run-pause-go" id="runResumeBtn"></button></div></div>`;
@@ -27999,6 +28003,7 @@ function interruptRun() {
   if (stripes) go.style.setProperty("--cta-stripes", stripes);
   go.innerHTML = ctaContentHTML("", finish, "carry on");
   document.body.appendChild(overlay);
+  liveRunScreen().classList.add("is-put-away");
   placeRunPauseSheet();
   containDialogBackground(overlay);
   overlay.addEventListener("keydown", (e) => { trapDialogTab(e, overlay, overlay); e.stopPropagation(); });
@@ -28032,6 +28037,7 @@ function liftRunPause(overlay) {
       !claimDailyRun(dailyRunDate || todayKey(), TAB_ID)) surrenderDailyRun();
   window.removeEventListener("resize", placeRunPauseSheet);
   window.removeEventListener("scroll", placeRunPauseSheet);
+  document.querySelectorAll(".is-put-away").forEach((el) => el.classList.remove("is-put-away"));
   releaseDialogBackground(overlay);
   overlay.remove();
   resumeFromSettings("background");

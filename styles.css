@@ -12792,6 +12792,7 @@
   .pol-tape,
   .an-tape,
   .ms-tape,
+  .run-pause-tape,
   .pb-tile::before,
   .bg-back::before,
   .dropdown .item::before {
@@ -12831,7 +12832,7 @@
      by day. The lip highlight inverts for the same reason the searcher's dots did: a white
      hairline on top and a dark one underneath is how light falls on a raised edge in daylight,
      and at 0.6 alpha on a dark strip it is just a bright line. */
-  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .an-tape, .ms-tape,
+  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .an-tape, .ms-tape, .run-pause-tape,
                                .pb-tile::before, .bg-back::before, .dropdown .item::before) {
     background:
       linear-gradient(102deg,
@@ -15593,105 +15594,102 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .dropdown { overflow-y: auto; overscroll-behavior: contain; }
 .dropdown[data-side="above"] { box-shadow: 0 -5px 12px rgba(43,39,34,0.12); }
 
-/* An interrupted run: a sheet torn off a legal pad is laid over the open page, the way you
-   cover your work when you get up from the desk. The notebook stays open under it, so its head
-   (page count, bracelet) and its edges show round the sheet, but the word, the answer line and
-   whatever is dealt below them are under it until its owner resumes. js/app.js places the sheet
-   on the live page (placeRunPauseSheet); the overlay itself is clear and only catches input.
+/* An interrupted run: the work on the page is put away (the word, the answer line and whatever
+   is dealt below them go, and only the page's head stays: the page count, the bracelet, a bonus
+   game's timer) and a ruled index card is taped over the middle of the blank page saying where
+   you are. js/app.js hides the page's body (.is-put-away) and places the card on it
+   (placeRunPauseSheet); the overlay itself is clear and only catches input.
 
-   The pad is yellow on purpose. Cream on cream read as the page itself gone blank; a different
-   stock reads as a different piece of paper lying on top. */
+   The page is emptied rather than covered on purpose. The legal pad that covered it before had
+   to be as big as everything under it, which made it a slab: a big yellow panel with a small
+   note in its corner and its edges landing almost on the notebook's. With nothing under it to
+   hide, the card can be the size of a real index card. */
 .run-pause-overlay {
   position: fixed; inset: 0; z-index: 500; overscroll-behavior: contain; touch-action: none;
 }
 .run-pause-overlay[hidden] { display: none; }
+#screen-game.is-put-away > :not(.quit-btn, .page-register, .margin-tally, .lives-tally, .streak-mark,
+  .streak-glitter, .doodle-layer, .milestone-sticky, .bracelet-wrap),
+#screen-bonusplay.is-put-away > :is(#bonusPlayBody, #bonusFeedback) { visibility: hidden; }
 .run-pause-sheet {
-  --pad: #f6ebb9; --pad-top: #fbf4d6;
-  --pad-rule: rgba(84, 116, 150, 0.2); --pad-margin: rgba(192, 64, 58, 0.42);
-  --pad-ink: #2b2722; --pad-soft: #6b5d3a;
-  --pad-rise: 32px;
-  position: fixed; box-sizing: border-box; overflow: visible;
-  padding: 26px 24px 24px 70px;
-  color: var(--pad-ink);
-  transform: rotate(-1.1deg); transform-origin: 50% 0;
-  filter: drop-shadow(0 1px 1px rgba(43, 39, 34, 0.16)) drop-shadow(0 10px 16px rgba(43, 39, 34, 0.2));
+  --card: #fdfbf4; --card-rule: rgba(84, 130, 170, 0.28); --card-head: rgba(192, 64, 58, 0.55);
+  --card-ink: #2b2722; --card-soft: #5d5646;
+  position: fixed; box-sizing: border-box; display: flex; flex-direction: column;
+  padding: 0 18px 18px; color: var(--card-ink);
+  transform: rotate(-2.2deg);
+  filter: drop-shadow(0 1px 1px rgba(43, 39, 34, 0.18)) drop-shadow(0 6px 10px rgba(43, 39, 34, 0.16));
 }
-/* The paper itself, on its own layer so the torn head can clip it without clipping the tape.
-   Rules sit every 32px from the top of the note, so the handwriting below lands on them. */
+/* The card: a red head rule, then blue rules every 26px. The clock line sits on the first. */
 .run-pause-sheet::before {
-  content: ""; position: absolute; inset: 0; z-index: -1;
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 2px;
   background:
-    linear-gradient(90deg, transparent 50px, var(--pad-margin) 50px 51px, transparent 51px 54px,
-      var(--pad-margin) 54px 55px, transparent 55px),
-    repeating-linear-gradient(180deg, transparent 0 31px, var(--pad-rule) 31px 32px),
-    linear-gradient(180deg, var(--pad-top), var(--pad) 40%);
-  background-position: 0 0, 0 26px, 0 0;
-  background-repeat: no-repeat, repeat-x, no-repeat;
-  background-size: 100% 100%, 100% calc(100% - 26px), 100% 100%;
-  /* torn along the pad's perforation: small, even-ish teeth, not a jagged rip */
-  clip-path: polygon(0 5px, 3% 2px, 6% 5px, 10% 1px, 13% 4px, 17% 2px, 21% 5px, 25% 1px, 29% 4px,
-    33% 2px, 37% 5px, 41% 2px, 45% 4px, 49% 1px, 53% 5px, 57% 2px, 61% 4px, 65% 1px, 69% 5px,
-    73% 2px, 77% 4px, 81% 1px, 85% 5px, 89% 2px, 93% 4px, 97% 1px, 100% 4px, 100% 100%, 0 100%);
+    linear-gradient(180deg, transparent 58px, var(--card-head) 58px 59.5px, transparent 59.5px),
+    repeating-linear-gradient(180deg, transparent 0 25px, var(--card-rule) 25px 26px),
+    var(--card);
+  background-position: 0 0, 0 60px, 0 0;
+  background-size: 100% 100%, 100% calc(100% - 60px), 100% 100%;
+  background-repeat: no-repeat;
 }
-.run-pause-tape {
-  position: absolute; top: -11px; left: 50%; width: 118px; height: 26px; z-index: 1;
-  transform: translateX(-50%) rotate(2.4deg);
-  background:
-    repeating-linear-gradient(90deg, rgba(255, 252, 238, 0.22) 0 1px, rgba(0, 0, 0, 0) 1px 3px),
-    linear-gradient(180deg, rgba(236, 220, 176, 0.9), rgba(208, 186, 136, 0.86));
-  clip-path: polygon(3% 0, 100% 0, 97% 22%, 100% 46%, 96% 70%, 100% 100%, 4% 100%, 0 74%, 3% 50%, 0 26%);
-  box-shadow: 0 1px 2px rgba(60, 44, 20, 0.2);
+/* A strip across each corner. The material is the shared washi rule's; these are the four
+   pieces, each torn, laid and cut to its own length, because four matching strips read as a
+   frame rather than as tape. */
+.run-pause-tape { position: absolute; z-index: 1; width: 74px; height: 20px; --tape-color: #c9b27a; }
+.run-pause-tape.t1 { left: 0; top: 0; transform: translate(-50%, -50%) translate(13px, 14px) rotate(-44deg); }
+.run-pause-tape.t2 {
+  left: 100%; top: 0; width: 82px; transform: translate(-50%, -50%) translate(-14px, 12px) rotate(39deg);
+  --tape-clip: polygon(4% 0%, 95% 0%, 99% 24%, 93% 50%, 98% 76%, 94% 100%, 6% 100%, 1% 70%, 6% 46%, 0% 22%);
 }
-.run-pause-note { display: flex; flex-direction: column; align-items: flex-start; }
-/* Line heights are whole rules; each nudge drops the baseline onto its rule. */
+.run-pause-tape.t3 {
+  left: 0; top: 100%; width: 66px; transform: translate(-50%, -50%) translate(12px, -13px) rotate(48deg);
+  --tape-clip: polygon(7% 0%, 93% 0%, 97% 30%, 92% 64%, 96% 100%, 3% 100%, 8% 72%, 2% 38%);
+}
+.run-pause-tape.t4 {
+  left: 100%; top: 100%; width: 77px; transform: translate(-50%, -50%) translate(-15px, -12px) rotate(-37deg);
+  --tape-clip: polygon(2% 0%, 97% 0%, 92% 26%, 99% 55%, 94% 100%, 5% 100%, 0% 64%, 6% 32%);
+}
+.run-pause-note { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+/* The title writes in the card's head; the clock line's baseline lands on the first rule. */
 .run-pause-sheet h2 {
-  margin: 0; height: 64px; font-family: var(--hand); font-weight: 700; line-height: 64px;
-  font-size: calc(40px + var(--text-size-adjust)); color: var(--pad-ink);
-  transform: translateY(6px);
+  margin: 0; height: 58px; line-height: 72px; font-family: var(--hand); font-weight: 700;
+  font-size: calc(40px + var(--text-size-adjust)); color: var(--card-ink); white-space: nowrap;
 }
 .run-pause-clock {
-  margin: 0; height: 32px; font-family: var(--hand); line-height: 32px;
-  font-size: calc(22px + var(--text-size-adjust)); color: var(--pad-soft);
-  transform: translateY(-6px);
+  margin: 0; height: 26px; line-height: 26px; font-family: var(--hand);
+  font-size: calc(21px + var(--text-size-adjust)); color: var(--card-soft);
+  transform: translateY(8px);
 }
 .run-pause-sheet .btn-primary.run-pause-go {
-  width: auto; min-width: min(230px, 100%); margin: 18px 0 0; padding: 12px 30px;
+  width: auto; min-width: min(220px, 100%); margin: auto 0 0; padding: 12px 30px;
 }
 @media (max-width: 480px) {
-  .run-pause-sheet { padding: 26px 16px 20px 50px; }
-  .run-pause-sheet::before {
-    background-image:
-      linear-gradient(90deg, transparent 34px, var(--pad-margin) 34px 35px, transparent 35px 38px,
-        var(--pad-margin) 38px 39px, transparent 39px),
-      repeating-linear-gradient(180deg, transparent 0 31px, var(--pad-rule) 31px 32px),
-      linear-gradient(180deg, var(--pad-top), var(--pad) 40%);
-  }
-  .run-pause-sheet h2 { font-size: calc(33px + var(--text-size-adjust)); transform: translateY(17px); }
-  .run-pause-clock { font-size: calc(19px + var(--text-size-adjust)); transform: translateY(4px); }
-  .run-pause-sheet .btn-primary.run-pause-go { align-self: stretch; }
+  .run-pause-sheet { padding: 0 14px 16px; }
+  .run-pause-sheet h2 { font-size: calc(32px + var(--text-size-adjust)); }
+  .run-pause-clock { font-size: calc(19px + var(--text-size-adjust)); }
+  .run-pause-tape { width: 62px; height: 18px; }
+  .run-pause-tape.t2 { width: 68px; }
+  .run-pause-tape.t3 { width: 56px; }
+  .run-pause-tape.t4 { width: 65px; }
 }
-/* Laid down when the player comes back to it, and lifted off when they carry on. The landing
-   never lets go of the page: it only settles, so the word is not glimpsed underneath. */
+/* Laid down when the player comes back to it, and lifted off when they carry on. */
 .run-pause-sheet.is-landing { animation: runPauseLand 0.34s cubic-bezier(.2, .8, .3, 1); }
 .run-pause-overlay.is-lifting .run-pause-sheet { animation: runPauseLift 0.23s ease-in forwards; }
 @keyframes runPauseLand {
-  from { transform: translate(3px, -6px) rotate(-2.4deg); }
-  to   { transform: rotate(-1.1deg); }
+  from { transform: translate(3px, -6px) rotate(-3.4deg); }
+  to   { transform: rotate(-2.2deg); }
 }
 @keyframes runPauseLift {
-  to { transform: translate(26px, -34px) rotate(2.5deg); opacity: 0; }
+  to { transform: translate(26px, -34px) rotate(1deg); opacity: 0; }
 }
 body[data-reduce-motion="on"] .run-pause-sheet { animation: none !important; }
+/* Under the lamp the card stays a card, taken down so it doesn't glow on the night desk. */
 :root[data-theme="dark"] .run-pause-sheet {
-  --pad: #463d26; --pad-top: #4d432b;
-  --pad-rule: rgba(236, 229, 214, 0.09); --pad-margin: rgba(223, 107, 100, 0.4);
-  --pad-ink: #ece5d6; --pad-soft: #b8ab8a;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)) drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45));
+  --card: #cdc3aa; --card-rule: rgba(62, 98, 132, 0.3); --card-head: rgba(170, 52, 46, 0.6);
+  --card-ink: #2b2722; --card-soft: #4e4738;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4)) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
 }
-:root[data-theme="dark"] .run-pause-tape { filter: brightness(0.72); }
 body[data-contrast="high"] .run-pause-sheet {
-  --pad: var(--paper); --pad-top: var(--paper); --pad-rule: transparent; --pad-margin: var(--ink);
-  --pad-ink: var(--ink); --pad-soft: var(--ink);
+  --card: var(--paper); --card-rule: transparent; --card-head: var(--ink);
+  --card-ink: var(--ink); --card-soft: var(--ink);
 }
 body[data-contrast="high"] .run-pause-sheet::before { outline: 2px solid var(--ink); outline-offset: -2px; }
 
