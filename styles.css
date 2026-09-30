@@ -8499,7 +8499,11 @@
   .hist-unit { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
   .hist-time { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft); }
   .hist-verse { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .hist-verse-star { color: #e0a32f; margin-right: 2px; }
+  /* The pen nib, the trinket a sung page hangs on the strand, so the column wears the verse
+     bonus's own mark. It takes the era's bead colour like the nib on the bracelet. */
+  .hist-verse { white-space: nowrap; }
+  .hist-verse-nib { display: inline-block; width: 16px; height: 16px; vertical-align: -3px; margin-right: 1px; }
+  .hist-verse-nib svg { display: block; width: 100%; height: 100%; }
   .hist-mode, .hist-date { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
   /* PB crown — the same SVG as the achievement charm, sized to sit on the score baseline. */
   .hist-crown { display: inline-block; width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; }
@@ -11160,7 +11164,11 @@
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px;
     color: var(--ink-accent); margin-top: 9px;
   }
-  .cat-meter-cta span { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); }
+  /* The drawn arrow on the songbook buttons, sized in em so it follows the type, and hung off the
+     BASELINE rather than centred in the line box: its shaft lands on the middle of Courier
+     Prime's lowercase (x-height 0.45em), which is where the eye reads the line's middle. The
+     line box's middle sits about 2px lower, so centring by flex put the arrow visibly low. */
+  .cta-arrow { display: inline-block; width: 1.9em; height: 0.95em; vertical-align: -0.28em; }
   /* two keepsake cards */
   .cat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .cat-card {
@@ -12674,7 +12682,6 @@
   .ach-quest-note { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); color: var(--red-pen); }
   .ach-quest.done .ach-quest-note { color: var(--ink-accent); }
   .ach-quest-cta { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-accent); white-space: nowrap; }
-  .ach-quest-cta span { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); }
   .ach-quest-aside { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex: none; }
   .ach-quest-charm {
     width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;

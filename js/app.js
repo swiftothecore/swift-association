@@ -2064,6 +2064,13 @@ let lastStatsDifficulty = null;
 function playCTA(label = "start writing") {
   return `<button type="button" class="empty-cta" data-go-play>${label} →</button>`;
 }
+// The hand-drawn arrow on the two catalogue buttons (the Stats meter and the charm quest), which
+// both open the songbook. Drawn rather than typed so it sits on the type line's middle instead
+// of wherever Caveat's arrow glyph happens to land; the head's two strokes are deliberately unequal.
+const CTA_ARROW = `<svg class="cta-arrow" viewBox="0 0 20 10" aria-hidden="true">` +
+  `<path d="M1.3 5.5 Q8.6 4.6 17.4 5.1 M13.1 1.7 Q15.6 3.5 18.1 5.1 Q15.9 6.6 13.8 8.6" fill="none" ` +
+  `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
   // "classic" is a tier-1 selector, not a real view — resolve it to a difficulty.
@@ -2235,7 +2242,7 @@ function lifetimeStatsHTML() {
       <div class="cat-meter-head"><span>songs discovered</span><span>${pct}%</span></div>
       <div class="cat-meter-num"><b>${discovered}</b> / ${total} songs</div>
       <div class="cat-bar">${segs}</div>
-      <div class="cat-meter-cta">${remaining > 0 ? remaining + " still to find" : "every song found ★"} <span aria-hidden="true">→</span></div>
+      <div class="cat-meter-cta">${remaining > 0 ? remaining + " still to find" : "every song found"} ${CTA_ARROW}</div>
     </button>`;
 
   // Words discovered — distinct prompt words answered correctly, out of the playable set.
@@ -4332,7 +4339,7 @@ function goalCardHTML() {
   const done = !!earnedAchievements[a.id];
   const entries = done ? [] : goalEntries(a.earn);
   const foot = done
-    ? `<span class="ach-plate-earned">earned ${escapeHtml(recordDateLabel(earnedAchievements[a.id]))} ★</span>` +
+    ? `<span class="ach-plate-earned">earned ${escapeHtml(recordDateLabel(earnedAchievements[a.id]))}</span>` +
       `<button type="button" class="ach-plate-swap" data-goal-repin="1">pin the next one</button>`
     : (entries.length
         ? `<button type="button" class="ach-plate-go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} <span aria-hidden="true">→</span></button>`
@@ -4387,7 +4394,7 @@ function questCardHTML() {
   const done = discovered >= total;
   const byAlbum = {};
   for (const s of allSongs) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
-  const note = done ? "every song found ★" : (total - discovered) + " still hiding from you";
+  const note = done ? "every song found" : (total - discovered) + " still hiding from you";
   return `<button type="button" class="ach-quest${done ? " done" : ""}" data-open-songbook="achievements">
     <div class="ach-quest-main">
       <div class="ach-quest-eyebrow">the long game · catalogue</div>
@@ -4397,7 +4404,7 @@ function questCardHTML() {
       <div class="cat-bar ach-quest-bar">${albumRainbowSegs(byAlbum, total)}</div>
       <div class="ach-quest-foot">
         <span class="ach-quest-note">${note}</span>
-        <span class="ach-quest-cta">see what's missing <span aria-hidden="true">→</span></span>
+        <span class="ach-quest-cta">see what's missing ${CTA_ARROW}</span>
       </div>
     </div>
     <div class="ach-quest-aside">
@@ -4429,7 +4436,7 @@ function renderSongbook() {
   for (const s of allSongs) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
 
   const sub = complete
-    ? "every song found: the whole catalogue, by heart ★"
+    ? "every song found: the whole catalogue, by heart"
     : remaining + " song" + (remaining === 1 ? "" : "s") + " still hiding from you";
 
   let html = `<div class="sb-meter${complete ? " done" : ""}">
@@ -4675,7 +4682,7 @@ function appendHistoryRows(hist) {
     return `<div class="hist-row${isPB ? " hist-pb" : ""}">` +
       `<span class="hist-score">${isPB ? `<span class="hist-crown" aria-hidden="true">${ACH_ICONS.crown}</span>` : ""}${scoreText}${unit ? `<span class="hist-unit">${unit}</span>` : ""}</span>` +
       `<span class="hist-time">${h.tm != null ? (ruthless ? fmtTimeFine(h.tm) : fmtTime(h.tm)) : "—"}</span>` +
-      `<span class="hist-verse">${h.v > 0 ? `<span class="hist-verse-star" aria-hidden="true">★</span>+${h.v}` : "—"}</span>` +
+      `<span class="hist-verse">${h.v > 0 ? `<span class="hist-verse-nib" aria-hidden="true">${trinketPreviewSVG("nib")}</span>+${h.v}` : "—"}</span>` +
       // `dk` marks a challenge run played on its dark side. It rides as a violet eclipse
       // rather than a word because modeLabel is deliberately token-only (the dark flag is
       // not a token suffix — see the appendHistory call in endChallenge) and because the
@@ -29887,7 +29894,7 @@ function devSeedRecords() {
     for (let k = 0; k < 3; k++) {
       const sc = Math.max(1, TOTAL_ROUNDS - k - (mi % 3));
       const time = m === "relaxed" ? null : 30 + k * 8 + Math.random() * 10;
-      // The middle entry of each mode is seeded hinted, so the tiles and the ★ best line have
+      // The middle entry of each mode is seeded hinted, so the tiles and the best line have
       // something to render the "· 3 hints" tail against without a real run being played.
       insertRecord(m, sc, today, time, 0, k === 1 ? 3 : 0);
     }
