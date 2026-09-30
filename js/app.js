@@ -14135,8 +14135,11 @@ function renderBracelet() {
     ? { ...base, total: customSessionLen, tieText: String(customSessionLen) }
     : base;
   $("bracelet").innerHTML = renderBraceletSVG(roundResults, round, justEarnedIndex, roundAlbums, opts);
+  // The named count only on a strand with no fixed length: that strand folds its earlier pages
+  // away, so the number is the one record of them. A fixed run's strand is the count already.
   const correct = roundResults.filter(Boolean).length;
   $("trinketCount").textContent = correct;
+  $("namedWrap").hidden = !rollingStrand;
   const uncapped = gameType === "infinite" || customInfinite()
     || (gameType === "challenge" && currentChallenge && currentChallenge.rule === "survive");
   const pg = uncapped
@@ -21704,11 +21707,13 @@ function adjustBeads(n) {
   score = Math.max(0, score + n);
   flashBeadDelta(n);
 }
-// A bead swing, called out where the eye already is: beside the strand's trinket count.
+// A bead swing, called out where the eye already is: at the end of the page line. Inside the
+// left-hand span rather than the row, which spaces its children apart and would shove the rule
+// marks into the middle for as long as the swing was showing.
 // Also used for beads lost from a pot that never reached `score` at all (Press Your Luck),
 // which is why it takes the delta rather than reading the score itself.
 function flashBeadDelta(n) {
-  const meta = document.querySelector("#screen-game .bracelet-meta");
+  const meta = document.querySelector("#screen-game .bracelet-meta-left");
   if (!meta) return;
   const old = meta.querySelector(".bead-delta");
   if (old) old.remove();
@@ -22089,8 +22094,8 @@ function applyRiskScoring(correct) {
       riskDecisionPending = true;
     } else if (beadPot > 0) {
       // A wiped pot is the single biggest event in a Press Your Luck run and it used to be
-      // reported by the same small "-55" that reports a one-bead swing, tucked beside the
-      // strand's trinket count where the eye was not. flashPotWipe puts it where the decision
+      // reported by the same small "-55" that reports a one-bead swing, tucked at the end of
+      // the page line where the eye was not. flashPotWipe puts it where the decision
       // was made instead. The delta still fires: the two are the same fact at two volumes.
       flashPotWipe(beadPot, beadRide);
       flashBeadDelta(-beadPot);      // lost from the pot, which never reached `score`

@@ -8035,7 +8035,7 @@
     .chall-banner.is-wiped .pot-wipe, .chall-banner.is-wiped { animation: none; }
   }
 
-  /* The bead swing a bet just paid (or cost), called out beside the strand's trinket count. */
+  /* The bead swing a bet just paid (or cost), called out at the end of the page line. */
   .bead-delta {
     margin-left: 8px; font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust));
     color: #4f7a3a; animation: bead-delta-in 1.5s ease both;
@@ -8564,7 +8564,6 @@
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
     margin-bottom: 8px; letter-spacing: 0.5px;
   }
-  .bracelet-meta .trinkets { color: var(--ink-accent); font-weight: 700; }
   .bracelet-meta-right { display: flex; align-items: center; gap: 11px; }
 
   /* ---- Rule marks: the terms of the page --------------------------------------
@@ -8572,8 +8571,8 @@
      in index.html and built in js/rulemarks.js; everything visual is here.
 
      Colour is deliberately BELOW the row it sits in: these are terms you glance at, and
-     the trinket star beside them is a thing you earned. If a term ever out-inks the star,
-     this is the line that did it. */
+     the page line beside them is what you are doing. If a term ever out-inks the page
+     count, this is the line that did it. */
   .rule-terms { display: inline-flex; align-items: center; gap: 7px; }
   /* Every mark gets the same box, so the spacing between them is even whatever they are drawn
      from — the marks differ in ink width and a slot is what keeps that from showing as ragged

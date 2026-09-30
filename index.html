@@ -3144,15 +3144,17 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="milestoneSticky" class="milestone-sticky" role="img" hidden></div>
     <div class="bracelet-wrap">
       <div class="bracelet-meta">
-        <span>page <b id="pageNum">1</b><span id="pageTotalWrap"> of <b id="pageTotal">13</b></span></span>
-        <!-- The page count says where you are; the star says what you have earned. #ruleTerms
-             joins them as what the page will TAKE, filled by renderRuleTerms. It sits inside
-             the right-hand span so the marks land in the dead space space-between was
-             already leaving, costing the row no height, and it goes BEFORE the star because a
-             term you merely glance at must never outrank a thing you won. -->
+        <!-- The page count says where you are. On a run with no fixed length it also says how
+             many songs you have named, in words, because there the strand folds its earlier
+             pages away and nothing else on the page keeps the total. On a fixed run the strand
+             is short enough to count at a glance, so the number would only repeat the beads
+             and stays hidden (renderBracelet decides). -->
+        <span class="bracelet-meta-left">page <b id="pageNum">1</b><span id="pageTotalWrap"> of <b id="pageTotal">13</b></span><span id="namedWrap" hidden> · <b id="trinketCount">0</b> named</span></span>
+        <!-- #ruleTerms says what the page will TAKE, filled by renderRuleTerms. It sits in the
+             right-hand span so the marks land in the dead space space-between was already
+             leaving, costing the row no height. -->
         <span class="bracelet-meta-right">
           <span id="ruleTerms" class="rule-terms"></span>
-          <span class="trinkets">★ <b id="trinketCount">0</b></span>
         </span>
       </div>
       <div id="bracelet" class="bracelet"></div>
