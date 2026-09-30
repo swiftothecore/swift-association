@@ -26192,8 +26192,18 @@ function addDoodle(kind) {
     });
   }
   layer.appendChild(d);
-  // Her stars, back in a margin: the tumblr post she drew them for.
-  if (kind === "stars" && catalogueCharmsLive()) earnTumblrPost("stars-do-u-like-dem");
+  // Her stars, back in a margin: the tumblr post she drew them for. It waits until the stars can
+  // actually be seen, which is the end of their 0.8s ink-in (doodleIn): on a page turn they are
+  // drawn under the outgoing sheet, and a toast asking "do u like dem" about a margin still
+  // hidden behind it answers a question you have not been asked yet. The fade outlasts the 0.5s
+  // flip, so its end is also the moment the sheet has cleared. A page turned before then takes
+  // the doodle with it and the event never fires, which is right: you never saw them. Reduced
+  // motion has no fade and no flip, so there the stars are on the page the moment they land.
+  if (kind === "stars" && catalogueCharmsLive()) {
+    const earn = () => earnTumblrPost("stars-do-u-like-dem");
+    if (getComputedStyle(d).animationName === "none") earn();
+    else d.addEventListener("animationend", earn, { once: true });
+  }
 }
 
 /* The margin marks beside each inside page's title are the other drawings you can touch, and
