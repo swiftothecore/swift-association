@@ -20445,50 +20445,42 @@ function setResultStamps(replay, encore) {
   $("resultStamps").classList.toggle("is-pair", !!(replay && encore));
 }
 
-// TAKE, the replay stamp: a numbering machine whose wheels read the take the replay will be, so
-// no two runs are stamped alike. Drawn here rather than in index.html because the number moves
-// every run. Two cuts of the one stamp: the full column, and the half it gets beside ENCORE.
-function replayStampArt(w, take, sub) {
+// ONE MORE TAKE, the replay stamp. Drawn here rather than in index.html because its sub-line
+// names the mode just played. Two cuts of the one stamp: the full column, and the half it gets
+// beside ENCORE, where the words drop a size so all three still fit inside the ring.
+function replayStampArt(w, sub) {
   const narrow = w < 400;
-  const digits = String(take).padStart(3, "0");
   const text = (x, y, size, ls, txt, rot) =>
     `<text x="${x}" y="${y}"${rot ? ` rotate="${rot}"` : ""} fill="currentColor" text-anchor="middle" ` +
     `style="font-family: var(--type); font-weight: 700; font-size: ${size}px; letter-spacing: ${ls}px;">${txt}</text>`;
-  const word = narrow ? { w: 84, size: 26, ls: 4 } : { w: 128, size: 30, ls: 6 };
-  const box = narrow ? { w: 22, h: 30, y: 19, size: 22, base: 41.5, gap: 3 } : { w: 26, h: 32, y: 18, size: 25, base: 43.5, gap: 4 };
-  const x0 = (w - (word.w + 10 + digits.length * box.w + (digits.length - 1) * box.gap)) / 2;
-  let art = `<rect x="4" y="4" width="${w - 8}" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>` +
+  const word = narrow ? { size: 21, ls: 2 } : { size: 30, ls: 6 };
+  return `<rect x="4" y="4" width="${w - 8}" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>` +
     `<rect x="10" y="10" width="${w - 20}" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>` +
-    text(x0 + word.w / 2, 44, word.size, word.ls, "TAKE", "-2 1 -1 2");
-  [...digits].forEach((d, i) => {
-    const bx = x0 + word.w + 10 + i * (box.w + box.gap);
-    art += `<rect x="${bx}" y="${box.y}" width="${box.w}" height="${box.h}" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>` +
-      text(bx + box.w / 2, box.base, box.size, 0, d, [1, -1.5, 0.8, -0.6][i % 4]);
-  });
-  return art + text(w / 2, 61.5, 8.5, 3, `&#9733; ${sub} &#9733;`);
+    text(w / 2, 44, word.size, word.ls, "ONE MORE TAKE", "-2 1 -1 2 -1 1 0 -1 1 -2 1 0 -1") +
+    text(w / 2, 59, 9, 3.2, `&#9733; ${sub} &#9733;`);
 }
 
 // What the replay will start, captured when the stamp is inked so nothing between the results
 // page and the click (a trip to the stats and back) can change which run it hands back.
 let replayRun = null;
-function paintReplayStamp(take) {
+function paintReplayStamp() {
   const label = currentMode.label;
   const infinite = gameType === "infinite";
   const sub = infinite
     ? (infiniteVariant === "sudden" ? "SUDDEN DEATH" : "INFINITE") + " · " + label.toUpperCase()
     : label.toUpperCase() + " MODE";
-  $("rpStampArt").innerHTML = replayStampArt(560, take, sub);
-  $("rpStampArtNarrow").innerHTML = replayStampArt(276, take, sub);
+  $("rpStampArt").innerHTML = replayStampArt(560, sub);
+  $("rpStampArtNarrow").innerHTML = replayStampArt(276, sub);
   // Chrome keeps printing a <use> clone of the art it first drew, so the second run's results
-  // would still read the first run's take. Pointing each clone away and back re-cuts it.
+  // would still name the first run's mode. Pointing each clone away and back re-cuts it.
   $("replayBtn").querySelectorAll("use").forEach((u) => {
     const href = u.getAttribute("href");
     u.setAttribute("href", "");
     u.setAttribute("href", href);
   });
   $("replayBtn").setAttribute("aria-label", infinite
-    ? `Play ${infiniteVariant === "sudden" ? "sudden death" : "Infinite"} on ${label} again, take ${take}`
-    : `Play ${label} again, take ${take}`);
+    ? `Play ${infiniteVariant === "sudden" ? "sudden death" : "Infinite"} on ${label} again`
+    : `Play ${label} again`);
   replayRun = { type: infinite ? "infinite" : "classic", mode: currentMode, variant: infiniteVariant };
 }
 
@@ -25930,9 +25922,9 @@ function endGame() {
   if (shownTime != null && !tallyHidden) tallyCells.push({ v: fmtTime(shownTime), l: "on the clock" });
   if (verseBonus > 0 && !tallyHidden) tallyCells.push({ v: "+" + verseBonus, l: "verse bonus" });
   setFinalTally(tallyHidden ? "?" : boardScore, tallyCells, isInfinite ? "rounds" : "");
-  // TAKE replays this mode (a Daily is one play a day, so it has none); ENCORE rolls a finished
+  // ONE MORE TAKE replays this mode (a Daily is one play a day, so it has none); ENCORE rolls a finished
   // classic run on into Infinite, which an Infinite run already is.
-  if (!isDaily) paintReplayStamp(loadStats(mode).played + 1);
+  if (!isDaily) paintReplayStamp();
   setResultStamps(!isDaily, !isInfinite && !isDaily);
   renderVerseAnthology();
   if (!isInfinite && score === TOTAL_ROUNDS && !dailyResultIsSealed()) {
@@ -30258,8 +30250,6 @@ function buildDevApi() {
     },
     jumpToRound: (n) => { round = Math.max(0, (n | 0) - 1); clearTimer(); advanceRound(); startTimer(); },
     endNow: () => endGame(),
-    // Re-ink the TAKE stamp with any number, to see how the wheels sit at four digits and up.
-    replayTake: (n) => paintReplayStamp(Math.max(1, n | 0)),
     batch1: {
       // The underline still has to pass through submitAnswer's stopwatch recording and the real
       // correct-verdict renderer. This only moves that stopwatch back half a second.
