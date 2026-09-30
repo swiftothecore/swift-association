@@ -13727,12 +13727,14 @@
     0%, 22% { transform: translateX(-115%); }
     66%, 100% { transform: translateX(115%); }
   }
-  .mpp-grid { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
-  .mpp-slot { position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 2px; min-height: 102px; }
-  .mpp-slot.cap { grid-column: span 2; }
+  /* Five a row, not seven: at seven a stamp was 78px and its lettering 5px, which no type size
+     could rescue. Thirteen stamps and a capstone three wide fill three rows exactly. */
+  .mpp-grid { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 6px; margin-top: 12px; }
+  .mpp-slot { position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 2px; }
+  .mpp-slot.cap { grid-column: span 3; }
   .mpp-no { position: absolute; top: 1px; left: 1px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.7; }
-  .mpp-stamp { width: 78px; height: 78px; display: block; overflow: visible; mix-blend-mode: var(--mpp-blend); }
-  .mpp-slot.cap .mpp-stamp { width: 156px; }
+  .mpp-stamp { width: 96px; height: 96px; display: block; overflow: visible; mix-blend-mode: var(--mpp-blend); }
+  .mpp-slot.cap .mpp-stamp { width: 204px; height: 102px; margin-bottom: -6px; }
   .mpp-stamp text { font-family: var(--type); font-weight: 700; }
   .mpp-inked { color: var(--mpp-ink); }
   :root[data-theme="dark"] .mpp-inked { color: color-mix(in srgb, var(--mpp-ink) 58%, #ece5d6); }
@@ -13743,16 +13745,19 @@
   /* the bento's #reward-* drawings carry no paint of their own, so it reaches them by inheritance */
   .mpp-rw { fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
   .mpp-ghost { color: var(--ink-soft); }
-  .mpp-ghost-fr { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-dasharray: 2.5 3.2; opacity: 0.55; }
+  .mpp-ghost-fr { fill: none; stroke: currentColor; opacity: 0.55; }
   .mpp-stamp .mpp-ghost-n { font-family: var(--hand); font-weight: 700; fill: currentColor; }
   .mpp-owed-bg { fill: none; stroke: var(--red-pen); stroke-width: 1.2; }
   .mpp-owed { fill: var(--red-pen); }
-  .mpp-ct { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.25; text-align: center; color: var(--ink); margin-top: 1px; max-width: 100%; }
+  .mpp-ct { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.25; text-align: center; color: var(--ink); margin-top: 3px; max-width: 100%; }
   .mpp-slot.todo .mpp-ct, .mpp-slot.locked .mpp-ct { color: var(--ink-soft); }
   .mpp-slot.now .mpp-ct { color: var(--red-pen); font-weight: 700; }
   .mpp-foot { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.5; color: var(--ink-soft);
     border-top: 1px dashed color-mix(in srgb, var(--ink) 25%, transparent); margin-top: 6px; padding-top: 7px; }
-  .mpp-void { position: absolute; left: 50%; top: 50%; width: 330px; transform: translate(-50%, -50%) rotate(-7deg); color: var(--red-pen);
+  /* Unissued, the page under the NOT YET ISSUED stamp steps back, the way a MASTERED card's
+     slots do: the outlines are there to show what is coming, not to be read through the ink. */
+  .mpp.unissued .mpp-slot { opacity: 0.4; }
+  .mpp-void { position: absolute; left: 50%; top: 50%; width: 380px; max-width: 94%; transform: translate(-50%, -50%) rotate(-7deg); color: var(--red-pen);
     mix-blend-mode: var(--mpp-blend); pointer-events: none; }
   .mpp-void text { font-family: var(--type); font-weight: 700; }
 
@@ -16060,11 +16065,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .mpp { padding: 14px 12px 10px; }
   .mpp-head { flex-direction: column; align-items: stretch; }
   .mpp-ink { width: auto; }
-  .mpp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .mpp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 2px; }
   .mpp-slot.cap { grid-column: span 4; }
-  .mpp-stamp { width: 68px; height: 68px; }
-  .mpp-slot.cap .mpp-stamp { width: 150px; height: 75px; }
-  .mpp-void { width: 260px; }
+  .mpp-stamp { width: min(100%, 84px); height: auto; aspect-ratio: 1; }
+  .mpp-slot.cap .mpp-stamp { width: 180px; height: 90px; aspect-ratio: auto; }
   .msc-grid { grid-template-columns: 1fr; }
   .ts-row { gap: 6px; }
   .ts-title { flex-wrap: wrap; font-size: calc(25px + var(--text-size-adjust)); }

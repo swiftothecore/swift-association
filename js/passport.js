@@ -22,29 +22,36 @@ import { skillMarkHTML } from "./skillmarks.js";
 /* One entry per level. `glyph` is ["mi", key] for a MASTERY_ICONS mark or ["rw", key] for one
    of the bento's #reward-* drawings (index.html); `tile` names the MASTERY_TILE_MARKS hue.
    Where a reward or a title tier already owns a mark, the stamp takes it FROM there rather than
-   naming it again, so a stamp and the tile it points at cannot drift apart. */
+   naming it again, so a stamp and the tile it points at cannot drift apart.
+
+   A stamp carries two pieces of type and no more: `word`, what it opened, and the date. The
+   level number already sits over the slot and the caption names the reward in full, so neither
+   is repeated in rubber, and what is left is set big enough to read at the stamp's real size.
+   `short` is the caption while the stamp is still owed, cut to fit one line of its slot. */
 const rewardMark = (id) => ["mi", MASTERY_REWARD_BY_ID[id].icon];
 const tierMark = (i) => ["mi", MASTERY_TIER_ICONS[i]];
 const STAMPS = {
-  1: { shape: "circle", glyph: rewardMark("pen-fountain"), top: "FOUNTAIN PEN", tile: "pens", caption: "Fountain pen" },
-  2: { shape: "oval", glyph: rewardMark("pen-quill"), top: "FEATHER QUILL", tile: "pens", caption: "Feather quill" },
-  3: { shape: "rect", glyph: rewardMark("pen-glitter"), top: "GEL PEN", tile: "pens", caption: "Gel pen" },
-  4: { shape: "notch", glyph: ["rw", "paper"], top: "PAPER", tile: "paper", caption: "Paper stocks" },
-  5: { shape: "scallop", glyph: ["rw", "trinket"], top: "TRINKETS", tile: "trinket", caption: "Trinkets" },
-  6: { shape: "shield", glyph: rewardMark("hardmode-unlock"), top: "SUPER-HARD", tile: "hard", caption: "Super-hard" },
-  7: { shape: "circle", glyph: tierMark(0), top: "CERTIFIED POET", tile: "title", caption: "Certified Poet" },
-  8: { shape: "rect", glyph: ["rw", "button"], top: "FINISHES", tile: "button", caption: "Button finishes" },
-  // level 9 opens two things, so it is two stamps pressed over each other
-  9: { shape: "double", glyph: rewardMark("sticker-hints"), top: "STICKERS", tile: "stick", glyph2: tierMark(1), top2: "BRIDGE BUILDER", tile2: "title", caption: "Stickers + titles" },
-  10: { shape: "hex", glyph: rewardMark("reveal-hints"), top: "SECRETS", tile: "hint", caption: "Secret hints" },
-  11: { shape: "circle", glyph: tierMark(2), top: "THE CHAIRMAN", tile: "title", caption: "The Chairman" },
-  12: { shape: "oval", glyph: ["rw", "cta"], top: "WORDS", tile: "cta", caption: "Button words" },
-  13: { shape: "banner", glyph: tierMark(3), top: "ULTIMATE SHOWGIRL", tile: "button", caption: "Ultimate Showgirl" },
+  1: { shape: "circle", glyph: rewardMark("pen-fountain"), word: "FOUNTAIN PEN", tile: "pens", caption: "Fountain pen" },
+  2: { shape: "oval", glyph: rewardMark("pen-quill"), word: "QUILL", tile: "pens", caption: "Feather quill", short: "Quill" },
+  3: { shape: "rect", glyph: rewardMark("pen-glitter"), word: "GEL PEN", tile: "pens", caption: "Gel pen" },
+  4: { shape: "notch", glyph: ["rw", "paper"], word: "PAPER", tile: "paper", caption: "Paper stocks" },
+  5: { shape: "scallop", glyph: ["rw", "trinket"], word: "TRINKETS", tile: "trinket", caption: "Trinkets" },
+  6: { shape: "shield", glyph: rewardMark("hardmode-unlock"), word: "SUPER-HARD", tile: "hard", caption: "Super-hard" },
+  7: { shape: "circle", glyph: tierMark(0), word: "CERTIFIED POET", tile: "title", caption: "Certified Poet", short: "Poet" },
+  8: { shape: "rect", glyph: ["rw", "button"], word: "FINISHES", tile: "button", caption: "Button finishes", short: "Finishes" },
+  // level 9 opens two things, so it is two stamps pressed over each other: the sticker one
+  // carries the word, the title one the date
+  9: { shape: "double", glyph: rewardMark("sticker-hints"), word: "STICKERS", tile: "stick", glyph2: tierMark(1), tile2: "title", caption: "Stickers + titles", short: "Stickers" },
+  10: { shape: "hex", glyph: rewardMark("reveal-hints"), word: "SECRETS", tile: "hint", caption: "Secret hints" },
+  11: { shape: "circle", glyph: tierMark(2), word: "THE CHAIRMAN", tile: "title", caption: "The Chairman" },
+  12: { shape: "oval", glyph: ["rw", "cta"], word: "WORDS", tile: "cta", caption: "Button words" },
+  13: { shape: "banner", glyph: tierMark(3), word: "ULTIMATE SHOWGIRL", tile: "button", caption: "Ultimate Showgirl" },
 };
 export const PASSPORT_LEVELS = Object.keys(STAMPS).length;
 
 // A fixed wobble per level, so a stamp lands at the same angle every time the page is drawn.
 const settle = (k) => { const x = Math.sin(k * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const tilt = (L) => settle(L) * 22 - 11;
 const pad = (n) => String(n).padStart(2, "0");
 const inner = (svg) => (svg || "").replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
 
@@ -59,93 +66,145 @@ function glyph([src, key], size, dx = 0, dy = 0) {
   const s = size / 24 * 1.45;
   return `<g class="mpp-gl mpp-rw" transform="translate(${dx - 12 * s} ${dy - 12 * s}) scale(${s})"><use href="#reward-${key}" width="24" height="24"/></g>`;
 }
-const text = (x, y, str, size) =>
-  `<text class="mpp-tx" x="${x}" y="${y}" font-size="${size}" text-anchor="middle" letter-spacing="${(size * .1).toFixed(2)}">${str}</text>`;
 
-function stampBody(L, sp, date, uid) {
-  const lv = `LVL ${pad(L)}`;
-  const when = date || lv;
-  switch (sp.shape) {
-    case "circle": return `<circle class="mpp-fr" r="36.5" stroke-width="4"/><circle class="mpp-fr" r="29.6" stroke-width="1.5"/>` +
-      `<path id="${uid}t" d="M-31.6 0 A31.6 31.6 0 0 1 31.6 0" fill="none"/><path id="${uid}b" d="M-35.2 0 A35.2 35.2 0 0 0 35.2 0" fill="none"/>` +
-      `<text class="mpp-tx" font-size="5.6" letter-spacing=".7"><textPath href="#${uid}t" startOffset="50%" text-anchor="middle">${sp.top} · ${lv}</textPath></text>` +
-      `<text class="mpp-tx" font-size="5.4" letter-spacing="1"><textPath href="#${uid}b" startOffset="50%" text-anchor="middle">${when}</textPath></text>` +
-      glyph(sp.glyph, 30);
-    case "oval": return `<ellipse class="mpp-fr" rx="38" ry="28" stroke-width="4"/><ellipse class="mpp-fr" rx="33" ry="23" stroke-width="1.5"/>` +
-      text(0, -12.6, sp.top, 5.6) + glyph(sp.glyph, 20, 0, .6) + text(0, 17.6, when, 5.2);
-    case "rect": return `<rect class="mpp-fr" x="-38" y="-25" width="76" height="50" rx="4" stroke-width="4"/><rect class="mpp-fr" x="-33.5" y="-20.5" width="67" height="41" rx="2" stroke-width="1.5"/>` +
-      glyph(sp.glyph, 25, -17, 0) + `<line class="mpp-fr" x1="-3.5" y1="-15" x2="-3.5" y2="15" stroke-width="1"/>` +
-      `<text class="mpp-tx" x="1" y="-7" font-size="6.6" letter-spacing=".5">${sp.top}</text><text class="mpp-tx" x="1" y="3.6" font-size="6" letter-spacing=".8">${lv}</text>` +
-      (date ? `<text class="mpp-tx" x="1" y="13" font-size="5.2" letter-spacing=".5">${date}</text>` : "");
-    case "notch": {
-      const d = "M-30 -27 H30 A7 7 0 0 0 37 -20 V20 A7 7 0 0 0 30 27 H-30 A7 7 0 0 0 -37 20 V-20 A7 7 0 0 0 -30 -27 Z";
-      return `<path class="mpp-fr" d="${d}" stroke-width="4"/><path class="mpp-fr" d="${d}" transform="scale(.86)" stroke-width="1.5"/>` +
-        text(0, -13.2, `${sp.top} · ${lv}`, 5.4) + glyph(sp.glyph, 22, 0, 1.4) + (date ? text(0, 19, date, 5) : "");
-    }
-    case "scallop": {
-      let d = "";
-      const nb = 20;
-      for (let i = 0; i < nb; i++) {
-        const a0 = i / nb * 2 * Math.PI, a1 = (i + 1) / nb * 2 * Math.PI, am = (a0 + a1) / 2;
-        const p0 = [34 * Math.cos(a0), 34 * Math.sin(a0)], p1 = [34 * Math.cos(a1), 34 * Math.sin(a1)], pc = [40.5 * Math.cos(am), 40.5 * Math.sin(am)];
-        d += (i === 0 ? `M${p0[0].toFixed(2)} ${p0[1].toFixed(2)}` : "") + ` Q${pc[0].toFixed(2)} ${pc[1].toFixed(2)} ${p1[0].toFixed(2)} ${p1[1].toFixed(2)}`;
-      }
-      return `<path class="mpp-fr" d="${d} Z" stroke-width="3.6"/><circle class="mpp-fr" r="28.4" stroke-width="1.5"/>` +
-        text(0, -15.4, sp.top, 5.4) + glyph(sp.glyph, 24, 0, .6) + text(0, 20.6, date ? date : lv, date ? 5 : 5.4);
-    }
-    case "shield": {
-      const d = "M0 -37 C10 -32.6 20 -30.6 31 -30 C32 -8 26 14 0 37 C-26 14 -32 -8 -31 -30 C-20 -30.6 -10 -32.6 0 -37 Z";
-      return `<path class="mpp-fr" d="${d}" stroke-width="4"/><path class="mpp-fr" d="${d}" transform="scale(.84)" stroke-width="1.5"/>` +
-        text(0, -17.6, sp.top, 5.4) + glyph(sp.glyph, 24, 0, 0) + text(0, 19.2, lv, 5.4);
-    }
-    case "hex": {
-      const pts = (r) => [...Array(6)].map((_, i) => { const a = i / 6 * 2 * Math.PI; return `${(r * Math.cos(a)).toFixed(2)},${(r * Math.sin(a) * .92).toFixed(2)}`; }).join(" ");
-      return `<polygon class="mpp-fr" points="${pts(38.5)}" stroke-width="4" stroke-linejoin="round"/><polygon class="mpp-fr" points="${pts(33)}" stroke-width="1.5" stroke-linejoin="round"/>` +
-        text(0, -15.8, sp.top, 5.6) + glyph(sp.glyph, 23, 0, .4) + text(0, 21, when, 5);
-    }
-    case "banner": return `<rect class="mpp-fr" x="-76" y="-27" width="152" height="54" rx="6" stroke-width="4.4"/><rect class="mpp-fr" x="-71" y="-22" width="142" height="44" rx="3.5" stroke-width="1.2"/>` +
-      glyph(sp.glyph, 34, -47, 0) + `<line class="mpp-fr" x1="-27" y1="-15" x2="-27" y2="15" stroke-width="1.5"/>` +
-      `<text class="mpp-tx" x="-20" y="-6" font-size="9.6" letter-spacing="1.1">ULTIMATE</text><text class="mpp-tx" x="-20" y="6.4" font-size="9.6" letter-spacing="1.1">SHOWGIRL</text>` +
-      `<text class="mpp-tx" x="-20" y="16.4" font-size="5.6" letter-spacing=".9">${lv}${date ? ` · ${date}` : ""}</text>` +
-      `<path class="mpp-tx" d="M60 -12 l1.6 3.8 3.8 1.6 -3.8 1.6 -1.6 3.8 -1.6 -3.8 -3.8 -1.6 3.8 -1.6 Z"/><path class="mpp-tx" d="M55 8 l1 2.3 2.3 1 -2.3 1 -1 2.3 -1 -2.3 -2.3 -1 2.3 -1 Z"/>`;
+/* Type is fitted, not guessed: the biggest size up to `max` at which `str` spans no more than
+   `room` units. Courier Prime advances .6em a character, and the tracking is .08em. */
+const fit = (str, room, max) => Math.min(max, room / (str.length * 0.6 + (str.length - 1) * 0.08));
+const tx = (x, y, str, room, max) => {
+  const s = fit(str, room, max);
+  return `<text class="mpp-tx" x="${x}" y="${y}" font-size="${s.toFixed(2)}" text-anchor="middle" letter-spacing="${(s * .08).toFixed(2)}">${str}</text>`;
+};
+// Type round an arc. `d` runs left to right; the text is centred on it.
+const arcTx = (id, d, str, room, max) => {
+  const s = fit(str, room, max);
+  return `<path id="${id}" d="${d}" fill="none"/><text class="mpp-tx" font-size="${s.toFixed(2)}" letter-spacing="${(s * .08).toFixed(2)}">` +
+    `<textPath href="#${id}" startOffset="50%" text-anchor="middle">${str}</textPath></text>`;
+};
+// the top of a ring reads outward, the bottom reads upright from inside
+const overArc = (rx, ry = rx) => `M${-rx} 0 A${rx} ${ry} 0 0 1 ${rx} 0`;
+const underArc = (rx, ry = rx) => `M${-rx} 0 A${rx} ${ry} 0 0 0 ${rx} 0`;
+
+function scallopPath() {
+  let d = "";
+  const nb = 20;
+  for (let i = 0; i < nb; i++) {
+    const a0 = i / nb * 2 * Math.PI, a1 = (i + 1) / nb * 2 * Math.PI, am = (a0 + a1) / 2;
+    const p0 = [34 * Math.cos(a0), 34 * Math.sin(a0)], p1 = [34 * Math.cos(a1), 34 * Math.sin(a1)], pc = [40.5 * Math.cos(am), 40.5 * Math.sin(am)];
+    d += (i === 0 ? `M${p0[0].toFixed(2)} ${p0[1].toFixed(2)}` : "") + ` Q${pc[0].toFixed(2)} ${pc[1].toFixed(2)} ${p1[0].toFixed(2)} ${p1[1].toFixed(2)}`;
   }
-  return "";
+  return d + " Z";
+}
+const hexPts = (r) => [...Array(6)].map((_, i) => { const a = i / 6 * 2 * Math.PI; return `${(r * Math.cos(a)).toFixed(2)},${(r * Math.sin(a) * .92).toFixed(2)}`; }).join(" ");
+const NOTCH = "M-30 -29 H30 A7 7 0 0 0 37 -22 V22 A7 7 0 0 0 30 29 H-30 A7 7 0 0 0 -37 22 V-22 A7 7 0 0 0 -30 -29 Z";
+const SHIELD = "M0 -37 C11 -33 23 -32 36 -31.5 C37 -6 28 17 0 38 C-28 17 -37 -6 -36 -31.5 C-23 -32 -11 -33 0 -37 Z";
+
+/* The outer edge of each stamp. The stamp presses it heavy and the ghost pencils the very same
+   line in dashes, so the outline waiting in a slot is the stamp that will land there. */
+function outline(shape, a) {
+  switch (shape) {
+    case "oval": return `<ellipse rx="38.5" ry="29.5" ${a}/>`;
+    case "rect": return `<rect x="-37" y="-30" width="74" height="60" rx="4" ${a}/>`;
+    case "notch": return `<path d="${NOTCH}" ${a}/>`;
+    case "scallop": return `<path d="${scallopPath()}" ${a}/>`;
+    case "shield": return `<path d="${SHIELD}" ${a}/>`;
+    case "hex": return `<polygon points="${hexPts(38.5)}" stroke-linejoin="round" ${a}/>`;
+    case "banner": return `<rect x="-76" y="-27" width="152" height="54" rx="6" ${a}/>`;
+    default: return `<circle r="37" ${a}/>`;
+  }
+}
+const heavy = (sw = 4) => `class="mpp-fr" stroke-width="${sw}"`;
+const fine = `class="mpp-fr" stroke-width="1.4"`;
+
+/* One stamp, in two layers: `ink` (the frame and the mark, pressed with the full speckle) and
+   `type` (pressed lighter, so the speckle cannot eat a letter). */
+function stampBody(L, sp, date, uid) {
+  const when = date || `LVL ${pad(L)}`;
+  switch (sp.shape) {
+    case "circle": return {
+      ink: outline("circle", heavy()) + `<circle r="25.5" ${fine}/>` + glyph(sp.glyph, 27),
+      type: arcTx(uid + "t", overArc(27.4), sp.word, 76, 8.6) + arcTx(uid + "b", underArc(33.6), when, 62, 8),
+    };
+    case "oval": return {
+      ink: outline("oval", heavy()) + `<ellipse rx="28" ry="19.5" ${fine}/>` + glyph(sp.glyph, 22),
+      type: arcTx(uid + "t", overArc(30, 21.2), sp.word, 66, 8.6) + arcTx(uid + "b", underArc(34.6, 25.9), when, 58, 8),
+    };
+    case "rect": return {
+      ink: outline("rect", heavy()) + `<rect x="-32.5" y="-25.5" width="65" height="51" rx="2" ${fine}/>` +
+        `<line x1="-25" y1="-9.4" x2="25" y2="-9.4" class="mpp-fr" stroke-width="1"/>` + glyph(sp.glyph, 19, 0, 3),
+      type: tx(0, -13.6, sp.word, 58, 8.6) + tx(0, 21.2, when, 56, 8),
+    };
+    case "notch": return {
+      ink: outline("notch", heavy()) + `<path d="${NOTCH}" transform="scale(.86)" ${fine}/>` + glyph(sp.glyph, 18, 0, 2.4),
+      type: tx(0, -12.6, sp.word, 52, 8.6) + tx(0, 20.2, when, 50, 8),
+    };
+    case "scallop": return {
+      ink: outline("scallop", heavy(3.6)) + `<circle r="22.5" ${fine}/>` + glyph(sp.glyph, 22),
+      type: arcTx(uid + "t", overArc(24.6), sp.word, 64, 8.4) + arcTx(uid + "b", underArc(30.6), when, 56, 7.8),
+    };
+    case "shield": return {
+      ink: outline("shield", heavy()) + `<path d="${SHIELD}" transform="scale(.85)" ${fine}/>` + glyph(sp.glyph, 16, 0, 11.6),
+      type: tx(0, -15.6, sp.word, 50, 8.4) + tx(0, -3.2, when, 50, 8),
+    };
+    case "hex": return {
+      ink: outline("hex", heavy()) + `<polygon points="${hexPts(32.5)}" stroke-linejoin="round" ${fine}/>` + glyph(sp.glyph, 15, 0, 1.6),
+      type: tx(0, -11.2, sp.word, 42, 8.6) + tx(0, 17.4, when, 38, 7.8),
+    };
+    case "banner": return {
+      ink: outline("banner", heavy(4.4)) + `<rect x="-71" y="-22" width="142" height="44" rx="3.5" class="mpp-fr" stroke-width="1.2"/>` +
+        glyph(sp.glyph, 32, -48, 0) + `<line class="mpp-fr" x1="-28" y1="-15" x2="-28" y2="15" stroke-width="1.5"/>` +
+        `<path class="mpp-tx" d="M60 -12 l1.6 3.8 3.8 1.6 -3.8 1.6 -1.6 3.8 -1.6 -3.8 -3.8 -1.6 3.8 -1.6 Z"/><path class="mpp-tx" d="M55 8 l1 2.3 2.3 1 -2.3 1 -1 2.3 -1 -2.3 -2.3 -1 2.3 -1 Z"/>`,
+      type: `<text class="mpp-tx" x="-21" y="-5.4" font-size="10" letter-spacing=".8">ULTIMATE</text><text class="mpp-tx" x="-21" y="6.6" font-size="10" letter-spacing=".8">SHOWGIRL</text>` +
+        `<text class="mpp-tx" x="-21" y="17.2" font-size="7" letter-spacing=".56">${when}</text>`,
+    };
+  }
+  return { ink: "", type: "" };
+}
+
+/* Level 9's pair. Each is drawn at full size and pressed at two thirds, so each carries ONE
+   piece of type, set bigger to land the same size as the rest: the word on the sticker stamp,
+   the date on the title stamp. */
+const DOUBLE = [{ at: "translate(-12 -14) rotate(-12) scale(.66)" }, { at: "translate(14 14) rotate(9) scale(.64)" }];
+function doubleBody(L, sp, date, uid) {
+  const a = {
+    ink: outline("oval", heavy()) + `<ellipse rx="32" ry="23" ${fine}/>` + glyph(sp.glyph, 18, 0, 9),
+    type: tx(0, -5, sp.word, 56, 12),
+  };
+  const b = {
+    ink: outline("circle", heavy()) + `<circle r="22.5" ${fine}/>` + glyph(sp.glyph2, 24),
+    type: arcTx(uid + "b", underArc(32.6), date || `LVL ${pad(L)}`, 78, 11),
+  };
+  return [a, b];
 }
 
 const tileInk = (tile) => MASTERY_TILE_MARKS[tile] || MASTERY_TILE_MARKS.title;
+const pressed = (body, ink, filt, at) =>
+  `<g class="mpp-inked" style="--mpp-ink:${ink}" transform="${at}"><g filter="url(#stampInk${filt})">${body.ink}</g><g filter="url(#stampType)">${body.type}</g></g>`;
 
 function stampSVG(L, date) {
   const sp = STAMPS[L], uid = `mpp${L}`, wide = sp.shape === "banner";
   const vb = wide ? "-80 -40 160 80" : "-41 -41 82 82";
-  const rot = settle(L) * 22 - 11;
   if (sp.shape === "double") {
-    const a = { ...sp, shape: "oval" }, b = { shape: "circle", glyph: sp.glyph2, top: sp.top2 };
-    return `<svg class="mpp-stamp" viewBox="${vb}" aria-hidden="true" focusable="false"><g filter="url(#stampInk1)">` +
-      `<g class="mpp-inked" style="--mpp-ink:${tileInk(sp.tile)}" transform="translate(-9 -9) rotate(-14) scale(.68)">${stampBody(L, a, date, uid + "a")}</g>` +
-      `<g class="mpp-inked" style="--mpp-ink:${tileInk(sp.tile2)}" transform="translate(10 11) rotate(9) scale(.64)">${stampBody(L, b, date, uid + "b")}</g></g></svg>`;
+    const [a, b] = doubleBody(L, sp, date, uid);
+    return `<svg class="mpp-stamp" viewBox="${vb}" aria-hidden="true" focusable="false">` +
+      pressed(a, tileInk(sp.tile), 1, DOUBLE[0].at) + pressed(b, tileInk(sp.tile2), 2, DOUBLE[1].at) + `</svg>`;
   }
-  return `<svg class="mpp-stamp" viewBox="${vb}" aria-hidden="true" focusable="false"><g class="mpp-inked" filter="url(#stampInk${L % 3})" style="--mpp-ink:${tileInk(sp.tile)}" ` +
-    `transform="rotate(${(wide ? rot / 3 : rot).toFixed(1)})">${stampBody(L, sp, date, uid)}</g></svg>`;
+  return `<svg class="mpp-stamp" viewBox="${vb}" aria-hidden="true" focusable="false">` +
+    pressed(stampBody(L, sp, date, uid), tileInk(sp.tile), L % 3, `rotate(${(wide ? tilt(L) / 3 : tilt(L)).toFixed(1)})`) + `</svg>`;
 }
 
-function ghostFrame(shape) {
-  const a = `class="mpp-ghost-fr"`;
-  switch (shape) {
-    case "oval": case "double": return `<ellipse rx="37" ry="27" ${a}/>`;
-    case "rect": case "notch": return `<rect x="-37" y="-25" width="74" height="50" rx="5" ${a}/>`;
-    case "banner": return `<rect x="-75" y="-26" width="150" height="52" rx="6" ${a}/>`;
-    case "shield": return `<path d="M0 -36 C10 -32 20 -30 30 -29.4 C31 -8 25 14 0 36 C-25 14 -31 -8 -30 -29.4 C-20 -30 -10 -32 0 -36 Z" ${a}/>`;
-    default: return `<circle r="36" ${a}/>`;
-  }
-}
-// Where a stamp will go: its outline pencilled in, the level number, and, on the one you're
-// working toward, the ink still owed as a small red bar.
+// Where a stamp will go: its own outline pencilled in at the angle it will land, the level
+// number, and, on the one you're working toward, the ink still owed as a small red bar. The
+// dashes are stated per outline so the two shrunken halves of level 9 dash like the rest.
+const ghostLine = (k = 1) => `class="mpp-ghost-fr" stroke-width="${(1.3 / k).toFixed(2)}" stroke-dasharray="${(2.5 / k).toFixed(2)} ${(3.2 / k).toFixed(2)}"`;
 function ghostSVG(L, frac) {
   const sp = STAMPS[L], wide = sp.shape === "banner";
   const vb = wide ? "-80 -40 160 80" : "-41 -41 82 82";
-  return `<svg class="mpp-stamp mpp-ghost" viewBox="${vb}" aria-hidden="true" focusable="false"><g transform="rotate(${(settle(L) * 22 - 11).toFixed(1)})">${ghostFrame(sp.shape)}</g>` +
+  const frame = sp.shape === "double"
+    ? `<g transform="${DOUBLE[0].at}">${outline("oval", ghostLine(.66))}</g><g transform="${DOUBLE[1].at}">${outline("circle", ghostLine(.66))}</g>`
+    : `<g transform="rotate(${(wide ? tilt(L) / 3 : tilt(L)).toFixed(1)})">${outline(sp.shape, ghostLine())}</g>`;
+  return `<svg class="mpp-stamp mpp-ghost" viewBox="${vb}" aria-hidden="true" focusable="false">${frame}` +
     `<text class="mpp-ghost-n" x="0" y="${wide ? 7 : 5}" text-anchor="middle" font-size="${wide ? 22 : 17}">${L}</text>` +
-    (frac != null ? `<g transform="translate(0 30)"><rect x="-20" y="-3" width="40" height="6" rx="3" class="mpp-owed-bg"/><rect x="-20" y="-3" width="${(40 * frac).toFixed(1)}" height="6" rx="3" class="mpp-owed"/></g>` : "") +
+    (frac != null ? `<g transform="translate(0 ${wide ? 18 : 17})"><rect x="-20" y="-3" width="40" height="6" rx="3" class="mpp-owed-bg"/><rect x="-20" y="-3" width="${(40 * frac).toFixed(1)}" height="6" rx="3" class="mpp-owed"/></g>` : "") +
     `</svg>`;
 }
 
@@ -162,13 +221,13 @@ export function passportHTML(d) {
     const body = s === "done" ? stampSVG(L, date) : ghostSVG(L, s === "now" ? d.frac : null);
     const tip = (d.tips[L] || `Level ${L}`) + (s === "done" && date ? ` · stamped ${date.toLowerCase()}` : "");
     slots += `<div class="mpp-slot ${s}${L === PASSPORT_LEVELS ? " cap" : ""}" data-tip="${tip}" data-tip-delay="200">` +
-      `<span class="mpp-no">${pad(L)}</span>${body}<div class="mpp-ct">${STAMPS[L].caption}</div></div>`;
+      `<span class="mpp-no">${pad(L)}</span>${body}<div class="mpp-ct">${s === "done" ? STAMPS[L].caption : STAMPS[L].short || STAMPS[L].caption}</div></div>`;
   }
   const bar = (pct, foil) => `<div class="mpp-bar${foil ? " foil" : ""}"><i style="width:${pct.toFixed(1)}%">${foil && d.sheen ? `<span class="mpp-sheen"></span>` : ""}</i></div>`;
   let head, foot;
   if (!d.issued) {
     head = `<div><div class="mpp-kick">Mastery · passport</div><div class="mpp-lv">Not yet issued</div></div>` +
-      `<div class="mpp-ink">${bar(Math.min(100, d.total / d.gate * 100))}<p><b>${d.total} / ${d.gate}</b> skill levels, then the first stamp</p></div>`;
+      `<div class="mpp-ink">${bar(Math.min(100, d.total / d.gate * 100))}<p><b>${d.total} / ${d.gate}</b> skill levels to issue</p></div>`;
     foot = `Collect ${d.gate} stamps across the five skill cards below and the passport is issued.`;
   } else if (d.complete) {
     head = `<div><div class="mpp-kick">Mastery · passport</div><div class="mpp-lv">Level ${d.level} <small>every page stamped</small></div></div>` +
@@ -183,7 +242,7 @@ export function passportHTML(d) {
     `<svg class="mpp-void" viewBox="-110 -30 220 60" aria-hidden="true" focusable="false"><g filter="url(#stampInk2)"><rect x="-104" y="-25" width="208" height="50" rx="6" fill="none" stroke="currentColor" stroke-width="3.4"/>` +
     `<text x="0" y="-2" text-anchor="middle" font-size="17" letter-spacing="3" fill="currentColor">NOT YET ISSUED</text>` +
     `<text x="0" y="15" text-anchor="middle" font-size="8.4" letter-spacing="1.6" fill="currentColor">${d.total} OF ${d.gate} SKILL LEVELS</text></g></svg>`;
-  return `<div class="mpp"><div class="mpp-head">${head}</div><div class="mpp-grid">${slots}${notIssued}</div><div class="mpp-foot">${foot}</div></div>`;
+  return `<div class="mpp${d.issued ? "" : " unissued"}"><div class="mpp-head">${head}</div><div class="mpp-grid">${slots}${notIssued}</div><div class="mpp-foot">${foot}</div></div>`;
 }
 
 function slotRing(frac) {
