@@ -1221,7 +1221,8 @@ export function initDev(api) {
     row(btn("next sacred 13", () => { const n = api.thirteen.next(); if (n) { api.thirteen.preview(n.date); showDate(n.date); } }),
         btn("milestones", () => { console.table(api.milestone.dates()); toast("milestones in console"); }),
         btn("13 dates", () => { console.table(api.thirteen.dates()); toast("sacred dates in console"); }),
-        btn("13th button", () => { const r = api.thirteen.button(); showDate(r.date); toast(`${r.date}: ${r.finish}`); })),
+        btn("13th button", () => { const r = api.thirteen.button(); showDate(r.date); toast(`${r.date}: ${r.finish}`); }),
+        btn("birthday button", () => { const r = api.milestone.birthdayButton(); showDate(r.date); toast(`${r.date}: ${r.finish}, age ${r.age}`); })),
     row(btn("share payload", () => {
           const p = api.share.payload();
           console.log("[dev] the tear would copy:\n" + [p.text, p.url].filter(Boolean).join("\n"));

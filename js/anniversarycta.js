@@ -1,21 +1,22 @@
 // The dated Start writing button: sixteen finishes, one per studio album and one per Taylor's
-// Version, and the rule that puts each on the button on its record's release day; and one more,
-// Thirteen marks, for the 13th of every month.
+// Version, and the rule that puts each on the button on its record's release day; one for her
+// birthday, Iced for her; and one more, Thirteen marks, for the 13th of every month.
 //
 // THE FINISH IS FORCED, AND THAT IS THE POINT. On each album's anniversary the button wears
 // that album's finish over whatever the player has chosen: Seasons, the gold marker, any
 // Mastery finish, the random roll. It is there to show support for the album on its release
 // day, the notebook dressing up for her record the way a fan does, and support you can switch
 // off would only be a theme. It lasts the one day and hands the button straight back, and it
-// never touches the stored choice, so nothing is lost by it. The 13th is forced the same way, for
-// her lucky number, on the 13th only.
+// never touches the stored choice, so nothing is lost by it. Her birthday is forced the same way,
+// and so is the 13th, for her lucky number, on the 13th only.
 //
 // Every finish is drawn on a 600 x 60 strip cropped from the middle, never stretched, exactly as
-// js/cta.js draws its own (the 13th's count is the one exception, and says why). The twelve were
-// designed on scripts/cta/chosen-board.html, the four Taylor's Versions on scripts/cta/tv-board.html
-// and the 13th on scripts/cta/thirteenth-board.html; change a finish there first and carry it
-// across, so the board and the button do not drift apart.
-import { TS_MILESTONES } from "./config.js";
+// js/cta.js draws its own (the 13th's count and the birthday's candles are the exceptions, and
+// say why). The twelve were
+// designed on scripts/cta/chosen-board.html, the four Taylor's Versions on scripts/cta/tv-board.html,
+// the birthday on scripts/cta/birthday-board.html and the 13th on scripts/cta/thirteenth-board.html;
+// change a finish there first and carry it across, so the board and the button do not drift apart.
+import { TS_MILESTONES, ALBUM_COLORS } from "./config.js";
 
 const R = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -712,6 +713,138 @@ function layCount(btn) {
 // button away from the player on some forty days a year.
 export const thirteenthFinishFor = (dateKey) => dateKey?.slice(8, 10) === "13" ? "anv-13th" : "";
 
+/* ---- Her birthday: Iced for her ---- */
+// Number candles drawn as fat strokes: each numeral's spine, the top of its wick, and two places
+// on its face where the glitter catches the light once it is lit. All ten, since the age moves.
+const DIGITS = {
+  0: ['M0 -8.6C4.8 -8.6 4.8 8.6 0 8.6C-4.8 8.6 -4.8 -8.6 0 -8.6Z', [0, -10.9], [[-3.4, -5], [3.5, 4.2]]],
+  1: ['M-3.2 -5.2L.6 -8.6V8.6', [.6, -10.9], [[.6, -5], [.6, 5.5]]],
+  2: ['M-4.2 -5.4C-3.2 -9.6 4.4 -9.8 4.2 -4.6C4 -1.2 -1.6 2.6 -4.4 8.4H4.6', [0, -11], [[3.4, -6.6], [-1.5, 8.4]]],
+  3: ['M-4.4 -6.6C-3 -9.8 3.6 -9.8 3.8 -5.4C3.9 -2.6 1 -1.1 -1 -.8C1.6 -.6 4.6 .8 4.4 4.4C4.2 9 -2.8 9.6 -4.8 6.6', [-.2, -11.4], [[2.8, -7.6], [3.6, 4]]],
+  4: ['M2.4 8.6V-8.6L-4.8 3.4H5', [2.4, -10.9], [[2.4, -3], [-2.6, 3.4]]],
+  5: ['M4 -8.4H-3.2L-3.8 -1.2C-1.8 -2.6 4.2 -2.8 4.4 2.6C4.6 8.8 -2.4 9.8 -4.6 6.4', [.4, -10.6], [[.4, -8.4], [3.7, 3.8]]],
+  6: ['M3.6 -7.6C1 -9.8 -4.4 -8.6 -4.4 .8C-4.4 7 -2 8.8 .2 8.8C3 8.8 4.4 6.6 4.4 3.8C4.4 .8 2.4 -1 -.2 -1C-2.6 -1 -4.2 .8 -4.4 2.4', [-.6, -11], [[-3.9, -3], [3.6, 5.8]]],
+  7: ['M-4.6 -8H4.4C1.6 -3.6 -.2 1.6 -1.2 8.2', [0, -10.2], [[2, -8], [-.4, 4.2]]],
+  8: ['M0 -.6C-3.6 -.8 -4 -8.6 0 -8.6C4 -8.6 3.6 -.8 0 -.6C-4.4 -.4 -4.6 8.6 0 8.6C4.6 8.6 4.4 -.4 0 -.6Z', [0, -10.8], [[-2.6, -6.4], [2.9, 5.4]]],
+  9: ['M4.4 -2.4C4.2 -.8 2.6 1 .2 1C-2.4 1 -4.4 -.8 -4.4 -3.8C-4.4 -6.6 -3 -8.8 -.2 -8.8C2 -8.8 4.4 -7 4.4 -.8C4.4 8.6 -1 9.8 -3.6 7.6', [0, -11], [[-3.2, -6.2], [3.5, -1.4]]],
+};
+// A candle flame with its base at the wick: a soft teardrop, a white core, a little blue at the root.
+const FLAME = 'M0 .7C-1.7 -.5 -2 -3 -1 -5.2C-.6 -6.3 -.1 -7.4 0 -8.8C.6 -7.2 1.9 -5.4 1.9 -3.2C1.9 -1.2 1.1 .2 0 .7Z';
+const CORE = 'M0 .3C-.8 -.4 -.9 -1.9 -.3 -3.6C.1 -2.4 .9 -1.5 .8 -.3C.6 .1 .3 .3 0 .3Z';
+const flame = (id) => `<path d="${FLAME}" fill="url(#${id}f)"/><path d="${CORE}" fill="#fffef6" opacity=".85"/><ellipse cx="0" cy="-.4" rx=".7" ry=".95" fill="#86a2ff" opacity=".45"/>`;
+const scallop = (r, n) => { let d = ''; for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2, m = (i - .5) / n * Math.PI * 2;
+  const p = [Math.cos(a) * r * .86, Math.sin(a) * r * .86], c = [Math.cos(m) * r * 1.14, Math.sin(m) * r * 1.14];
+  d += i ? `Q${f(c[0])} ${f(c[1])} ${f(p[0])} ${f(p[1])}` : `M${f(p[0])} ${f(p[1])}`; } return d + 'Z'; };
+const tint = (hex, t) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t) + 255 * t).toString(16).padStart(2, '0')).join('');
+// The sprinkles take the bright eras; reputation's and folklore's greys would read as dust.
+const SPRINKLES = ['Taylor Swift', 'Fearless', 'Speak Now', 'Red', '1989', 'Lover', 'Midnights', 'The Life of a Showgirl'].map((n) => tint(ALBUM_COLORS[n], .22));
+const BIRTHDAY = TS_MILESTONES.find((m) => m.kind === "birthday");
+// Her age on the birthday `dateKey` falls on, which is the one day this finish is worn. With no
+// date (a design board) it is her next birthday's.
+function birthdayAge(dateKey) {
+  if (dateKey) return +dateKey.slice(0, 4) - BIRTHDAY.year;
+  const d = new Date();
+  return d.getFullYear() + (d.getMonth() === 11 && d.getDate() > 13 ? 1 : 0) - BIRTHDAY.year;
+}
+// The button is the cake, seen from above: buttercream with a piped shell border along both
+// edges, rosettes and sprinkles out at the ends, Happy birthday piped in raspberry, and the words
+// piped in the same icing, where a cake's message goes. Beside them stand gold number candles in
+// her age that day. On hover a struck match comes in from the right and lights them, the last
+// digit first; each flame flares as it catches and settles, the glitter on the gold starts to
+// catch the light, and the match is shaken out and taken away, leaving a curl of smoke.
+function birthdayCake(dateKey) {
+  const id = `anvBd${++serial}`, rand = R(1312);
+  // The sprinkles keep out of the middle band, where the words are and where the inscription and
+  // the candles are laid beside them at whatever width the button is.
+  const clear = (x, y) => !(x > 118 && x < 482 && y > 12 && y < 48);
+  // Palette knife marks in the buttercream.
+  let knife = '', knifeHi = '';
+  for (let k = 0; k < 7; k++) { const x = rand() * 600, y = 12 + rand() * 36, w = 34 + rand() * 60, b = (rand() - .5) * 12;
+    knife += `M${f(x - w / 2)} ${f(y)}q${f(w / 2)} ${f(b)} ${f(w)} ${f(-b * .3)}`; knifeHi += `M${f(x - w / 2 + 4)} ${f(y - 1.2)}q${f(w / 2 - 4)} ${f(b)} ${f(w - 8)} ${f(-b * .3)}`; }
+  // The shell border, piped along the top edge and back along the bottom.
+  const SHELL = 'M-3.4 .4C-3.8 -2 -1.6 -3.4 .6 -3C2.4 -2.6 3.6 -1.2 5.8 -.2C3.8 .5 2.6 2.4 .2 2.8C-1.8 3.1 -3.2 2 -3.4 .4Z';
+  const RIDGE = 'M-2.4 -1.4Q.6 -1.2 4 -.5M-2.6 1Q.4 .8 3.8 .1';
+  let shells = '';
+  for (const [y, dir, x0] of [[3.4, 1, -8], [56.6, -1, -5]]) for (let x = x0; x < 612; x += 6.4)
+    shells += `<g transform="translate(${f(x)} ${f(y + (rand() - .5) * .5)}) scale(${dir} 1) rotate(${f((rand() - .5) * 8)})"><path class="bd-shell" d="${SHELL}"/><path class="bd-ridge" d="${RIDGE}"/><path class="bd-hi" d="M-2.6 -.6Q-2.4 -2 -.6 -2.4"/></g>`;
+  // Rosettes out at each end, each with a silver dragee in the middle.
+  const rosette = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s}) rotate(${f(rand() * 360)})"><path class="bd-shell" d="${scallop(5.4, 9)}"/>` +
+    `<path class="bd-ridge" d="M-.9 .2a.9 .9 0 1 1 1.8 -.1a2 2 0 1 1 -3.9 .3a3.1 3.1 0 1 1 6.2 -.2a4.2 4.2 0 1 1 -8.3 .6"/><path class="bd-hi" d="M-3.6 -2.2Q-2.4 -3.8 -.4 -4.1"/>` +
+    `<circle class="bd-pearl" r="1.15"/><circle class="bd-pearl-hi" cx="-.35" cy="-.4" r=".38"/></g>`;
+  const roses = rosette(40, 31, 1.45) + rosette(88, 19, 1.1) + rosette(110, 41, 1) + rosette(510, 21, 1.05) + rosette(548, 39, 1.45) + rosette(584, 18, .95);
+  let sprinkles = '';
+  for (let k = 0; k < 120; k++) { const x = 8 + rand() * 584, y = 10 + rand() * 40; if (!clear(x, y)) continue;
+    sprinkles += rand() < .82 ? `<rect x="${f(x - 1.3)}" y="${f(y - .45)}" width="2.6" height=".9" rx=".45" fill="${SPRINKLES[k % SPRINKLES.length]}" transform="rotate(${f(rand() * 180)} ${f(x)} ${f(y)})"/>`
+      : `<circle class="bd-pearl" cx="${f(x)}" cy="${f(y)}" r=".75"/><circle class="bd-pearl-hi" cx="${f(x - .25)}" cy="${f(y - .28)}" r=".25"/>`; }
+  const script = (t, x, y) => `<text class="bd-script-shadow" x="${f(x + .45)}" y="${f(y + .6)}">${t}</text><text class="bd-script" x="${x}" y="${y}">${t}</text>`;
+  const words = `<g transform="rotate(-5 166 34)">${script('Happy', 164, 28.5)}${script('birthday', 167, 41)}</g>`;
+  // Her age in gold number candles, a digit or two (or three, one day) standing just past the words.
+  const digits = String(birthdayAge(dateKey)).split(''), S = 1.14;
+  const n = digits.length, place = digits.map((_, i) => n === 1 ? [438, 31.6, 0] : [427 + i * (n === 2 ? 23 : 19), 31.6 + (i % 2) * .6, i % 2 ? 4 : -5]);
+  const wick = ([x, y, r], [wx, wy]) => { const a = r * Math.PI / 180; return [x + S * (wx * Math.cos(a) - wy * Math.sin(a)), y + S * (wx * Math.sin(a) + wy * Math.cos(a))]; };
+  const wicks = digits.map((dg, i) => wick(place[i], [DIGITS[dg][1][0], DIGITS[dg][1][1] - 1.1]));
+  // The match comes in from the right, so the last digit is lit first. It dips to each wick in
+  // turn, at 30% and 58% of its run, and each candle catches as it touches.
+  const MATCH_T = 1.6, first = wicks[wicks.length - 1], last = wicks[0];
+  const catchAt = (i) => n === 1 ? .48 : .48 + (n - 1 - i) / (n - 1) * .45;
+  let glows = '', nums = '';
+  digits.forEach((dg, i) => { const [d, [wx, wy], glints] = DIGITS[dg], [x, y, r] = place[i], at = f(catchAt(i));
+    glows += `<ellipse class="bd-glow" style="--d:${at}s" cx="${f(x)}" cy="${f(y - 9)}" rx="22" ry="17" fill="url(#${id}w)"/>`;
+    nums += `<g transform="translate(${f(x)} ${f(y)}) rotate(${r}) scale(${S})"><ellipse class="bd-cast" cx="1.8" cy="10.6" rx="7.2" ry="1.7"/><path class="bd-num-edge" d="${d}" transform="translate(.9 1.3)"/>` +
+      `<path class="bd-num" d="${d}" stroke="url(#${id}g)"/><path class="bd-num-hi" d="${d}" transform="translate(-.9 -.8)"/>` +
+      glints.map(([gx, gy], k) => `<g transform="translate(${gx} ${gy})"><path class="bd-glint" style="--d:${at}s;--gd:${f(.25 + k * .55 + rand() * .3)}s" d="M0 -1.9C.15 -.5 .5 -.15 1.9 0C.5 .15 .15 .5 0 1.9C-.15 .5 -.5 .15 -1.9 0C-.5 -.15 -.15 -.5 0 -1.9Z"/></g>`).join('') +
+      `<path class="bd-wick" d="M${wx} ${wy + 1.8}V${f(wy - 1.1)}"/>` +
+      `<g transform="translate(${wx} ${f(wy - .5)}) rotate(${-r})"><g class="bd-flame" style="--d:${at}s"><g class="bd-catch" style="--d:${at}s"><g class="bd-flick" style="--ft:${f(.55 + rand() * .3)}s;--fd:${f(-rand())}s" transform="scale(1.45)">${flame(id)}</g></g></g></g></g>`; });
+  // The match: held from the upper right, its head charred where it was struck, and a flame of its
+  // own. It is drawn resting on the first wick; the animation carries it in, across and away.
+  const mx = first[0] + 2, my = first[1] + 2.4;
+  const match = `<g transform="translate(${f(mx)} ${f(my)})"><g class="bd-match" style="--ax:44px;--ay:-26px;--bx:${f(last[0] - first[0])}px;--by:${f(last[1] - first[1])}px;--t:${MATCH_T}s">` +
+    `<g transform="rotate(-36)"><rect class="bd-match-cast" x="2.6" y="1.3" width="27" height="2" rx=".4"/><rect class="bd-stick" x="1.2" y="-1" width="27" height="2" rx=".4"/>` +
+    `<rect class="bd-stick-shade" x="1.2" y=".35" width="27" height=".65"/><ellipse class="bd-head" cx=".6" cy="0" rx="2.5" ry="1.75"/><ellipse class="bd-head-hi" cx="0" cy="-.45" rx="1.05" ry=".6"/></g>` +
+    `<g class="bd-mflame"><g transform="translate(-.3 -.6) scale(2)">${flame(id)}</g></g>` +
+    `<path class="bd-msmoke" pathLength="1" d="M-.2 -1C1 -3.4 -1.2 -5.6 .2 -8.2S1.8 -12 .4 -14.6"/></g></g>`;
+  const defs = `<pattern id="${id}g" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#e2b85a"/><circle cx="1" cy="1.4" r=".45" fill="#fff6d6"/><circle cx="4.1" cy="3.2" r=".35" fill="#fff"/><circle cx="2.6" cy="4.9" r=".42" fill="#b98a2e"/><circle cx="5.2" cy=".6" r=".3" fill="#fff3c4"/><circle cx="4.6" cy="5.3" r=".3" fill="#f6dc93"/></pattern>` +
+    `<radialGradient id="${id}f" cx=".5" cy=".78" r=".75"><stop offset="0" stop-color="#fffdf0"/><stop offset=".38" stop-color="#ffe89a"/><stop offset=".8" stop-color="#ffa53e"/><stop offset="1" stop-color="#f07a2a"/></radialGradient>` +
+    `<radialGradient id="${id}w"><stop offset="0" stop-color="#ffc467" stop-opacity=".5"/><stop offset=".5" stop-color="#ffc467" stop-opacity=".16"/><stop offset="1" stop-color="#ffc467" stop-opacity="0"/></radialGradient>`;
+  // The inscription and the candles are each their own drawing, laid either side of the words by
+  // layCake rather than cropped from the middle of the strip: a phone's gutters are too narrow to
+  // crop from, and would cut the age in half.
+  const half = (side, inner) => { const [x, y, w, h] = CAKE_BOX[side]; return `<svg class="bd-half bd-half--${side}" viewBox="${x} ${y} ${w} ${h}">${inner}</svg>`; };
+  return { fx: strip('bd-cake', `<defs>${defs}</defs><path class="bd-knife" d="${knife}"/><path class="bd-knife-hi" d="${knifeHi}"/>${sprinkles}${roses}${shells}`) +
+    half('l', words) + half('r', glows + nums + match) };
+}
+// The ink of the inscription and of the candles in the strip's own units, [x, y, width, height],
+// which is what has to fit beside the words. The glow and the match reach past them, and are
+// allowed to: only the button's edge clips them.
+const CAKE_BOX = { l: [144, 13, 47, 35], r: [417, 6, 43, 42] };
+// Lays the inscription and the candles either side of the words at one shared scale, the way the
+// 13th's count is laid. Where both fit at full size with a generous gap, which is everywhere wider
+// than a phone, that is how they sit; on a phone the gap closes and both come down together, to
+// about four fifths of full size at 375px.
+function layCake(btn) {
+  const fx = btn.querySelector('.cta-fx'), label = btn.querySelector('.cta-label');
+  if (!fx || !label || btn.querySelectorAll('.bd-half').length !== 2 || !btn.offsetWidth) return;
+  const box = btn.getBoundingClientRect(), text = label.getBoundingClientRect();
+  if (!box.width) return;
+  const k0 = btn.offsetWidth / box.width; // undo a preview's scale: work in the button's own pixels
+  const W = fx.clientWidth, H = fx.clientHeight, u = H / 60;
+  const from = (x) => (x - box.left) * k0 - btn.clientLeft;
+  const labelL = from(text.left), labelR = from(text.right);
+  const fit = (gap) => Math.min(1, (labelL - gap - 3) / (CAKE_BOX.l[2] * u), (W - labelR - gap - 3) / (CAKE_BOX.r[2] * u));
+  const gap = fit(14) >= 1 ? 14 : 6, k = Math.max(.2, fit(gap));
+  const put = (side, left) => { const [, y, w, h] = CAKE_BOX[side];
+    Object.assign(btn.querySelector(`.bd-half--${side}`).style, { left: `${f(left)}px`, top: `${f(H / 2 + (y - 30) * u * k)}px`, width: `${f(w * u * k)}px`, height: `${f(h * u * k)}px` }); };
+  put('l', labelL - gap - CAKE_BOX.l[2] * u * k);
+  put('r', labelR + gap);
+}
+
+// The finish the button is forced into on her birthday, or "". It outranks the 13th, which her
+// birthday always is, or it would never be seen; paintStartButton asks it before
+// thirteenthFinishFor. No record has come out on 13 December, so nothing outranks it in turn,
+// though a release day would, being asked first. The day comes off her row in TS_MILESTONES, so
+// the button and the margin note cannot disagree about it.
+export const birthdayFinishFor = (dateKey) => dateKey?.slice(5) === BIRTHDAY.md ? "anv-birthday" : "";
+
 /* ---------- which finish, on which day ---------- */
 // Keyed by the TS_MILESTONES album name, so the release dates live in one table and a date fix
 // there moves the button with the margin note.
@@ -738,7 +871,7 @@ const TV_FINISHES = {
 };
 const BY_KIND = { album: ANNIVERSARY_FINISHES, tv: TV_FINISHES };
 const finishOf = (m) => BY_KIND[m.kind]?.[m.album]?.[0] || "";
-const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks]]);
+const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake]]);
 
 // The finish the button is forced into on `dateKey` (YYYY-MM-DD, the player's own day), or "" on
 // every other day. Every studio album's release day counts, and so does every Taylor's Version's.
@@ -762,21 +895,23 @@ export const anniversaryFinishList = () => TS_MILESTONES.filter(finishOf)
 
 // The drawing for an anniversary finish: { fx, out?, label? }, or null for any other finish. `fx`
 // goes in the clipped art layer, `out` in a layer allowed past the button's edge (Red's fringe,
-// Lover's butterflies), and label "typed" asks for the words one letter to a span.
-export function anniversaryArt(finish) {
+// Lover's butterflies), and label "typed" asks for the words one letter to a span. `dateKey` is
+// the day the button is being worn on, which only the birthday reads: its candles are her age.
+export function anniversaryArt(finish, dateKey = "") {
   const draw = ART[finish];
-  return draw ? draw() : null;
+  return draw ? draw(dateKey) : null;
 }
 
 // Anything that has to measure the button once it is on the page. Red's fringe keeps one spacing
-// at every width, so it is hung by the button's width; the 13th's count is laid beside the words,
-// so it is laid by where the label sits, which moves with the button's size and with the face
-// once it has loaded. Safe to call on every paint; the watcher is attached once per button.
+// at every width, so it is hung by the button's width; the 13th's count and the birthday's
+// inscription and candles are laid beside the words, so they are laid by where the label sits,
+// which moves with the button's size and with the face once it has loaded. Safe to call on every paint; the watcher is attached once per button.
 const watched = new WeakSet();
 export function layoutAnniversaryArt(btn) {
   const lay = () => {
     btn.querySelectorAll(".anv-fringe").forEach((el) => { if (el.offsetWidth) hangFringe(el); });
     if (btn.querySelector(".ch-count")) layCount(btn);
+    if (btn.querySelector(".bd-half")) layCake(btn);
   };
   lay();
   if (watched.has(btn) || typeof ResizeObserver === "undefined") return;

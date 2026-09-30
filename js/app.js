@@ -4,7 +4,7 @@ import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
-import { anniversaryFinishFor, anniversaryFinishList, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
+import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
 import { seasonOn, SEASONS, southernSeasons } from "./season.js";
 import { launchFlock } from "./messengers.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
@@ -532,7 +532,7 @@ function paintThemeColor(dark) {
 // a pencil held in a hand; a nametag or a turned page rocking 12° reads as a wobble rather
 // than as writing, and the ones it would suit are not worth a per-mark opt-in.
 function writeCtaLabel(btn, labelId) {
-  btn.innerHTML = ctaContentHTML(labelId, btn.dataset.startbtn || "");
+  btn.innerHTML = ctaContentHTML(labelId, btn.dataset.startbtn || "", todayKey());
 }
 
 // The start-button finish sits on the button itself, not the body: the Mastery reward board
@@ -548,12 +548,14 @@ function paintStartButton() {
   //
   // Except on an album's release day, when the album's own finish is FORCED over all of that,
   // Mastery pick and random roll included, to show support for the album on its anniversary
-  // (the reasoning is at the top of js/anniversarycta.js), and on the 13th of every month, which
-  // wears Thirteen marks the same way. A release day would outrank the 13th, though no record
-  // has come out on one yet. Only this button wears either: the Mastery board still previews the
-  // player's own choice, which is untouched and comes back the next day.
+  // (the reasoning is at the top of js/anniversarycta.js), on her birthday, which wears Iced for
+  // her the same way, and on the 13th of every month, which wears Thirteen marks. They are asked
+  // in that order: her birthday is always a 13th, so it has to come first to be seen at all, and
+  // a release day would outrank both, though no record has come out on either yet. Only this
+  // button wears any of them: the Mastery board still previews the player's own choice, which is
+  // untouched and comes back the next day.
   const day = todayKey();
-  const finish = anniversaryFinishFor(day) || thirteenthFinishFor(day) || wornFinish(activeButtonFinish());
+  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || thirteenthFinishFor(day) || wornFinish(activeButtonFinish());
   if (finish) playCta.setAttribute("data-startbtn", finish);
   else playCta.removeAttribute("data-startbtn");
   // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
@@ -30760,6 +30762,14 @@ function buildDevApi() {
         return anniversaryNote(window.__devDate, TS_MILESTONES);
       },
       clear: () => { window.__devDate = null; refreshDateSurfaces(); },
+      // Her birthday's Start writing finish, Iced for her (js/anniversarycta.js). Moves the dev
+      // date to 13 December, this year's or, with a year, that one's, so the front page's button
+      // can be seen wearing it with the candles that year would light.
+      birthdayButton: (year) => {
+        window.__devDate = `${year | 0 || new Date().getFullYear()}-12-13`;
+        refreshDateSurfaces();
+        return { date: window.__devDate, finish: anniversaryFinishFor(window.__devDate) || birthdayFinishFor(window.__devDate), age: +window.__devDate.slice(0, 4) - 1989 };
+      },
       // The album-anniversary word pool for a date now lives with the rest of the daily
       // tooling, which sees more of the draw than this did: see __dev.daily.preview.
     },
@@ -30823,7 +30833,7 @@ function buildDevApi() {
             if (!tn) continue;
             const shadowed = anniversaryNote(key, TS_MILESTONES) ? "milestone"
               : guestDayNote(key, GUEST_DAYS) ? "guest day" : "";
-            const button = anniversaryFinishFor(key) || thirteenthFinishFor(key);
+            const button = anniversaryFinishFor(key) || birthdayFinishFor(key) || thirteenthFinishFor(key);
             out.push(`${key}  ${tn.caption}${shadowed ? `  (shadowed by ${shadowed})` : ""}${button ? `  button: ${button}` : ""}`);
           }
         }
@@ -30845,13 +30855,14 @@ function buildDevApi() {
       },
       // The 13th's Start writing finish, Thirteen marks (js/anniversarycta.js). Moves the dev date
       // to the next 13th counted from the real today, so the front page's button can be seen
-      // wearing it, and says what the button wears there: anv-13th, unless a release day has it.
+      // wearing it, and says what the button wears there: anv-13th, unless a release day or her
+      // birthday has it (13 December is always the birthday's).
       button: () => {
         const d = new Date();
         if (d.getDate() > 13) d.setMonth(d.getMonth() + 1, 13); else d.setDate(13);
         window.__devDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-13`;
         refreshDateSurfaces();
-        return { date: window.__devDate, finish: anniversaryFinishFor(window.__devDate) || thirteenthFinishFor(window.__devDate) };
+        return { date: window.__devDate, finish: anniversaryFinishFor(window.__devDate) || birthdayFinishFor(window.__devDate) || thirteenthFinishFor(window.__devDate) };
       },
       clear: () => { window.__devDate = null; refreshDateSurfaces(); },
     },

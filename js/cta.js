@@ -451,7 +451,7 @@ const FINISH_ART = {
 // whole label cream while half of it still sat on gold, which is about 1.6:1.
 const goldStroke = (words) => `<i class="cta-stroke"><span class="cta-stroke-copy"><span class="cta-copy-label">${words}</span><i class="cta-stroke-line"></i></span></i>`;
 
-export function ctaContentHTML(labelId = "", finish = "") {
+export function ctaContentHTML(labelId = "", finish = "", dateKey = "") {
   const opt = labelId ? CTA_LABELS[labelId] : null;
   // No chosen words means the default, which wears the drawn pencil (the one mark that wiggles).
   const markId = opt ? opt.mark : "pencil";
@@ -459,8 +459,9 @@ export function ctaContentHTML(labelId = "", finish = "") {
   const words = `${mark}${opt ? escapeHtml(opt.text) : "Start writing"}`;
   // An album-anniversary finish (js/anniversarycta.js) brings its own art, and two of them need
   // more than the clipped layer: Red's fringe and Lover's butterflies hang past the button's
-  // edge, and Tortured Poets types the words out again a letter at a time.
-  const anniversary = anniversaryArt(finish);
+  // edge, and Tortured Poets types the words out again a letter at a time. The birthday's candles
+  // are her age on `dateKey`, the day the button is worn.
+  const anniversary = anniversaryArt(finish, dateKey);
   if (anniversary) {
     const text = opt ? opt.text : "Start writing";
     const typed = anniversary.label === "typed"
