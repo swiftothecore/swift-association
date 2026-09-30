@@ -2566,11 +2566,11 @@
     body:not([data-reduce-motion="off"]) .turn-slip { transition: none; }
   }
 
-  /* ---------- The result stamps: ONE MORE TAKE (replay) and ENCORE (keep going) ----------
+  /* ---------- The result stamps: PLAY AGAIN (replay) and ENCORE (keep going) ----------
      The finished tally gets marked the way a teacher stamps a page: big rubber stamps
      (the rarity stamp's hero siblings — same typewriter caps, double ring, multiply ink),
      distressed by a turbulence filter so no two edges print clean. ENCORE is margin-rule
-     red and rolls the run on into Infinite; ONE MORE TAKE is stamp-pad navy and plays
+     red and rolls the run on into Infinite; PLAY AGAIN is stamp-pad navy and plays
      the same mode again. Hovering re-inks a stamp and
      ghosts in a second strike; pressing thumps it down.
 

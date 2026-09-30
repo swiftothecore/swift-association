@@ -20383,18 +20383,20 @@ function setResultStamps(replay, encore) {
   $("resultStamps").classList.toggle("is-pair", !!(replay && encore));
 }
 
-// ONE MORE TAKE, the replay stamp. Drawn here rather than in index.html because its sub-line
+// PLAY AGAIN, the replay stamp. Drawn here rather than in index.html because its sub-line
 // names the mode just played. Two cuts of the one stamp: the full column, and the half it gets
-// beside ENCORE, where the words drop a size so all three still fit inside the ring.
+// beside ENCORE, where the words drop a size so all three still fit inside the ring. Ten letters
+// leave room to set them larger than ENCORE's, and the baseline sits higher to match, so the
+// caps centre in the band between the inner ring and the sub-line's rules instead of on it.
 function replayStampArt(w, sub) {
   const narrow = w < 400;
   const text = (x, y, size, ls, txt, rot) =>
     `<text x="${x}" y="${y}"${rot ? ` rotate="${rot}"` : ""} fill="currentColor" text-anchor="middle" ` +
     `style="font-family: var(--type); font-weight: 700; font-size: ${size}px; letter-spacing: ${ls}px;">${txt}</text>`;
-  const word = narrow ? { size: 21, ls: 2 } : { size: 30, ls: 6 };
+  const word = narrow ? { size: 27, ls: 3, y: 40 } : { size: 36, ls: 7, y: 42.5 };
   return `<rect x="4" y="4" width="${w - 8}" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>` +
     `<rect x="10" y="10" width="${w - 20}" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>` +
-    text(w / 2, 44, word.size, word.ls, "ONE MORE TAKE", "-2 1 -1 2 -1 1 0 -1 1 -2 1 0 -1") +
+    text(w / 2, word.y, word.size, word.ls, "PLAY AGAIN", "-2 1 -1 2 0 1 -1 2 -1 1") +
     stampSubLine(w, sub);
 }
 
@@ -25933,7 +25935,7 @@ function endGame() {
   if (shownTime != null && !tallyHidden) tallyCells.push({ v: fmtTime(shownTime), l: "on the clock" });
   if (verseBonus > 0 && !tallyHidden) tallyCells.push({ v: "+" + verseBonus, l: "verse bonus" });
   setFinalTally(tallyHidden ? "?" : boardScore, tallyCells, isInfinite ? "rounds" : "");
-  // ONE MORE TAKE replays this mode (a Daily is one play a day, so it has none); ENCORE rolls a finished
+  // PLAY AGAIN replays this mode (a Daily is one play a day, so it has none); ENCORE rolls a finished
   // classic run on into Infinite, which an Infinite run already is.
   if (!isDaily) paintReplayStamp();
   setResultStamps(!isDaily, !isInfinite && !isDaily);
