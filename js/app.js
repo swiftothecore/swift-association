@@ -2067,14 +2067,26 @@ let lastStatsDifficulty = null;
 // them do it, landing on the start screen's "Start writing" launchpad in one tap. Shared by every
 // empty state so the affordance reads the same everywhere.
 function playCTA(label = "start writing") {
-  return `<button type="button" class="empty-cta" data-go-play>${label} →</button>`;
+  return `<button type="button" class="empty-cta" data-go-play>${label} ${CTA_ARROW}</button>`;
 }
 // The hand-drawn arrow on the two catalogue buttons (the Stats meter and the charm quest), which
 // both open the songbook. Drawn rather than typed so it sits on the type line's middle instead
 // of wherever Caveat's arrow glyph happens to land; the head's two strokes are deliberately unequal.
+// It is also THE right-pointing arrow: every "go on" control in the game draws this one rather
+// than setting →, which arrives as whatever the typewriter font thinks an arrow is and reads as
+// a system glyph beside everything else on the page that was drawn.
 const CTA_ARROW = `<svg class="cta-arrow" viewBox="0 0 20 10" aria-hidden="true">` +
   `<path d="M1.3 5.5 Q8.6 4.6 17.4 5.1 M13.1 1.7 Q15.6 3.5 18.1 5.1 Q15.9 6.6 13.8 8.6" fill="none" ` +
   `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+// "in context": the line among its lines. The middle stroke is the one on the card, in the
+// album's ink; the strokes round it are the verse, faint until the context is open.
+const CTX_LINES = `<svg class="ctx-lines" viewBox="0 0 15 12" aria-hidden="true">` +
+  `<path class="o" d="M1.2 1.8C5 1.6 9.4 1.9 13.2 1.6"/><path class="a" d="M1.4 6C4.6 5.9 7.8 6.1 10.4 5.9"/>` +
+  `<path class="o" d="M1.2 10.2C4.4 10.1 8 10.4 12.4 10.1"/></svg>`;
+// "show more songs": a drawn chevron that turns over once the list is open
+const MORE_CHEV = `<svg class="more-chev" viewBox="0 0 10 7" aria-hidden="true">` +
+  `<path d="M1.2 1.4C2.6 2.8 3.8 4.2 5 5.6 6.2 4.2 7.6 2.6 8.8 1.2"/></svg>`;
 
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
@@ -2277,7 +2289,7 @@ function lifetimeStatsHTML() {
   // The nemesis word is a real prompt word, so it deep-links straight into the lyric
   // searcher — one click to see every song that holds the word you keep missing.
   const nemesisSub = nemesis
-    ? `missed ×${nemesis.count} · <a class="cat-search-link" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up →</a>`
+    ? `missed ×${nemesis.count} · <a class="cat-search-link" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up ${CTA_ARROW}</a>`
     : "no misses yet";
   const nemesisBlock = `
     <div class="cat-nemesis">
@@ -3446,6 +3458,15 @@ function foundRecapItems() {
 // The found line's markup: a label, the objects themselves, then their names underneath.
 // A polaroid is drawn as the toast's mini frame, veil and all, because on this screen it IS
 // still developing and saying so is the whole point of showing it here.
+// "+N" on the found line, written on a kraft tag tied to the end of the row: the rest of this
+// run's keepsakes, not yet unwrapped. Hover swings it.
+function foundTag(n) {
+  return `<svg class="found-tag" viewBox="0 0 50 30" aria-hidden="true">` +
+    `<path class="st" d="M0.4 6.2C2.6 9.6 4.4 12.4 6.8 14.6"/>` +
+    `<path class="tg" d="M14.6 6.4 46.4 5.8C47.6 5.8 48.2 6.4 48.2 7.6L48.4 22.6C48.4 23.8 47.8 24.4 46.6 24.4L14.8 24.6 6.4 15.6Z"/>` +
+    `<circle class="hl" cx="13.2" cy="15.4" r="2.2"/><path class="st" d="M6.8 14.6C9 15.6 11 15.6 13.2 15.4"/>` +
+    `<text x="31" y="19.2" text-anchor="middle">+${n}</text></svg>`;
+}
 function foundRecapHTML(items) {
   const chips = items.map((f, i) => {
     const art = f.kind === "sticker"
@@ -3460,7 +3481,7 @@ function foundRecapHTML(items) {
       `aria-label="${escapeHtml(label)}"${tip}>${art}</button>`;
   }).join("");
   const extra = items.length > FOUND_RECAP_SHOWN
-    ? `<button type="button" class="found-chip--more">+${items.length - FOUND_RECAP_SHOWN}</button>`
+    ? `<button type="button" class="found-chip--more" aria-label="${items.length - FOUND_RECAP_SHOWN} more">${foundTag(items.length - FOUND_RECAP_SHOWN)}</button>`
     : "";
   // A tumblr post has no name of its own, only her words, and her blog name is already on the
   // chip. So posts are left out of the names, and a run that found
@@ -3474,6 +3495,9 @@ function foundRecapHTML(items) {
     `</div>`;
 }
 
+// the loose pencil ring the charm overflow count gets on hover
+const MORE_RING = `<svg class="more-ring" viewBox="0 0 40 30" preserveAspectRatio="none" aria-hidden="true">` +
+  `<path pathLength="100" d="M24 3.4C33 3.6 38.4 9 37.6 15.8 36.8 23 29 27 19.4 26.6 9.4 26.2 2.2 21.6 2.6 14.6 3 7.8 10.8 3.2 20.8 3.3 25 3.4 28.6 4.6 31 6.4"/></svg>`;
 const ACH_RECAP_SHOWN = 5;   // unlock charms shown before "+N" points at the collection
 // (5, not 6: six charms plus the overflow count wrap to a second line in the band's half-width column)
 function renderResultRecap() {
@@ -3496,7 +3520,7 @@ function renderResultRecap() {
   }).join("");
   const folded = ids.length > ACH_RECAP_SHOWN;
   const extra = folded
-    ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN}</button>`
+    ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN}${MORE_RING}</button>`
     : "";
   const charmHTML = ids.length
     ? `<p class="sr-lab ach-recap-lab">newly unlocked · ${ids.length}</p>` +
@@ -3685,7 +3709,7 @@ function celebrateMastery(res, host) {
       `<div class="mc-title">${escapeHtml(lvl >= 1 ? `Level ${lvl}` : "Freshly sealed")}</div>` +
       meta +
     `</div>` +
-    `<button type="button" class="mc-cta">see mastery →</button>`;
+    `<button type="button" class="mc-cta">see mastery ${CTA_ARROW}</button>`;
   host.insertBefore(banner, host.firstChild);
   banner.querySelector(".mc-cta").addEventListener("click", () => openMastery("results"));
 
@@ -4347,7 +4371,7 @@ function goalCardHTML() {
     ? `<span class="ach-plate-earned">earned ${escapeHtml(recordDateLabel(earnedAchievements[a.id]))}</span>` +
       `<button type="button" class="ach-plate-swap" data-goal-repin="1">pin the next one</button>`
     : (entries.length
-        ? `<button type="button" class="ach-plate-go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} <span aria-hidden="true">→</span></button>`
+        ? `<button type="button" class="ach-plate-go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} ${CTA_ARROW}</button>`
         // Two different truths, and they must not be collapsed. A charm WITH an `earn` whose
         // pool came back empty has a destination that is not open: no dark side unlocked yet,
         // say, or no preset of your own that a lever-gated Custom charm could be earned on.
@@ -9268,7 +9292,7 @@ function bonusBannerText(correct, isTimeout) {
 // its corner turned down (styles.css, "next page" slip). One builder so the game, the bonus
 // shelf and the impostor page can never draw it three different ways.
 function turnSlip(id, label = "next page") {
-  return `<button type="button" id="${id}" class="turn-slip"><span class="turn-sheet">${label} →` +
+  return `<button type="button" id="${id}" class="turn-slip"><span class="turn-sheet">${label} ${CTA_ARROW}` +
     `<span class="turn-ear" aria-hidden="true"><svg viewBox="0 0 20 20" preserveAspectRatio="none">` +
     `<path class="flap" d="M0 0L20 20H0Z"/><path class="fold" d="M1 0V19H20"/><path class="fold crease" d="M0 0L20 20"/>` +
     `</svg></span></span></button>`;
@@ -9494,7 +9518,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   const advanceUI = auto
     ? `<div class="countdown">${last ? "the back cover" : "next page"} in ` +
         `<b id="bonusCd">${settings.countdownSecs}</b></div>` +
-      `<button type="button" id="bonusSkipBtn" class="countdown-skip">skip →</button>`
+      `<button type="button" id="bonusSkipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
     : turnSlip("bonusNextBtn", last ? "the back cover" : "next page");
   resetLyricReveals();
   const fb = $("bonusFeedback");
@@ -13013,7 +13037,7 @@ function lineupBoardStubHTML() {
   return `<button type="button" class="lu-board-stub" data-lineup-board="1">` +
     `<span class="lu-stub-eyebrow">The board</span>` +
     `<span class="lu-stub-count">${escapeHtml(lineupBoardTally().line)}</span>` +
-    `<span class="lu-stub-go">read the deck →</span></button>`;
+    `<span class="lu-stub-go">read the deck ${CTA_ARROW}</span></button>`;
 }
 
 /* The deck panel: four suits, and under each the cards it deals, with the rule printed and the
@@ -18273,7 +18297,7 @@ function revealTapKnowledge(correct) {
     : `that line is from ${escapeHtml(censor(answer ? answer.title : ""))}`;
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
+    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
     : turnSlip("continueBtn");
   const banner = correct
     ? (oddOneRuleActive() ? "✓ that's the odd one" : "✓ that's the one")
@@ -18541,7 +18565,7 @@ function revealCommon(correct) {
   ).join("") : "";
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
+    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
     : turnSlip("continueBtn");
   fb.innerHTML = verdictMarkup(
     `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>`,
@@ -25009,7 +25033,7 @@ function fullLyricsButton(entry, extra = false) {
     `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(entry.song.title)}"` +
       ` data-reveal-id="${entry.id}" data-word="${escapeHtml(entry.word || "")}" data-section="${entry.model.sectionIndex}"` +
       ` data-line="${entry.model.anchorSourceLineIndex}" aria-label="Open full lyrics for ${escapeHtml(censor(entry.song.title))} at this line">` +
-      `full lyrics →</button></span>`;
+      `full lyrics ${CTA_ARROW}</button></span>`;
 }
 
 // Stepping between occurrences only changes what is on screen while the context is open: the
@@ -25049,7 +25073,7 @@ function lyricRevealInner(entry) {
     ? `<button type="button" class="lyric-ctx-toggle" aria-expanded="${entry.expanded ? "true" : "false"}"` +
       ` aria-controls="${entry.beforeId} ${entry.afterId} ${entry.fullId}"` +
       ` aria-label="${entry.expanded ? "Hide" : "Show"} lyric context for ${escapeHtml(censor(entry.song.title))}">` +
-      `${entry.expanded ? "hide context" : "in context"}</button>`
+      `${CTX_LINES}<span class="ctl-lab">${entry.expanded ? "hide context" : "in context"}</span></button>`
     : "";
   const actions = contextButton + stepper + (entry.allowContext ? fullLyricsButton(entry, hasContext) : "");
   // A card with nothing to offer gets no action row at all. An empty flex box still carries its
@@ -25099,7 +25123,7 @@ function standaloneLyricContext(song, word, anchorLine) {
     lyricContextPart(model.after, model.truncatedAfter, false, entry);
   return `<div class="lyric-reveal lyric-reveal--standalone" data-lyric-reveal="${id}">` +
     `<button type="button" class="lyric-ctx-toggle" aria-expanded="false" aria-controls="${entry.beforeId}"` +
-      ` aria-label="Show lyric context for ${escapeHtml(censor(song.title))}">in context</button>` +
+      ` aria-label="Show lyric context for ${escapeHtml(censor(song.title))}">${CTX_LINES}<span class="ctl-lab">in context</span></button>` +
     `<div class="lyric-ctx" id="${entry.beforeId}" data-lyric-context-extra hidden>` +
       `<div class="lyric-ctx-lines">${rows}</div>${fullLyricsButton(entry)}</div></div>`;
 }
@@ -25177,7 +25201,7 @@ function moreSongsBlock(pool, shown, word) {
   const remaining = rest.length - initial;
   const next = remaining
     ? `<button type="button" class="more-songs-next" data-batch="${MORE_EXAMPLES_BATCH}">` +
-      `show ${Math.min(MORE_EXAMPLES_BATCH, remaining)} more · ${remaining} remaining</button>`
+      `<span class="ctl-lab">show ${Math.min(MORE_EXAMPLES_BATCH, remaining)} more · ${remaining} remaining</span>${MORE_CHEV}</button>`
     : "";
   // Swift To The Lyric is Taylor-only. It is a secondary whole-catalogue exploration, never a
   // substitute for completing this scoped list, and therefore stays out of guest/title pages.
@@ -25186,10 +25210,10 @@ function moreSongsBlock(pool, shown, word) {
     const hash = new URLSearchParams({ q: word, mode: effectiveStrict() ? "exact" : "stem", view: "grouped" });
     searcher = `<a class="more-songs-all" href="search/#${hash.toString()}" target="_blank" rel="noopener"` +
       ` aria-label="Explore ${escapeHtml(word)} across Taylor Swift's full catalogue in Swift To The Lyric">` +
-      `explore “${escapeHtml(word)}” across Taylor's full catalogue →</a>`;
+      `explore “${escapeHtml(word)}” across Taylor's full catalogue ${CTA_ARROW}</a>`;
   }
   return `<button type="button" class="more-songs-toggle" aria-expanded="false" aria-controls="${id}"` +
-      ` data-label="${escapeHtml(openingLabel)}">${openingLabel}</button>` +
+      ` data-label="${escapeHtml(openingLabel)}"><span class="ctl-lab">${openingLabel}</span>${MORE_CHEV}</button>` +
     `<div class="more-songs" id="${id}" data-more-total="${rest.length}" data-more-shown="${initial}" aria-live="off" hidden>` +
       `<p class="sr-only" data-more-status aria-live="polite">${initial} of ${rest.length} extra songs ready to read</p>` +
       `<ul class="more-songs-list">${rows}</ul>${next}${searcher}</div>`;
@@ -25336,7 +25360,7 @@ function showCorrectFeedback(song, lyricMatch) {
   // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip →</button>`
+    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
     : turnSlip("continueBtn");
   // Scribbled between the banner and the lyric card, where the eye already is, and above
   // everything that explains the page — it is a margin aside, not part of the verdict.
@@ -27105,7 +27129,7 @@ function wireInput() {
       const showing = extras.some((part) => part.hidden);
       extras.forEach((part) => { part.hidden = !showing; });
       toggle.setAttribute("aria-expanded", String(showing));
-      toggle.textContent = showing ? "hide context" : "in context";
+      toggle.querySelector(".ctl-lab").textContent = showing ? "hide context" : "in context";
       toggle.setAttribute("aria-label", `${showing ? "Hide" : "Show"} lyric context for ${
         reveal && lyricRevealRegistry.get(reveal.dataset.lyricReveal)
           ? censor(lyricRevealRegistry.get(reveal.dataset.lyricReveal).song.title)
@@ -27147,7 +27171,7 @@ function wireInput() {
         const showing = box.hidden;
         box.hidden = !showing;
         more.setAttribute("aria-expanded", String(showing));
-        more.textContent = showing ? "hide additional songs" : more.dataset.label;
+        more.querySelector(".ctl-lab").textContent = showing ? "hide additional songs" : more.dataset.label;
         if (showing) pauseAutoAdvanceForReading();
       }
       return;
@@ -27172,10 +27196,10 @@ function wireInput() {
         ? `${shown} of ${total} additional songs shown. ${remaining} remaining.`
         : `All ${total} additional songs shown.`;
       if (remaining) {
-        next.textContent = `show ${Math.min(batch, remaining)} more · ${remaining} remaining`;
+        next.querySelector(".ctl-lab").textContent = `show ${Math.min(batch, remaining)} more · ${remaining} remaining`;
       } else {
         const returnFocus = document.activeElement === next;
-        next.textContent = `all ${total} additional songs shown`;
+        next.querySelector(".ctl-lab").textContent = `all ${total} additional songs shown`;
         next.disabled = true;
         if (returnFocus && fold) requestAnimationFrame(() => fold.focus({ preventScroll: true }));
       }
@@ -28131,7 +28155,7 @@ function showRunPauseSheet() {
   overlay.innerHTML = `<div class="run-pause-sheet">${tape}` +
     `<div class="run-pause-note"><h2 id="runPauseTitle">Your page is waiting</h2>` +
     `<p class="run-pause-clock">${escapeHtml(pausedClockLine())}</p>` +
-    `<button type="button" class="run-pause-go" id="runResumeBtn">carry on <span aria-hidden="true">&rarr;</span></button>` +
+    `<button type="button" class="run-pause-go" id="runResumeBtn">carry on ${CTA_ARROW}</button>` +
     `<button type="button" class="run-pause-quit" id="runPauseQuitBtn" data-label="${quitLabel}">${quitLabel}</button>` +
     `</div></div>`;
   const go = overlay.querySelector("#runResumeBtn");
@@ -29085,7 +29109,7 @@ function renderHowTo() {
           (page.legend ? ruleLegendMarkup() : "") +
           `<p class="howto-note">${note}</p>` +
           (page.doors || []).map((d) => `<p class="howto-door"><button type="button" class="gloss-jump" ` +
-            `data-howto-door="${d.to}">${escapeHtml(d.label)} &rarr;</button></p>`).join("") +
+            `data-howto-door="${d.to}">${escapeHtml(d.label)}${CTA_ARROW}</button></p>`).join("") +
         `</div>` +
       `</div>` +
       `<button type="button" class="ach-latest-nav ach-latest-prev" data-howto-prev` +
@@ -29504,7 +29528,7 @@ function firstRunWelcomeHTML() {
     // A pointer, not a fourth button. Nothing here needs the longer version to get started, and
     // an extra control on the welcome buys a slower first two minutes for very little.
     `<div class="fr-actions">` +
-      `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed &rarr;</button>` +
+      `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed ${CTA_ARROW}</button>` +
       `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
       `<button type="button" class="btn-link" data-fr="knowit-quiet">I know it, skip the tips</button>` +
     `</div>` +
@@ -29538,7 +29562,7 @@ function firstRunEraHTML() {
     `<div class="fr-era-grid" role="group" aria-label="Choose your era">${chips}</div>` +
     `<div class="fr-actions">` +
       `<button type="button" class="btn-primary fr-confirm" data-fr="confirm"${firstRunEra ? "" : " disabled"}>` +
-        `${firstRunEra ? "That's my era &rarr;" : "Pick an era"}</button>` +
+        `${firstRunEra ? `That's my era ${CTA_ARROW}` : "Pick an era"}</button>` +
       `<button type="button" class="btn-link" data-fr="skip">skip for now</button>` +
     `</div>`;
 }
@@ -29623,7 +29647,7 @@ function showReadyForNormal(force) {
     `<h2 id="firstRunTitle" class="fr-title">Ready to start the clock?</h2>` +
     `<p class="fr-sub">That was Relaxed, with no timer and all the help. <b>Normal</b> adds a 10-second clock per page. Same game, a little more thrilling. Want to give it a go next?</p>` +
     `<div class="fr-actions">` +
-      `<button type="button" class="btn-primary" data-fr="normal-yes">Yes, switch me to Normal &rarr;</button>` +
+      `<button type="button" class="btn-primary" data-fr="normal-yes">Yes, switch me to Normal ${CTA_ARROW}</button>` +
       `<button type="button" class="btn-link" data-fr="normal-no">Stay in Relaxed for now</button>` +
     `</div>`;
   showOnboardingOverlay();

@@ -405,6 +405,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   border-bottom: 1px dashed rgba(185, 64, 47, .45); padding: 8px 0; min-height: 44px;
 }
 .sx-play:hover { color: #8f2e20; border-bottom-color: rgba(185, 64, 47, .9); }
+.sx-play .cta-arrow { width: 1.9em; height: 0.95em; margin-left: 0.45em; flex: none; }
 
 /* "copy link" — a quiet typewriter button beside the counter that mints a shareable link */
 .sx-copy {

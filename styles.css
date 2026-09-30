@@ -2547,7 +2547,7 @@
   .turn-slip:is(:hover, :focus-visible) { --turn-ear: 27px; }
   .turn-slip:active { translate: 2px 2px; filter: drop-shadow(1px 1px 0 var(--turn-shade)); }
   .turn-sheet {
-    position: relative; display: flex; align-items: center; justify-content: center;
+    position: relative; display: flex; align-items: center; justify-content: center; gap: 0.5em;
     min-height: 46px; padding: 10px 14px;
     background:
       linear-gradient(90deg, transparent 21px, var(--margin) 21px 22.5px, transparent 22.5px),
@@ -4280,18 +4280,24 @@
   .chall-prog-said b { font-weight: 700; color: #5f5749; }
   .chall-prog-said i { font-style: normal; display: block; opacity: 0.82; }
 
-  /* the offer: no card, just what it does and what it pays, underlined in the editor's red */
+  /* the offer: no card, just what it does and what it pays, inked inside a library's red
+     returns stamp, double ruled (the inner rule is an inset shadow over a ring of the page) and
+     set a degree off square. Pressing it presses the stamp into the page. By night the red is
+     --red-pen: the literal day red measured unreadable on the night page. */
   .chall-refund {
     display: inline-flex; align-items: center; gap: 6px; max-width: 100%; text-align: left;
     font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.4px;
-    color: #8a2f22; background: none; border: none;
-    border-bottom: 1.5px dashed rgba(138,47,34,0.5); padding: 3px 0; cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease;
+    color: #8a2f22; background: none; cursor: pointer;
+    border: 1.6px solid currentColor; border-radius: 3px; padding: 5px 9px 5px 8px; transform: rotate(-1deg);
+    box-shadow: inset 0 0 0 1.6px var(--paper), inset 0 0 0 2.3px color-mix(in srgb, currentColor 55%, transparent);
+    transition: background-color 0.15s ease, transform 0.12s ease;
   }
-  .chall-refund:hover, .chall-refund:focus-visible { border-bottom-style: solid; border-bottom-color: #8a2f22; outline: none; }
+  .chall-refund:hover { background: color-mix(in srgb, currentColor 7%, transparent); transform: rotate(-1deg) translateY(1px); }
+  .chall-refund:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+  :root[data-theme="dark"] .chall-refund { color: var(--red-pen); }
   .chall-refund .chall-ticket-svg { width: 19px; height: 13px; flex: none; }
   .chall-refund-sub {
-    display: block; margin-top: 4px;
+    display: block; margin-top: 6px;
     font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink-soft);
   }
 
@@ -8901,12 +8907,18 @@
   .va-text mark { background: var(--highlighter); color: var(--ink); padding: 0 2px; font-weight: 700; }
   /* Long anthologies fold: the first few lines show, the rest wait behind "+ N more". */
   .va-row.va-folded { display: none; }
+  /* Set between two short rules, the way a typed page marks lines left out. */
   .va-more {
-    display: block; margin: 8px auto 0; padding: 2px 1px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px; margin: 8px auto 0; padding: 2px 0; cursor: pointer;
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase;
-    color: var(--ink-soft); background: none; border: none; border-bottom: 1px dotted var(--ink-soft);
+    color: var(--ink-soft); background: none; border: none;
   }
-  .va-more:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  .va-more::before, .va-more::after {
+    content: ""; width: 26px; height: 1px; background: currentColor; opacity: 0.5;
+    transition: width 0.2s ease, opacity 0.15s ease;
+  }
+  .va-more:is(:hover, :focus-visible) { color: var(--ink); }
+  .va-more:is(:hover, :focus-visible)::before, .va-more:is(:hover, :focus-visible)::after { width: 40px; opacity: 0.85; }
 
   /* ---------- Word + highlighter ---------- */
   .word-label {
@@ -10131,11 +10143,23 @@
     color: var(--ink-soft); background: transparent;
     border: none; text-decoration: none; cursor: pointer; touch-action: manipulation;
   }
-  .lyric-ctx-toggle,
-  .more-songs-toggle,
-  .more-songs-next,
-  .more-songs-all { text-decoration-line: underline; text-decoration-style: dashed; text-underline-offset: 4px; }
+  /* "in context" leads with the line among its lines: the middle stroke is the one on the card,
+     in the album's ink, and the strokes round it ink in once the verse is open round it. */
+  .lyric-ctx-toggle { gap: 6px; }
   .lyric-ctx-toggle:hover { color: var(--ink); }
+  .ctx-lines { width: 15px; height: 12px; flex: none; overflow: visible; }
+  .ctx-lines path { fill: none; stroke-linecap: round; transition: opacity 0.18s ease; }
+  .ctx-lines .o { stroke: currentColor; stroke-width: 1.3; opacity: 0.35; }
+  .ctx-lines .a { stroke: var(--album-color, var(--ink)); stroke-width: 2.2; }
+  .lyric-ctx-toggle:is(:hover, :focus-visible) .ctx-lines .o { opacity: 0.75; }
+  .lyric-ctx-toggle[aria-expanded="true"] .ctx-lines .o { opacity: 1; }
+  /* the more-songs fold ends on a drawn chevron, turned over once the list is open */
+  :is(.more-songs-toggle, .more-songs-next) { gap: 7px; }
+  .more-chev { width: 10px; height: 7px; flex: none; overflow: visible; transition: transform 0.2s ease; }
+  .more-chev path { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  :is(.more-songs-toggle, .more-songs-next):is(:hover, :focus-visible):not(:disabled) .more-chev { transform: translateY(2px); }
+  .more-songs-toggle[aria-expanded="true"] .more-chev { transform: rotate(180deg); }
+  .more-songs-next:disabled .more-chev { display: none; }
   /* Every one of these controls keeps a 44px touch target on a finger, but a mouse does not
      need one, and a stack of 44px bands under cards that are three lines tall is most of the
      dead space on the verdict. On a fine pointer they shrink to the size of their own type. */
@@ -10161,7 +10185,7 @@
     letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.65;
   }
   .lyric-fullsong {
-    color: var(--album-color, var(--ink-soft));
+    gap: 0.5em; color: var(--album-color, var(--ink-soft));
   }
   .lyric-fullsong:hover { text-decoration: underline; }
   .lyric-occurrence {
@@ -10231,9 +10255,9 @@
   .lyric-reveal--compact .lc-line { font-size: calc(16px + var(--text-size-adjust)); }
   .more-songs-next { margin: 2px 0; }
   .more-songs-next:hover:not(:disabled) { color: var(--ink); }
-  .more-songs-next:disabled { opacity: 0.58; cursor: default; text-decoration: none; }
+  .more-songs-next:disabled { opacity: 0.58; cursor: default; }
   .more-songs-all {
-    margin-top: 1px;
+    gap: 0.5em; margin-top: 1px;
   }
   .more-songs-all:hover { color: var(--ink); }
 
@@ -11126,10 +11150,11 @@
     display: block; width: max-content; margin: 6px auto 10px;
     background: none; border: none; padding: 4px 2px; cursor: pointer;
     font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 0.4px;
-    color: var(--ink-accent); border-bottom: 1px dashed var(--ink-accent);
-    transition: color 0.15s, border-color 0.15s;
+    color: var(--ink-accent);
+    transition: color 0.15s;
   }
-  .empty-cta:hover, .empty-cta:focus-visible { color: var(--ink); border-bottom-color: var(--ink); outline: none; }
+  .empty-cta:hover { color: var(--ink); }
+  .empty-cta:focus-visible { color: var(--ink); outline: 1.5px solid var(--ink-accent); outline-offset: 3px; }
   /* lifetime catalogue stats — hero meter + keepsake cards + circled nemesis */
   .cat-wrap { margin-bottom: 22px; }
   .cat-label {  /* shared type label: small uppercase typewriter */
@@ -11204,8 +11229,17 @@
      "solid ink, for text you must be able to read", and composites to within a shade of the
      old literal by day, so the swap is a fix at night and a no-op by day. */
   .cat-nemesis-sub { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--red-pen); }
-  .cat-search-link { color: inherit; text-decoration: none; border-bottom: 1px dashed color-mix(in srgb, var(--red-pen) 55%, transparent); white-space: nowrap; }
-  .cat-search-link:hover, .cat-search-link:focus-visible { color: color-mix(in srgb, var(--red-pen) 78%, var(--ink)); border-bottom-color: var(--red-pen); outline: none; }
+  /* The editor's squiggle under it: the wavy red line that means "look at this again", which
+     is what a missed word is asking for. Hover inks it full. */
+  .cat-search-link { position: relative; color: inherit; text-decoration: none; padding-bottom: 4px; white-space: nowrap; }
+  .cat-search-link::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 5px; background: var(--red-pen); opacity: 0.55;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 5'%3E%3Cpath d='M0 2.6C1.8 0.6 3.4 0.8 4.8 2.8S7.8 4.6 9.4 2.4 12.6 0.4 14.2 2.6 17 4.8 18.8 2.6 21.8 0.2 23.6 2.4 26.8 4.6 28.4 2.8 31.2 0.6 33 2.4 36.2 4.8 37.8 2.6 40.8 0.4 42.4 2.6 45.2 4.6 47 2.6 50.2 0.6 51.8 2.6 54.6 4.4 56.4 2.6 57.6 1.6 58 2.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") left center / 58px 5px repeat-x;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 5'%3E%3Cpath d='M0 2.6C1.8 0.6 3.4 0.8 4.8 2.8S7.8 4.6 9.4 2.4 12.6 0.4 14.2 2.6 17 4.8 18.8 2.6 21.8 0.2 23.6 2.4 26.8 4.6 28.4 2.8 31.2 0.6 33 2.4 36.2 4.8 37.8 2.6 40.8 0.4 42.4 2.6 45.2 4.6 47 2.6 50.2 0.6 51.8 2.6 54.6 4.4 56.4 2.6 57.6 1.6 58 2.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") left center / 58px 5px repeat-x;
+    transition: opacity 0.15s ease;
+  }
+  .cat-search-link:is(:hover, :focus-visible) { color: color-mix(in srgb, var(--red-pen) 78%, var(--ink)); outline: none; }
+  .cat-search-link:is(:hover, :focus-visible)::after { opacity: 1; }
   .cat-nemesis-word { position: relative; padding: 4px 10px; flex: none; }
   .cat-nemesis-word span {
     font-family: var(--hand); font-weight: 700; font-size: calc(34px + var(--text-size-adjust));
@@ -11782,10 +11816,17 @@
   .ach-recap .ach-recap-target--muted { opacity: 0.24; filter: grayscale(0.9); }
   /* Charms past the cap, waiting on the overflow count to unfold them in place. */
   .ach-recap .ach-chip.ach-folded { display: none; }
-  .ach-recap .ach-chip--more { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
-    text-transform: uppercase; color: var(--ink-soft); border: none; border-bottom: 1px dotted var(--ink-soft);
-    background: none; border-radius: 0; padding: 2px 1px; margin-left: 3px; cursor: pointer; }
-  .ach-recap .ach-chip--more:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  /* the overflow count is written in, not typed, big enough to sit in the row of charms; hover
+     draws a loose pencil ring round it */
+  .ach-recap .ach-chip--more { position: relative; font: 700 calc(19px + var(--text-size-adjust))/1 var(--hand);
+    color: var(--ink-soft); border: none; background: none; border-radius: 0; padding: 4px 5px; margin-left: 1px; cursor: pointer;
+    transition: color 0.15s ease; }
+  .ach-recap .ach-chip--more .more-ring { position: absolute; inset: -3px -4px -2px; width: calc(100% + 8px); height: calc(100% + 5px);
+    overflow: visible; pointer-events: none; }
+  .ach-recap .ach-chip--more .more-ring path { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round;
+    vector-effect: non-scaling-stroke; stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 0.3s ease; }
+  .ach-recap .ach-chip--more:is(:hover, :focus-visible) { color: var(--ink); outline: none; }
+  .ach-recap .ach-chip--more:is(:hover, :focus-visible) .more-ring path { stroke-dashoffset: 0; }
   .ach-recap-names { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 0;
     list-style: none; padding: 0; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust));
     line-height: 1.25; color: var(--ink-soft); margin: 9px 0 0; }
@@ -11832,10 +11873,17 @@
   .found-chip--polaroid .pol-thumb-art svg { display: block; width: 100%; height: 100%; }
   .found-chip--polaroid .pol-thumb-veil { position: absolute; inset: 0; background: #0c0a07; opacity: 0.5; }
   .found-chip.found-folded { display: none; }
-  .found-chip--more { align-self: center; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
-    text-transform: uppercase; color: var(--ink-soft); border: none; border-bottom: 1px dotted var(--ink-soft);
-    background: none; border-radius: 0; padding: 2px 1px; cursor: pointer; }
-  .found-chip--more:hover { color: var(--ink); border-bottom-color: var(--ink); }
+  /* the rest of the run's keepsakes, on a kraft tag tied to the end of the row; hover swings it */
+  .found-chip--more { align-self: flex-end; margin-bottom: 8px; border: none; background: none; border-radius: 0; padding: 0; cursor: pointer; }
+  .found-chip--more:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+  .found-tag { display: block; width: 62px; height: 37px; overflow: visible; transform: rotate(9deg); transform-origin: 4px 15px;
+    transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
+  .found-tag .tg { fill: #c9a878; stroke: #8f7148; stroke-width: 1; stroke-linejoin: round; }
+  .found-tag .hl { fill: var(--paper); stroke: #8f7148; stroke-width: 0.9; }
+  .found-tag .st { fill: none; stroke: var(--ink-soft); stroke-width: 1; stroke-linecap: round; }
+  .found-tag text { font: 700 10.5px var(--type); fill: #4a3a22; }
+  .found-chip--more:is(:hover, :focus-visible) .found-tag { transform: rotate(-4deg); }
+  :root[data-theme="dark"] .found-tag .tg { fill: #9d855a; stroke: #6a5029; }
   .found-recap-names { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 0;
     list-style: none; padding: 0; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust));
     line-height: 1.25; color: var(--ink-soft); margin: 9px 0 0; }
@@ -12178,6 +12226,8 @@
     cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
   }
   .gloss-jump:hover, .gloss-jump:focus-visible { background: var(--highlighter); outline: none; }
+  /* spaced by margin, not a space character, so the underline stops at the last letter */
+  .gloss-jump .cta-arrow { margin-left: 0.45em; }
   /* The count of what is still hidden, with none of the words in it. */
   .gloss-rest {
     margin: 18px 0 0; padding-top: 12px; border-top: 1px dashed rgba(43,39,34,0.16);
@@ -12610,7 +12660,8 @@
   }
   .ach-plate-go:hover { background: rgba(212, 160, 23, 0.24); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(169, 121, 31, 0.36); }
   .ach-plate-go:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
-  .ach-plate-go span { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); letter-spacing: 0; }
+  .ach-plate-go { display: inline-flex; align-items: center; gap: 0.7em; }
+  .ach-plate-go .cta-arrow { width: 2.1em; height: 1.05em; margin-top: -1px; }
   /* the re-draw, and the locked/no-destination notes: pencil, never chrome */
   .ach-plate-swap {
     border: 0; background: transparent; padding: 2px 0; cursor: pointer;
@@ -16192,6 +16243,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   transform: rotate(-1deg);
 }
 .run-pause-go:hover { background: var(--card-ink); color: var(--card); }
+/* the label is in capitals, so the arrow hangs on their middle rather than the lowercase one */
+.run-pause-go .cta-arrow { vertical-align: -0.18em; }
 .run-pause-go:focus-visible { outline: 1.5px dashed var(--card-ink); outline-offset: 4px; }
 .run-pause-go:active { transform: rotate(-1deg) translate(2px, 2px); box-shadow: 1px 1px 0 var(--card-ink); }
 /* The way out, written the way the run's own quit link is: small typewriter caps, quiet until

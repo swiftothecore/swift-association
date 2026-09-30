@@ -571,8 +571,13 @@ function render(terms, groups) {
   }
   // "Play this word" — only for a SINGLE term that is a real prompt word the game can
   // start a round on (gated by words.json), so the link never dead-ends.
+  // The game's own drawn arrow (CTA_ARROW in js/app.js, which this page cannot import), so a
+  // link that crosses over into the game points the way the game does.
+  const CTA_ARROW = `<svg class="cta-arrow" viewBox="0 0 20 10" aria-hidden="true">` +
+    `<path d="M1.3 5.5 Q8.6 4.6 17.4 5.1 M13.1 1.7 Q15.6 3.5 18.1 5.1 Q15.9 6.6 13.8 8.6" fill="none" ` +
+    `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const play = (terms.length === 1 && PROMPT_WORDS.has(terms[0].toLowerCase()))
-    ? ` <a class="sx-play" href="../?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game &rarr;</a>`
+    ? ` <a class="sx-play" href="../?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game ${CTA_ARROW}</a>`
     : "";
   const share = ` <button type="button" class="sx-copy" id="copyLink" title="${SHARE_TITLE}">` +
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">` +
