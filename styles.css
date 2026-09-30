@@ -5694,7 +5694,8 @@
     content: ""; position: absolute; inset: -3px; border: 3px solid var(--nash-ink);
     opacity: 0.28; transform: translate(2.5px, 2px); pointer-events: none;
   }
-  .bg-nash-stars { font-family: var(--type); font-size: 9px; letter-spacing: 3.2px; line-height: 1; color: var(--nash-ink); opacity: 0.85; }
+  .bg-nash-stars { display: flex; justify-content: center; gap: 5px; color: var(--nash-ink); opacity: 0.85; }
+  .bg-nash-stars svg { display: block; width: 11px; height: 11px; }
   /* Typewriter capitals, like Aaron or Jack's stamps and for the same reason: it is a label on
      a poster rather than something written by hand, so it wants no entry in ink.css's three
      var(--hand) lists. */
@@ -15858,6 +15859,11 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
    first name and Three Chairs reads all three, so which one you picked first is a decision. */
 .lu-who-n { font-weight: 700; margin-right: 5px; opacity: 0.8; }
 
+/* A held card is TICKED in red pen, the partner of the red strike through a lost one: ticked if
+   you held it, struck if you lost it. Drawn, not typed, and used as a mask so it takes the pen's
+   colour in every theme. The strip and the deck panel share it. */
+:root { --lu-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 11.5'%3E%3Cpath d='M1.4 6.3 Q3.1 7.6 4.5 10.2 Q7.3 4.4 11.8 1.3' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+
 /* ---- the hand, live on the page and again on the results ---- */
 .lu-goals { display: flex; flex-wrap: wrap; gap: 5px 12px; justify-content: center; margin: 0 0 9px; }
 .lu-goal {
@@ -15869,7 +15875,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .lu-goal.is-won { color: var(--ink); }
 .lu-goal.is-won .lu-pip { color: var(--ink); }
 .lu-goal.is-won b { font-weight: 700; }
-.lu-goal.is-won::after { content: " ★"; color: var(--red-pen); }
+.lu-goal.is-won::after {
+  content: ""; width: 11px; height: 10px; margin-left: 1px; transform: translateY(-1px);
+  background: var(--red-pen); -webkit-mask: var(--lu-tick) center / contain no-repeat; mask: var(--lu-tick) center / contain no-repeat;
+}
 /* Struck in red pen, drawn slightly off level so it reads as a line ruled by hand rather
    than a text-decoration. Same vocabulary as a struck rule mark: not available here. */
 .lu-goal.is-dead { opacity: 0.55; }
@@ -15956,7 +15965,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.7;
 }
 .lu-deck-row.is-won .lu-deck-name { font-weight: 700; }
-.lu-deck-row.is-won .lu-deck-name::after { content: "★"; color: var(--red-pen); font-weight: 400; order: -1; }
+.lu-deck-row.is-won .lu-deck-name::after {
+  content: ""; flex: none; align-self: center; width: 11px; height: 10px; margin-right: -1px; order: -1;
+  background: var(--red-pen); -webkit-mask: var(--lu-tick) center / contain no-repeat; mask: var(--lu-tick) center / contain no-repeat;
+}
 .lu-deck-row.is-won .lu-deck-rec { color: var(--red-pen); opacity: 0.85; }
 /* Struck across the NAME only, not the whole row: the rule still has to be readable, because
    this panel is where the deck is read. Ruled slightly off level, by hand, like every other

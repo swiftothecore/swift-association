@@ -8046,12 +8046,20 @@ function renderBonusRound() {
        as one of three equal cards it would read as a shrug with the same weight as a call, and
        the whole point of the door is that using it well is a skill. So the two doors are poster
        blocks and the pass is the pointing fist from the same type case (see styles.css). */
+    // Three wood-type stars for the poster's ornament row, cut plump and each by hand: its own
+    // tilt, its own uneven points. Drawn rather than typed because U+2605 is in neither of the
+    // notebook's faces, so every OS set the old row in a star of its own choosing.
+    const nashStars = [
+      "M5.33 0.74 L7.42 3.64 L10.49 4.11 L8.64 6.71 L9.82 10.30 L6.35 9.05 L3.43 10.84 L3.67 7.29 L1.04 5.24 L4.08 4.14 Z",
+      "M6.44 1.22 L7.73 4.22 L11.41 4.95 L8.67 7.33 L8.68 10.66 L5.76 8.94 L2.29 10.46 L3.20 6.85 L1.31 4.21 L4.68 4.00 Z",
+      "M5.80 0.55 L7.57 3.87 L10.98 4.39 L8.47 6.91 L9.02 10.06 L6.10 9.13 L3.12 10.47 L3.42 7.14 L0.66 4.67 L4.23 3.94 Z",
+    ].map((d) => `<svg viewBox="0 0 12 12"><path d="${d}" fill="currentColor"/></svg>`).join("");
     const doors = [
       ["hers", "hers", "This is a Taylor Swift song she never released"],
       ["not", "not hers", "This is somebody else's song"],
     ].map(([v, label, full]) =>
       `<button type="button" class="bg-nash" data-v="${v}" aria-label="${escapeHtml(full)}">` +
-        `<span class="bg-nash-card"><span class="bg-nash-stars" aria-hidden="true">\u2605 \u2605 \u2605</span>` +
+        `<span class="bg-nash-card"><span class="bg-nash-stars" aria-hidden="true">${nashStars}</span>` +
           `<span class="bg-nash-word">${escapeHtml(label)}</span>` +
           `<span class="bg-nash-rules" aria-hidden="true"></span></span>` +
       `</button>`).join("");
@@ -23851,10 +23859,10 @@ function verseProgress(text) {
     const { text: line, lines } = recoverLyricLine(s, np);
     const total = normalizeLyric(line).split(" ").length;
     const coverage = total ? Math.min(np.split(" ").length / total, 1) : 0;
-    // Mirror gradeLyricRecall's cap on tiny lines, so the meter never promises a ★ the
+    // Mirror gradeLyricRecall's cap on tiny lines, so the meter never promises a rung the
     // verdict won't pay out.
     if (total && total < RECALL_TIER_MIN_WORDS) return coverage >= RECALL_GOOD ? "good" : "fragment";
-    // The ★ rungs are the ones that pay beads, and the verdict won't pay them for a line
+    // The top two rungs are the ones that pay beads, and the verdict won't pay them for a line
     // that doesn't sing the page's word — so they stay dark until it does, however much of
     // the line has been typed. Same invariant as the tiny-line cap above: the gauge may run
     // ahead of the answer, but it must never promise more than the answer will honour.
@@ -23870,8 +23878,8 @@ function verseProgress(text) {
 const VERSE_METER = {
   fragment: { level: 1, label: "a fragment" },
   good:     { level: 2, label: "half the verse" },
-  perfect:  { level: 3, label: "the whole line ★" },
-  verse:    { level: 4, label: "a whole verse ★★" },
+  perfect:  { level: 3, label: "the whole line" },
+  verse:    { level: 4, label: "a whole verse" },
 };
 // Light the meter's notches for what's typed. Hidden unless the text is a real lyric
 // fragment, and suppressed once the tier-3 line hint is on screen (it'd be copying).
