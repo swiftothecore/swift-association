@@ -10077,9 +10077,33 @@
   .lyric-card .lyric-line {
     font-family: var(--hand); font-size: calc(24px + var(--text-size-adjust)); color: var(--ink); line-height: 1.3;
   }
-  .lyric-card .lyric-line mark {
-    background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700;
+  /* The page's word in a revealed line, marked the way a chisel highlighter marks it rather
+     than boxed like a text selection. Background layers only, no pseudo-element, so a mark
+     that wraps still paints on both lines (box-decoration-break). The 104deg hard stops give
+     both ends the same slanted nib cut, the doubled strip inside each end is where the pen
+     touched down and lifted, and a faint pale streak runs along the middle. It sits low over
+     the x-height instead of framing the ascenders, and its height steps between three cards
+     so neighbouring marks don't read as one stamp. --hl is the ink: the wrong card swaps it.
+     The "more songs" rows are list items, not cards, so they are named here too. */
+  .lyric-card .lyric-line mark,
+  .lyric-reveal--compact .lyric-line mark {
+    --hl: var(--highlighter);
+    color: var(--ink); font-weight: 700;
+    padding: 0 6px; margin: 0 -2px;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+    background:
+      linear-gradient(transparent 46%, rgba(255,255,255,0.16) 47% 51%, transparent 52%)
+        0 var(--hl-y, 70%) / 100% var(--hl-h, 66%) no-repeat,
+      linear-gradient(104deg, transparent 0 3px, var(--hl) 3px 8px, transparent 11px calc(100% - 11px),
+        var(--hl) calc(100% - 8px) calc(100% - 3px), transparent calc(100% - 3px))
+        0 var(--hl-y, 70%) / 100% var(--hl-h, 66%) no-repeat,
+      linear-gradient(104deg, transparent 0 3px, var(--hl) 3px calc(100% - 3px), transparent calc(100% - 3px))
+        0 var(--hl-y, 70%) / 100% var(--hl-h, 66%) no-repeat;
   }
+  .lyric-card:nth-child(3n+2) .lyric-line mark,
+  .ms-row:nth-child(3n+2) .lyric-line mark { --hl-y: 78%; --hl-h: 62%; }
+  .lyric-card:nth-child(3n) .lyric-line mark,
+  .ms-row:nth-child(3n) .lyric-line mark { --hl-y: 64%; --hl-h: 70%; }
   /* album tag */
   .album-tag {
     display: inline-block; margin-left: 8px;
@@ -10099,9 +10123,7 @@
 
   /* Wrong cards: album border stays, lyric slightly faded, keyword blushes */
   .lyric-card.wrong-card .lyric-line { color: var(--ink-soft); }
-  .lyric-card.wrong-card .lyric-line mark {
-    background: rgba(178,58,58,0.15); color: var(--ink);
-  }
+  .lyric-card.wrong-card .lyric-line mark { --hl: rgba(178,58,58,0.15); }
 
   /* Sits under the red-pen verdict, above the turn slip: it is the evidence for the verdict,
      so it reads with it rather than as a caption hanging off the button. */
@@ -10249,9 +10271,7 @@
     font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust));
     color: var(--ink-soft); line-height: 1.35;
   }
-  .lyric-reveal--compact .lyric-line mark {
-    background: var(--highlighter); color: var(--ink); padding: 0 2px; font-weight: 700;
-  }
+  .lyric-reveal--compact .lyric-line mark { padding: 0 5px; margin: 0 -2px; }
   .lyric-reveal--compact .lc-line { font-size: calc(16px + var(--text-size-adjust)); }
   .more-songs-next { margin: 2px 0; }
   .more-songs-next:hover:not(:disabled) { color: var(--ink); }
