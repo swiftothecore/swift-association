@@ -86,7 +86,7 @@ import { showCover, placeCoverStickers } from "./stickercover.js";
 import { coverStickerSlots, toggleCoverSticker } from "./stickerselection.js";
 import {
   BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
-  centreStrand, trinketPreviewSVG, randomTrinketForBead,
+  centreStrand, trinketPreviewSVG, beadPreviewSVG, randomTrinketForBead,
 } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
@@ -13617,16 +13617,19 @@ function renderBraceletDetails(results, albums, opts) {
       const special = trinket && BRACELET_SPECIAL_TRINKETS.includes(trinket);
       const meta = [album, elapsed,
         special ? `${BRACELET_TRINKET_COPY[trinket] || "chosen"} dangle` : ""].filter(Boolean).join(" · ");
-      // The swatch takes the page's own album colour, so a row of the note and the bead it
-      // describes are the same bead. Filtered to a literal colour token, never interpolated raw.
-      // A rule with its own bead colours (Impostor's fakes, Common Thread's speed ramp) wins
-      // over the album, exactly as it does on the strand — the note and the bead it describes
-      // have to be the same bead.
-      const hue = (Array.isArray(opts.beadTints) && opts.beadTints[i])
+      // The row leads with the strand's own bead for this page, drawn by the same builder, so
+      // the note and the bead it describes are the same bead. A rule with its own bead colours
+      // (Impostor's fakes, Common Thread's speed ramp, a guest's two voices) wins over the
+      // album, exactly as it does on the strand. Every colour is filtered to a literal hex
+      // token first, never interpolated raw.
+      const hex = (c) => typeof c === "string" && /^#[0-9a-f]{3,8}$/i.test(c);
+      const raw = (Array.isArray(opts.beadTints) && opts.beadTints[i])
         || (albums[i] && palette[albums[i]]) || "";
-      const tint = /^#[0-9a-f]{3,8}$/i.test(hue) ? ` style="--bead:${hue}"` : "";
+      const hue = typeof raw === "string" ? (hex(raw) ? raw : "")
+        : Array.isArray(raw) ? raw.filter(hex)
+        : raw && Array.isArray(raw.colors) ? { ...raw, colors: raw.colors.filter(hex) } : "";
       return `<li class="bracelet-recap-item" value="${i + 1}">` +
-        `<span class="bracelet-bead-swatch bracelet-recap-bead" data-finish="${finish}"${tint} aria-hidden="true"></span>` +
+        `<span class="bracelet-recap-bead">${beadPreviewSVG(finish, hue || undefined, i)}</span>` +
         `<span class="bracelet-recap-page">page ${i + 1} · ${escapeHtml(prompt)}</span>` +
         `<span class="bracelet-recap-title">${escapeHtml(title)}` +
           `<span class="sr-only"> · ${escapeHtml(BRACELET_FINISH_COPY[finish] || "")}</span></span>` +

@@ -316,6 +316,21 @@ export function trinketPreviewSVG(id, tint) {
   return `<svg viewBox="0 0 24 24" class="trinket-preview" aria-hidden="true"><g${style} transform="translate(12 12.5)">${fn(0, 0, r, sw)}</g></svg>`;
 }
 
+// One bead off the strand, on its own: the same ponyBead (or skull) the strand strings for page
+// `i`, at the same tilt, so a row that describes a page leads with that page's actual bead and
+// not a stand-in. `tint` is whatever the strand would have been handed for it: one colour, a
+// band list or a wedge cake. Left out, the bead inherits the era's --bead like an unpicked slot.
+export function beadPreviewSVG(finish, tint, i = 0) {
+  const u = "bp" + (++BR_UID);
+  const paint = beadPaint(tint);
+  const fill = paint ? `url(#${u}paint)` : (typeof tint === "string" && tint) || "var(--bead)";
+  const body = finish === "skull"
+    ? `<g class="b-skull-bead">${skullBead(0, -1.8, 13.4, 1)}</g>`
+    : ponyBead(0, 0, fill, 1, jitter(i, 1, 9), finish, u, i);
+  return `<svg viewBox="-16 -17 32 34" class="bead-preview" aria-hidden="true" focusable="false">` +
+    `<defs>${beadDefs(u)}${paint ? beadPaintDef(`${u}paint`, paint) : ""}</defs>${body}</svg>`;
+}
+
 // ---- The strand's materials ----
 // PEN is deliberately not var(--ink). A white bead is a white OBJECT, not ink on paper: in
 // dark mode var(--ink) becomes a warm paper-white, and every near-white piece here — the
