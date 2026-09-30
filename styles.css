@@ -8577,7 +8577,7 @@
   .heat-foot b { color: var(--ink-accent); font-weight: 700; }
 
   /* ---------- Bracelet (round progress + score) ---------- */
-  .bracelet-wrap { margin-bottom: 26px; }
+  .bracelet-wrap { margin-bottom: 24px; }
   .bracelet-meta {
     display: flex; justify-content: space-between; align-items: center;
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
@@ -15925,6 +15925,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* ---- the hand, live on the page and again on the results ---- */
 .lu-goals { display: flex; flex-wrap: wrap; gap: 5px 12px; justify-content: center; margin: 0 0 9px; }
+.lu-goals[hidden] { display: none; }
 .lu-goal {
   display: inline-flex; align-items: center; gap: 4px; position: relative;
   font-family: var(--type); font-size: 10px; letter-spacing: 0.4px; color: var(--ink-soft);
