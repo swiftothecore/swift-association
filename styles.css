@@ -10339,9 +10339,11 @@
      --red-pen, always, and never a rarity tier hue: the round screen's rarity stamp is a slab
      of the same family on purpose, and colour plus size are what keep the two apart. Multiply
      lets the paper grain read through the ink on the day page; the night page lays it on
-     normally, because multiply against a near-black sheet turns any red to mud. */
+     normally, because multiply against a near-black sheet turns any red to mud. It takes the
+     pointer so its data-tip can say what the run was stamped for; it sits on empty paper, so
+     there is nothing underneath for it to swallow a click from. */
   .run-stamp {
-    position: absolute; top: 36px; right: 5%; z-index: 3; pointer-events: none;
+    position: absolute; top: 36px; right: 5%; z-index: 3; cursor: help;
     font-family: var(--type); font-weight: 700; text-transform: uppercase; white-space: nowrap;
     font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 2.5px;
     padding: 7px 13px; border: 3px double currentColor;

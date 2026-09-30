@@ -13719,21 +13719,29 @@ function trailingCorrect() {
 }
 
 /* Resolved in order, first match wins. Each `words` array is the press's own lines: one word
-   per line on a phone, where the slab has to stack to clear the label beside it. */
+   per line on a phone, where the slab has to stack to clear the label beside it. `tip` is what
+   hovering the stamp says it was pressed for, stated as the test's own condition so the two
+   cannot drift into describing different feats. */
 const RUN_STORIES = [
   // A full run, every page landed, nothing crossed out and nothing asked for. The page count
   // is read off sessionRounds rather than TOTAL_ROUNDS so a Custom run of seven pages can earn
   // it honestly, and a partial run can never claim it.
-  { id: "clean-copy", words: ["clean", "copy"], test: () =>
+  { id: "clean-copy", words: ["clean", "copy"],
+    tip: "Every page named, with no misses, no hints, no timeouts and nothing crossed out",
+    test: () =>
       roundResults.length > 0 && roundResults.length === sessionRounds()
       && roundResults.every(Boolean) && hintsUsed === 0 && gameTimeouts === 0
       && roundRejects.every((list) => !(list || []).length) },
   // Fell apart somewhere, then closed the run out. Both halves are required: without the miss
   // this is just a good run, and without the tail it is just a run with a miss in it.
-  { id: "comeback", words: ["comeback"], test: () =>
+  { id: "comeback", words: ["comeback"],
+    tip: `Missed a page, then closed the run on ${STORY_COMEBACK_TAIL} right in a row`,
+    test: () =>
       roundResults.includes(false) && trailingCorrect() >= STORY_COMEBACK_TAIL },
   // Sung rather than named, three times over. lyricLineAnswers is already counted for a charm.
-  { id: "from-memory", words: ["from", "memory"], test: () =>
+  { id: "from-memory", words: ["from", "memory"],
+    tip: `Answered ${STORY_MEMORY_LINES} or more pages by singing a lyric line`,
+    test: () =>
       lyricLineAnswers >= STORY_MEMORY_LINES },
 ];
 
@@ -13768,6 +13776,8 @@ function renderRunStamp() {
   const el = document.createElement("div");
   el.className = "run-stamp";
   el.dataset.story = story.id;
+  el.setAttribute("data-tip", story.tip);
+  el.setAttribute("aria-label", story.words.join(" ") + ": " + story.tip);
   // Each word its own span: inline on paper wide enough for one line, stacked on a phone,
   // where the measured free paper beside the number is 125px and a single line runs through
   // "the final tally". Same markup either way, so nothing has to know which it is.
