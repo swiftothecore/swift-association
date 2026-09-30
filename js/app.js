@@ -20457,7 +20457,27 @@ function replayStampArt(w, sub) {
   return `<rect x="4" y="4" width="${w - 8}" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>` +
     `<rect x="10" y="10" width="${w - 20}" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>` +
     text(w / 2, 44, word.size, word.ls, "ONE MORE TAKE", "-2 1 -1 2 -1 1 0 -1 1 -2 1 0 -1") +
-    text(w / 2, 59, 9, 3.2, `&#9733; ${sub} &#9733;`);
+    stampSubLine(w, sub);
+}
+
+// The stamps' small line, set off by a short rule either side the way a rubber stamp sets off
+// its small print. Courier Prime is monospaced at 0.6em, so the ink's width follows from the
+// letter count alone. The words sit half a letter-space right of centre because the spacing
+// trails the last letter, which would otherwise leave the right-hand rule the closer one. A
+// long sub-line on the narrow cut shortens its rules to keep clear of the inner ring, and drops
+// them once there is no room left to read as a rule. ENCORE's copy in index.html is this one
+// worked out by hand for "INFINITE MODE", so a change here wants making there too.
+function stampSubLine(w, sub) {
+  const cx = w / 2, ls = 3.2, gap = 7;
+  const half = (sub.length * (5.4 + ls) - ls) / 2;
+  const len = Math.min(30, (w - 20) / 2 - half - gap - 8);
+  const words = `<text x="${cx + ls / 2}" y="59" fill="currentColor" text-anchor="middle" ` +
+    `style="font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: ${ls}px;">${sub}</text>`;
+  if (len < 10) return words;
+  const l1 = cx - half - gap, r1 = cx + half + gap, f = (n) => n.toFixed(1);
+  const rule = (a, ya, b, yb, yc) =>
+    `<path d="M${f(a)} ${ya} Q${f((a + b) / 2)} ${yb} ${f(b)} ${yc}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>`;
+  return rule(l1 - len, 55.9, l1, 55.35, 55.7) + rule(r1, 55.6, r1 + len, 56.1, 55.5) + words;
 }
 
 // What the replay will start, captured when the stamp is inked so nothing between the results
