@@ -2095,6 +2095,9 @@ function playCTA(label = "start writing") {
 // It is also THE right-pointing arrow: every "go on" control in the game draws this one rather
 // than setting →, which arrives as whatever the typewriter font thinks an arrow is and reads as
 // a system glyph beside everything else on the page that was drawn.
+// Where its control is a flex row, the label and the arrow go in one .cta-run span: a flex row
+// centres the arrow on the line box rather than the letters, and strands it between the lines
+// when the label wraps, where inside the span it stays on the last word and its vertical-align holds.
 const CTA_ARROW = `<svg class="cta-arrow" viewBox="0 0 20 10" aria-hidden="true">` +
   `<path d="M1.3 5.5 Q8.6 4.6 17.4 5.1 M13.1 1.7 Q15.6 3.5 18.1 5.1 Q15.9 6.6 13.8 8.6" fill="none" ` +
   `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -4391,7 +4394,7 @@ function goalCardHTML() {
     ? `<span class="ach-plate-earned">earned ${escapeHtml(recordDateLabel(earnedAchievements[a.id]))}</span>` +
       `<button type="button" class="ach-plate-swap" data-goal-repin="1">pin the next one</button>`
     : (entries.length
-        ? `<button type="button" class="ach-plate-go" data-goal-play="1">play ${escapeHtml(goalDestLabel(a.earn))} ${CTA_ARROW}</button>`
+        ? `<button type="button" class="ach-plate-go" data-goal-play="1"><span class="cta-run">play ${escapeHtml(goalDestLabel(a.earn))}${CTA_ARROW}</span></button>`
         // Two different truths, and they must not be collapsed. A charm WITH an `earn` whose
         // pool came back empty has a destination that is not open: no dark side unlocked yet,
         // say, or no preset of your own that a lever-gated Custom charm could be earned on.
@@ -9312,7 +9315,7 @@ function bonusBannerText(correct, isTimeout) {
 // its corner turned down (styles.css, "next page" slip). One builder so the game, the bonus
 // shelf and the impostor page can never draw it three different ways.
 function turnSlip(id, label = "next page") {
-  return `<button type="button" id="${id}" class="turn-slip"><span class="turn-sheet">${label} ${CTA_ARROW}` +
+  return `<button type="button" id="${id}" class="turn-slip"><span class="turn-sheet"><span class="cta-run">${label}${CTA_ARROW}</span>` +
     `<span class="turn-ear" aria-hidden="true"><svg viewBox="0 0 20 20" preserveAspectRatio="none">` +
     `<path class="flap" d="M0 0L20 20H0Z"/><path class="fold" d="M1 0V19H20"/><path class="fold crease" d="M0 0L20 20"/>` +
     `</svg></span></span></button>`;
@@ -25053,7 +25056,7 @@ function fullLyricsButton(entry, extra = false) {
     `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(entry.song.title)}"` +
       ` data-reveal-id="${entry.id}" data-word="${escapeHtml(entry.word || "")}" data-section="${entry.model.sectionIndex}"` +
       ` data-line="${entry.model.anchorSourceLineIndex}" aria-label="Open full lyrics for ${escapeHtml(censor(entry.song.title))} at this line">` +
-      `full lyrics ${CTA_ARROW}</button></span>`;
+      `<span class="cta-run">full lyrics${CTA_ARROW}</span></button></span>`;
 }
 
 // Stepping between occurrences only changes what is on screen while the context is open: the
@@ -25230,7 +25233,7 @@ function moreSongsBlock(pool, shown, word) {
     const hash = new URLSearchParams({ q: word, mode: effectiveStrict() ? "exact" : "stem", view: "grouped" });
     searcher = `<a class="more-songs-all" href="search/#${hash.toString()}" target="_blank" rel="noopener"` +
       ` aria-label="Explore ${escapeHtml(word)} across Taylor Swift's full catalogue in Swift To The Lyric">` +
-      `explore “${escapeHtml(word)}” across Taylor's full catalogue ${CTA_ARROW}</a>`;
+      `<span class="cta-run">explore “${escapeHtml(word)}” across Taylor's full catalogue${CTA_ARROW}</span></a>`;
   }
   return `<button type="button" class="more-songs-toggle" aria-expanded="false" aria-controls="${id}"` +
       ` data-label="${escapeHtml(openingLabel)}"><span class="ctl-lab">${openingLabel}</span>${MORE_CHEV}</button>` +

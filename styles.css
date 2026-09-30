@@ -11205,11 +11205,18 @@
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px;
     color: var(--ink-accent); margin-top: 9px;
   }
-  /* The drawn arrow on the songbook buttons, sized in em so it follows the type, and hung off the
-     BASELINE rather than centred in the line box: its shaft lands on the middle of Courier
-     Prime's lowercase (x-height 0.45em), which is where the eye reads the line's middle. The
-     line box's middle sits about 2px lower, so centring by flex put the arrow visibly low. */
-  .cta-arrow { display: inline-block; width: 1.9em; height: 0.95em; vertical-align: -0.28em; }
+  /* The drawn arrow on every "go on" control, sized in em so it follows the type, and hung off
+     the BASELINE rather than centred in the line box, which sits about 2px under the letters.
+     The drawing's middle (the head's, y 5.15 of 10) stands 0.485 of the box above its foot, so
+     at 0.95em tall it is 0.461em up, and the offset puts it on the middle of Courier Prime's
+     lowercase (x-height 0.451em, so 0.2255em): 0.2255 - 0.461 = -0.235em. A label set in
+     capitals takes the cap-height middle instead (0.5796em, so 0.2898em): -0.171em. Measured to
+     within a tenth of a pixel; retune from those two heights, not by eye, if the arrow is resized.
+     A flex control wraps label and arrow in .cta-run (see CTA_ARROW), so the offset still applies. */
+  .cta-arrow { display: inline-block; width: 1.9em; height: 0.95em; vertical-align: -0.235em; }
+  :is(.run-pause-go, .lyric-fullsong, .more-songs-all, .lu-stub-go) .cta-arrow { vertical-align: -0.171em; }
+  /* spaced by margin inside the run, matching the gap the flex row used to give it */
+  .cta-run .cta-arrow { margin-left: 0.5em; }
   /* two keepsake cards */
   .cat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .cat-card {
@@ -12676,7 +12683,8 @@
   .ach-plate-go:hover { background: rgba(212, 160, 23, 0.24); transform: translate(-1px, -1px); box-shadow: 3px 3px 0 rgba(169, 121, 31, 0.36); }
   .ach-plate-go:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
   .ach-plate-go { display: inline-flex; align-items: center; gap: 0.7em; }
-  .ach-plate-go .cta-arrow { width: 2.1em; height: 1.05em; margin-top: -1px; }
+  /* capitals, and a larger arrow: 0.2898 - 0.485 x 1.05 = -0.22em */
+  .ach-plate-go .cta-arrow { width: 2.1em; height: 1.05em; margin-left: 0.7em; vertical-align: -0.22em; }
   /* the re-draw, and the locked/no-destination notes: pencil, never chrome */
   .ach-plate-swap {
     border: 0; background: transparent; padding: 2px 0; cursor: pointer;
@@ -16258,8 +16266,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   transform: rotate(-1deg);
 }
 .run-pause-go:hover { background: var(--card-ink); color: var(--card); }
-/* the label is in capitals, so the arrow hangs on their middle rather than the lowercase one */
-.run-pause-go .cta-arrow { vertical-align: -0.18em; }
 .run-pause-go:focus-visible { outline: 1.5px dashed var(--card-ink); outline-offset: 4px; }
 .run-pause-go:active { transform: rotate(-1deg) translate(2px, 2px); box-shadow: 1px 1px 0 var(--card-ink); }
 /* The way out, written the way the run's own quit link is: small typewriter caps, quiet until

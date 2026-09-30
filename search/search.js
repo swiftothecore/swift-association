@@ -577,7 +577,7 @@ function render(terms, groups) {
     `<path d="M1.3 5.5 Q8.6 4.6 17.4 5.1 M13.1 1.7 Q15.6 3.5 18.1 5.1 Q15.9 6.6 13.8 8.6" fill="none" ` +
     `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const play = (terms.length === 1 && PROMPT_WORDS.has(terms[0].toLowerCase()))
-    ? ` <a class="sx-play" href="../?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word">play this word in the game ${CTA_ARROW}</a>`
+    ? ` <a class="sx-play" href="../?word=${encodeURIComponent(terms[0].toLowerCase())}" title="Start a game round on this word"><span class="cta-run">play this word in the game${CTA_ARROW}</span></a>`
     : "";
   const share = ` <button type="button" class="sx-copy" id="copyLink" title="${SHARE_TITLE}">` +
     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">` +
