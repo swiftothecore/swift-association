@@ -7913,6 +7913,7 @@
   }
   .chall-path-overlay.is-devil .chall-path-card:hover { box-shadow: 3px 5px 0 rgba(0, 0, 0, 0.45); }
   .chall-path-overlay.is-devil .cpc-icon { color: #e2725b; }
+  .chall-path-overlay.is-devil .cpc-mark { --pk-bg: #2c1f1c; }
   .chall-path-overlay.is-devil .cpc-name { color: #f3e9da; }
   .chall-path-overlay.is-devil .cpc-desc { color: #c9a59c; }
   /* The risk batch — the same fork overlay for the bank / double-or-nothing offer, tinted
