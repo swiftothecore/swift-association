@@ -15996,6 +15996,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   header.title .tagline-row { margin-top: 18px; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; }
   .tagline-row .tag-heart { margin-inline: 5px; }
   .screen.card, [data-flip-id].card { --rule-x: 17px; padding: 20px 14px 26px 30px; }
+  /* The close link is pinned in the game card's top-right corner, above the page line. The
+     phone padding above would slide the page line up under it and print the link straight
+     across the rule marks, so the game page keeps the head room the desktop card gives it. */
+  #screen-game.card { padding-top: 32px; }
   .settings-gear {
     position: absolute; top: calc(8px + env(safe-area-inset-top, 0px));
     right: max(10px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px;
