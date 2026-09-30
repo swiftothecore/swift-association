@@ -30950,6 +30950,20 @@ function buildDevApi() {
         return ACHIEVEMENTS.filter((a) => achGroupOf(a.id) === "mastery")
           .map((a) => (earnedAchievements[a.id] ? "✓ " : "· ") + a.name);
       },
+      // Back-date the passport's stamps. Every setter above stamps its unlocks with today, so a
+      // dev-built passport prints one date on every stamp. This spreads the reached levels over
+      // a climb instead: the current level keeps today and each one below it lands `days`
+      // further back (a level's rewards all share its day). Returns the dates it wrote.
+      backdate: (days = 9) => {
+        days = Math.max(0, +days || 0);
+        const m = loadMastery(), top = masteryLevelFromXp(m.masteryXp), now = Date.now();
+        for (const r of MASTERY_REWARDS) {
+          if (r.level > top) continue;
+          m.unlocked[r.id] = new Date(now - (top - r.level) * days * 86400000).toISOString();
+        }
+        saveMastery(m); if ($("masteryBody")) renderMasteryPage();
+        return Object.fromEntries(Object.entries(masteryStampDates(m)).filter(([lv]) => +lv <= top));
+      },
       open: () => openMastery("start"),
       // The finale in one press: the cap, every reward, and the Mastery page open on it.
       // Level 13 is the one state that can't be reached honestly in a testing session, and the

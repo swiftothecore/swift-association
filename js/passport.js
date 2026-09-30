@@ -16,26 +16,30 @@
 
    The stamps are pressed with the stampInk filters in index.html; the skill marks on the cards
    come from skillmarks.js. */
-import { MASTERY_ICONS, MASTERY_TILE_MARKS } from "./config.js";
+import { MASTERY_ICONS, MASTERY_TILE_MARKS, MASTERY_REWARD_BY_ID, MASTERY_TIER_ICONS } from "./config.js";
 import { skillMarkHTML } from "./skillmarks.js";
 
 /* One entry per level. `glyph` is ["mi", key] for a MASTERY_ICONS mark or ["rw", key] for one
-   of the bento's #reward-* drawings (index.html); `tile` names the MASTERY_TILE_MARKS hue. */
+   of the bento's #reward-* drawings (index.html); `tile` names the MASTERY_TILE_MARKS hue.
+   Where a reward or a title tier already owns a mark, the stamp takes it FROM there rather than
+   naming it again, so a stamp and the tile it points at cannot drift apart. */
+const rewardMark = (id) => ["mi", MASTERY_REWARD_BY_ID[id].icon];
+const tierMark = (i) => ["mi", MASTERY_TIER_ICONS[i]];
 const STAMPS = {
-  1: { shape: "circle", glyph: ["mi", "fountainpen"], top: "FOUNTAIN PEN", tile: "pens", caption: "Fountain pen" },
-  2: { shape: "oval", glyph: ["mi", "feather"], top: "FEATHER QUILL", tile: "pens", caption: "Feather quill" },
-  3: { shape: "rect", glyph: ["mi", "gelpen"], top: "GEL PEN", tile: "pens", caption: "Gel pen" },
+  1: { shape: "circle", glyph: rewardMark("pen-fountain"), top: "FOUNTAIN PEN", tile: "pens", caption: "Fountain pen" },
+  2: { shape: "oval", glyph: rewardMark("pen-quill"), top: "FEATHER QUILL", tile: "pens", caption: "Feather quill" },
+  3: { shape: "rect", glyph: rewardMark("pen-glitter"), top: "GEL PEN", tile: "pens", caption: "Gel pen" },
   4: { shape: "notch", glyph: ["rw", "paper"], top: "PAPER", tile: "paper", caption: "Paper stocks" },
   5: { shape: "scallop", glyph: ["rw", "trinket"], top: "TRINKETS", tile: "trinket", caption: "Trinkets" },
-  6: { shape: "shield", glyph: ["mi", "swords"], top: "SUPER-HARD", tile: "hard", caption: "Super-hard" },
-  7: { shape: "circle", glyph: ["mi", "laurel"], top: "CERTIFIED POET", tile: "title", caption: "Certified Poet" },
+  6: { shape: "shield", glyph: rewardMark("hardmode-unlock"), top: "SUPER-HARD", tile: "hard", caption: "Super-hard" },
+  7: { shape: "circle", glyph: tierMark(0), top: "CERTIFIED POET", tile: "title", caption: "Certified Poet" },
   8: { shape: "rect", glyph: ["rw", "button"], top: "FINISHES", tile: "button", caption: "Button finishes" },
   // level 9 opens two things, so it is two stamps pressed over each other
-  9: { shape: "double", glyph: ["mi", "sticker"], top: "STICKERS", tile: "stick", glyph2: ["mi", "bridge"], top2: "BRIDGE BUILDER", tile2: "title", caption: "Stickers + titles" },
-  10: { shape: "hex", glyph: ["mi", "key"], top: "SECRETS", tile: "hint", caption: "Secret hints" },
-  11: { shape: "circle", glyph: ["mi", "chair"], top: "THE CHAIRMAN", tile: "title", caption: "The Chairman" },
+  9: { shape: "double", glyph: rewardMark("sticker-hints"), top: "STICKERS", tile: "stick", glyph2: tierMark(1), top2: "BRIDGE BUILDER", tile2: "title", caption: "Stickers + titles" },
+  10: { shape: "hex", glyph: rewardMark("reveal-hints"), top: "SECRETS", tile: "hint", caption: "Secret hints" },
+  11: { shape: "circle", glyph: tierMark(2), top: "THE CHAIRMAN", tile: "title", caption: "The Chairman" },
   12: { shape: "oval", glyph: ["rw", "cta"], top: "WORDS", tile: "cta", caption: "Button words" },
-  13: { shape: "banner", glyph: ["mi", "plumes"], top: "ULTIMATE SHOWGIRL", tile: "button", caption: "Ultimate Showgirl" },
+  13: { shape: "banner", glyph: tierMark(3), top: "ULTIMATE SHOWGIRL", tile: "button", caption: "Ultimate Showgirl" },
 };
 export const PASSPORT_LEVELS = Object.keys(STAMPS).length;
 

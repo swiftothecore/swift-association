@@ -1280,6 +1280,7 @@ export function initDev(api) {
   const mFracN = num(0.5);
   const mMastN = num(5);
   const mGrantN = num(500, 56);
+  const mDaysN = num(9);
   body.append(section("mastery",
     row(btn("grant xp (all)", () => { api.mastery.grant(+mGrantN.value); toast("granted " + mGrantN.value + " xp"); }), mGrantN),
     row(mSkillSel, "lvl", mLvlN, btn("set skill", () => { api.mastery.setSkillLevel(mSkillSel.value, +mLvlN.value); toast("skill set"); }),
@@ -1307,12 +1308,15 @@ export function initDev(api) {
     row("seasons", ...["spring", "summer", "autumn", "winter"].map((s) =>
         btn(s, () => toast("button wears " + api.mastery.season(s)))),
         btn("by date", () => toast("button wears " + api.mastery.season(null)))),
-    // The level-13 finale: the gold-foil hero only ever renders at the cap, which is the one
-    // state a testing session can't reach honestly. Each button also sets the motion pair
-    // that decides how much of it draws, so all three renders are one press apart.
+    // Every setter above stamps its unlocks with today, so a dev-built passport wears one date
+    // on every stamp. This spreads the reached levels back over a climb, `days` apart.
+    row("backdate stamps", mDaysN, "days apart",
+        btn("backdate", () => { const d = api.mastery.backdate(+mDaysN.value); toast(Object.keys(d).length + " stamps back-dated"); })),
+    // The level-13 finale: the passport's gold-leaf bar only ever renders at the cap, which is
+    // the one state a testing session can't reach honestly. Each button also sets the motion
+    // setting that decides whether the leaf's sheen travels, so both renders are one press apart.
     row("finale", btn("full", () => toast(api.mastery.finale("full"))),
-        btn("reduce motion", () => toast(api.mastery.finale("reduce"))),
-        btn("reduced flashing", () => toast(api.mastery.finale("flash")))),
+        btn("reduce motion", () => toast(api.mastery.finale("reduce")))),
     row(btn("open page", () => api.mastery.open()),
         btn("reset mastery", () => { api.mastery.reset(); toast("mastery reset"); }, "warn"))));
 
