@@ -1127,8 +1127,15 @@ function renameFlipIds(root) {
 
 const FLIP_PALETTE_TOKENS = ["--ink-accent", "--highlighter", "--bead", "--page-wash"];
 let activePageTurn = null;
+let eraOnScreen = null;   // the palette on screen before this task's era change (see applyEra)
 
-function freezeFlipPalette(src, flip) {
+// `incoming` marks the one sheet that is the page arriving (flipInToScreen's), which wears the new
+// era; every other sheet is the page leaving and keeps the era it was shown in (see applyEra).
+function freezeFlipPalette(src, flip, incoming = false) {
+  if (eraOnScreen && !incoming) {
+    eraOnScreen.forEach(([token, value]) => flip.style.setProperty(token, value));
+    return;
+  }
   const style = getComputedStyle(src);
   FLIP_PALETTE_TOKENS.forEach((token) => {
     flip.style.setProperty(token, style.getPropertyValue(token));
@@ -1350,10 +1357,10 @@ if (window.visualViewport) window.visualViewport.addEventListener("resize", fini
    reduced-motion / instant-speed / page-turn-off opt-outs (else they just switch instantly).
    A flip sheet is the clone of `src`, positioned over `at` (a currently-visible screen, so its
    offsets are real even when `src` is display:none). */
-function makeFlipSheet(src, at, sideClass, shadeClass, turn) {
+function makeFlipSheet(src, at, sideClass, shadeClass, turn, incoming = false) {
   const flip = src.cloneNode(true);
   settleFlipStreak(flip);
-  freezeFlipPalette(src, flip);
+  freezeFlipPalette(src, flip, incoming);
   renameFlipIds(flip);
   flip.classList.remove("screen", "active");
   // Purely a visual page-turn artifact: keep it out of both the accessibility and interaction
@@ -1441,7 +1448,7 @@ function flipInToScreen(name, onDone) {
   // 3. Clone the now-final destination for the incoming sheet — so its tape and id-styled
   //    buttons match the real screen exactly — and flip it in over the backdrop. (dest is the
   //    visible active screen now, so its offsets are real.)
-  const incoming = makeFlipSheet(dest, dest, "page-flip-sheet--in", "flip-shade--in", turn);
+  const incoming = makeFlipSheet(dest, dest, "page-flip-sheet--in", "flip-shade--in", turn, true);
   // 4. Now hide the real destination for the length of the turn. The backdrop only covers the
   //    page we're leaving, so when the destination is TALLER (e.g. quitting a game: the start
   //    board is longer than the game card) its uncovered lower strip would otherwise be sitting
@@ -1824,7 +1831,20 @@ function pickEra() {
 // at --ink-accent: under that one ink the era IS the title's colour, and a favicon left alone
 // would sit on whichever era happened to be loaded when the ink was last applied. paintFavicon
 // bails on an unchanged href, so for the other thirteen inks this costs one string compare.
-function applyEra(era) { document.body.setAttribute("data-era", era); paintFavicon(); }
+function applyEra(era) {
+  // A page turn clones the outgoing page AFTER its caller has already moved the era on (a give-up
+  // sets gold and then flips home; endGame sets the finale era and then turns to the results), so
+  // reading the live body would hand the leaving sheet the new colour before it has turned away.
+  // Keep the palette the player was actually looking at until this task ends, for
+  // freezeFlipPalette. The first change in a task wins, since that is what was on screen.
+  if (!eraOnScreen && document.body.getAttribute("data-era") !== era) {
+    const style = getComputedStyle(document.body);
+    eraOnScreen = FLIP_PALETTE_TOKENS.map((token) => [token, style.getPropertyValue(token)]);
+    setTimeout(() => { eraOnScreen = null; }, 0);
+  }
+  document.body.setAttribute("data-era", era);
+  paintFavicon();
+}
 
 /* ---------- Matching helpers ---------- */
 // The pure matching core (variantBody/wordRegex/extractLineWithWord/highlightWord)
