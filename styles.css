@@ -565,7 +565,7 @@
   .di-placard .plc-tape {
     top: -1px; left: 50%; bottom: auto; right: auto; width: 43px; height: 14px;
     transform: translateX(-50%) rotate(3.5deg);
-    --tape-clip: polygon(5% 0%, 96% 0%, 91% 20%, 97% 40%, 88% 60%, 96% 80%, 90% 100%, 8% 100%, 4% 80%, 10% 60%, 3% 40%, 7% 20%);
+    --tape-clip: polygon(6.1% 0%, 96.2% 0%, 96.2% 25.3%, 98.1% 40.2%, 95.5% 65.5%, 95.7% 78.2%, 95.4% 100%, 2.3% 100%, 4.7% 88.8%, 7.3% 61.3%, 5.4% 47.7%, 4.7% 38.8%, 5.8% 11.4%);
   }
   .di-placard .plc-l1 {
     fill: #6d6354; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
@@ -13306,25 +13306,30 @@
   .see-also:not(.see-also--row) > .nav-card:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
   /* A lone last card starting a fresh row centres instead of clinging left. */
   .see-also:not(.see-also--row) > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
-  /* Sticky tape — OPAQUE pastel washi (a cream backing under a half-strength tint wash,
-     plus a diagonal sheen), so the card never shows through. ::before is the primary
-     strip, ::after an optional second strip; placement varies per card below so the row
-     doesn't read as a repeated template. */
-  /* ===== Shared realistic washi-tape surface =====================================
+  /* ===== Shared washi-tape surface ==============================================
      One look, reused everywhere the site shows sticky tape: the nav keepsake cards
-     (.nav-tape, injected + randomly torn per visit by app.js), the Records page
-     personal-best tiles (.pb-tile::before), the bonus-run sleeve (.bg-back::before), and the in-game suggestion dropdown
-     (.dropdown .item::before). Realism comes from four physical cues rather than a flat
-     gradient:
-       · frosted TRANSLUCENCY — warm-white base + half-strength tint let the ruled paper
-         read faintly through the strip, the way real semi-matte tape does;
-       · a soft cast SHADOW via drop-shadow() (follows the torn silhouette, so the strip
-         visibly lifts off the page);
-       · a diagonal WRINKLE highlight + faint crease, so light catches an uneven surface;
-       · longitudinal FIBRE grain + a bright top edge / shaded bottom edge for thickness.
-     Per-context knobs: --tape-color (any CSS colour) tints the strip; --tape-clip
-     supplies the hand-torn outline (nav strips set a fresh random one inline; the tiles
-     and dropdown cycle a few preset tears below). */
+     (.nav-tape, injected by app.js), the Records page personal-best tiles
+     (.pb-tile::before), the bonus-run sleeve (.bg-back::before), the pause card, the
+     polaroids, the milestone sticky and the in-game suggestion dropdown
+     (.dropdown .item::before). It is deliberately PLAIN: a frosted translucent base with a
+     half-strength tint (so the ruled paper reads faintly through), one soft diagonal sheen,
+     and a whisper of an edge. The tear does the rest.
+
+     Three things were tried and taken off, and should stay off:
+       · a surface texture. A 3px stripe grain ran ACROSS the strip and read as ribbed
+         plastic; a noise grain along it, strong enough to see, read as a photograph of tape,
+         and one quiet enough to fit the notebook could not be told from no grain at all.
+       · a bright top edge (0.6 white). It read as a bevel, lifting the strip like a sticker.
+       · a drop-shadow(). clip-path is applied AFTER filter, so the torn outline cut the
+         shadow off and it never rendered, while still promoting every strip to its own
+         compositing layer. On the dropdown, rebuilt every keystroke, that layer churn left
+         phantom song titles painted on the page in Chromium (bisected to the filter alone,
+         caught in Brave). Never put a filter back on a strip. A shadow would have to live on
+         a wrapper element, which the ::before strips cannot have.
+     Per-context knobs: --tape-color (any CSS colour) tints the strip; --tape-clip supplies
+     the torn outline. Every tear is irregular and neither end mirrors the other, because
+     scissored zigzags read as pinking shears; the set was rolled once on
+     scripts/ui/washi-tape.html and baked, so a page never re-tears itself between visits. */
   .nav-tape,
   .pol-tape,
   .ms-tape,
@@ -13337,8 +13342,6 @@
       linear-gradient(102deg,
         rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.30) 40%, rgba(255, 255, 255, 0) 52%,
         rgba(43, 39, 34, 0.05) 66%, rgba(255, 255, 255, 0.14) 78%, rgba(255, 255, 255, 0) 90%),
-      /* fine paper fibre running along the strip */
-      repeating-linear-gradient(90.5deg, rgba(74, 62, 42, 0.05) 0 1px, rgba(255, 255, 255, 0.025) 1px 3px),
       /* the tint (color-mix so any plain colour can drive it, e.g. the tile's accent) */
       linear-gradient(
         color-mix(in srgb, var(--tape-color, #c9b27a) 37%, transparent),
@@ -13346,13 +13349,10 @@
       /* frosted translucent base (lets the page show through, but still clearly present) */
       rgba(252, 248, 238, 0.62);
     box-shadow:
-      inset 0 0.5px 0 rgba(255, 255, 255, 0.6),
-      inset 0 -1px 1px rgba(43, 39, 34, 0.06);
-    filter:
-      drop-shadow(0 1px 1.2px rgba(43, 39, 34, 0.30))
-      drop-shadow(0 0.5px 0.5px rgba(43, 39, 34, 0.16));
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -0.5px 0.5px rgba(43, 39, 34, 0.05);
     clip-path: var(--tape-clip,
-      polygon(5% 0%, 96% 0%, 91% 20%, 97% 40%, 88% 60%, 96% 80%, 90% 100%, 8% 100%, 4% 80%, 10% 60%, 3% 40%, 7% 20%));
+      polygon(6.3% 0%, 96% 0%, 99.1% 15.2%, 93.6% 27.2%, 93% 43.1%, 94.6% 55.1%, 91.6% 70.2%, 94.5% 84.3%, 93.8% 100%, 8.7% 100%, 6% 82%, 6.9% 67.4%, 7.4% 48.3%, 4.5% 31.5%, 5.1% 15.2%));
   }
   /* Tape at night. Not dimmed with a filter, because tape is TRANSLUCENT and the filter would
      darken what shows through it as well; the honest move is to take down the frosted base so
@@ -13363,56 +13363,33 @@
      The wrinkle sheen comes down with it, and this is the part not to "restore" later: a bright
      white band reads as a sheen only against a lit strip. On a dark strip the same band is the
      brightest thing in the frame and the tape stops looking like tape and starts looking like a
-     tear in the page. The fibre and the tint are untouched — the tint is per-context and often
-     an era colour, and it is what keeps a strip recognisable as the same piece of tape it was
-     by day. The lip highlight inverts for the same reason the searcher's dots did: a white
-     hairline on top and a dark one underneath is how light falls on a raised edge in daylight,
-     and at 0.6 alpha on a dark strip it is just a bright line. */
+     tear in the page. The tint is untouched — it is per-context and often an era colour, and it
+     is what keeps a strip recognisable as the same piece of tape it was by day. The edge goes
+     quieter still than by day, for the same reason: any bright hairline on a dark strip is
+     just a bright line. */
   :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape,
                                .pb-tile::before, .bg-back::before, .dropdown .item::before) {
     background:
       linear-gradient(102deg,
         rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0) 52%,
         rgba(0, 0, 0, 0.10) 66%, rgba(255, 255, 255, 0.05) 78%, rgba(255, 255, 255, 0) 90%),
-      repeating-linear-gradient(90.5deg, rgba(0, 0, 0, 0.10) 0 1px, rgba(255, 255, 255, 0.02) 1px 3px),
       linear-gradient(
         color-mix(in srgb, var(--tape-color, #c9b27a) 30%, transparent),
         color-mix(in srgb, var(--tape-color, #c9b27a) 23%, transparent)),
       rgba(236, 229, 214, 0.13);
     box-shadow:
-      inset 0 0.5px 0 rgba(255, 255, 255, 0.14),
-      inset 0 -1px 1px rgba(0, 0, 0, 0.28);
-    filter:
-      drop-shadow(0 1px 1.2px rgba(0, 0, 0, 0.55))
-      drop-shadow(0 0.5px 0.5px rgba(0, 0, 0, 0.35));
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.06),
+      inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.2);
   }
-  /* The dropdown strip gives up its filter by day for the stranded-layer bug documented below,
-     and must keep giving it up at night — the shorthand above would hand it straight back. */
-  :root[data-theme="dark"] .dropdown .item::before { filter: none; }
   /* Preset hand-torn outlines, cycled so neighbouring tiles/dropdown rows differ. */
   .pb-tile:nth-child(3n+2)::before,
   .dropdown .item:nth-child(3n+2)::before {
-    --tape-clip: polygon(4% 0%, 95% 0%, 99% 25%, 90% 50%, 97% 75%, 93% 100%, 6% 100%, 10% 75%, 2% 50%, 9% 25%);
+    --tape-clip: polygon(3.7% 0%, 95.9% 0%, 93.6% 21%, 92.6% 29.1%, 92.9% 44.8%, 94.6% 63.7%, 91.8% 83%, 91.1% 100%, 9% 100%, 9.3% 78.3%, 5.7% 58.9%, 5.5% 39.4%, 6.9% 24.4%);
   }
   .pb-tile:nth-child(3n)::before,
   .dropdown .item:nth-child(3n)::before {
-    --tape-clip: polygon(8% 0%, 92% 0%, 96% 33%, 89% 66%, 97% 100%, 7% 100%, 3% 66%, 11% 33%);
+    --tape-clip: polygon(6.8% 0%, 95.3% 0%, 98.2% 15.7%, 94.2% 32%, 95.3% 44.4%, 92.8% 61%, 93.5% 69.6%, 91.3% 83%, 92.6% 100%, 6.8% 100%, 5.5% 84.8%, 6.4% 66.7%, 6.2% 61.3%, 7.1% 45.7%, 6.8% 26.8%, 4.5% 12.9%);
   }
-  /* The suggestion cards give up the tape's cast shadow, and it is not a taste call. `filter`
-     promotes the strip to its own compositing layer, and renderDropdown tears down and rebuilds
-     six of them on EVERY keystroke, so typing a lyric line churns dozens of throwaway layers in
-     a couple of seconds. Chromium (caught in Brave) loses one on the way out and leaves it
-     painted after the list is hidden: a stack of phantom song titles sitting on the paper, from
-     a query two letters old, while the DOM correctly says the list is gone. Switching tabs
-     healed it, which is the tell: stale pixels, not stale state.
-
-     Bisected to this one property: with the filter off and nothing else changed, the ghosts
-     stop. Everything else sharing the surface above (nav strips, tile and sleeve tape) is built
-     once and left alone, so none of them can strand a layer and all of them keep their shadow.
-     The strip is 32x14px and still reads as tape on its four other cues, so the loss is small
-     and it buys a bug that made the game look broken mid-round. Applies to the bonus games'
-     dropdown too, which shares the class and the same per-keystroke rebuild. */
-  .dropdown .item::before { filter: none; }
   /* Geometry + tint for the nav-card strips (size/transform/clip are overridden inline). */
   .nav-tape {
     position: absolute; z-index: 3; width: 50px; height: 16px; pointer-events: none;
@@ -16178,15 +16155,15 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .run-pause-tape.t1 { left: 0; top: 0; transform: translate(-50%, -50%) translate(13px, 14px) rotate(-44deg); }
 .run-pause-tape.t2 {
   left: 100%; top: 0; width: 82px; transform: translate(-50%, -50%) translate(-14px, 12px) rotate(39deg);
-  --tape-clip: polygon(4% 0%, 95% 0%, 99% 24%, 93% 50%, 98% 76%, 94% 100%, 6% 100%, 1% 70%, 6% 46%, 0% 22%);
+  --tape-clip: polygon(8.3% 0%, 96.2% 0%, 96.7% 13.6%, 95.6% 36.9%, 94.4% 44.9%, 92.3% 69.2%, 95.5% 87.4%, 93.7% 100%, 8.3% 100%, 5.8% 85.4%, 4.6% 54.5%, 7.3% 37.3%, 7.7% 26.7%);
 }
 .run-pause-tape.t3 {
   left: 0; top: 100%; width: 66px; transform: translate(-50%, -50%) translate(12px, -13px) rotate(48deg);
-  --tape-clip: polygon(7% 0%, 93% 0%, 97% 30%, 92% 64%, 96% 100%, 3% 100%, 8% 72%, 2% 38%);
+  --tape-clip: polygon(8.7% 0%, 96.8% 0%, 94.2% 13.6%, 93% 37.8%, 94.3% 55.3%, 94.7% 71.5%, 92.2% 88.4%, 93.6% 100%, 4.5% 100%, 3.7% 89.1%, 7.5% 67.8%, 6.6% 59.4%, 5.4% 43.4%, 8.4% 32.7%, 5.4% 18%);
 }
 .run-pause-tape.t4 {
   left: 100%; top: 100%; width: 77px; transform: translate(-50%, -50%) translate(-15px, -12px) rotate(-37deg);
-  --tape-clip: polygon(2% 0%, 97% 0%, 92% 26%, 99% 55%, 94% 100%, 5% 100%, 0% 64%, 6% 32%);
+  --tape-clip: polygon(5.5% 0%, 93.1% 0%, 92.5% 19.9%, 96.4% 33.2%, 94.5% 63.7%, 96.3% 81%, 95% 100%, 5.1% 100%, 7% 84%, 8.1% 73.5%, 6.8% 58.5%, 5.5% 46%, 7.4% 29.8%, 6.7% 11.7%);
 }
 .run-pause-note { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
 /* The title writes in the card's head; the clock line's baseline lands on the first rule. */

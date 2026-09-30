@@ -1748,19 +1748,24 @@ function coverAdmireKey(e) {
    on the outer pair and a centre pin on the middle card, so tape never lands in the inner
    gaps. Rotation, length, and tear vary per card for a handmade feel but never change. Order
    matches the DOM (start screen): records, stats, charms, challenges, mastery, bonus. Strips
-   are injected as .nav-tape child elements (styles.css). */
+   are injected as .nav-tape child elements (styles.css). Each card has its own tear, rolled
+   once on scripts/ui/washi-tape.html and baked here: irregular, and neither end mirrors the
+   other, because regular zigzags read as pinking shears rather than a torn strip. */
 const TORN_EDGES = [
-  "polygon(5% 0%, 96% 0%, 91% 20%, 97% 40%, 88% 60%, 96% 80%, 90% 100%, 8% 100%, 4% 80%, 10% 60%, 3% 40%, 7% 20%)",
-  "polygon(4% 0%, 95% 0%, 99% 25%, 90% 50%, 97% 75%, 93% 100%, 6% 100%, 10% 75%, 2% 50%, 9% 25%)",
-  "polygon(8% 0%, 92% 0%, 96% 33%, 89% 66%, 97% 100%, 7% 100%, 3% 66%, 11% 33%)",
+  "polygon(7.9% 0%, 90.2% 0%, 92.4% 15.7%, 91.5% 29.2%, 94.3% 46.5%, 91.6% 60.4%, 92.5% 75.4%, 96.4% 84.2%, 94.6% 100%, 6.4% 100%, 8.3% 76.5%, 7.3% 53.1%, 8.9% 34%, 9.6% 17.5%)",
+  "polygon(5.2% 0%, 98.9% 0%, 99.2% 18.6%, 97.8% 24.3%, 94.1% 38%, 94.6% 61.6%, 93.6% 71.4%, 96% 85.7%, 91.9% 100%, 5.4% 100%, 5.9% 83.7%, 6% 60%, 4.6% 42.7%, 7.1% 19.8%)",
+  "polygon(9.4% 0%, 95.4% 0%, 95.5% 20.5%, 92.4% 33.3%, 90.6% 59.6%, 92.5% 73.5%, 89.7% 100%, 2.7% 100%, 3.7% 87%, 4.5% 74.7%, 3.5% 57.9%, 8.4% 47.1%, 5.9% 25.4%, 10.1% 12.7%)",
+  "polygon(6.1% 0%, 90.6% 0%, 94.9% 14.3%, 95.7% 37.4%, 93.2% 46.5%, 98.1% 69.7%, 98.6% 88.6%, 94.2% 100%, 10.3% 100%, 8.8% 77.8%, 9.3% 62.4%, 7.8% 40.7%, 6.4% 17.2%)",
+  "polygon(4.5% 0%, 94.7% 0%, 96.6% 16.2%, 93.2% 34.4%, 95.3% 63.3%, 96.5% 77.2%, 96.3% 100%, 7.6% 100%, 5.8% 82.3%, 5.3% 68.3%, 2.5% 58.2%, 2.1% 38.5%, 3.4% 26.8%, 6% 18%)",
+  "polygon(3.1% 0%, 95.3% 0%, 94.1% 20.9%, 96.6% 30.8%, 96.6% 54.9%, 98.2% 64.8%, 97% 82.1%, 95% 100%, 6.5% 100%, 6.4% 78.4%, 5.7% 69.8%, 6.9% 50.1%, 5% 37.4%, 5% 12.6%)",
 ];
 const NAV_TAPE_PATTERN = [
   { left: "-9px",   top: "-6px",             rot: -42, w: 54, tear: 0 },   // records    · top-left corner
   { left: "50%",    top: "-7px", tx: "-50%", rot: 5,   w: 50, tear: 1 },   // stats      · top-centre pin
   { right: "-9px",  top: "-6px",             rot: 40,  w: 56, tear: 2 },   // charms     · top-right corner
-  { left: "-10px",  bottom: "-7px",             rot: 38,  w: 52, tear: 1 },   // challenges · bottom-left corner
-  { left: "50%",    bottom: "-7px", tx: "-50%", rot: -6,  w: 50, tear: 2 },   // mastery    · bottom-centre pin
-  { right: "-10px", bottom: "-7px",             rot: -44, w: 55, tear: 0 },   // bonus      · bottom-right corner
+  { left: "-10px",  bottom: "-7px",             rot: 38,  w: 52, tear: 3 },   // challenges · bottom-left corner
+  { left: "50%",    bottom: "-7px", tx: "-50%", rot: -6,  w: 50, tear: 4 },   // mastery    · bottom-centre pin
+  { right: "-10px", bottom: "-7px",             rot: -44, w: 55, tear: 5 },   // bonus      · bottom-right corner
 ];
 function makeTapeStrip(spot) {
   const t = document.createElement("span");
