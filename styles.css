@@ -7869,6 +7869,18 @@
   }
   .chall-path-card:hover { transform: translateY(-2px); box-shadow: 3px 5px 0 rgba(43, 39, 34, 0.22); }
   .cpc-icon { font-family: var(--type); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); color: #b23a3a; }
+  /* A perk's drawn mark (PERK_MARKS in app.js), inked in the card's colour so every tint of this
+     overlay carries it. The spot is that colour washed into the card's paper, and the knockout is
+     the paper itself, so --pk-bg has to follow the card's background wherever that changes. */
+  .cpc-mark {
+    --pk-bg: var(--paper);
+    display: block; overflow: visible;
+    width: calc(40px + 2 * var(--text-size-adjust)); height: calc(40px + 2 * var(--text-size-adjust));
+  }
+  .cpc-mark .pk-pen { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .cpc-mark .pk-blot { fill: currentColor; stroke: none; }
+  .cpc-mark .pk-spot { fill: color-mix(in srgb, currentColor 22%, var(--pk-bg)); stroke: none; transform: translate(0.9px, 0.8px); }
+  .cpc-mark .pk-knock { fill: var(--pk-bg); stroke: none; }
   .cpc-name { font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); color: var(--ink); }
   .cpc-desc { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.35; color: var(--ink-soft); }
   /* Choose Your Path's mulligan is an eraser: rub the word out and write another. The label
