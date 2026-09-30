@@ -2177,14 +2177,14 @@ export const DARK_IMPOSTOR_WORDS = [
    (an inclusive record of engagement), not the competitive boards — see foldSkillXp in
    app.js for the per-mode contribution mask. Internal ids stay neutral; the visible names
    are notebook-flavoured and tunable here. No RPG "XP bar / Lvl" chrome in the UI. */
-// `tint` is the skill's own ink (an "r, g, b" triplet, drawn from the era palette) — the
-// mastery skills bars, emblem, and level label all take it; a maxed skill overrides to gold.
+// `tint` is the skill's own ink (an "r, g, b" triplet, drawn from the era palette): the stamp
+// card, the linocut mark (js/skillmarks.js) and the postmark wave all take it, maxed or not.
 export const SKILLS = [
-  { id: "resolve",   name: "Instinct",      icon: "comet",     tint: "61, 79, 134",   blurb: "Grows with every word you match to the right song." },
-  { id: "tempo",     name: "Quick Pen",     icon: "metronome", tint: "178, 58, 63",   blurb: "Grows when you beat the clock to your answer." },
-  { id: "lyricist",  name: "By Heart",      icon: "heartline", tint: "200, 95, 151",  blurb: "Grows when you recall the full lyric line, word for word." },
-  { id: "endurance", name: "The Long Game", icon: "trail",     tint: "78, 143, 99",   blurb: "Grows with the longest unbroken streak you hold in a run." },
-  { id: "range",     name: "Discography",   icon: "records",   tint: "125, 104, 184", blurb: "Grows as your answers reach across more albums." },
+  { id: "resolve",   name: "Instinct",      tint: "61, 79, 134",   blurb: "Grows with every word you match to the right song." },
+  { id: "tempo",     name: "Quick Pen",     tint: "178, 58, 63",   blurb: "Grows when you beat the clock to your answer." },
+  { id: "lyricist",  name: "By Heart",      tint: "200, 95, 151",  blurb: "Grows when you recall the full lyric line, word for word." },
+  { id: "endurance", name: "The Long Game", tint: "78, 143, 99",   blurb: "Grows with the longest unbroken streak you hold in a run." },
+  { id: "range",     name: "Discography",   tint: "125, 104, 184", blurb: "Grows as your answers reach across more albums." },
 ];
 export const SKILL_IDS = SKILLS.map((s) => s.id);
 export const SKILL_BY_ID = Object.fromEntries(SKILLS.map((s) => [s.id, s]));
@@ -2483,27 +2483,6 @@ export const MASTERY_TILE_MARKS = {
   stick:  "#584a8c",   // ink violet: the shelf's own, held clear of the charm vault's plum
   hint:   "#6d3f5c",   // plum, matching the vault it opens
   title:  "#4a6b3f",   // laurel green, for the rank
-};
-
-// The mark each Mastery level wears on the hero's ascent track, and the single source of
-// truth for it. Where a reward already defines the level's identity — the first pen, the three
-// milestones — the level takes its mark FROM that reward rather than naming a second one, so
-// the track node and the tile it points at can never drift apart; the two title levels here
-// take the TIER's mark on the same principle, because a track node marks what the level
-// opens (a whole tier) rather than one title inside it. The set levels (paper, trinkets, button
-// finishes, flourishes) draw their rewards rather than a mark, so they name one here.
-// Levels 2, 3, 9 and 11 are deliberately unmarked.
-export const MASTERY_LEVEL_ICONS = {
-  1:  MASTERY_REWARD_BY_ID["pen-fountain"].icon,
-  4:  "book",
-  5:  "gem",
-  6:  MASTERY_REWARD_BY_ID["hardmode-unlock"].icon,
-  7:  MASTERY_TIER_ICONS[0],
-  8:  "rise",
-  9:  MASTERY_REWARD_BY_ID["sticker-hints"].icon,
-  10: MASTERY_REWARD_BY_ID["reveal-hints"].icon,
-  12: "sparkle",
-  13: MASTERY_TIER_ICONS[3],
 };
 
 // Prestige titles, in tier order. `masteryDefaultTitle` resolves the title a "follows your
@@ -3019,13 +2998,6 @@ export const ACH_ICONS = {
   yinyang: `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="12" cy="12" r="10" stroke-width="1.2"/><path d="M12 2 a10 10 0 0 1 0 20 a5 5 0 0 1 0 -10 a5 5 0 0 0 0 -10 z" fill="currentColor"/><circle cx="12" cy="7" r="1.7" fill="currentColor"/><circle cx="12" cy="17" r="1.7" fill="var(--paper)"/></svg>`,
   // a vinyl record — Taylor's Version (re-recording)
   vinyl:   `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="11.4" cy="12.6" r="9"/><circle cx="11.4" cy="12.6" r="4" fill="var(--paper)" stroke="none"/><circle class="ink-fill" cx="11.4" cy="12.6" r="1.2"/><g stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.6"><circle cx="11.4" cy="12.6" r="6.2"/><circle cx="11.4" cy="12.6" r="7.6"/></g><path class="ink-fill" d="M20.6 2.6 L21.3 4 L22.7 4.7 L21.3 5.4 L20.6 6.8 L19.9 5.4 L18.5 4.7 L19.9 4 Z"/></svg>`,
-  // Mastery skill emblems: a comet (Instinct), metronome (Quick Pen), heart holding lyric
-  // lines (By Heart), a winding trail to a flag (The Long Game), and fanned records (Discography).
-  comet:     `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M19.4 8.4 C13.5 12 7.5 15.5 2.6 21.6 C8.5 17 13.2 12.6 15 8.6 Z"/><path d="M12.4 12.3 L8.4 16.2 M13.9 13.9 L10 17.5" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/><circle class="ink-fill" cx="17.6" cy="6.9" r="3.3"/><circle cx="18.5" cy="6" r="1" fill="var(--paper)"/></svg>`,
-  metronome: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M9.2 5 H14.8 L18 21 H6 Z"/><path d="M7 16.6 H17" stroke="currentColor" stroke-width="1.1"/><rect x="11.7" y="7.8" width="5.2" height="3.2" rx="1" fill="var(--paper)" transform="rotate(14 14.3 9.4)"/><rect class="ink-fill" x="12.3" y="8.3" width="4" height="2.2" rx="0.6" transform="rotate(14 14.3 9.4)"/><path class="ink" d="M12 18 L16 3"/><circle cx="12" cy="18" r="0.9" fill="var(--paper)"/></svg>`,
-  heartline: `<svg viewBox="0 0 24 24"><path class="ink-fill" d="M12 21 C12 21 3.5 14.6 3.5 8.9 C3.5 6.1 5.7 4.3 8 4.3 C9.9 4.3 11.3 5.6 12 7 C12.7 5.6 14.1 4.3 16 4.3 C18.3 4.3 20.5 6.1 20.5 8.9 C20.5 14.6 12 21 12 21 Z"/><path d="M7.7 11 q2.15 -1.5 4.3 0 t4.3 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M9 13.7 q1.5 -1.1 3 0 t3 0" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" opacity="0.85"/></svg>`,
-  trail:     `<svg viewBox="0 0 24 24"><path class="ink" stroke-width="2" d="M4.2 21 C10.4 20 6.6 14.6 11 13.2 C15.2 11.9 12 7.9 16.5 7"/><circle class="ink-fill" cx="4.2" cy="21" r="1.7"/><path class="ink" stroke-width="1.6" d="M16.5 7 V2.5"/><path class="ink-fill" d="M16.5 2.7 L21 4 L16.5 5.6 Z"/></svg>`,
-  records:   `<svg viewBox="0 0 24 24"><circle class="ink-fill" cx="6.3" cy="15.3" r="4.8"/><circle cx="6.3" cy="15.3" r="4.8" fill="none" stroke="currentColor" stroke-width="0.9"/><circle class="ink-fill" cx="17.7" cy="15.3" r="4.8"/><circle cx="17.7" cy="15.3" r="4.8" fill="none" stroke="currentColor" stroke-width="0.9"/><circle class="ink-fill" cx="12" cy="11.3" r="5.7"/><circle cx="12" cy="11.3" r="3.5" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.55"/><circle cx="12" cy="11.3" r="1.4" fill="var(--paper)"/></svg>`,
   // a keyboard with a snake over the keys: the piano was hissing
   piano:   `<svg viewBox="0 0 24 24"><rect class="ink-fill" x="2.4" y="11.2" width="19.2" height="9.8" rx="0.8"/><g class="ink" stroke-width="1"><path d="M5.6 11.2 V21"/><path d="M8.8 11.2 V21"/><path d="M12 11.2 V21"/><path d="M15.2 11.2 V21"/><path d="M18.4 11.2 V21"/></g><g fill="currentColor"><rect x="4.6" y="11.2" width="2" height="5.4"/><rect x="7.8" y="11.2" width="2" height="5.4"/><rect x="14.2" y="11.2" width="2" height="5.4"/><rect x="17.4" y="11.2" width="2" height="5.4"/></g><path class="ink" stroke-width="2" d="M2.8 10 C5.8 6.8 8.8 11.4 11.8 8.4 C14.4 5.8 16.8 8.8 19 6.6"/><ellipse class="ink-fill" stroke-width="1.4" cx="20.1" cy="5.7" rx="1.55" ry="1.1" transform="rotate(-38 20.1 5.7)"/><circle cx="20.5" cy="5.2" r="0.35" fill="currentColor"/><path class="ink" stroke-width="0.9" d="M21.3 4.8 L22.3 4 L22.7 3.2 M22.3 4 L23.2 4.3"/></svg>`,
   // an hourglass — is it over now?
@@ -3365,7 +3337,7 @@ export const ACH_ICONS = {
   snapthree:`<svg viewBox="0 0 24 24"><g class="ink" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.4 L7 14.6 L9.8 8.4"/><path d="M11.4 12.4 L13.4 14.6 L16.2 8.4"/><path d="M17.8 12.4 L19.8 14.6 L22.6 8.4"/></g><g class="ink" stroke-width="1.3" opacity="0.5" stroke-linecap="round"><path d="M0.8 9.4 H3.4"/><path d="M0.4 12.4 H2.8"/><path d="M1.2 15.4 H3.2"/></g><path class="ink" stroke-width="1.2" opacity="0.35" d="M3.4 19.6 H21.6"/></svg>`,
   // perfect and gone before the ink dried: the star with the air it went through drawn in
   // behind it. The streaks stop short of the point — touching it turns the whole thing into
-  // a shooting star, which is `comet`'s job
+  // a shooting star, which is a different mark
   blurstar:`<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" d="M14 3 L16.5 8.1 L22.1 8.9 L18.05 12.85 L19 18.4 L14 15.8 L9 18.4 L9.95 12.85 L5.9 8.9 L11.5 8.1 Z"/><g class="ink" stroke-width="1.3" opacity="0.6" stroke-linecap="round"><path d="M0.8 7.6 H4.2"/><path d="M0.4 11.6 H3.4"/><path d="M1.4 15.6 H4.2"/></g></svg>`,
   // a fuel gauge with the needle still above half: the whole way home without dropping below
   halfdial:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M3.2 16.6 C3.2 11.4 7.2 7.2 12 7.2 C16.8 7.2 20.8 11.4 20.8 16.6 Z"/><g class="ink" stroke-width="1.1"><path d="M5 16.1 L6.2 15.5"/><path d="M12 8.9 V10.2"/><path d="M19 16.1 L17.8 15.5"/><path d="M7.1 11.3 L7.9 12.1" opacity="0.55"/><path d="M16.9 11.3 L16.1 12.1" opacity="0.55"/></g><path class="ink" stroke-width="1.7" d="M12 16 L16.2 11.4"/><circle cx="12" cy="16" r="1.25" fill="currentColor"/><g class="ink" stroke-width="1.15"><path d="M4.2 18.6 V21.2 H5.8 M4.2 18.6 H5.8 M4.2 19.9 H5.4"/><path d="M18.6 18.6 V21.2 M18.6 18.6 H20.2 M18.6 19.9 H19.8"/></g><path class="ink" stroke-width="1" opacity="0.6" d="M10.6 19.6 V21.6 H13 V19.6 Z M13 20.2 L13.8 20.6 V21.4"/></svg>`,
@@ -3766,8 +3738,9 @@ export const ACH_ICONS = {
    achievements — so a prestige mark can never be redrawn without collateral damage while
    the two share a table. The entries below either ALIAS an ACH_ICONS glyph (where the
    achievement drawing genuinely means the same thing) or are drawn here for Mastery alone.
-   Read through masteryMarkup() in app.js; keys are named by MASTERY_LEVEL_ICONS,
-   MASTERY_TIER_ICONS, the `icon` field on a mastery reward, and SKILLS[].icon.
+   Read through masteryMarkup() in app.js; keys are named by MASTERY_TIER_ICONS and the
+   `icon` field on a mastery reward. The five skills are not in here: their marks are the
+   linocut blocks in js/skillmarks.js.
 
    DRAWING NOTES for anything added to MASTERY_OWN_ICONS. A mark renders in two different
    ways depending on the surface, and has to work in both: on the reward tiles and the tier
@@ -3836,12 +3809,12 @@ const MASTERY_OWN_ICONS = {
 export const MASTERY_ICONS = Object.assign(Object.fromEntries([
   // the quill (level 2) — the one pen of the three that ACH_ICONS already draws right
   "feather", "sparkle", "key",
-  // level marks with no reward of their own: paper, charms, button finishes, flourishes
-  "nib", "book", "gem", "rise",
+  // marks worn by prestige titles alongside the ones below
+  "nib", "book", "gem",
   // the marks worn by prestige titles in the stepper (the TIERS have their own, drawn above)
   "drop", "tower", "note", "quote", "brain", "crown", "star",
-  // skill emblems and the shared padlock
-  "comet", "metronome", "heartline", "trail", "records", "lock",
+  // the shared padlock
+  "lock",
 ].map((k) => [k, ACH_ICONS[k]])), MASTERY_OWN_ICONS);
 
 /* ---------- Challenge wax seals ----------

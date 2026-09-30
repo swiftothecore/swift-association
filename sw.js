@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v266";
+const CACHE = "stta-v267";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -89,6 +89,10 @@ const ASSETS = [
   // The four rule marks (pure; see js/rulemarks.js). app.js imports it at load, so an
   // uncached copy breaks a cold offline start rather than only the marks.
   "js/rulemarks.js",
+  // The Mastery passport and stamp cards, and the five linocut skill marks (pure; app.js
+  // imports both at load).
+  "js/passport.js",
+  "js/skillmarks.js",
   // The randomiser's weighting (pure; see js/random.js). app.js imports it at load, so an
   // uncached copy would break a cold offline start rather than just the button.
   "js/random.js",

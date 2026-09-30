@@ -11729,9 +11729,8 @@
     display: grid; place-items: center; border-radius: 50%;
     background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink);
   }
-  .toast-skill .ts-medal .charm { width: 26px; height: 26px; }
-  /* the skill glyph lives in its own stamped ink medallion — no highlighter swipe */
-  .toast-skill .ts-medal .charm::before { display: none; }
+  .toast-skill .ts-medal { --skm-cut: var(--paper); }
+  .toast-skill .ts-medal .skm { width: 28px; height: 28px; }
   .toast-skill .ts-lv {
     position: absolute; right: -5px; bottom: -5px; box-sizing: border-box;
     min-width: 19px; height: 19px; padding: 0 4px; border-radius: 10px;
@@ -13610,19 +13609,18 @@
   :root[data-theme="dark"] .mastery-page { --m-accent: 201, 112, 155; --m-accent-deep: 240, 156, 196; }
   /* The five skill inks at night. config.js says outright that each tint is "drawn from the era
      palette", so each one here is simply that era's DARK accent — midnight, red, lover, debut,
-     lavender — and the maxed state takes the dark gold. Nothing is hand-picked, which is the
-     point: a skill row cannot drift away from the era colour it is supposed to be written in.
-     Level text was measuring 1.95:1 against the paper before this.
+     lavender. Nothing is hand-picked, which is the point: a stamp card cannot drift away from
+     the era colour it is supposed to be printed in. Level text was measuring 1.95:1 against the
+     paper before this.
 
-     As triplets, not colours, because the row derives a 0.14 wash and a 0.42 rule from the same
-     value and all three have to move together. */
+     As triplets, not colours, because config.js hands the day column over the same way and the
+     page wraps both in rgb() at the one place it reads them. */
   :root[data-theme="dark"] {
     --skill-resolve:   131, 152, 218;   /* dark midnight */
     --skill-tempo:     235, 106, 102;   /* dark red */
     --skill-lyricist:  241, 148, 193;   /* dark lover */
     --skill-endurance: 116, 196, 139;   /* dark debut */
     --skill-range:     188, 166, 240;   /* dark lavender */
-    --skill-gold:      230, 173,  61;   /* dark gold, for a mastered skill */
   }
 
   /* High contrast on the night page needs its own column for both palettes, for the reason the
@@ -13682,148 +13680,149 @@
     --skill-lyricist:  255, 170, 211;
     --skill-endurance: 142, 224, 166;
     --skill-range:     211, 188, 255;
-    --skill-gold:      255, 201,  74;
   }
 
-  /* Mastery hero — a notebook card, three states (see masteryHead* in app.js). */
+  /* ===== Mastery passport (js/passport.js) =====
+     The hero is a passport page: one rubber stamp per level reached, pressed in the ink of the
+     reward tile it opens (MASTERY_TILE_MARKS, handed over inline as --mpp-ink) and dated the day
+     it was earned. The stamps are pressed with #stampInk0-2 (index.html). On the light page they
+     print with multiply, the way ink sits on paper; on the night page multiply would drown them,
+     so they print flat and their hue is lifted toward the paper-white ink instead. */
   .mastery-head { margin: 4px 0 6px; }
-  .mh-card { position: relative; border-radius: 14px; padding: 20px 24px 18px 46px;
-    background-color: var(--paper); background-image: linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32));
-    border: 1px solid rgba(43, 39, 34, 0.16); box-shadow: 0 1px 2px rgba(43, 39, 34, 0.05); }
-  .mh-rule { position: absolute; top: 14px; bottom: 14px; left: 34px; width: 1.5px; background: rgba(var(--m-red), 0.55); }
-  .mh-row { display: flex; align-items: center; gap: 16px; }
-  .mh-body { flex: 1; min-width: 0; }
-  .mh-kicker { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); }
-  .mh-title { font-family: var(--hand); font-weight: 700; font-size: calc(34px + var(--text-size-adjust)); line-height: 0.95; color: var(--ink); margin-top: 1px; }
-  .mh-next { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: rgba(var(--m-goldink), 1); margin-top: 5px; }
-  .mh-sub { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.04em; color: var(--ink-soft); margin-top: 10px; }
-  .mh-sub b { color: var(--ink); font-weight: 700; }
-  /* The curve's rule, said aloud. Quieter than the count it trails, so the ink figure
-     still reads first and the track above it stays uncrowded. */
-  .mh-law { color: var(--ink-faint, var(--ink-soft)); opacity: 0.75; }
-
-  /* Wax-seal medallion */
-  .mh-seal { width: 62px; height: 62px; border-radius: 50%; flex: none; position: relative;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .mh-seal.locked { background: rgba(var(--m-gold), 0.12); border: 1.5px dashed rgba(var(--m-gold), 0.85); }
-  .mh-seal.locked::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; border: 1px solid rgba(var(--m-gold), 0.3); }
-  .mh-seal.climb, .mh-seal.complete { background: rgba(var(--m-gold), 0.92); border: 2px solid rgba(var(--m-goldink), 0.9); }
-  .mh-seal.climb::before, .mh-seal.complete::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 1px dashed rgba(63, 44, 16, 0.4); }
-  .mh-seal-num { font-family: var(--hand); font-weight: 700; font-size: calc(33px + var(--text-size-adjust)); line-height: 1; color: #3f2c10;
-    transform: translate(-4px, -2px); }
-  .mh-seal.complete .mh-seal-emblem { transform: translateY(2px); }
-  .mh-seal-emblem .charm { width: 26px; height: 26px; }
-  .mh-seal .charm { display: inline-flex; }
-  .mh-seal .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .mh-seal.locked .ink { fill: none; stroke: rgba(var(--m-goldink), 0.95); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .mh-seal.locked .ink-fill { fill: rgba(var(--m-gold), 0.28); stroke: rgba(var(--m-goldink), 0.95); stroke-width: 1.2; }
-  .mh-seal.climb .ink, .mh-seal.complete .ink { fill: none; stroke: #3f2c10; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .mh-seal.climb .ink-fill, .mh-seal.complete .ink-fill { fill: #3f2c10; stroke: #3f2c10; stroke-width: 1.2; }
-
-  /* Flat bar (locked + complete states) */
-  .mh-bar { position: relative; height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); margin: 13px 0 9px; }
-  .mh-bar i { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.72); }
-  .mh-gate { position: absolute; right: -1px; top: -4px; bottom: -4px; width: 2px; border-radius: 1px; background: rgba(var(--m-goldink), 0.95); }
-
-  /* ---- The finale: Mastery 13 ----
-     At the cap the bar stops being a meter and becomes a strip of gold leaf pressed into
-     the page. It is the last thing in the game, seen once, so it is allowed some ceremony —
-     but the ceremony is foil and paper and ink, the notebook's own materials, never glow.
-     What each layer answers to is decided in masteryHeadComplete (app.js): the flecks are
-     printed and always drawn, .mh-foil-sheen is only emitted when motion is allowed, and
-     the seal's .glint also wants reduced flashing off. */
-  .mh-card.mh-complete {
-    /* a faint scatter of leaf caught in the card's own paper */
+  .mastery-page { --mpp-card: #fbf8ef; --mpp-blend: multiply; --mpp-gold: #a8780c; }
+  :root[data-theme="dark"] .mastery-page { --mpp-card: #332c22; --mpp-blend: normal; --mpp-gold: #e8b64c; }
+  .mpp { position: relative; border: 2px solid var(--ink); border-radius: 12px; padding: 16px 18px 12px;
+    background-color: var(--mpp-card);
+    /* the passport's security print: two faint fans of rings from opposite corners */
     background-image:
-      radial-gradient(circle at 24% 36%, rgba(199, 149, 31, 0.20) 0 1px, transparent 1.4px),
-      radial-gradient(circle at 71% 68%, rgba(199, 149, 31, 0.15) 0 0.9px, transparent 1.3px),
-      radial-gradient(circle at 88% 18%, rgba(150, 105, 20, 0.13) 0 0.8px, transparent 1.2px),
-      linear-gradient(rgba(255, 253, 246, 0.4), rgba(255, 253, 246, 0.4));
-    background-size: 173px 121px, 227px 149px, 139px 97px, 100% 100%;
-  }
-  .mh-complete .mh-bar {
-    height: 14px; border-radius: 7px; margin: 15px 0 11px;
-    background: rgba(var(--m-goldink), 0.14);
-    box-shadow: inset 0 0 0 1px rgba(var(--m-goldink), 0.4), 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
-  .mh-complete .mh-bar i {
-    overflow: hidden; border-radius: 7px; background-color: #c8951f;
-    /* leaf grain over beaten gold: the flecks tile on co-prime widths so no repeat is
-       visible across the bar, and the base gradient is the fold-and-shadow of real foil. */
+      repeating-radial-gradient(circle at 0 100%, transparent 0 11px, color-mix(in srgb, var(--ink) 2.6%, transparent) 11px 12px),
+      repeating-radial-gradient(circle at 100% 0, transparent 0 11px, color-mix(in srgb, var(--ink) 2%, transparent) 11px 12px);
+    box-shadow: inset 0 0 0 4px var(--mpp-card), inset 0 0 0 5px color-mix(in srgb, var(--ink) 35%, transparent); }
+  .mpp-kick { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-soft); }
+  .mpp-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; border-bottom: 1.5px solid var(--ink); padding-bottom: 10px; }
+  .mpp-lv { font-family: var(--hand); font-weight: 700; font-size: calc(40px + var(--text-size-adjust)); line-height: 1; color: var(--ink); margin-top: 2px; }
+  .mpp-lv small { font-family: var(--type); font-weight: 400; font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); margin-left: 6px; }
+  .mpp-ink { width: 232px; flex: none; }
+  .mpp-ink p { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); margin: 5px 0 0; }
+  .mpp-ink p b { color: var(--ink); }
+  .mpp-bar { position: relative; height: 12px; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; background: var(--paper); }
+  .mpp-bar i { position: relative; display: block; height: 100%; overflow: hidden; border-right: 1.5px solid var(--ink);
+    background: repeating-linear-gradient(-50deg, var(--ink) 0 2.2px, transparent 2.2px 5px); }
+  /* ---- The finale: Mastery 13 ----
+     At the cap the bar stops being a meter and becomes a strip of gold leaf laid into the
+     passport. The leaf's grain is printed and always drawn; .mpp-sheen, one slow pass of light
+     down its length, is motion, so passportHTML only emits it when motionReduced() is false. */
+  .mpp-bar.foil { border-color: rgba(150, 105, 20, 0.9); background: rgba(150, 105, 20, 0.14); }
+  .mpp-bar.foil i { border-right: 0; background-color: #c8951f;
+    /* leaf grain over beaten gold: the flecks tile on co-prime widths so no repeat is visible
+       across the bar, and the base gradient is the fold-and-shadow of real foil. */
     background-image:
       radial-gradient(circle at 18% 30%, rgba(255, 248, 222, 0.95) 0 0.7px, transparent 1px),
       radial-gradient(circle at 62% 72%, rgba(255, 248, 222, 0.75) 0 0.6px, transparent 0.9px),
       radial-gradient(circle at 85% 24%, rgba(110, 74, 10, 0.45) 0 0.6px, transparent 0.9px),
       radial-gradient(circle at 41% 80%, rgba(110, 74, 10, 0.35) 0 0.5px, transparent 0.8px),
       linear-gradient(100deg, #b7841c 0%, #e6c471 16%, #c8951f 32%, #f4e0a6 50%, #bf891b 66%, #e3c072 84%, #b7841c 100%);
-    background-size: 37px 100%, 53px 100%, 29px 100%, 61px 100%, 100% 100%;
-  }
-  /* The sheen: one slow pass of light down the length of the foil, then a long rest. */
-  .mh-foil-sheen {
-    position: absolute; inset: 0; pointer-events: none;
+    background-size: 37px 100%, 53px 100%, 29px 100%, 61px 100%, 100% 100%; }
+  .mpp-sheen { position: absolute; inset: 0; pointer-events: none;
     background: linear-gradient(100deg, transparent 38%, rgba(255, 252, 238, 0.75) 50%, transparent 62%);
-    transform: translateX(-115%);
-    animation: mh-foil-travel 6s ease-in-out infinite;
-  }
-  @keyframes mh-foil-travel {
+    transform: translateX(-115%); animation: mpp-foil-travel 6s ease-in-out infinite; }
+  @keyframes mpp-foil-travel {
     0%, 22% { transform: translateX(-115%); }
     66%, 100% { transform: translateX(115%); }
   }
-  /* The seal catches the same light a beat before it reaches the bar, so one pass reads as
-     one light crossing the whole card rather than as two separate effects. */
-  .mh-seal.glint::after {
-    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
-    background: linear-gradient(112deg, transparent 40%, rgba(255, 253, 242, 0.8) 50%, transparent 60%);
-    background-size: 320% 100%; background-position: 160% 0;
-    animation: mh-seal-glint 6s ease-in-out infinite;
-  }
-  @keyframes mh-seal-glint {
-    0%, 10% { background-position: 160% 0; }
-    40%, 100% { background-position: -60% 0; }
-  }
+  .mpp-grid { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+  .mpp-slot { position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 2px; min-height: 102px; }
+  .mpp-slot.cap { grid-column: span 2; }
+  .mpp-no { position: absolute; top: 1px; left: 1px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.7; }
+  .mpp-stamp { width: 78px; height: 78px; display: block; overflow: visible; mix-blend-mode: var(--mpp-blend); }
+  .mpp-slot.cap .mpp-stamp { width: 156px; }
+  .mpp-stamp text { font-family: var(--type); font-weight: 700; }
+  .mpp-inked { color: var(--mpp-ink); }
+  :root[data-theme="dark"] .mpp-inked { color: color-mix(in srgb, var(--mpp-ink) 58%, #ece5d6); }
+  .mpp-fr { fill: none; stroke: currentColor; }
+  .mpp-tx { fill: currentColor; stroke: none; }
+  .mpp-gl .ink-fill { fill: currentColor; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
+  .mpp-gl .ink { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  /* the bento's #reward-* drawings carry no paint of their own, so it reaches them by inheritance */
+  .mpp-rw { fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+  .mpp-ghost { color: var(--ink-soft); }
+  .mpp-ghost-fr { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-dasharray: 2.5 3.2; opacity: 0.55; }
+  .mpp-stamp .mpp-ghost-n { font-family: var(--hand); font-weight: 700; fill: currentColor; }
+  .mpp-owed-bg { fill: none; stroke: var(--red-pen); stroke-width: 1.2; }
+  .mpp-owed { fill: var(--red-pen); }
+  .mpp-ct { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.25; text-align: center; color: var(--ink); margin-top: 1px; max-width: 100%; }
+  .mpp-slot.todo .mpp-ct, .mpp-slot.locked .mpp-ct { color: var(--ink-soft); }
+  .mpp-slot.now .mpp-ct { color: var(--red-pen); font-weight: 700; }
+  .mpp-foot { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.5; color: var(--ink-soft);
+    border-top: 1px dashed color-mix(in srgb, var(--ink) 25%, transparent); margin-top: 6px; padding-top: 7px; }
+  .mpp-void { position: absolute; left: 50%; top: 50%; width: 330px; transform: translate(-50%, -50%) rotate(-7deg); color: var(--red-pen);
+    mix-blend-mode: var(--mpp-blend); pointer-events: none; }
+  .mpp-void text { font-family: var(--type); font-weight: 700; }
 
-  /* Ascent track (climbing state) */
-  .mh-track { position: relative; margin: 22px 2px 6px; }
-  .mh-line { position: absolute; top: 26px; left: 8px; right: 8px; height: 3px; border-radius: 2px; background: rgba(43, 39, 34, 0.14); }
-  .mh-fill { position: absolute; top: 26px; left: 8px; height: 3px; border-radius: 2px; background: rgba(var(--m-gold), 0.9); }
-  .mh-nodes { position: relative; display: flex; justify-content: space-between; }
-  .mh-nd { display: flex; flex-direction: column; align-items: center; width: 16px; }
-  .mh-ic { height: 20px; display: flex; align-items: center; justify-content: center; }
-  .mh-ic .charm { display: inline-flex; width: 15px; height: 15px; opacity: 0.85; }
-  .mh-ic .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .mh-nd .mh-ic .ink { fill: none; stroke: var(--ink-soft); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .mh-nd .mh-ic .ink-fill { fill: rgba(43, 39, 34, 0.16); stroke: var(--ink-soft); stroke-width: 1.2; }
-  .mh-nd.reached .mh-ic .charm { opacity: 1; }
-  .mh-nd.reached .mh-ic .ink { stroke: rgba(var(--m-goldink), 0.95); }
-  .mh-nd.reached .mh-ic .ink-fill { fill: rgba(var(--m-gold), 0.85); stroke: rgba(var(--m-goldink), 0.95); }
-  .mh-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--paper); border: 2px solid rgba(43, 39, 34, 0.26); margin-top: 1px; }
-  .mh-nd.reached .mh-dot { background: rgba(var(--m-gold), 0.92); border-color: rgba(var(--m-goldink), 0.9); }
-  .mh-nd.current .mh-dot { background: rgba(var(--m-accent), 0.95); border-color: rgba(var(--m-accent), 0.95); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.18); }
-  .mh-lv { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 6px; }
-  .mh-nd.reached .mh-lv { color: var(--ink); }
+  /* ---- The five skills: one loyalty stamp card each, printed in the skill's own ink (--t,
+     handed over inline so the night column in the --skill-* block can reach it). The notches
+     either side are a mask, so they are real holes in the card. A full card is stamped MASTERED
+     across the whole of it, and what is under the stamp steps back: nothing there still needs
+     reading, and at full strength it fought the stamp. ---- */
+  .mastery-skills { margin-top: 30px; }
+  .msc-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .msc-note { font-family: var(--hand); font-weight: 600; font-size: calc(19px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft); }
+  .msc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .msc { --card: color-mix(in srgb, var(--t) 11%, var(--paper)); --skm-ink: var(--t); --skm-cut: var(--card);
+    position: relative; padding: 11px 14px 10px; border-radius: 10px; color: var(--ink); background: var(--card);
+    border: 1.5px solid color-mix(in srgb, var(--t) 48%, var(--paper));
+    -webkit-mask: radial-gradient(circle 7px at left 50%, transparent 6.5px, #000 7px) left / 51% 100% no-repeat,
+                  radial-gradient(circle 7px at right 50%, transparent 6.5px, #000 7px) right / 51% 100% no-repeat;
+            mask: radial-gradient(circle 7px at left 50%, transparent 6.5px, #000 7px) left / 51% 100% no-repeat,
+                  radial-gradient(circle 7px at right 50%, transparent 6.5px, #000 7px) right / 51% 100% no-repeat; }
+  .msc-top { display: flex; align-items: center; gap: 8px; }
+  .msc-mark { flex: none; width: 34px; height: 34px; margin: -3px 0 -3px -2px; }
+  .msc-mark .skm { width: 100%; height: 100%; }
+  .msc-name { font-family: var(--hand); font-weight: 700; font-size: calc(23px + var(--text-size-adjust)); line-height: 1; color: var(--t); }
+  .msc-lv { margin-left: auto; font-family: var(--type); font-weight: 700; font-size: calc(16px + var(--text-size-adjust)); }
+  .msc-lv small { font-size: calc(11px + var(--text-size-adjust)); font-weight: 400; color: var(--ink-soft); }
+  .msc-slots { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; margin: 10px 0 8px; }
+  .msc-s { position: relative; aspect-ratio: 1; width: 100%; max-width: 24px; justify-self: center; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: color-mix(in srgb, var(--t) 75%, var(--paper)); }
+  .msc-s.off, .msc-s.part { border: 1.5px dotted color-mix(in srgb, var(--t) 55%, var(--paper)); }
+  .msc-s.on { background: var(--t); color: var(--paper); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust));
+    filter: url(#stampInk0); transform: rotate(var(--r, 0deg)); }
+  .msc-s.on:nth-child(3n+1) { filter: url(#stampInk1); }
+  .msc-s.on:nth-child(3n+2) { filter: url(#stampInk2); }
+  .msc-s.part { color: var(--t); }
+  .msc-s.part svg { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); overflow: visible; transform: rotate(-90deg); }
+  .msc-s.part b { font-weight: 400; color: color-mix(in srgb, var(--t) 75%, var(--paper)); }
+  .msc-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .msc-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
+  .msc-next { font-family: var(--type); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); white-space: nowrap; color: var(--ink); }
+  .msc.maxed .msc-slots, .msc.maxed .msc-foot { opacity: 0.32; }
+  .msc.maxed .msc-lv { opacity: 0.45; }
+  .msc-mastered { position: absolute; left: 50%; top: 58%; width: 94%; transform: translate(-50%, -50%) rotate(var(--r));
+    color: var(--mpp-gold); mix-blend-mode: var(--mpp-blend); pointer-events: none; overflow: visible; }
+  .msc-mastered text, .msc-post text { font-family: var(--type); font-weight: 700; }
+  /* the sixth cell: a postmark, whose waves are the five cards in miniature */
+  .msc-post { display: flex; align-items: center; justify-content: center; padding: 10px 10px 10px 14px; }
+  .msc-post svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .msc-post-ring { color: var(--ink); }
+  .msc-post .msc-post-n { font-family: var(--hand); }
+
+  /* ---- The skill marks (js/skillmarks.js): a travel drawing carved out of a linocut block.
+     Each surface says what the block is printed in (--skm-ink) and what shows through the
+     carving (--skm-cut); inside the block the drawing's own roles swap, so its cuts (.h/.hs)
+     take the block's ink. Stroke weights live on the drawing, never here. ---- */
+  .skm { display: block; overflow: visible; }
+  .skm-block { fill: var(--skm-ink, var(--ink)); }
+  .skm-gouge { fill: none; stroke: var(--skm-cut, var(--paper)); stroke-width: 1.1; stroke-linecap: round; }
+  .skm-cut { color: var(--skm-cut, var(--paper)); --hole: var(--skm-ink, var(--ink)); }
+  .skm-cut .f { fill: currentColor; }
+  .skm-cut .st { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .skm-cut .h { fill: var(--hole); }
+  .skm-cut .hs { fill: none; stroke: var(--hole); stroke-linecap: round; }
 
   .ms-bar { height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin: 12px auto 0; max-width: 320px; }
   .ms-bar i { display: block; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.7); }
   .ms-bar.maxed i { background: rgba(199, 149, 31, 0.85); }
-  .mastery-section-label { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); margin: 26px 0 8px; }
-  /* Each skill carries its own ink via --c / --cs (soft) / --cr (ring), set inline per row. */
-  .skill-row { display: flex; align-items: center; gap: 16px; padding: 13px 4px; border-bottom: 1px solid rgba(43, 39, 34, 0.08); }
-  .skill-row:last-of-type { border-bottom: none; }
-  .skill-emblem { width: 46px; height: 46px; flex: none; border-radius: 50%; background: var(--cs); border: 1px dashed var(--cr); display: flex; align-items: center; justify-content: center; }
-  .skill-emblem svg { width: 27px; height: 27px; overflow: visible; }
-  .skill-emblem .ink-fill { fill: var(--c); stroke: var(--c); stroke-width: 1; stroke-linejoin: round; stroke-linecap: round; }
-  .skill-emblem .ink { fill: none; stroke: var(--c); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-  .skill-main { flex: 1; min-width: 0; }
-  .skill-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  .skill-name { font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); color: var(--ink); }
-  .skill-lvl { font-family: var(--type); font-weight: 700; font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.06em; color: var(--c); white-space: nowrap; }
-  .skill-bar { display: flex; gap: 3px; margin: 8px 0 6px; }
-  .skill-bar span { flex: 1; height: 9px; border-radius: 2px; background: rgba(43, 39, 34, 0.08); }
-  .skill-bar span.on { background: var(--c); }
-  .skill-bar span.part { background: linear-gradient(90deg, var(--c) var(--p), rgba(43, 39, 34, 0.08) var(--p)); }
-  .skill-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  .skill-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.4; color: var(--ink-soft); }
-  .skill-next { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: var(--ink-soft); opacity: 0.85; white-space: nowrap; }
   /* ---- Reward bento: cosmetics grouped into weight-sized tiles (pens, trinkets, paper, the
      super-hard milestone) plus the prestige-titles tile. Replaces the old flat reward list.
      Uses the mastery rose (--m-accent) for state; trinkets keep their era-gold (--bead). ---- */
@@ -14293,11 +14292,9 @@
   .sr-lab { display: block; margin: 0 0 9px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.6px;
     text-transform: uppercase; color: var(--ink-soft); }
   .sr-it { display: inline-flex; align-items: center; gap: 5px; line-height: 1.2; }
-  .sr-it .sr-ic { width: 18px; height: 18px; flex: none; color: rgba(var(--m-accent), 0.85); }
-  .sr-it .sr-ic .charm { width: 100%; height: 100%; display: block; }
-  .sr-it .sr-ic svg { width: 100%; height: 100%; overflow: visible; }
-  .sr-it .sr-ic .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .sr-it .sr-ic .ink-fill { fill: rgba(var(--m-accent), 0.75); stroke: var(--ink); stroke-width: 1.2; }
+  /* 20px, two over the line of text: the carving inside a linocut block needs the room */
+  .sr-it .sr-ic { width: 20px; height: 20px; flex: none; --skm-cut: var(--paper); }
+  .sr-it .sr-ic .skm { width: 100%; height: 100%; }
   .sr-nm { font-family: var(--hand); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); color: var(--ink); }
   .sr-xp { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); }
   .sr-it.up .sr-xp { color: rgba(var(--m-accent), 0.95); }
@@ -14448,20 +14445,6 @@
     .stamp--focus { width: 34px; }
     .stamp--ruthless { width: 33px; margin-left: -2px; }
     .stamp--guest { width: 43px; margin-left: -3px; }
-
-    /* Mastery hero — tighten the card and the 13-pip ascent track for narrow screens. */
-    .mh-card { padding: 18px 16px 16px 30px; }
-    .mh-rule { left: 20px; }
-    .mh-row { gap: 12px; }
-    .mh-seal { width: 54px; height: 54px; }
-    .mh-title { font-size: calc(30px + var(--text-size-adjust)); }
-    .mh-track { margin-top: 20px; }
-    .mh-line, .mh-fill { top: 22px; }
-    .mh-nd { width: 14px; }
-    .mh-ic { height: 16px; }
-    .mh-ic .charm { width: 12px; height: 12px; }
-    .mh-dot { width: 10px; height: 10px; }
-    .mh-lv { font-size: calc(8px + var(--text-size-adjust)); margin-top: 5px; }
   }
 
   /* Daily-streak status line under the streak numbers on the Stats page. */
@@ -16075,14 +16058,17 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .rb-rows--cta .rb-row-ic:not(.rb-lock) { flex-basis: 100%; }
   .rb-rows--cta .rb-row-tag { width: 100%; text-align: center; }
   .cta-prev .play-cta { --cta-k: 0.57; }
-  .mh-card { padding: 16px 14px 16px 26px; }
-  .mh-rule { left: 14px; }
-  .mh-row { gap: 10px; }
-  .mh-seal { width: 48px; height: 48px; }
-  .mh-title { font-size: calc(29px + var(--text-size-adjust)); }
-  .mh-ic .charm { width: 12px; height: 12px; }
-  .skill-top, .skill-foot { flex-wrap: wrap; gap: 3px 8px; }
-  .skill-row { gap: 10px; }
+  /* The passport folds to four stamps a row with the capstone on its own, and the stamp cards
+     to one column. */
+  .mpp { padding: 14px 12px 10px; }
+  .mpp-head { flex-direction: column; align-items: stretch; }
+  .mpp-ink { width: auto; }
+  .mpp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .mpp-slot.cap { grid-column: span 4; }
+  .mpp-stamp { width: 68px; height: 68px; }
+  .mpp-slot.cap .mpp-stamp { width: 150px; height: 75px; }
+  .mpp-void { width: 260px; }
+  .msc-grid { grid-template-columns: 1fr; }
   .ts-row { gap: 6px; }
   .ts-title { flex-wrap: wrap; font-size: calc(25px + var(--text-size-adjust)); }
   .ts-dots, .ts-legend { flex-wrap: wrap; }

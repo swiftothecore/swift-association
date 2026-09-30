@@ -68,7 +68,7 @@ import {
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL, SKILL_EVEN_LEVEL,
   CTA_LABELS, PRIDE_BUTTONS, PRIDE_BUTTON_BY_ID, prideStripes,
-  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_LEVEL_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
+  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
   STICKER_TOTAL, COVER_STICKER_LIMIT,
@@ -113,6 +113,8 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
+import { passportHTML, stampCardsHTML } from "./passport.js";
+import { skillMarkHTML } from "./skillmarks.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
          ruleTermsFrom, ruleShapeFor } from "./rulemarks.js";
 import {
@@ -3578,7 +3580,7 @@ function renderSkillsRecap() {
   const items = gained.map((sk) => {
     const up = levelTo[sk.id];
     return `<span class="sr-it${up ? " up" : ""}">` +
-      `<span class="sr-ic">${masteryMarkup(sk.icon)}</span>` +
+      `<span class="sr-ic" style="--skm-ink:rgb(var(--skill-${sk.id}, ${sk.tint}))">${skillMarkHTML(sk.id)}</span>` +
       `<span class="sr-nm">${escapeHtml(sk.name)}</span>` +
       `<span class="sr-xp">+${delta[sk.id]}${up ? ` · lv ${up}` : ""}</span></span>`;
   }).join("");
@@ -6082,47 +6084,36 @@ function renderMasteryPage() {
   const total = totalSkillLevels(m);
   const mLevel = masteryLevelFromXp(m.masteryXp);
 
-  // Headline — a notebook-card hero with three states: locked (the wax not yet
-  // pressed), climbing (the ascent track), and complete (sealed at the cap).
-  let head;
-  if (unlocked && mLevel >= MASTERY_MAX_LEVEL) head = masteryHeadComplete(mLevel);
-  else if (unlocked) head = masteryHeadClimb(m, mLevel);
-  else head = masteryHeadLocked(total);
+  // Headline — the passport (js/passport.js): one rubber stamp per level reached, each dated
+  // the day it was earned, the next one pencilled in with the ink still owed. At the cap its
+  // bar turns to gold leaf, and the leaf's travelling sheen is motion, so it waits on
+  // motionReduced() like every other moving thing.
+  const cur = masteryXpForLevel(mLevel), nxt = masteryXpForLevel(Math.min(MASTERY_MAX_LEVEL, mLevel + 1));
+  const complete = unlocked && mLevel >= MASTERY_MAX_LEVEL;
+  const inCur = complete ? 0 : Math.max(0, m.masteryXp - cur), span = Math.max(1, nxt - cur);
+  const head = passportHTML({
+    issued: unlocked, total, gate: MASTERY_GATE, level: mLevel, complete, inCur, span,
+    frac: complete ? 1 : Math.min(1, inCur / span), step: MASTERY_LEVEL_STEP,
+    sheen: complete && !motionReduced(), dates: masteryStampDates(m), tips: masteryStampTips(),
+  });
 
-  // Skills — each a full-width row of SKILL_MAX_LEVEL "pips" (one per level) inked in the
-  // skill's own tint, with the current level's pip part-filled to progress toward the next.
-  // A maxed skill overrides its tint to gold.
-  const GOLD_TINT = "199, 149, 31";
-  const skills = SKILLS.map((sk) => {
+  // Skills — one stamp card each, printed in the skill's own ink. The ink is handed over as a
+  // custom property with the config.js triplet as its FALLBACK, not as the triplet itself, for
+  // the same reason modeAccent does it: an inline custom property cannot be overridden by any
+  // stylesheet rule, and the night column lives in the --skill-* block in styles.css. A maxed
+  // skill keeps its own ink; the MASTERED stamp across the card is what says it is done.
+  const skillData = SKILLS.map((sk) => {
     const xp = m.skills[sk.id] || 0;
     const lvl = skillLevelFromXp(xp);
     const maxed = lvl >= SKILL_MAX_LEVEL;
-    const cur = skillXpForLevel(lvl), next = skillXpForLevel(lvl + 1);
-    const frac = maxed ? 1 : Math.max(0, Math.min(1, (xp - cur) / (next - cur)));
-    // The tint is handed over as a custom property with the config.js triplet as its FALLBACK,
-    // not as the triplet itself, for the same reason modeAccent does it: this is written inline
-    // on the row, and an inline custom property cannot be overridden by any stylesheet rule.
-    // The night column lives in the --skill-* block in styles.css. One triplet drives all three
-    // derived values below, so the wash and the rule follow the ink instead of being left on
-    // the light palette when the ink moves.
-    const tintKey = maxed ? "gold" : sk.id;
-    const tint = `var(--skill-${tintKey}, ${maxed ? GOLD_TINT : sk.tint})`;
-    let pips = "";
-    for (let i = 1; i <= SKILL_MAX_LEVEL; i++) {
-      if (i <= lvl) pips += `<span class="on"></span>`;
-      else if (i === lvl + 1 && !maxed && frac > 0) pips += `<span class="part" style="--p:${(frac * 100).toFixed(1)}%"></span>`;
-      else pips += `<span></span>`;
-    }
-    const lvlText = (maxed ? "★ " : "") + "Level " + lvl;
-    const nextText = maxed ? "mastered" : `${xp - cur} ink to ${lvl + 1}`;
-    return `<div class="skill-row" style="--ct:${tint};--c:rgb(var(--ct));--cs:rgba(var(--ct),0.14);--cr:rgba(var(--ct),0.42)">` +
-      `<span class="skill-emblem">${MASTERY_ICONS[sk.icon] || ""}</span>` +
-      `<div class="skill-main">` +
-        `<div class="skill-top"><span class="skill-name">${escapeHtml(sk.name)}</span><span class="skill-lvl">${lvlText}</span></div>` +
-        `<div class="skill-bar">${pips}</div>` +
-        `<div class="skill-foot"><span class="skill-blurb">${escapeHtml(sk.blurb)}</span><span class="skill-next">${nextText}</span></div>` +
-      `</div></div>`;
-  }).join("");
+    const lo = skillXpForLevel(lvl), hi = skillXpForLevel(lvl + 1);
+    return {
+      id: sk.id, name: escapeHtml(sk.name), blurb: escapeHtml(sk.blurb), lvl, maxed,
+      frac: maxed ? 0 : Math.max(0, Math.min(1, (xp - lo) / (hi - lo))), toNext: maxed ? 0 : hi - xp,
+      ink: `rgb(var(--skill-${sk.id}, ${sk.tint}))`,
+    };
+  });
+  const skills = stampCardsHTML({ skills: skillData, total, gate: MASTERY_GATE, max: SKILLS.length * SKILL_MAX_LEVEL, maxLevel: SKILL_MAX_LEVEL });
 
   // Reward board — a bento of grouped cosmetic tiles (pens, charms, paper, the super-hard
   // milestone) plus the prestige-titles tile. Titles fold in as the last tile.
@@ -6130,7 +6121,7 @@ function renderMasteryPage() {
 
   body.innerHTML = `<div class="mastery-page">` +
     `<div class="mastery-head">${head}</div>` +
-    `<div class="mastery-section-label">Skills</div>${skills}` +
+    `<div class="mastery-skills">${skills}</div>` +
     bento +
     `</div>`;
 
@@ -6197,116 +6188,40 @@ function renderMasteryPage() {
   });
 }
 
-// ---- Mastery hero ----
-// The card at the top of the Mastery page. Three states share a notebook-card shell
-// (paper, a red margin rule, a wax-seal medallion) but diverge in the middle:
-//   locked   → a dashed, unpressed seal + a bar toward the unlock gate
-//   climbing → a gold seal with your level + the ascent track (13 pips, reward
-//              markers, a pen nib riding the ink line at your exact progress)
-//   complete → a sealed gold medallion + a full gold bar
+// ---- Mastery passport ----
+// The passport itself is drawn by js/passport.js; these two read what it needs off the ledger.
 
-// What each mastery level introduces, for the ascent-track markers and the "next reward"
-// note. Only the levels that unlock something appear. The marks themselves come from
-// MASTERY_LEVEL_ICONS in config.js, which the reward tiles read too.
+// What each mastery level introduces, named in the passport's tooltips. Only the levels that
+// unlock something appear.
 const MASTERY_LEVEL_LABEL = {
   1: "a new pen", 2: "a new pen", 3: "a new pen", 4: "paper stocks", 5: "bracelet trinkets",
-  6: "super-hard challenges", 7: "a prestige title", 8: "a button finish",
-  9: "a prestige title", 10: "secret hints", 11: "a prestige title",
-  12: "a signature flourish", 13: "your final title",
+  6: "super-hard challenges", 7: "a prestige title", 8: "button finishes",
+  9: "sticker hints and a prestige title", 10: "secret hints", 11: "a prestige title",
+  12: "words for the start button", 13: "your final title",
 };
+function masteryStampTips() {
+  const tips = {};
+  for (let lv = 1; lv <= MASTERY_MAX_LEVEL; lv++) tips[lv] = `Level ${lv}${MASTERY_LEVEL_LABEL[lv] ? " · " + MASTERY_LEVEL_LABEL[lv] : ""}`;
+  return tips;
+}
 
-// The next reward waiting up the track, phrased for the sub-line ("" once none remain).
-function masteryNextRewardNote(mLevel) {
-  for (let lv = mLevel + 1; lv <= MASTERY_MAX_LEVEL; lv++) {
-    if (MASTERY_LEVEL_LABEL[lv]) return `Next: ${MASTERY_LEVEL_LABEL[lv]} at level ${lv}`;
+// The day each level was stamped: the EARLIEST unlock the ledger holds among that level's
+// rewards. Earliest, because loadMastery backfills rewards added after a player passed their
+// level, and a backfill is stamped with the day it ran, not the day the level was reached. A
+// level with no dated reward gets no date, and its stamp prints its level number instead.
+const STAMP_MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+function masteryStampDates(m) {
+  const first = {};
+  for (const r of MASTERY_REWARDS) {
+    const t = Date.parse(m.unlocked[r.id] || "");
+    if (!Number.isNaN(t) && (first[r.level] == null || t < first[r.level])) first[r.level] = t;
   }
-  return "";
-}
-
-// Locked — the wax not yet pressed. Bar runs toward the skill-level gate.
-function masteryHeadLocked(total) {
-  const pct = Math.max(0, Math.min(100, (total / MASTERY_GATE) * 100));
-  const left = Math.max(0, MASTERY_GATE - total);
-  return `<div class="mh-card mh-locked"><span class="mh-rule"></span>` +
-    `<div class="mh-row">` +
-      `<div class="mh-seal locked"><span class="mh-seal-emblem">${masteryMarkup("lock")}</span></div>` +
-      `<div class="mh-body">` +
-        `<div class="mh-kicker">Mastery</div>` +
-        `<div class="mh-title">Not yet sealed</div>` +
-        `<div class="mh-bar"><i style="width:${pct.toFixed(1)}%"></i><span class="mh-gate"></span></div>` +
-        `<div class="mh-sub"><b>${total} / ${MASTERY_GATE}</b> skill levels · ${left} more to press the wax</div>` +
-      `</div>` +
-    `</div></div>`;
-}
-
-// Complete — sealed at the cap. The last thing in the game and seen exactly once, so the bar
-// stops being a progress meter and becomes a strip of gold leaf pressed into the page. The
-// drama is built out of the notebook's own materials: foil, paper grain, and ink.
-//
-// Three layers, and each answers to a different setting, because they are different things:
-//   flecks — fine gold specks in the leaf and in the card's paper. Printed, not moving, so
-//            no motion setting has anything to say about them; they are always drawn.
-//   sheen  — a slow highlight travelling the length of the foil. That is motion, so
-//            reduceMotion takes it away (and on "auto" the system preference does).
-//   glint  — the seal catching that same light as it passes. A specular flash on top of the
-//            motion, so it needs reducedFlashing off as well: the same pairing every other
-//            sparkle in the game is gated by.
-function masteryHeadComplete(mLevel) {
-  const sheen = !motionReduced();
-  const glint = sheen && !settings.reducedFlashing;
-  return `<div class="mh-card mh-complete"><span class="mh-rule"></span>` +
-    `<div class="mh-row">` +
-      `<div class="mh-seal complete${glint ? " glint" : ""}"><span class="mh-seal-emblem">${masteryMarkup("crown")}</span></div>` +
-      `<div class="mh-body">` +
-        `<div class="mh-kicker">Mastery</div>` +
-        `<div class="mh-title">Mastered</div>` +
-        `<div class="mh-bar"><i style="width:100%">${sheen ? `<span class="mh-foil-sheen"></span>` : ""}</i></div>` +
-        `<div class="mh-sub"><b>Level ${mLevel}</b> · every reward earned</div>` +
-      `</div>` +
-    `</div></div>`;
-}
-
-// Climbing — the ascent track. Pips are levels 1–13; reached ones ink gold, the current
-// one glows plum, and the ink line fills to the exact fraction between levels.
-function masteryHeadClimb(m, mLevel) {
-  const cur = masteryXpForLevel(mLevel), next = masteryXpForLevel(mLevel + 1);
-  const inCur = Math.max(0, m.masteryXp - cur), span = Math.max(1, next - cur);
-  const pct = Math.max(0, Math.min(100, (inCur / span) * 100));
-  const frac = Math.max(0, Math.min(1, ((mLevel - 1) + pct / 100) / (MASTERY_MAX_LEVEL - 1)));
-  const fillPos = `calc((100% - 16px) * ${frac.toFixed(4)})`;
-
-  let pips = "";
-  for (let i = 1; i <= MASTERY_MAX_LEVEL; i++) {
-    const reached = i <= mLevel, current = i === mLevel;
-    const icon = MASTERY_LEVEL_ICONS[i];
-    const label = MASTERY_LEVEL_LABEL[i];
-    const tip = `Level ${i}${label ? " · " + label : ""}`;
-    pips += `<div class="mh-nd${reached ? " reached" : ""}${current ? " current" : ""}" title="${escapeHtml(tip)}">` +
-      `<span class="mh-ic">${icon ? masteryMarkup(icon) : ""}</span>` +
-      `<span class="mh-dot"></span><span class="mh-lv">${i}</span></div>`;
+  const out = {};
+  for (const [lv, t] of Object.entries(first)) {
+    const d = new Date(t);
+    out[lv] = `${String(d.getDate()).padStart(2, "0")} ${STAMP_MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
   }
-
-  const seal = mLevel >= 1
-    ? `<span class="mh-seal-num">${mLevel}</span>`
-    : `<span class="mh-seal-emblem">${masteryMarkup("star")}</span>`;
-  const title = mLevel >= 1 ? `Level ${mLevel}` : "Freshly sealed";
-
-  return `<div class="mh-card mh-climb"><span class="mh-rule"></span>` +
-    `<div class="mh-row">` +
-      `<div class="mh-seal climb">${seal}</div>` +
-      `<div class="mh-body">` +
-        `<div class="mh-kicker">Mastery</div>` +
-        `<div class="mh-title">${title}</div>` +
-        `<div class="mh-next">${masteryNextRewardNote(mLevel)}</div>` +
-      `</div>` +
-    `</div>` +
-    `<div class="mh-track">` +
-      `<span class="mh-line"></span>` +
-      `<span class="mh-fill" style="width:${fillPos}"></span>` +
-      `<div class="mh-nodes">${pips}</div>` +
-    `</div>` +
-    `<div class="mh-sub"><b>${inCur} / ${span}</b> ink to level ${mLevel + 1}` +
-      `<span class="mh-law"> · every level asks ${MASTERY_LEVEL_STEP} more ink than the last</span></div></div>`;
+  return out;
 }
 
 // ---- Reward bento ----
@@ -25604,7 +25519,7 @@ function emitSkillToast(sk, level, fallbackId) {
   t.className = "toast toast-skill";
   if (sk && sk.blurb) { t.setAttribute("data-tip", sk.blurb); t.setAttribute("data-tip-delay", "500"); }
   t.innerHTML =
-    `<div class="ts-medal">${sk ? masteryMarkup(sk.icon) : ""}<span class="ts-lv">${level}</span></div>` +
+    `<div class="ts-medal"${sk ? ` style="--skm-ink:rgb(var(--skill-${sk.id}, ${sk.tint}))"` : ""}>${sk ? skillMarkHTML(sk.id) : ""}<span class="ts-lv">${level}</span></div>` +
     `<div class="ts-body"><div class="t-label">skill leveled up</div>` +
     `<div class="t-name">${escapeHtml(sk ? sk.name : fallbackId)}</div>` +
     `<div class="ts-craft">reached level ${level}</div></div>`;
@@ -31037,10 +30952,11 @@ function buildDevApi() {
       },
       open: () => openMastery("start"),
       // The finale in one press: the cap, every reward, and the Mastery page open on it.
-      // Level 13 is the one state that can't be reached honestly in a testing session, and
-      // the gold-foil hero only exists there. Pass a motion mode to see the other two
-      // renders of it: "reduce" drops the travelling sheen, "flash" keeps the sheen but
-      // drops the seal's glint, "" (or nothing) restores whatever you had.
+      // Level 13 is the one state that can't be reached honestly in a testing session, and the
+      // passport's gold-leaf bar only exists there. Pass a motion mode to see the other render
+      // of it: "reduce" drops the travelling sheen, "full" brings it back, "" (or nothing)
+      // restores whatever you had. "flash" is kept so old notes still work; it sets reduced
+      // flashing, which the leaf no longer reads.
       finale: (mode) => {
         if (mode === "reduce") { settings.reduceMotion = "on"; settings.reducedFlashing = false; }
         else if (mode === "flash") { settings.reduceMotion = "off"; settings.reducedFlashing = true; }
@@ -31052,7 +30968,7 @@ function buildDevApi() {
         for (const r of MASTERY_REWARDS) m.unlocked[r.id] = m.unlocked[r.id] || new Date().toISOString();
         saveMastery(m); updateMasteryNav();
         if (screens.mastery.classList.contains("active")) renderMasteryPage(); else openMastery("start");
-        return `level ${MASTERY_MAX_LEVEL} · sheen ${motionReduced() ? "off" : "on"} · glint ${(!motionReduced() && !settings.reducedFlashing) ? "on" : "off"}`;
+        return `level ${MASTERY_MAX_LEVEL} · sheen ${motionReduced() ? "off" : "on"}`;
       },
       // Preview the results-screen skills recap + the level-up celebration without a real
       // game. Pass a mastery level (>=1) for a level-up beat; pass 0 for the first-unlock beat.
