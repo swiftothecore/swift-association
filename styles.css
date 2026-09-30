@@ -2518,9 +2518,9 @@
 
 
   /* ---------- The "next page" slip ----------
-     The button a run presses thirteen times is a strip of the next sheet: the era
-     highlighter under that sheet's own ruling and red margin line, with its top corner
-     already turned down, ready to go over. Hover folds the corner further.
+     The button a run presses thirteen times is a strip of the next sheet: plain paper
+     under its own ruling and red margin line, with its top corner already turned down,
+     ready to go over. No era wash: paper is never pink, and the highlighter means a match. Hover folds the corner further.
      The corner is cut off .turn-sheet with clip-path and the flap drawn back in over it,
      plain on its back the way a folded page is. The drop shadow lives on the button, outside
      the clip, which is the only place it can follow the cut instead of being cut with it.
@@ -2552,7 +2552,7 @@
     background:
       linear-gradient(90deg, transparent 21px, var(--margin) 21px 22.5px, transparent 22.5px),
       repeating-linear-gradient(180deg, transparent 0 8px, var(--turn-rule) 8px 9px),
-      linear-gradient(var(--highlighter), var(--highlighter)), var(--turn-paper);
+      var(--turn-paper);
     border: 2px solid var(--ink); border-radius: 1px;
     clip-path: polygon(0 0, calc(100% - var(--turn-ear)) 0, 100% var(--turn-ear), 100% 100%, 0 100%);
   }
