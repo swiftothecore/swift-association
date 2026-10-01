@@ -2115,6 +2115,16 @@ const CTX_LINES = `<svg class="ctx-lines" viewBox="0 0 15 12" aria-hidden="true"
 const MORE_CHEV = `<svg class="more-chev" viewBox="0 0 10 7" aria-hidden="true">` +
   `<path d="M0.9 1.5C2.3 2.9 3.5 4.3 4.9 5.9" stroke-width="1.6"/>` +
   `<path d="M4.6 5.7C6 4.4 7.3 2.8 9.1 1.1" stroke-width="1.35"/></svg>`;
+// The lyric stepper's arrows, drawn in the same two-stroke hand as MORE_CHEV and turned on
+// their side. Glyphs were tried first and sat on Caveat's baseline at three times the size of
+// the count between them; a drawn mark centres on the count's own middle and stays its size.
+// The pair is drawn separately, never mirrored, so the two hands do not match exactly.
+const OCC_CHEV_L = `<svg class="occ-chev" viewBox="0 0 7 10" aria-hidden="true">` +
+  `<path d="M5.6 0.9C4.3 2.3 2.9 3.6 1.3 5.1" stroke-width="1.6"/>` +
+  `<path d="M1.5 4.8C2.7 6.1 4.2 7.5 5.9 9.1" stroke-width="1.35"/></svg>`;
+const OCC_CHEV_R = `<svg class="occ-chev" viewBox="0 0 7 10" aria-hidden="true">` +
+  `<path d="M1.3 1.1C2.8 2.4 4.1 3.7 5.8 5" stroke-width="1.6"/>` +
+  `<path d="M5.5 4.8C4.2 6.2 2.9 7.6 1.1 8.9" stroke-width="1.35"/></svg>`;
 
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
@@ -25096,9 +25106,9 @@ function occurrenceControls(entry, extra = false) {
   const title = escapeHtml(censor(entry.song.title));
   const attrs = extra ? ` data-lyric-context-extra${entry.expanded ? "" : " hidden"}` : "";
   return `<span class="lyric-occurrence" role="group" aria-label="Matching lyrics in ${title}"${attrs}>` +
-    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="-1" aria-label="Previous matching lyric in ${title}">‹</button>` +
+    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="-1" aria-label="Previous matching lyric in ${title}">${OCC_CHEV_L}</button>` +
     `<span class="lyric-occurrence-count" aria-live="polite">${model.occurrence} / ${model.totalMatches}</span>` +
-    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="1" aria-label="Next matching lyric in ${title}">›</button>` +
+    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="1" aria-label="Next matching lyric in ${title}">${OCC_CHEV_R}</button>` +
   `</span>`;
 }
 

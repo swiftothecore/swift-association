@@ -10292,8 +10292,11 @@
   .lyric-occurrence-btn {
     display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0;
     border: 0; background: transparent; color: var(--ink-soft); cursor: pointer;
-    font-family: var(--hand); font-size: calc(25px + var(--text-size-adjust)); line-height: 1;
   }
+  /* Sized to the count's digits, not to a glyph: 9px type has digits about 6px tall, so the
+     arrow stands a little taller than them and centres on the same middle. */
+  .occ-chev { width: 6px; height: 8.5px; overflow: visible; }
+  .occ-chev path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
   .lyric-occurrence-btn:hover:not(:disabled) { color: var(--ink); }
   .lyric-occurrence-btn:disabled { opacity: 0.28; cursor: default; }
   .lyric-occurrence-count {
