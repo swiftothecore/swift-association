@@ -10370,17 +10370,24 @@
        Pull the glyph back onto the typewritten caption's optical centre. */
     transform: translateX(-8px);
   }
-  /* A solid ink underline, drawn on the text rather than on the box, so the taller touch
+  /* A solid ink underline, drawn on the word rather than on the box, so the taller touch
      target coarse pointers get (see the pointer: coarse block) doesn't move it off the word.
-     Hover only recolours that line: a highlighter swiped behind it read as a flash. */
+     It is a round-ended stroke under "skip" alone: a text-decoration ran on under the space
+     and the trailing letter-spacing toward the arrow, and its square ends read as a ruler
+     line beside the arrow's round pen. Hover only recolours that line: a highlighter swiped
+     behind it read as a flash. */
   .countdown-skip {
     margin-top: 8px;
     font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink); background: none;
-    text-decoration: underline 2px; text-underline-offset: 4px;
     border: none; padding: 3px 3px; cursor: pointer;
   }
-  .countdown-skip:is(:hover, :focus-visible) { text-decoration-color: var(--ink-accent); }
+  .cd-skip-word { position: relative; }
+  .cd-skip-word::after {
+    content: ""; position: absolute; left: 0; right: 1px; bottom: -3px; height: 2px;
+    border-radius: 1px; background: currentColor;
+  }
+  .countdown-skip:is(:hover, :focus-visible) .cd-skip-word::after { background: var(--ink-accent); }
   /* Hold sits beside skip as its quieter twin: same typewriter, same drawn underline, but in the
      soft ink and dotted, because stopping is the lesser of the two ways off a verdict. */
   .countdown-acts { display: flex; align-items: baseline; justify-content: center; gap: 18px; }

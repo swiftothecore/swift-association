@@ -9338,7 +9338,7 @@ function countdownAdvance(lead, cdId, skipId) {
   return `<div class="countdown">${lead} in <b id="${cdId}">${settings.countdownSecs}</b></div>` +
     `<div class="countdown-acts">` +
       `<button type="button" class="countdown-hold" aria-label="Hold this page, stop the countdown">hold</button>` +
-      `<button type="button" id="${skipId}" class="countdown-skip">skip ${CTA_ARROW}</button>` +
+      `<button type="button" id="${skipId}" class="countdown-skip"><span class="cd-skip-word">skip</span> ${CTA_ARROW}</button>` +
     `</div>`;
 }
 
