@@ -10381,13 +10381,24 @@
     border: none; padding: 3px 3px; cursor: pointer;
   }
   .countdown-skip:is(:hover, :focus-visible) { text-decoration-color: var(--ink-accent); }
+  /* Hold sits beside skip as its quieter twin: same typewriter, same drawn underline, but in the
+     soft ink and dotted, because stopping is the lesser of the two ways off a verdict. */
+  .countdown-acts { display: flex; align-items: baseline; justify-content: center; gap: 18px; }
+  .countdown-hold {
+    margin-top: 8px;
+    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
+    color: var(--ink-soft); background: none;
+    text-decoration: underline dotted 2px; text-underline-offset: 4px;
+    border: none; padding: 3px 3px; cursor: pointer;
+  }
+  .countdown-hold:is(:hover, :focus-visible) { color: var(--ink); text-decoration-color: var(--ink-accent); }
 
   /* On a desktop the way off a verdict comes last, under everything that explains the page
      (phones get it straight under the verdict instead: verdictMarkup in app.js). The countdown and its skip stack on one centre line so the skip
      reads as part of the countdown instead of a stray link on the next card's shoulder. */
   .feedback-advance { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
   .feedback-advance .countdown { margin-top: 0; }
-  .feedback-advance .countdown-skip { margin-top: 2px; }
+  .feedback-advance .countdown-skip, .feedback-advance .countdown-hold { margin-top: 2px; }
   .feedback-advance > .turn-slip { margin-top: 0; }
 
   /* ---------- Results ---------- */
@@ -16203,7 +16214,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .feedback-advance > .turn-slip { width: 100%; margin: 0; min-height: 46px; }
   .feedback-advance .countdown { display: flex; align-items: center; gap: 8px; margin: 0; }
   .feedback-advance .countdown b { display: inline; font-size: calc(28px + var(--text-size-adjust)); transform: none; }
-  .feedback-advance .countdown-skip { margin: 0; }
+  .feedback-advance .countdown-skip, .feedback-advance .countdown-hold { margin: 0; }
+  .feedback-advance .countdown-acts { gap: 12px; }
 
   /* minmax removes the grid's intrinsic floor; every collection then fits its tile. */
   .rb-grid { grid-template-columns: minmax(0, 1fr); }
@@ -16258,7 +16270,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* Keep the drawn marks small while their touch area is comfortable. */
 @media (pointer: coarse) {
-  .btn-link, .countdown-skip, .ts-reset, .set-picker-top button { min-height: 44px; padding-block: 10px; }
+  .btn-link, .countdown-skip, .countdown-hold, .ts-reset, .set-picker-top button { min-height: 44px; padding-block: 10px; }
   .ts-arw { width: 44px; height: 44px; }
   .rb-rand { min-width: 44px; min-height: 44px; }
   .rb-row, .rb-sw-col, .rb-medal { min-height: 44px; }

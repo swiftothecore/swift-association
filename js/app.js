@@ -9330,6 +9330,18 @@ function turnSlip(id, label = "next page") {
 // the page. On a phone that would be a scroll away past the song cards, so there it rides
 // straight under the verdict, in reach of the thumb. Read at render time: a phone that rotates
 // mid-verdict keeps the page it was dealt, which is harmless for the few seconds it is up.
+/* The countdown on a verdict, with its two ways out: hold it, or skip it. Before "hold" the only
+   way to stop the page turning was to open something on the verdict, which paused it as a side
+   effect nobody was told about. Hold takes the same path (pauseAutoAdvanceForReading), and so
+   does Escape; skip and Enter still turn the page straight away. */
+function countdownAdvance(lead, cdId, skipId) {
+  return `<div class="countdown">${lead} in <b id="${cdId}">${settings.countdownSecs}</b></div>` +
+    `<div class="countdown-acts">` +
+      `<button type="button" class="countdown-hold" aria-label="Hold this page, stop the countdown">hold</button>` +
+      `<button type="button" id="${skipId}" class="countdown-skip">skip ${CTA_ARROW}</button>` +
+    `</div>`;
+}
+
 function verdictMarkup(head, body, advanceUI) {
   const adv = `<div class="feedback-advance">${advanceUI}</div>`;
   return matchMedia("(max-width: 560px)").matches ? head + adv + body : head + body + adv;
@@ -9544,9 +9556,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   const last = bonusEndless ? bonusDead : bonusRound >= BONUS_ROUNDS;
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">${last ? "the back cover" : "next page"} in ` +
-        `<b id="bonusCd">${settings.countdownSecs}</b></div>` +
-      `<button type="button" id="bonusSkipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
+    ? countdownAdvance(last ? "the back cover" : "next page", "bonusCd", "bonusSkipBtn")
     : turnSlip("bonusNextBtn", last ? "the back cover" : "next page");
   resetLyricReveals();
   const fb = $("bonusFeedback");
@@ -18325,7 +18335,7 @@ function revealTapKnowledge(correct) {
     : `that line is from ${escapeHtml(censor(answer ? answer.title : ""))}`;
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
+    ? countdownAdvance("next page", "cd", "skipBtn")
     : turnSlip("continueBtn");
   const banner = correct
     ? (oddOneRuleActive() ? "that's the odd one" : "that's the one")
@@ -18593,7 +18603,7 @@ function revealCommon(correct) {
   ).join("") : "";
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
+    ? countdownAdvance("next page", "cd", "skipBtn")
     : turnSlip("continueBtn");
   fb.innerHTML = verdictMarkup(
     `<div class="banner ${correct ? "good" : "bad"}">${verdictMark(correct ? "good" : "bad", "inl")}${correct ? "that's the thread" : "not the thread"}</div>`,
@@ -25427,7 +25437,7 @@ function showCorrectFeedback(song, lyricMatch) {
   // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
   const auto = settings.autoAdvance;
   const advanceUI = auto
-    ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
+    ? countdownAdvance("next page", "cd", "skipBtn")
     : turnSlip("continueBtn");
   // Scribbled between the banner and the lyric card, where the eye already is, and above
   // everything that explains the page — it is a margin aside, not part of the verdict.
@@ -27184,6 +27194,19 @@ function wireInput() {
     advanceFromFeedback();
   });
 
+  // Escape holds a running countdown, the keyboard twin of the "hold" button. Only while one
+  // is actually counting, and never past a captive modal (the song modal's own Escape closes it
+  // and stops there).
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || e.defaultPrevented) return;
+    if ($("settingsModal").classList.contains("open") || $("songModal").classList.contains("open")) return;
+    const onRound = screens.game.classList.contains("active") && roundLocked && countdownId && $("cd");
+    const onBonus = screens.bonusplay.classList.contains("active") && bonusLocked && !bonusEnded && bonusCdId && $("bonusCd");
+    if (!onRound && !onBonus) return;
+    e.preventDefault();
+    pauseAutoAdvanceForReading();
+  });
+
   // After a bonus verdict the input is disabled, so Enter turns the page there too: it skips
   // the countdown, or fires "next page" when auto-advance is off. Same grace and same
   // "Enter advances on a miss" setting as the round screen above.
@@ -27205,6 +27228,7 @@ function wireInput() {
   // Result controls live inside rebuilt feedback blocks, so delegate from the two stable hosts.
   // Every reading action pauses auto-advance; disclosure state stays local to its unique reveal.
   [$("feedback"), $("bonusFeedback")].forEach((host) => host.addEventListener("click", (e) => {
+    if (e.target.closest(".countdown-hold")) { pauseAutoAdvanceForReading(); return; }
     const toggle = e.target.closest(".lyric-ctx-toggle");
     if (toggle) {
       const reveal = toggle.closest("[data-lyric-reveal]");
@@ -28396,12 +28420,22 @@ function trapDialogTab(e, modal, container) {
 
 // Reading lyric context shouldn't let the page turn out from under the reader, so any
 // running correct-answer countdown is cancelled the moment they expand context or open
-// the full song. The manual "skip"/Enter path stays available to advance when ready.
+// the full song, or press "hold" / Escape. The manual "skip"/Enter path stays available to
+// advance when ready.
 function pauseAutoAdvanceForReading() {
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   stopBonusCountdown();
   const cd = document.querySelector("#feedback .countdown, #bonusFeedback .countdown");
   if (cd) cd.innerHTML = `<span class="cd-paused">take your time</span>`;
+  // Held is held: the button has done its one job, so it goes rather than sitting there inert.
+  // Focus moves to skip if it was on hold, so a keyboard player is left on the way forward.
+  const hold = document.querySelector("#feedback .countdown-hold, #bonusFeedback .countdown-hold");
+  if (hold) {
+    const skip = hold.parentElement.querySelector(".countdown-skip");
+    const hadFocus = document.activeElement === hold;
+    hold.remove();
+    if (hadFocus && skip) skip.focus({ preventScroll: true });
+  }
 }
 
 // Build the full lyrics for the song modal: structured sections with their labels, every
