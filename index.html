@@ -1508,53 +1508,6 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M211 288 L229 270 Q220.5 268.6 212.8 270.5 Q210.2 278.6 211 288 Z" fill="url(#calCurl)" stroke="#c9ba97" stroke-width="0.8" stroke-linejoin="round"/>
     </svg>
   </div>
-  <!-- LEFT: the daily streak on a torn piece of calendar paper, tucked below
-       the calendar like a little keepsake. The red margin, blue ruling, pencil
-       note and imperfect tear keep it in the same stationery world as the
-       notebook instead of adding another heavy object to the desk.
-       js/placard.js writes the count and keeps the slip hidden until the daily
-       streak is at least one day. Desktop-only and non-interactive. -->
-  <div class="desk-item di-placard" hidden>
-    <svg viewBox="0 0 190 112" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Daily streak">
-      <defs>
-        <linearGradient id="plcPaper" x1="0" y1="0" x2="0.85" y2="1">
-          <stop offset="0" stop-color="#fffaf0"/><stop offset="0.58" stop-color="#f4ecd9"/><stop offset="1" stop-color="#e7dbc0"/>
-        </linearGradient>
-      </defs>
-      <!-- Everything a ruled pad prints is STRAIGHT: the top edge it was cut
-           from, the two sides, the blue ruling and the red margin. Bowing any
-           of them (as this drawing used to) reads as a sheet curling up off
-           the desk, which is not what a slip lying flat under a calendar does.
-           The only irregular line here is the tear, and it is irregular on
-           purpose: uneven bite depths and uneven tooth widths, because a
-           repeating sawtooth reads as pinking shears, not torn paper. -->
-      <!-- a second sheet peeks out at the torn edge, suggesting this was
-           pulled from the calendar pad rather than bought as desk decor -->
-      <path class="plc-under" d="M13 14 L177 13 L178 90 L171 97 L165 92 L157 99 L150 93 L144 96 L136 90 L128 97 L121 93 L113 95 L106 100 L99 92 L91 96 L83 91 L76 98 L69 93 L61 95 L54 99 L47 92 L40 96 L33 90 L26 95 L19 92 L13 91 Z"/>
-      <path class="plc-paper" d="M9 8 L181 7 L182 86 L175 92 L170 88 L161 95 L155 90 L150 91 L141 86 L133 93 L127 89 L118 90 L112 96 L104 88 L97 92 L88 87 L82 94 L75 89 L66 90 L60 95 L52 88 L45 92 L38 86 L30 91 L23 88 L15 93 L9 87 Z" fill="url(#plcPaper)"/>
-      <!-- the pale fibre lip torn paper shows where the top layer let go -->
-      <path class="plc-lip" d="M182 86 L175 92 L170 88 L161 95 L155 90 L150 91 L141 86 L133 93 L127 89 L118 90 L112 96 L104 88 L97 92 L88 87 L82 94 L75 89 L66 90 L60 95 L52 88 L45 92 L38 86 L30 91 L23 88 L15 93 L9 87"/>
-      <!-- familiar notebook ruling; the count is written ON the line. One rule, not
-           two: the upper one used to sit where the strand now lies, and a cord
-           threaded along a ruled line reads as a mistake rather than a drawing. -->
-      <g class="plc-rules"><path d="M11 76 L179 75.4"/></g>
-      <path class="plc-margin" d="M34 8.5 L34.6 88"/>
-      <!-- The picture is the bead strand: one bead per day kept, on the game's own
-           waxed cord, in the era ink of the album that carried that day. It is the
-           drawing the daily ticket already uses for a streak, so the desk and the
-           ticket say the same thing in the same hand. What was here before was a
-           flame, which is a phone app's streak icon on a desk with no phone on it.
-           Capped at seven beads, past which the cord runs off the left edge to say
-           "more, back there". The numeral underneath is what carries the count.
-           js/placard.js draws into this group; empty means no strand today. -->
-      <g class="plc-strand"></g>
-      <text class="plc-l1" x="43" y="24">DAILY STREAK</text>
-      <text class="plc-l2" x="43" y="75"></text>   <!-- js/placard.js fills this: <tspan class="plc-num"> + <tspan class="plc-unit"> -->
-    </svg>
-    <!-- This is the exact shared washi surface used on the six mode cards,
-         not an SVG imitation: the same translucency, fibres, wrinkle and tear. -->
-    <span class="nav-tape plc-tape" aria-hidden="true"></span>
-  </div>
   <!-- LEFT: hexagonal pencil from above, set down whole beside the page.
        The plan geometry is measured, not eyeballed: a 7mm across-flats hex
        resting on a facet shows three faces from directly above, and their

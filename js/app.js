@@ -115,7 +115,6 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
-import { renderStreakPlacard } from "./placard.js";
 import { passportHTML, stampCardsHTML, passportStamp, passportGhost, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
 import { skillMarkHTML } from "./skillmarks.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
@@ -15896,8 +15895,7 @@ function refreshDateSurfaces() {
   window.deskCalendar?.refresh();
   window.deskCassette?.refresh();
   // Moving the date moves what "today" means to the daily gate, so the button's
-  // played/unplayed coat, its countdown and the streak on the desk placard all
-  // have to be redrawn with it.
+  // played/unplayed coat and its countdown have to be redrawn with it.
   renderDailyButtonState();
   // The weather is on the calendar too: snow is a December reading and the leaves are three
   // days in November. Each refresher re-asks its own gate.
@@ -16211,24 +16209,6 @@ function renderDailyButtonState() {
   btn.classList.toggle("day--done", !undone);
 
   const live = effectiveDailyStreak(dateStr);
-  // The desk slip runs off the same number, but shows it whether or not today's
-  // puzzle is in: a streak stays alive until the day after it was last fed, and the
-  // whole point of the keepsake is standing there reminding you of that. Its beads
-  // are the ticket's beads, resolved to ink here rather than in placard.js so the
-  // colour-blind album palette is honoured in one place. Days walk back from the
-  // last one FED, which on an unplayed day is yesterday, exactly as the ticket does.
-  const slipEnd = live.playedToday ? dateStr : yesterdayOf(dateStr);
-  // The walk is capped by the streak as well as by the cord, so the slip can never
-  // string more beads than there are days in the run it is drawing. Honest data can't
-  // produce that (a streak of one means yesterday is missing, which stops the walk),
-  // but dev.daily.fakeStrand can, and a slip reading "1 day" over seven beads is the
-  // kind of thing that gets believed.
-  const slipBeads = live.current > 0
-    ? recentDailyAlbums(slipEnd, Math.min(DAY_STRAND_CAP, live.current))
-        .map((a) => (a ? albumColor(a) : null))
-    : [];
-  renderStreakPlacard(live, slipBeads);
-
   const { month, day, dow } = dayChipFields(dateStr);
   const serial = dailySerial(dateStr);
   const serialHTML = serial ? `<span class="day-serial">No. ${serial}</span>` : "";
@@ -30974,9 +30954,8 @@ function buildDevApi() {
       },
       free: () => { releaseDailyRun(TAB_ID); releaseDailyRun("dev-other-tab"); return readDailyOwner(); },
       setDate: (d) => { window.__devDate = d || null; refreshDateSurfaces(); },
-      // Redraws the start screen after writing, so the daily button's inline streak and
-      // the desk placard show the set number straight away — the placard is the whole
-      // reason to scrub a streak by hand, since a real 100-day one takes 100 days.
+      // Redraws the start screen after writing, so the daily button's inline streak
+      // shows the set number straight away.
       setStreak: (current, best, lastPlayed) => {
         saveDailyStreak({ current: current | 0, best: Math.max(best | 0, current | 0),
           lastPlayed: lastPlayed || todayKey() });

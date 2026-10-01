@@ -390,7 +390,7 @@
     border-color: rgba(236, 229, 214, 0.16);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
   }
-  /* Desk props are physical objects (a cream calendar, a brass placard), so they
+  /* Desk props are physical objects (a cream calendar, a cassette), so they
      keep their own colours — but at night the desk is barely lit, and a fully-lit
      cream pad glows brighter than the notebook and steals the eye. Dim the fixed
      props with brightness (their per-variant drop-shadows are preserved, just
@@ -543,48 +543,6 @@
     transform: translate(-50%, -50%) rotate(-4.5deg);
     filter: drop-shadow(5px 9px 8px rgba(46,32,14,0.30)) saturate(0.9);
   }
-  /* the daily streak: a torn calendar-paper keepsake tucked below the working
-     calendar. It is deliberately lighter and smaller than the old brass plaque
-     so it reads as a quiet personal note, not another piece of furniture. */
-  .di-placard {
-    --tint: 199, 149, 31;
-    width: 132px; top: 54%; left: calc(50% - 460px);
-    transform: translate(-50%, -50%) rotate(2.2deg);
-    filter: drop-shadow(3px 6px 4px rgba(46,32,14,0.24)) saturate(0.9);
-  }
-  .di-placard[hidden] { display: none; }
-  .di-placard .plc-under { fill: #d2c3a3; stroke: #aa9875; stroke-width: 0.8; }
-  .di-placard .plc-paper { stroke: #c8b999; stroke-width: 0.9; stroke-linejoin: round; }
-  .di-placard .plc-lip { fill: none; stroke: #fffaf2; stroke-width: 1.3; opacity: 0.75; stroke-linejoin: round; }
-  .di-placard .plc-rules { fill: none; stroke: #7892a4; stroke-width: 0.8; opacity: 0.24; }
-  .di-placard .plc-margin { fill: none; stroke: #b23a3f; stroke-width: 1.1; opacity: 0.52; }
-  /* Geometry only. The material itself comes from the shared .nav-tape rule. */
-  .di-placard .plc-tape {
-    top: -1px; left: 50%; bottom: auto; right: auto; width: 43px; height: 14px;
-    transform: translateX(-50%) rotate(3.5deg);
-    --tape-clip: polygon(6.1% 0%, 96.2% 0%, 96.2% 25.3%, 98.1% 40.2%, 95.5% 65.5%, 95.7% 78.2%, 95.4% 100%, 2.3% 100%, 4.7% 88.8%, 7.3% 61.3%, 5.4% 47.7%, 4.7% 38.8%, 5.8% 11.4%);
-  }
-  .di-placard .plc-l1 {
-    fill: #6d6354; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
-    font-weight: 700; letter-spacing: 1.45px;
-  }
-  /* The count: the numeral in the notebook's hand, the unit in its printed
-     voice and small, so that "128 days" still sits inside the slip. */
-  .di-placard .plc-num {
-    fill: #3f596c; font-family: var(--hand); font-size: calc(30px + var(--text-size-adjust));
-    font-weight: 700;
-  }
-  .di-placard .plc-unit {
-    fill: #6d6354; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust));
-    font-weight: 700; letter-spacing: 1.2px;
-  }
-  /* The strand: the same waxed cord and the same bead outline as the daily
-     ticket's, at the slip's own scale. The beads take their fill inline from
-     js/placard.js, because an era ink is data, not styling. */
-  .di-placard .plc-cord {
-    fill: none; stroke: #8a7f6b; stroke-width: 1.9; stroke-linecap: round;
-  }
-  .di-placard .plc-bead { stroke: #2b2722; stroke-width: 1.1; }
   .di-pencil {
     width: 520px; top: 69%; left: calc(50% - 412px);
     /* near-vertical, tip pointing down the page; the pencil is drawn at real
