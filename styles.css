@@ -11143,6 +11143,11 @@
      wears, so "give up? tap again" reads as a warning on both screens rather than as more
      grey nav. */
   .btn-link.armed { color: var(--margin); opacity: 1; font-weight: 700; text-decoration-color: var(--margin); }
+  /* A way back wears no underline: the drawn arrow already says it goes somewhere, and a line
+     under the words alone left the arrow standing outside it. The words take one on hover and
+     keyboard focus so it still answers like a link. Armed is a warning, so it keeps its line. */
+  .btn-link:has(.back-arrow):not(.armed) { text-decoration: none; }
+  .btn-link:has(.back-arrow):not(.armed):is(:hover, :focus-visible) .ctl-lab { text-decoration: underline; text-underline-offset: 3px; }
   /* "By the numbers" header (design E): three primaries on top, then a
      recent-form sparkline beside the secondary stats. Transparent over paper,
      thin ruled dividers — no boxed border. */
@@ -11352,7 +11357,7 @@
   :is(.run-pause-go, .lyric-fullsong, .more-songs-all, .lu-stub-go) .cta-arrow { vertical-align: -0.171em; }
   /* The back arrow (symbol #back-arrow, BACK_ARROW in app.js) on every "go back" control. It
      leads its label, so it is spaced by margin on its right: a typed space there would carry the
-     link's underline out under the gap, where the margin leaves it starting at the first letter. */
+     hover underline out under the gap, where the margin leaves it starting at the first letter. */
   .back-arrow { display: inline-block; width: 1.9em; height: 0.95em; vertical-align: -0.235em; margin-right: 0.5em; }
   /* The stamped results buttons set 13-15px type in half-width rows, where the 1.9em arrow
      pushes "album focus" and "guest shelf" onto two lines at 375px. 1.6em at 13px is the same

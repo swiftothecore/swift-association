@@ -2127,7 +2127,7 @@ const CTA_ARROW = `<svg class="cta-arrow" viewBox="0 0 20 10" aria-hidden="true"
   `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 // THE left-pointing arrow, for every "go back" control. The drawing is a <symbol> in index.html,
-// shared with the panels' static ← back links; the label sits in .ctl-lab so the underline
+// shared with the panels' static ← back links; the label sits in .ctl-lab so the hover underline
 // stops at the words and any armed-state swap can rewrite them without losing the arrow.
 const BACK_ARROW = `<svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg>`;
 
