@@ -10159,7 +10159,7 @@
   .vw-say mark {
     --hl: var(--highlighter);
     color: var(--ink); font-weight: 700;
-    padding: 0 6px; margin: 0 -2px;
+    padding: 0 4px; margin: 0;
     -webkit-box-decoration-break: clone; box-decoration-break: clone;
     background:
       linear-gradient(transparent 46%, rgba(255,255,255,0.16) 47% 51%, transparent 52%)
@@ -10347,7 +10347,7 @@
     font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust));
     color: var(--ink-soft); line-height: 1.35;
   }
-  .lyric-reveal--compact .lyric-line mark { padding: 0 5px; margin: 0 -2px; }
+  .lyric-reveal--compact .lyric-line mark { padding: 0 3px; margin: 0; }
   .lyric-reveal--compact .lc-line { font-size: calc(16px + var(--text-size-adjust)); }
   .more-songs-next { margin: 2px 0; }
   .more-songs-next:hover:not(:disabled) { color: var(--ink); }
