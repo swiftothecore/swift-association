@@ -104,3 +104,32 @@ export function countDots(hits, corpus, { width, fallbackWidth, colour, title, s
 function wrap(w, h, inner) {
   return `<svg class="count-dots" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">${inner}</svg>`;
 }
+
+/* ---------- How they arrive: tipped out and filed ----------
+   The dots spill out of the label in a loose heap, out of order, then each rolls to its own
+   place in the discography: the songs are seen before the shape, and the shape sorts itself
+   out of them. Picked from scripts/ui/count-dots-arrive.html (option 4) and run about 15%
+   quicker than the board. The heap is seeded off the word, so a word always spills the same
+   way. On a tracklist the faint rings are only pencilled in once the inked dots are mostly
+   home, so the empty slots don't sit waiting before anything has arrived. The caller skips
+   this under reduced motion; the drawing is complete without it. */
+export function tipOutCountDots(svg, seed) {
+  if (!svg || typeof svg.animate !== "function") return;
+  const r = mulberry32(fnv1a(`tip:${seed}`));
+  const w = +svg.getAttribute("width"), h = +svg.getAttribute("height");
+  const heapW = Math.min(60, w * 0.3);
+  for (const c of svg.querySelectorAll("circle")) {
+    if (c.classList.contains("cd-rest")) {
+      c.animate([{ opacity: 0 }, { opacity: 1 }], { delay: 550, duration: 255, fill: "both", easing: "ease-out" });
+      continue;
+    }
+    const x = +c.getAttribute("cx"), y = +c.getAttribute("cy");
+    const hx = w * 0.08 + r() * heapW - x, hy = (r() - 0.5) * (h + 14) - (y - h / 2);
+    c.animate([
+      { transform: `translate(${-x - 10}px, ${hy}px) scale(.4)`, opacity: 0 },
+      { transform: `translate(${hx}px, ${hy}px) scale(1)`, opacity: 1, offset: 0.3 },
+      { transform: `translate(${hx}px, ${hy}px)`, offset: 0.45 },
+      { transform: "translate(0, 0)" },
+    ], { delay: r() * 170, duration: 935 + r() * 255, fill: "both", easing: "cubic-bezier(.35,0,.25,1)" });
+  }
+}

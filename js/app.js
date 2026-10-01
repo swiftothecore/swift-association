@@ -96,7 +96,7 @@ import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordC
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
-import { countDots } from "./countdots.js";
+import { countDots, tipOutCountDots } from "./countdots.js";
 import { zineCover, hasCover } from "./zine.js";
 // Track by Track's twelve album sleeves (pure; see js/sleeves.js).
 import { albumSleeve, commonNameSize, hasMotif, motifOf, sleeveName } from "./sleeves.js";
@@ -25407,6 +25407,7 @@ function fillCountDots(label, hits) {
   if (!svg) return;
   label.classList.toggle("vw-count-below", below);
   label.insertAdjacentHTML("beforeend", svg);
+  if (!prefersReducedMotion()) tipOutCountDots(label.querySelector(".count-dots"), currentWord);
 }
 function waveVerdictActive() {
   return !!currentWord && !roundIsImpostor && !tapGridActive() && !whoseLineRuleActive() &&

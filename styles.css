@@ -10109,6 +10109,7 @@
   .vw-count-say { white-space: nowrap; }
   .vw-count-below { flex-direction: column; align-items: flex-start; }
   .count-dots { display: block; flex: none; overflow: visible; }
+  .count-dots circle { transform-box: fill-box; transform-origin: center; }
   .count-dots .cd-rest { fill: none; stroke-width: 0.6; stroke-opacity: 0.45; }
   @media (max-width: 560px) {
     .vw-say { font-size: calc(23px + var(--text-size-adjust)); }
