@@ -10103,6 +10103,13 @@
     text-transform: uppercase; color: var(--ink-soft);
   }
   .vw-label b { color: var(--ink); }
+  /* the songs behind the count, one dot each (js/countdots.js): beside the label while they fit,
+     on their own line under it when a word is everywhere and even the tracklists won't */
+  .vw-count { display: flex; align-items: center; flex-wrap: wrap; column-gap: 12px; row-gap: 6px; }
+  .vw-count-say { white-space: nowrap; }
+  .vw-count-below { flex-direction: column; align-items: flex-start; }
+  .count-dots { display: block; flex: none; overflow: visible; }
+  .count-dots .cd-rest { fill: none; stroke-width: 0.6; stroke-opacity: 0.45; }
   @media (max-width: 560px) {
     .vw-say { font-size: calc(23px + var(--text-size-adjust)); }
     .vw-say .vmark { width: 22px; height: 22px; margin-right: 4px; }

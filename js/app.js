@@ -96,6 +96,7 @@ import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordC
 import { buildLyricReveal } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
+import { countDots } from "./countdots.js";
 import { zineCover, hasCover } from "./zine.js";
 // Track by Track's twelve album sleeves (pure; see js/sleeves.js).
 import { albumSleeve, commonNameSize, hasMotif, motifOf, sleeveName } from "./sleeves.js";
@@ -25388,6 +25389,25 @@ function revengeNote() {
    banners, and those carry the same felt-tip marks (js/verdictmark.js). */
 const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
 const countWord = (n) => COUNT_WORDS[n] || String(n);
+
+/* The count label's dots: measured against the label's own line, so a word that fits sits
+   beside "twenty-one songs do" as a strip, and one that doesn't becomes the tracklist blocks,
+   beside the label while they fit and on a line of their own under it when they don't. */
+function fillCountDots(label, hits) {
+  if (!label) return;
+  const say = label.querySelector(".vw-count-say");
+  const full = label.clientWidth;
+  const { svg, below } = countDots(hits, allSongs, {
+    width: full - (say ? say.offsetWidth : 0) - 12,
+    fallbackWidth: full,
+    colour: (s) => { const g = guestBeadTint(s); return (Array.isArray(g) ? g[0] : g) || albumColor(s.album) || "var(--ink-soft)"; },
+    title: (s) => escapeHtml(censor(s.title)),
+    seed: currentWord,
+  });
+  if (!svg) return;
+  label.classList.toggle("vw-count-below", below);
+  label.insertAdjacentHTML("beforeend", svg);
+}
 function waveVerdictActive() {
   return !!currentWord && !roundIsImpostor && !tapGridActive() && !whoseLineRuleActive() &&
     !bothRuleActive() && !commonRuleActive() && !titleProofActive();
@@ -25513,6 +25533,7 @@ function showWrongFeedback(song, isTimeout) {
   // cards — and on Whose Line? the "songs with this word" cards would be nonsense anyway.
   const n = (settings.showExamples && !tapGridActive()) ? currentMode.examples : 0;
   let help = "";
+  let countHits = null;
   if (n > 0) {
     let pool = currentSongs;
     // Double Trouble: don't showcase a song the player already named on this page (e.g.
@@ -25552,9 +25573,12 @@ function showWrongFeedback(song, isTimeout) {
       // The way into the cards is a label, so it is typed rather than handwritten, and it says
       // how many songs there were before you scroll: "seven songs do".
       const one = ordered.length === 1;
+      // …followed by the songs themselves as dots (js/countdots.js), drawn once the label is on
+      // the page and its width can be measured: see fillCountDots.
+      if (sentence) countHits = ordered;
       const label = sentence
-        ? `<p class="vw-label"><b>${countWord(ordered.length)}</b> song${one ? "" : "s"} ` +
-          `${isTimeout ? (one ? "sings it" : "sing it") : (one ? "does" : "do")}</p>`
+        ? `<p class="vw-label vw-count"><span class="vw-count-say"><b>${countWord(ordered.length)}</b> song${one ? "" : "s"} ` +
+          `${isTimeout ? (one ? "sings it" : "sing it") : (one ? "does" : "do")}</span></p>`
         : `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>`;
       // The expansion continues `ordered`, so the list picks up exactly where the cards left
       // off instead of re-shuffling the same songs into a different sequence.
@@ -25569,6 +25593,7 @@ function showWrongFeedback(song, isTimeout) {
         `<span class="sr-only">your answer, </span>${escapeHtml(censor(song.title))}</span>` +
         ` <span class="vw-verb">never sings</span> ${verdictWord()}</p>${waveProof(pageWave(song, false), "vw-proof")}</div>`;
   fb.innerHTML = verdictMarkup(head, help, turnSlip("continueBtn"));
+  if (countHits) fillCountDots(fb.querySelector(".vw-count"), countHits);
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
