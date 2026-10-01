@@ -5095,9 +5095,11 @@ function keepsakePolaroidHTML(p, opts = {}) {
   const elapsed = iso ? Date.now() - Date.parse(iso) : 0;
   return polaroidHTML(null, p.name, { keepsake: true, state, elapsed, art: p.art, sub: p.sub, tilt: opts.tilt, small: opts.small });
 }
-// Re-render the Keepsakes wall if its modal is currently open (otherwise a no-op).
+// Re-render the Keepsakes wall wherever it is open: its modal, or its divider in a phone's
+// settings (otherwise a no-op).
 function refreshKeepsakes() {
   if ($("keepsakesModal") && $("keepsakesModal").classList.contains("open")) renderKeepsakesPage();
+  if (settingsKeepsakesShowing()) renderKeepsakesPage($("setKeepsakesBody"));
 }
 // Dev-only: grant `id` backdated `agoMs` milliseconds (0 = fresh/developing, >13min = developed).
 function devSetKeepsake(id, agoMs) {
@@ -5233,6 +5235,13 @@ function updateKeepsakesNav() {
     btn.setAttribute("aria-label", label);
     btn.setAttribute("title", label);
   }
+  // On a phone the drawer lives in settings, so the gear wears the badge and says why.
+  const gear = $("settingsGear");
+  if (gear) {
+    const label = n && phoneDesk() ? `Settings (${n} new keepsake${n === 1 ? "" : "s"})` : "Settings";
+    gear.setAttribute("aria-label", label);
+    gear.setAttribute("title", label);
+  }
 }
 
 // A stable per-polaroid tilt + vertical nudge so the wall reads as hand-pinned rather than
@@ -5282,8 +5291,7 @@ function closeKeepsakes() {
 // The polaroid wall: a lead, the found counter, then the messy pinned grid. Every tile is a
 // keepsake polaroid at its current develop state (blacked-out lock / developing / developed),
 // pinned at its deterministic jitter so the wall reads hand-done rather than gridded.
-function renderKeepsakesPage() {
-  const body = $("keepsakesBody");
+function renderKeepsakesPage(body = $("keepsakesBody")) {
   if (!body) return;
   const earned = loadKeepsakes();
   const found = keepsakeCount(earned);
@@ -5318,9 +5326,11 @@ function renderKeepsakesPage() {
   // the drawer is a modal over the front page, so it has to get out of the way first, and focus
   // comes back to the keepsakes icon once the book reopens.
   const shut = body.querySelector("[data-close-notebook]");
+  // In a phone's settings the drawer is a divider, so it is settings that gets out of the way.
+  const inSettings = body.id === "setKeepsakesBody";
   if (shut) shut.addEventListener("click", () => {
-    closeKeepsakes();
-    openCoverAdmire($("keepsakesGear"));
+    if (inSettings) closeSettings(); else closeKeepsakes();
+    openCoverAdmire($(inSettings ? "settingsGear" : "keepsakesGear"));
   });
   scheduleKeepsakeDevWatch();   // re-arm the develop watch for the next tile due to finish
 }
@@ -5343,8 +5353,7 @@ function scheduleKeepsakeDevWatch() {
   if (!Number.isFinite(soonest)) return;   // nothing developing → no timer needed
   keepsakeDevTimer = setTimeout(() => {
     keepsakeDevTimer = null;
-    if (!$("keepsakesModal").classList.contains("open")) return;
-    renderKeepsakesPage();   // re-renders + reschedules for the next pending tile
+    refreshKeepsakes();   // re-renders + reschedules for the next pending tile, if a wall is open
   }, Math.min(soonest + 250, 0x7fffffff));
 }
 function stopKeepsakeDevWatch() {
@@ -27662,23 +27671,36 @@ const COMMON_TZ_FALLBACK = [
    the web's stock symbol for the idea: a spiral notebook, gusts for motion, a game piece,
    a screen on its stand for Display (a desk lamp was tried and thinned to nothing at 13px,
    because a lamp is mostly empty space), the same speaker as the sound button, a card file
-   box for backups, and a luggage tag for About. */
+   box for backups, and a luggage tag for About. Keepsakes, the drawer, only exists on a phone:
+   see settingsPanels(). Each divider names its own `tint` stock so adding one never repaints
+   the rest. */
 const SETTINGS_PANELS = [
-  { id: "notebook", label: "Notebook", icon: `<path d="M6.4 3.6 C10.4 3.3 14.8 3.4 18.6 3.6 C18.9 9.2 18.8 14.9 18.5 20.5 C14.6 20.8 10.4 20.8 6.4 20.5 C6.1 14.9 6.1 9.2 6.4 3.6 Z"/><path d="M4.2 6.6 C5.2 5.9 6.6 6 7.8 6.8"/><path d="M4.2 10.6 C5.2 9.9 6.6 10 7.8 10.8"/><path d="M4.3 14.6 C5.3 13.9 6.7 14 7.9 14.8"/><path d="M4.2 18.4 C5.2 17.7 6.6 17.8 7.8 18.6"/><path d="M10.6 8.8 C12.6 8.7 14.6 8.7 16.2 8.9"/>` },
-  { id: "motion", label: "Motion", icon: `<path d="M4 8.1 C7.3 8 10.6 8 13.9 8.1 C15.6 8.1 16.4 6.6 15.6 5.4 C14.9 4.4 13.2 4.6 12.8 5.9"/><path d="M4 12.1 C8.3 12 12.7 12 16.8 12.2 C18.7 12.3 19.8 13.6 19.2 15.1 C18.6 16.6 16.6 16.6 16.2 15.2"/><path d="M4.1 16.1 C5.8 16 7.4 16 9 16.1"/>` },
-  { id: "gameplay", label: "Gameplay", icon: `<path d="M14.6 6.2 C14.6 7.7 13.5 8.8 12 8.8 C10.5 8.8 9.4 7.6 9.4 6.2 C9.4 4.7 10.6 3.6 12 3.6 C13.5 3.6 14.6 4.8 14.6 6.2 Z"/><path d="M9.6 9.5 C11.2 9.2 12.8 9.2 14.4 9.5"/><path d="M10.3 9.7 C10.1 12.4 9.3 15 7.9 17.2"/><path d="M13.7 9.7 C13.9 12.4 14.7 15 16.1 17.2"/><path d="M6.2 17.4 C10 17 14 17 17.8 17.4 C18.2 18.4 18.2 19.4 17.8 20.4 C14 20.8 10 20.8 6.2 20.4 C5.8 19.4 5.8 18.4 6.2 17.4 Z"/>` },
-  { id: "display", label: "Display", icon: `<path d="M4 5.2 C9.4 4.9 14.6 4.9 20 5.2 C20.2 8.9 20.2 12.9 19.9 16.9 C14.6 17.2 9.4 17.2 4.1 16.9 C3.8 12.9 3.8 8.9 4 5.2 Z"/><path d="M12 17.1 C12 18 12 19 12.1 19.9"/><path d="M8.8 20.1 C11 19.9 13.2 19.9 15.3 20.2"/>` },
-  { id: "sound", label: "Sound", icon: `<path d="M10.9 5.2 C9.4 6.4 7.9 7.8 6.5 9.1 L3.4 9.2 C3.2 11.1 3.2 13 3.4 14.9 L6.5 15 C7.9 16.3 9.4 17.6 10.9 18.9 C11.2 14.4 11.2 9.7 10.9 5.2 Z"/><path d="M14.4 9.4 C15.6 10.9 15.6 13.2 14.5 14.7"/><path d="M17.2 6.9 C19.9 9.9 19.9 14.4 17.3 17.4"/>` },
-  { id: "data", label: "Data", icon: `<path d="M3.6 11.4 C9.2 11 14.8 11 20.4 11.4 C20.6 14.4 20.5 17.4 20.2 20.4 C14.8 20.7 9.2 20.7 3.8 20.4 C3.4 17.4 3.4 14.4 3.6 11.4 Z"/><path d="M6 11.2 C6 9.2 6.1 7.2 6.3 5.4 C9 5.2 11.6 5.2 14.2 5.4 C14.4 7.2 14.4 9.2 14.3 11.2"/><path d="M9.4 5.4 C9.4 4.6 9.5 4 9.6 3.4 C12.4 3.2 15.2 3.2 17.8 3.5 C18 6 18 8.6 17.9 11.2"/><path d="M10 15.6 C11.4 15.5 12.6 15.5 14 15.6"/>` },
-  { id: "about", label: "About", icon: `<path d="M9 4.4 C12.6 4.2 16.2 4.2 19.8 4.5 C20 8.8 20 13.1 19.8 17.3 C16.2 17.6 12.6 17.6 9 17.4 L4.2 10.9 Z"/><path d="M10.4 10.9 C10.4 11.6 9.9 12.1 9.2 12.1 C8.5 12.1 8 11.6 8 10.9 C8 10.2 8.5 9.7 9.2 9.7 C9.9 9.7 10.4 10.2 10.4 10.9 Z"/><path d="M12.8 8.6 C14.6 8.5 16.2 8.5 17.8 8.7"/><path d="M12.8 12.8 C14.2 12.7 15.6 12.7 16.8 12.9"/>` },
+  { id: "notebook", tint: 1, label: "Notebook", icon: `<path d="M6.4 3.6 C10.4 3.3 14.8 3.4 18.6 3.6 C18.9 9.2 18.8 14.9 18.5 20.5 C14.6 20.8 10.4 20.8 6.4 20.5 C6.1 14.9 6.1 9.2 6.4 3.6 Z"/><path d="M4.2 6.6 C5.2 5.9 6.6 6 7.8 6.8"/><path d="M4.2 10.6 C5.2 9.9 6.6 10 7.8 10.8"/><path d="M4.3 14.6 C5.3 13.9 6.7 14 7.9 14.8"/><path d="M4.2 18.4 C5.2 17.7 6.6 17.8 7.8 18.6"/><path d="M10.6 8.8 C12.6 8.7 14.6 8.7 16.2 8.9"/>` },
+  { id: "keepsakes", tint: 8, phoneOnly: true, label: "Keepsakes", icon: `<path d="M4.3 12.5 L4.0 4.0 L20.1 3.5 L20.4 12.0"/><path d="M4.15 8.3 L20.25 7.85"/><path d="M4.3 12.5 L2.7 13.5"/><path d="M20.4 12.0 L21.5 13.0"/><path d="M2.7 13.5 L21.5 13.0 L20.7 20.6 L3.4 20.9 Z"/><circle cx="12.1" cy="17.1" r="1.15" fill="currentColor" stroke="none"/>` },
+  { id: "motion", tint: 2, label: "Motion", icon: `<path d="M4 8.1 C7.3 8 10.6 8 13.9 8.1 C15.6 8.1 16.4 6.6 15.6 5.4 C14.9 4.4 13.2 4.6 12.8 5.9"/><path d="M4 12.1 C8.3 12 12.7 12 16.8 12.2 C18.7 12.3 19.8 13.6 19.2 15.1 C18.6 16.6 16.6 16.6 16.2 15.2"/><path d="M4.1 16.1 C5.8 16 7.4 16 9 16.1"/>` },
+  { id: "gameplay", tint: 3, label: "Gameplay", icon: `<path d="M14.6 6.2 C14.6 7.7 13.5 8.8 12 8.8 C10.5 8.8 9.4 7.6 9.4 6.2 C9.4 4.7 10.6 3.6 12 3.6 C13.5 3.6 14.6 4.8 14.6 6.2 Z"/><path d="M9.6 9.5 C11.2 9.2 12.8 9.2 14.4 9.5"/><path d="M10.3 9.7 C10.1 12.4 9.3 15 7.9 17.2"/><path d="M13.7 9.7 C13.9 12.4 14.7 15 16.1 17.2"/><path d="M6.2 17.4 C10 17 14 17 17.8 17.4 C18.2 18.4 18.2 19.4 17.8 20.4 C14 20.8 10 20.8 6.2 20.4 C5.8 19.4 5.8 18.4 6.2 17.4 Z"/>` },
+  { id: "display", tint: 4, label: "Display", icon: `<path d="M4 5.2 C9.4 4.9 14.6 4.9 20 5.2 C20.2 8.9 20.2 12.9 19.9 16.9 C14.6 17.2 9.4 17.2 4.1 16.9 C3.8 12.9 3.8 8.9 4 5.2 Z"/><path d="M12 17.1 C12 18 12 19 12.1 19.9"/><path d="M8.8 20.1 C11 19.9 13.2 19.9 15.3 20.2"/>` },
+  { id: "sound", tint: 5, label: "Sound", icon: `<path d="M10.9 5.2 C9.4 6.4 7.9 7.8 6.5 9.1 L3.4 9.2 C3.2 11.1 3.2 13 3.4 14.9 L6.5 15 C7.9 16.3 9.4 17.6 10.9 18.9 C11.2 14.4 11.2 9.7 10.9 5.2 Z"/><path d="M14.4 9.4 C15.6 10.9 15.6 13.2 14.5 14.7"/><path d="M17.2 6.9 C19.9 9.9 19.9 14.4 17.3 17.4"/>` },
+  { id: "data", tint: 6, label: "Data", icon: `<path d="M3.6 11.4 C9.2 11 14.8 11 20.4 11.4 C20.6 14.4 20.5 17.4 20.2 20.4 C14.8 20.7 9.2 20.7 3.8 20.4 C3.4 17.4 3.4 14.4 3.6 11.4 Z"/><path d="M6 11.2 C6 9.2 6.1 7.2 6.3 5.4 C9 5.2 11.6 5.2 14.2 5.4 C14.4 7.2 14.4 9.2 14.3 11.2"/><path d="M9.4 5.4 C9.4 4.6 9.5 4 9.6 3.4 C12.4 3.2 15.2 3.2 17.8 3.5 C18 6 18 8.6 17.9 11.2"/><path d="M10 15.6 C11.4 15.5 12.6 15.5 14 15.6"/>` },
+  { id: "about", tint: 7, label: "About", icon: `<path d="M9 4.4 C12.6 4.2 16.2 4.2 19.8 4.5 C20 8.8 20 13.1 19.8 17.3 C16.2 17.6 12.6 17.6 9 17.4 L4.2 10.9 Z"/><path d="M10.4 10.9 C10.4 11.6 9.9 12.1 9.2 12.1 C8.5 12.1 8 11.6 8 10.9 C8 10.2 8.5 9.7 9.2 9.7 C9.9 9.7 10.4 10.2 10.4 10.9 Z"/><path d="M12.8 8.6 C14.6 8.5 16.2 8.5 17.8 8.7"/><path d="M12.8 12.8 C14.2 12.7 15.6 12.7 16.8 12.9"/>` },
 ];
+// A phone's corner holds the gear alone: the sound and keepsakes buttons hide below this width
+// (the phone block in styles.css), so the drawer moves in here as a divider and sound is left to
+// its own divider. The two breakpoints must move together.
+function phoneDesk() {
+  return !!(window.matchMedia && window.matchMedia("(max-width: 560px)").matches);
+}
+function settingsPanels() {
+  return phoneDesk() ? SETTINGS_PANELS : SETTINGS_PANELS.filter((p) => !p.phoneOnly);
+}
 // Module-level, because every toggle re-renders the whole body: without this the
 // player would be thrown back to Notebook each time they ticked a box.
 let settingsPanel = SETTINGS_PANELS[0].id;
 
 function stepSettingsPanel(step) {
-  const i = SETTINGS_PANELS.findIndex((p) => p.id === settingsPanel);
-  const next = SETTINGS_PANELS[(i + step + SETTINGS_PANELS.length) % SETTINGS_PANELS.length];
+  const panels = settingsPanels();
+  const i = panels.findIndex((p) => p.id === settingsPanel);
+  const next = panels[(i + step + panels.length) % panels.length];
   if (next) showSettingsPanel(next.id);
 }
 
@@ -27697,12 +27719,16 @@ function handleSettingsPageArrow(e) {
 function renderSettingsTabs() {
   const rail = $("settingsTabs");
   if (!rail) return;
-  rail.innerHTML = SETTINGS_PANELS.map((p, i) => {
+  const fresh = newKeepsakeCount();
+  rail.innerHTML = settingsPanels().map((p) => {
     const on = p.id === settingsPanel;
+    // The drawer's divider carries the unread count the hidden desk button used to.
+    const count = p.id === "keepsakes"
+      ? `<span class="set-tab-count js-keepsakes-count${fresh ? "" : " is-empty"}" aria-hidden="true">${fresh || ""}</span>` : "";
     return `<button type="button" class="set-tab${on ? " active" : ""}" id="set-tab-${p.id}" role="tab" ` +
       `aria-selected="${on}" aria-controls="set-panel-${p.id}" tabindex="${on ? 0 : -1}" ` +
-      `data-panel="${p.id}" style="--tab-tint: var(--set-tab-${i + 1}); --tab-ink: var(--set-tab-${i + 1}-deep)">` +
-      `<svg class="set-tab-icon" viewBox="0 0 24 24" aria-hidden="true">${p.icon}</svg><span>${p.label}</span></button>`;
+      `data-panel="${p.id}" style="--tab-tint: var(--set-tab-${p.tint}); --tab-ink: var(--set-tab-${p.tint}-deep)">` +
+      `<svg class="set-tab-icon" viewBox="0 0 24 24" aria-hidden="true">${p.icon}</svg><span>${p.label}</span>${count}</button>`;
   }).join("");
   rail.querySelectorAll("[data-panel]").forEach((b) => {
     b.addEventListener("click", () => showSettingsPanel(b.dataset.panel));
@@ -27716,10 +27742,11 @@ function renderSettingsTabs() {
     const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
     let next = null;
     if (step) {
-      const i = SETTINGS_PANELS.findIndex((p) => p.id === settingsPanel);
-      next = SETTINGS_PANELS[(i + step + SETTINGS_PANELS.length) % SETTINGS_PANELS.length].id;
-    } else if (e.key === "Home") next = SETTINGS_PANELS[0].id;
-    else if (e.key === "End") next = SETTINGS_PANELS[SETTINGS_PANELS.length - 1].id;
+      const panels = settingsPanels();
+      const i = panels.findIndex((p) => p.id === settingsPanel);
+      next = panels[(i + step + panels.length) % panels.length].id;
+    } else if (e.key === "Home") next = settingsPanels()[0].id;
+    else if (e.key === "End") next = settingsPanels().at(-1).id;
     if (!next) return;
     e.preventDefault();
     showSettingsPanel(next);
@@ -27728,11 +27755,26 @@ function renderSettingsTabs() {
 function showSettingsPanel(id) {
   settingsPanel = id;
   $("settingsBody").querySelectorAll(".set-panel").forEach((p) => { p.hidden = p.id !== `set-panel-${id}`; });
+  if (id === "keepsakes") fillSettingsKeepsakes();
   renderSettingsTabs();
   const card = document.querySelector("#settingsModal .settings-card");
   if (card) card.scrollTop = 0;   // a new divider opens at the top of its page
   const tab = $(`set-tab-${id}`);
   if (tab) { try { tab.focus({ preventScroll: true }); } catch (_) { tab.focus(); } }
+}
+
+// The drawer, drawn into its settings divider rather than its own modal. Rendered only when the
+// divider is open, so the polaroid wall costs nothing on every other tab's re-render, and
+// opening it is looking at it, so it clears the unread count the same way the modal does.
+function settingsKeepsakesShowing() {
+  return $("settingsModal").classList.contains("open") && settingsPanel === "keepsakes" && !!$("setKeepsakesBody");
+}
+function fillSettingsKeepsakes() {
+  const host = $("setKeepsakesBody");
+  if (!host) return;
+  renderKeepsakesPage(host);
+  markKeepsakesSeen();
+  updateKeepsakesNav();
 }
 
 function coverStickerSettingsHTML() {
@@ -27791,6 +27833,7 @@ function renderSettingsBody() {
       setBookplateHTML() +
       setEraGridHTML()
     ) + coverStickerSettingsHTML();
+  panels.keepsakes = `<div id="setKeepsakesBody" class="set-keepsakes"></div>`;
   panels.motion =
     setSection("",
       setChoiceHTML("reduceMotion", "Reduce motion", "Auto follows your system", [{ val: "auto", label: "Auto" }, { val: "on", label: "On" }, { val: "off", label: "Off" }]) +
@@ -27903,7 +27946,8 @@ function renderSettingsBody() {
     );
 
   // An unknown id (a panel removed while one was open) falls back to the first tab.
-  if (!SETTINGS_PANELS.some((p) => p.id === settingsPanel)) settingsPanel = SETTINGS_PANELS[0].id;
+  // So does the phone-only drawer once the window has grown past a phone.
+  if (!settingsPanels().some((p) => p.id === settingsPanel)) settingsPanel = SETTINGS_PANELS[0].id;
   // Every control re-renders the whole body, which throws focus back to <body>. Note
   // where it was so a keyboard can tick three boxes in a row without re-Tabbing.
   const was = document.activeElement;
@@ -27916,10 +27960,11 @@ function renderSettingsBody() {
     : d.select ? `[data-select="${CSS.escape(d.select)}"]`
     : was && was.id === "countdownSlider" ? "#countdownSlider"
     : null;
-  $("settingsBody").innerHTML = SETTINGS_PANELS.map((p) =>
+  $("settingsBody").innerHTML = settingsPanels().map((p) =>
     `<div class="set-panel" id="set-panel-${p.id}" role="tabpanel" aria-labelledby="set-tab-${p.id}"` +
     `${p.id === settingsPanel ? "" : " hidden"}>${panels[p.id]}</div>`
   ).join("");
+  if (settingsPanel === "keepsakes") fillSettingsKeepsakes();
   renderSettingsTabs();
   wireSettingsBody();
   mountOfflineSettings($("settingsBody"), GUESTS);

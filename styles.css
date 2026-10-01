@@ -15019,6 +15019,7 @@
     text-align: center; box-shadow: 0 1px 3px rgba(43, 39, 34, 0.3);
   }
   .keepsakes-gear-badge.is-empty { display: none; }
+  .settings-gear-badge { display: none; }
 
   /* The three desk buttons at night. They are chips of stationery lying on the DESK, not on
      the page, so a cream disc has nothing dark behind it to be read against and simply burns
@@ -15117,6 +15118,7 @@
     --set-tab-5: #e8d9dc;   --set-tab-5-deep: #a45d68;   /* rose   */
     --set-tab-6: #dfe3d3;   --set-tab-6-deep: #6f8f5c;   /* sage   */
     --set-tab-7: #ece2cf;   --set-tab-7-deep: #9a6b3a;   /* buff   */
+    --set-tab-8: #d8e4e0;   --set-tab-8-deep: #4e8a7f;   /* teal, the phone's keepsakes divider */
   }
   /* The dividers at night. Same seven stocks, printed on the dark side of the paper: each one
      keeps its HUE and is rebuilt at a lightness that stands off the night page by 1.16-1.19:1,
@@ -15139,8 +15141,17 @@
     --set-tab-5: #47292f;   /* rose   */
     --set-tab-6: #2e331e;   /* sage   */
     --set-tab-7: #372f20;   /* buff   */
+    --set-tab-8: #213631;   /* teal   */
   }
   .set-panel[hidden] { display: none; }
+  /* The keepsakes divider's unread count: the desk button's badge, shrunk to sit in a tab. */
+  .set-tab-count {
+    margin-left: 6px; min-width: 15px; height: 15px; padding: 0 4px; box-sizing: border-box;
+    border-radius: 8px; background: var(--ink); color: var(--paper);
+    font-size: calc(9px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0;
+    line-height: calc(15px + var(--text-size-adjust)); text-align: center;
+  }
+  .set-tab-count.is-empty { display: none; }
 
   /* Under the rail's width the tabs can't sit beside the paper, so they lie across
      the top of it instead — same dividers, seen from the other edge. */
@@ -16202,8 +16213,12 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
     position: absolute; top: calc(8px + env(safe-area-inset-top, 0px));
     right: max(10px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px;
   }
-  .sound-gear { right: calc(max(10px, env(safe-area-inset-right, 0px)) + 52px); }
-  .keepsakes-gear { right: calc(max(10px, env(safe-area-inset-right, 0px)) + 104px); }
+  /* A phone's corner holds the gear alone. Sound is a settings divider already, and the
+     keepsakes drawer becomes one here (settingsPanels in app.js, same 560px breakpoint), so
+     the gear wears the drawer's unread badge instead. */
+  .sound-gear, .keepsakes-gear { display: none; }
+  .settings-gear-badge:not(.is-empty) { display: block; }
+  body.in-game .settings-gear-badge { display: none; }
   .corner-links {
     position: relative; order: 2; inset: auto; justify-content: center; flex-wrap: wrap;
     max-width: 100%; margin-top: 22px; gap: 8px;
