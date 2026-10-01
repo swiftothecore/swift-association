@@ -9334,10 +9334,15 @@ function turnSlip(id, label = "next page") {
    way to stop the page turning was to open something on the verdict, which paused it as a side
    effect nobody was told about. Hold takes the same path (pauseAutoAdvanceForReading), and so
    does Escape; skip and Enter still turn the page straight away. */
+// Hold's underline: four short pen dashes of uneven length, in the same round pen as skip's
+// line. Stretched to the word's width, so the stroke is kept from stretching with it.
+const HOLD_DASHES = `<svg class="cd-hold-dashes" viewBox="0 0 32 4" preserveAspectRatio="none" aria-hidden="true">` +
+  `<path d="M1.2 2 L6.4 2.2 M10.1 2.1 L14.6 1.9 M18.3 2 L23.5 2.1 M27 2.2 L30.8 1.9"/></svg>`;
 function countdownAdvance(lead, cdId, skipId) {
   return `<div class="countdown">${lead} in <b id="${cdId}">${settings.countdownSecs}</b></div>` +
     `<div class="countdown-acts">` +
-      `<button type="button" class="countdown-hold" aria-label="Hold this page, stop the countdown">hold</button>` +
+      `<button type="button" class="countdown-hold" aria-label="Hold this page, stop the countdown">` +
+        `<span class="cd-hold-word">hold${HOLD_DASHES}</span></button>` +
       `<button type="button" id="${skipId}" class="countdown-skip"><span class="cd-skip-word">skip</span> ${CTA_ARROW}</button>` +
     `</div>`;
 }

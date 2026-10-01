@@ -10388,17 +10388,25 @@
     border-radius: 1px; background: currentColor;
   }
   .countdown-skip:is(:hover, :focus-visible) .cd-skip-word::after { background: var(--ink-accent); }
-  /* Hold sits beside skip as its quieter twin: same typewriter, same drawn underline, but in the
-     soft ink and dotted, because stopping is the lesser of the two ways off a verdict. */
+  /* Hold sits beside skip as its quieter twin: same typewriter, same round pen and the same
+     depth of underline, but in the soft ink and broken into dashes, because stopping is the
+     lesser of the two ways off a verdict. The dashes are an SVG (HOLD_DASHES in app.js) because
+     a dashed text-decoration can only draw even, square-ended dashes. */
   .countdown-acts { display: flex; align-items: baseline; justify-content: center; gap: 18px; }
   .countdown-hold {
     margin-top: 8px;
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink-soft); background: none;
-    text-decoration: underline dotted 2px; text-underline-offset: 4px;
     border: none; padding: 3px 3px; cursor: pointer;
   }
-  .countdown-hold:is(:hover, :focus-visible) { color: var(--ink); text-decoration-color: var(--ink-accent); }
+  .cd-hold-word { position: relative; }
+  .cd-hold-dashes {
+    position: absolute; left: 0; bottom: -4px; width: calc(100% - 1px); height: 4px; overflow: visible;
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round;
+  }
+  .cd-hold-dashes path { vector-effect: non-scaling-stroke; }
+  .countdown-hold:is(:hover, :focus-visible) { color: var(--ink); }
+  .countdown-hold:is(:hover, :focus-visible) .cd-hold-dashes { color: var(--ink-accent); }
 
   /* On a desktop the way off a verdict comes last, under everything that explains the page
      (phones get it straight under the verdict instead: verdictMarkup in app.js). The countdown and its skip stack on one centre line so the skip
