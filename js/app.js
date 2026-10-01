@@ -94,6 +94,8 @@ import { sfx } from "./sound.js";
 import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
 import { buildLyricReveal } from "./lyric-reveal.mjs";
+import { verdictMark } from "./verdictmark.js";
+import { songWave } from "./songwave.js";
 import { zineCover, hasCover } from "./zine.js";
 // Track by Track's twelve album sleeves (pure; see js/sleeves.js).
 import { albumSleeve, commonNameSize, hasMotif, motifOf, sleeveName } from "./sleeves.js";
@@ -2107,9 +2109,12 @@ const CTA_ARROW = `<svg class="cta-arrow" viewBox="0 0 20 10" aria-hidden="true"
 const CTX_LINES = `<svg class="ctx-lines" viewBox="0 0 15 12" aria-hidden="true">` +
   `<path class="o" d="M1.2 1.8C5 1.6 9.4 1.9 13.2 1.6"/><path class="a" d="M1.4 6C4.6 5.9 7.8 6.1 10.4 5.9"/>` +
   `<path class="o" d="M1.2 10.2C4.4 10.1 8 10.4 12.4 10.1"/></svg>`;
-// "show more songs": a drawn chevron that turns over once the list is open
+// "show more songs": a chevron drawn as the hand draws one, which is two strokes and not one
+// bent line. The left arm comes down a little longer and heavier, the right one goes up from
+// just past where it landed and lifts off lighter, so the point is a join rather than a mitre.
 const MORE_CHEV = `<svg class="more-chev" viewBox="0 0 10 7" aria-hidden="true">` +
-  `<path d="M1.2 1.4C2.6 2.8 3.8 4.2 5 5.6 6.2 4.2 7.6 2.6 8.8 1.2"/></svg>`;
+  `<path d="M0.9 1.5C2.3 2.9 3.5 4.3 4.9 5.9" stroke-width="1.6"/>` +
+  `<path d="M4.6 5.7C6 4.4 7.3 2.8 9.1 1.1" stroke-width="1.35"/></svg>`;
 
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
@@ -9554,10 +9559,10 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   fb.className = "bg-feedback show " + (correct ? "ok" : passed ? "pass" : "no");
   fb.innerHTML = verdictMarkup(
     correct
-      ? `<div class="banner good">✓ ${escapeHtml(bonusBannerText(true, isTimeout))}</div>`
+      ? `<div class="banner good">${verdictMark("good", "inl")}${escapeHtml(bonusBannerText(true, isTimeout))}</div>`
       : passed
         ? `<div class="banner pass">— ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`
-      : `<div class="banner bad">✗ ${escapeHtml(bonusBannerText(false, isTimeout))}</div>`,
+      : `<div class="banner bad">${verdictMark("bad", "inl")}${escapeHtml(bonusBannerText(false, isTimeout))}</div>`,
     (detail ? `<p class="bg-detail">${detail}</p>` : "") + bonusAnswerCard(),
     advanceUI);
   $("bonusScore").textContent = bonusScoreText();
@@ -18323,11 +18328,11 @@ function revealTapKnowledge(correct) {
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
     : turnSlip("continueBtn");
   const banner = correct
-    ? (oddOneRuleActive() ? "✓ that's the odd one" : "✓ that's the one")
-    : (oddOneRuleActive() ? "✗ that one sings it" : "✗ not that one");
+    ? (oddOneRuleActive() ? "that's the odd one" : "that's the one")
+    : (oddOneRuleActive() ? "that one sings it" : "not that one");
   const fb = $("feedback");
   fb.innerHTML = verdictMarkup(
-    `<div class="banner ${correct ? "good" : "bad"}">${banner}</div>`,
+    `<div class="banner ${correct ? "good" : "bad"}">${verdictMark(correct ? "good" : "bad", "inl")}${banner}</div>`,
     `<p class="red-note">${note}</p>`,
     advanceUI);
   playSound(correct ? "correct" : "wrong");
@@ -18591,7 +18596,7 @@ function revealCommon(correct) {
     ? `<div class="countdown">next page in <b id="cd">${settings.countdownSecs}</b></div><button id="skipBtn" class="countdown-skip">skip ${CTA_ARROW}</button>`
     : turnSlip("continueBtn");
   fb.innerHTML = verdictMarkup(
-    `<div class="banner ${correct ? "good" : "bad"}">${correct ? "✓ that's the thread" : "✗ not the thread"}</div>`,
+    `<div class="banner ${correct ? "good" : "bad"}">${verdictMark(correct ? "good" : "bad", "inl")}${correct ? "that's the thread" : "not the thread"}</div>`,
     `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
     `<div class="common-reveal">${cards}</div>`,
     advanceUI);
@@ -25151,7 +25156,8 @@ function standaloneLyricContext(song, word, anchorLine) {
       `<div class="lyric-ctx-lines">${rows}</div>${fullLyricsButton(entry)}</div></div>`;
 }
 
-function lyricCard(song, word, isWrong, lineOverride, context) {
+// `wave` draws the song under its title with the word's lines lit (see waveVerdictActive).
+function lyricCard(song, word, isWrong, lineOverride, context, wave = false) {
   const color = albumColor(song.album) || "var(--ink-soft)";
   const proofTitle = titleProofActive();
   const title = proofTitle
@@ -25163,7 +25169,9 @@ function lyricCard(song, word, isWrong, lineOverride, context) {
   const cls = isWrong ? " wrong-card" : "";
   const headingId = nextLyricRevealId("title");
   return `<article class="lyric-card${cls}${proofTitle ? " title-proof" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
-    `<div class="song-title" id="${headingId}">${title}${albumTag(song, color)}</div>${proof}</article>`;
+    `<div class="song-title" id="${headingId}">${title}${albumTag(song, color)}</div>` +
+    `${wave && !proofTitle && Array.isArray(song.sections) && song.sections.length
+      ? waveProof(songWave(song, wordRegex(word), isWrong ? "" : "lit"), "card-wave") : ""}${proof}</article>`;
 }
 
 // Both Of Us remains ONE card per song, but each required word now has its own anchored proof
@@ -25242,7 +25250,7 @@ function moreSongsBlock(pool, shown, word) {
       `<ul class="more-songs-list">${rows}</ul>${next}${searcher}</div>`;
 }
 
-const LYRIC_BANNERS = { base: "✓ you knew the line", good: "✓ nicely recalled", perfect: "✓ word-perfect", verse: "✓ the whole verse" };
+const LYRIC_BANNERS = { base: "you knew the line", good: "nicely recalled", perfect: "word-perfect", verse: "the whole verse" };
 const FIRST_THOUGHT_SECONDS = 1;
 
 // A quick answer is already timed by the page stopwatch. Multi-answer pages are excluded:
@@ -25327,6 +25335,33 @@ function revengeNote() {
   return `<p class="revenge-note" aria-label="finally answered your most missed word">finally.</p>`;
 }
 
+/* The verdict as one sentence about the page's word ("Style never sings gold", "End Game sings
+   bury"), with the song it is about drawn underneath: one pencil bar per lyric line, the lines
+   that sing the word lit (js/songwave.js). A missed title shows its whole sheet with nothing
+   lit, which is the reason it missed, and the cards below carry the same drawing, so the page
+   shows where the word lives in each song instead of only saying which songs have it. The
+   board this was picked from is scripts/ui/verdict-wave.html.
+
+   It only speaks for a page with one prompt word answered by naming a song. Tap grids, Whose
+   Line?, Both Of Us, Common Thread and Title...? each ask something else, so they keep their own
+   banners, and those carry the same felt-tip marks (js/verdictmark.js). */
+const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+const countWord = (n) => COUNT_WORDS[n] || String(n);
+function waveVerdictActive() {
+  return !!currentWord && !roundIsImpostor && !tapGridActive() && !whoseLineRuleActive() &&
+    !bothRuleActive() && !commonRuleActive() && !titleProofActive();
+}
+// The song drawn under the page's word. Null for a song without structured sections, which
+// then goes without its picture rather than drawing an empty sheet it doesn't have.
+function pageWave(song, lit) {
+  if (!song || !Array.isArray(song.sections) || !song.sections.length) return null;
+  return songWave(song, wordRegex(currentWord), lit ? "lit" : "");
+}
+function waveProof(w, cls) {
+  return w ? `<div class="${cls}">${w.svg}<span class="wave-count"><b>${w.hits}</b> / ${w.lines} lines</span></div>` : "";
+}
+const verdictWord = () => `<mark class="vw-word">${escapeHtml(currentWord)}</mark>`;
+
 function showCorrectFeedback(song, lyricMatch) {
   resetLyricReveals();
   const fb = $("feedback");
@@ -25340,9 +25375,18 @@ function showCorrectFeedback(song, lyricMatch) {
   // lyric at each place it earns the page.
   const both = bothRuleActive() && bothWords.length > 1;
   const banner = multi
-    ? (roundNamed.length === 2 ? "✓ both of them" : `✓ all ${roundNamed.length}`)
-    : both ? (bothWords.length === 2 ? "✓ it holds both" : "✓ it holds all three")
-    : lyricMatch ? (LYRIC_BANNERS[lyricMatch.tier] || LYRIC_BANNERS.base) : "✓ that's the one";
+    ? (roundNamed.length === 2 ? "both of them" : `all ${roundNamed.length}`)
+    : both ? (bothWords.length === 2 ? "it holds both" : "it holds all three")
+    : lyricMatch ? (LYRIC_BANNERS[lyricMatch.tier] || LYRIC_BANNERS.base) : "";
+  // A named title on a one-word page is said as the sentence, "Florida!!! sings bury, twice",
+  // over the song's drawing. A sung line keeps its recall banner, because how much of the line
+  // came back is the news there, and still gets the drawing under it.
+  const wave = !multi && !both && waveVerdictActive() ? pageWave(song, true) : null;
+  const times = wave && wave.hits === 2 ? ", twice" : wave && wave.hits > 2 ? `, ${countWord(wave.hits)} times` : "";
+  const head = banner || !song || !waveVerdictActive()
+    ? `<div class="banner good">${verdictMark("good", "inl")}${banner || "that's the one"}</div>`
+    : `<p class="vw-say good">${verdictMark("good")}<span class="vw-title">${escapeHtml(censor(song.title))}</span>` +
+      ` <span class="vw-verb">sings</span> ${verdictWord()}${times}</p>`;
   const bonus = lyricMatch ? lyricMatch.bonus : 0;
   const sticker = lyricMatch ? verseSticker(lyricMatch.tier, bonus) : "";
   // First time a verse bonus is ever earned, teach what it is — once, then silent.
@@ -25389,7 +25433,7 @@ function showCorrectFeedback(song, lyricMatch) {
   // everything that explains the page — it is a margin aside, not part of the verdict.
   const revenge = revengeNote();
   fb.innerHTML = verdictMarkup(`
-    <div class="fb-head"><div class="banner good">${banner}</div>${sticker}</div>`, `
+    <div class="fb-head"><div class="vw vw-good">${head}${waveProof(wave, "vw-proof")}</div>${sticker}</div>`, `
     ${revenge}
     ${inkNote}
     ${firstNote}
@@ -25413,6 +25457,11 @@ function showWrongFeedback(song, isTimeout) {
   resetLyricReveals();
   const fb = $("feedback");
   const reason = isTimeout ? "the page ran out" : "not this verse";
+  // Said as a sentence only when it is true: a title the word is really absent from. A pick
+  // refused for some other rule (it holds the word, but the page wanted something else of it)
+  // keeps the plain banner with the answer under it.
+  const sentence = waveVerdictActive() &&
+    (isTimeout || !!(song && !wordRegex(currentWord).test(song.lyrics || "")));
   const submitted = song && !isTimeout
     ? `<p class="wrong-submission"><span>your answer</span> ${escapeHtml(censor(song.title))}</p>`
     : "";
@@ -25458,16 +25507,27 @@ function showWrongFeedback(song, isTimeout) {
       }
     } else {
       const examples = ordered.slice(0, n);
-      const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true)).join("");
+      const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true, sentence)).join("");
+      // The way into the cards is a label, so it is typed rather than handwritten, and it says
+      // how many songs there were before you scroll: "seven songs do".
+      const one = ordered.length === 1;
+      const label = sentence
+        ? `<p class="vw-label"><b>${countWord(ordered.length)}</b> song${one ? "" : "s"} ` +
+          `${isTimeout ? (one ? "sings it" : "sing it") : (one ? "does" : "do")}</p>`
+        : `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>`;
       // The expansion continues `ordered`, so the list picks up exactly where the cards left
       // off instead of re-shuffling the same songs into a different sequence.
-      help = `<span class="red-note">songs that hold "<b>${escapeHtml(currentWord)}</b>"</span>${cards}` +
-        moreSongsBlock(ordered, examples, currentWord);
+      help = label + cards + moreSongsBlock(ordered, examples, currentWord);
     }
   }
-  fb.innerHTML = verdictMarkup(`
-    <div class="banner bad">✗ ${reason}</div>
-    ${submitted}`, help, turnSlip("continueBtn"));
+  const head = !sentence
+    ? `<div class="banner bad">${verdictMark("bad", "inl")}${reason}</div>${submitted}`
+    : isTimeout
+      ? `<div class="vw vw-bad"><p class="vw-say">${verdictMark("bad")}<span class="vw-verb">the page ran out on</span> ${verdictWord()}</p></div>`
+      : `<div class="vw vw-bad"><p class="vw-say">${verdictMark("bad")}<span class="vw-title">` +
+        `<span class="sr-only">your answer, </span>${escapeHtml(censor(song.title))}</span>` +
+        ` <span class="vw-verb">never sings</span> ${verdictWord()}</p>${waveProof(pageWave(song, false), "vw-proof")}</div>`;
+  fb.innerHTML = verdictMarkup(head, help, turnSlip("continueBtn"));
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -27119,7 +27179,7 @@ function wireInput() {
     // from submitting is ignored, so the key can never run away with the verdict by itself.
     if (e.repeat) return;
     // "Enter advances on a miss" off → require a click on the miss/answer screen.
-    if (!settings.enterOnMiss && document.querySelector("#feedback .banner.bad")) return;
+    if (!settings.enterOnMiss && document.querySelector("#feedback :is(.banner.bad, .vw-bad)")) return;
     e.preventDefault();
     advanceFromFeedback();
   });

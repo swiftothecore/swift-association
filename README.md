@@ -45,6 +45,7 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - On each album's release day, Taylor's Versions included, the start button dresses up in that album's own finish, on her birthday it becomes a cake with her age in candles, and on the 13th of every month it counts to thirteen in chalk
 - A rubber stamp on your results when a run has a story worth one
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
+- Every verdict draws the songs as little waveforms, one bar per lyric line, with the lines that sing the word lit
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
 - A graveyard of everything the notebook used to have, each plot carrying the argument that ended it
 - A night version of the whole desk, and a high-contrast setting that works in either light
