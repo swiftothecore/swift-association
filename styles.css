@@ -1371,10 +1371,10 @@
 
   /* The same interaction on a real button or its enclosing picker control. Keep motion
      off the preview's outer box: its transform is also what scales and centres it. */
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) {
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) {
     background-color: var(--cta-hover-fill); color: var(--cta-hover-text);
   }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta)::after { transform: scaleX(1); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta)::after { transform: scaleX(1); }
   button.play-cta:is(:hover, :focus-visible) { animation: none; transform: rotate(-.6deg) translateY(-2px); box-shadow: 3px 5px 0 #2b272238; }
   button.play-cta:active { transform: rotate(-.6deg) translateY(1px); }
   .play-cta:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; }
@@ -1406,7 +1406,7 @@
     transform: translateX(102%); transition: transform .45s cubic-bezier(.2,.7,.25,1); }
   .cta-stroke-line { position: absolute; left: calc(5px + (100% - 49px) * .16); right: calc(44px + (100% - 49px) * .16);
     bottom: 14px; height: 2px; border-radius: 2px; background: currentColor; opacity: .7; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-stroke, :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-stroke-copy { transform: translateX(0); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-stroke, :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-stroke-copy { transform: translateX(0); }
 
   /* Ink press: a rubber-stamp impression. The face is matte (the shared white sheen turned a
      near-black slab into grey plastic), the ink has taken unevenly, and on hover fresh ink
@@ -1433,7 +1433,7 @@
     vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center;
     transform: scale(.2); opacity: 0; transition: opacity .35s ease, transform 0s .35s; }
   :root[data-theme="dark"] .play-cta[data-startbtn="ink"] .cta-ink-blot { fill-opacity: .45; stroke-opacity: .5; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ink-blot { transform: scale(1); opacity: 1;
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-ink-blot { transform: scale(1); opacity: 1;
     transition: transform 1.1s cubic-bezier(.15,.7,.3,1) var(--ink-delay), opacity .4s ease var(--ink-delay); }
   button.play-cta[data-startbtn="ink"]:is(:hover, :focus-visible) { transform: rotate(-.6deg) translateY(1px); box-shadow: 1px 1px 0 #2b272255, inset 0 2px 5px #0008; }
   button.play-cta[data-startbtn="ink"]:active { transform: rotate(-.6deg) translateY(2px); box-shadow: 0 0 0 #0000, inset 0 3px 8px #000b; }
@@ -1465,7 +1465,7 @@
     transform: translateX(var(--wash-x, 0px)) rotate(var(--wash-turn, 0deg)); }
   .cta-wash-blot { fill-opacity: .32; stroke-opacity: .3; transform-box: fill-box; transform-origin: center;
     transform: scale(.3); opacity: 0; transition: opacity .3s ease, transform 0s .3s; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-wash-blot { transform: scale(1); opacity: 1;
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-wash-blot { transform: scale(1); opacity: 1;
     transition: transform 1s cubic-bezier(.2,.7,.3,1) var(--wash-delay), opacity .45s ease var(--wash-delay); }
 
   /* Sky: fair-weather clouds along the top edge give way to a storm front of their own on
@@ -1489,20 +1489,20 @@
   .cta-day-clouds { inset: 0; width: 100%; height: 100%; fill: var(--day-cloud);
     transition: opacity .45s ease, transform 1.2s ease; }
   :root[data-theme="dark"] .play-cta[data-startbtn="sky"] .cta-day-clouds { opacity: .45; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-day-clouds { opacity: 0 !important; transform: translateX(14px); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-day-clouds { opacity: 0 !important; transform: translateX(14px); }
   .cta-storm-clouds { top: -4px; left: -30px; width: calc(100% + 60px); height: 36px; opacity: 0;
     transform: translateX(-24px); transition: opacity .5s ease .1s, transform 1.2s ease; }
   .cta-storm-back { fill: var(--storm-back); }
   .cta-storm-front { fill: var(--storm-front); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-storm-clouds { opacity: 1; transform: translateX(0); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-storm-clouds { opacity: 1; transform: translateX(0); }
   .cta-rain { inset: 0; opacity: 0; overflow: hidden;
     mask-image: linear-gradient(90deg, #000 0 15%, #0007 36% 65%, #000 85%); }
   .cta-rain--far { filter: blur(.3px); }
   .cta-drop { position: absolute; top: -18px; width: 1.2px; height: var(--drop-h);
     background: linear-gradient(transparent, var(--rain)); border-radius: 50%; opacity: 0; transform: rotate(16deg); }
   .cta-rain--far .cta-drop { width: .8px; height: calc(var(--drop-h) * .65); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-rain { animation: ctaRainShower 2.6s ease-out both; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-drop { animation: ctaRainFall var(--drop-duration) var(--drop-delay) linear 4; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-rain { animation: ctaRainShower 2.6s ease-out both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-drop { animation: ctaRainFall var(--drop-duration) var(--drop-delay) linear 4; }
   @keyframes ctaRainShower { 0% { opacity: 0; } 12%, 75% { opacity: 1; } 100% { opacity: 0; } }
   @keyframes ctaRainFall { 0% { opacity: 0; transform: translate(8px, var(--drop-y)) rotate(16deg); }
     15%, 75% { opacity: .95; } 100% { opacity: 0; transform: translate(-12px, calc(var(--drop-y) + 82px)) rotate(16deg); } }
@@ -1512,7 +1512,7 @@
   .cta-bolt-halo { stroke: #a3c8ff; stroke-width: 3; filter: blur(2px); }
   .cta-bolt-core { stroke: #f6faff; stroke-width: 1.1; }
   .cta-bolt-branch { stroke: #d5e6ff; stroke-width: .55; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-lightning { animation: ctaLightning 1.1s .45s ease-out both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-lightning { animation: ctaLightning 1.1s .45s ease-out both; }
   @keyframes ctaLightning { 0%, 8% { opacity: 0; } 11% { opacity: .95; } 22% { opacity: .55; } 45% { opacity: .18; } 100% { opacity: 0; } }
 
   /* Meadow: rooted blades bend once in a passing breeze; the flowers stay open. */
@@ -1537,11 +1537,11 @@
   .cta-flower-stem { fill: none; stroke: var(--blade-a); stroke-width: 1.3; stroke-linecap: round; }
   .cta-flower-sway { transform-box: fill-box; transform-origin: 50% 100%; }
   .cta-petals { fill: var(--flower-colour, #faf0cc); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-flower { transform: translateY(0); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-flower { transform: translateY(0); }
   /* The breeze crosses left to right, blade by blade, and the flowers bend in it too, a beat
      after they have come up. */
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-blade { animation: ctaBreeze 1s var(--wind-delay) ease-in-out 2; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-flower-sway { animation: ctaFlowerSway 1s calc(.55s + var(--wind-delay)) ease-in-out 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-blade { animation: ctaBreeze 1s var(--wind-delay) ease-in-out 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-flower-sway { animation: ctaFlowerSway 1s calc(.55s + var(--wind-delay)) ease-in-out 2; }
   @keyframes ctaBreeze { 0%, 100% { transform: skewX(0); } 40% { transform: skewX(12deg); } 75% { transform: skewX(-6deg); } }
   @keyframes ctaFlowerSway { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(-7deg); } 75% { transform: rotate(3deg); } }
 
@@ -1588,13 +1588,13 @@
   .cta-opens { transform: scale(.15) rotate(-50deg); opacity: 0;
     transition: transform .3s ease, opacity .2s ease; }
   .cta-bud { transition: transform .3s ease .1s, opacity .3s ease .1s; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-opens {
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-opens {
     transform: scale(1) rotate(0); opacity: 1;
     transition: transform .7s cubic-bezier(.2,.9,.3,1.15) var(--open-at), opacity .35s ease var(--open-at); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bud {
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-bud {
     transform: scale(.2); opacity: 0; transition: transform .4s ease var(--open-at), opacity .3s ease var(--open-at); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bough--left .cta-bough-sway { animation: ctaBoughL 1.8s .35s ease-in-out 2; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-bough--right .cta-bough-sway { animation: ctaBoughR 1.9s .55s ease-in-out 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-bough--left .cta-bough-sway { animation: ctaBoughL 1.8s .35s ease-in-out 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-bough--right .cta-bough-sway { animation: ctaBoughR 1.9s .55s ease-in-out 2; }
   @keyframes ctaBoughL { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(2.2deg); } 70% { transform: rotate(-.8deg); } }
   @keyframes ctaBoughR { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(-2.6deg); } 72% { transform: rotate(1deg); } }
 
@@ -1602,9 +1602,9 @@
   .cta-petal { position: absolute; width: var(--ps); height: var(--ps); opacity: 0; }
   .cta-petal b { display: block; width: 100%; height: 72%; background: var(--pc);
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; box-shadow: inset -.6px -.6px 0 #d98ea655; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-petal {
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-petal {
     animation: ctaPetalRide var(--pt) var(--pd) cubic-bezier(.35,.15,.6,.95) 2; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-petal b {
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-petal b {
     animation: ctaPetalTumble var(--pf) var(--pd) linear 4; }
   @keyframes ctaPetalRide {
     0% { opacity: 0; transform: translate(0, 0); }
@@ -1620,7 +1620,7 @@
   }
   .cta-sill { left: 0; bottom: 0; width: 100%; height: 9px; }
   .cta-sill-late { opacity: 0; transition: opacity .3s ease; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-sill-late { opacity: 1; transition: opacity .5s ease var(--land); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-sill-late { opacity: 1; transition: opacity .5s ease var(--land); }
 
   /* =====================================================================
      SUMMER: Tide
@@ -1651,33 +1651,33 @@
   .cta-surf-trail path { fill: none; stroke: var(--foam); stroke-linecap: round; opacity: .75; }
   .cta-surf-bubbles { fill: var(--foam); opacity: .8; }
   /* Rushes up quickly, hangs, draws back slowly: the swash is fast and the backwash is not. */
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-surf { animation: ctaSwash 2.9s .15s linear 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-surf { animation: ctaSwash 2.9s .15s linear 2; }
   @keyframes ctaSwash {
     0% { transform: translateY(0); animation-timing-function: cubic-bezier(.2,.7,.35,1); }
     38% { transform: translateY(5px); animation-timing-function: ease-in-out; }
     48% { transform: translateY(5.2px); animation-timing-function: cubic-bezier(.5,.1,.6,1); }
     100% { transform: translateY(0); }
   }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-surf-trail { animation: ctaTrail 2.9s .15s ease-in-out 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-surf-trail { animation: ctaTrail 2.9s .15s ease-in-out 2; }
   @keyframes ctaTrail { 0%, 100% { opacity: .75; } 40% { opacity: .95; } 70% { opacity: .35; } }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-sand-soak { animation: ctaSoak 2.9s .15s linear 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-sand-soak { animation: ctaSoak 2.9s .15s linear 2; }
   @keyframes ctaSoak { 0%, 40% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-lace-left { animation: ctaLaceLeft 2.9s .15s linear 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-lace-left { animation: ctaLaceLeft 2.9s .15s linear 2; }
   @keyframes ctaLaceLeft { 0%, 46% { opacity: 0; } 54% { opacity: .9; } 85%, 100% { opacity: 0; } }
   .cta-glint { height: 1.4px; border-radius: 1px; background: var(--glint); opacity: var(--g0); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-glint { animation: ctaGlint 1s var(--gd) ease-in-out 5 alternate; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-glint { animation: ctaGlint 1s var(--gd) ease-in-out 5 alternate; }
   @keyframes ctaGlint { 0% { opacity: var(--g0); transform: scaleX(1); } 100% { opacity: 1; transform: scaleX(1.7); } }
   .cta-boat { left: 66%; top: calc(23% - 12px); width: 17px; height: 13px; transition: transform .8s ease; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-boat { transform: translateX(26px); transition: transform 7s linear; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-boat path { animation: ctaBob 1.4s ease-in-out 4 alternate; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-boat { transform: translateX(26px); transition: transform 7s linear; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-boat path { animation: ctaBob 1.4s ease-in-out 4 alternate; }
   @keyframes ctaBob { 0% { transform: translateY(0); } 100% { transform: translateY(.6px); } }
   .cta-gull { width: 12px; height: 5px; transition: transform .8s ease; }
   .cta-gull--a { left: 14%; top: 3px; }
   .cta-gull--b { left: 21%; top: 7px; width: 9px; }
   .cta-gull path { transform-box: fill-box; transform-origin: 50% 70%; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gull { transform: translate(18px, -1px); transition: transform 4s ease-out; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gull path { animation: ctaFlap .32s ease-in-out 8 alternate; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gull--b path { animation-delay: .12s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-gull { transform: translate(18px, -1px); transition: transform 4s ease-out; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-gull path { animation: ctaFlap .32s ease-in-out 8 alternate; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-gull--b path { animation-delay: .12s; }
   @keyframes ctaFlap { 0% { transform: scaleY(1); } 100% { transform: scaleY(-.5); } }
   .cta-starfish { left: 7%; bottom: 0; width: 12px; height: 12px; transform: rotate(-14deg); }
   .cta-shell { right: 10%; bottom: 0; width: 11px; height: 10px; transform: rotate(9deg); }
@@ -1707,18 +1707,18 @@
   .cta-litter-bed { fill: var(--litter); }
   .cta-twig-wood { fill: var(--twig); }
   .cta-heap-leaf { transform-box: fill-box; transform-origin: 50% 80%; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-heap-leaf { animation: ctaRustle .55s var(--rd) ease-in-out 2 alternate; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-heap-leaf { animation: ctaRustle .55s var(--rd) ease-in-out 2 alternate; }
   @keyframes ctaRustle { 0% { transform: rotate(0) translateY(0); } 100% { transform: rotate(var(--rt)) translateY(-1.4px); } }
   .cta-winds { inset: 0; width: 100%; height: 100%; }
   .cta-wind { fill: none; stroke: var(--wind); stroke-width: 1.3; stroke-linecap: round; opacity: 0;
     stroke-dasharray: 100 100; stroke-dashoffset: 100; vector-effect: non-scaling-stroke; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-wind { animation: ctaWind var(--wt) var(--wd) cubic-bezier(.4,.1,.5,1) both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-wind { animation: ctaWind var(--wt) var(--wd) cubic-bezier(.4,.1,.5,1) both; }
   @keyframes ctaWind { 0% { stroke-dashoffset: 100; opacity: .55; } 55% { stroke-dashoffset: 0; opacity: .5; } 100% { stroke-dashoffset: -100; opacity: 0; } }
   .cta-gust { width: var(--gs); height: var(--gs); left: calc(var(--gs) * -1.4); top: var(--gy0); }
   .cta-gust svg, .cta-fall svg { display: block; width: 100%; height: 100%; overflow: visible; }
   .cta-gust > span, .cta-fall > span { display: block; width: 100%; height: 100%; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gust { animation: ctaGustAcross var(--gt) var(--gd) cubic-bezier(.3,.05,.55,1) both; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-gust > span { animation: ctaLeafTumble var(--gf) var(--gd) linear 4; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-gust { animation: ctaGustAcross var(--gt) var(--gd) cubic-bezier(.3,.05,.55,1) both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-gust > span { animation: ctaLeafTumble var(--gf) var(--gd) linear 4; }
   @keyframes ctaGustAcross {
     0% { transform: translate(0, 0); }
     30% { transform: translate(38cqw, var(--gy1)); }
@@ -1734,13 +1734,13 @@
   .cta-twig-sway { transform-origin: 72px 0; }
   /* On a phone the label runs nearly edge to edge, so the twig hangs from further out. */
   @container (max-width: 330px) { .cta-twig { right: -18px; top: -3px; } }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-twig-sway { animation: ctaTwig 1.4s .15s ease-in-out 2; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-twig-sway { animation: ctaTwig 1.4s .15s ease-in-out 2; }
   @keyframes ctaTwig { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-5deg); } 65% { transform: rotate(2deg); } }
   .cta-fall { position: absolute; width: var(--fs); height: var(--fs); left: var(--fx); top: var(--fy); margin: calc(var(--fs) / -2) 0 0 calc(var(--fs) / -2); }
   .cta-fall > span { transform: rotate(var(--fr0)); transform-origin: 50% 10%; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-fall { animation: ctaLetGo var(--ft) var(--fd) cubic-bezier(.45,.05,.6,1) both; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-fall > span { animation: ctaLetGoSpin var(--ft) var(--fd) ease-in-out both; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-fall--holds > span { animation: ctaHoldOn .5s .25s ease-in-out 3 alternate; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-fall { animation: ctaLetGo var(--ft) var(--fd) cubic-bezier(.45,.05,.6,1) both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-fall > span { animation: ctaLetGoSpin var(--ft) var(--fd) ease-in-out both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-fall--holds > span { animation: ctaHoldOn .5s .25s ease-in-out 3 alternate; }
   @keyframes ctaLetGo {
     0% { transform: translate(0, 0); }
     25% { transform: translate(calc(var(--lx) * .35), calc((100cqh - var(--fy) - var(--ly)) * .22)); }
@@ -1782,23 +1782,23 @@
   }
   .play-cta[data-startbtn="winter"] .cta-fx { container-type: size; }
   .play-cta[data-startbtn="winter"] .cta-label { transition: text-shadow .6s ease .3s; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta)[data-startbtn="winter"] .cta-label { text-shadow: 0 1px 3px #16222b; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta)[data-startbtn="winter"] .cta-label { text-shadow: 0 1px 3px #16222b; }
   .cta-storm-sky { inset: 0; background: var(--storm-sky); opacity: 0; transition: opacity .9s ease; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-storm-sky { opacity: .95; transition: opacity 1.1s ease .05s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-storm-sky { opacity: .95; transition: opacity 1.1s ease .05s; }
   .cta-frost { top: 0; height: auto; overflow: visible; }
   .cta-frost--left { left: 0; width: clamp(64px, 22%, 110px); }
   .cta-frost--right { right: 0; width: clamp(52px, 18%, 96px); }
   .cta-frost path { fill: none; stroke: var(--frost); stroke-linecap: round; opacity: .92;
     stroke-dasharray: 1 1; stroke-dashoffset: var(--rest); transition: stroke-dashoffset .6s ease; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-frost path { stroke-dashoffset: 0; transition: stroke-dashoffset 2.4s cubic-bezier(.3,.6,.4,1) var(--fz); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-frost path { stroke-dashoffset: 0; transition: stroke-dashoffset 2.4s cubic-bezier(.3,.6,.4,1) var(--fz); }
   .cta-flurry { inset: 0; overflow: hidden; opacity: 0; transition: opacity .5s ease; }
   .cta-flurry--mid { inset: 0 0 5px; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-flurry { opacity: 1; transition: none; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-flurry { opacity: 1; transition: none; }
   .cta-flake { position: absolute; top: 0; left: 0; width: var(--fsz); height: var(--fsz); border-radius: 50%; background: #fff; opacity: 0; }
   .cta-flurry--far .cta-flake { background: #eef5f9; filter: blur(.45px); }
   .cta-flake--crystal { background: none; border-radius: 0; }
   .cta-flake svg { display: block; width: 100%; height: 100%; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-flake { animation: ctaBlow var(--ft) var(--fd) linear var(--fn); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-flake { animation: ctaBlow var(--ft) var(--fd) linear var(--fn); }
   @keyframes ctaBlow {
     0% { opacity: 0; transform: translate(var(--x0), -12px) rotate(0); }
     10% { opacity: .95; }
@@ -1808,15 +1808,15 @@
   }
   .cta-whiteout { top: -30%; bottom: -30%; left: 0; width: 55cqw; opacity: 0; transform: translateX(-60cqw);
     background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--whiteout), #fff0 72%); filter: blur(2px); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-whiteout { animation: ctaWhiteout 1.5s .7s ease-in-out both; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-whiteout--2 { animation-duration: 1.9s; animation-delay: 2.5s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-whiteout { animation: ctaWhiteout 1.5s .7s ease-in-out both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-whiteout--2 { animation-duration: 1.9s; animation-delay: 2.5s; }
   @keyframes ctaWhiteout { 0% { opacity: 0; transform: translateX(-60cqw); } 30%, 65% { opacity: .8; } 100% { opacity: 0; transform: translateX(105cqw); } }
   .cta-drifts { left: 0; bottom: 0; width: 100%; height: 24px; transform-origin: 50% 100%; transition: transform .6s ease; }
   .cta-drifts--back path { fill: var(--drift-back); }
   .cta-drifts--front path { fill: var(--drift-front); }
   .cta-drifts--front .cta-drift-line { fill: none; stroke: var(--drift-line); stroke-width: 1; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-drifts--back { transform: scaleY(1.22); transition: transform 4s cubic-bezier(.3,.5,.4,1) .8s; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-drifts--front { transform: scaleY(1.32); transition: transform 4.4s cubic-bezier(.3,.5,.4,1) 1.1s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-drifts--back { transform: scaleY(1.22); transition: transform 4s cubic-bezier(.3,.5,.4,1) .8s; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-drifts--front { transform: scaleY(1.32); transition: transform 4.4s cubic-bezier(.3,.5,.4,1) 1.1s; }
 
   /* Ivy is deliberately allowed out of the frame, like a cutting laid on brick. The brick is
      dark enough to carry cream lettering at 4.8:1, and a soft shade sits under the label so the
@@ -1841,9 +1841,9 @@
      another and settling part of the way back. */
   .cta-ivy-stem { transition: transform .7s cubic-bezier(.22,.75,.3,1); }
   .cta-ivy-leaf { transform-box: fill-box; transform-origin: 50% 90%; }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--left .cta-ivy-stem { transform: rotate(-4deg); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy--right .cta-ivy-stem { transform: rotate(3deg); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ivy-leaf { animation: ctaIvyRustle .9s var(--ivy-delay) cubic-bezier(.3,.6,.35,1) both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-ivy--left .cta-ivy-stem { transform: rotate(-4deg); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-ivy--right .cta-ivy-stem { transform: rotate(3deg); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-ivy-leaf { animation: ctaIvyRustle .9s var(--ivy-delay) cubic-bezier(.3,.6,.35,1) both; }
   @keyframes ctaIvyRustle { 0% { transform: rotate(0); } 35% { transform: rotate(var(--ivy-turn)); } 70% { transform: rotate(calc(var(--ivy-turn) * -.3)); } 100% { transform: rotate(calc(var(--ivy-turn) * .5)); } }
 
   /* Pride: all eight flags still come only from PRIDE_BUTTONS (js/config.js), in their own
@@ -1858,7 +1858,7 @@
   }
   .cta-ribbon { top: 0; bottom: 0; left: 0; width: 300%; opacity: 0;
     background: repeating-linear-gradient(90deg, #0000 0, #00000024 8%, #0000 16.67%, #ffffff38 25%, #0000 33.33%); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .rb-sw-col:hover .play-cta, .rb-sw-col:focus-visible .play-cta, .rb-row:hover .play-cta, .rb-row:focus-visible .play-cta) .cta-ribbon { animation: ctaFlagWave 1.8s ease-in-out both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-ribbon { animation: ctaFlagWave 1.8s ease-in-out both; }
   @keyframes ctaFlagWave { 0% { transform: translateX(-66.67%); opacity: 0; } 18%, 72% { opacity: 1; } 100% { transform: translateX(0); opacity: 0; } }
 
   /* ---------- Album anniversaries ----------
@@ -7136,7 +7136,7 @@
   .ink-sw.locked { background: rgba(43,39,34,0.04); border: 1px dashed rgba(43,39,34,0.25); box-shadow: none; color: var(--ink-soft); }
   /* Borrow .rb-lock for the padlock: it is the shared icon-INK primitive (it gives the .ink /
      .ink-fill classes their stroke and fill), not a Mastery layout class, and without it the
-     glyph renders as a solid black blob. The bento scopes its own svg sizing, so size it here. */
+     glyph renders as a solid black blob. Size it here. */
   .ink-sw.locked .rb-lock { width: 18px; height: 18px; opacity: 0.55; }
   .ink-sw.locked .rb-lock svg { width: 100%; height: 100%; overflow: visible; }
   .ink-sw-col.active .ink-sw { border-color: var(--mast-ink, var(--brand-gold)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mast-ink, var(--brand-gold)) 22%, transparent); }
@@ -13957,7 +13957,7 @@
   .mpp-tx { fill: currentColor; stroke: none; }
   .mpp-gl .ink-fill { fill: currentColor; stroke: currentColor; stroke-width: 1; stroke-linejoin: round; }
   .mpp-gl .ink { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-  /* the bento's #reward-* drawings carry no paint of their own, so it reaches them by inheritance */
+  /* the #reward-* drawings carry no paint of their own, so it reaches them by inheritance */
   .mpp-rw { fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
   .mpp-ghost { color: var(--ink-soft); }
   .mpp-ghost-fr { fill: none; stroke: currentColor; opacity: 0.55; }
@@ -14040,189 +14040,443 @@
   .ms-bar { height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin: 12px auto 0; max-width: 320px; }
   .ms-bar i { display: block; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.7); }
   .ms-bar.maxed i { background: rgba(199, 149, 31, 0.85); }
-  /* ---- Reward bento: cosmetics grouped into weight-sized tiles (pens, trinkets, paper, the
-     super-hard milestone) plus the prestige-titles tile. Replaces the old flat reward list.
-     Uses the mastery rose (--m-accent) for state; trinkets keep their era-gold (--bead). ---- */
-  .reward-bento { margin-top: 22px; }
-  .rb-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 0 2px 14px; }
-  .rb-title { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
-  .rb-sub { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
-  .rb-meter { text-align: right; flex: none; }
-  .rb-count { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.04em; color: rgba(var(--m-accent), 0.95); }
-  .rb-prog { display: block; width: 120px; height: 5px; border-radius: 3px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin-top: 6px; }
-  .rb-prog i { display: block; height: 100%; border-radius: 3px; background: rgba(var(--m-accent), 0.78); }
-
-  /* The two start-button tiles each take the full width, finishes above words, because they
-     dress one object and read as a pair: the finish swatches sit four across and the word rows
-     two across, so neither tile is a tall column beside a short one. The two knowledge vaults
-     then share a row below them, level 9 beside level 10, which is still the pairing: the shelf
-     starts nudging, then the charms tell you outright. */
-  .rb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-    grid-template-areas:
-      "pens pens paper paper"
-      "trinket trinket trinket trinket"
-      "hard hard hard hard"
-      "button button button button"
-      "cta cta cta cta"
-      "stick stick hint hint"
-      "title title title title"; }
-
-  .rb-tile { position: relative; border-radius: 12px; padding: 14px 16px;
-    background-color: var(--paper); background-image: linear-gradient(rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32));
-    border: 1px solid rgba(43, 39, 34, 0.16); box-shadow: 0 1px 2px rgba(43, 39, 34, 0.05); }
-  /* Left-aligned rather than space-between now the heading is a mark AND a name: with three
-     children space-between would push the mark, the name and the pill to three corners. The
-     pill takes the right edge for itself instead. */
-  .rb-tile-top { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
-  .rb-tile-top > .rb-chip, .rb-tile-top > .rb-fuse { margin-left: auto; }
-  .rb-tt { font-family: var(--hand); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); color: var(--ink); }
-
-  /* The tile's mark — the same construction as the Charm Collection's theme and family marks
-     and deliberately sharing their two inner classes, so a change to the hand is made once:
-     .ach-mark-wash is the filled six-sided ground, .ach-mark-glyph the pen line over it. Only
-     the box and the hue live here.
-
-     Two things that will look like mistakes and are not, both inherited from that page for the
-     same reasons: the glyph is 23px over a 21px wash and OVERFLOWS it on every side, because a
-     drawing contained inside the hexagon has about a stroke-width of usable area and the wash
-     stops reading as a ground and starts reading as a cage. And the box is smaller than the
-     glyph it holds, so the heading's height comes from the drawing — do not put overflow:hidden
-     anywhere up this chain.
-
-     The overflow is a couple of pixels, though, and it has to stay that way. Pushed to the 124%
-     the theme marks use, the six-sided wash disappeared entirely behind the solider drawings
-     here — a shield and a heart fill their box where a pencil and a tick do not — and eight
-     tiles were left wearing eight plain glyphs with a smudge somewhere underneath.
-
-     The other half of that fix is in the drawings rather than here: every reward glyph is
-     normalised to the same 13.4-unit extent inside its 24-unit box (~56%, against the theme
-     marks' ~71%) and recentred, which is what leaves the hexagon's corners showing. Redraw one
-     by measuring against that number, not by eye, or it will quietly out-grow the other seven.
-
-     Drawn a touch larger than the theme marks (21px against 15px) because this heading is
-     17px handwriting rather than an 11px typewriter row; a 15px mark beside it reads as a
-     bullet point that failed to load. */
-  .rb-tt-mark {
-    flex: none; position: relative; isolation: isolate;
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 22px; height: 21px;
-    color: color-mix(in srgb, var(--fam) 74%, var(--ink));
+  /* ===== REWARD BOARD (js/rewardboard.js) =====
+       Every reward family drawn as the object it would come in, each wearing the passport stamp
+       that opened it. Objects with a material of their own keep its colours at night; only what
+       is ink on the page follows the theme. The section measures itself (a container), not the
+       window, so its breakpoints hold wherever the page is drawn.
+       ---------- the section ---------- */
+  /* the section measures itself, not the window: the desk card is 572px of content and a phone's
+     is 311, and the board shows both inside frames of any width */
+  .rw { margin-top: 34px; container: rw / inline-size; }
+  .rw-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+  .rw-head .msc-note i { font-style: normal; font-family: var(--type); font-weight: 400; font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); letter-spacing: .02em; }
+  .rw-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 38px 26px;
+    grid-template-areas: "pens paper" "trinket hard" "button button" "words words" "stick hint" "title title"; }
+  @container rw (max-width: 440px) {
+    .rw-grid { grid-template-columns: minmax(0, 1fr); gap: 34px;
+      grid-template-areas: "pens" "paper" "trinket" "hard" "button" "words" "stick" "hint" "title"; }
   }
-  .rb-tt-mark .ach-mark-glyph { width: 23px; height: 23px; }
+  .rw-cell { min-width: 0; }
 
-  /* The vaults hang their mark off the tile NAME rather than a heading row, since that is
-     where their name is. Both are dark stock, so the mark cannot mix toward --ink the way it
-     does on paper — it would go dark on dark. It mixes toward the vault's own foil instead,
-     which is also what keeps the plum hex legible on the plum leather one. */
-  .rb-ms-nm { display: flex; align-items: center; gap: 8px; }
-  .rb-ms .rb-tt-mark { color: color-mix(in srgb, var(--fam) 40%, var(--v-foil-lit)); }
-  .rb-ms .rb-tt-mark .ach-mark-wash { fill: color-mix(in srgb, color-mix(in srgb, var(--fam) 74%, var(--v-foil)) 82%, transparent); }
-  /* The randomiser: a die in a circle fused to the left end of its tile's level pill, so the
-     two read as one object. .rb-fuse::before carries BOTH shapes as gradients on a single
-     layer and wears the #fuseGoo metaball filter, which pulls a melted neck between them
-     where their blurred edges overlap. The die and the pill's words sit above it untouched —
-     running the filter over the whole control would smear the type.
-     Both shapes are painted OPAQUE and the wash is applied to the layer as --fuse-wash: the
-     goo works by slamming alpha through a threshold, so a translucent fill lands under the
-     threshold and the whole layer vanishes. Opaque in, faded after.
-     --fuse-r is the circle's radius, --fuse-pill the bar's height, and --fuse-lap the GAP
-     between them: negative, i.e. they genuinely do not touch. That is the whole effect. The
-     goo bridges the gap with a thin neck, so the circle reads as almost separate and melting
-     back in rather than as one lozenge with a bulge on the end — which is what an overlap
-     gives you, and what this deliberately is not. Widen the gap past about 3px and the neck
-     snaps; close it and the waist disappears. */
-  .rb-fuse { --fuse-r: 9.5px; --fuse-pill: 15px; --fuse-lap: -2px;
-    --fuse-fill: rgb(var(--m-accent)); --fuse-wash: 0.13;
-    position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; }
-  .rb-fuse::before {
-    content: ""; position: absolute; z-index: 0; pointer-events: none;
-    left: 0; right: 0; top: 50%; height: calc(var(--fuse-r) * 2); transform: translateY(-50%);
-    background:
-      radial-gradient(circle var(--fuse-r) at var(--fuse-r) 50%, var(--fuse-fill) 98%, transparent 100%),
-      linear-gradient(var(--fuse-fill), var(--fuse-fill))
-        calc(var(--fuse-r) * 2 - var(--fuse-lap)) 50% / calc(100% - var(--fuse-r) * 2 + var(--fuse-lap)) var(--fuse-pill) no-repeat;
-    filter: url(#fuseGoo); opacity: var(--fuse-wash);
-  }
-  .rb-fuse .rb-chip { position: relative; z-index: 1; background: none; padding-left: 7px; }
-  .rb-rand { position: relative; z-index: 1; flex: none; cursor: pointer;
-    width: calc(var(--fuse-r) * 2); height: calc(var(--fuse-r) * 2); margin-right: calc(var(--fuse-lap) * -1);
-    display: inline-flex; align-items: center; justify-content: center;
-    appearance: none; border: 0; background: none; padding: 0; border-radius: 50%; }
-  /* The die is sized to sit WELL inside the circle: it is rotated, so its corners swing wider
-     than its own box, and a die tight to the rim reads as clipped even when nothing clips it. */
-  .rb-rand svg { width: 13px; height: 13px; overflow: visible; }
-  /* Beats .reward-bento .ink-fill, which would otherwise ink the die in the trinkets' era-gold:
-     the die is a control, and the only colour a control on this board wears is the rose. */
-  .rb-fuse .rb-rand .ink-fill { fill: rgba(var(--m-accent), 0.85); stroke: rgba(var(--m-accent), 0.85); }
-  .rb-fuse:hover { --fuse-wash: 0.2; }
-  .rb-fuse .rb-rand:hover .ink-fill { fill: rgb(var(--m-accent)); stroke: rgb(var(--m-accent)); }
-  /* Worn: the circle inks solid and the die knocks out of it in paper — a pressed stamp. It is
-     the loudest state on the board on purpose. Random is the one setting that NOTHING below
-     the header can show as selected: every other choice lights its own row or bead, so a quiet
-     mark here leaves the tile looking like nothing is chosen at all.
-     The solid disc is its own layer rather than a fourth state of --fuse-wash, because the
-     goo layer has to stay washed for the neck to keep reading as a melt. */
-  .rb-fuse::after {
-    content: ""; position: absolute; z-index: 0; pointer-events: none; opacity: 0;
-    left: 0; top: 50%; width: calc(var(--fuse-r) * 2); height: calc(var(--fuse-r) * 2);
-    transform: translateY(-50%); border-radius: 50%; background: rgb(var(--m-accent-deep));
-  }
-  .rb-fuse.active { --fuse-wash: 0.28; }
-  .rb-fuse.active::after { opacity: 1; }
-  .rb-fuse.active .rb-rand .ink-fill,
-  .rb-fuse.active .rb-rand:hover .ink-fill { fill: var(--paper); stroke: var(--paper); }
-  /* The pips are the die's only detail and they invert with it: the SVG paints them
-     var(--paper) inline on the parent <g>, which the children merely inherit, so a rule on the
-     circles themselves wins without touching the markup. */
-  .rb-fuse.active .rb-rand svg circle { fill: rgb(var(--m-accent-deep)); }
-  .rb-fuse.active .rb-chip { color: rgb(var(--m-accent-deep)); font-weight: 700; }
-  .rb-rand:focus-visible { outline: 2px solid rgba(var(--m-accent), 0.75); outline-offset: 2px; }
-  .rb-tt-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.04em; color: var(--ink-soft); margin-top: 3px; }
-  .rb-chip { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
-    color: rgba(var(--m-accent), 0.95); background: rgba(var(--m-accent), 0.1); border-radius: 20px; padding: 3px 9px; }
-  /* charm-icon ink (ACH_ICONS glyphs) inside the bento; charm previews use global .b-* styling */
-  .reward-bento .charm { display: inline-flex; }
-  .reward-bento .charm svg, .reward-bento .rb-lock svg, .reward-bento .rb-ms-mark svg, .reward-bento .rb-ms-seal svg { width: 100%; height: 100%; overflow: visible; }
-  .reward-bento .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .reward-bento .ink-fill { fill: var(--bead); stroke: var(--ink); stroke-width: 1.2; }
+  .rw-obj { --oi: var(--o); --ow: color-mix(in srgb, var(--o) 10%, var(--paper)); --ow2: color-mix(in srgb, var(--o) 19%, var(--paper));
+    position: relative; }
+  :root[data-theme="dark"] .rw-obj { --oi: color-mix(in srgb, var(--o) 58%, #ece5d6); --ow: color-mix(in srgb, var(--o) 24%, var(--paper)); --ow2: color-mix(in srgb, var(--o) 36%, var(--paper)); }
+  .rw button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
+  .rw button:focus-visible { outline: 2px solid var(--red-pen); outline-offset: 3px; }
+  .rw-cap { display: flex; align-items: flex-start; gap: 6px; margin: 0 0 12px; }
+  .rw-cap-tx { flex: 1; min-width: 0; }
+  .rw-cap > .rw-stamp { position: relative; flex: none; width: 72px; height: 72px; margin: -12px -4px -34px 0; }
+  .rw-nm { margin: 0; font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); line-height: 1; color: var(--oi); }
+  .rw-what { margin: 5px 0 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
+
+  /* the stamp that opened it, pressed on the object */
+  .rw-stamp { position: absolute; z-index: 6; width: 76px; height: 76px; pointer-events: none; }
+  .rw-stamp .mpp-stamp { width: 100%; height: 100%; }
+  .rw-stamp.owed .mpp-ghost-n { font-family: var(--hand); }
+  /* a ladder member's stamp in short: the passport ghost, inked */
+  .rw-tag { display: inline-block; flex: none; width: 40px; height: 40px; }
+  .rw-tag .mpp-stamp { width: 100%; height: 100%; mix-blend-mode: normal; }
+  .rw-tag .mpp-ghost-n { font-size: 30px; transform: translateY(6px); }
+  .rw-tag.on { filter: url(#stampInk1); }
+  .rw-tag.on .mpp-ghost { color: var(--si); }
+  :root[data-theme="dark"] .rw-tag.on .mpp-ghost { color: color-mix(in srgb, var(--si) 58%, #ece5d6); }
+  .rw-tag.on .mpp-ghost-fr { stroke-dasharray: none; opacity: 1; stroke-width: 4.4; }
+  .rw-tag.on .mpp-ghost-n { font-family: var(--type); font-weight: 700; font-size: 27px; transform: translateY(5px); }
+  .rw-tag.owed .mpp-ghost-fr { stroke-width: 2.2; }
+  .rw-tag.wide { width: 52px !important; height: 26px !important; }
+  .rw-tag.wide .mpp-ghost-n { font-size: 40px; transform: translateY(8px); }
+  .rw-tag.wide.on .mpp-ghost-n { font-size: 36px; transform: translateY(7px); }
+
+  /* the editor's red pen round what you are wearing */
+  .rw-loop { position: absolute; left: -6%; top: -9%; width: 112%; height: 118%; overflow: visible; pointer-events: none; z-index: 7; }
+  .rw-loop path { fill: none; stroke: var(--red-pen); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+
+  /* the randomiser: a die you shake */
+  .rw-die { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 3px; border: 1.5px solid var(--ink) !important;
+    border-radius: 999px; background: var(--paper) !important; font-family: var(--type) !important; font-size: calc(10px + var(--text-size-adjust)) !important;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink) !important; white-space: nowrap; }
+  .rw-die-ic { width: 21px; height: 21px; display: block; }
+  .rw-die-ic svg { width: 100%; height: 100%; display: block; }
+  .rw-die .ink-fill { fill: var(--ink); stroke: var(--ink); }
+  .rw-die.on { background: var(--ink) !important; color: var(--paper) !important; }
+  .rw-die.on .ink-fill { fill: var(--paper); stroke: var(--paper); }
+  .rw-die.on .rw-die-ic g[fill] { fill: var(--ink); }
+
+  /* a door out of an object: the bold stamp-like button the notebook uses for real actions */
+  .rw-door { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 7px 14px !important; border: 2px solid var(--ink) !important;
+    border-radius: 4px; background: var(--paper) !important; font-family: var(--type) !important; font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)) !important;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink) !important; }
+  .rw-door::after { content: "→"; font-weight: 400; letter-spacing: 0; }
+  .rw-door:hover { background: var(--ink) !important; color: var(--paper) !important; }
+
+  /* ================= PENS: the roll =================
+     Denim, gold thread and four pens: an object, so its colours hold at night and only its outline
+     follows the page's ink. */
+  .rw-pens { --dn: #3a5684; --dn-dark: #2e466d; --dn-pk: #42608f; --thread: #e0b25a; }
+  .pr { position: relative; padding-right: 34px; }
+  .pr-roll { position: relative; border: 2px solid var(--ink); border-radius: 8px 4px 4px 8px; padding: 0 8px 8px; background-color: var(--dn);
+    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 3.4px); }
+  .pr-roll::after { content: ""; position: absolute; inset: 5px; border: 1.4px dashed var(--thread); border-radius: 5px 2px 2px 5px; opacity: .8; pointer-events: none; }
+  .pr-flap { position: relative; height: 22px; margin: 0 -8px; border-bottom: 2px solid #22201d; border-radius: 6px 2px 0 0; background-color: var(--dn-dark);
+    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .06) 0 1px, transparent 1px 3.4px); }
+  .pr-flap::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 4px; border-top: 1.4px dashed var(--thread); opacity: .8; }
+  .pr-row { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: 190px; }
+  .pr-pk { position: relative; display: block; height: 100%; }
+  .pr-pen { position: absolute; left: 50%; bottom: 0; width: 28px; height: 184px; margin-left: -14px; z-index: 1; pointer-events: none;
+    transition: transform .28s cubic-bezier(.3, 1.4, .5, 1); }
+  .pr-pk.worn .pr-pen { transform: translateY(-30px); }
+  .pr-pk:not(.worn):not(.empty):hover .pr-pen { transform: translateY(-9px); }
+  .pn { display: block; width: 100%; height: 100%; overflow: visible; }
+  .pn path, .pn rect, .pn circle { stroke: #2b2722; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+  .pn-lead { fill: #3b3631; } .pn-wood { fill: #ead3a6; } .pn-yellow { fill: #e8b53f; }
+  .pn .pn-facet { fill: none; stroke: #b5852a; stroke-width: 1; }
+  .pn-ferrule { fill: #cdb98a; } .pn .pn-ridge { fill: none; stroke-width: .9; opacity: .55; } .pn-eraser { fill: #e5978f; }
+  .pn-nib { fill: #ddb04a; } .pn .pn-slit { fill: none; stroke-width: 1; } .pn .pn-hole { fill: #2b2722; stroke: none; }
+  .pn-grip { fill: #2b2722; } .pn-gold { fill: #ddb04a; } .pn-lacquer { fill: #7c2c3b; }
+  .pn .pn-shine { fill: none; stroke: rgba(255, 236, 226, .35); stroke-width: 1.6; }
+  .pn-vane { fill: #f4ecdc; } .pn .pn-barb { fill: none; stroke-width: .9; opacity: .55; } .pn .pn-split { fill: none; stroke-width: 1; }
+  .pn .pn-rachis { fill: none; stroke-width: 1.5; } .pn .pn-calamus { fill: none; stroke-width: 2.6; }
+  .pn-metal { fill: #c9c1b3; } .pn .pn-ball { fill: #2b2722; stroke: none; } .pn-rubber { fill: #e38db3; }
+  .pn .pn-grain { fill: none; stroke: #b15485; stroke-width: .9; }
+  .pn-clear { fill: url(#rwGlitter); } .pn .pn-refill { fill: none; stroke: #c45a90; stroke-width: 1.6; opacity: .7; }
+  .pr-face { position: absolute; left: 0; right: 0; bottom: 0; height: 74px; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    gap: 3px; padding-bottom: 7px; border-top: 2px solid #22201d; background-color: var(--dn-pk);
+    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 3.4px); }
+  .pr-face::before { content: ""; position: absolute; left: 3px; right: 3px; top: 4px; border-top: 1.4px dashed var(--thread); opacity: .85; }
+  .pr-pk + .pr-pk .pr-face { border-left: 1.4px dashed var(--thread); }
+  .pr-badge { display: flex; align-items: center; justify-content: center; height: 34px; }
+  .pr .pr-tagc { width: 34px; height: 34px; filter: none; }
+  /* the level, sewn: a satin outline in gold once earned, the passport's dashes in pale thread while owed */
+  .pr .pr-tagc .mpp-ghost, :root[data-theme="dark"] .pr .pr-tagc.on .mpp-ghost { color: var(--thread); }
+  .pr .pr-tagc.on .mpp-ghost-fr { stroke-width: 4; }
+  .pr .pr-tagc.owed .mpp-ghost, :root[data-theme="dark"] .pr .pr-tagc.owed .mpp-ghost { color: #c9d3e6; }
+  .pr .pr-tagc.owed .mpp-ghost-fr { opacity: .6; stroke-width: 2.6; }
+  .pr .pr-tagc.owed .mpp-ghost-n { opacity: .7; }
+  .pr-hb { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1.6px solid var(--thread); border-radius: 50%;
+    font-family: var(--type); font-weight: 700; font-size: 10.5px; color: var(--thread); transform: rotate(-8deg); }
+  .pr-nm { font-family: var(--type); font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .06em; text-transform: uppercase; color: var(--thread); white-space: nowrap; }
+  .pr-pk.empty .pr-nm { color: #c9d3e6; opacity: .7; font-weight: 400; }
+  .pr-pk.worn .pr-nm { color: #fff3e2; }
+  .pr-pk .rw-loop { left: 4%; width: 92%; top: -44px; height: 112px; }
+  .pr-pk .rw-loop path { stroke: #e2584f; stroke-width: 2; }
+  .pr-end { position: absolute; right: 9px; top: 0; bottom: 0; width: 27px; border: 2px solid var(--ink); border-radius: 13px; background-color: var(--dn);
+    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 3.4px); }
+  .pr-end::before, .pr-end::after { content: ""; position: absolute; top: 6px; bottom: 6px; border-left: 1.4px dashed var(--thread); opacity: .8; }
+  .pr-end::before { left: 5px; } .pr-end::after { right: 5px; }
+  .pr-tie { position: absolute; right: -4px; top: 50%; width: 44px; height: 120px; margin-top: -60px; overflow: visible; }
+  .pr-strap, .pr-tail { fill: #b98a55; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+  .pr-knot { fill: #a3764a; stroke: var(--ink); stroke-width: 1.5; }
+
+  /* ================= PAPER: the fan deck ================= */
+  .pf { position: relative; height: 248px; }
+  .pf-fan { position: absolute; left: 46px; bottom: 26px; width: 0; height: 0; }
+  .pf .pf-strip.paper-chip { position: absolute; left: -19px; bottom: -19px; width: 38px; height: 204px; display: block; padding: 0;
+    border: 1.5px solid var(--ink) !important; border-radius: 5px 5px 19px 19px; overflow: hidden; box-shadow: none;
+    transform-origin: 19px calc(100% - 19px); transform: rotate(var(--a));
+    background-image: repeating-linear-gradient(180deg, transparent 0 15px, rgba(72, 98, 140, .2) 15px 16px);
+    transition: transform .32s cubic-bezier(.3, 1.3, .5, 1); }
+  .pf .pf-strip.paper-chip::before { left: 8px; }
+  .pf .pf-strip.worn { border-width: 2px !important; }
+  :root[data-theme="dark"] .pf .pf-strip.paper-chip { filter: brightness(.74) saturate(.95); }
+  .pf .pf-strip:not(.worn):not(.shut):hover { transform: rotate(var(--a)) translateY(-7px); }
+  .pf-name { position: absolute; left: 50%; top: 14px; writing-mode: vertical-rl; transform: translateX(-50%) rotate(180deg);
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: .1em; color: #2b2722; white-space: nowrap; }
+  .pf-strip.worn .pf-name { color: #a8322e; font-weight: 700; }
+  .pf-strip .rw-loop { left: 9%; width: 82%; top: 5px; height: 92px; }
+  .pf-hole { position: absolute; left: 50%; bottom: 12px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; border: 1.3px solid #2b2722; }
+  .pf-rivet { position: absolute; left: -13px; bottom: -13px; width: 26px; height: 26px; z-index: 30; overflow: visible; }
+  .pf-rv-o { fill: #c9a457; stroke: #2b2722; stroke-width: 1.6; }
+  .pf-rv-i { fill: #e3c47e; stroke: #2b2722; stroke-width: 1.2; }
+  .pf-rv-h { fill: #2b2722; }
+  .pf-arm { position: absolute; left: -19px; bottom: -19px; width: 38px; height: 204px; z-index: 25; transform-origin: 19px calc(100% - 19px); transform: rotate(var(--a)); pointer-events: none; }
+  .pf-band { position: absolute; left: 50%; top: 62px; width: 96px; margin-left: -48px; padding: 6px 4px 7px; display: flex; flex-direction: column; gap: 2px; text-align: center;
+    background: var(--ow2); border: 1.6px solid var(--ink); }
+  .pf-band b { font-family: var(--hand); font-size: 16px; line-height: 1; color: var(--ink); }
+  .pf-band i { font-style: normal; font-family: var(--type); font-size: 8.5px; letter-spacing: .04em; color: var(--ink-soft); }
+  .pf-stamp { right: 0; bottom: 6px; width: 86px; height: 86px; }
+
+  /* ================= TRINKETS: the bead box ================= */
+  .tb { position: relative; }
+  .tb-lid { position: relative; display: flex; align-items: center; justify-content: flex-start; gap: 14px; height: 40px; padding: 0 10px 4px 12px;
+    border: 2px solid var(--ink); border-bottom: 0; border-radius: 10px 10px 0 0; background: var(--ow2); }
+  /* knuckle hinges on the seam between lid and box, three knuckles each */
+  .tb-lid::before, .tb-lid::after { content: ""; position: absolute; bottom: -6px; width: 34px; height: 10px; border: 1.6px solid var(--ink); border-radius: 3px; z-index: 2;
+    background: linear-gradient(90deg, var(--ow) 0 32%, var(--ink) 32% calc(32% + 1.4px), var(--ow) 0 66%, var(--ink) 66% calc(66% + 1.4px), var(--ow) 0); }
+  .tb-lid::before { left: 46%; } .tb-lid::after { right: 9%; }
+  .tb-tape { display: inline-block; padding: 1px 16px 2px; font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1; color: var(--ink);
+    background: #e8dcbc; transform: rotate(-2.4deg);
+    clip-path: polygon(0 8%, 3% 0, 6% 9%, 9% 1%, 91% 0, 94% 8%, 97% 0, 100% 10%, 99% 90%, 96% 100%, 93% 91%, 90% 100%, 8% 100%, 5% 92%, 2% 100%, 0 90%, 1% 50%); }
+  :root[data-theme="dark"] .tb-tape { background: #b9ab88; color: #2b2722; }
+  .tb-box { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 9px 8px 8px; border: 2px solid var(--ink); border-radius: 0 0 10px 10px; background: var(--ow); }
+  .tb-cell { position: relative; display: block; height: 78px; border: 1.4px solid var(--ink) !important; border-radius: 8px; background: var(--mpp-card) !important; }
+  /* the moulded rim inside each compartment wall */
+  .tb-cell::before { content: ""; position: absolute; inset: 3px; border-radius: 5px; border: 1px solid color-mix(in srgb, var(--o) 24%, transparent); pointer-events: none; }
+  .tb-cell.empty { border: 1.3px dashed color-mix(in srgb, var(--ink) 35%, transparent) !important; background: transparent !important; }
+  .tb-bit { position: absolute; width: 27px; height: 27px; transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--s)); pointer-events: none; }
+  .tb-bit svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .tb-nm { position: absolute; left: 8px; top: 5px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: .04em; color: var(--ink-soft); }
+  .tb-cell.worn .tb-nm { color: var(--red-pen); font-weight: 700; }
+  .tb-cell:not(.empty):hover { background: color-mix(in srgb, var(--o) 7%, var(--mpp-card)) !important; }
+  .tb.shaken .tb-cell .tb-bit { transform: translate(-50%, -50%) rotate(calc(var(--r) * -1.6)) scale(var(--s)); }
+  .tb-stamp { right: -20px; bottom: -26px; width: 76px; height: 76px; }
+  .tb-owe { margin: 8px 0 0; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
+
+  /* ================= SUPER-HARD: the fourth tape ================= */
+  .cs { position: relative; }
+  .cs-wrap { position: relative; max-width: 272px; }
+  .cs-tape { display: block; width: 100%; height: auto; overflow: visible; }
+  /* a cassette is an object, not ink: its plastic, label and window keep their colours at night,
+     the way the start-button finishes do, and only the outline follows the page's ink */
+  .cs-shell { fill: #8a3b2f; stroke: var(--ink); stroke-width: 2; }
+  .cs-screw { fill: #4d1f18; stroke: #2b2722; stroke-width: .8; }
+  .cs-label { fill: #fbf8ef; stroke: #2b2722; stroke-width: 1.3; }
+  .cs-band { fill: #2b2722; }
+  .cs-side { font-family: var(--type); font-weight: 700; font-size: 12px; fill: #fbf8ef; }
+  .cs-rule { stroke: rgba(43, 39, 34, .25); stroke-width: 1; fill: none; }
+  .cs-window { fill: #2a1f1c; stroke: #2b2722; stroke-width: 1.4; }
+  .cs-pack { fill: #5b3a25; stroke: #3a2416; stroke-width: 1; }
+  .cs-film { fill: none; stroke: #5b3a25; stroke-width: 1.4; }
+  .cs-hub-o { fill: #fbf8ef; stroke: #2b2722; stroke-width: 1.3; }
+  .cs-hub-i { fill: #2a1f1c; stroke: #2b2722; stroke-width: 1; }
+  .cs-hub rect { fill: #fbf8ef; }
+  .cs-window-rim { fill: none; stroke: #2b2722; stroke-width: 1.6; }
+  .cs-screw-x { stroke: #2b2722; stroke-width: .9; }
+  .cs-nr { font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: .12em; fill: #fbf8ef; opacity: .8; }
+  .cs-foot { fill: #6b2c22; stroke: #2b2722; stroke-width: 1.6; stroke-linejoin: round; }
+  .cs-hole { fill: #2b2722; }
+  .cs-text { position: absolute; left: 11.5%; right: 11.5%; top: 19.5%; height: 11%; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cs-title { font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1; color: #2b2722; white-space: nowrap; }
+  .cs-tapes { display: inline-flex; align-items: center; gap: 1px; }
+  .cs-tg { width: 17px; height: 12px; display: block; }
+  .cs-tg rect, .cs-tg circle { fill: none; stroke: #8a3b2f; stroke-width: 1.4; }
+  .cs-tapes i { margin-left: 4px; font-style: normal; font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #8a3b2f; }
+  .cs-stamp { right: 4%; top: 25%; width: 74px; height: 74px; }
+  .cs-seal { position: absolute; left: -5%; right: -5%; top: 47%; z-index: 7; display: flex; align-items: center; justify-content: center; gap: 10px; height: 28px;
+    transform: rotate(-9deg); background: #f3e6b4; border-top: 1.4px solid var(--ink); border-bottom: 1.4px solid var(--ink);
+    background-image: repeating-linear-gradient(-45deg, transparent 0 7px, rgba(168, 50, 46, .13) 7px 9px); }
+  :root[data-theme="dark"] .cs-seal { background-color: #cdbd86; }
+  .cs-seal b { font-family: var(--type); font-weight: 700; font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: #a8322e; }
+  .cs-seal i { font-style: normal; font-family: var(--type); font-size: 9.5px; letter-spacing: .08em; color: #5a2a24; }
+  /* the J-card: its spine folded down the left, the tracklist on the face */
+  .cs-jcard { display: flex; max-width: 272px; margin-top: 12px; background: var(--mpp-card); border: 1.4px solid var(--ink); }
+  .cs-spine { flex: none; width: 21px; display: flex; align-items: center; justify-content: center; background: #8a3b2f; border-right: 1.4px solid var(--ink);
+    writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--type); font-weight: 700; font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: #fbf8ef; }
+  .cs-jbody { flex: 1; min-width: 0; padding: 7px 10px 8px 10px; }
+  .cs-jk { display: block; margin-bottom: 5px; font-family: var(--type); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
+  .cs-jcard ol { margin: 0; padding: 0; list-style: none; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.4; color: var(--ink); }
+  .cs-jcard li { display: grid; grid-template-columns: 22px minmax(0, 1fr) 16px; align-items: start; gap: 0 2px; padding: 2px 0; }
+  .cs-jcard li b { color: var(--oi); }
+  .cs-tick { width: 14px; height: 11px; margin-top: 1px; overflow: visible; }
+  .cs-tick path { fill: none; stroke: var(--red-pen); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .cs.shut .cs-jcard ol { color: var(--ink-soft); }
+  .cs-play { display: inline-flex !important; align-items: center; gap: 9px; margin-top: 12px !important; padding: 7px 15px 6px 12px !important; border: 2px solid var(--ink) !important; border-bottom-width: 5px !important;
+    border-radius: 4px; background: var(--mpp-card) !important; font-family: var(--type) !important; font-weight: 700; font-size: calc(11px + var(--text-size-adjust)) !important;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--ink) !important; }
+  .cs-play:active { border-bottom-width: 2px !important; transform: translateY(3px); }
+  .cs-tri { width: 0; height: 0; border-left: 11px solid var(--oi); border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+
+  /* ================= START BUTTONS: the haberdasher's card ================= */
+  .bc { position: relative; }
+  .bc-card { position: relative; padding: 28px 16px 16px; background: var(--mpp-card); border: 1.6px solid var(--ink); border-radius: 6px; }
+  /* the hang slot a card of buttons is sold on, punched through so the page shows */
+  .bc-card::after { content: ""; position: absolute; top: 9px; left: 50%; width: 40px; height: 11px; margin-left: -20px; border: 1.5px solid var(--ink); border-radius: 6px; background: var(--paper); }
+  .bc-card::before { content: ""; position: absolute; inset: 5px; border: 1.2px dotted color-mix(in srgb, var(--oi) 75%, transparent); border-radius: 3px; pointer-events: none; }
+  .bc-hd { position: relative; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; padding: 0 4px 9px; margin-bottom: 14px; border-bottom: 1.3px solid var(--ink); }
+  .bc-no { font-family: var(--type); font-weight: 700; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--oi); border: 1.4px solid var(--oi); padding: 1px 6px; transform: translateY(-3px); }
+  .bc-hd b { font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
+  .bc-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); }
+  .bc-hd .rw-die { margin-left: auto; align-self: center; }
+  .bc-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 6px; }
+  @container rw (max-width: 440px) { .bc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .bc-cell { position: relative; display: flex !important; flex-direction: column; align-items: center; gap: 5px; padding: 6px 0 2px; }
+  .bc-sew { display: flex; align-items: center; }
+  .bc-x { position: relative; z-index: 3; width: 13px; height: 13px; flex: none; margin: 0 -6px; overflow: visible; }
+  .bc-x circle { fill: color-mix(in srgb, var(--ink) 70%, transparent); }
+  .bc-x path { stroke: #b07d22; stroke-width: 1.7; stroke-linecap: round; }
+  :root[data-theme="dark"] .bc-x path { stroke: #e2b955; }
+  .bc-btn { position: relative; width: 108px; height: 34px; display: flex; align-items: center; justify-content: center; }
+  .bc-btn .play-cta { flex: none; width: 214px; margin: 0; transform: scale(.5) rotate(-.6deg); pointer-events: none; animation: none !important; }
+  .bc-btn .play-cta .cta-mark--pencil { animation: none; }
+  .bc-cell:not(.empty):hover .bc-btn { transform: translateY(-2px); }
+  .bc-nm { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink); text-align: center; }
+  .bc-cell.worn .bc-nm { color: var(--red-pen); font-weight: 700; }
+  .bc-note { margin-top: -3px; font-family: var(--hand); font-weight: 600; font-size: 15px; line-height: 1; color: var(--ink-soft); }
+  .bc-cell.empty .bc-nm { color: var(--ink-soft); }
+  .bc-ghost { width: 96px; height: 26px; border: 1.3px dashed color-mix(in srgb, var(--ink) 35%, transparent); border-radius: 8px; margin: 0 4px; }
+  .bc-holes { width: 13px; height: 13px; flex: none; background:
+    radial-gradient(circle at 3px 3px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
+    radial-gradient(circle at 10px 3px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
+    radial-gradient(circle at 3px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
+    radial-gradient(circle at 10px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px); }
+  .bc-cell .rw-loop { left: -1%; width: 102%; top: -6px; height: 66px; }
+  .bc-owe { margin: 12px 0 0; text-align: center; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
+  .bc-refill { position: relative; margin: -1px 22px 0; padding: 12px 12px 14px; background: color-mix(in srgb, var(--o) 9%, var(--mpp-card));
+    border: 1.5px solid var(--ink); border-top: 1.5px dashed var(--ink); border-radius: 0 0 6px 6px; }
+  .bc-refill-hd { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .bc-refill-hd b { font-family: var(--hand); font-size: 21px; line-height: 1; }
+  .bc-refill-hd span { font-family: var(--type); font-size: 10px; color: var(--ink-soft); }
+  .bc-refill-hd button { margin-left: auto !important; font-family: var(--type) !important; font-size: 10px !important; text-decoration: underline; color: var(--ink-soft) !important; }
+
+  /* the live start button, wherever words are chosen */
+  .rw-now { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
+  .rw-now-k { font-family: var(--type); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
+  .rw-now-btn { display: block; width: 170px; }
+  .rw-now-btn .cta-prev { --cta-k: .6; --cta-h: 38px; }
+
+  /* ================= WORDS: label-maker tape ================= */
+  .lt { position: relative; }
+  .lt-strips { display: flex; flex-wrap: wrap; gap: 12px 12px; align-items: center; }
+  .lt-strip { position: relative; isolation: isolate; display: inline-flex !important; align-items: center; gap: 8px; height: 30px; padding: 0 15px 0 13px !important;
+    color: #f7f2e6 !important; transform: rotate(var(--r)); transition: transform .15s; }
+  .lt-strip::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--o); border-radius: 2px;
+    clip-path: polygon(var(--c1) 0, calc(100% - var(--c3)) 0, 100% 100%, calc(var(--c2) * .4) 100%); }
+  :root[data-theme="dark"] .lt-strip::before { box-shadow: inset 0 0 0 1px rgba(236, 229, 214, .25); }
+  .lt-strip:hover { transform: rotate(var(--r)) translateY(-2px); }
+  .lt-tx { font-family: var(--type); font-weight: 700; font-size: calc(12.5px + var(--text-size-adjust)); letter-spacing: .16em; text-shadow: 0 1px 0 color-mix(in srgb, var(--o) 55%, #000); white-space: nowrap; }
+  .lt-mk { width: 18px; height: 18px; display: block; flex: none; }
+  .lt-mk svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .lt-mk .ink-fill { fill: currentColor; stroke: none; }
+  .lt-mk .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .lt-strip.worn { outline: none; }
+  .lt-strip .rw-loop { left: -5%; width: 110%; top: -30%; height: 160%; }
+  .lt-coil { display: flex; align-items: center; gap: 14px; margin-left: 8px; }
+  .lt-coil svg { width: 74px; height: 74px; flex: none; overflow: visible; }
+  .lt-coil circle { fill: none; stroke: var(--oi); stroke-width: 6.5; }
+  .lt-coil circle.lt-core { fill: var(--mpp-card); stroke: var(--ink); stroke-width: 1.6; }
+  .lt-coil path { stroke: var(--oi); stroke-width: 9; }
+  .lt-coil span { font-family: var(--type); font-size: 10.5px; line-height: 1.5; color: var(--ink-soft); }
+  .lt-coil span b { color: var(--ink); font-family: var(--hand); font-size: 19px; font-weight: 700; display: block; line-height: 1.1; }
+  .lt-stamp { right: 0; top: -6px; width: 74px; height: 74px; }
+  .lt-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-family: var(--hand); font-weight: 600; font-size: 16px; color: var(--ink-soft); }
+
+  /* ================= STICKER HINTS: the sheet ================= */
+  .ss { position: relative; }
+  .ss-sheet { position: relative; overflow: hidden; padding: 10px 12px 12px; background: color-mix(in srgb, var(--o) 6%, #fbf8ef); border: 1.6px solid var(--ink); border-radius: 12px; }
+  :root[data-theme="dark"] .ss-sheet { background: color-mix(in srgb, var(--o) 20%, var(--paper)); }
+  .ss-hd { display: flex; align-items: baseline; justify-content: flex-start; gap: 10px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1.2px dashed color-mix(in srgb, var(--ink) 35%, transparent); }
+  .ss-hd b { font-family: var(--hand); font-size: 20px; line-height: 1; color: var(--oi); }
+  .ss-hd span { font-family: var(--type); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+  .ss-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 10px; }
+  .ss-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 98px; }
+  .ss-cut { width: 58px; height: 58px; flex: none; filter: url(#rwKiss); transform: rotate(var(--r)); }
+  .ss-cut svg { width: 100%; height: 100%; display: block; }
+  .ss-hint { font-family: var(--hand); font-weight: 600; font-size: calc(14.5px + var(--text-size-adjust)); line-height: 1.02; color: var(--oi); text-align: center; }
+  .ss-glass { position: absolute; inset: 0; z-index: 4; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px;
+    background: color-mix(in srgb, #fbf8ef 68%, transparent); border-radius: 11px;
+    background-image: linear-gradient(135deg, transparent 0 calc(100% - 46px), color-mix(in srgb, var(--ink) 18%, transparent) calc(100% - 46px) calc(100% - 45px), var(--paper) calc(100% - 45px)); }
+  :root[data-theme="dark"] .ss-glass { background-color: color-mix(in srgb, var(--paper) 72%, transparent); }
+  .ss-glass span { font-family: var(--type); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); background: var(--mpp-card); padding: 2px 8px; border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent); }
+  .ss.open .ss-glass { display: none; }
+  .ss.open .ss-glass span { display: none; }
+  .ss-stamp { right: -14px; bottom: 34px; width: 80px; height: 80px; }
+  .ss.shut .ss-stamp { bottom: auto; top: 46%; right: 50%; transform: translate(50%, -50%); }
+
+  /* ================= SECRET HINTS: the diary ================= */
+  .dy { position: relative; }
+  .dy-book { position: relative; width: 196px; height: 150px; margin: 4px 0 18px 2px; }
+  .dy-pages { position: absolute; left: 10px; right: -7px; top: 6px; bottom: -7px; border: 1.5px solid var(--ink); border-radius: 3px 9px 9px 3px; background: #f3ecdb;
+    background-image: repeating-linear-gradient(90deg, transparent 0 2px, rgba(43, 39, 34, .14) 2px 3px); }
+  :root[data-theme="dark"] .dy-pages { background-color: #b9ae96; }
+  .dy-cover { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding-left: 14px;
+    background: var(--o); border: 1.8px solid var(--ink); border-radius: 4px 10px 10px 4px; }
+
+  .dy-cover::before { content: ""; position: absolute; inset: 7px 7px 7px 21px; border: 1.3px dashed rgba(236, 184, 200, .75); border-radius: 3px 7px 7px 3px; }
+  .dy-cover::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 14px; border-right: 1.6px solid rgba(0, 0, 0, .35); background: rgba(0, 0, 0, .14); border-radius: 3px 0 0 3px; }
+  .dy-title { font-family: var(--hand); font-weight: 700; font-size: 34px; line-height: 1; color: #eebccb; }
+  .dy-sub { font-family: var(--type); font-size: 9px; letter-spacing: .26em; text-transform: uppercase; color: #eebccb; opacity: .85; }
+  .dy-clasp { position: absolute; right: -40px; top: 40px; width: 96px; height: 80px; overflow: visible; }
+  .dy-clasp.open { top: 30px; right: -74px; width: 124px; height: 160px; }
+  .dy-strap { fill: #4f2a43; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+  .dy-stitch { fill: none; stroke: #eebccb; stroke-width: 1.1; stroke-dasharray: 2.6 2.2; opacity: .75; }
+  .dy-metal { fill: #d4a23c; stroke: #2b2722; stroke-width: 1.4; }
+  .rw-hint { --metal-line: #2b2722; }
+  :root[data-theme="dark"] .rw-hint { --metal-line: #d9cfbc; }
+  .dy-shackle { fill: none; stroke: var(--metal-line); stroke-width: 2.6; stroke-linecap: round; }
+  .dy-heart { fill: #d4a23c; stroke: #2b2722; stroke-width: 1.5; stroke-linejoin: round; }
+  .dy-kh { fill: #2b2722; }
+  .dy-keyshaft { fill: none; stroke: var(--metal-line); stroke-width: 2.2; stroke-linecap: round; }
+  .dy-keybit { fill: none; stroke: var(--metal-line); stroke-width: 1.8; stroke-linecap: round; }
+  .dy-keybow { fill: #d4a23c; stroke: #2b2722; stroke-width: 1.5; }
+  .dy-keyhole { fill: var(--paper); stroke: #2b2722; stroke-width: 1; }
+  .dy-ribbon { fill: none; stroke: #c45a7c; stroke-width: 2; stroke-linecap: round; }
+  .dy-orn { position: absolute; left: 27px; top: 13px; right: 13px; bottom: 13px; width: calc(100% - 40px); height: calc(100% - 26px); overflow: visible; }
+  .dy-orn path { fill: none; stroke: #eebccb; stroke-width: 1.4; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .85; }
+  .dy-owe { margin: 18px 0 0; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
+
+  /* ================= TITLES: the card file ================= */
+  .tt-foot { display: flex; flex-direction: column; align-items: center; gap: 7px; margin-top: 18px; }
+  .tt-act { font-family: var(--type) !important; font-size: calc(11px + var(--text-size-adjust)) !important; letter-spacing: .14em; text-transform: uppercase; }
+  .tt-act.wear { padding: 8px 18px !important; border: 2px solid var(--ink) !important; border-radius: 4px; background: var(--paper) !important; font-weight: 700; color: var(--ink) !important; }
+  .tt-act.wear:hover { background: var(--ink) !important; color: var(--paper) !important; }
+  .tt-act.worn { font-weight: 700; color: var(--red-pen); }
+  .tt-act.lock { color: var(--ink-soft); letter-spacing: .08em; text-transform: none; }
+  .tt-reset { font-family: var(--type) !important; font-size: 10px !important; color: var(--ink-soft) !important; text-decoration: underline; }
+  .tt-reset.muted { text-decoration: none; }
+  .rw-mk { display: block; width: 100%; height: 100%; }
+  .rw-mk svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .rw-mk .ink, .rw-mk .ink-fill { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tc-kick { font-family: var(--type); font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--tc-acc); }
+  .tc-title { margin: 4px 0 3px; font-family: var(--hand); font-weight: 700; font-size: calc(35px + var(--text-size-adjust)); line-height: 1; color: var(--type-ink); }
+  .tc-desc { font-family: var(--type); font-style: italic; font-size: 11px; color: color-mix(in srgb, var(--type-ink) 65%, transparent); }
+
+  .tf-file { position: relative; max-width: 440px; margin: 0 auto; padding-top: 46px; }
+  /* the dividers are cards the width of the title cards, so their tabs sit within the card's own
+     edges; only the tab shows, standing up behind the card in front */
+  .tf-tabs { position: absolute; left: 10px; right: 10px; top: 0; height: 60px; }
+  .tf-tab { position: absolute !important; top: 7px; left: calc(var(--i) * 25.2%); width: 24.4%; height: 60px; display: flex !important; align-items: flex-start; gap: 3px;
+    padding: 5px 5px 0 5px !important; border: 1.5px solid var(--ink) !important; border-radius: 9px 9px 0 0; background: var(--stock, #fbf8ef) !important; transition: top .2s; }
+  .tf-tab.here { top: 0; z-index: 1; }
+  .tf-tab.here::after { content: ""; position: absolute; left: 8px; right: 8px; top: 3px; border-top: 2px solid var(--red-pen); border-radius: 2px; opacity: .85; }
+  .tf-tab:not(.on) { background: color-mix(in srgb, var(--stock, #fbf8ef) 55%, var(--paper)) !important; border-style: dashed !important; }
+  .tf-tab:not(.on) .tf-tab-tx { opacity: .55; }
+  .tf-tab:hover { top: 2px; } .tf-tab.here:hover { top: 0; }
+  .tf-tag { width: 26px; height: 26px; flex: none; }
+  .tf-tag.wide { width: 36px !important; height: 18px !important; margin-top: 5px; }
+  .tf-tag.wide .mpp-ghost-n { font-size: 44px; transform: translateY(9px); }
+  .tf-tab-tx { display: flex; flex-direction: column; line-height: 1.02; padding-top: 2px; min-width: 0; }
+  .tf-tab-tx i { font-style: normal; font-family: var(--type); font-size: 9px; letter-spacing: .14em; color: var(--tf-sub, var(--ink-soft)); }
+  .tf-tab-tx b { font-family: var(--hand); font-size: 15px; color: var(--tf-ink, var(--ink)); white-space: nowrap; }
+  .tf-tab.tier0, .tf-card.tier0 { --stock: #fbf8ef; }
+  .tf-tab.tier1, .tf-card.tier1 { --stock: #efe9da; }
+  .tf-tab.tier2, .tf-card.tier2 { --stock: #fbf3df; }
+  .tf-tab.tier3, .tf-card.tier3 { --stock: #1f1b17; --tf-ink: #e8c46a; --tf-sub: #bfa264; }
+  .tf-tab.tier2 { box-shadow: inset 0 3px 0 #c8951f; }
+  :root[data-theme="dark"] .tf-tab.tier0, :root[data-theme="dark"] .tf-card.tier0 { --stock: #3a3227; }
+  :root[data-theme="dark"] .tf-tab.tier1, :root[data-theme="dark"] .tf-card.tier1 { --stock: #443a2d; }
+  :root[data-theme="dark"] .tf-tab.tier2, :root[data-theme="dark"] .tf-card.tier2 { --stock: #42382a; }
+  :root[data-theme="dark"] .tf-tab.tier3, :root[data-theme="dark"] .tf-card.tier3 { --stock: #14110d; }
+  .tf-card { --type-ink: var(--tf-ink, #2b2722); --tc-acc: var(--oi); position: relative; z-index: 2; height: 176px; margin: 0 10px; display: flex; flex-direction: column; align-items: center;
+    gap: 2px; padding: 22px 26px 0; text-align: center; background: var(--stock); border: 1.5px solid var(--ink); border-radius: 5px;
+    box-shadow: inset 0 0 0 6px var(--stock), inset 0 0 0 7px color-mix(in srgb, var(--tc-acc) 40%, transparent); }
+  :root[data-theme="dark"] .tf-card { --type-ink: var(--tf-ink, #ece5d6); }
+  .tf-card.tier1 { background: transparent; border: 0; box-shadow: none; isolation: isolate; }
+  .tf-card.tier1::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--stock); border: 1.5px solid var(--ink); filter: url(#rwDeckle); }
+  .tf-card.tier2 { --tc-acc: #a77a1e; border: 4px solid #c8951f; outline: 1.4px solid var(--ink); box-shadow: inset 0 0 0 5px var(--stock), inset 0 0 0 6px #c8951f; }
+  .tf-card.tier3 { --tc-acc: #e8c46a; border-color: #c8951f; }
+  .tf-card .tc-title { font-size: calc(33px + var(--text-size-adjust)); }
+  .tf-corner { position: absolute; top: 12px; right: 14px; width: 22px; height: 22px; color: var(--tc-acc); }
+  .tf-card.lk > * { opacity: .45; }
+  .tf-card.lk .tc-title { opacity: .32; }
+  .tf-box { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 66px; margin-top: -58px; padding: 0 12px;
+    background-color: var(--ow2); border: 2px solid var(--ink); border-radius: 3px 3px 9px 9px;
+    background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--o) 9%, transparent) 0 1px, transparent 1px 4px); }
+  .tf-box::before { content: ""; position: absolute; left: 6px; right: 6px; top: 5px; border-top: 1.2px solid color-mix(in srgb, var(--ink) 40%, transparent); }
+  .tf-plate { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 14px 5px; background: var(--mpp-card); border: 1.5px solid var(--ink); border-radius: 3px; }
+  .tf-plate b { font-family: var(--hand); font-size: 18px; line-height: 1; color: var(--oi); }
+  .tf-plate i { font-style: normal; font-family: var(--type); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
+  .tf-arw { flex: none; width: 34px; height: 34px; display: flex !important; align-items: center; justify-content: center; border: 1.5px solid var(--ink) !important; border-radius: 50%; background: var(--mpp-card) !important; }
+  .tf-arw svg { width: 18px; height: 18px; } .tf-arw path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tf-arw:disabled { opacity: .3; cursor: default; }
+  @container rw (max-width: 440px) { .tf-tab-tx b { display: none; } .tf-tab-tx i { font-size: 11px; padding-top: 7px; } .tf-tag { width: 26px; height: 26px; flex: none; } }
+  /* Shared with the ink swatches in settings: the padlock primitive the old reward tiles drew. */
   .rb-lock { display: inline-flex; width: 15px; height: 15px; color: var(--ink-soft); }
+  .rb-lock svg { width: 100%; height: 100%; overflow: visible; }
   .rb-lock .ink { stroke: var(--ink-soft); }
   .rb-lock .ink-fill { fill: var(--ink-soft); stroke: var(--ink-soft); }
-
-  /* Stacked pick-list rows — shared by the pens tile and the signature tile: a glyph, a name,
-     and an "in use" tag. The two differ only in how much room the glyph needs, hence --sig. */
-  .rb-rows { display: flex; flex-direction: column; gap: 9px; margin-top: 12px; }
-  .rb-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font: inherit; cursor: pointer;
-    padding: 8px 11px; border-radius: 10px; border: 1px solid rgba(43, 39, 34, 0.14); background: rgba(43, 39, 34, 0.015); }
-  .rb-row.active { border-color: rgba(var(--m-accent), 0.6); background: rgba(var(--m-accent), 0.1); }
-  .rb-row.locked { cursor: not-allowed; border-style: dashed; opacity: 0.6; }
-  .rb-row-ic { width: 22px; height: 22px; flex: none; color: var(--bead); }
-  .rb-row-ic.rb-lock { color: var(--ink-soft); }
-  .rb-row-nm { flex: 1; font-family: var(--hand); font-weight: 700; font-size: calc(14px + var(--text-size-adjust)); color: var(--ink); }
-  .rb-row.locked .rb-row-nm { color: var(--ink-soft); }
-  .rb-row-tag { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
-  .rb-row.active .rb-row-tag { color: rgba(var(--m-accent), 0.95); }
-  /* Start-button words rows: each row previews the real button, scaled, wearing the words on
-     offer. It is a live .play-cta and not a picture of one, for the same reason the paper and
-     finish swatches are — a preview that is the thing cannot drift from it.
-     The button is laid out at full size and scaled rather than reflowed, so "I'll write your
-     name" keeps the real button's proportions instead of wrapping to two lines at row width.
-     280px is a FLOOR, not a width: the label is nowrap and the mark takes 28px of the content
-     box, so a fixed 280 shoved the longest label straight through the right border — and worse
-     as --text-size-adjust climbs. max-content lets the widest words push the button out
-     instead, and left:50% + translateX keeps whatever width results centred in the slot. */
-  .rb-rows--cta .rb-row { padding: 7px 11px; min-height: 52px; }
-  /* Full width, the rows go two across rather than stretching a small button over a long row. */
-  .rb-rows--cta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .rb-rows--cta .rb-row-ic {
-    flex: 1 1 auto; width: auto; height: auto; min-width: 0; min-height: 40px;
-    display: flex; flex-direction: column; align-items: stretch; justify-content: center;
-    color: var(--ink);
-  }
-  .rb-rows--cta .rb-row-ic.rb-lock { flex: 0 0 15px; width: 15px; height: 15px; min-height: 0; color: var(--ink-soft); }
-  /* overflow stays visible: the scaled button is far narrower than the slot at every width, and
-     the only things reaching outside its box are the drawn shadow and the corner the -0.6deg
-     tilt lifts — both of which the real button on the start screen also puts outside its box. */
+  /* A real start button, scaled into a preview (ctaPreviewHTML). overflow stays visible: the
+     only things reaching outside its box are the drawn shadow and the corner the -0.6deg tilt
+     lifts, both of which the real button on the start screen also puts outside its box. */
   .cta-prev { position: relative; display: block; width: 100%; height: var(--cta-h, 39px); }
   .cta-prev .play-cta {
     position: absolute; top: 2px; left: 50%;
@@ -14230,224 +14484,8 @@
     margin: 0; text-align: center; white-space: nowrap; pointer-events: none;
     transform: translateX(-50%) scale(var(--cta-k, 0.63)) rotate(-0.6deg); transform-origin: center top;
   }
-  /* A shelf of nine buttons all bobbing and wiggling at once is a fairground, not a notebook.
-     The idle animations belong to the ONE real button on the start screen. */
+  /* The idle animations belong to the ONE real button on the start screen. */
   .cta-prev .play-cta, .cta-prev .play-cta .cta-mark--pencil { animation: none; }
-  /* The bento paints ACH_ICONS glyphs in bead gold over an ink outline, which is right for a
-     charm sitting on paper and wrong for a mark sitting INSIDE the gold button — it would
-     paint the mark the same colour as the button it sits on. The CTA marks are currentColor
-     by design (that is what makes the hover inversion free), so they are exempted here. */
-  .reward-bento .cta-mark .ink-fill { fill: currentColor; stroke: none; }
-  .reward-bento .cta-mark .ink { fill: none; stroke: currentColor; }
-  /* The preview eats enough of the row that "in use" would otherwise break across two lines. */
-  .rb-rows--cta .rb-row-tag { white-space: nowrap; }
-
-  /* Charms — bracelet strand hero */
-  .rb-strand { position: relative; margin-top: 16px; padding-top: 8px; }
-  .rb-cord { position: absolute; top: 8px; left: 4px; right: 4px; border-top: 2px solid rgba(43, 39, 34, 0.22); }
-  .rb-clasp { position: absolute; top: 3px; width: 9px; height: 9px; border-radius: 50%; background: var(--paper); border: 2px solid rgba(43, 39, 34, 0.22); }
-  .rb-clasp.l { left: -2px; }
-  .rb-clasp.r { right: -2px; }
-  .rb-beads { position: relative; display: flex; justify-content: space-between; align-items: flex-start; }
-  .rb-bead-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0; font: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
-  .rb-bead-col.locked { cursor: not-allowed; }
-  .rb-stem { width: 2px; background: rgba(43, 39, 34, 0.22); }
-  .rb-bead-col.short .rb-stem { height: 14px; }
-  .rb-bead-col.long .rb-stem { height: 30px; }
-  .rb-bead { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(43, 39, 34, 0.16); }
-  /* The disc is a SEAT for the bead, not a material, so unlike the paper chips beside it there
-     is nothing here to preserve and it simply inverts — the same move .nav-card-seat already
-     makes. A half-white disc reads as a lit hole punched in the night page. */
-  :root[data-theme="dark"] .rb-bead {
-    background: rgba(236, 229, 214, 0.08); border-color: rgba(236, 229, 214, 0.16);
-  }
-  :root[data-theme="dark"] .rb-bead-col.active .rb-bead { background: rgba(236, 229, 214, 0.16); }
-  :root[data-theme="dark"] .rb-bead-col.locked .rb-bead { background: rgba(236, 229, 214, 0.04); }
-  /* Two kinds of mark hang here: a TRINKETS glyph (.trinket-preview) and, on the random bead,
-     a MASTERY_ICONS mark wrapped by masteryMarkup (.charm). Sized alike so the strand reads
-     as one row of beads whichever one a slot is wearing. */
-  .rb-bead .trinket-preview, .rb-bead > .charm { width: 30px; height: 30px; color: var(--bead); }
-  .rb-bead-col.active .rb-bead { border: 2px solid rgba(var(--m-accent), 0.75); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.15); background: #fff9ec; }
-  .rb-bead-col.locked .rb-bead { border-style: dashed; background: rgba(43, 39, 34, 0.04); }
-  .rb-bead-col.locked .rb-lock { width: 15px; height: 15px; opacity: 0.6; }
-  .rb-bead-nm { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: var(--ink-soft); margin-top: 6px; }
-  .rb-bead-col.active .rb-bead-nm { color: rgba(var(--m-accent), 0.95); }
-
-  /* Paper — swatches of the real stock */
-  .rb-swatches { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 15px; }
-  .rb-sw-col { display: flex; flex-direction: column; align-items: center; gap: 7px; font: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
-  .rb-sw-col.locked { cursor: not-allowed; }
-  /* Sized to fit three across the tile: at this size a swatch reads as a sheet of the stock
-     rather than a colour chip, and the tile stops looking half-empty under its heading. */
-  .rb-sw { width: 72px; height: 56px; border-radius: 8px; }
-  /* Re-assert the swatch size over the generic .paper-chip (26px) so unlocked chips match the locked slots. */
-  .rb-sw.paper-chip { width: 72px; height: 56px; border-radius: 8px; }
-  .rb-sw.paper-chip::before { left: 12px; }
-  .rb-sw-col.active .rb-sw { border-color: rgba(var(--m-accent), 0.7); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.16); }
-  .rb-sw.locked { display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(43, 39, 34, 0.25); background: rgba(43, 39, 34, 0.04); }
-  .rb-sw.locked .rb-lock { opacity: 0.6; }
-  .rb-sw-nm { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: var(--ink-soft); }
-  .rb-sw-col.active .rb-sw-nm { color: rgba(var(--m-accent), 0.95); }
-
-  /* Milestone tiles — the two rewards that grant no toggle. Both are vaults: something
-     pressed shut that you are being kept out of, with the reward's mark floated oversized
-     behind the copy and the seal brightening the moment it opens. They guard different
-     things, so they are made of different things, and that is the ONLY difference between
-     them: every rule below is shared, and a tone class supplies the finish. --dark is the
-     iron-and-brass strongbox holding a tier of brutal challenges; --ink is the plum-leather
-     archive holding what the secret charms are, opened with a key rather than forced. */
-  .rb-ms { overflow: hidden; background-color: var(--v-bg); background-image: none; border-color: var(--v-edge); }
-  .rb-ms .rb-chip { position: absolute; top: 13px; right: 14px; color: var(--v-foil); background: transparent; border: 1px solid var(--v-edge); }
-  .rb-ms-mark { position: absolute; right: -8px; bottom: -22px; width: 132px; height: 132px; opacity: 0.09; }
-  .rb-ms-mark .ink, .rb-ms-mark .ink-fill { stroke: var(--v-foil); fill: var(--v-foil); }
-  .rb-ms-seal {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; border-radius: 50%; padding: 8px;
-    background: var(--v-seal); border: 1.5px solid var(--v-edge);
-  }
-  .rb-ms-seal .ink { stroke: var(--v-foil); }
-  .rb-ms-seal .ink-fill { fill: var(--v-foil); stroke: var(--v-foil); }
-  .rb-ms-nm { font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); margin-top: 10px; color: var(--v-text); }
-  .rb-ms-sub { position: relative; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.5; margin-top: 5px; max-width: 240px; color: var(--v-sub); }
-  /* Open: the mark behind the copy comes up out of the dark and the seal catches the light. */
-  .rb-ms.earned .rb-ms-mark { opacity: 0.16; }
-  .rb-ms.earned .rb-ms-seal { border-color: var(--v-edge-lit); }
-  .rb-ms.earned .rb-ms-seal .ink, .rb-ms.earned .rb-ms-seal .ink-fill { stroke: var(--v-foil-lit); fill: var(--v-foil-lit); }
-  /* Iron and brass — the tier of brutal challenges. */
-  .rb-ms--dark {
-    --v-bg: #26221d; --v-edge: #3d372e; --v-edge-lit: #7a6330; --v-seal: #2f2921;
-    --v-foil: #c99a45; --v-foil-lit: #e8c37a; --v-text: #f3e7d0; --v-sub: #b4a488;
-  }
-  /* Plum leather and rose foil — the archive of what the secret charms are. */
-  .rb-ms--ink {
-    --v-bg: #2a2029; --v-edge: #45333f; --v-edge-lit: #7d5068; --v-seal: #342634;
-    --v-foil: #bf87a4; --v-foil-lit: #e2add0; --v-text: #f2e2ea; --v-sub: #ab93a2;
-  }
-  /* The door out of a vault to wherever the reward actually lives. Drawn only on an earned
-     tile, so it never has a locked state to dress: a small plate in the vault's own metal. */
-  .rb-ms-go {
-    position: relative; display: inline-block; margin-top: 12px; cursor: pointer;
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 7px 15px; border-radius: 3px;
-    color: var(--v-foil-lit); background: var(--v-seal); border: 1px solid var(--v-edge-lit);
-  }
-  .rb-ms-go:hover { border-color: var(--v-foil); }
-
-  /* Start-writing button: swatches of the real CTA (reuses .rb-sw-col). Eight swatches, four
-     across now that the tile has the full width, and two across on a phone; the grid is scoped
-     to this tile because the paper tile shares .rb-swatches and wants its own free-flowing wrap.
-     Each swatch is a real button scaled down, ~116px wide however narrow its column gets, so the
-     column count must drop before the columns get narrower than that, or they overlap. The
-     Seasons tray leads with "By the calendar" across the whole row, the default above the four
-     seasons it pins. */
-  .rb-button .rb-swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); justify-items: center; }
-  #seasonPicker .rb-sw-col:first-child { grid-column: 1 / -1; }
-  .rb-button .rb-sw-col { width: 100%; }
-  /* Each swatch is a real .play-cta drawn at a fixed width and scaled down to fit, so the
-     preview stays the button rather than an impression of it. */
-  .rb-btn-sw { position: relative; width: 100%; max-width: 118px; height: 36px; border-radius: 6px;
-    display: flex; align-items: center; justify-content: center; }
-  /* 214px is the narrowest the real label sits on one line at its real size; the scale then
-     brings that back to the column width. Sizing the preview by font-size instead would let
-     the label wrap here and nowhere else. */
-  .rb-btn-sw .play-cta { flex: none; width: 214px; margin: 0; transform: scale(0.54) rotate(-0.6deg);
-    animation: none; pointer-events: none; }
-  .rb-btn-sw .play-cta .cta-mark--pencil { animation: none; }
-  .rb-sw-col.active .rb-btn-sw { outline: 3px solid rgba(var(--m-accent), 0.22); outline-offset: 1px; }
-  .rb-btn-sw.locked { background: rgba(43, 39, 34, 0.04); border: 1px dashed rgba(43, 39, 34, 0.25); color: var(--ink-soft); }
-  .rb-btn-sw.locked .rb-lock { opacity: 0.6; }
-
-  /* Pride lives behind one of the six button-finish swatches, then opens a tray below the
-     grid holding the flags. The tray's chips are the same .rb-sw-col swatches the tile above
-     it uses, each a real scaled-down .play-cta, so a flag previews as the button it will
-     actually become and there is no second drawing of a ramp to drift. */
-  .set-picker { margin-top: 14px; padding-top: 13px; border-top: 1px dashed rgba(43, 39, 34, 0.2); }
-  .set-picker[hidden] { display: none; }
-  .set-picker-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-  .set-picker-top > span { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); }
-  .set-picker-top button { border: 0; background: none; padding: 2px 0; cursor: pointer; color: var(--ink-soft); font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; }
-  .set-picker-top button:hover, .set-picker-top button:focus-visible { color: rgb(var(--m-accent)); text-decoration: underline; text-underline-offset: 3px; }
-
-  /* Prestige titles — rank-medallion ladder above the picker */
-  .rb-ladder { position: relative; display: flex; justify-content: space-between; align-items: flex-start; margin: 18px 4px 6px; padding: 0 6px; }
-  .rb-ladder-rail { position: absolute; top: 22px; left: 40px; right: 40px; border-top: 1.5px dashed rgba(43, 39, 34, 0.2); }
-  .rb-medal { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 0;
-    font: inherit; text-align: center; border: 0; background: none; padding: 0; }
-  button.rb-medal { cursor: pointer; }
-  div.rb-medal { cursor: not-allowed; }
-  .rb-title-lock { cursor: not-allowed; }
-  .rb-medal-ic { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 11px;
-    background: var(--paper); border: 1.5px solid rgba(43, 39, 34, 0.16); }
-  .rb-medal-ic .charm { width: 100%; height: 100%; }
-  .rb-medal.locked .rb-medal-ic { opacity: 0.5; }
-  .rb-medal.reached .rb-medal-ic { border-color: rgba(var(--m-accent), 0.5); background: #fff9ec; }
-  .rb-medal.worn .rb-medal-ic, .rb-medal.next .rb-medal-ic { border: 2px solid rgba(var(--m-accent), 0.75); box-shadow: 0 0 0 3px rgba(var(--m-accent), 0.14); }
-  .rb-medal.next .rb-medal-ic { border-color: rgba(var(--m-accent), 0.5); }
-  .rb-medal-lv { font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin-top: 7px; }
-  .rb-medal-nm { font-family: var(--hand); font-weight: 700; font-size: calc(13px + var(--text-size-adjust)); color: var(--ink); margin-top: 1px; }
-  .rb-medal.locked .rb-medal-nm { color: var(--ink-soft); }
-  /* One fixed-height line under every medallion, so the four columns stay level whether or
-     not they carry a flag. It holds the state word at rest and cross-fades to the click cue
-     on hover, which is the only place the medallions say what they do. */
-  .rb-medal-flag { position: relative; width: 100%; height: 11px; margin-top: 3px;
-    font-family: var(--type); font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 0.1em; text-transform: uppercase; }
-  .rb-medal-state, .rb-medal-hint { position: absolute; left: 0; right: 0; top: 0; font-style: normal; transition: opacity 0.16s ease; }
-  .rb-medal-state { color: rgba(var(--m-accent), 0.95); }
-  .rb-medal-hint { color: var(--ink-soft); opacity: 0; }
-  button.rb-medal:hover .rb-medal-hint, button.rb-medal:focus-visible .rb-medal-hint { opacity: 1; }
-  button.rb-medal:hover .rb-medal-state, button.rb-medal:focus-visible .rb-medal-state { opacity: 0; }
-  button.rb-medal:hover .rb-medal-ic, button.rb-medal:focus-visible .rb-medal-ic { border-color: rgba(var(--m-accent), 0.6); background: #fff9ec; }
-  button.rb-medal:hover .rb-medal-nm, button.rb-medal:focus-visible .rb-medal-nm { color: rgba(var(--m-accent), 0.95); }
-  button.rb-medal.locked:hover .rb-medal-ic, button.rb-medal.locked:focus-visible .rb-medal-ic { opacity: 0.75; }
-  .rb-title-lock { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 12px; border-radius: 9px;
-    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); background: rgba(43, 39, 34, 0.04); border: 1px solid rgba(43, 39, 34, 0.14); }
-  .rb-titles .title-stepper { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(43, 39, 34, 0.1); }
-  @media (max-width: 560px) {
-    .rb-grid { grid-template-columns: 1fr; grid-template-areas: "pens" "trinket" "paper" "hard" "button" "cta" "stick" "hint" "title"; }
-    .rb-button .rb-swatches, .rb-rows--cta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .rb-rows--cta { grid-template-columns: minmax(0, 1fr); }
-    .rb-bead { width: 34px; height: 34px; }
-    .rb-bead .trinket-preview, .rb-bead > .charm { width: 24px; height: 24px; }
-    .rb-swatches { gap: 10px; }
-    .rb-sw, .rb-sw.paper-chip { width: 62px; height: 48px; }
-    .rb-sw.paper-chip::before { left: 10px; }
-  }
-  /* Prestige-title stepper: browse one title at a time; a star marks the worn title, a
-     circle the one being viewed. Tier-grouped position dots below the name. */
-  .title-stepper { text-align: center; margin: 6px 0 2px; }
-  .ts-cap { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-soft); }
-  .ts-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-  .ts-arw { width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(43, 39, 34, 0.26); background: transparent; display: flex; align-items: center; justify-content: center; color: var(--ink-soft); cursor: pointer; flex: none; }
-  .ts-arw svg { width: 18px; height: 18px; }
-  .ts-arw[disabled] { opacity: 0.3; cursor: default; }
-  .ts-mid { flex: 1; min-width: 0; }
-  .ts-title { font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); line-height: 1.02; color: #7a3d59; display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
-  .ts-title.lk { color: var(--ink-soft); }
-  .ts-title .charm { width: 22px; height: 22px; }
-  .ts-title .charm svg { width: 100%; height: 100%; }
-  .ts-def { font-family: var(--type); font-weight: 400; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.1em; text-transform: uppercase; color: rgba(var(--m-accent), 0.95); border: 1px solid rgba(var(--m-accent), 0.5); border-radius: 3px; padding: 1px 5px; vertical-align: 4px; }
-  .ts-sub { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
-  .ts-dots { display: flex; gap: 4px; justify-content: center; margin-top: 11px; }
-  .ts-grp { display: flex; align-items: center; gap: 5px; padding: 0 6px; border-right: 1px solid rgba(43, 39, 34, 0.14); }
-  .ts-grp:last-child { border-right: 0; }
-  .ts-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(43, 39, 34, 0.2); display: block; box-sizing: border-box; }
-  .ts-dots i.ts-cur { background: rgba(var(--m-accent), 0.95); }
-  .ts-dots i.ts-lk { background: transparent; border: 1px solid rgba(160, 62, 46, 0.45); }
-  .ts-dots i.ts-cur.lk { background: rgba(var(--m-accent), 0.95); border: 0; }
-  .ts-star { width: 13px; height: 13px; display: inline-flex; }
-  .ts-star svg { width: 13px; height: 13px; display: block; fill: rgba(var(--m-accent), 0.95); }
-  .ts-legend { display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 9px; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
-  .ts-legend span { display: inline-flex; align-items: center; gap: 5px; }
-  .ts-legend .d { width: 6px; height: 6px; border-radius: 50%; background: rgba(var(--m-accent), 0.95); display: block; }
-  .ts-act { display: block; width: 100%; max-width: 230px; margin: 14px auto 0; font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.05em; padding: 8px 0; border-radius: 4px; text-align: center; }
-  .ts-act.wear { border: 1px solid rgba(var(--m-accent), 0.6); background: rgba(var(--m-accent), 0.14); color: #7a3d59; cursor: pointer; }
-  .ts-act.worn { border: 1px solid rgba(43, 39, 34, 0.2); background: transparent; color: var(--ink-soft); }
-  .ts-act.lock { border: 1px dashed rgba(43, 39, 34, 0.3); background: transparent; color: var(--ink-soft); display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
-  .ts-act.lock .charm { width: 12px; height: 12px; }
-  .ts-act.lock .charm svg { width: 100%; height: 100%; }
-  .ts-reset { display: block; margin: 10px auto 0; background: transparent; border: 0; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.08em; text-transform: uppercase; color: rgba(var(--m-accent), 0.95); cursor: pointer; }
-  .ts-reset.muted { color: var(--ink-soft); cursor: default; }
   /* Worn prestige title, engraved under the notebook signature on the records page. */
   .rec-sig-title { display: inline-block; font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.14em; text-transform: uppercase; color: #7a3d59; border-top: 1px solid rgba(168, 87, 122, 0.35); border-bottom: 1px solid rgba(168, 87, 122, 0.35); padding: 4px 0; margin-top: 8px; }
   /* Paper-stock swatch: a little sheet of the actual stock with its red margin rule. */
@@ -14469,8 +14507,6 @@
      chips are previewing something the page is not currently wearing. Showing them lit would
      be the page promising a stock it will not give you until morning. */
   :root[data-theme="dark"] .paper-chip { filter: brightness(0.6) saturate(0.92); }
-  :root[data-theme="dark"] .rb-sw-col:hover .paper-chip,
-  :root[data-theme="dark"] .rb-sw-col.active .paper-chip { filter: brightness(0.76) saturate(0.94); }
   /* Bracelet-trinket glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
   .trinket-preview { overflow: visible; }
 
@@ -16311,23 +16347,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .feedback-advance .countdown-skip, .feedback-advance .countdown-hold { margin: 0; }
   .feedback-advance .countdown-acts { gap: 12px; }
 
-  /* minmax removes the grid's intrinsic floor; every collection then fits its tile. */
-  .rb-grid { grid-template-columns: minmax(0, 1fr); }
-  .rb-tile { min-width: 0; padding: 14px 12px; }
-  .rb-tile-top { flex-wrap: wrap; }
-  .rb-row, .rb-row-nm, .rb-sw-col { min-width: 0; }
-  .rb-row-nm { overflow-wrap: anywhere; }
-  .rb-row-tag { text-align: right; }
-  .rb-top { flex-wrap: wrap; }
-  .rb-beads { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 12px; }
-  .rb-bead-col { min-height: 64px; }
-  .rb-bead-col .rb-stem { height: 14px; }
-  .rb-button .rb-swatches { column-gap: 5px; }
-  .rb-btn-sw .play-cta { transform: scale(0.46) rotate(-0.6deg); }
-  .rb-rows--cta .rb-row { flex-wrap: wrap; }
-  .rb-rows--cta .rb-row-ic:not(.rb-lock) { flex-basis: 100%; }
-  .rb-rows--cta .rb-row-tag { width: 100%; text-align: center; }
-  .cta-prev .play-cta { --cta-k: 0.57; }
   /* The passport folds to four stamps a row with the capstone on its own, and the stamp cards
      to one column. */
   .mpp { padding: 14px 12px 10px; }
@@ -16338,10 +16357,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .mpp-stamp { width: min(100%, 84px); height: auto; aspect-ratio: 1; }
   .mpp-slot.cap .mpp-stamp { width: 180px; height: 90px; aspect-ratio: auto; }
   .msc-grid { grid-template-columns: 1fr; }
-  .ts-row { gap: 6px; }
-  .ts-title { flex-wrap: wrap; font-size: calc(25px + var(--text-size-adjust)); }
-  .ts-dots, .ts-legend { flex-wrap: wrap; }
-  .rb-ladder { padding: 0; margin-inline: 0; }
 
   .settings-card, .song-card, .firstrun-card {
     --rule-x: 17px; padding: 18px 14px 22px 30px;
@@ -16364,10 +16379,9 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* Keep the drawn marks small while their touch area is comfortable. */
 @media (pointer: coarse) {
-  .btn-link, .countdown-skip, .countdown-hold, .ts-reset, .set-picker-top button { min-height: 44px; padding-block: 10px; }
-  .ts-arw { width: 44px; height: 44px; }
-  .rb-rand { min-width: 44px; min-height: 44px; }
-  .rb-row, .rb-sw-col, .rb-medal { min-height: 44px; }
+  .btn-link, .countdown-skip, .countdown-hold, .tt-reset, .bc-refill-hd button { min-height: 44px; padding-block: 10px; }
+  .tf-arw { width: 44px; height: 44px; }
+  .rw-die { min-height: 44px; }
   .see-also--row .nav-card-title {
     position: static; display: block; width: auto; height: auto; margin: 7px 0 0; padding: 0;
     overflow: visible; clip: auto; clip-path: none; border: 0; white-space: normal; text-align: center; line-height: 1.15;

@@ -173,16 +173,25 @@ if (location.pathname.endsWith('/index.html')) {
     <feTurbulence type="fractalNoise" baseFrequency="0.018 0.075" numOctaves="2" seed="23" result="noise"/>
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
-  <!-- Metaball goo for the Mastery reward board's randomiser: the die's circle sits proud of
-       its level pill and melts into it, rather than floating beside it as a second object.
-       Blur the alpha, then slam the midtones back to opaque with the colour matrix — the
-       overlap of two blurred edges crosses the threshold and fuses; the outer edges stay put.
-       Applied to a background LAYER only (.rb-fuse::before), never to the die or the words,
-       which have to stay crisp. -->
-  <filter id="fuseGoo" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
-    <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
-    <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"/>
+  <!-- The reward board's three materials (js/rewardboard.js). rwKiss draws a sticker's kiss-cut:
+       a hairline ring a few pixels outside the shape, and a ghost of the shape on the backing.
+       rwDeckle tears the edge of the rank II title card. rwGlitter is the gel pen's clear barrel,
+       glitter suspended in it in several colours and never a regular grid. -->
+  <filter id="rwKiss" x="-25%" y="-25%" width="150%" height="150%">
+    <feMorphology in="SourceAlpha" operator="dilate" radius="4.2" result="o"/>
+    <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="i"/>
+    <feComposite in="o" in2="i" operator="out" result="ring"/>
+    <feFlood flood-color="#7d7466" result="c"/><feComposite in="c" in2="ring" operator="in" result="cut"/>
+    <feFlood flood-color="#7d7466" flood-opacity="0.12" result="c2"/><feComposite in="c2" in2="SourceAlpha" operator="in" result="ghost"/>
+    <feMerge><feMergeNode in="ghost"/><feMergeNode in="cut"/></feMerge>
   </filter>
+  <filter id="rwDeckle" x="-4%" y="-6%" width="108%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.22" numOctaves="2" seed="4" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <pattern id="rwGlitter" width="9" height="11" patternUnits="userSpaceOnUse"><rect width="9" height="11" fill="#f6efe4"/>
+    <circle cx="1.6" cy="1.8" r=".75" fill="#c8951f"/><circle cx="6.4" cy="3.1" r=".6" fill="#c45a90"/><circle cx="3.9" cy="6.2" r=".5" fill="#5d7fb0"/>
+    <circle cx="7.6" cy="8.4" r=".8" fill="#c8951f"/><circle cx="2.2" cy="9.6" r=".55" fill="#c45a90"/><circle cx="5.2" cy="10.4" r=".35" fill="#2b2722" opacity=".5"/></pattern>
   <!-- Brushed nickel for the guest shelf's hardware: the split ring every pass hangs from
        and the crimp at the foot of its strap. The hard stop mid-gradient is the specular
        band that makes it read as turned metal rather than a grey outline. -->
@@ -919,35 +928,12 @@ if (location.pathname.endsWith('/index.html')) {
           stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
 </svg>
-<!-- MASTERY REWARD MARKS — one per tile on the Mastery reward board, drawn once here and
-     <use>d by rewardTileMarkHTML in app.js. Built exactly like the charm-collection theme
-     marks: a filled wash underneath, a pen drawing over it, both carrying NO colour of their
-     own so the pair takes its tile's hue off --fam (MASTERY_TILE_MARKS in js/config.js).
-
-     The wash is a HEXAGON, which is the point of it. The Charm Collection already ranks its
-     marks by how many sides the wash has — three for a theme, five for a family — so a
-     six-sided one reads as a third register of the same idea rather than as a new invention.
-     Same hand as both: corners heavily rounded, every side wandering, no edge ruled straight.
-     A geometric hexagon is a bolt head or a warning sign, and either would be the one rigid
-     object on a page of drawn ones.
-
-     The glyphs answer what the TILE hands you, not the individual rewards inside it, because
-     eight of them have to be told apart at 22px. Two are drawn away from the mark their tile
-     already wears elsewhere: the brutal vault's seal is a pair of swords, so its hex takes a
-     cracked shield, and the hints vault's seal is a key, so its hex takes a lantern. Three
-     copies of one drawing on one tile is a stutter; a second reading of the same idea is not. -->
+<!-- MASTERY REWARD MARKS: the drawings four passport stamps print in place of a MASTERY_ICONS
+     mark (passport.js, ["rw", key]): the paper stocks, the trinkets, the button finishes and the
+     button words, because those rewards are things rather than ideas and the stamp draws the
+     thing. They carry NO colour of their own; the stamp's ink reaches them by inheritance. -->
 <svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
-  <!-- the wash the reward marks sit on: a six-sided one, laid with the same chisel tip -->
-  <symbol id="reward-hex" viewBox="0 0 24 22">
-    <path d="M10.34 2.95 C11.1 2.15 13.1 2.2 13.85 2.97 C15.4 3.9 17.0 4.7 18.25 5.43 C19.4 6.0 20.2 7.0 19.93 8.4 C19.95 10.2 19.9 12.0 19.77 13.6 C19.6 15.1 19.1 15.9 17.97 16.6 C16.6 17.5 15.1 18.4 13.63 19.1 C12.6 19.7 11.2 19.8 10.15 19.13 C8.8 18.3 7.2 17.5 5.85 16.77 C4.7 16.1 3.9 15.2 4.14 13.8 C4.05 12.0 4.1 10.0 4.26 8.2 C4.4 6.7 4.9 5.9 6.06 5.25 C7.4 4.4 9.0 3.6 10.34 2.95 Z"/>
-  </symbol>
 
-  <!-- a fountain pen laid on the diagonal: the tile is your writing hand -->
-  <symbol id="reward-pens" viewBox="0 0 24 24">
-    <path d="M18.03 5.97 C18.70 6.64 18.70 7.73 18.03 8.40 L11.75 14.68 L9.32 12.25 L15.60 5.97 C16.27 5.30 17.36 5.30 18.03 5.97 Z"/>
-    <path d="M11.75 14.68 L9.32 12.25 L6.31 17.69 Z"/>
-    <path d="M7.98 15.60 L5.30 18.70"/>
-  </symbol>
   <!-- a heart on its jump ring: the thing that hangs off a bead, on its own. The strand it
        hangs from was drawn in above it at first and has been taken out — an arc over a heart
        turns its two ends up into ears at 21px, and the whole mark read as an owl. The tile
@@ -962,11 +948,6 @@ if (location.pathname.endsWith('/index.html')) {
     <path d="M14.43 5.64 C14.35 7.09 14.43 8.04 14.51 8.71 C15.29 8.80 16.48 8.71 17.33 8.63"/>
     <path d="M9.14 11.70 C11.19 11.53 13.24 11.53 14.77 11.70"/>
     <path d="M9.14 14.61 C10.84 14.43 12.55 14.43 13.92 14.61"/>
-  </symbol>
-  <!-- a shield with a crack struck through it: the tier is meant to hurt -->
-  <symbol id="reward-hard" viewBox="0 0 24 24">
-    <path d="M12.00 5.30 C14.34 6.24 16.36 6.70 17.92 6.86 C18.08 11.22 16.98 15.28 12.00 18.70 C7.02 15.28 5.92 11.22 6.08 6.86 C7.64 6.70 9.66 6.24 12.00 5.30 Z"/>
-    <path d="M13.09 8.42 L10.60 12.00 L13.09 12.62 L10.91 16.20"/>
   </symbol>
   <!-- a rubber stamp on its pad: the finish is pressed onto the button -->
   <symbol id="reward-button" viewBox="0 0 24 24">
@@ -985,24 +966,11 @@ if (location.pathname.endsWith('/index.html')) {
        Drawn rather than the key its seal already wears, and drawn as an eye rather than the
        lantern this was first — a flame inside a glass body is four strokes in a 21px box and
        came out looking like a battery. -->
-  <symbol id="reward-hint" viewBox="0 0 24 24">
-    <path d="M5.30 12.00 C7.70 8.97 9.84 7.53 12.00 7.53 C14.16 7.53 16.30 8.97 18.70 12.00 C16.30 15.03 14.16 16.47 12.00 16.47 C9.84 16.47 7.70 15.03 5.30 12.00 Z"/>
-    <path d="M12.00 9.93 C13.19 9.93 14.16 10.88 14.16 12.00 C14.16 13.12 13.19 14.07 12.00 14.07 C10.81 14.07 9.84 13.12 9.84 12.00 C9.84 10.96 10.72 10.01 11.84 9.93 Z"/>
-  </symbol>
   <!-- a magnifying glass: this tile does not hand over the answer, it asks you to look closer.
        Drawn away from the seal the tile wears (a peeled die-cut sticker) for the same reason
        the charms vault's hex is an eye against its key — three copies of one drawing on one
        tile is a stutter. Cubic segments only, never an arc: scale_reward_glyphs.py pairs every
        number in a `d` as a coordinate, and an arc's flags would be read as one. -->
-  <symbol id="reward-stick" viewBox="0 0 24 24">
-    <path d="M10.31 5.30 C13.08 5.30 15.33 7.55 15.33 10.31 C15.33 13.08 13.08 15.33 10.31 15.33 C7.55 15.33 5.30 13.08 5.30 10.31 C5.30 7.55 7.55 5.30 10.31 5.30 Z"/>
-    <path d="M13.86 13.86 L18.70 18.70"/>
-  </symbol>
-  <!-- a signature over the line it is written on: a title is engraved on your records page -->
-  <symbol id="reward-title" viewBox="0 0 24 24">
-    <path d="M5.30 13.52 C5.84 9.60 7.26 5.47 8.79 5.47 C9.98 5.47 9.77 7.53 8.57 9.38 C7.48 11.02 6.71 12.22 7.37 13.09 C8.14 14.07 9.66 13.09 11.18 10.91 C12.49 8.95 13.80 7.42 14.67 7.86 C15.65 8.29 14.56 10.91 15.43 12.00 C16.19 12.87 17.50 12.43 18.70 11.35"/>
-    <path d="M5.73 18.53 C9.88 18.10 13.80 18.10 17.50 18.53"/>
-  </symbol>
 </svg>
 <!-- The bonus shelf's icons are NOT here. Every game on the shelf is a hand-bound zine and
      its cover is a torn-paper collage drawn entirely in js/zine.js — no sprite, no <use>, no

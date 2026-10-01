@@ -2,8 +2,8 @@
    the ledger and hands these plain numbers, and gets markup back.
 
    THE PASSPORT. Mastery's thirteen levels are thirteen pages of stamps. A level you have
-   reached is a rubber stamp pressed in the ink of the reward tile it opens on the bento below
-   (MASTERY_TILE_MARKS, so the hero and the bento share one set of hues), and it carries the
+   reached is a rubber stamp pressed in the ink of the reward it opens on the reward board below
+   (MASTERY_TILE_MARKS, so the passport and the board share one set of hues), and it carries the
    DAY it was earned, read from the ledger (m.unlocked holds an ISO timestamp per reward). The
    level you are working toward is a dotted ghost of its stamp with the ink still owed; the
    rest are ghosts. Locked, the page is overprinted NOT YET ISSUED.
@@ -20,7 +20,7 @@ import { MASTERY_ICONS, MASTERY_TILE_MARKS, MASTERY_REWARD_BY_ID, MASTERY_TIER_I
 import { skillMarkHTML } from "./skillmarks.js";
 
 /* One entry per level. `glyph` is ["mi", key] for a MASTERY_ICONS mark or ["rw", key] for one
-   of the bento's #reward-* drawings (index.html); `tile` names the MASTERY_TILE_MARKS hue.
+   of the #reward-* drawings (index.html); `tile` names the MASTERY_TILE_MARKS hue.
    Where a reward or a title tier already owns a mark, the stamp takes it FROM there rather than
    naming it again, so a stamp and the tile it points at cannot drift apart.
 
@@ -60,7 +60,7 @@ function glyph([src, key], size, dx = 0, dy = 0) {
     const s = size / 24;
     return `<g class="mpp-gl" transform="translate(${dx - 12 * s} ${dy - 12 * s}) scale(${s})">${inner(MASTERY_ICONS[key])}</g>`;
   }
-  // The bento marks are normalised to a 13.4-unit extent (see scale_reward_glyphs.py), so they
+  // The reward drawings are normalised to a 13.4-unit extent (see scale_reward_glyphs.py), so they
   // are brought up to the rest here. Stroke and fill reach the symbol by inheritance. The
   // <use> needs its size stated: without one a symbol fills the whole stamp.
   const s = size / 24 * 1.45;

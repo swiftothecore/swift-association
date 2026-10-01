@@ -2459,19 +2459,17 @@ export const MASTERY_REWARD_BY_ID = Object.fromEntries(MASTERY_REWARDS.map((r) =
 // and the medallion still read one source, this one.
 export const MASTERY_TIER_ICONS = ["laurel", "bridge", "chair", "plumes"];
 
-/* The reward board's eight tiles, each with a drawn mark beside its name. The hue is all that
-   lives here; the drawings are the `#reward-*` symbols in index.html and the pair is assembled
-   by rewardTileMarkHTML in app.js.
+/* One hue per reward family, shared by the passport's stamps (each pressed in the hue of what
+   it opened) and the reward board's objects below it (js/rewardboard.js), so a stamp and the
+   object it opened are always the same ink.
 
-   One hue per TILE, not per reward. There are around forty rewards on that board and only
-   eight things they can be — a pen, a paper, a trinket, a tier, a finish, some words, a hint, a
-   title — so colouring the members would have painted forty arbitrary hues onto a page whose
-   whole job is to show you five sets. The hue is a label for the set, and the members below it
-   already show you exactly what they are.
+   One hue per FAMILY, not per reward. There are around forty rewards and only nine things they
+   can be, so colouring the members would have painted forty arbitrary hues onto a page whose
+   whole job is to show you the sets. The hue is a label for the set.
 
-   Keyed by the tile's grid-area name, which is also the reward `kind` everywhere a kind
-   exists: the two vaults are the exception, since "unlock" covers both and they are two very
-   different promises. Notebook hues only, in the register ACH_GROUP_COLORS uses — nothing
+   Keyed by the board's grid-area name, which is also the reward `kind` everywhere a kind
+   exists: the two hint rewards are the exception, since "unlock" covers both and they are two
+   very different promises. Notebook hues only, in the register ACH_GROUP_COLORS uses — nothing
    here is allowed to be brighter than the ink it sits next to. */
 export const MASTERY_TILE_MARKS = {
   pens:   "#3f5d8a",   // ink blue: the writing hand

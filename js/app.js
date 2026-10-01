@@ -68,7 +68,7 @@ import {
   RESOLVE_BASE, RESOLVE_STREAK_CAP,
   MASTERY_REWARDS, MASTERY_REWARD_BY_ID, MASTERY_GATE, MASTERY_MAX_LEVEL, MASTERY_LEVEL_STEP, SKILL_MAX_LEVEL, SKILL_EVEN_LEVEL,
   CTA_LABELS, PRIDE_BUTTONS, PRIDE_BUTTON_BY_ID, prideStripes,
-  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS, MASTERY_TIER_ICONS, MASTERY_TILE_MARKS,
+  MASTERY_TITLES, MASTERY_TITLE_BY_VALUE, masteryDefaultTitle, MASTERY_ICONS,
   skillXpForLevel, skillLevelFromXp, masteryXpForLevel, masteryLevelFromXp,
   POLAROID_DEVELOP_MS, POLAROID_TOTAL,
   STICKER_TOTAL, COVER_STICKER_LIMIT,
@@ -116,6 +116,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
 import { passportHTML, stampCardsHTML, passportStamp, passportGhost, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
+import { rewardBoardHTML, titleFileHTML } from "./rewardboard.js";
 import { skillMarkHTML } from "./skillmarks.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
          ruleTermsFrom, ruleShapeFor } from "./rulemarks.js";
@@ -2775,15 +2776,6 @@ function charmHistoryArrow(next = false) {
     `<path class="ink" d="M27.5 10.2C20.4 9.7 13.5 10.5 4.7 10.1"/>` +
     `<path class="ink" d="M11.2 4.3C8.5 6.1 6.4 8.1 4.4 10.1C6.8 12 8.9 14 11.5 15.6"/>` +
     `</g></svg></span>`;
-}
-
-// The same markup for a Mastery mark, drawn from the mastery-only MASTERY_ICONS namespace
-// rather than the achievement charm set. Every mastery surface — the ascent track, the reward
-// tiles, the title medallions, the skill emblems — goes through here, so a mark can be redrawn
-// for Mastery without a single achievement changing.
-function masteryMarkup(icon, color) {
-  const style = color ? ` style="--bead:${color}"` : "";
-  return `<span class="charm" aria-hidden="true"${style}>${MASTERY_ICONS[icon] || ""}</span>`;
 }
 
 // The theme colour an achievement's charm should render in (undefined for non-achievement icons).
@@ -6114,7 +6106,7 @@ function openMastery(from, focus) {
 // board is at the bottom of a long page, so wait for the page turn and its layout before
 // placing the Prestige titles tile at the top of the viewport.
 function scrollMasteryTitlesIntoView() {
-  revealAfterFlip(() => document.querySelector("#masteryBody .rb-titles"), { pad: 18 });
+  revealAfterFlip(() => document.querySelector("#masteryBody .rw-title"), { pad: 18 });
 }
 // Keep the live indicator on the mastery nav-cards (both start + results) current: the
 // Mastery level once unlocked, otherwise progress toward the unlock gate. It sits under a
@@ -6185,9 +6177,8 @@ function renderMasteryPage() {
   });
   const skills = stampCardsHTML({ skills: skillData, total, gate: MASTERY_GATE, max: SKILLS.length * SKILL_MAX_LEVEL, maxLevel: SKILL_MAX_LEVEL });
 
-  // Reward board — a bento of grouped cosmetic tiles (pens, charms, paper, the super-hard
-  // milestone) plus the prestige-titles tile. Titles fold in as the last tile.
-  const bento = buildRewardBento(m, mLevel, unlocked);
+  // Rewards: every reward family drawn as the object it would come in (js/rewardboard.js).
+  const bento = buildRewardBoard(m, mLevel, unlocked);
 
   body.innerHTML = `<div class="mastery-page">` +
     `<div class="mastery-head">${head}</div>` +
@@ -6195,7 +6186,7 @@ function renderMasteryPage() {
     bento +
     `</div>`;
 
-  renderTitleStepper();   // fills #titleStepper inside the titles tile (present only once unlocked)
+  renderTitleStepper();   // fills #titleStepper, the card file inside the titles object
 
   // Wire cosmetic selection: data-reward chooses that reward; data-reward-reset reverts a
   // whole kind (pen / paper / charm) to its default; data-reward-random hands a kind over to
@@ -6225,11 +6216,6 @@ function renderMasteryPage() {
       if (opening) tray.scrollIntoView({ block: "nearest", behavior: "smooth" });
       else if (door) door.focus();
     });
-  });
-  // ...and the rank ladder above the stepper: data-title-tier scrolls the stepper to that
-  // tier's default title. Browsing only — it never changes which title you wear.
-  body.querySelectorAll("[data-title-tier]").forEach((el) => {
-    el.addEventListener("click", () => { _titleView = +el.getAttribute("data-title-tier"); renderTitleStepper(); });
   });
   // The super-hard vault's door: straight to the brutal group on the Challenges board. NOT
   // the bottom of that list — the groups render [1,2,3,4,0], so the bottom is the UNRATED
@@ -6294,150 +6280,28 @@ function masteryStampDates(m) {
   return out;
 }
 
-// ---- Reward bento ----
-// The reward board groups the cosmetics into tiles sized by weight: pens as a stacked
-// column, trinkets hung from a bracelet strand (the hero), paper as live-tinted swatches,
-// the super-hard milestone as a sealed vault, and the prestige titles as a rank ladder.
-// Each group carries its own "default" option so a kind can always be reverted; still-locked
-// items read as empty slots (a lock, no glyph) so the reward stays a surprise until earned.
-function buildRewardBento(m, mLevel, unlocked) {
-  const groups = { pen: [], paper: [], trinket: [], unlock: [], button: [], label: [] };
-  MASTERY_REWARDS.forEach((r) => { if (groups[r.kind]) groups[r.kind].push(r); });
+// ---- Reward board ----
+// The objects themselves are drawn by js/rewardboard.js; this reads what they need off the
+// ledger and settings, and hands over the two start-button renderers so every preview of a
+// button is still the real .play-cta wearing the real finish.
+function buildRewardBoard(m, mLevel, unlocked) {
   const all = MASTERY_REWARDS.filter((r) => r.kind !== "title");
-  const earned = all.filter((r) => m.unlocked[r.id]).length;
-  const pct = Math.round((earned / all.length) * 100);
-  const hardR = groups.unlock.find((r) => r.id === "hardmode-unlock");
-  const hintR = groups.unlock.find((r) => r.id === "reveal-hints");
-  const secretsLeft = secretCharmsLeft().length > 0;
-
-  return `<div class="reward-bento">` +
-    `<div class="rb-head">` +
-      `<div><div class="rb-title">Rewards</div><div class="rb-sub">Your collected spoils</div></div>` +
-      `<div class="rb-meter"><div class="rb-count">${earned} of ${all.length} earned</div>` +
-        `<div class="rb-prog"><i style="width:${pct}%"></i></div></div>` +
-    `</div>` +
-    `<div class="rb-grid">` +
-      buildPensTile(groups.pen, m) +
-      buildTrinketTile(groups.trinket, m) +
-      buildPaperTile(groups.paper, m) +
-      // The super-hard vault reports the real gate, not the ledger: `mastery: 6` on the
-      // tapes:4 challenges is what actually opens the tier.
-      buildMilestoneTile(hardR, {
-        area: "hard", tone: "dark", watermark: true, earned: superHardTierOpen(),
-        // With the button below carrying the verb, the copy no longer has to point at
-        // Challenges in words as well.
-        earnedCopy: "Unlocked: a whole tier of brutal challenges.",
-        lockedCopy: `A tier of brutal new challenges. Reach Mastery ${hardR ? hardR.level : ""} to break the seal.`,
-        action: { label: "Take one on", attr: `data-open-brutal` },
-      }) +
-      buildButtonTile(groups.button, m) +
-      buildCtaTile(groups.label, m) +
-      buildStickerHintTile(m, groups.unlock) +
-      // The last vault, and the one the sticker tile above is paired with. Both guard knowledge
-      // rather than a tier, so both are made of different stuff to the super-hard tile — plum
-      // leather and rose foil against its iron and brass — and this one opens with the key it
-      // already wears rather than being broken into. It is also the stronger of the pair on
-      // purpose: level 9 nudges, level 10 tells you outright.
-      // Its earned state has two readings, because the thing it points at can run out: the
-      // Secret section only holds charms you haven't earned yet, and it stops rendering once
-      // you've found them all. A door to a section that isn't there is worse than no door, so
-      // the tile spends its last state saying so and offers nothing.
-      buildMilestoneTile(hintR, {
-        area: "hint", tone: "ink", watermark: true, earned: !!(hintR && m.unlocked[hintR.id]),
-        earnedCopy: secretsLeft
-          ? "Unlocked: every secret charm now shows how to earn it."
-          : "Every secret charm found. The hints have nothing left to reveal.",
-        lockedCopy: `What every secret charm wants from you, kept shut. Reach Mastery ${hintR ? hintR.level : ""} for the key.`,
-        action: secretsLeft ? { label: "Read the hints", attr: `data-open-secret-charms` } : null,
-      }) +
-      buildTitlesTile(m, unlocked) +
-    `</div>` +
-  `</div>`;
-}
-
-// The third vault, and the quiet one. It shares the charms vault's plum leather and rose foil
-// on purpose — the two of them are one kind of object, knowledge rather than a tier, and the
-// super-hard tile keeps its iron and brass to itself — so the tone is reused rather than
-// forked. Only the hexagon's hue differs, because two identical marks on adjacent tiles read
-// as a stutter.
-// Three states, for the same reason the charms vault has three: the thing it points at can run
-// out. Once all fifteen are stuck down there is no locked silhouette left to nudge, so the tile
-// drops its door and says so rather than opening onto a shelf with nothing to say.
-function buildStickerHintTile(m, unlocks) {
-  const r = unlocks.find((x) => x.id === "sticker-hints");
-  const left = stickersLeft().length > 0;
-  return buildMilestoneTile(r, {
-    area: "stick", tone: "ink", watermark: true, earned: !!(r && m.unlocked[r.id]),
-    earnedCopy: left
-      ? "Unlocked: every sticker you have not earned now whispers what it wants."
-      : "All fifteen stuck down. Nothing left on the shelf to hint at.",
-    lockedCopy: `A nudge toward each sticker still showing as a shape. Reach Mastery ${r ? r.level : ""} to be let in on it.`,
-    action: left ? { label: "Open the drawer", attr: `data-open-sticker-shelf` } : null,
+  const lv = (id) => (MASTERY_REWARD_BY_ID[id] || {}).level || 0;
+  return rewardBoardHTML({
+    issued: unlocked, level: mLevel, dates: masteryStampDates(m), has: (id) => !!m.unlocked[id],
+    wear: { pen: settings.masteryPen || "", paper: settings.masteryPaper || "", trinket: settings.masteryTrinket || "",
+      button: settings.masteryButton || "", label: settings.masteryLabel || "" },
+    RANDOM: COSMETIC_RANDOM,
+    // The real gate, not the ledger: `mastery` on the tapes:4 challenges is what opens the tier.
+    superHard: superHardTierOpen(), superHardLevel: lv("hardmode-unlock"),
+    brutal: CHALLENGES.filter((c) => c.tapes === 4 && c.mastery).map((c) => ({ name: c.name, beaten: !!challengeRecord(c.id).defeated })),
+    stickerHints: !!m.unlocked["sticker-hints"], stickerLevel: lv("sticker-hints"), stickersLeft: stickersLeft(), stickerTotal: STICKERS.length,
+    secretHints: !!m.unlocked["reveal-hints"], secretLevel: lv("reveal-hints"), secretsLeft: secretCharmsLeft().length > 0,
+    earned: all.filter((r) => m.unlocked[r.id]).length, total: all.length,
+    miniButton: (finish) => `<span class="btn-primary play-cta"${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML("", wornFinish(finish))}</span>`,
+    // the words preview wears this load's roll when the button is on random, like the real one
+    nowButton: () => ctaPreviewHTML(activeCtaLabel(), activeButtonFinish()),
   });
-}
-
-/* A reward tile's mark: the hexagonal wash with that tile's drawing over it. Built exactly
-   like the Charm Collection's theme and family marks — a filled wash underneath, a pen line
-   on top, both <use> references carrying no colour of their own so the pair takes the tile's
-   hue off --fam. See the reward marks block in index.html for why the wash has six sides and
-   why the drawing is allowed to break out past them.
-   `key` is the tile's grid-area name, which is what MASTERY_TILE_MARKS is keyed by. */
-function rewardTileMarkHTML(key) {
-  return `<span class="rb-tt-mark" style="--fam:${MASTERY_TILE_MARKS[key]}" aria-hidden="true">` +
-    `<svg class="ach-mark-wash" viewBox="0 0 24 22"><use href="#reward-hex"/></svg>` +
-    `<svg class="ach-mark-glyph" viewBox="0 0 24 24"><use href="#reward-${key}"/></svg>` +
-    `</span>`;
-}
-
-// Small level pill shown top-right of a tile.
-function rbChip(text) { return `<span class="rb-chip">${escapeHtml(text)}</span>`; }
-
-// A tile's level pill with a die fused to its left end: the control that hands that tile's
-// whole set over to chance. Drawn as ONE object rather than two, because the randomiser is
-// not one more member of the set — it is a state the tile itself can be in. The die's circle
-// stands slightly proud of the pill and melts into it (#fuseGoo, painted on .rb-fuse::before
-// so the die and the words above it stay crisp).
-//
-// The die is raw MASTERY_ICONS markup, deliberately NOT run through masteryMarkup: that wraps
-// every icon in .charm, whose ::before lays a roundish highlighter smudge behind it, and a
-// square die on a round smudge reads as a clipped icon. A control is not a keepsake anyway.
-//
-// Falls back to a bare chip while the set is still locked — there is nothing to randomise yet.
-function rbRandChip(kind, text, active, available, label) {
-  if (!available) return rbChip(text);
-  return `<span class="rb-fuse${active ? " active" : ""}">` +
-    `<button type="button" class="rb-rand" data-reward-random="${kind}"` +
-      ` aria-pressed="${active ? "true" : "false"}" title="${escapeHtml(label)}"` +
-      ` aria-label="${escapeHtml(label)}">${MASTERY_ICONS.die}</button>` +
-    rbChip(text) + `</span>`;
-}
-
-// A stacked pick-list row — the shape the pens tile and the signature tile both wear: a glyph,
-// a name, and a tag that reads "in use" on the row you're wearing. The two kinds differ only
-// in how much room the glyph needs, which the list's variant class handles.
-function rbRow(attr, glyphHTML, name, active) {
-  return `<button type="button" class="rb-row${active ? " active" : ""}" ${attr}>` +
-    `<span class="rb-row-ic">${glyphHTML}</span><span class="rb-row-nm">${escapeHtml(name)}</span>` +
-    `<span class="rb-row-tag">${active ? "in use" : "use"}</span></button>`;
-}
-// Its locked twin — an empty slot, so the reward stays a surprise until it's earned.
-function rbRowSlot(level) {
-  return `<div class="rb-row locked"><span class="rb-row-ic rb-lock">${MASTERY_ICONS.lock}</span>` +
-    `<span class="rb-row-nm">Locked</span><span class="rb-row-tag">Mastery ${level}</span></div>`;
-}
-
-// Pens — a stacked column. A "default" hand plus each unlockable pen; locked pens are slots.
-function buildPensTile(pens, m) {
-  const active = settings.masteryPen || "";
-  let rows = rbRow(`data-reward-reset="pen"`, masteryMarkup("nib"), "Default", active === "");
-  pens.forEach((r) => {
-    if (!m.unlocked[r.id]) rows += rbRowSlot(r.level);
-    else rows += rbRow(`data-reward="${r.id}"`, masteryMarkup(r.icon), r.name, active === r.payload.pen);
-  });
-  return `<div class="rb-tile rb-pens" style="grid-area:pens">` +
-    `<div class="rb-tile-top">${rewardTileMarkHTML("pens")}<span class="rb-tt">Pens</span>${rbChip("Mastery 1–3")}</div>` +
-    `<div class="rb-tt-sub">Your writing hand</div>` +
-    `<div class="rb-rows rb-rows--pen">${rows}</div></div>`;
 }
 
 // "random" is a VALUE a cosmetic setting can hold, not a reward in the ladder — there is no
@@ -6453,7 +6317,6 @@ function rewardSetUnlocked(m, kind) {
   const first = MASTERY_REWARDS.find((r) => r.kind === kind);
   return !!(first && m.unlocked[first.id]);
 }
-const trinketSetUnlocked = (m) => rewardSetUnlocked(m, "trinket");
 
 // A random start button is a different animal from a random trinket strand. The strand hangs
 // nine beads at once, so chance there is visible standing still. There is only ever ONE start
@@ -6503,74 +6366,6 @@ function activeCtaLabel() {
   return settings.masteryLabel === COSMETIC_RANDOM ? rolledLabel : (settings.masteryLabel || "");
 }
 
-// Trinkets hang from a bracelet strand on alternating drops. The random action lives in the
-// tile header because it changes the whole strand rather than selecting one trinket.
-function buildTrinketTile(trinkets, m) {
-  const setUnlocked = trinketSetUnlocked(m);
-  const active = settings.masteryTrinket || "";
-  let beads = trinketBead(`data-reward-reset="trinket"`, trinketPreviewSVG("star"), "star", active === "", true, 0);
-  trinkets.forEach((r, i) => {
-    beads += trinketBead(`data-reward="${r.id}"`, trinketPreviewSVG(r.payload.trinket), r.payload.trinket, active === r.payload.trinket, setUnlocked, i + 1);
-  });
-  return `<div class="rb-tile rb-trinket" style="grid-area:trinket">` +
-    `<div class="rb-tile-top">${rewardTileMarkHTML("trinket")}<span class="rb-tt">Bracelet trinkets</span>` +
-      rbRandChip("trinket", "Mastery 5", active === COSMETIC_RANDOM, setUnlocked, "Give every bead its own trinket") +
-    `</div>` +
-    `<div class="rb-tt-sub">Hangs from every bead you earn · random gives each bead its own</div>` +
-    `<div class="rb-strand"><span class="rb-cord"></span>` +
-      `<span class="rb-clasp l"></span><span class="rb-clasp r"></span>` +
-      `<div class="rb-beads">${beads}</div></div></div>`;
-}
-// `glyph` is finished markup rather than a trinket id so the shared bead shape can render it.
-function trinketBead(attr, glyph, name, active, available, idx) {
-  const drop = idx % 2 === 0 ? "short" : "long";   // alternating hang, like a laid-out bracelet
-  if (!available) {
-    return `<span class="rb-bead-col ${drop} locked"><span class="rb-stem"></span>` +
-      `<span class="rb-bead"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span></span>`;
-  }
-  return `<button type="button" class="rb-bead-col ${drop}${active ? " active" : ""}" ${attr}>` +
-    `<span class="rb-stem"></span><span class="rb-bead">${glyph}</span>` +
-    `<span class="rb-bead-nm">${active ? "in use" : escapeHtml(name)}</span></button>`;
-}
-
-// Paper stock — swatches of the real stock (default plus each unlockable set member).
-function buildPaperTile(papers, m) {
-  const setUnlocked = papers.length ? !!m.unlocked[papers[0].id] : false;
-  const active = settings.masteryPaper || "";
-  let sw = rbSwatch(`data-reward-reset="paper"`, paperChip("default"), "plain", active === "", true, 0);
-  papers.forEach((r) => {
-    sw += rbSwatch(`data-reward="${r.id}"`, paperChip(r.payload.paper), r.payload.paper, active === r.payload.paper, setUnlocked, r.level);
-  });
-  return `<div class="rb-tile rb-paper" style="grid-area:paper">` +
-    `<div class="rb-tile-top">${rewardTileMarkHTML("paper")}<span class="rb-tt">Paper stock</span>${rbChip("Mastery 4")}</div>` +
-    `<div class="rb-tt-sub">Retints the whole page</div>` +
-    `<div class="rb-swatches">${sw}</div></div>`;
-}
-// A swatch column — the shape the paper tile and the start-button tile both wear: a chip of
-// the real thing above its name, or a dashed empty chip while the set is still locked. `chip`
-// is the kind's own chip renderer, called with the locked flag.
-//
-// The worn swatch says "in use" instead of its name, which the chip above it has already
-// shown. `activeName` overrides that for the one swatch where the name is NOT redundant: the
-// Pride doorway, whose chip shows a flag the swatch would otherwise leave unnamed.
-function rbSwatch(attr, chip, name, active, available, level, activeName) {
-  if (!available) {
-    return `<span class="rb-sw-col locked">${chip(true)}<span class="rb-sw-nm">Mastery ${level}</span></span>`;
-  }
-  return `<button type="button" class="rb-sw-col${active ? " active" : ""}" ${attr}>` +
-    `${chip(false)}<span class="rb-sw-nm">${escapeHtml(active ? (activeName || "in use") : name)}</span></button>`;
-}
-// The two chips a swatch can wear: a sheet of the real paper stock, and a miniature of the
-// real start button. Each carries its own locked finish.
-const paperChip = (paper) => (locked) => locked
-  ? `<span class="rb-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
-  : `<span class="rb-sw paper-chip" data-paper="${paper}"></span>`;
-// The button chip is the real "start writing" CTA, markup and label and all, shrunk to fit:
-// it carries the same .play-cta the home screen does, so a finish looks here exactly as it
-// will look there, with no second description of the four fills to drift out of step.
-const buttonChip = (style) => (locked) => locked
-  ? `<span class="rb-btn-sw locked"><span class="rb-lock">${MASTERY_ICONS.lock}</span></span>`
-  : `<span class="rb-btn-sw"><span class="btn-primary play-cta"${finishAttrs(style)} aria-hidden="true">${ctaContentHTML("", wornFinish(style))}</span></span>`;
 // What a .play-cta has to be told to wear a finish: the finish itself, plus — for the Pride
 // set, whose eight ramps live in PRIDE_BUTTONS rather than in CSS — that flag's gradient.
 // Everything that previews a start button goes through this, so a preview cannot wear a
@@ -6583,82 +6378,9 @@ function finishAttrs(finish) {
     (stripes ? ` style="--cta-stripes:${stripes}"` : "");
 }
 
-// A milestone tile — the shape both toggle-less rewards wear (super-hard challenges at 6,
-// secret hints at 10): a vault, sealed shut until the milestone is reached, with the level
-// chip, the name, and one line of copy that changes with the state.
-// Both tones are vaults; `opts.tone` only says what this one is made of ("dark" iron and
-// brass, "ink" plum leather and rose foil), which is the whole of the difference between
-// them. `opts.watermark` floats the reward's mark oversized behind the copy. `opts.action`
-// ({label, attr}) adds a door out of the tile to wherever the reward actually lives, and is
-// drawn only once the milestone is earned — a sealed tile offers nothing.
-function buildMilestoneTile(r, opts) {
-  if (!r) return "";
-  const mark = MASTERY_ICONS[r.icon] || "";
-  const act = (opts.earned && opts.action)
-    ? `<button type="button" class="rb-ms-go" ${opts.action.attr}>${escapeHtml(opts.action.label)}</button>`
-    : "";
-  return `<div class="rb-tile rb-ms rb-ms--${opts.tone}${opts.earned ? " earned" : ""}" style="grid-area:${opts.area}">` +
-    (opts.watermark ? `<span class="rb-ms-mark">${mark}</span>` : "") +
-    rbChip("Mastery " + r.level) +
-    `<span class="rb-ms-seal">${opts.earned ? mark : MASTERY_ICONS.lock}</span>` +
-    `<div class="rb-ms-nm">${rewardTileMarkHTML(opts.area)}<span>${escapeHtml(r.name)}</span></div>` +
-    `<div class="rb-ms-sub">${opts.earned ? opts.earnedCopy : opts.lockedCopy}</div>${act}</div>`;
-}
-
-// Start-writing button finishes: swatches of the real CTA. The first is Seasons, the default,
-// which follows the calendar. Two of the level-8 rewards are SETS rather than finishes (the
-// four seasons to pin, the eight Pride flags), and a set's swatch is a doorway rather than a
-// choice: it opens a tray of its members below the grid. The Seasons doorway is the tile's
-// first swatch and is open to everyone, because its tray also holds the default ("By the
-// calendar"); the four pinned seasons in it wait for level 8. Trays are always in the markup
-// and merely hidden, so opening one is a DOM change and not app state; the only thing that
-// re-renders this page is a pick, which shuts every tray anyway.
-function buildButtonTile(buttons, m) {
-  const setUnlocked = buttons.length ? !!m.unlocked[buttons[0].id] : false;
-  const active = settings.masteryButton || "";
-  let sw = "", trays = "";
-  const tray = (id, title, members) => `<div class="set-picker" id="${id}" hidden>` +
-    `<div class="set-picker-top"><span>${escapeHtml(title)}</span>` +
-    `<button type="button" data-open-set-picker="${id}">‹ button finishes</button></div>` +
-    `<div class="rb-swatches">${members}</div></div>`;
-  const door = (id, chip, name, worn, available, level, wornName) =>
-    rbSwatch(`data-open-set-picker="${id}" aria-expanded="false" aria-controls="${id}"`, chip, name, worn, available, level, wornName);
-  // Seasons first: the default, and the doorway to pinning one.
-  const seasons = buttons.find((r) => r.id === "btn-seasons");
-  if (seasons) {
-    const pinned = seasons.variants.find((v) => v.id === active) || null;
-    sw += door("seasonPicker", buttonChip(pinned ? pinned.id : ""), "Seasons", active === "" || !!pinned, true, 0,
-      pinned ? `${pinned.name}, all year` : "by the calendar");
-    trays += tray("seasonPicker", "Seasons",
-      rbSwatch(`data-reward-reset="button"`, buttonChip(""), "By the calendar", active === "", true, 0) +
-      seasons.variants.map((v) => rbSwatch(`data-reward="${seasons.id}" data-variant="${v.id}"`, buttonChip(v.id),
-        v.name, active === v.id, setUnlocked, seasons.level)).join(""));
-  }
-  buttons.forEach((r) => {
-    if (r === seasons) return;
-    if (r.variants) {
-      const worn = r.variants.find((v) => v.id === active) || null;
-      const id = `setPicker-${r.id}`;
-      sw += door(id, buttonChip(worn ? worn.id : r.payload.button), r.name, !!worn, setUnlocked, r.level, worn ? worn.name : "");
-      // No doorway while the set is locked, so no tray behind it. Members route through the
-      // same data-reward guard as every finish: the variant is the member, the unlock is still
-      // the set's.
-      if (setUnlocked) trays += tray(id, r.name, r.variants.map((v) =>
-        rbSwatch(`data-reward="${r.id}" data-variant="${v.id}"`, buttonChip(v.id), v.name, active === v.id, setUnlocked, r.level)).join(""));
-    } else {
-      sw += rbSwatch(`data-reward="${r.id}"`, buttonChip(r.payload.button), r.name, active === r.payload.button, setUnlocked, r.level);
-    }
-  });
-  return `<div class="rb-tile rb-button" style="grid-area:button">` +
-    `<div class="rb-tile-top">${rewardTileMarkHTML("button")}<span class="rb-tt">Start button</span>` +
-      rbRandChip("button", "Mastery 8", active === COSMETIC_RANDOM, setUnlocked, "A different finish every visit") +
-    `</div>` +
-    `<div class="rb-tt-sub">Restyles your home-screen button · random redraws it every visit</div>` +
-    `<div class="rb-swatches">${sw}</div>${trays}</div>`;
-}
-// One row's preview: a real start button, scaled down, wearing the words on offer and the
-// mark that comes with them. It is the button itself rather than a picture of one, for the
-// same reason the paper and finish swatches are — the preview cannot drift from the thing.
+// The words' preview: a real start button, scaled down, wearing the chosen words and the mark
+// that comes with them. It is the button itself rather than a picture of one, so the preview
+// cannot drift from the thing.
 //
 // The finish comes along for free: the preview carries no data-startbtn of its own, so it
 // inherits nothing and must be told. Level 8 owns how the button looks and level 12 owns what
@@ -6671,92 +6393,6 @@ function buildButtonTile(buttons, m) {
 function ctaPreviewHTML(labelId, finish) {
   return `<span class="cta-prev"><span class="btn-primary play-cta"` +
     `${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML(labelId, wornFinish(finish))}</span></span>`;
-}
-
-// A start-button words row. The preview is aria-hidden (it is a decorative copy of a button
-// that already exists on the start screen), so the row has to state its own name for anyone
-// not looking at it — hence the aria-label rather than a visible .rb-row-nm. Every other
-// pick-list row in the bento names itself on screen; here the preview says the words out
-// loud already, and printing them twice reads as a stutter.
-function ctaRow(attr, labelId, name, active, finish) {
-  return `<button type="button" class="rb-row${active ? " active" : ""}" ${attr} aria-label="${escapeHtml(name)}">` +
-    `<span class="rb-row-ic">${ctaPreviewHTML(labelId, finish)}</span>` +
-    `<span class="rb-row-tag">${active ? "in use" : "use"}</span></button>`;
-}
-
-// Start-button words — a stacked column of live button previews (the default "Start writing"
-// plus each unlockable label). Selecting one rewrites the home-screen button.
-//
-// The default row and the first option are the same thing here, unlike pens or paper where
-// the default is a distinct fifth object. So it renders as the RESET row and there is no
-// separate "Start writing" entry in the ladder, or the words would appear twice.
-function buildCtaTile(labels, m) {
-  const setUnlocked = labels.length ? !!m.unlocked[labels[0].id] : false;
-  const active = settings.masteryLabel || "";
-  // The finish the previews wear is the one the real button is wearing right now, which on a
-  // randomised button is this load's roll rather than the word "random".
-  const finish = activeButtonFinish();
-  let rows = ctaRow(`data-reward-reset="label"`, "", "Start writing", active === "", finish);
-  if (!setUnlocked) {
-    // One slot for the whole set, not eight. The pens tile locks a row at a time because its
-    // three arrive on three separate levels; these eight arrive together, and eight identical
-    // "Locked / Mastery 12" rows stacked in a column is a wall rather than a promise.
-    const level = labels.length ? labels[0].level : 12;
-    rows += `<div class="rb-row locked"><span class="rb-row-ic rb-lock">${MASTERY_ICONS.lock}</span>` +
-      `<span class="rb-row-nm">${labels.length} more ways to say it</span>` +
-      `<span class="rb-row-tag">Mastery ${level}</span></div>`;
-  } else {
-    labels.forEach((r) => {
-      rows += ctaRow(`data-reward="${r.id}"`, r.payload.label, r.name, active === r.payload.label, finish);
-    });
-  }
-  return `<div class="rb-tile rb-cta" style="grid-area:cta">` +
-    `<div class="rb-tile-top">${rewardTileMarkHTML("cta")}<span class="rb-tt">Start button words</span>` +
-      rbRandChip("label", "Mastery 12", active === COSMETIC_RANDOM, setUnlocked, "Different words every visit") +
-    `</div>` +
-    `<div class="rb-tt-sub">Rewrites the label on your home-screen button · random rewrites it every visit</div>` +
-    `<div class="rb-rows rb-rows--cta">${rows}</div></div>`;
-}
-
-// Prestige titles — the rank ladder (four tier medallions along a rail) above the title
-// picker. The medallions show progress; the stepper (once unlocked) does the actual choosing.
-const RB_TIER_ROMAN = ["I", "II", "III", "IV"];
-const RB_TIER_SHORT = ["Poet", "Bridge", "Chairman", "Showgirl"];
-function buildTitlesTile(m, unlocked) {
-  const worn = wornTitleValue(m);
-  const wornR = MASTERY_TITLE_BY_VALUE[worn];
-  const wornTier = wornR ? wornR.level : -1;
-  const tiers = MASTERY_TITLES.filter((t) => t.isDefault);   // one representative per tier
-  const nextLocked = tiers.find((t) => !m.unlocked[t.id]);
-  const medals = tiers.map((t, i) => {
-    const reached = !!m.unlocked[t.id];
-    const isWorn = reached && t.level === wornTier;
-    const isNext = !reached && nextLocked && t.level === nextLocked.level;
-    const cls = reached ? (isWorn ? "reached worn" : "reached") : (isNext ? "next" : "locked");
-    const state = isWorn ? "worn" : isNext ? "next" : "";
-    // The flag line is always rendered, even empty: it keeps the four columns the same
-    // height, and it is the slot the "see titles" hover cue swaps into.
-    const flag = `<span class="rb-medal-flag"><i class="rb-medal-state">${state}</i>` +
-      (unlocked ? `<i class="rb-medal-hint">see titles</i>` : "") + `</span>`;
-    // The medallion wears the TIER's mark (MASTERY_TIER_ICONS), not the default title's:
-    // the rail is a rank ladder, and tier IV and Ultimate Showgirl are two different things.
-    const face = `<span class="rb-medal-ic">${masteryMarkup(MASTERY_TIER_ICONS[i])}</span>` +
-      `<span class="rb-medal-lv">${RB_TIER_ROMAN[i]} · L${t.level}</span>` +
-      `<span class="rb-medal-nm">${RB_TIER_SHORT[i]}</span>${flag}`;
-    // A medallion jumps the stepper to that tier's default title — including a tier you have
-    // not reached, since browsing ahead is what the stepper is for. Without the stepper on the
-    // page (mastery still locked) there is nothing to jump, so it stays a plain mark.
-    return unlocked
-      ? `<button type="button" class="rb-medal ${cls}" data-title-tier="${MASTERY_TITLES.indexOf(t)}">${face}</button>`
-      : `<div class="rb-medal ${cls}">${face}</div>`;
-  }).join("");
-  const picker = unlocked
-    ? `<div id="titleStepper" class="title-stepper"></div>`
-    : `<div class="rb-title-lock"><span class="rb-lock">${MASTERY_ICONS.lock}</span>Reach Mastery 7 to earn your first title</div>`;
-  return `<div class="rb-tile rb-titles" style="grid-area:title">` +
-    `<div class="rb-tile-top">${rewardTileMarkHTML("title")}<span class="rb-tt">Prestige titles</span>${rbChip("Mastery 7")}</div>` +
-    `<div class="rb-tt-sub">Four ranks, fourteen titles. Engraved on your records signature.</div>` +
-    `<div class="rb-ladder"><span class="rb-ladder-rail"></span>${medals}</div>${picker}</div>`;
 }
 
 // Apply a Mastery-unlocked cosmetic. Pens swap the writing hand; papers retint the page
@@ -6820,16 +6456,11 @@ function setMasteryTitle(value) {
   if (screens.records.classList.contains("active")) renderRecordsPage();
 }
 
-let _titleView = null;   // index into MASTERY_TITLES the stepper is currently viewing
-const TS_STAR = `<span class="ts-star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17.8 5.9 21.4l1.5-6.8L2.2 9l6.9-.7z"/></svg></span>`;
-// The arrows are drawn by hand and each separately, so the pair bow slightly differently
-// rather than one being the other flipped.
-const TS_CHEV_L = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 5.2 C12.6 7.4 10.4 9.6 8.3 12.1 C10.4 14.3 12.7 16.6 15.1 18.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const TS_CHEV_R = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.1 5 C11.4 7.2 13.6 9.5 15.8 11.9 C13.5 14.2 11.3 16.6 9 18.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+let _titleView = null;   // index into MASTERY_TITLES the card file is currently showing
 
-// The title picker: one title at a time with ← → to browse, a star marking the worn title
-// and a circle marking the one being viewed, tier-grouped position dots, and a context action
-// (wear / currently worn / N levels to go). Re-renders itself on each step; commits on "wear".
+// The title picker is the card file (titleFileHTML in js/rewardboard.js): a divider tab per rank,
+// one title card in view, arrows on the box, and a context action (wear / engraved / N levels to
+// go). It redraws only itself on each step, so browsing never re-renders the page; "wear" commits.
 function renderTitleStepper() {
   const host = $("titleStepper");
   if (!host) return;
@@ -6839,61 +6470,16 @@ function renderTitleStepper() {
   const wornIdx = MASTERY_TITLES.findIndex((t) => t.payload.title === worn);
   if (_titleView == null) _titleView = wornIdx >= 0 ? wornIdx : 0;
   _titleView = Math.max(0, Math.min(last, _titleView));
-
-  const r = MASTERY_TITLES[_titleView];
-  const mLevel = masteryLevelFromXp(m.masteryXp);
-  const isUnlocked = !!m.unlocked[r.id];
-  const isWorn = r.payload.title === worn;
-  const isCapstone = r.level >= 13;
-
-  const nameHTML = (isCapstone ? masteryMarkup(r.icon) + "<span>" + escapeHtml(r.name) + "</span>" : escapeHtml(r.name)) +
-    (r.isDefault ? ` <span class="ts-def">default</span>` : "");
-  const sub = isCapstone ? `the capstone · Mastery ${r.level}` : `Mastery ${r.level}`;
-
-  let action;
-  if (!isUnlocked) {
-    const togo = Math.max(1, r.level - mLevel);
-    action = `<div class="ts-act lock"><span class="charm">${MASTERY_ICONS.lock}</span>${togo} level${togo === 1 ? "" : "s"} to go</div>`;
-  } else if (isWorn) {
-    action = `<div class="ts-act worn">currently worn</div>`;
-  } else {
-    action = `<button type="button" class="ts-act wear" id="tsWear">wear this title</button>`;
-  }
-
-  // Position dots, grouped by tier level. Star = worn, filled circle = viewing, hollow = locked.
-  const levels = [...new Set(MASTERY_TITLES.map((t) => t.level))];
-  const dots = levels.map((lv) => {
-    const cells = MASTERY_TITLES.map((t, i) => ({ t, i })).filter((x) => x.t.level === lv).map(({ t, i }) => {
-      const locked = !m.unlocked[t.id];
-      if (t.payload.title === worn) return TS_STAR;
-      if (i === _titleView) return `<i class="ts-cur${locked ? " lk" : ""}"></i>`;
-      return `<i class="${locked ? "ts-lk" : ""}"></i>`;
-    }).join("");
-    return `<span class="ts-grp">${cells}</span>`;
-  }).join("");
-
-  const reset = settings.masteryTitle
-    ? `<button type="button" class="ts-reset" id="tsReset">reset to default · follows your mastery</button>`
-    : `<div class="ts-reset muted">following your mastery</div>`;
-
-  host.innerHTML =
-    `<div class="ts-cap">Choose your title</div>` +
-    `<div class="ts-row">` +
-      `<button type="button" class="ts-arw" id="tsPrev"${_titleView === 0 ? " disabled" : ""} aria-label="previous title">${TS_CHEV_L}</button>` +
-      `<div class="ts-mid">` +
-        `<div class="ts-title${isUnlocked ? "" : " lk"}">${nameHTML}</div>` +
-        `<div class="ts-sub">${sub}</div>` +
-        `<div class="ts-dots">${dots}</div>` +
-        `<div class="ts-legend"><span>${TS_STAR}worn</span><span><span class="d"></span>viewing</span></div>` +
-      `</div>` +
-      `<button type="button" class="ts-arw" id="tsNext"${_titleView === last ? " disabled" : ""} aria-label="next title">${TS_CHEV_R}</button>` +
-    `</div>` +
-    action + reset;
-
-  const prev = $("tsPrev"); if (prev) prev.onclick = () => { _titleView--; renderTitleStepper(); };
-  const next = $("tsNext"); if (next) next.onclick = () => { _titleView++; renderTitleStepper(); };
-  const wear = $("tsWear"); if (wear) wear.onclick = () => setMasteryTitle(r.payload.title);
-  const rst = $("tsReset"); if (rst) rst.onclick = () => setMasteryTitle("");
+  host.innerHTML = titleFileHTML({
+    view: _titleView, worn, picked: !!settings.masteryTitle, has: (id) => !!m.unlocked[id],
+    level: masteryLevelFromXp(m.masteryXp), issued: isMasteryUnlocked(m), dates: masteryStampDates(m),
+  });
+  host.querySelectorAll("[data-title-view]").forEach((el) => {
+    el.onclick = () => { _titleView = +el.getAttribute("data-title-view"); renderTitleStepper(); };
+  });
+  host.querySelectorAll("[data-title-wear]").forEach((el) => {
+    el.onclick = () => setMasteryTitle(el.getAttribute("data-title-wear"));
+  });
 }
 
 /* ---------- Bonus games shelf ----------
@@ -31235,7 +30821,14 @@ function buildDevApi() {
         SKILL_IDS.forEach((id) => { m.skills[id] = skillXpForLevel(SKILL_MAX_LEVEL); });   // clear the unlock gate
         saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage();
       },
-      // Re-lock every reward — preview the reward bento's locked/empty-slot tile states. Drops
+      // Wind the super-hard cassette: mark the first `n` brutal challenges defeated and the rest
+      // not, so the tape packs and the J-card ticks can be seen at any point of the tier. Writes
+      // storage direct like challenges.defeat, so no charms, tokens or seals fire.
+      brutal: (n = 2) => { const st = loadChallengeState();
+        const ids = CHALLENGES.filter((c) => c.tapes === 4 && c.mastery).map((c) => c.id);
+        ids.forEach((k, i) => { st[k] = { ...challengeRecord(k), defeated: i < n }; });
+        saveChallengeState(st); if ($("masteryBody")) renderMasteryPage(); return `${Math.min(n, ids.length)} of ${ids.length} brutal beaten`; },
+      // Re-lock every reward to preview the reward board's locked objects. Drops
       // the mastery level with them, for the same reason unlockRewards raises it.
       lockRewards: () => { const m = loadMastery(); m.unlocked = {}; m.masteryXp = 0; saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
       reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryTrinket = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masteryLabel = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },

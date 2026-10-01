@@ -516,7 +516,7 @@ export function initCtaInteractions(root = document) {
   if (boundRoots.has(root)) return;
   boundRoots.add(root);
   const controlFor = (target) => target instanceof Element
-    ? target.closest("button.play-cta, .rb-sw-col, .rb-row") : null;
+    ? target.closest("button.play-cta, .bc-cell") : null;
   const refresh = (control) => {
     const cta = control.matches(".play-cta") ? control : control.querySelector(".play-cta");
     if (!cta) return;
