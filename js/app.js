@@ -26267,17 +26267,22 @@ function quitGame() {
   clearWagerStake();
   challengeRunActive = false;
   resetTension();
-  clearEggs();
   roundLocked = false;
-  $("feedback").innerHTML = "";
-  $("songInput").value = "";
 
   // Back to the desk. The next game start (startGame / startInfinite / startDaily)
   // calls resetRunState, so the abandoned score/round clear there.
   applyEra("gold");
   renderStartPickers();
   $("startContent").style.display = "";
-  flipInToScreen("start");
+  // The page's own contents (the answer card, the typed line, the gutter doodles) are wiped
+  // only once the turn has landed. flipInToScreen photographs the game screen as the page
+  // being left, so clearing them first tore the answered page in half: the feedback card
+  // that makes up its lower half vanished on the tap, before the turn had even begun.
+  flipInToScreen("start", () => {
+    clearEggs();
+    $("feedback").innerHTML = "";
+    $("songInput").value = "";
+  });
 }
 
 /* ---------- Easter eggs (Phase 8) ---------- */
