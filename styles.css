@@ -16195,13 +16195,17 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   body {
     position: relative; flex-direction: column; align-items: center; justify-content: flex-start;
     min-height: 100svh;
-    padding: calc(64px + env(safe-area-inset-top, 0px))
+    padding: calc(22px + env(safe-area-inset-top, 0px))
       max(10px, env(safe-area-inset-right, 0px))
       max(20px, env(safe-area-inset-bottom, 0px))
       max(10px, env(safe-area-inset-left, 0px));
   }
   .app { order: 1; min-width: 0; }
   header.title { margin-bottom: 16px; }
+  /* The masthead shares the top band with the gear instead of sitting under it: the page
+     starts high enough that the wordmark's middle lines up with the gear's, and the margin
+     centres it in the width the gear leaves (gear 44px + an 8px gap + a hair of air). */
+  header.title h1 { margin-right: 54px; }
   header.title .tagline-row { margin-top: 18px; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; }
   .tagline-row .tag-heart { margin-inline: 5px; }
   .screen.card, [data-flip-id].card { --rule-x: 17px; padding: 20px 14px 26px 30px; }
