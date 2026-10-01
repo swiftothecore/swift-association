@@ -1176,6 +1176,28 @@ function copyFlipRuntimeState(src, flip) {
     }
     copy.scrollTop = node.scrollTop;
     copy.scrollLeft = node.scrollLeft;
+    syncFlipAnimations(node, copy);
+  });
+}
+
+// A cloned node is a NEW element, so every CSS animation on it starts again from its first
+// keyframe the moment the sheet is inserted: an answered page's verdict cross redraws itself,
+// the lyric-line ticks and album dots pop back in, all while the page is meant to be turning
+// away. Wind each of the copy's animations to wherever its twin on the live page has got to
+// (an entrance that has long finished lands on its last frame, a loop carries on in step).
+// One with no live twin had already run out on the page, so it is finished on the copy too.
+function syncFlipAnimations(node, copy) {
+  if (!copy.getAnimations || copy.classList.contains("flip-shade")) return;
+  const own = (el) => el.getAnimations({ subtree: true }).filter((a) => a.effect && a.effect.target === el);
+  const live = own(node);
+  own(copy).forEach((anim) => {
+    if (copy.classList.contains("page-flip-sheet") && !anim.effect.pseudoElement) return;   // the turn itself
+    const twin = live.find((a) => a.animationName === anim.animationName
+      && (a.effect.pseudoElement || null) === (anim.effect.pseudoElement || null));
+    try {
+      if (twin && twin.currentTime != null) anim.currentTime = twin.currentTime;
+      else anim.finish();
+    } catch (_) {}   // finish() throws on an infinite loop with no live twin; leave it running
   });
 }
 
