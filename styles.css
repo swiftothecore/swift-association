@@ -9957,14 +9957,16 @@
      Both want the number back to the left, so it goes. */
   .sticker-amt {
     position: relative; z-index: 1;
-    transform: translate(-1.5px, -2px);
+    transform: translate(-1.1px, -0.8px);
     font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1;
     color: #6b4a12; text-shadow: 0 1px 0 rgba(255,247,214,0.5);
   }
   /* The big cut needs its own measurement, not the small one scaled up: the type grows
      faster than the star does (19->23 against 54->64), and the nudge is correcting how the
      hand face sits inside its line box rather than dividing up the star, so proportion is
-     the wrong instrument. Scaling gave -2.5 and it rode visibly high; measured, it's -1. */
+     the wrong instrument. Both sizes are measured: the number's inked middle sits on the
+     middle of the inner pentagon to within a fifth of a pixel. Nudging either by eye is how
+     the small one drifted 1.2px high. */
   .feedback .sticker--big .sticker-amt { font-size: calc(23px + var(--text-size-adjust)); transform: translate(-2px, -1px); }
   .sticker--rose .sticker-amt { color: #5e1f30; text-shadow: 0 1px 0 rgba(255,224,232,0.45); }
   @keyframes stickerPress {
