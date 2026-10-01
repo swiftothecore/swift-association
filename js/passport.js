@@ -180,8 +180,11 @@ const tileInk = (tile) => MASTERY_TILE_MARKS[tile] || MASTERY_TILE_MARKS.title;
 const pressed = (body, ink, filt, at) =>
   `<g class="mpp-inked" style="--mpp-ink:${ink}" transform="${at}"><g filter="url(#stampInk${filt})">${body.ink}</g><g filter="url(#stampType)">${body.type}</g></g>`;
 
-function stampSVG(L, date) {
-  const sp = STAMPS[L], uid = `mpp${L}`, wide = sp.shape === "banner";
+/* `pre` prefixes the ids the arc lettering hangs on. The results screen draws these same stamps
+   while the Mastery page sits hidden in the document holding its own, and a textPath pointing
+   into a display:none subtree draws nothing, so the two must never share an id. */
+function stampSVG(L, date, pre = "mpp") {
+  const sp = STAMPS[L], uid = `${pre}${L}`, wide = sp.shape === "banner";
   const vb = wide ? "-80 -40 160 80" : "-41 -41 82 82";
   if (sp.shape === "double") {
     const [a, b] = doubleBody(L, sp, date, uid);
@@ -212,6 +215,19 @@ const fmt = (n) => Math.round(n).toLocaleString("en-GB");
 
 /* d: { issued, total, gate, level, inCur, span, frac, complete, step, sheen,
         dates: { [level]: "14 AUG 26" }, tips: { [level]: "Level 4 · paper stocks" } } */
+/* The results screen's level-up spread (celebrateMastery) prints single stamps and slots off
+   the same table, so the stamp you are shown at the end of a run is the one on the page. */
+export const passportStamp = (L, date, pre = "lvu") => stampSVG(L, date, pre);
+export const passportGhost = (L, frac = null) => ghostSVG(L, frac);
+export const passportCaption = (L) => STAMPS[L] ? STAMPS[L].caption : "";
+export const passportStampInk = (L) => STAMPS[L] ? tileInk(STAMPS[L].tile) : tileInk("title");
+
+/* ISSUED, pressed the way NOT YET ISSUED is (one office, two verdicts), in the laurel green of the
+   title tile, for the one level-up spread that has no stamp of its own yet: the unlock. */
+export const issuedStampSVG = (date) => `<svg class="mpp-stamp" viewBox="-62 -31 124 62" aria-hidden="true" focusable="false"><g class="mpp-inked" style="--mpp-ink:${tileInk("title")}" transform="rotate(-7)">` +
+  `<g filter="url(#stampInk1)"><rect x="-56" y="-25" width="112" height="50" rx="6" class="mpp-fr" stroke-width="3.6"/><rect x="-50" y="-19" width="100" height="38" rx="3" class="mpp-fr" stroke-width="1.2"/></g>` +
+  `<g filter="url(#stampType)"><text class="mpp-tx" y="3" text-anchor="middle" font-size="19" letter-spacing="3">ISSUED</text><text class="mpp-tx" y="14.6" text-anchor="middle" font-size="7.4" letter-spacing="1.2">${date}</text></g></g></svg>`;
+
 export function passportHTML(d) {
   const state = (L) => !d.issued ? "locked" : L <= d.level ? "done" : L === d.level + 1 ? "now" : "todo";
   let slots = "";

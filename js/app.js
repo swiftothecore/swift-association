@@ -116,7 +116,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
 import { renderStreakPlacard } from "./placard.js";
-import { passportHTML, stampCardsHTML } from "./passport.js";
+import { passportHTML, stampCardsHTML, passportStamp, passportGhost, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
 import { skillMarkHTML } from "./skillmarks.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
          ruleTermsFrom, ruleShapeFor } from "./rulemarks.js";
@@ -3693,18 +3693,7 @@ function renderSkillsRecap() {
     `<div class="ms-bar sr-mbar${cls === "maxed" ? " maxed" : ""}"><i style="width:${pct}%"></i></div>` +
     `<span>${val}</span></div>`;
   if (masteryMoment) {
-    const lvl = masteryLevelFromXp(m.masteryXp);
-    if (lvl >= MASTERY_MAX_LEVEL) {
-      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery: level ${lvl}</span>` +
-        `<span class="sr-mxp">max</span></div>` +
-        `<div class="ms-bar sr-mbar maxed"><i style="width:100%"></i></div></div>`;
-    } else {
-      const cur = masteryXpForLevel(lvl), next = masteryXpForLevel(lvl + 1);
-      const pct = Math.max(0, Math.min(100, ((m.masteryXp - cur) / (next - cur)) * 100));
-      mastery = `<div class="sr-mastery"><div class="sr-mtop"><span>Mastery: level ${lvl}</span>` +
-        `<span class="sr-mxp">${m.masteryXp - cur} / ${next - cur} to ${lvl + 1}</span></div>` +
-        `<div class="ms-bar sr-mbar"><i style="width:${pct.toFixed(1)}%"></i></div></div>`;
-    }
+    mastery = "";   // the level-up spread above says where the ink stands, so no second bar
   } else if (isMasteryUnlocked(m)) {
     const lvl = masteryLevelFromXp(m.masteryXp);
     if (lvl >= MASTERY_MAX_LEVEL) {
@@ -3731,69 +3720,90 @@ function renderSkillsRecap() {
   celebrateMastery(res, el);
 }
 
-// A first-class Mastery moment on the results card: the unlock or a level-up, naming any
-// reward just earned, with a soft sparkle burst (honours reduced motion / reduced flashing).
-// Skill level-ups stay as plain toasts; this is only the rarer, bigger beat. Injected at the
-// top of the skills recap so it reads before the detail.
-// It is deliberately the Mastery page's own hero in miniature — margin rule, numbered wax
-// seal, kicker over a big hand-written level — so arriving at the page after tapping through
-// feels like the same object, and so the seal is the LEVEL rather than a decorative star. Laid
-// out as one row, because this lands mid-results and must not push the recap off the page.
+// A first-class Mastery moment on the results card: the unlock or a level-up. It is the Mastery
+// page's passport in the hand, opened at the spread just reached: last level's stamp dry on the
+// left page, and on the right the dotted outline of this level's stamp (the same ghost the page
+// shows while it is owed) with the new stamp pressed onto it. Beside it, the words say it plainly
+// ("Mastery level up", the level) and a rail of thirteen little pages shows the step on the climb:
+// pages already stamped hatched in ink, the new one in its reward's colour under a hand-inked
+// pointer, the rest dotted. The stamps come from js/passport.js, so the one shown here is the one
+// waiting on the page, dated off the same ledger. Injected at the top of the skills recap.
+// Three spreads are not a plain left/right pair: level 13 strikes its wide capstone across the
+// fold, and the unlock (no level yet) opens at the data page, stamped ISSUED, facing page 01 with
+// its ghost already part-inked by this run.
+const LVU_POINTER = `<svg class="lvu-pt" viewBox="0 0 12 10" aria-hidden="true" focusable="false"><path d="M1.2 1.9 C4.2 1.3 7.8 1.7 10.8 1.3 C11 1.4 11 1.7 10.9 1.9 C9.5 4.7 7.9 6.8 6.6 8.8 C6.2 9.3 5.7 9.2 5.4 8.7 C4.1 6.3 2.5 4.6 1 2.6 C0.7 2.2 0.8 1.9 1.2 1.9 Z"/></svg>`;
+// the link's rule is a pen stroke laid under the words, not a text underline
+const LVU_UNDER = `<svg class="lvu-under" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M1.5 3.6 C20 2.2 44 4.4 66 3 C80 2.2 90 3.4 98.5 2.8" vector-effect="non-scaling-stroke"/></svg>`;
+const LVU_UP = `<svg class="lvu-up" viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M7 12.4 V2.2 M3 5.8 L7 1.8 L11 5.8"/></svg>`;
 function celebrateMastery(res, host) {
   if (!res || !host) return;
   const isUnlock = res.masteryJustUnlocked;
   const up = res.masteryUp;
   if (!isUnlock && !up) return;
-  const lvl = up ? up.to : masteryLevelFromXp(res.mastery.masteryXp);
+  const m = res.mastery;
+  const lvl = up ? up.to : masteryLevelFromXp(m.masteryXp);
+  const issued = lvl < 1;
+  const cap = lvl >= MASTERY_MAX_LEVEL;
+  const dates = masteryStampDates(m);
+  const today = (() => { const d = new Date(); return `${String(d.getDate()).padStart(2, "0")} ${STAMP_MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`; })();
+  const pg = (n) => String(n).padStart(2, "0");
   const rewards = (res.newUnlocks || []).map((id) => MASTERY_REWARD_BY_ID[id]).filter(Boolean);
-  // One meta line only. A reward is the better news, so it displaces the flavour note rather
-  // than stacking under it and growing the card by a row. Two names is the cap: a level that
-  // hands over a whole group (the eight trinkets at 5) would otherwise spell all of them out
-  // and turn the line into a paragraph. The board they landed on is one tap away.
-  const names = rewards.slice(0, 2).map((r) => escapeHtml(r.name));
-  const rest = rewards.length - names.length;
-  const meta = rewards.length
-    ? `<div class="mc-reward">new reward${rewards.length > 1 ? "s" : ""}: ${names.join(", ")}${rest ? ` and ${rest} more` : ""}</div>`
-    : `<div class="mc-sub">${escapeHtml(isUnlock ? "every skill now feeds your mastery" : "another page turns in your songbook")}</div>`;
-  // The unlock can land before the first level is banked, which is the one state with no
-  // number to press into the wax; the page calls that "freshly sealed" and shows the star.
-  const seal = lvl >= 1
-    ? `<span class="mc-seal-num">${lvl}</span>`
-    : `<span class="mc-seal-emblem">${masteryMarkup("star")}</span>`;
+
+  // the two pages
+  const page = (side, no, body, cap2 = "") => `<div class="lvu-pg ${side}"><span class="lvu-no">${no}</span>${body}${cap2 ? `<span class="lvu-ct">${escapeHtml(cap2)}</span>` : ""}</div>`;
+  const dataPage = (stamp) => page("l", "DATA PAGE",
+    `<div class="lvu-data"><div><small>SKILL LEVELS</small><span>${MASTERY_GATE} / ${MASTERY_GATE}</span></div><div><small>PAGES</small><span>${MASTERY_MAX_LEVEL}</span></div></div>` +
+    (stamp ? `<div class="lvu-issued">${issuedStampSVG(today)}</div>` : ""));
+  let left, right, across = "";
+  if (issued) {
+    const cur = m.masteryXp, span = masteryXpForLevel(1);
+    left = dataPage(true);
+    right = page("r", "PAGE 01", `<div class="lvu-slot">${passportGhost(1, Math.min(1, cur / span))}</div>`, passportCaption(1));
+  } else if (cap) {
+    left = page("l", `PAGE ${pg(lvl - 1)}`, `<div class="lvu-slot lvu-prev">${passportStamp(lvl - 1, dates[lvl - 1] || "")}</div>`);
+    right = page("r", `PAGE ${pg(lvl)}`, "");
+    across = `<div class="lvu-across">${passportStamp(lvl, dates[lvl] || today)}</div>`;
+  } else {
+    left = lvl > 1
+      ? page("l", `PAGE ${pg(lvl - 1)}`, `<div class="lvu-slot">${passportStamp(lvl - 1, dates[lvl - 1] || "")}</div>`, passportCaption(lvl - 1))
+      : dataPage(false);
+    right = page("r", `PAGE ${pg(lvl)}`,
+      `<div class="lvu-slot"><div class="lvu-ghost">${passportGhost(lvl)}</div><div class="lvu-new">${passportStamp(lvl, dates[lvl] || today)}</div></div>`,
+      passportCaption(lvl));
+  }
+
+  // what it opened: names while there are one or two, the stamp's own caption past that
+  const caption = issued ? "" : passportCaption(lvl);
+  const what = issued ? "every skill now feeds it"
+    : rewards.length > 2 ? `<b>${escapeHtml(caption)}</b> · ${rewards.length} new`
+    : rewards.map((r) => `<b>${escapeHtml(r.name)}</b>`).join(" + ");
+  let next;
+  if (cap) next = "every page stamped";
+  else {
+    const at = issued ? 0 : lvl, cur = masteryXpForLevel(at), nxt = masteryXpForLevel(at + 1);
+    const n = (v) => Math.round(v).toLocaleString("en-GB");
+    next = issued ? `${n(m.masteryXp - cur)} / ${n(nxt - cur)} ink to your first stamp`
+      : `next: ${escapeHtml(passportCaption(lvl + 1).toLowerCase())} · ${n(m.masteryXp - cur)} / ${n(nxt - cur)}`;
+  }
+  const rail = Array.from({ length: MASTERY_MAX_LEVEL }, (_, i) => i + 1 === lvl
+    ? `<i class="n">${LVU_POINTER}</i>` : `<i class="${i + 1 < lvl ? "d" : "t"}"></i>`).join("");
 
   const banner = document.createElement("div");
-  banner.className = "mastery-celebrate";
-  banner.innerHTML = `<span class="mc-rule"></span>` +
-    `<div class="mc-seal">${seal}</div>` +
-    `<div class="mc-body">` +
-      `<div class="mc-kicker">${isUnlock ? "Mastery unlocked" : "Mastery level up"}</div>` +
-      `<div class="mc-title">${escapeHtml(lvl >= 1 ? `Level ${lvl}` : "Freshly sealed")}</div>` +
-      meta +
-    `</div>` +
-    `<button type="button" class="mc-cta">see mastery ${CTA_ARROW}</button>`;
+  banner.className = "lvu" + (motionReduced() ? " still" : "");
+  banner.style.setProperty("--tile", issued ? passportStampInk(0) : passportStampInk(lvl));
+  banner.innerHTML =
+    `<div class="lvu-book${cap ? " cap" : ""}">${left}${right}${across}</div>` +
+    `<div class="lvu-txt">` +
+      `<div class="lvu-kick">${LVU_UP}${issued || isUnlock ? "Mastery unlocked" : "Mastery level up"}</div>` +
+      `<div class="lvu-lv">${issued ? "Passport issued" : `Level ${lvl}`}</div>` +
+      `<div class="lvu-rail" aria-hidden="true">${rail}</div>` +
+      `<div class="lvu-of"><b>${lvl}</b> of ${MASTERY_MAX_LEVEL} pages stamped</div>` +
+      (what ? `<div class="lvu-what">${what}</div>` : "") +
+      `<div class="lvu-next">${next}</div>` +
+      `<button type="button" class="lvu-go"><span>open your passport${LVU_UNDER}</span>${CTA_ARROW}</button>` +
+    `</div>`;
   host.insertBefore(banner, host.firstChild);
-  banner.querySelector(".mc-cta").addEventListener("click", () => openMastery("results"));
-
-  if (!motionReduced() && !settings.reducedFlashing) {
-    const burst = document.createElement("div");
-    burst.className = "mc-burst"; burst.setAttribute("aria-hidden", "true");
-    for (let i = 0; i < 22; i++) {
-      const s = document.createElement("span");
-      s.className = "mcs";
-      const ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.3;
-      const dist = 54 + Math.random() * 74;
-      s.style.setProperty("--dx", (Math.cos(ang) * dist).toFixed(0) + "px");
-      s.style.setProperty("--dy", (Math.sin(ang) * dist).toFixed(0) + "px");
-      s.style.animationDelay = (Math.random() * 0.22).toFixed(2) + "s";
-      s.innerHTML = SPARKLE_SVG;
-      burst.appendChild(s);
-    }
-    // Hung on the seal, not the card, so the sparks come off the wax wherever the row wraps.
-    (banner.querySelector(".mc-seal") || banner).appendChild(burst);
-    setTimeout(() => burst.remove(), 2100);
-  }
-  if (!motionReduced()) { void banner.offsetWidth; }
-  banner.classList.add("in");
+  banner.querySelector(".lvu-go").addEventListener("click", () => openMastery("results"));
   playUnlockChime();   // same grand chime as a charm; coalesced if charms unlocked this tick too
 }
 

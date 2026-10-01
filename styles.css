@@ -14514,66 +14514,91 @@
   .sr-mastery.locked .sr-mtop span:first-child { color: var(--ink-soft); }
   .sr-mbar { margin-top: 6px; }
 
-  /* ---- First-class Mastery moment (unlock / level-up) — the Mastery page's own hero card
-     in miniature, sitting atop the recap: margin rule, numbered wax seal, kicker over a
-     hand-written level, and a way through. It carries the gold/red vars locally because it
-     lives on the results card, outside .mastery-page where they are declared.
-     One ROW on purpose. This lands in the middle of the results page, above the recap and
-     the actions, so a stacked column of star-title-sub-reward-button pushed everything that
-     matters below the fold and read as a splash screen rather than a note on the page. ---- */
-  .mastery-celebrate { --m-gold: 199, 149, 31; --m-goldink: 150, 105, 20; --m-red: 178, 58, 58;
-    position: relative; display: flex; align-items: center; gap: 14px;
-    margin: 0 auto 14px; max-width: 480px; padding: 12px 14px 12px 34px; border-radius: 10px;
-    background-color: var(--paper); background-image: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3));
-    border: 1px solid rgba(var(--m-gold), 0.45); box-shadow: 0 1px 3px rgba(43, 39, 34, 0.07);
-    text-align: left; opacity: 0; transform: translateY(6px) scale(0.98); }
-  .mastery-celebrate.in { opacity: 1; transform: none; transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.34,1.56,.64,1); }
-  .mc-rule { position: absolute; top: 10px; bottom: 10px; left: 22px; width: 1.5px; background: rgba(var(--m-red), 0.55); }
-  /* Same wax medallion as the mastery hero, struck a size smaller. */
-  .mc-seal { width: 46px; height: 46px; flex: none; position: relative; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(var(--m-gold), 0.92); border: 2px solid rgba(var(--m-goldink), 0.9); }
-  .mc-seal::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; border: 1px dashed rgba(63, 44, 16, 0.4); }
-  .mc-seal-num { font-family: var(--hand); font-weight: 700; font-size: calc(25px + var(--text-size-adjust)); line-height: 1;
-    color: #3f2c10; transform: translate(-3px, -1px); }
-  .mc-seal-emblem .charm { width: 22px; height: 22px; display: inline-flex; }
-  .mc-seal-emblem .charm svg { width: 100%; height: 100%; overflow: visible; }
-  .mc-seal-emblem .ink { fill: none; stroke: #3f2c10; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .mc-seal-emblem .ink-fill { fill: #3f2c10; stroke: #3f2c10; stroke-width: 1.2; }
-  .mc-body { flex: 1; min-width: 0; }
-  .mc-kicker { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.2em;
-    text-transform: uppercase; color: var(--ink-soft); }
-  .mc-title { font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); line-height: 1; color: var(--ink); margin-top: 2px; }
-  .mc-reward { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.03em; color: rgba(var(--m-goldink), 1); margin-top: 4px; }
-  /* The reward is the payload of the whole banner, and the gold ink it is written in was
-     mixed for a light page — on a dark one it sinks into the card. Lift it here rather than
-     in the shared var: the seal's rim and the border want the deep gold either way. */
-  :root[data-theme="dark"] .mc-reward { color: rgba(226, 184, 92, 1); }
-  .mc-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.04em; color: var(--ink-soft); margin-top: 4px; }
-  .mc-cta { flex: none; align-self: center; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 0.04em;
-    padding: 6px 11px; border-radius: 3px; border: 1px solid rgba(var(--m-gold), 0.55);
-    background: var(--paper); color: var(--ink); cursor: pointer; }
-  .mc-cta:hover { background: rgba(var(--m-gold), 0.14); }
-  /* Sparks come off the wax itself (the burst is appended inside .mc-seal). */
-  .mc-burst { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
-  .mc-burst .mcs { position: absolute; left: 0; top: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px;
-    color: #d8a71b; opacity: 0; animation: mcSpark 1.6s ease-out forwards; }
-  .mc-burst .mcs svg { width: 100%; height: 100%; }
-  @keyframes mcSpark {
-    0% { opacity: 0; transform: translate(0, 0) scale(0.2); }
-    25% { opacity: 1; }
-    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1); }
-  }
-  /* Narrow: the button drops to its own line under the text rather than squeezing the level. */
-  @media (max-width: 430px) {
-    .mastery-celebrate { flex-wrap: wrap; padding-left: 30px; }
-    .mc-rule { left: 18px; }
-    .mc-cta { margin-left: 60px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .mastery-celebrate { opacity: 1; transform: none; }
-    .mastery-celebrate.in { transition: none; }
-    .mc-burst { display: none; }
+  /* ---- The Mastery moment on the results card (unlock / level-up): the passport in the hand,
+     opened at the spread just reached (celebrateMastery). The booklet is the Mastery page's
+     objects at a smaller size, its stamps printed by js/passport.js, so the inks, the multiply
+     blend and the night lift are the passport's own. Beside it the words say it plainly and a
+     rail of thirteen pages shows the step, the new page in its reward's colour (--tile, handed
+     over inline) under a hand-inked pointer in that same colour.
+     Motion is one sequence: the right page swings open on the gutter, the stamp is pressed onto
+     its own dotted outline (which fades from under it), then the new page drops into the rail
+     and the pointer lands over it. .still (motionReduced) shows the settled spread. ---- */
+  .lvu { --lvu-card: #fbf8ef; --mpp-blend: multiply; --tile-ink: var(--tile);
+    display: flex; align-items: center; gap: 20px; max-width: 560px; margin: 0 auto 16px; text-align: left; }
+  :root[data-theme="dark"] .lvu { --lvu-card: #332c22; --mpp-blend: normal; --tile-ink: color-mix(in srgb, var(--tile) 58%, #ece5d6); }
+  .lvu .mpp-stamp { width: 100%; height: 100%; }
+  /* The booklet: ink cover showing round the pages, its name along the foot, a stitched gutter. */
+  .lvu-book { position: relative; flex: none; display: flex; padding: 5px 5px 19px; border-radius: 11px; background: var(--ink);
+    transform: rotate(-1.4deg); perspective: 700px; animation: lvu-in .35s ease both; }
+  .lvu-book::before { content: "MASTERY  PASSPORT"; position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; white-space: pre;
+    font-family: var(--type); font-weight: 700; font-size: 8px; letter-spacing: .32em; color: var(--lvu-card); }
+  .lvu-book::after { content: ""; position: absolute; left: 50%; top: 9px; bottom: 23px; z-index: 3;
+    border-left: 1.4px dashed color-mix(in srgb, var(--ink) 50%, transparent); }
+  .lvu-pg { position: relative; width: 122px; height: 146px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background-color: var(--lvu-card);
+    background-image: repeating-radial-gradient(circle at 0 100%, transparent 0 9px, color-mix(in srgb, var(--ink) 3%, transparent) 9px 10px); }
+  .lvu-pg.l { border-radius: 7px 1px 1px 7px; }
+  .lvu-pg.r { border-radius: 1px 7px 7px 1px; transform-origin: 0 50%; backface-visibility: hidden; animation: lvu-open .6s cubic-bezier(.3,.6,.3,1) .12s both;
+    background-image: repeating-radial-gradient(circle at 100% 0, transparent 0 9px, color-mix(in srgb, var(--ink) 3%, transparent) 9px 10px); }
+  .lvu-no { position: absolute; top: 7px; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .16em; color: var(--ink-soft); }
+  .lvu-pg.l .lvu-no { left: 10px; } .lvu-pg.r .lvu-no { right: 10px; }
+  .lvu-slot { position: relative; width: 96px; height: 96px; margin-top: 4px; }
+  .lvu-slot > div { position: absolute; inset: 0; }
+  .lvu-slot > .mpp-stamp { position: absolute; inset: 0; }
+  .lvu-ghost { opacity: 0; animation: lvu-unfade .25s ease .95s both; }
+  .lvu-new { animation: lvu-strike .45s cubic-bezier(.3,.7,.35,1) .78s both; }
+  .lvu-ct { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); color: var(--ink); margin-top: 3px; }
+  .lvu-pg.r .lvu-ct { animation: lvu-in .3s ease 1s both; }
+  /* The capstone is struck across the fold; the page before it moves up out of its way. */
+  .lvu-book.cap .lvu-pg { height: 184px; }
+  .lvu-prev { position: absolute; top: 20px; left: 14px; width: 66px; height: 66px; margin: 0; }
+  .lvu-across { position: absolute; left: 50%; bottom: 18px; width: 224px; height: 112px; margin-left: -112px; z-index: 4;
+    animation: lvu-strike .5s cubic-bezier(.3,.7,.35,1) .8s both; }
+  /* The data page the unlock opens at. */
+  .lvu-data { width: 100%; padding: 22px 12px 0; align-self: stretch; }
+  .lvu-data div { border-bottom: 1px dashed color-mix(in srgb, var(--ink) 30%, transparent); padding: 4px 0 2px; }
+  .lvu-data small { display: block; font-family: var(--type); font-size: 7px; letter-spacing: .16em; color: var(--ink-soft); }
+  .lvu-data span { font-family: var(--type); font-weight: 700; font-size: 10.5px; color: var(--ink); }
+  .lvu-issued { position: absolute; left: 8px; bottom: 8px; width: 104px; height: 52px; z-index: 4;
+    animation: lvu-strike .45s cubic-bezier(.3,.7,.35,1) .8s both; }
+  /* The words. */
+  .lvu-kick { font-family: var(--type); font-weight: 700; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: .22em; text-transform: uppercase; color: var(--red-pen); }
+  .lvu-up { width: 13px; height: 13px; vertical-align: -2px; margin-right: 4px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .lvu-lv { font-family: var(--hand); font-weight: 700; font-size: calc(34px + var(--text-size-adjust)); line-height: 1; color: var(--ink); margin-top: 4px; }
+  .lvu-rail { display: flex; gap: 3px; margin-top: 15px; }
+  .lvu-rail i { position: relative; flex: none; width: 14px; height: 18px; border-radius: 2px; }
+  .lvu-rail i.d { background: repeating-linear-gradient(-50deg, var(--ink) 0 1.6px, transparent 1.6px 3.6px); box-shadow: inset 0 0 0 1.3px var(--ink); }
+  .lvu-rail i.n { background: var(--tile-ink); box-shadow: inset 0 0 0 1.3px var(--tile-ink); animation: lvu-pop .4s cubic-bezier(.3,1.6,.5,1) 1.15s both; }
+  .lvu-rail i.t { border: 1.2px dashed color-mix(in srgb, var(--ink) 45%, transparent); }
+  /* The pointer is a filled triangle inked by hand (uneven sides, a point a hair off centre),
+     in the new page's colour, so pointer, page and stamp read as one thing. */
+  .lvu-pt { position: absolute; left: 50%; top: -11px; width: 10px; height: 8px; margin-left: -5px; overflow: visible;
+    fill: var(--tile-ink); stroke: var(--tile-ink); stroke-width: .7; stroke-linejoin: round; animation: lvu-drop .3s ease-out 1.45s both; }
+  .lvu-of { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 4px; }
+  .lvu-of b { color: var(--ink); }
+  .lvu-what { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink); margin-top: 5px; }
+  .lvu-what b { color: var(--tile-ink); }
+  .lvu-next { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 6px; }
+  .lvu-go { display: inline-flex; align-items: center; gap: 7px; margin-top: 9px; padding: 0; background: none; border: 0; cursor: pointer;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: .04em; color: var(--ink); }
+  .lvu-go > span { position: relative; padding-bottom: 3px; }
+  .lvu-under { position: absolute; left: 0; bottom: -2px; width: 100%; height: 5px; overflow: visible;
+    fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; transition: stroke .15s ease; }
+  .lvu-go:hover .lvu-under, .lvu-go:focus-visible .lvu-under { stroke: var(--tile-ink); }
+  .lvu-go .cta-arrow { width: 19px; height: 10px; }
+  @keyframes lvu-in { from { opacity: 0; transform: translateX(-6px); } }
+  @keyframes lvu-open { from { transform: rotateY(-175deg); } }
+  @keyframes lvu-unfade { from { opacity: 1; } }
+  @keyframes lvu-strike { 0% { transform: scale(1.75) rotate(7deg); opacity: 0; } 55% { opacity: 1; } 70% { transform: scale(.95) rotate(-.8deg); } 86% { transform: scale(1.015); } 100% { transform: none; } }
+  @keyframes lvu-pop { from { transform: scale(.3); opacity: 0; } }
+  @keyframes lvu-drop { from { opacity: 0; transform: translateY(-4px); } }
+  .lvu.still, .lvu.still * { animation: none !important; }
+  @media (prefers-reduced-motion: reduce) { .lvu, .lvu * { animation: none !important; } }
+  /* Narrow: the words go under the booklet, centred on it. */
+  @media (max-width: 480px) {
+    .lvu { flex-direction: column; gap: 12px; }
+    .lvu-txt { text-align: center; }
+    .lvu-rail { justify-content: center; }
   }
 
   /* Corner franking — two stamps from one issue, struck onto the top-right of the
