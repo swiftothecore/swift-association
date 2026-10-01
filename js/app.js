@@ -12532,13 +12532,28 @@ function guestPassMarkup(g, slot) {
    you to, and this one admits you to all of them, so taking any single guest's palette would
    be picking a favourite. Dark card and brass instead, which is what a crew laminate actually
    looks like and what the notebook's own gold already is. */
+/* One artist, one colour: the lead ink their beads are strung in, and brass for home, whose bead
+   is all twelve records cut as a cake and so has no single colour to lend. Every surface that
+   names the lineup's artists by a single mark (the pass's ticks, the detail list, the count's
+   dots) reads it here so they stay one key. `night` swaps a lead too dark for the night desk for
+   the artist's second ink: Billie's sleeve black goes acid and Sabrina's espresso goes cream,
+   and every other lead is light enough to stay. */
+function lineupInk(name, night = false) {
+  if (name === HOME_ARTIST) return "#b08d46";
+  const [lead, second] = LINEUP_INKS[name] || [];
+  if (night && lead && second) {
+    const n = parseInt(lead.slice(1), 16);
+    if (((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 < 90) return second;
+  }
+  return lead || null;
+}
 function guestAllAccessMarkup(pass) {
   // One tick per artist, inked the colour that artist's BEADS are strung in, so the pass and
   // the bracelet the run produces are the same picture. Home leads and takes brass rather than
   // a bead colour, because her bead is all twelve records cut as a cake and a 5px tick cannot
   // be a cake; the laminate's own metal stands in for her.
   const ticks = lineupShelf().map((name) => {
-    const ink = name === HOME_ARTIST ? "#b08d46" : (LINEUP_INKS[name] || [])[0];
+    const ink = lineupInk(name);
     return `<i title="${escapeHtml(name)}"${ink ? ` style="background:${ink}"` : ""}></i>`;
   }).join("");
   return (
@@ -12744,7 +12759,7 @@ function renderLineupDetail() {
   if (!el) return;
   const shelf = lineupShelf();
   const names = shelf.map((name) => {
-    const ink = name === HOME_ARTIST ? "#b08d46" : (LINEUP_INKS[name] || [])[0];
+    const ink = lineupInk(name);
     return `<li><span class="guest-rec-dot"${ink ? ` style="background:${ink}"` : ""}></span>` +
       `<span class="guest-rec-name">${escapeHtml(name)}</span></li>`;
   }).join("");
@@ -24976,7 +24991,12 @@ function fillCountDots(label, hits) {
   const { svg, below } = countDots(hits, allSongs, {
     width: full - (say ? say.offsetWidth : 0) - 12,
     fallbackWidth: full,
-    colour: (s) => { const g = guestBeadTint(s); return (Array.isArray(g) ? g[0] : g) || albumColor(s.album) || "var(--ink-soft)"; },
+    // The lineup inks by ARTIST: its blended album names ("Taylor Swift · Red") match no era
+    // palette, and forty-odd blocks in forty-odd colours would say nothing anyway. One ink per
+    // artist turns the strip into where the word lives across the shelf.
+    colour: gameType === "lineup"
+      ? ((night) => (s) => lineupInk(s.artist, night) || "var(--ink-soft)")(effectiveTheme() === "dark")
+      : (s) => { const g = guestBeadTint(s); return (Array.isArray(g) ? g[0] : g) || albumColor(s.album) || "var(--ink-soft)"; },
     title: (s, n) => escapeHtml(`${censor(s.title)} · ${s.album} · ${n} words · sings it ${(s.lyrics.match(rx) || []).length}×`),
     seed: currentWord,
   });
