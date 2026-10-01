@@ -85,6 +85,12 @@ if (location.pathname.endsWith('/index.html')) {
      in styles.css via filter: url(#charmWobble). Small displacement only — big
      values turn 30px icons to mush. Defined once here; hidden, zero layout. -->
 <svg width="0" height="0" aria-hidden="true" style="position:absolute" focusable="false">
+  <!-- THE back arrow: every "go back" control draws this rather than typing ←. Its own drawing,
+       not CTA_ARROW turned round: the shaft sags the other way and the head's lower stroke is
+       the longer one. currentColor is safe through <use>, it inherits from the outer svg. -->
+  <symbol id="back-arrow" viewBox="0 0 20 10">
+    <path d="M18.7 5.3 Q11.3 5.9 2.6 5.0 M6.7 1.8 Q4.4 3.2 1.9 5.0 Q4.1 6.8 6.4 8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
   <filter id="charmWobble" x="-15%" y="-15%" width="130%" height="130%">
     <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="noise"/>
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
@@ -3118,7 +3124,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-stats" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-stats"/></svg></span>
         <span class="stats-title">Stats</span>
       </span>
-      <button id="statsBackBtn" class="btn-link">← back</button>
+      <button id="statsBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="statsBody"></div>
   </section>
@@ -3538,7 +3544,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-records" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-records"/></svg></span>
         <span class="stats-title">Records</span>
       </span>
-      <button id="recordsBackBtn" class="btn-link">← back</button>
+      <button id="recordsBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="recordsBody"></div>
   </section>
@@ -3550,7 +3556,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-charms" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-achievements"/></svg></span>
         <span class="stats-title">Achievements</span>
       </span>
-      <button id="achievementsBackBtn" class="btn-link">← back</button>
+      <button id="achievementsBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="achievementsBody"></div>
   </section>
@@ -3564,7 +3570,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-howto" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-howto"/></svg></span>
         <span class="stats-title">How to play</span>
       </span>
-      <button id="howToBackBtn" class="btn-link">← back</button>
+      <button id="howToBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="howToBody"></div>
   </section>
@@ -3579,7 +3585,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-glossary" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-glossary"/></svg></span>
         <span class="stats-title">Glossary</span>
       </span>
-      <button id="glossaryBackBtn" class="btn-link">← back</button>
+      <button id="glossaryBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="glossaryBody"></div>
   </section>
@@ -3596,7 +3602,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-graveyard" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-graveyard"/></svg></span>
         <span class="stats-title">Graveyard</span>
       </span>
-      <button id="graveyardBackBtn" class="btn-link">← back</button>
+      <button id="graveyardBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="graveyardBody"></div>
   </section>
@@ -3610,7 +3616,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-credits" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-credits"/></svg></span>
         <span class="stats-title">Credits</span>
       </span>
-      <button id="creditsBackBtn" class="btn-link">← back</button>
+      <button id="creditsBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="creditsBody"></div>
   </section>
@@ -3622,7 +3628,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-mastery" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-mastery"/></svg></span>
         <span class="stats-title">Mastery</span>
       </span>
-      <button id="masteryBackBtn" class="btn-link">← back</button>
+      <button id="masteryBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="masteryBody"></div>
   </section>
@@ -3634,7 +3640,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-challenges" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-challenges"/></svg></span>
         <span class="stats-title">Challenges</span>
       </span>
-      <button id="challengesBackBtn" class="btn-link">← back</button>
+      <button id="challengesBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="challengesBody"></div>
   </section>
@@ -3646,7 +3652,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-bonus" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-bonus"/></svg></span>
         <span class="stats-title">Bonus games</span>
       </span>
-      <button id="bonusBackBtn" class="btn-link">← back</button>
+      <button id="bonusBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="bonusBody"></div>
   </section>
@@ -3657,10 +3663,10 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="bonusPageRegister" class="page-register" aria-hidden="true"></div>
     <div class="stats-nav">
       <span class="stats-title" id="bonusPlayTitle">Bonus game</span>
-      <button id="bonusQuitBtn" class="btn-link" data-label="← quit">← quit</button>
+      <button id="bonusQuitBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">quit</span></button>
       <!-- Swapped in for the quit link once the run is over: there is nothing left to give up
            on, and the back cover's own actions only reach as far as the shelf. -->
-      <button id="bonusHomeBtn" class="btn-link" hidden>← front page</button>
+      <button id="bonusHomeBtn" class="btn-link" hidden><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">front page</span></button>
     </div>
     <div id="bonusHud" class="bg-hud">
       <span id="bonusProgress" class="bg-progress"></span>
@@ -3681,7 +3687,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-album" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-album"/></svg></span>
         <span class="stats-title">Album Focus</span>
       </span>
-      <button id="albumFocusBackBtn" class="btn-link">← back</button>
+      <button id="albumFocusBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="albumFocusBody"></div>
   </section>
@@ -3693,7 +3699,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-album" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-album"/></svg></span>
         <span class="stats-title">Album Focus</span>
       </span>
-      <button id="albumDetailBackBtn" class="btn-link">← albums</button>
+      <button id="albumDetailBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">albums</span></button>
     </div>
     <div id="albumDetailBody"></div>
   </section>
@@ -3709,7 +3715,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-album" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-album"/></svg></span>
         <span class="stats-title">Title ink</span>
       </span>
-      <button id="inkTrayBackBtn" class="btn-link">← albums</button>
+      <button id="inkTrayBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">albums</span></button>
     </div>
     <div id="inkTrayBody"></div>
   </section>
@@ -3721,7 +3727,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-ruthless" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-ruthless"/></svg></span>
         <span class="stats-title">Ruthless Game</span>
       </span>
-      <button id="ruthlessBackBtn" class="btn-link">← back</button>
+      <button id="ruthlessBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="ruthlessBody"></div>
   </section>
@@ -3735,7 +3741,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span id="tracksMark" class="tbt-mark"></span>
         <span class="stats-title">Track by Track</span>
       </span>
-      <button id="tracksBackBtn" class="btn-link">← back</button>
+      <button id="tracksBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="tracksBody"></div>
   </section>
@@ -3747,7 +3753,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-guests" aria-hidden="true"><svg viewBox="0 0 36 24" style="stroke:url(#guestMarkInkShelf)"><defs><linearGradient id="guestMarkInkShelf" x1="0" y1="0" x2="1" y2="1"><stop class="guest-mark-ink-a" offset="42%"/><stop class="guest-mark-ink-b" offset="58%"/></linearGradient></defs><use href="#mark-guests"/></svg></span>
         <span class="stats-title">Guest shelf</span>
       </span>
-      <button id="guestBackBtn" class="btn-link">← back</button>
+      <button id="guestBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="guestBody"></div>
   </section>
@@ -3759,7 +3765,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-guests" aria-hidden="true"><svg viewBox="0 0 36 24" style="stroke:url(#guestMarkInkDetail)"><defs><linearGradient id="guestMarkInkDetail" x1="0" y1="0" x2="1" y2="1"><stop class="guest-mark-ink-a" offset="42%"/><stop class="guest-mark-ink-b" offset="58%"/></linearGradient></defs><use href="#mark-guests"/></svg></span>
         <span class="stats-title">Guest shelf</span>
       </span>
-      <button id="guestDetailBackBtn" class="btn-link">← guest shelf</button>
+      <button id="guestDetailBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">guest shelf</span></button>
     </div>
     <div id="guestDetailBody"></div>
   </section>
@@ -3770,7 +3776,7 @@ if (location.pathname.endsWith('/index.html')) {
   <section id="screen-lineup-board" class="screen card" tabindex="-1" aria-label="The lineup: the goal deck">
     <div class="stats-nav">
       <span class="title-group"><span class="stats-title">The goal deck</span></span>
-      <button id="lineupBoardBackBtn" class="btn-link">← the lineup</button>
+      <button id="lineupBoardBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">the lineup</span></button>
     </div>
     <div id="lineupBoardBody"></div>
   </section>
@@ -3781,7 +3787,7 @@ if (location.pathname.endsWith('/index.html')) {
   <section id="screen-lineup" class="screen card" tabindex="-1" aria-label="The lineup: your hand">
     <div class="stats-nav">
       <span class="title-group"><span class="stats-title">The lineup</span></span>
-      <button id="lineupBackBtn" class="btn-link">← back</button>
+      <button id="lineupBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <p class="lu-felt-lead">Five dealt. Keep up to three.</p>
     <div id="lineupSpend" class="lu-spend"></div>
@@ -3798,7 +3804,7 @@ if (location.pathname.endsWith('/index.html')) {
         <span class="page-mark mark-songbook" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-songbook"/></svg></span>
         <span class="stats-title">Songbook</span>
       </span>
-      <button id="songbookBackBtn" class="btn-link">← back</button>
+      <button id="songbookBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
     </div>
     <div id="songbookBody"></div>
   </section>

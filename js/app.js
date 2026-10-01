@@ -2126,6 +2126,11 @@ const CTA_ARROW = `<svg class="cta-arrow" viewBox="0 0 20 10" aria-hidden="true"
   `<path d="M1.3 5.5 Q8.6 4.6 17.4 5.1 M13.1 1.7 Q15.6 3.5 18.1 5.1 Q15.9 6.6 13.8 8.6" fill="none" ` +
   `stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
+// THE left-pointing arrow, for every "go back" control. The drawing is a <symbol> in index.html,
+// shared with the panels' static ← back links; the label sits in .ctl-lab so the underline
+// stops at the words and any armed-state swap can rewrite them without losing the arrow.
+const BACK_ARROW = `<svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg>`;
+
 // "in context": the line among its lines. The middle stroke is the one on the card, in the
 // album's ink; the strokes round it are the verse, faint until the context is open.
 const CTX_LINES = `<svg class="ctx-lines" viewBox="0 0 15 12" aria-hidden="true">` +
@@ -10257,7 +10262,7 @@ function endBonusRun() {
          ten-page run and the loop for an endless one, so the button and the sticker it stands in
          for are recognisably the same act. */
       `<div class="bg-end-actions">` +
-        `<button type="button" id="bonusShelfBtn" class="btn-primary">← the shelf</button>` +
+        `<button type="button" id="bonusShelfBtn" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">the shelf</span></button>` +
         `<button type="button" id="bonusAgainBtn" class="btn-primary">replay ↺</button>` +
         (bonusHasEndless(bonusGame)
           ? `<button type="button" id="bonusOtherBtn"` +
@@ -10482,7 +10487,7 @@ function endRuthlessRun() {
           `<span class="sr-only">Copy the bracelet</span></button></div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
-        `<button id="backToRuthless" class="btn-primary">← ruthless game</button>` +
+        `<button id="backToRuthless" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">ruthless game</span></button>` +
         `<button id="replayRuthless" class="btn-primary">replay ↺</button>` +
       `</div>` +
     `</div>`;
@@ -10544,7 +10549,7 @@ function disarmBonusQuit() {
   const btn = $("bonusQuitBtn");
   if (!btn) return;
   btn.classList.remove("armed");
-  btn.textContent = btn.dataset.label || "← quit";
+  btn.querySelector(".ctl-lab").textContent = "quit";
 }
 function armBonusQuit() {
   const btn = $("bonusQuitBtn");
@@ -10552,7 +10557,7 @@ function armBonusQuit() {
   if (settings.confirmLeave === false) { leaveBonusGame(); return; }
   if (btn.classList.contains("armed")) { leaveBonusGame(); return; }
   btn.classList.add("armed");
-  btn.textContent = "give up? tap again";
+  btn.querySelector(".ctl-lab").textContent = "give up? tap again";
   bonusQuitTimer = setTimeout(disarmBonusQuit, 3000);
 }
 
@@ -20063,7 +20068,7 @@ function endChallenge() {
   // are on every challenge and the offer sits directly above the front-page button.
   $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + inkLine + impostorLine + newSongLine + riskResultLine() + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToChallenges" class="btn-primary">← challenges</button>` +
+      `<button id="backToChallenges" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">challenges</span></button>` +
       `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
     `</div>` + darkInvite + lightInvite;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
@@ -20176,7 +20181,7 @@ function endAlbumFocus() {
   // same album at the same difficulty on the right.
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToAlbumFocus" class="btn-primary">← album focus</button>` +
+      `<button id="backToAlbumFocus" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">album focus</span></button>` +
       `<button id="replayAlbumFocus" class="btn-primary">replay ↺</button>` +
     `</div>`;
   $("backToAlbumFocus").addEventListener("click", () => openAlbumFocus("start"));
@@ -20252,7 +20257,7 @@ function endGuest() {
     ` · admitted ${admittedCount}/${GUESTS.length}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToGuests" class="btn-primary">← guest shelf</button>` +
+      `<button id="backToGuests" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">guest shelf</span></button>` +
       `<button id="replayGuest" class="btn-primary">replay ↺</button>` +
     `</div>`;
   $("backToGuests").addEventListener("click", () => openGuestShelf("start"));
@@ -20333,7 +20338,7 @@ function endCustom() {
   const meta = `<div class="chall-result-meta">${escapeHtml(customLeverSummary(currentMode))}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToCustom" class="btn-primary">← modes</button>` +
+      `<button id="backToCustom" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">modes</span></button>` +
       `<button id="replayCustom" class="btn-primary">replay ↺</button>` +
     `</div>`;
   // Back to the launchpad with Custom still selected (gameType stays "custom" through

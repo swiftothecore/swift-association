@@ -11350,6 +11350,17 @@
      A flex control wraps label and arrow in .cta-run (see CTA_ARROW), so the offset still applies. */
   .cta-arrow { display: inline-block; width: 1.9em; height: 0.95em; vertical-align: -0.235em; }
   :is(.run-pause-go, .lyric-fullsong, .more-songs-all, .lu-stub-go) .cta-arrow { vertical-align: -0.171em; }
+  /* The back arrow (symbol #back-arrow, BACK_ARROW in app.js) on every "go back" control. It
+     leads its label, so it is spaced by margin on its right: a typed space there would carry the
+     link's underline out under the gap, where the margin leaves it starting at the first letter. */
+  .back-arrow { display: inline-block; width: 1.9em; height: 0.95em; vertical-align: -0.235em; margin-right: 0.5em; }
+  /* The stamped results buttons set 13-15px type in half-width rows, where the 1.9em arrow
+     pushes "album focus" and "guest shelf" onto two lines at 375px. 1.6em at 13px is the same
+     21px as the 12px links' arrow, so it reads as one arrow everywhere. Same rule as above for
+     the offset: 0.2255 - 0.485 x 0.8 = -0.1625em. */
+  .btn-primary .back-arrow { width: 1.6em; height: 0.8em; vertical-align: -0.1625em; margin-right: 0.4em; }
+  /* "give up? tap again" is a warning, not a way back */
+  .btn-link.armed .back-arrow { display: none; }
   /* spaced by margin inside the run, matching the gap the flex row used to give it */
   .cta-run .cta-arrow { margin-left: 0.5em; }
   /* two keepsake cards */
