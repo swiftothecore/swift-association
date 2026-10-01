@@ -11148,59 +11148,210 @@
      keyboard focus so it still answers like a link. Armed is a warning, so it keeps its line. */
   .btn-link:has(.back-arrow):not(.armed) { text-decoration: none; }
   .btn-link:has(.back-arrow):not(.armed):is(:hover, :focus-visible) .ctl-lab { text-decoration: underline; text-underline-offset: 3px; }
-  /* "By the numbers" header (design E): three primaries on top, then a
-     recent-form sparkline beside the secondary stats. Transparent over paper,
-     thin ruled dividers — no boxed border. */
-  .statE-top {
-    display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 16px;
+  /* ---------- Stats, taped in ----------
+     A scrapbook spread rather than a dashboard: every number is stuck in on the object it
+     would be written on (statsBoardHTML in app.js has the cast list and the why). Six tracks
+     on a desk, each piece spanning two, four or six of them; two on a phone, where the small
+     pieces pair up and the ticket, the gist and the sticky note come first.
+
+     THE TAPE IS THE HOME SCREEN'S: .stp-tape is on the shared washi rule (surface, night
+     treatment, tears), and this block only sizes it and tints it with the stats card's denim.
+
+     The paper objects are fixed stock (a ticket is buff by day and by night), so they write in
+     fixed ink rather than var(--ink), and at night they are taken down a stop with one
+     brightness() each, the polaroid treatment, rather than repainted: the object stays lit the
+     way it was drawn and its ink keeps the ratios it was written for. The tape is a sibling of
+     each dimmed object, never inside it, because no filter may reach a strip. */
+  .stp {
+    --stp-pen: #2b2722; --stp-soft: #6f675a; --stp-red: #a8322e; --stp-green: #2f6340;
+    --tape-color: rgb(91, 135, 184);
+    display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px 18px; align-items: start;
+    margin-top: 6px;
   }
-  .statE-cell { text-align: center; padding: 0 6px; }
-  .statE-top .statE-cell + .statE-cell { border-left: 1px solid rgba(43,39,34,0.10); }
-  .statE-val {
-    font-family: var(--hand); font-weight: 700; color: var(--ink);
-    font-size: calc(56px + var(--text-size-adjust)); line-height: 0.9; display: inline-block; vertical-align: top;
+  .stp-item { position: relative; min-width: 0; transform: rotate(var(--r, 0deg)); }
+  .stp-w2 { grid-column: span 2; } .stp-w4 { grid-column: span 4; } .stp-w6 { grid-column: span 6; }
+  .stp-tape { position: absolute; z-index: 3; height: 16px; pointer-events: none; }
+  .stp-lab {
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.2px;
+    text-transform: uppercase; color: var(--ink-soft); line-height: 1.3;
   }
-  .statE-accent { color: var(--ink-accent); }
-  .statE-best {
-    background: linear-gradient(var(--highlighter), var(--highlighter)) bottom/100% 38% no-repeat;
-    padding: 0 5px;
-  }
-  .statE-star {
-    width: 18px; height: 18px; display: inline-block; color: var(--bead);
-    vertical-align: top; margin: 4px 0 0 2px;
-  }
-  .statE-star svg { width: 100%; height: 100%; display: block; }
-  .statE-lbl {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px;
-    color: var(--ink-soft); text-transform: uppercase; display: block; margin-top: 6px;
-  }
-  .statE-form {
-    display: flex; align-items: center; gap: 18px;
-    border-top: 1px solid rgba(43,39,34,0.10); padding-top: 14px; margin-bottom: 22px;
-  }
-  .statE-form-spark { flex: 1; min-width: 0; }
-  .statE-form-lbl { margin: 0 0 4px; }
-  .statE-form-empty {
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
-    display: block; padding: 8px 0 4px;
-  }
-  .form-spark { display: block; overflow: visible; }
-  .form-line {
-    fill: none; stroke: var(--ink-accent); stroke-width: 2.4;
-    stroke-linecap: round; stroke-linejoin: round;
-  }
-  .form-base { stroke: rgba(43,39,34,0.16); stroke-width: 1; stroke-dasharray: 3 4; }
-  .form-dot { fill: var(--ink-accent); }
-  .statE-chips { display: flex; gap: 20px; flex: none; }
-  .statE-chips .statE-cell { padding-left: 18px; border-left: 1px solid rgba(43,39,34,0.10); }
-  .statE-chips .statE-cell:first-child { border-left: none; padding-left: 0; }
-  .statE-chips .statE-val { font-size: calc(40px + var(--text-size-adjust)); }
-  .statE-chips .statE-star { width: 15px; height: 15px; }
+  .stp-item > .stp-lab { margin-bottom: 7px; }
   @media (max-width: 560px) {
-    .statE-val { font-size: calc(46px + var(--text-size-adjust)); }
-    .statE-form { flex-direction: column; align-items: stretch; gap: 14px; }
-    .statE-chips { justify-content: center; gap: 28px; }
+    .stp { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 12px; }
+    .stp-w4, .stp-w6 { grid-column: span 2; }
+    .stp-w2 { grid-column: span 1; }
+    .stp > .stp-item { order: 9; }
+    .stp > .stp-o0 { order: 0; } .stp > .stp-o1 { order: 1; } .stp > .stp-o2 { order: 2; }
+    .stp > .stp-solo { grid-column: span 2; justify-self: center; width: 64%; }
   }
+  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-slip, .stp-chips, .stp-dy, .stp-rt) {
+    filter: brightness(0.78) saturate(0.94);
+  }
+
+  /* the best score: a ticket stub, notched at the perforation, the game count its serial */
+  .stp-ticket {
+    --stub: 92px;
+    display: flex; min-height: 132px; color: var(--stp-pen); background: #f0dc9c;
+    -webkit-mask:
+      radial-gradient(circle 9px at calc(100% - var(--stub)) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle 9px at calc(100% - var(--stub)) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+            mask:
+      radial-gradient(circle 9px at calc(100% - var(--stub)) 0, transparent 98%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle 9px at calc(100% - var(--stub)) 100%, transparent 98%, #000) bottom / 100% 51% no-repeat;
+  }
+  .stp-ticket-main { position: relative; flex: 1; min-width: 0; padding: 14px 14px 12px 18px; border: 1.5px solid rgba(43,39,34,.55); border-right: 0; }
+  .stp-ticket-main::before { content: ""; position: absolute; inset: 5px 4px 5px 5px; border: 1px solid rgba(43,39,34,.28); border-right: 0; pointer-events: none; }
+  .stp-adm { font-family: var(--type); font-weight: 700; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 3px; }
+  .stp-ticket-big { display: flex; align-items: baseline; gap: 6px; margin: 8px 0 3px; }
+  .stp-ticket-big b { font-family: var(--hand); font-weight: 700; font-size: calc(64px + var(--text-size-adjust)); line-height: .85; }
+  .stp-ticket-big span { font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); opacity: .72; }
+  .stp-ticket-line { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.4; }
+  .stp-ticket-stub {
+    width: var(--stub); flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    text-align: center; border: 1.5px solid rgba(43,39,34,.55); border-left: 2px dashed rgba(43,39,34,.55);
+  }
+  .stp-stub-no { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 2px; }
+  .stp-ticket-stub b { font-family: var(--type); font-weight: 700; font-size: calc(28px + var(--text-size-adjust)); letter-spacing: 1px; line-height: 1; }
+  .stp-ticket-stub span:last-child { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.4px; line-height: 1.3; }
+  @media (max-width: 560px) { .stp-ticket { --stub: 78px; } .stp-adm { letter-spacing: 1.4px; } .stp-ticket-big b { font-size: calc(56px + var(--text-size-adjust)); } }
+  .stp--hero { grid-template-columns: minmax(0, 1fr); max-width: 470px; margin: 4px 0 22px; }
+  .stp--hero .stp-item { grid-column: auto; }
+
+  /* average and lately: an index card, red head rule and blue lines */
+  .stp-idx {
+    min-height: 132px; padding: 8px 12px 6px; color: var(--stp-pen); border: 1px solid rgba(43,39,34,.18);
+    background-color: #fbf9f2;
+    background-image: linear-gradient(transparent 27px, #d3878a 27px, #d3878a 28.5px, transparent 28.5px), repeating-linear-gradient(transparent 0 25px, #b9cde0 25px 26px);
+    background-position: 0 0, 0 28px;
+  }
+  .stp-idx .stp-lab { color: var(--stp-soft); height: 21px; }
+  .stp-idx p { margin: 0; font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 26px; }
+  .stp-idx b { font-size: 1.2em; }
+  .stp-up { color: var(--stp-green); } .stp-down { color: var(--stp-red); }
+
+  /* the last twelve: a torn strip of staff paper */
+  .stp-staff {
+    padding: 10px 14px 6px; color: var(--stp-pen); background: #fbf9f2;
+    clip-path: polygon(0 3%, 4% 0, 9% 2.5%, 15% .5%, 22% 3%, 30% .8%, 38% 2.6%, 47% 0, 55% 2.2%, 63% .4%, 72% 2.8%, 80% .6%, 88% 2.4%, 95% 0, 100% 2%, 100% 97%, 94% 100%, 86% 97.6%, 77% 99.6%, 69% 97.4%, 60% 100%, 51% 97.8%, 42% 99.4%, 33% 97.2%, 24% 99.8%, 15% 97.6%, 7% 99.6%, 0 98%);
+  }
+  .stp-staff .stp-lab { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; color: var(--stp-soft); }
+  .stp-staff .stp-lab em { font-style: normal; color: var(--stp-red); }
+  .stp-staff .stp-lab i { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; white-space: nowrap; font-style: normal; text-transform: none; letter-spacing: 0;
+    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); color: var(--stp-pen); }
+  .stp-crotchet { width: 8px; height: 15px; overflow: visible; }
+  .stp-crotchet ellipse { fill: var(--stp-pen); }
+  .stp-crotchet path { fill: none; stroke: var(--stp-pen); stroke-width: 1.2; stroke-linecap: round; }
+  .stp-staff svg:not(.stp-crotchet) { display: block; width: 100%; height: auto; overflow: visible; }
+  .stp-sl { stroke: var(--stp-soft); stroke-width: .9; }
+  .stp-head { fill: var(--stp-pen); }
+  .stp-stem { stroke: var(--stp-pen); stroke-width: 1.3; stroke-linecap: round; }
+  .stp-avg { stroke: var(--stp-red); stroke-width: 1.3; stroke-dasharray: 4 3; }
+  .stp-staff text { font-family: var(--hand); font-size: 13px; fill: var(--stp-soft); text-anchor: middle; }
+  .stp-star { fill: #d9a93a; stroke: #8a6418; stroke-width: .9; stroke-linejoin: round; }
+
+  /* every game by score: pencil on a graph-paper scrap */
+  .stp-graph {
+    padding: 10px 12px 8px; color: var(--stp-pen); border: 1px solid rgba(43,39,34,.14); background-color: #fbfaf5;
+    background-image: linear-gradient(rgba(70,130,160,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(70,130,160,.16) 1px, transparent 1px);
+    background-size: 10px 10px;
+  }
+  .stp-graph .stp-lab { color: var(--stp-soft); }
+  .stp-graph svg { display: block; width: 100%; height: auto; margin-top: 4px; overflow: visible; }
+  .stp-bar { fill: none; stroke: #3f3a33; stroke-width: 1.3; stroke-linejoin: round; stroke-linecap: round; }
+  .stp-hatch { stroke: #3f3a33; stroke-width: .8; opacity: .7; }
+  .stp-hatch.is-you { stroke: var(--stp-red); opacity: .9; }
+  .stp-graph text { text-anchor: middle; }
+  .stp-ax { font-family: var(--type); font-size: 9.5px; fill: var(--stp-soft); }
+  .stp-ct { font-family: var(--hand); font-size: 13px; fill: #3f3a33; }
+  .stp-ct.is-you { fill: var(--stp-red); font-weight: 700; }
+
+  /* the nemesis (or the perfects): a sticky note, which needs no tape */
+  .stp-sticky {
+    min-height: 140px; padding: 14px 12px 12px; color: var(--stp-pen); background-color: #f7e27c;
+    background-image: linear-gradient(rgba(43,39,34,.06), rgba(43,39,34,.06)); background-size: 100% 16px; background-repeat: no-repeat;
+    box-shadow: 0 1px 0 rgba(43,39,34,.08);
+  }
+  .stp-sticky .stp-lab { color: #6b5a1e; }
+  .stp-nem { position: relative; display: inline-block; margin: 10px 0 4px; font-family: var(--hand); font-weight: 700; font-size: calc(36px + var(--text-size-adjust)); line-height: 1; overflow-wrap: anywhere; }
+  .stp-nem svg { position: absolute; inset: -2px -6px; width: calc(100% + 12px); height: calc(100% + 4px); overflow: visible; }
+  .stp-nem path { fill: none; stroke: var(--stp-red); stroke-width: 2.2; stroke-linecap: round; }
+  .stp-nem--gold { color: #8a6418; }
+  .stp-sticky p { margin: 0; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); line-height: 1.25; }
+  /* The editor's squiggle under the way out: the wavy red line that means "look at this
+     again", which is what a missed word is asking for. Hover inks it full. */
+  .stp-look { position: relative; color: var(--stp-red); text-decoration: none; padding-bottom: 4px; white-space: nowrap; }
+  .stp-look::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 5px; background: var(--stp-red); opacity: 0.55;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 5'%3E%3Cpath d='M0 2.6C1.8 0.6 3.4 0.8 4.8 2.8S7.8 4.6 9.4 2.4 12.6 0.4 14.2 2.6 17 4.8 18.8 2.6 21.8 0.2 23.6 2.4 26.8 4.6 28.4 2.8 31.2 0.6 33 2.4 36.2 4.8 37.8 2.6 40.8 0.4 42.4 2.6 45.2 4.6 47 2.6 50.2 0.6 51.8 2.6 54.6 4.4 56.4 2.6 57.6 1.6 58 2.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") left center / 58px 5px repeat-x;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 5'%3E%3Cpath d='M0 2.6C1.8 0.6 3.4 0.8 4.8 2.8S7.8 4.6 9.4 2.4 12.6 0.4 14.2 2.6 17 4.8 18.8 2.6 21.8 0.2 23.6 2.4 26.8 4.6 28.4 2.8 31.2 0.6 33 2.4 36.2 4.8 37.8 2.6 40.8 0.4 42.4 2.6 45.2 4.6 47 2.6 50.2 0.6 51.8 2.6 54.6 4.4 56.4 2.6 57.6 1.6 58 2.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") left center / 58px 5px repeat-x;
+    transition: opacity 0.15s ease;
+  }
+  .stp-look:is(:hover, :focus-visible) { outline: none; }
+  .stp-look:is(:hover, :focus-visible)::after { opacity: 1; }
+  .stp-look .cta-arrow { width: 1.6em; height: .8em; }
+
+  /* the home album: its record sleeve (Track by Track's own art, which brings its own torn
+     edges and dark ground, so it takes no night dim), with a slip tucked under it */
+  .stp-sleeve { position: relative; z-index: 1; }
+  .stp-sleeve-art { box-shadow: 1px 2px 0 rgba(43,39,34,.12); }
+  .stp-slip { position: relative; margin: -6px 6px 0 10px; padding: 10px 10px 8px; color: var(--stp-pen); background: #fdfcf8;
+    border: 1px solid rgba(43,39,34,.14); transform: rotate(-2.6deg); font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.12; }
+  .stp-slip .stp-lab { display: block; color: var(--stp-soft); margin-bottom: 3px; }
+  .stp-slip b { display: block; }
+  .stp-slip > span:last-child { font-size: .9em; color: var(--stp-soft); }
+  .stp-solo .stp-slip { margin-inline: 14px; }
+
+  /* the quick numbers: label-maker tape, which sticks itself */
+  .stp-dymo { display: flex; flex-wrap: wrap; gap: 12px 10px; align-content: flex-start; padding-top: 2px; }
+  .stp-dy {
+    display: inline-block; padding: 5px 10px 4px; color: #f6f1e4; background: #23406b; border-radius: 2px;
+    font-family: var(--type); font-weight: 700; font-size: calc(13px + var(--text-size-adjust)); line-height: 1.1; letter-spacing: 2.2px; text-transform: uppercase;
+    transform: rotate(var(--r, 0deg)); clip-path: polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%);
+  }
+  .stp-dy--1 { background: #2b2722; } .stp-dy--2 { background: #8c2f2a; } .stp-dy--3 { background: #2f5a3f; }
+  /* black tape on the night page is a hole in it: lifted to the pale side of graphite, as the nav cards' graphite is */
+  :root[data-theme="dark"] .stp-dy--1 { background: #57514a; }
+
+  /* songs found: a paint-chip card, a chip an album filled to what you've found */
+  .stp-chips { padding: 12px 12px 10px; color: var(--stp-pen); background: #fdfcf8; border: 1px solid rgba(43,39,34,.14); }
+  .stp-chips-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
+  .stp-chips-hd b { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; }
+  .stp-chips-hd span { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--stp-soft); }
+  .stp-door { border: 0; background: none; padding: 2px 0; cursor: pointer; color: var(--stp-red); font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); }
+  .stp-door:is(:hover, :focus-visible) { text-decoration: underline; text-underline-offset: 3px; outline: none; }
+  .stp-door .cta-arrow { width: 1.4em; height: .7em; vertical-align: -0.05em; }
+  .stp-chip-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px 6px; }
+  @media (max-width: 560px) { .stp-chip-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .stp-sw { position: relative; height: 40px; background: color-mix(in srgb, var(--c) 18%, #fdfcf8); border: 1px solid rgba(43,39,34,.18); }
+  .stp-sw i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--c); }
+  .stp-nm { margin-top: 4px; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 0; text-transform: uppercase; color: var(--stp-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stp-ct2 { font-family: var(--hand); font-weight: 700; font-size: calc(14px + var(--text-size-adjust)); line-height: 1; }
+
+  /* the daily: the streak as a strip of raffle tickets, each a way back to its day */
+  .stp-raffle-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 9px;
+    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-soft); }
+  .stp-raffle-hd b { color: var(--ink); font-size: 1.3em; }
+  .stp-raffle-hd .stp-done { color: var(--green-pen); }
+  .stp-strip { display: flex; align-items: center; transform: rotate(-.8deg); transform-origin: left center; }
+  .stp-rt {
+    flex: 0 0 auto; width: 44px; height: 56px; padding: 0; cursor: pointer; color: var(--stp-pen);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    background: #ecb2b5; border: 1.2px solid rgba(43,39,34,.4); border-right: 1.5px dashed rgba(43,39,34,.45);
+    transition: transform .15s ease;
+  }
+  .stp-rt:last-child { border-right: 1.2px solid rgba(43,39,34,.4); }
+  .stp-rt.is-perfect { background: #ecd17a; }
+  .stp-rt:is(:hover, :focus-visible) { transform: translateY(-3px); outline: none; }
+  .stp-rt:focus-visible { box-shadow: 0 0 0 2px var(--ink-accent); }
+  .stp-rt-m { font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 1px; }
+  .stp-rt-d { font-family: var(--type); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1; }
+  .stp-rt-more { flex: none; padding-right: 8px; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); }
+
+  /* the calendar keeps its marker X's, on a sheet of its own taped in under the strip */
+  .stp-cal { padding: 6px 10px 4px; background: var(--paper); border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent); box-shadow: 1px 2px 0 rgba(43,39,34,.06); }
+
+  .stp-empty { margin: 0 0 4px; font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); line-height: 1.3; color: var(--ink-soft); }
+  .stp-empty + .empty-cta { margin-left: 0; }
   .streak-row {
     display: flex; gap: 0; border: 1.5px solid rgba(43,39,34,0.12);
     border-radius: 2px; margin-bottom: 22px;
@@ -11217,83 +11368,9 @@
      once the streak passed whatever the little drawing could hold. */
   .streak-cell .stat-val { font-family: var(--hand); font-size: calc(42px + var(--text-size-adjust)); font-weight: 700; color: var(--ink-accent); line-height: 1; display: block; }
   .streak-cell .stat-lbl { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); display: block; margin-top: 4px; text-transform: uppercase; }
-  /* "By the numbers" — a notebook bento: accuracy ring + album-spine meter,
-     quick-stat tiles, daily footer. Cards are transparent over the ruled paper. */
-  .num-card {
-    border: 1.5px solid rgba(43,39,34,0.14); border-radius: 3px;
-    padding: 13px 15px; position: relative;
-  }
-  .num-lbl {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--ink-soft);
-  }
-  .num-sub {
-    display: block; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px;
-    text-transform: uppercase; color: var(--ink-soft); line-height: 1.4;
-  }
-  .num-val {
-    display: block; font-family: var(--hand); font-weight: 700; font-size: calc(34px + var(--text-size-adjust));
-    line-height: 1; color: var(--ink);
-  }
-  .num-val-md { font-size: calc(30px + var(--text-size-adjust)); }
-  .num-gold { color: var(--ink-accent); }
-  .num-ico {
-    display: inline-block; width: 19px; height: 19px;
-    color: var(--ink-soft); opacity: 0.7;
-  }
-  .num-ico svg { width: 100%; height: 100%; display: block; }
-  .num-ico-lg { width: 22px; height: 22px; }
-  .num-ico-gold { color: var(--ink-accent); opacity: 1; }
-  .num-hero-row {
-    display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; margin-bottom: 12px;
-  }
-  .num-acc { display: flex; align-items: center; gap: 16px; }
-  .num-ring { position: relative; width: 92px; height: 92px; flex: none; }
-  .num-ring svg { width: 100%; height: 100%; display: block; }
-  .num-ring-track { fill: none; stroke: rgba(43,39,34,0.13); stroke-width: 11; }
-  .num-ring-arc {
-    fill: none; stroke: var(--ink-accent); stroke-width: 11; stroke-linecap: round;
-    transition: stroke-dashoffset 0.6s cubic-bezier(0.2,0.7,0.2,1);
-  }
-  .num-ring-val {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-family: var(--hand); font-weight: 700; color: var(--ink);
-  }
-  .num-ring-val b { font-size: calc(38px + var(--text-size-adjust)); line-height: 1; }
-  .num-ring-val span { font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .num-albums { display: flex; flex-direction: column; justify-content: center; }
-  .num-albums-head {
-    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 11px;
-  }
-  .num-count { font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); color: var(--ink); line-height: 1; }
-  .num-count i { font-style: normal; font-size: calc(17px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .num-spines { display: flex; gap: 3px; align-items: flex-end; height: 38px; }
-  .num-spine { flex: 1; height: 100%; border-radius: 1px; }
-  .num-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
-  .num-tile { text-align: center; }
-  .num-tile .num-ico { margin-bottom: 2px; }
-  .num-tile .num-val { margin: 2px 0 3px; }
-  .num-daily { display: flex; justify-content: space-around; align-items: center; margin-bottom: 22px; }
-  .num-daily-item { display: flex; align-items: center; gap: 12px; }
-  .num-daily-div { width: 1px; height: 46px; background: rgba(43,39,34,0.12); }
   .histogram-label {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink-soft); text-transform: uppercase; margin-bottom: 10px;
-  }
-  .histogram {
-    display: flex; align-items: flex-end; gap: 4px;
-    height: 64px; margin-bottom: 4px;
-  }
-  .histogram-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-  .histogram-bar {
-    width: 100%; background: var(--bead); opacity: 0.5; border-radius: 1px;
-    min-height: 2px; transition: height 0.3s ease, opacity 0.15s ease, filter 0.15s ease;
-  }
-  .histogram-bar.has-you { opacity: 0.9; }
-  .histogram-col:hover .histogram-bar { opacity: 1; filter: brightness(0.8); }
-  .histogram-score {
-    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: var(--ink-soft);
-    text-align: center; line-height: 1;
   }
   .stats-empty {
     font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); color: var(--ink-soft);
@@ -11310,13 +11387,7 @@
   }
   .empty-cta:hover { color: var(--ink); }
   .empty-cta:focus-visible { color: var(--ink); outline: 1.5px solid var(--ink-accent); outline-offset: 3px; }
-  /* lifetime catalogue stats — hero meter + keepsake cards + circled nemesis */
-  .cat-wrap { margin-bottom: 22px; }
-  .cat-label {  /* shared type label: small uppercase typewriter */
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
-    color: var(--ink-soft); text-transform: uppercase;
-  }
-  /* hero: songs discovered */
+  /* the progress meter the charms page and the songbook share */
   .cat-meter {
     border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px;
     padding: 14px 16px 16px; margin-bottom: 12px;
@@ -11333,18 +11404,6 @@
     background: rgba(43,39,34,0.10);
   }
   .cat-seg { height: 100%; }
-  /* the songs-discovered meter doubles as a button into the songbook */
-  .cat-meter--btn {
-    display: block; width: 100%; text-align: left; cursor: pointer;
-    background: var(--page-wash); font: inherit; color: inherit;
-    transition: border-color 0.15s ease, background 0.15s ease;
-  }
-  .cat-meter--btn:hover { border-color: rgba(43,39,34,0.3); background: rgba(212,160,23,0.08); }
-  .cat-meter--btn:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
-  .cat-meter-cta {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px;
-    color: var(--ink-accent); margin-top: 9px;
-  }
   /* The drawn arrow on every "go on" control, sized in em so it follows the type, and hung off
      the BASELINE rather than centred in the line box, which sits about 2px under the letters.
      The drawing's middle (the head's, y 5.15 of 10) stands 0.485 of the box above its foot, so
@@ -11368,104 +11427,12 @@
   .btn-link.armed .back-arrow { display: none; }
   /* spaced by margin inside the run, matching the gap the flex row used to give it */
   .cta-run .cta-arrow { margin-left: 0.5em; }
-  /* two keepsake cards */
-  .cat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .cat-card {
-    border: 1.5px solid rgba(43,39,34,0.12); border-left: 4px solid var(--ink-soft);
-    border-radius: 0 3px 3px 0; padding: 11px 13px; min-width: 0;
-  }
-  .cat-card-head {
-    display: flex; align-items: center; gap: 6px; margin-bottom: 3px;
-    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1px;
-    color: var(--ink-soft); text-transform: uppercase;
-  }
-  .cat-star { width: 15px; height: 15px; flex: none; color: var(--bead); }
-  .cat-star svg { width: 100%; height: 100%; display: block; }
-  .cat-dot { width: 11px; height: 11px; flex: none; border-radius: 50%; }
-  .cat-card-val {
-    font-family: var(--hand); font-weight: 700; font-size: calc(25px + var(--text-size-adjust)); line-height: 1.05;
-    color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .cat-card-sub {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px;
-    text-transform: uppercase; margin-top: 3px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  /* nemesis word, circled in red pen */
-  .cat-nemesis {
-    border: 1.5px solid rgba(43,39,34,0.12); border-radius: 3px;
-    padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  }
-  /* The red here is the editor's pen and always was — it was just spelled out as a literal,
-     which is the "tinted rather than tokenised" trap: on the night page it measured 1.7:1 and
-     the nemesis line and its link were all but gone. --red-pen is the token for exactly this,
-     "solid ink, for text you must be able to read", and composites to within a shade of the
-     old literal by day, so the swap is a fix at night and a no-op by day. */
-  .cat-nemesis-sub { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--red-pen); }
-  /* The editor's squiggle under it: the wavy red line that means "look at this again", which
-     is what a missed word is asking for. Hover inks it full. */
-  .cat-search-link { position: relative; color: inherit; text-decoration: none; padding-bottom: 4px; white-space: nowrap; }
-  .cat-search-link::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 5px; background: var(--red-pen); opacity: 0.55;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 5'%3E%3Cpath d='M0 2.6C1.8 0.6 3.4 0.8 4.8 2.8S7.8 4.6 9.4 2.4 12.6 0.4 14.2 2.6 17 4.8 18.8 2.6 21.8 0.2 23.6 2.4 26.8 4.6 28.4 2.8 31.2 0.6 33 2.4 36.2 4.8 37.8 2.6 40.8 0.4 42.4 2.6 45.2 4.6 47 2.6 50.2 0.6 51.8 2.6 54.6 4.4 56.4 2.6 57.6 1.6 58 2.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") left center / 58px 5px repeat-x;
-            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 58 5'%3E%3Cpath d='M0 2.6C1.8 0.6 3.4 0.8 4.8 2.8S7.8 4.6 9.4 2.4 12.6 0.4 14.2 2.6 17 4.8 18.8 2.6 21.8 0.2 23.6 2.4 26.8 4.6 28.4 2.8 31.2 0.6 33 2.4 36.2 4.8 37.8 2.6 40.8 0.4 42.4 2.6 45.2 4.6 47 2.6 50.2 0.6 51.8 2.6 54.6 4.4 56.4 2.6 57.6 1.6 58 2.4' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") left center / 58px 5px repeat-x;
-    transition: opacity 0.15s ease;
-  }
-  .cat-search-link:is(:hover, :focus-visible) { color: color-mix(in srgb, var(--red-pen) 78%, var(--ink)); outline: none; }
-  .cat-search-link:is(:hover, :focus-visible)::after { opacity: 1; }
-  .cat-nemesis-word { position: relative; padding: 4px 10px; flex: none; }
-  .cat-nemesis-word span {
-    font-family: var(--hand); font-weight: 700; font-size: calc(34px + var(--text-size-adjust));
-    color: var(--ink); position: relative; z-index: 1;
-  }
-  .cat-nemesis-word svg {
-    position: absolute; inset: -4px -2px;
-    width: calc(100% + 4px); height: calc(100% + 8px); overflow: visible;
-  }
-  /* "from memory" verse-bonus tally, paired beside the nemesis word */
-  .cat-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
-  .cat-pair .cat-nemesis { margin: 0; }
-  .cat-frommemory {
-    border: 1.5px solid rgba(43,39,34,0.12); border-left: 4px solid var(--bead);
-    border-radius: 0 3px 3px 0; padding: 12px 16px;
-    display: flex; flex-direction: column; justify-content: center; min-width: 0;
-  }
-  .cat-fm-val {
-    font-family: var(--hand); font-weight: 700; font-size: calc(34px + var(--text-size-adjust)); line-height: 1.05; color: var(--ink);
-  }
-  .cat-fm-sub {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px;
-    text-transform: uppercase; color: var(--ink-soft); margin-top: 3px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  /* infinite-mode tab — a pen-circled longest run over one strand per played combo.
+  /* infinite-mode tab: the longest run kept on a ticket stub (the .stp stock above), then one strand per played combo.
      Every strand shares a scale (js sets the pitch), so length is the comparison and
      the numbers are only labels for it. No table: rows only exist where a run does. */
   /* Ruling and hairlines, tokenised so the dark page gets light lines instead of ink ones. */
-  .inf-group, .inf-hero { --inf-line: rgba(43,39,34,0.08); --inf-line-strong: rgba(43,39,34,0.14); }
-  :root[data-theme="dark"] .inf-group,
-  :root[data-theme="dark"] .inf-hero { --inf-line: rgba(236,229,214,0.10); --inf-line-strong: rgba(236,229,214,0.18); }
-  .inf-hero {
-    display: flex; align-items: center; gap: 16px;
-    border-bottom: 1.5px solid var(--inf-line-strong);
-    padding-bottom: 14px; margin-bottom: 16px;
-  }
-  /* The number itself is the object — circled the way you'd ring a figure on paper,
-     not set in a filled disc. Two strokes, neither of them closed, never mirrored. */
-  .inf-best { position: relative; flex: none; width: 108px; height: 70px; display: grid; place-items: center; }
-  .inf-best-ring {
-    position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
-    fill: none; stroke: #b23a3a; stroke-width: 1.7; stroke-linecap: round;
-    stroke-dasharray: 300; stroke-dashoffset: 0; opacity: 0.85;
-  }
-  .inf-best-ring path { stroke-width: 1.2; opacity: 0.6; }
-  .inf-best b {
-    position: relative; font-family: var(--hand); font-weight: 700;
-    font-size: calc(52px + var(--text-size-adjust)); line-height: 1; color: var(--ink);
-  }
-  .inf-hero-title { font-family: var(--hand); font-size: calc(30px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
-  .inf-hero-sub { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 6px; }
-
+  .inf-group { --inf-line: rgba(43,39,34,0.08); --inf-line-strong: rgba(43,39,34,0.14); }
+  :root[data-theme="dark"] .inf-group { --inf-line: rgba(236,229,214,0.10); --inf-line-strong: rgba(236,229,214,0.18); }
   .inf-group { margin-bottom: 18px; }
   .inf-group-h {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1px;
@@ -11521,8 +11488,6 @@
     .inf-row-games { grid-area: g; align-self: end; padding-bottom: 3px; }
     .inf-row-games::before { content: "·"; margin-right: 5px; opacity: 0.5; }
     .inf-row-strand { grid-area: s; }
-    .inf-best { width: 92px; height: 62px; }
-    .inf-best b { font-size: calc(44px + var(--text-size-adjust)); }
   }
 
   /* ---------- Easter eggs (Phase 8) ---------- */
@@ -13533,7 +13498,8 @@
   .see-also:not(.see-also--row) > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
   /* ===== Shared washi-tape surface ==============================================
      One look, reused everywhere the site shows sticky tape: the nav keepsake cards
-     (.nav-tape, injected by app.js), the Records page personal-best tiles
+     (.nav-tape, injected by app.js), the Stats page's taped-in pieces (.stp-tape), the Records
+     page personal-best tiles
      (.pb-tile::before), the bonus-run sleeve (.bg-back::before), the pause card, the
      polaroids, the milestone sticky and the in-game suggestion dropdown
      (.dropdown .item::before). It is deliberately PLAIN: a frosted translucent base with a
@@ -13559,6 +13525,7 @@
   .pol-tape,
   .ms-tape,
   .run-pause-tape,
+  .stp-tape,
   .pb-tile::before,
   .bg-back::before,
   .dropdown .item::before {
@@ -13592,7 +13559,7 @@
      is what keeps a strip recognisable as the same piece of tape it was by day. The edge goes
      quieter still than by day, for the same reason: any bright hairline on a dark strip is
      just a bright line. */
-  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape,
+  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape, .stp-tape,
                                .pb-tile::before, .bg-back::before, .dropdown .item::before) {
     background:
       linear-gradient(102deg,
@@ -14834,8 +14801,7 @@
   body[data-reduce-motion="on"] .page-flip-sheet { display: none; }
   body[data-reduce-motion="on"] .card,
   body[data-reduce-motion="on"] .timer-fill,
-  body[data-reduce-motion="on"] .word::before,
-  body[data-reduce-motion="on"] .histogram-bar { transition: none; }
+  body[data-reduce-motion="on"] .word::before { transition: none; }
   /* easter eggs: show statically, no motion */
   body[data-reduce-motion="on"] .doodle,
   body[data-reduce-motion="on"] .doodle-note { animation: none; opacity: 0.5; }

@@ -2065,10 +2065,10 @@ function defaultStatsView() {
   if (d && d !== "last" && MODES[d]) return d;
   return currentMode.id;
 }
-// Recent run scores for the "recent form" sparkline (oldest→newest, capped).
+// Recent run scores for the Stats page's staff-paper strip (oldest→newest, capped).
 // All tab = every classic run; a mode tab = that mode's runs. Daily/Infinite use
 // different score scales, so they're excluded — the same scope as the All
-// histogram, which sums only the classic difficulty boards.
+// distribution, which sums only the classic difficulty boards.
 function recentScores(viewMode, cap = 12) {
   const picked = loadHistory().filter((e) =>
     viewMode === "all" ? e.t === "classic" : e.m === viewMode);
@@ -2076,7 +2076,7 @@ function recentScores(viewMode, cap = 12) {
 }
 // Rolling "forgiving form" average — the mean score of the last `cap` games for
 // this view (TypeRacer-style, so a bad month stops haunting the number). Same
-// scope as recentScores/the histogram (All = classic runs, a mode tab = that
+// scope as recentScores/the distribution (All = classic runs, a mode tab = that
 // mode); includes hinted runs, which is fine for recent *form*. Returns the
 // average and the actual sample size (< cap when there aren't `cap` games yet),
 // so the label can read "last 8" honestly instead of padding.
@@ -2088,21 +2088,6 @@ function recentAverage(viewMode, cap = 20) {
   if (n === 0) return { avg: null, n: 0 };
   return { avg: window.reduce((a, e) => a + e.s, 0) / n, n };
 }
-// A small hand-inked sparkline of recent scores (0–TOTAL_ROUNDS), with a dotted
-// baseline at the window's average and a filled dot on the latest game.
-function sparklineSVG(scores) {
-  const W = 360, H = 40, pad = 6, top = 6, bot = 34, n = scores.length;
-  const x = (i) => n === 1 ? W / 2 : pad + (i * (W - pad * 2)) / (n - 1);
-  const y = (v) => bot - (Math.min(v, TOTAL_ROUNDS) / TOTAL_ROUNDS) * (bot - top);
-  const pts = scores.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  const avg = scores.reduce((a, b) => a + b, 0) / n;
-  const ay = y(avg).toFixed(1), lx = x(n - 1).toFixed(1), ly = y(scores[n - 1]).toFixed(1);
-  return `<svg class="form-spark" viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" aria-hidden="true">
-    <line x1="0" y1="${ay}" x2="${W}" y2="${ay}" class="form-base"/>
-    <polyline points="${pts}" class="form-line"/>
-    <circle cx="${lx}" cy="${ly}" r="3.6" class="form-dot"/>
-  </svg>`;
-}
 // Last difficulty viewed under the Classic tier this session — so re-clicking
 // "Classic" (after a detour through All/Infinite) returns there, not to the
 // active play mode. Falls back to currentMode.id until a difficulty is opened.
@@ -2113,7 +2098,7 @@ let lastStatsDifficulty = null;
 function playCTA(label = "start writing") {
   return `<button type="button" class="empty-cta" data-go-play>${label} ${CTA_ARROW}</button>`;
 }
-// The hand-drawn arrow on the two catalogue buttons (the Stats meter and the charm quest), which
+// The hand-drawn arrow on the two catalogue buttons (the Stats paint chips and the charm quest), which
 // both open the songbook. Drawn rather than typed so it sits on the type line's middle instead
 // of wherever Caveat's arrow glyph happens to land; the head's two strokes are deliberately unequal.
 // It is also THE right-pointing arrow: every "go on" control in the game draws this one rather
@@ -2178,7 +2163,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     : "";
   const tabs = tier1 + tier2;
 
-  // Infinite is its own game type — its own headline + ledger, not the 0–13 histogram.
+  // Infinite is its own game type, with its own ticket and strands, not the 0–13 distribution.
   if (isInf) {
     el.innerHTML = tabs + infiniteTabHTML();
     el.querySelectorAll("[data-statmode]").forEach((b) =>
@@ -2186,65 +2171,10 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     return;
   }
 
+  // Everything below the tabs is the taped-in spread (statsBoardHTML). The lifetime pieces
+  // (the catalogue, the quick numbers, the daily) are All only, as they always were.
   const s = isAll ? aggregateStats() : loadStats(viewMode);
-  let body;
-  if (s.played === 0) {
-    body = (isAll
-      ? `<p class="stats-empty">no games yet. start writing!</p>`
-      : `<p class="stats-empty">no games yet in ${MODES[viewMode].label}. start writing!</p>`) + playCTA();
-  } else {
-    const avg = (s.totalScore / s.played).toFixed(1);
-    const maxCount = Math.max(...s.scoreCounts, 1);
-    // highlight the just-played bar on the mode that was played (and always in the All view)
-    const youScore = (isAll || viewMode === currentMode.id) ? lastScore : null;
-    const bars = s.scoreCounts.map((count, score) => {
-      const h = Math.round((count / maxCount) * 56);
-      const isYou = (score === youScore);
-      const tip = `scored ${score}/${TOTAL_ROUNDS} · ${count} time${count === 1 ? "" : "s"}`;
-      return `<div class="histogram-col" data-tip="${tip}">
-        <div class="histogram-bar${isYou ? " has-you" : ""}" style="height:${Math.max(h, count > 0 ? 4 : 2)}px"></div>
-        <div class="histogram-score">${score}</div>
-      </div>`;
-    }).join("");
-    // Best correct-in-a-row (lifetime, per mode; max across modes in the All view) +
-    // perfect-game count. Same two cells for every tab.
-    // "By the numbers" header (design E): three primaries on top, then a
-    // recent-form sparkline beside the secondary stats (best-in-a-row, perfect).
-    const recent = recentScores(viewMode);
-    const formPanel = recent.length >= 2
-      ? sparklineSVG(recent)
-      : `<span class="statE-form-empty">(more games will draw your form)</span>`;
-    const star = `<span class="statE-star">${STAR_SVG}</span>`;
-    // Rolling "forgiving form" — last-20 average, sitting beside the lifetime
-    // best/average so a gentle current number reads against the aspirational one.
-    const form = recentAverage(viewMode);
-    const formChip = form.avg === null
-      ? `<div class="statE-cell"><span class="statE-val statE-accent">–</span><span class="statE-lbl">Recent</span></div>`
-      : `<div class="statE-cell"><span class="statE-val statE-accent">${form.avg.toFixed(1)}</span><span class="statE-lbl">Last ${form.n}</span></div>`;
-    body = `
-      <div class="statE-top">
-        <div class="statE-cell"><span class="statE-val">${s.played}</span><span class="statE-lbl">Played</span></div>
-        <div class="statE-cell"><span class="statE-val statE-best">${s.best}</span>${star}<span class="statE-lbl">Best</span></div>
-        <div class="statE-cell"><span class="statE-val">${avg}</span><span class="statE-lbl">Average</span></div>
-      </div>
-      <div class="statE-form">
-        <div class="statE-form-spark">
-          <span class="statE-lbl statE-form-lbl">recent form${recent.length >= 2 ? " · last " + recent.length : ""}</span>
-          ${formPanel}
-        </div>
-        <div class="statE-chips">
-          ${formChip}
-          <div class="statE-cell"><span class="statE-val statE-accent">${s.bestInRow || 0}</span><span class="statE-lbl">In a row</span></div>
-          <div class="statE-cell"><span class="statE-val statE-accent">${s.scoreCounts[TOTAL_ROUNDS] || 0}</span>${star}<span class="statE-lbl">Perfect</span></div>
-        </div>
-      </div>
-      <p class="histogram-label">score distribution</p>
-      <div class="histogram">${bars}</div>`;
-  }
-
-  // Catalogue, lifetime numbers + daily streak are lifetime summaries — All tab only.
-  if (isAll) body += extraStatsHTML() + lifetimeStatsHTML() + dailyStatsHTML();
-  el.innerHTML = tabs + body;
+  el.innerHTML = tabs + statsBoardHTML(s, viewMode, isAll, lastScore);
   el.querySelectorAll("[data-statmode]").forEach((b) =>
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
   el.querySelectorAll("[data-open-songbook]").forEach((b) =>
@@ -2273,118 +2203,247 @@ function albumOfTitle(title) {
   return s ? (s.album || null) : null;
 }
 
-// Display name for an album — long titles that overflow the keepsake cards get a
-// short form (e.g. "The Tortured Poets Department" → "TTPD").
-function albumDisplayName(name) {
-  return name === "The Tortured Poets Department" ? "TTPD" : name;
+/* ---------- Stats, taped in ----------
+   The page is a scrapbook spread, not a dashboard. It used to be one: KPI tiles, a donut, a
+   sparkline, a bar chart, progress bars and bordered cards, which are the parts every analytics
+   screen is built from and the reason it read as an app rather than a notebook. Now every
+   number is stuck into the notebook on the object it would really be written on, and each
+   object says something about its number:
+     the best score       a ticket stub, kept; its serial is how many games that took
+     average · lately     an index card ("the gist")
+     the last twelve      a torn strip of staff paper, a note a game, pitched by score
+     the distribution     pencil-hatched bars on a graph-paper scrap
+     the nemesis          a sticky note you would leave yourself (perfects, where there is none)
+     the home album       its record sleeve (Track by Track's), the most-sung song on a slip
+     the quick numbers    label-maker tape
+     songs found          a paint-chip card, a chip an album, each filled to what you've found
+     the daily streak     a strip of raffle tickets, gold for a perfect day
+   and the calendar keeps its marker X's on a sheet taped in beneath.
+
+   THE TAPE IS THE HOME SCREEN'S. Same shared washi surface (.stp-tape is on that rule in
+   styles.css, day and night), the same six baked tears (TORN_EDGES), one placement per object
+   that never re-dices, all on the stats card's own denim, so the page is taped down with the
+   roll its nav card was. Sticky notes and label tape carry no strip: they stick themselves.
+
+   The paper objects are physical things in fixed stock, so they write in fixed ink, never
+   var(--ink), and at night they are taken down a stop the way the polaroids are, never
+   repainted. The strips sit outside the dimmed element, because a filter must never reach
+   a strip of tape (see the shared washi rule). */
+const STATS_TAPE = {
+  ticket:   [{ left: "44%", top: "-9px", rot: -3, w: 54, tear: 1 }],
+  gist:     [{ right: "-9px", top: "-6px", rot: 38, w: 50, tear: 2 }],
+  staff:    [{ left: "-7px", top: "-6px", rot: -32, w: 50, tear: 0 }, { right: "-7px", top: "-5px", rot: 30, w: 52, tear: 3 }],
+  graph:    [{ left: "-9px", top: "-6px", rot: -40, w: 52, tear: 4 }],
+  sleeve:   [{ left: "50%", tx: "-50%", top: "-9px", rot: 4, w: 48, tear: 5 }],
+  chips:    [{ left: "50%", tx: "-50%", top: "-9px", rot: -2, w: 56, tear: 1 }],
+  cal:      [{ left: "-9px", top: "-6px", rot: -38, w: 52, tear: 3 }, { right: "-9px", top: "-6px", rot: 40, w: 54, tear: 0 }],
+};
+function statsTape(key) {
+  return (STATS_TAPE[key] || []).map((s) =>
+    `<span class="stp-tape" aria-hidden="true" style="${s.left ? `left:${s.left};` : ""}${s.right ? `right:${s.right};` : ""}` +
+    `top:${s.top};width:${s.w}px;transform:translateX(${s.tx || "0"}) rotate(${s.rot}deg);clip-path:${TORN_EDGES[s.tear]}"></span>`).join("");
+}
+// Short names for the paint chips, where a full album title would not fit under a chip.
+const STATS_ALBUM_SHORT = {
+  "The Tortured Poets Department": "TTPD", "The Life of a Showgirl": "Showgirl",
+  "Holiday Collection": "Holiday", "Songs From Movies": "Films",
+  "Written for Others": "For others", "Collaborations": "Collabs",
+};
+// The page's inner width, for sizing the drawn pieces before the screen is shown (it is
+// rendered while still hidden, so it cannot always be measured). Coarse on purpose: the
+// drawings scale to their box either way; this only decides how much room to draw in.
+function statsInnerWidth() {
+  const w = $("statsBody")?.clientWidth;
+  if (w) return w;
+  const vw = window.innerWidth || 700;
+  return vw <= 560 ? Math.max(260, vw - 64) : Math.min(660, vw - 36) - 88;
+}
+const pad3 = (n) => (n < 1000 ? String(n).padStart(3, "0") : String(n));
+const fmtN = (n) => n.toLocaleString("en-GB");
+
+function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip }) {
+  return `<div class="stp-item stp-w4 stp-o0" style="--r:-1.2deg">${statsTape("ticket")}` +
+    `<div class="stp-ticket"${tip ? ` role="img" aria-label="${tip}"` : ""}><div class="stp-ticket-main">` +
+    `<div class="stp-adm">ADMIT ONE${kicker ? ` · ${kicker}` : ""}</div>` +
+    `<div class="stp-ticket-big"><b>${value}</b><span>${unit}</span></div><div class="stp-ticket-line">${line}</div></div>` +
+    `<div class="stp-ticket-stub"><span class="stp-stub-no">NO.</span><b>${serial}</b><span>${serialLabel}</span></div></div></div>`;
 }
 
-// Lifetime catalogue stats — global (not per-mode), drawn from the per-song/per-word
-// tally written in endGame. Shows under every Stats tab, like the daily streak.
-// Three zones: a hero "songs discovered" meter (filled portion split into album-colour
-// segments), two album-tinted keepsake cards, and a red-pen-circled nemesis word.
-function lifetimeStatsHTML() {
-  const t = loadSongTally();
+/* The last twelve as notes on a stave: a line or a space per score, 1 on the low ledger, 11
+   on the top line, 13 above it with a star, and the average as a red dashed line across. */
+const STAFF_NOTE = `<svg class="stp-crotchet" viewBox="0 0 9 16" aria-hidden="true"><ellipse cx="3.6" cy="12.6" rx="3.3" ry="2.4" transform="rotate(-20 3.6 12.6)"/><path d="M6.6 12.2 L6.7 1.4"/></svg>`;
+function statsStaffSVG(recent, avg, W) {
+  const n = recent.length, H = 96, x0 = 24, step = n > 1 ? (W - x0 - 16) / (n - 1) : 0;
+  const y = (s) => 78 - s * 4;   // 12 units of headroom so a 13's star stays on the strip
+  const r = mulberry32(recent.reduce((a, s, i) => a + s * (i + 7), 3));
+  let out = avg != null ? `<line class="stp-avg" x1="0" x2="${W}" y1="${y(avg).toFixed(1)}" y2="${y(avg).toFixed(1)}"/>` : "";
+  for (const ly of [34, 42, 50, 58, 66]) out += `<line class="stp-sl" x1="0" x2="${W}" y1="${ly}" y2="${ly}"/>`;
+  recent.forEach((s, i) => {
+    const cx = n > 1 ? x0 + i * step : W / 2, cy = y(s);
+    for (let ly = 74; ly <= cy + 1; ly += 8) out += `<line class="stp-sl" x1="${(cx - 8).toFixed(1)}" x2="${(cx + 8).toFixed(1)}" y1="${ly}" y2="${ly}"/>`;
+    for (let ly = 26; ly >= cy - 1; ly -= 8) out += `<line class="stp-sl" x1="${(cx - 8).toFixed(1)}" x2="${(cx + 8).toFixed(1)}" y1="${ly}" y2="${ly}"/>`;
+    out += `<ellipse class="stp-head" cx="${cx.toFixed(1)}" cy="${cy}" rx="5" ry="3.6" transform="rotate(-20 ${cx.toFixed(1)} ${cy})"/>`;
+    const up = s < 7, sx = up ? cx + 4.4 : cx - 4.4;
+    out += `<line class="stp-stem" x1="${sx.toFixed(1)}" x2="${(sx + (r() - .5) * .7).toFixed(1)}" y1="${cy + (up ? -1 : 1)}" y2="${cy + (up ? -24 : 24)}"/>`;
+    out += `<text x="${cx.toFixed(1)}" y="${up ? cy + 15 : cy - 9}">${s}</text>`;
+    if (s === TOTAL_ROUNDS) {
+      let d = "";
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 2.3 : 5.2; d += (k ? "L" : "M") + (cx + Math.cos(a) * rr).toFixed(1) + " " + (cy - 22 + Math.sin(a) * rr).toFixed(1); }
+      out += `<path class="stp-star" d="${d}Z"/>`;
+    }
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${out}</svg>`;
+}
+
+/* Every game by score, in pencil: hatched bars on graph paper with the count written over
+   each, the just-played score (from a results screen) hatched in red pen. */
+function statsGraphSVG(counts, youScore, W) {
+  const H = 122, base = 98, max = Math.max(...counts, 1), bw = (W - 16) / 14;
+  let out = "";
+  counts.forEach((c, s) => {
+    const h = (c / max) * 74, x = 8 + s * bw + 2.5, w = bw - 5, r = mulberry32(s * 31 + c + 1), you = s === youScore && c > 0;
+    if (c) {
+      const j = () => (r() - .5) * 1.2;
+      out += `<path class="stp-bar" d="M${(x + j()).toFixed(1)} ${base} L${(x + j()).toFixed(1)} ${(base - h).toFixed(1)} L${(x + w + j()).toFixed(1)} ${(base - h + j()).toFixed(1)} L${(x + w + j()).toFixed(1)} ${base}"/>`;
+      for (let hy = base - 4; hy > base - h + 2.5; hy -= 5) out += `<line class="stp-hatch${you ? " is-you" : ""}" x1="${(x + 1.5).toFixed(1)}" y1="${hy.toFixed(1)}" x2="${(x + w - 1.5).toFixed(1)}" y2="${(hy - 3.5).toFixed(1)}"/>`;
+      out += `<text class="stp-ct${you ? " is-you" : ""}" x="${(x + w / 2).toFixed(1)}" y="${(base - h - 4).toFixed(1)}">${c}</text>`;
+    }
+    out += `<text class="stp-ax" x="${(x + w / 2).toFixed(1)}" y="${base + 13}">${s}</text>`;
+  });
+  out += `<path class="stp-bar" d="M4 ${base} C${(W / 3).toFixed(0)} ${base + .8} ${(W * .66).toFixed(0)} ${base - .6} ${W - 4} ${base + .4}"/>`;
+  if (youScore != null && counts[youScore]) out += `<text class="stp-ct is-you" x="${(8 + youScore * bw + bw / 2).toFixed(1)}" y="${base + 24}">this game</text>`;
+  return `<svg viewBox="0 0 ${W} ${H + (youScore != null ? 4 : 0)}" aria-hidden="true">${out}</svg>`;
+}
+
+// The pieces every view shares: ticket, the gist, the stave, the graph and a sticky note.
+function statsGameHTML(s, viewMode, isAll, lastScore, W) {
+  const avg = s.totalScore / s.played;
+  const perfect = s.scoreCounts[TOTAL_ROUNDS] || 0;
+  const recent = recentScores(viewMode);
+  const form = recentAverage(viewMode);
+  const lead = form.n >= 3 ? form.avg - avg : 0;
+  const phone = W < 520;
+  const out = [];
+  out.push(statsTicketHTML({
+    kicker: "BEST SCORE", value: s.best, unit: `/${TOTAL_ROUNDS}`,
+    line: perfect ? `${perfect} perfect ${perfect === 1 ? "page" : "pages"}` : s.best >= 11 ? "so close to perfect" : "still climbing",
+    serial: pad3(s.played), serialLabel: `${s.played === 1 ? "GAME" : "GAMES"}<br>PLAYED`,
+    tip: `Best score ${s.best} of ${TOTAL_ROUNDS}, ${s.played} games played`,
+  }));
+  out.push(`<div class="stp-item stp-w2 stp-o1" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx"><div class="stp-lab">the gist</div>` +
+    `<p>avg <b>${avg.toFixed(1)}</b></p>` +
+    (form.n >= 2 ? `<p>lately <b>${form.avg.toFixed(1)}</b>${lead > 0.3 ? ` <span class="stp-up" title="up on your average">↑</span>` : lead < -0.3 ? ` <span class="stp-down" title="down on your average">↓</span>` : ""}</p>` : "") +
+    `<p><b>${s.bestInRow || 0}</b> in a row</p></div></div>`);
+  const tempo = isAll ? loadMetrics() : null;
+  out.push(`<div class="stp-item stp-w6 stp-o3" style="--r:-.4deg">${statsTape("staff")}` +
+    `<div class="stp-staff" role="img" aria-label="Last ${recent.length} scores, oldest first: ${recent.join(", ")}. Average ${avg.toFixed(1)}.">` +
+    `<div class="stp-lab"><span>lately · a note a game, oldest first · <em>- - - my average, ${avg.toFixed(1)}</em></span>` +
+    (tempo && tempo.answerN ? `<i>${STAFF_NOTE} = ${(tempo.answerSumMs / tempo.answerN / 1000).toFixed(1)}s a page</i>` : "") + `</div>` +
+    statsStaffSVG(recent, avg, Math.round(Math.max(260, W - 30))) + `</div></div>`);
+  const youScore = (isAll || viewMode === currentMode.id) ? lastScore : null;
+  out.push(`<div class="stp-item stp-w4 stp-o3" style="--r:.7deg">${statsTape("graph")}` +
+    `<div class="stp-graph" role="img" aria-label="Games at each score: ${s.scoreCounts.map((c, i) => `${i}: ${c}`).join(", ")}">` +
+    `<div class="stp-lab">every game, by score</div>${statsGraphSVG(Array.from({ length: TOTAL_ROUNDS + 1 }, (_, i) => s.scoreCounts[i] || 0), youScore, Math.round(phone ? W - 26 : W * 4 / 6 - 30))}</div></div>`);
+  const nemesis = isAll ? topTallyEntry(loadSongTally().misses) : null;
+  if (nemesis && nemesis.count > 1) {
+    out.push(`<div class="stp-item stp-w2 stp-o2" style="--r:-2.6deg"><div class="stp-sticky"><div class="stp-lab">the one that gets me</div>` +
+      `<div class="stp-nem">${escapeHtml(nemesis.key)}<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="M2 24.6 C30 18 64 22 98 15"/></svg></div>` +
+      `<p>missed ×${nemesis.count}</p><p><a class="stp-look" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up ${CTA_ARROW}</a></p></div></div>`);
+  } else {
+    out.push(`<div class="stp-item stp-w2 stp-o2" style="--r:-2deg"><div class="stp-sticky"><div class="stp-lab">perfect pages</div>` +
+      `<div class="stp-nem stp-nem--gold">${perfect}</div><p>${perfect ? "and counting" : "one day"}</p></div></div>`);
+  }
+  return out.join("");
+}
+
+// The All view's lifetime pieces: the sleeve, label tape, paint chips, raffle tickets, calendar.
+function statsLifetimeHTML(W) {
+  const phone = W < 520;
   const m = loadMetrics();
-  const discoveredTitles = Object.keys(t.songs);
-  const discovered = discoveredTitles.length;
-  const total = allSongs.length || 1;
-  const favSong = topTallyEntry(t.songs);
-  const favAlbum = topTallyEntry(t.albums);
-  const nemesis = topTallyEntry(t.misses);
-  const header = `<p class="histogram-label" style="margin-top:24px;">your catalogue</p>`;
-  if (!discovered && !nemesis) {
-    return header + `<p class="stats-empty">no answers logged yet. play a game to start your catalogue!</p>`;
+  const t = loadSongTally();
+  const dt = dailyTotals();
+  const d = effectiveDailyStreak(todayKey());
+  const out = [];
+  const favSong = topTallyEntry(t.songs), favAlbum = topTallyEntry(t.albums);
+  // The home album is its record: the Track by Track shelf's own sleeve for it (js/sleeves.js),
+  // hand-made per album in its era colour and derived from nothing on the real cover, with the
+  // most-sung song written on a slip tucked under it.
+  if (favSong && favAlbum) {
+    out.push(`<div class="stp-item stp-w2 stp-o4${phone ? " stp-solo" : ""}" style="--r:2.2deg">${statsTape("sleeve")}` +
+      `<div class="stp-sleeve">${albumSleeve(favAlbum.key, albumColor(favAlbum.key) || "#8a7f6b", null, undefined, "stp-sleeve-art")}</div>` +
+      `<div class="stp-slip"><span class="stp-lab">home album · ${favAlbum.count} right</span>` +
+      `<b>${escapeHtml(censor(favSong.key))}</b><span>sung the most, ×${favSong.count}</span></div></div>`);
   }
-  // Floor, not round — 243/244 must read 99%, never a misleading 100% before completion.
-  const pct = Math.floor((discovered / total) * 100);
-
-  // Distinct discovered songs per album → album-rainbow meter segments, drawn in the
-  // chronological album order songs appear in allSongs (covers any pseudo-albums too).
-  const byAlbum = {};
-  for (const title of discoveredTitles) {
-    const a = albumOfTitle(title);
-    if (a) byAlbum[a] = (byAlbum[a] || 0) + 1;
+  if (m.roundsTotal) {
+    const labels = [`${Math.round((m.roundsCorrect / m.roundsTotal) * 100)}% right`, `${fmtN(m.roundsCorrect)} / ${fmtN(m.roundsTotal)} pages`];
+    if (m.fastestMs != null) labels.push(`quickest ${(m.fastestMs / 1000).toFixed(1)}s`);
+    if (m.answerN) labels.push(`usually ${(m.answerSumMs / m.answerN / 1000).toFixed(1)}s`);
+    if (m.lyricLines) labels.push(`${fmtN(m.lyricLines)} lines by heart`, `${fmtN(m.versePerfect || 0)} word-perfect`);
+    labels.push(`${Object.keys(t.words || {}).length} / ${playableWords.length} words`);
+    out.push(`<div class="stp-item ${favSong ? "stp-w4" : "stp-w6"} stp-o5"><div class="stp-lab">label maker</div><div class="stp-dymo">` +
+      labels.map((l, i) => `<span class="stp-dy stp-dy--${i % 4}" style="--r:${[-1.6, 1.2, -.6, 2, -1.2, .8, -1.8][i % 7]}deg">${l}</span>`).join("") + `</div></div>`);
   }
-  const albumOrder = [];
-  for (const s of allSongs) if (s.album && !albumOrder.includes(s.album)) albumOrder.push(s.album);
-  const segs = albumOrder.filter((a) => byAlbum[a]).map((a) =>
-    `<div class="cat-seg" style="width:${(byAlbum[a] / total) * 100}%;background:${albumColor(a) || "var(--ink-soft)"}" title="${escapeHtml(a)}: ${byAlbum[a]}"></div>`
-  ).join("");
-
-  const songColor = favSong ? (albumColor(albumOfTitle(favSong.key)) || "var(--bead)") : "var(--bead)";
-  const songAlbum = favSong ? albumOfTitle(favSong.key) : null;
-  const albColor = favAlbum ? (albumColor(favAlbum.key) || "var(--ink-soft)") : "var(--ink-soft)";
-
-  // The meter doubles as the door into the songbook (the missing-songs checklist that
-  // backs the "I Knew Everything" charm) — same tally, drilled into per-album detail.
-  const remaining = total - discovered;
-  const meter = `
-    <button type="button" class="cat-meter cat-meter--btn" data-open-songbook="stats">
-      <div class="cat-meter-head"><span>songs discovered</span><span>${pct}%</span></div>
-      <div class="cat-meter-num"><b>${discovered}</b> / ${total} songs</div>
-      <div class="cat-bar">${segs}</div>
-      <div class="cat-meter-cta">${remaining > 0 ? remaining + " still to find" : "every song found"} ${CTA_ARROW}</div>
-    </button>`;
-
-  // Words discovered — distinct prompt words answered correctly, out of the playable set.
-  const wordsFound = Object.keys(t.words || {}).length;
-  const wordTotal = playableWords.length || 1;
-  const wordPct = Math.floor((wordsFound / wordTotal) * 100);
-  const wordMeter = `
-    <div class="cat-meter">
-      <div class="cat-meter-head"><span>words discovered</span><span>${wordPct}%</span></div>
-      <div class="cat-meter-num"><b>${wordsFound}</b> / ${wordTotal} words</div>
-      <div class="cat-bar"><div class="cat-seg" style="width:${(wordsFound / wordTotal) * 100}%;background:var(--ink-accent)"></div></div>
-    </div>`;
-
-  const songCard = `
-    <div class="cat-card" style="border-left-color:${songColor}">
-      <div class="cat-card-head"><span class="cat-star">${STAR_SVG}</span>favourite song</div>
-      <div class="cat-card-val">${favSong ? escapeHtml(censor(favSong.key)) : "—"}</div>
-      <div class="cat-card-sub" style="color:${songColor}">${favSong ? (songAlbum ? escapeHtml(albumDisplayName(songAlbum)) + " · " : "") + "sung ×" + favSong.count : "play a game"}</div>
-    </div>`;
-  const albumCard = `
-    <div class="cat-card" style="border-left-color:${albColor}">
-      <div class="cat-card-head"><span class="cat-dot" style="background:${albColor}"></span>favourite album</div>
-      <div class="cat-card-val">${favAlbum ? escapeHtml(albumDisplayName(favAlbum.key)) : "—"}</div>
-      <div class="cat-card-sub" style="color:${albColor}">${favAlbum ? "×" + favAlbum.count + " correct" : "play a game"}</div>
-    </div>`;
-
-  // The nemesis word is a real prompt word, so it deep-links straight into the lyric
-  // searcher — one click to see every song that holds the word you keep missing.
-  const nemesisSub = nemesis
-    ? `missed ×${nemesis.count} · <a class="cat-search-link" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up ${CTA_ARROW}</a>`
-    : "no misses yet";
-  const nemesisBlock = `
-    <div class="cat-nemesis">
-      <div>
-        <div class="cat-card-head">nemesis word</div>
-        <div class="cat-nemesis-sub">${nemesisSub}</div>
-      </div>
-      <div class="cat-nemesis-word">
-        <span>${nemesis ? escapeHtml(nemesis.key) : "—"}</span>
-        <svg viewBox="0 0 160 60" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M18 30 C18 12, 60 8, 90 10 C130 13, 152 22, 150 34 C148 48, 100 54, 64 52 C28 50, 12 42, 16 28" fill="none" stroke="rgba(178,58,58,0.7)" stroke-width="2.2" stroke-linecap="round"/>
-        </svg>
-      </div>
-    </div>`;
-
-  // "From memory" — the verse-bonus prestige tally (lyric lines recalled, word-perfect ones).
-  // Paired beside the nemesis word so neither owns a whole row.
-  const lines = m.lyricLines || 0;
-  const perfect = m.versePerfect || 0;
-  const fromMemoryBlock = `
-    <div class="cat-frommemory">
-      <div class="cat-card-head"><span class="cat-star">${STAR_SVG}</span>from memory</div>
-      <div class="cat-fm-val">${lines}</div>
-      <div class="cat-fm-sub">${lines ? "lines written · " + perfect + " word-perfect" : "write a lyric line"}</div>
-    </div>`;
-
-  return header + `<div class="cat-wrap">${meter}${wordMeter}<div class="cat-cards">${songCard}${albumCard}</div><div class="cat-pair">${fromMemoryBlock}${nemesisBlock}</div></div>`;
+  // Songs found, album by album, in the order the catalogue runs (pseudo-albums included).
+  const found = {}, total = {}, order = [];
+  for (const s of allSongs) {
+    if (!s.album) continue;
+    if (!order.includes(s.album)) order.push(s.album);
+    total[s.album] = (total[s.album] || 0) + 1;
+    if (t.songs[s.title]) found[s.album] = (found[s.album] || 0) + 1;
+  }
+  const discovered = Object.values(found).reduce((a, b) => a + b, 0);
+  if (discovered) {
+    const left = allSongs.length - discovered;
+    out.push(`<div class="stp-item stp-w6 stp-o6" style="--r:-.5deg">${statsTape("chips")}<div class="stp-chips">` +
+      `<div class="stp-chips-hd"><b>${discovered}</b><span>of ${allSongs.length} songs found</span>` +
+      `<button type="button" class="stp-door" data-open-songbook="stats">${left ? `${left} to go` : "every one found"} ${CTA_ARROW}</button></div><div class="stp-chip-grid">` +
+      order.map((a) => {
+        const f = found[a] || 0, n = total[a];
+        return `<div class="stp-chip" style="--c:${albumColor(a) || "#8a7f6b"}" data-tip="${escapeHtml(a)}: ${f} of ${n}">` +
+          `<div class="stp-sw"><i style="height:${((f / n) * 100).toFixed(0)}%"></i></div><div class="stp-nm">${escapeHtml(STATS_ALBUM_SHORT[a] || a)}</div><div class="stp-ct2">${f}/${n}</div></div>`;
+      }).join("") + `</div></div></div>`);
+  }
+  // The daily: a strip of raffle tickets, one per day of the streak still standing, newest
+  // last. A torn-off ticket is a real button: it reopens that day, as the calendar's X does.
+  const played = dailyPlayedDates();
+  let strip = "";
+  if (d.current) {
+    const end = new Date(todayKey() + "T12:00:00Z");
+    if (!d.playedToday) end.setUTCDate(end.getUTCDate() - 1);
+    const cap = phone ? 6 : 11, shown = Math.min(d.current, cap);
+    for (let i = shown - 1; i >= 0; i--) {
+      const day = new Date(end); day.setUTCDate(end.getUTCDate() - i);
+      const key = day.toISOString().slice(0, 10), sc = played[key];
+      strip += `<button type="button" class="stp-rt${sc === TOTAL_ROUNDS ? " is-perfect" : ""}" data-daily-date="${key}"` +
+        `${sc != null ? ` data-tip="${sc}/${TOTAL_ROUNDS} · tap to reopen" data-tip-delay="200"` : ""}>` +
+        `<span class="stp-rt-m">${MONTH_NAMES[day.getUTCMonth()].slice(0, 3).toUpperCase()}</span><span class="stp-rt-d">${day.getUTCDate()}</span></button>`;
+    }
+    if (d.current > cap) strip = `<span class="stp-rt-more">+${d.current - cap} more</span>` + strip;
+  }
+  out.push(`<div class="stp-item stp-w6 stp-o7 stp-raffle"><div class="stp-lab">the daily</div><div class="stp-raffle-hd">` +
+    (d.lastPlayed
+      ? `<span><b>${d.current}</b> ${d.current === 1 ? "day" : "days"} running</span><span>longest <b>${d.best}</b></span>` +
+        `<span><b>${dt.played}</b> in all, <b>${dt.perfect}</b> perfect</span><span class="${d.playedToday ? "stp-done" : ""}">${d.playedToday ? "done today" : "today's is waiting"}</span>`
+      : `<span>no dailies yet. today's is waiting.</span>`) +
+    `</div>${strip ? `<div class="stp-strip">${strip}</div>` : ""}</div>`);
+  out.push(`<div class="stp-item stp-w6 stp-o8" style="--r:.4deg">${statsTape("cal")}<div class="stp-cal">${dailyCalendarHTML()}</div></div>`);
+  return out.join("");
 }
 
-// Daily-challenge streak — global (not per-mode), so it shows under every tab.
+function statsBoardHTML(s, viewMode, isAll, lastScore) {
+  const W = statsInnerWidth();
+  let items = "";
+  if (s.played) items += statsGameHTML(s, viewMode, isAll, lastScore, W);
+  else {
+    items += statsTicketHTML({ kicker: "", value: "–", unit: `/${TOTAL_ROUNDS}`,
+      line: `your first game goes here${isAll ? "" : `, in ${MODES[viewMode].label}`}`, serial: "000", serialLabel: "GAMES<br>PLAYED" });
+    items += `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">Nothing stuck in yet. Every game you finish leaves something to keep.</p>${playCTA()}</div>`;
+  }
+  if (isAll) items += statsLifetimeHTML(W);
+  return `<div class="stp">${items}</div>`;
+}
+
+// The daily calendar on the Stats page (All only), taped in under the raffle tickets.
 // --- Hand-inked marker marks for the daily calendar ---------------------------
 // Each X/O is a one-off: drawn from pressure-tapered ribbon strokes (fat-marker
 // profile — near-uniform body, blunt rounded tips) with per-mark jitter, so no two
@@ -2542,110 +2601,6 @@ function dailyCalendarHTML() {
     `</div>`;
 }
 
-function dailyStatsHTML() {
-  const d = effectiveDailyStreak(todayKey());
-  const cal = dailyCalendarHTML();
-  const head = `<p class="histogram-label" style="margin-top:24px;">daily challenge</p>`;
-  if (!d.lastPlayed) {
-    return head + cal + `<p class="stats-empty">no daily runs yet. try today's Daily Challenge!</p>`;
-  }
-  const note = d.playedToday
-    ? `<p class="daily-streak-note">✓ played today's challenge</p>`
-    : `<p class="daily-streak-note">today's challenge awaits</p>`;
-  return head +
-    `<div class="streak-row">` +
-    `<div class="streak-cell"><span class="stat-val">${d.current}</span><span class="stat-lbl">day streak</span></div>` +
-    `<div class="streak-cell"><span class="stat-val">${d.best}</span><span class="stat-lbl">best streak</span></div>` +
-    `</div>` + note + cal;
-}
-
-// Lifetime cross-game numbers — global (All tab only, like the catalogue). Drawn from
-// the metrics store folded in endGame and the song tally. A notebook bento: an accuracy
-// ring + album-spine meter up top, a row of quick-stat tiles, a daily footer. Empty
-// until the first finished game. ("Best streak ever" lives in the per-tab block above —
-// it's the same bestInRow value, so it isn't repeated here.)
-// Tiny ink marginalia icons (18×18, stroked in currentColor).
-const NUM_ICONS = {
-  rounds:  `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M5 3h5l3 3v9H5z"/><path d="M10 3v3h3"/></svg>`,
-  bolt:    `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M10.5 2L4.5 10H8l-.8 6 6.3-9H10z"/></svg>`,
-  clock:   `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="6.4"/><path d="M9 5v4.2l2.8 1.8" stroke-linecap="round"/></svg>`,
-  lines:   `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3.5 6h11M3.5 9h11M3.5 12h7"/></svg>`,
-  cal:     `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><rect x="3" y="4.2" width="12" height="10.8" rx="1.2"/><path d="M3 7.4h12M6 2.6v2.6M12 2.6v2.6"/></svg>`,
-  rosette: `<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><circle cx="9" cy="9" r="6.4"/><path d="M9 5.4l1 2.1 2.3.2-1.7 1.5.5 2.3L9 10.5 6.9 11.7l.5-2.3L5.7 7.7 8 7.5z"/></svg>`,
-};
-
-const RING_CIRC = 2 * Math.PI * 52;   // accuracy ring: r=52 in a 120×120 viewBox
-
-function extraStatsHTML() {
-  const m = loadMetrics();
-  if (m.roundsTotal === 0) return "";
-  const t = loadSongTally();
-  const dt = dailyTotals();   // authoritative daily counts (per-day keys, not the metrics store)
-  const secs = (ms) => (ms / 1000).toFixed(1) + "s";
-  const fastest = m.fastestMs != null ? secs(m.fastestMs) : "—";
-  const avg = m.answerN ? secs(m.answerSumMs / m.answerN) : "—";
-  const accPct = m.roundsTotal ? Math.round((m.roundsCorrect / m.roundsTotal) * 100) : 0;
-  const ringOffset = RING_CIRC * (1 - accPct / 100);
-
-  // Album-spine meter: one bar per album in chronological catalogue order, lit in its
-  // album colour once any of its songs has been answered, faint until then.
-  const albumOrder = [];
-  for (const s of allSongs) if (s.album && !albumOrder.includes(s.album)) albumOrder.push(s.album);
-  const albumsTotal = albumOrder.length || 1;
-  const albumsCollected = albumOrder.filter((a) => (t.albums || {})[a] > 0).length;
-  const spines = albumOrder.map((a) => {
-    const got = ((t.albums || {})[a] || 0) > 0;
-    const c = got ? (albumColor(a) || "var(--ink-soft)") : "rgba(43,39,34,0.13)";
-    return `<div class="num-spine" style="background:${c}" title="${escapeHtml(a)}"></div>`;
-  }).join("");
-
-  const tile = (icon, label, value) =>
-    `<div class="num-card num-tile"><span class="num-ico">${NUM_ICONS[icon]}</span>` +
-    `<span class="num-val">${value}</span><span class="num-sub">${label}</span></div>`;
-
-  return `<p class="histogram-label" style="margin-top:24px;">by the numbers</p>
-    <div class="num-hero-row">
-      <div class="num-card num-acc">
-        <div class="num-ring">
-          <svg viewBox="0 0 120 120" aria-hidden="true">
-            <circle class="num-ring-track" cx="60" cy="60" r="52"/>
-            <circle class="num-ring-arc" cx="60" cy="60" r="52" transform="rotate(-90 60 60)"
-              stroke-dasharray="${RING_CIRC.toFixed(1)}" stroke-dashoffset="${ringOffset.toFixed(1)}"/>
-          </svg>
-          <div class="num-ring-val"><b>${accPct}</b><span>%</span></div>
-        </div>
-        <div>
-          <div class="num-lbl">Accuracy</div>
-          <div class="num-sub">${m.roundsCorrect} of ${m.roundsTotal}<br>rounds right</div>
-        </div>
-      </div>
-      <div class="num-card num-albums">
-        <div class="num-albums-head">
-          <span class="num-lbl">Albums collected</span>
-          <span class="num-count">${albumsCollected}<i> / ${albumsTotal}</i></span>
-        </div>
-        <div class="num-spines">${spines}</div>
-      </div>
-    </div>
-    <div class="num-tiles">
-      ${tile("rounds", "Rounds played", m.roundsTotal)}
-      ${tile("bolt", "Fastest", fastest)}
-      ${tile("clock", "Avg time", avg)}
-      ${tile("lines", "Lyric lines", m.lyricLines)}
-    </div>
-    <div class="num-card num-daily">
-      <div class="num-daily-item">
-        <span class="num-ico num-ico-lg">${NUM_ICONS.cal}</span>
-        <div><div class="num-val num-val-md">${dt.played}</div><div class="num-sub">Daily challenges</div></div>
-      </div>
-      <div class="num-daily-div"></div>
-      <div class="num-daily-item">
-        <span class="num-ico num-ico-lg num-ico-gold">${NUM_ICONS.rosette}</span>
-        <div><div class="num-val num-val-md num-gold">${dt.perfect}</div><div class="num-sub">Daily perfects</div></div>
-      </div>
-    </div>`;
-}
-
 // Infinite runs aren't comparable to the 13-round game (scores can exceed 13 and the
 // 0-13 histogram is meaningless), so the Infinite tab gets its own body. What a run IS
 // in this mode is a length: you kept going until you didn't. So the tab draws lengths.
@@ -2730,20 +2685,13 @@ function infiniteTabHTML() {
   let top = entries[0], games = 0, rounds = 0;
   for (const e of entries) { games += e.played; rounds += e.total; if (e.best > top.best) top = e; }
   const pitch = infPitch(top.best);
-  const hero = `
-    <div class="inf-hero">
-      <div class="inf-best">
-        <svg class="inf-best-ring" viewBox="0 0 120 76" aria-hidden="true">
-          <ellipse cx="60" cy="38" rx="52" ry="31" transform="rotate(-4 60 38)"/>
-          <path d="M9 44 Q13 66 46 71 Q80 76 105 60"/>
-        </svg>
-        <b>${top.best}</b>
-      </div>
-      <div class="inf-hero-text">
-        <div class="inf-hero-title">your longest run</div>
-        <div class="inf-hero-sub">${top.best} rounds · ${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}</div>
-      </div>
-    </div>`;
+  // The longest run is kept the way the best score is on the other tabs: a ticket stub.
+  const hero = `<div class="stp stp--hero">` + statsTicketHTML({
+    kicker: "LONGEST RUN", value: top.best, unit: top.best === 1 ? "page" : "pages",
+    line: `${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}`,
+    serial: pad3(games), serialLabel: `INFINITE<br>${games === 1 ? "RUN" : "RUNS"}`,
+    tip: `Longest infinite run ${top.best} pages, ${VARIANT_LABELS[top.variant]}, ${MODES[top.mode].label}`,
+  }) + `</div>`;
   const group = (variant) => {
     const sty = INF_VARIANT_STYLE[variant];
     const mine = MODE_ORDER.map((m) => entries.find((e) => e.variant === variant && e.mode === m)).filter(Boolean);

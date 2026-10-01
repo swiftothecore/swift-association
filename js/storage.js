@@ -1044,7 +1044,7 @@ export function recordGameTally(rounds) {
 
 /* ---------- Lifetime metrics (cross-game, cross-mode counters) ---------- */
 // One record across every game type & difficulty, folded once per finished game.
-// Backs the Stats "by the numbers" block: fastest/avg answer, accuracy, lyric lines,
+// Backs the Stats page's label tape and staff tempo: fastest/avg answer, accuracy, lyric lines,
 // daily totals. Kept separate from per-mode stats so it spans classic/infinite/daily.
 //   fastestMs   — fastest single correct answer in a timed mode (null = none yet)
 //   answerSumMs — total time spent on timed rounds (for the average)
@@ -1479,7 +1479,7 @@ export function dailyRunHeldByOther(dateStr, tabId, now = Date.now()) {
 // Lifetime daily totals derived from the per-day result keys (the authoritative
 // record — saved on every daily completion). The `metrics` counters miss any
 // dailies finished before that store existed; these keys don't, so the Stats
-// "by the numbers" daily figures count from here instead.
+// daily figures (the raffle strip's "in all, n perfect") count from here instead.
 //   played   — distinct days a daily was completed
 //   perfect  — of those, days scored 13/13
 export function dailyTotals() {
