@@ -9338,6 +9338,13 @@ function turnSlip(id, label = "next page") {
 // line. Stretched to the word's width, so the stroke is kept from stretching with it.
 const HOLD_DASHES = `<svg class="cd-hold-dashes" viewBox="0 0 32 4" preserveAspectRatio="none" aria-hidden="true">` +
   `<path d="M1.2 2 L6.4 2.2 M10.1 2.1 L14.6 1.9 M18.3 2 L23.5 2.1 M27 2.2 L30.8 1.9"/></svg>`;
+// What stands in the numeral's place once the page is held: a cup of tea, its steam still
+// curling. Drawn into a slot the numeral's height (.cd-held in styles.css), so holding the page
+// moves nothing beneath it; a line of text alone left the block a numeral short and the page jumped.
+const HELD_TEACUP = `<svg class="cd-teacup" viewBox="0 0 60 40" aria-hidden="true">` +
+  `<path d="M10.6 17.2 Q11.2 33.6 26.4 35.2 Q41.4 34.2 43 17.4 Q27 16 10.6 17.2Z"/>` +
+  `<path d="M42.8 20.4 Q51.6 19.4 50.6 25.6 Q49.6 30.4 40.6 29.4"/><path d="M6.4 37.6 Q27.4 39.6 47.8 37.2"/>` +
+  `<path d="M22.4 13 Q19.4 9.4 22.6 6.4 Q25.6 3.6 23.2 0.8"/><path d="M30.8 13.4 Q28.6 10.2 31.4 7.6"/></svg>`;
 function countdownAdvance(lead, cdId, skipId) {
   return `<div class="countdown">${lead} in <b id="${cdId}">${settings.countdownSecs}</b></div>` +
     `<div class="countdown-acts">` +
@@ -28431,7 +28438,7 @@ function pauseAutoAdvanceForReading() {
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   stopBonusCountdown();
   const cd = document.querySelector("#feedback .countdown, #bonusFeedback .countdown");
-  if (cd) cd.innerHTML = `<span class="cd-paused">take your time</span>`;
+  if (cd) cd.innerHTML = `take your time<span class="cd-held">${HELD_TEACUP}</span>`;
   // Held is held: the button has done its one job, so it goes rather than sitting there inert.
   // Focus moves to skip if it was on hold, so a keyboard player is left on the way forward.
   const hold = document.querySelector("#feedback .countdown-hold, #bonusFeedback .countdown-hold");

@@ -10357,7 +10357,6 @@
   }
   .more-songs-all:hover { color: var(--ink); }
 
-  .cd-paused { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); font-style: italic; }
 
   .countdown {
     text-align: center; margin-top: 18px;
@@ -10369,6 +10368,17 @@
     /* Caveat's numerals carry most of their visible ink to the right of their advance box.
        Pull the glyph back onto the typewritten caption's optical centre. */
     transform: translateX(-8px);
+  }
+  /* A held page keeps the numeral's slot: the caption reads "take your time" and a teacup is drawn
+     where the count stood, in the count's gold, at exactly the height its line box took, so
+     nothing under the countdown moves when it stops. */
+  .cd-held {
+    display: flex; align-items: center; justify-content: center;
+    height: calc((46px + var(--text-size-adjust)) * 1.3); color: var(--ink-accent);
+  }
+  .cd-teacup {
+    width: 60px; height: 40px; overflow: visible;
+    fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round;
   }
   /* A solid ink underline, drawn on the word rather than on the box, so the taller touch
      target coarse pointers get (see the pointer: coarse block) doesn't move it off the word.
@@ -16229,6 +16239,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .feedback-advance > .turn-slip { width: 100%; margin: 0; min-height: 46px; }
   .feedback-advance .countdown { display: flex; align-items: center; gap: 8px; margin: 0; }
   .feedback-advance .countdown b { display: inline; font-size: calc(28px + var(--text-size-adjust)); transform: none; }
+  .feedback-advance .cd-held { display: inline-flex; height: calc((28px + var(--text-size-adjust)) * 1.3); }
+  .feedback-advance .cd-teacup { width: 37px; height: 25px; }
   .feedback-advance .countdown-skip, .feedback-advance .countdown-hold { margin: 0; }
   .feedback-advance .countdown-acts { gap: 12px; }
 
