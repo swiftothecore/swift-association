@@ -880,6 +880,10 @@
        the gradient-clipped glyph fill. Kept gentle so the ink rests on the wood
        without a heavy carved shadow. */
     filter: drop-shadow(0 1px 0 rgba(255,248,232,0.32)) drop-shadow(0 1.5px 1px rgba(50,26,7,0.28)) drop-shadow(0 3px 5px rgba(58,30,8,0.16));
+    /* Caveat's last stroke overhangs its advance (the closing "n" of Association), and a
+       text-clipped background stops at the span's box, so the overhang was sheared off flat.
+       Pad the paint box past it and hand the room straight back so the spacing never moves. */
+    padding-right: 0.12em; margin-right: -0.12em;
   }
   /* the one gold word in the title. Pinned to --brand-gold, NOT --ink-accent: the
      era accent owns the page below the header, but the masthead is the wordmark and
