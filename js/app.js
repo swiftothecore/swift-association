@@ -25429,11 +25429,12 @@ function fillCountDots(label, hits) {
   if (!label) return;
   const say = label.querySelector(".vw-count-say");
   const full = label.clientWidth;
+  const rx = new RegExp(wordRegex(currentWord).source, "gi");
   const { svg, below } = countDots(hits, allSongs, {
     width: full - (say ? say.offsetWidth : 0) - 12,
     fallbackWidth: full,
     colour: (s) => { const g = guestBeadTint(s); return (Array.isArray(g) ? g[0] : g) || albumColor(s.album) || "var(--ink-soft)"; },
-    title: (s) => escapeHtml(censor(s.title)),
+    title: (s, n) => escapeHtml(`${censor(s.title)} · ${s.album} · ${n} words · sings it ${(s.lyrics.match(rx) || []).length}×`),
     seed: currentWord,
   });
   if (!svg) return;

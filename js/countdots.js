@@ -35,9 +35,11 @@ function hand(seed) {
   return (amp) => (r() - 0.5) * amp;
 }
 
-function circle(cx, cy, r, fill, j, title) {
+// `tip` arrives escaped for an attribute. It goes on data-tip, the game's own bubble, and not
+// on an SVG <title>, which the browser would show as its grey native tooltip.
+function circle(cx, cy, r, fill, j, tip) {
   return `<circle cx="${(cx + j(0.6)).toFixed(2)}" cy="${(cy + j(0.8)).toFixed(2)}"` +
-    ` r="${(r * (1 + j(0.12))).toFixed(2)}" fill="${fill}"><title>${title}</title></circle>`;
+    ` r="${(r * (1 + j(0.12))).toFixed(2)}" fill="${fill}" data-tip="${tip}"/>`;
 }
 
 // Group a corpus into its albums, keeping both the album order and each running order.
@@ -72,7 +74,7 @@ export function countDots(hits, corpus, { width, fallbackWidth, colour, title, s
     let x = 0, out = "";
     sorted.forEach((s, i) => {
       const r = radii[i];
-      out += circle(x + r, STRIP_H / 2, r, colour(s), j, title(s));
+      out += circle(x + r, STRIP_H / 2, r, colour(s), j, title(s, words(s)));
       x += 2 * r + GAP;
     });
     return { svg: wrap(Math.ceil(stripW + 1), STRIP_H, out), below: false };
@@ -93,7 +95,7 @@ export function countDots(hits, corpus, { width, fallbackWidth, colour, title, s
       const cx = x + Math.floor(i / rows) * TL_P + TL_R + 0.5;
       const cy = (i % rows) * TL_P + TL_R + 0.5;
       out += held.has(s)
-        ? circle(cx, cy, TL_R, colour(s), j, title(s))
+        ? circle(cx, cy, TL_R, colour(s), j, title(s, words(s)))
         : `<circle class="cd-rest" cx="${cx}" cy="${cy}" r="${TL_R - 0.4}" stroke="${colour(s)}"/>`;
     });
     x += Math.ceil(g.songs.length / rows) * TL_P + TL_ALBUM_GAP;
