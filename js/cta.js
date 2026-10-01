@@ -430,6 +430,14 @@ const ivyVine = (side) => {
   return `<svg class="cta-ivy cta-ivy--${side}" viewBox="0 0 ${w} ${h}" style="aspect-ratio:${w}/${h}"><g class="cta-ivy-stem" style="transform-origin:${root[0]}px ${root[1]}px"><path d="${stem}" fill="none" stroke="#425332" stroke-width="2"/>${leaves.map(([x, y, r, s], i) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><g class="cta-ivy-leaf" style="--ivy-delay:${(i * .037).toFixed(3)}s;--ivy-turn:${-7 - (i + shade) % 3 * 4}deg"><path d="M0 10C-3 5 -10 4 -9 -2L-5 -1L-3 -9L1 -6L6 -10L7 -3L12 -1C10 6 4 5 0 10Z" fill="${IVY_GREENS[(i + shade) % 3]}" stroke="#344d31" stroke-width=".65"/><path d="M0 9L1 -5M0 4L-5 0M0 3L7 -1" fill="none" stroke="#b5c38a" stroke-width=".6" opacity=".7"/></g></g>`).join("")}</g></svg>`;
 };
 const ivy = ivyVine("left") + ivyVine("right");
+// Pride's hover is the flag waving (styles.css, under Pride): the stripes cut into thin
+// upright slices that rise and fall in turn, with the swing growing from the hoist (--a, in px)
+// out to the fly, and the button's sheen laid back over the top. 64 slices keeps the wave a
+// curve rather than a staircase on a desktop-width button.
+const FLAG_SLICES = 64;
+const prideRipple = Array.from({ length: FLAG_SLICES }, (_, i) =>
+  `<i class="cta-flag-slice" style="--i:${i};--n:${FLAG_SLICES};--a:${(.6 + 2.6 * i / (FLAG_SLICES - 1)).toFixed(2)}"></i>`).join("") +
+  `<i class="cta-flag-sheen"></i>`;
 const FINISH_ART = {
   ink: inkStamp,
   rose: rosePaint,
@@ -440,7 +448,7 @@ const FINISH_ART = {
   summer: tide,
   autumn,
   winter: storm,
-  pride: `<i class="cta-ribbon"></i>`,
+  pride: prideRipple,
 };
 
 // Gold's hover is a marker stroke dragged across the button, and it carries its own copy of

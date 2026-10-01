@@ -1849,17 +1849,37 @@
   /* Pride: all eight flags still come only from PRIDE_BUTTONS (js/config.js), in their own
      colours and proportions, at full strength behind the label. A pale patch under the words
      was tried and taken off: the dark label reads across every flag without it, and the patch
-     only washed the middle of each flag out to pastel. On hover the flag waves: soft bands of
-     fold and light travel along its length, the way cloth moves in a breeze, rather than a
-     glossy streak across it. */
+     only washed the middle of each flag out to pastel.
+
+     On hover the cloth itself waves. The fx layer holds the flag again cut into thin upright
+     slices (js/cta.js, prideRipple), each showing its own sliver of the one --cta-stripes ramp,
+     and each slice rides up and down a little after the one to its left, so a wave runs from
+     the hoist out to the fly. It grows as it goes (--a, set per slice), since a flag is pinned
+     at the pole and loose at the far end, and each slice catches light on the way up and shade
+     on the way down. Two waves, then it hangs still. The words never move.
+
+     A slice that has ridden up or down uncovers the button's own flag behind it, whose top and
+     bottom edges are the same first and last bands, so the wave never opens a gap. The slices
+     cover the button's sheen, so the layer draws it again on top (.cta-flag-sheen), which keeps
+     the face the same at rest and while held. A slice's width must stay exactly 1/n of the
+     button: background-size is a percentage of the slice, so any overlap added to hide seams
+     stretches every sliver and the flag tears into stripes. */
   .play-cta[data-startbtn^="pride-"] {
     --cta-hover-text: #2b2722;
     --cta-art: var(--cta-stripes);
   }
-  .cta-ribbon { top: 0; bottom: 0; left: 0; width: 300%; opacity: 0;
-    background: repeating-linear-gradient(90deg, #0000 0, #00000024 8%, #0000 16.67%, #ffffff38 25%, #0000 33.33%); }
-  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-ribbon { animation: ctaFlagWave 1.8s ease-in-out both; }
-  @keyframes ctaFlagWave { 0% { transform: translateX(-66.67%); opacity: 0; } 18%, 72% { opacity: 1; } 100% { transform: translateX(0); opacity: 0; } }
+  @property --cta-wave-y { syntax: "<length>"; inherits: false; initial-value: 0px; }
+  @property --cta-wave-shade { syntax: "<color>"; inherits: false; initial-value: #0000; }
+  .cta-flag-slice { top: 0; bottom: 0; left: calc(var(--i) * 100% / var(--n)); width: calc(100% / var(--n));
+    background-image: var(--cta-stripes); background-repeat: no-repeat;
+    background-size: calc(var(--n) * 100%) 100%;
+    background-position: calc(var(--i) / (var(--n) - 1) * 100%) var(--cta-wave-y); }
+  .cta-flag-slice::after { content: ""; position: absolute; inset: 0; background: var(--cta-wave-shade); }
+  .cta-flag-sheen { inset: 0; background: linear-gradient(168deg, #ffffff57 0%, #ffffff00 46%, #2b27221f 100%); }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-flag-slice { animation: ctaFlagWave 1.15s calc(var(--i) / var(--n) * 1.1s) cubic-bezier(.45,0,.55,1) 2 both; }
+  :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-flag-slice::after { animation: ctaFlagShade 1.15s calc(var(--i) / var(--n) * 1.1s) cubic-bezier(.45,0,.55,1) 2 both; }
+  @keyframes ctaFlagWave { 0%, 100% { --cta-wave-y: 0px; } 25% { --cta-wave-y: calc(var(--a) * -1px); } 75% { --cta-wave-y: calc(var(--a) * 1px); } }
+  @keyframes ctaFlagShade { 0%, 50%, 100% { --cta-wave-shade: #0000; } 12% { --cta-wave-shade: #ffffff30; } 62% { --cta-wave-shade: #00000026; } }
 
   /* ---------- Album anniversaries ----------
      The sixteen finishes the Start writing button is made to wear on each studio album's release
