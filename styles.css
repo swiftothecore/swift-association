@@ -13009,6 +13009,7 @@
     --day-stub: color-mix(in srgb, var(--red-pen) 88%, #3a120f);
     --day-stub-ink: #f7ead0;
     --day-stub-rule: rgba(247, 234, 208, 0.42);
+    --day-glint: rgba(255, 252, 240, 0.85);
     --day-bite: 10px;      /* the half-circle bitten out of each end */
     --day-seam: 110px;     /* where the perforation runs, measured from the right */
     position: relative; display: block; width: 100%; margin-top: 12px; padding: 0;
@@ -13043,6 +13044,7 @@
     --day-stub: color-mix(in srgb, var(--red-pen) 56%, #2a0f0c);
     --day-stub-ink: #f4e2cd;
     --day-stub-rule: rgba(244, 226, 205, 0.36);
+    --day-glint: rgba(255, 244, 222, 0.38);
   }
   /* Spans in the ticket are block by default; the handful that are flex rows have to
      outrank this, which is why they are written `.day .day-*` (a class plus a type
@@ -13082,6 +13084,27 @@
       radial-gradient(circle at 20% 30%, var(--day-fleck) 0.6px, transparent 0.7px),
       radial-gradient(circle at 70% 65%, var(--day-fleck) 0.5px, transparent 0.6px);
     background-size: 17px 13px, 11px 19px;
+  }
+  /* THE GLINT: an unplayed ticket catches the light now and then, the way a piece of
+     glossy card does when the desk lamp crosses it. One soft diagonal band travels the
+     strip in about a second, then the card sits still for the rest of the cycle, so it
+     reads as something noticed out of the corner of the eye rather than as a button
+     pulsing for attention. Played, the stub is torn and the glint goes with it; with
+     reduced motion it is never drawn at all. It rides ::after, which the played state
+     claims for its fibre lip, and the two can never be on the card at once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .day:not(.day--done) .day-strip::after {
+      content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+      background: linear-gradient(105deg, transparent 38%, var(--day-glint) 50%, transparent 62%)
+        no-repeat;
+      background-size: 60% 100%; background-position: -120% 0;
+      mix-blend-mode: soft-light;
+      animation: day-glint 7s ease-in-out 1.2s infinite;
+    }
+  }
+  @keyframes day-glint {
+    0% { background-position: -120% 0; }
+    16%, 100% { background-position: 260% 0; }
   }
   .day-frame {
     position: absolute; z-index: 3; pointer-events: none; border-radius: 2px;
