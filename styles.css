@@ -1868,6 +1868,11 @@
     --cta-hover-text: #2b2722;
     --cta-art: var(--cta-stripes);
   }
+  /* The one flag that letters in white. The words cross the bisexual flag's purple and the top
+     of its blue, where dark ink falls to 1.5:1; white holds 5.1:1 across both. Every other flag
+     has a white or pale stripe behind the words, where white lettering would vanish, so the
+     rest stay dark. */
+  .play-cta[data-startbtn="pride-bi"] { --cta-text: #fff; --cta-hover-text: #fff; }
   @property --cta-wave-y { syntax: "<length>"; inherits: false; initial-value: 0px; }
   @property --cta-wave-shade { syntax: "<color>"; inherits: false; initial-value: #0000; }
   .cta-flag-slice { top: 0; bottom: 0; left: calc(var(--i) * 100% / var(--n)); width: calc(100% / var(--n));
