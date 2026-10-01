@@ -7679,134 +7679,202 @@
   .custom-change-btn .type-glyph--levers circle { fill: none; }
   .custom-active-levers { font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.5; color: var(--ink-soft); }
 
-  /* ---------- Custom "Change" modal (reuses the settings-modal chrome) ---------- */
+  /* ---------- Custom "Change" modal: FORM 13 (reuses the settings-modal chrome) ----------
+     A printed form in Custom's brick rust, filled in by hand in blue ballpoint. The form is
+     always the WORKING copy; the tabs above it are the filed copies, each on its own colour of
+     carbonless stock, locked once filed (see renderCustomModalBody). */
   .cm-foot { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 13px; border-top: 1px solid rgba(43,39,34,0.1); }
-  .cm-presets { margin-bottom: 10px; }
-  .cm-preset-head { display: flex; align-items: flex-end; gap: 10px; }
-  .cm-name-input {
-    flex: 1; min-width: 0; font-family: var(--hand); font-size: calc(25px + var(--text-size-adjust)); color: var(--ink);
-    background: transparent; border: none; border-bottom: 1.5px solid rgba(43,39,34,0.28); padding: 2px 2px 4px;
-  }
-  .cm-name-input:focus { outline: none; border-bottom-color: var(--ink); }
-  .cm-preset-acts { display: flex; gap: 6px; flex-shrink: 0; }
-  .cm-preset-acts { align-items: center; gap: 2px; }
-  .pencil-half {
-    position: relative; flex: none; height: 30px; padding: 0; text-align: left;
-    font-size: calc(11px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.8px; color: #2b2014;
-    background: none; transition: transform 0.14s ease;
-  }
-  .pencil-half > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .pencil-half .o { fill: none; stroke: #2b2622; stroke-width: 1.2; stroke-linejoin: round; stroke-linecap: round; }
-  .pencil-lab { position: relative; }
-  .pencil-half.point { width: 84px; padding: 0 8px 0 30px; }
-  .pencil-half.rubber { width: 96px; padding: 0 32px 0 10px; }
-  .pencil-half.point:not(:disabled):is(:hover, :focus-visible) { transform: translateX(-4px); }
-  .pencil-half.rubber:not(:disabled):is(:hover, :focus-visible) { transform: translateX(4px); }
-  .pencil-half:disabled { cursor: default; opacity: 0.4; filter: grayscale(0.7); }
-  .cm-preset-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .cm-preset-chip {
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
-    background: transparent; border: 1px solid rgba(43,39,34,0.24); border-radius: 2px;
-    padding: 3px 10px; cursor: pointer;
-  }
-  .cm-preset-chip:hover, .cm-preset-chip:focus-visible { color: var(--ink); border-color: var(--ink); }
-  .cm-preset-chip.active { color: var(--ink); border-color: var(--ink); background: var(--highlighter); }
-  .set-row.cm-disabled { opacity: 0.45; }
+  .custom-modal { --print: #a8483a; --pen: #274560; --sheet: #fbf8f0; --print-soft: color-mix(in srgb, var(--print) 55%, transparent); }
+  :root[data-theme="dark"] .custom-modal { --print: #e3907c; --pen: #9fc0e0; --sheet: #2f281f; }
+  .custom-modal .fm-stock-0 { --c: #f6eaa8; } .custom-modal .fm-stock-1 { --c: #f5d3d6; }
+  .custom-modal .fm-stock-2 { --c: #d4e3ee; } .custom-modal .fm-stock-3 { --c: #dbe9cf; }
+  .custom-modal .fm-stock-4 { --c: #efd69a; } .custom-modal .fm-stock-5 { --c: #e3d7ee; }
+  :root[data-theme="dark"] .custom-modal .fm-stock-0 { --c: #463c22; } :root[data-theme="dark"] .custom-modal .fm-stock-1 { --c: #46302f; }
+  :root[data-theme="dark"] .custom-modal .fm-stock-2 { --c: #2c3a44; } :root[data-theme="dark"] .custom-modal .fm-stock-3 { --c: #33402c; }
+  :root[data-theme="dark"] .custom-modal .fm-stock-4 { --c: #47391f; } :root[data-theme="dark"] .custom-modal .fm-stock-5 { --c: #3c3346; }
 
-  /* ---------- Custom "Change" modal — a bento of control tiles ----------
-     Instead of a flat settings list, the levers sit in a 4-column grid where some
-     tiles are deliberately bigger (the run-length hero spans 2×2, the answering
-     picker spans the full width) so the panel reads like a songwriter's console. */
-  .cm-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 11px; margin-top: 6px;
+  /* the pad: filed copies' heads peek out above the working copy */
+  .fm-pad { display: flex; flex-wrap: wrap; align-items: flex-end; margin: 2px 0 0 4px; padding-right: 24px; }
+  .fm-copy {
+    position: relative; margin: 6px -6px 0 0; padding: 6px 16px 9px 12px; cursor: pointer; max-width: 17ch;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.3px; color: #2b2722;
+    text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    background: var(--c); border: 1px solid rgba(43, 39, 34, 0.22); border-bottom: 0; border-radius: 3px 3px 0 0;
+    box-shadow: inset 0 -6px 6px -6px rgba(43, 39, 34, 0.25);
+    transform: translateY(4px); transition: transform 0.14s ease;
   }
-  .cm-tile {
-    display: flex; flex-direction: column; gap: 9px;
-    padding: 12px 13px 13px; border-radius: 7px;
-    background: var(--cm-wash, rgba(255,255,255,0.36));
-    border: 1.5px solid var(--cm-edge, rgba(43,39,34,0.14));
-    box-shadow: 0 1px 0 var(--cm-lip, rgba(255,255,255,0.55)) inset, 0 2px 6px rgba(60,50,35,0.05);
-  }
-  /* The same inversion the era chips and the chain cards make, and for the same reason: a
-     36% white wash lifts a tile off cream paper, but on a dark page it IS the light, and it
-     lifted the tile to a mid grey that --ink-soft then sat on at 1.57:1 — the lever
-     descriptions and every unchosen tab in the modal, which is most of the words in it. */
-  :root[data-theme="dark"] .cm-tile {
-    --cm-wash: rgba(236,229,214,0.06);
-    --cm-edge: rgba(236,229,214,0.16);
-    --cm-lip: rgba(236,229,214,0.10);
-  }
-  .cm-tile--wide { grid-column: span 4; }
-  .cm-tile--half { grid-column: span 2; }
-  .cm-tile--hero { grid-column: span 2; grid-row: span 2; }
-  .cm-tile--toggle {
-    flex-direction: row; align-items: center; justify-content: space-between; gap: 12px;
-  }
-  .cm-tile--toggle .set-toggle { flex: 0 0 auto; }
-  .cm-tile.cm-disabled { opacity: 0.5; }
-  .cm-tile-head { display: flex; flex-direction: column; gap: 2px; }
-  .cm-tile-name { font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); line-height: 1.02; color: var(--ink); }
-  .cm-tile-desc { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.3; color: var(--ink-soft); }
+  :root[data-theme="dark"] .fm-copy { color: var(--ink); border-color: rgba(236, 229, 214, 0.2); }
+  .fm-copy small { display: block; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase; opacity: 0.62; }
+  .fm-copy:is(:hover, :focus-visible) { transform: translateY(0); }
+  .fm-copy:focus-visible { outline: 2px dashed var(--pen); outline-offset: 2px; }
+  /* the copy the form is a faithful copy of; a dashed edge once the form has moved away from it */
+  .fm-copy.is-on { z-index: 2; transform: translateY(0); font-weight: 700; box-shadow: none; border-color: rgba(43, 39, 34, 0.42); }
+  .fm-copy.is-src { border-style: dashed; border-color: rgba(43, 39, 34, 0.5); }
+  .fm-copy--blank { margin-left: 12px; background: transparent; border-style: dashed; color: var(--ink-soft); box-shadow: none; }
+  .fm-pad-empty { align-self: center; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); margin: 6px 4px 0 2px; }
 
-  /* sliders inside a tile — stretch to fill, value inked to the right */
-  .cm-slider-wrap { display: flex; align-items: center; gap: 10px; margin-top: auto; }
-  .cm-slider { flex: 1; width: auto; min-width: 0; accent-color: var(--ink-accent); }
-  .cm-slider-val { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-accent); min-width: 30px; text-align: right; flex: 0 0 auto; }
-
-  /* choice pills inside a tile — even, full-radius, no ladder tilt */
-  .cm-choices { display: flex; gap: 5px; flex-wrap: wrap; margin-top: auto; }
-  .cm-choices .mode-tab {
-    flex: 1 1 auto; min-width: 40px; text-align: center;
-    font-size: calc(15px + var(--text-size-adjust)); padding: 5px 8px 6px; border-radius: 6px;
-    border: 1.5px solid rgba(43,39,34,0.16); transform: none;
+  .fm-form {
+    position: relative; z-index: 1; padding: 14px 16px 16px; background: var(--sheet); color: var(--ink);
+    border: 1px solid rgba(43, 39, 34, 0.3); border-radius: 0 3px 3px 3px; box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.14);
   }
-  .cm-choices .mode-tab:nth-child(even) { transform: none; }
-  .cm-choices .mode-tab.active { transform: none; border-color: rgba(43,39,34,0.34); }
-  .cm-tile--wide .cm-choices .mode-tab { font-size: calc(18px + var(--text-size-adjust)); padding: 8px 10px 9px; }
+  :root[data-theme="dark"] .fm-form { border-color: rgba(236, 229, 214, 0.2); box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.4); }
+  .fm-masthead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; color: var(--print); border-bottom: 2.5px solid var(--print); padding-bottom: 6px; margin-bottom: 4px; }
+  .fm-masthead b { font-family: var(--type); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 2.5px; }
+  .fm-masthead span { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; }
 
-  /* the run-length hero — a big ink number over its slider, lives tucked below when endless */
-  .cm-tile--rounds { justify-content: flex-start; }
-  .cm-rounds-big {
-    font-family: var(--hand); font-weight: 700; font-size: calc(54px + var(--text-size-adjust)); line-height: 0.95;
-    color: var(--ink-accent); text-align: center; margin: 4px 0 2px;
+  .fm-row { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--print-soft); }
+  .fm-row:first-of-type, .fm-masthead + .fm-row { border-top: 0; }
+  .fm-f { position: relative; min-width: 0; padding: 9px 4px 11px 0; }
+  .fm-f + .fm-f { padding-left: 12px; border-left: 1px solid var(--print-soft); }
+  .fm-f.wide { grid-column: 1 / -1; }
+  @media (max-width: 520px) {
+    .fm-row { grid-template-columns: 1fr; }
+    .fm-f + .fm-f { padding-left: 0; border-left: 0; border-top: 1px solid var(--print-soft); }
   }
-  .cm-rounds-big.is-inf { font-size: calc(62px + var(--text-size-adjust)); }
-  .cm-slider--rounds { width: 100%; flex: none; }
-  .cm-lives {
-    margin-top: 12px; padding-top: 11px; display: flex; flex-direction: column; gap: 7px;
-    border-top: 1px dashed rgba(43,39,34,0.2);
-  }
-  .cm-lives-head { display: flex; align-items: baseline; justify-content: space-between; }
-  .cm-lives-lbl { font-size: calc(18px + var(--text-size-adjust)); }
+  .fm-l { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 7px; margin-bottom: 7px; color: var(--print);
+    font-family: var(--type); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.2; letter-spacing: 1.4px; text-transform: uppercase; }
+  .fm-l i { font-style: normal; display: inline-grid; place-items: center; width: 17px; height: 17px; flex: none; align-self: center;
+    border: 1.5px solid var(--print); border-radius: 50%; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0; }
+  .fm-l em { font-style: normal; font-weight: 400; letter-spacing: 0.6px; text-transform: none; opacity: 0.85; }
+  .fm-l--inline { margin: 0; }
+  .fm-sub { margin-top: 6px; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.4; color: var(--print); opacity: 0.9; }
+  .fm-hand { font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); line-height: 1; color: var(--pen); }
+  .fm-hand--sm { font-size: calc(19px + var(--text-size-adjust)); }
+  .fm-gap { margin-top: 6px; }
 
-  /* click-to-type value readouts: the number turns into a small field on click, so an exact
-     amount can be set past the slider's own range */
-  .cm-val-edit { cursor: text; border-radius: 4px; }
-  .cm-slider-val.cm-val-edit:hover { text-decoration: underline dotted; text-underline-offset: 2px; }
-  .cm-rounds-big.cm-val-edit:hover { text-decoration: underline dotted; text-underline-offset: 4px; }
-  .cm-val-edit:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
-  .cm-val-input {
-    font: inherit; color: inherit; text-align: right; width: 3.4em; max-width: 100%;
-    padding: 0 3px; background: rgba(43,39,34,0.06);
-    border: 1px solid rgba(43,39,34,0.34); border-radius: 4px;
+  /* exact amounts are written in the box beside each tally, in ballpoint */
+  .fm-count { flex: none; border-bottom: 1.5px solid var(--print); }
+  .fm-count input {
+    width: 2.6ch; padding: 0 2px; text-align: right; background: transparent; border: 0;
+    font-family: var(--hand); font-weight: 700; font-size: calc(25px + var(--text-size-adjust)); line-height: 1.1; color: var(--pen);
     -moz-appearance: textfield; appearance: textfield;
   }
-  .cm-val-input::-webkit-inner-spin-button, .cm-val-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  .cm-rounds-big .cm-val-input {
-    font-family: var(--hand); font-weight: 700; font-size: calc(40px + var(--text-size-adjust)); line-height: 1;
-    text-align: center; width: 2.4em;
-  }
-  /* the shared ∞ mark sizes to whichever readout hosts it */
-  .cm-slider-val .type-glyph { margin-right: 0; }
-  .cm-rounds-big .type-glyph--inf { width: 58px; height: 46px; margin: 0; vertical-align: middle; }
+  .fm-count input::-webkit-inner-spin-button, .fm-count input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .fm-count input::placeholder { color: var(--pen); opacity: 0.55; }
+  .fm-count input:focus { outline: none; }
+  .fm-count:focus-within { border-bottom-width: 2.5px; }
 
-  @media (max-width: 520px) {
-    .cm-grid { grid-template-columns: repeat(2, 1fr); }
-    .cm-tile--wide { grid-column: span 2; }
-    .cm-tile--half { grid-column: span 1; }
-    .cm-tile--hero { grid-column: span 2; grid-row: auto; }
+  /* tally: tap where the count ends, or drag along it */
+  .fm-tally-row { display: flex; align-items: center; gap: 12px; }
+  .fm-tally { flex: 1; min-width: 0; max-width: 250px; height: 40px; cursor: crosshair; touch-action: pan-y; border-bottom: 1px dotted var(--print-soft); }
+  .fm-tally--hints { max-width: 120px; }
+  .fm-tally svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .fm-tally .pen { fill: none; stroke: var(--pen); stroke-width: 2; stroke-linecap: round; }
+  .fm-tally .ghost { fill: none; stroke: var(--print-soft); stroke-width: 1; stroke-dasharray: 1.5 3; }
+  .fm-tally.off .pen { opacity: 0.25; }
+  .fm-tally:focus-visible, .fm-dial:focus-visible { outline: 2px dashed var(--pen); outline-offset: 3px; }
+
+  /* tick boxes */
+  .fm-ticks { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+  .fm-tick { display: inline-flex; align-items: center; gap: 7px; padding: 3px 0; cursor: pointer; background: none; border: 0; color: var(--print);
+    font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 0.8px; text-transform: uppercase; text-align: left; }
+  .fm-tick .bx { position: relative; flex: none; width: 17px; height: 17px; border: 1.5px solid var(--print); }
+  .fm-tick .bx svg { position: absolute; left: -3px; top: -8px; width: 26px; height: 26px; overflow: visible; }
+  .fm-tick .bx path { fill: none; stroke: var(--pen); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; animation: fm-draw 0.25s ease-out both; }
+  .fm-tick:focus-visible { outline: 2px dashed var(--pen); outline-offset: 2px; }
+
+  /* circle one */
+  .fm-circ { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 6px; }
+  .fm-o { position: relative; padding: 5px 9px; cursor: pointer; background: none; border: 0; color: var(--print);
+    font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; }
+  .fm-o:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .fm-o:focus-visible { outline: 2px dashed var(--pen); outline-offset: 3px; }
+  .fm-loop { position: absolute; left: -5px; top: -5px; overflow: visible; pointer-events: none; }
+  .fm-loop path { fill: none; stroke: var(--pen); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 300; animation: fm-draw 0.4s ease-out both; }
+  :is(.fm-o, .fm-tick).is-still path { animation: none; }
+  @keyframes fm-draw { from { stroke-dashoffset: 300; } to { stroke-dashoffset: 0; } }
+
+  /* the stopwatch */
+  .fm-clock { display: flex; align-items: center; gap: 12px; }
+  .fm-dial { width: 112px; height: 112px; flex: none; cursor: grab; touch-action: none; border-radius: 50%; }
+  @media (max-width: 520px) { .fm-dial { width: 100px; height: 100px; } }
+  .fm-dial svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .fm-dial .face, .fm-dial .crown { fill: none; stroke: var(--print); stroke-width: 1.6; }
+  .fm-dial .tk { stroke: var(--print); stroke-width: 1; }
+  .fm-dial .tk.big { stroke-width: 1.8; }
+  .fm-dial text { font-family: var(--type); font-weight: 700; font-size: 9px; fill: var(--print); text-anchor: middle; }
+  .fm-dial .hatch { fill: url(#fmHatch); }
+  .fm-dial .hatch-line { stroke: var(--pen); stroke-width: 1.1; opacity: 0.5; }
+  .fm-dial .hand { fill: none; stroke: var(--pen); stroke-width: 2.4; stroke-linecap: round; }
+  .fm-dial .pin { fill: var(--pen); }
+  .fm-clock-side { display: flex; flex-direction: column; gap: 8px; }
+  .fm-sec { display: inline-flex; align-items: baseline; gap: 6px; }
+
+  /* lives: hearts filled in with pen */
+  .fm-lives { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
+  .fm-hearts { display: flex; align-items: center; gap: 4px; }
+  .fm-heart { width: 26px; height: 24px; padding: 0; background: none; border: 0; cursor: pointer; }
+  .fm-heart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .fm-heart .o { fill: none; stroke: var(--print); stroke-width: 1.4; }
+  .fm-heart .s { fill: none; stroke: var(--pen); stroke-width: 1.6; stroke-linecap: round; }
+  .fm-heart:focus-visible { outline: 2px dashed var(--pen); outline-offset: 1px; }
+
+  /* n/a: switched off by the answering lever, crossed out by a clerk, value still legible */
+  .fm-f.na > :not(.fm-l):not(.fm-na) { opacity: 0.35; pointer-events: none; }
+  .fm-na { position: absolute; inset: 24px 0 4px; pointer-events: none; }
+  .fm-na svg { width: 100%; height: 100%; overflow: visible; }
+  .fm-na path { fill: none; stroke: var(--pen); stroke-width: 1.6; stroke-linecap: round; }
+  .fm-na span { position: absolute; right: 4px; bottom: 2px; padding: 0 4px; background: var(--sheet); transform: rotate(-3deg);
+    font-family: var(--hand); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); color: var(--pen); }
+
+  /* FILED and VOID, pressed onto the form when a copy is filed or voided */
+  .fm-stamp {
+    position: absolute; left: 50%; top: 42%; z-index: 5; padding: 6px 22px; pointer-events: none;
+    font-family: var(--type); font-weight: 700; font-size: calc(50px + var(--text-size-adjust)); line-height: 1; letter-spacing: 10px;
+    color: var(--red-pen); border: 6px solid currentColor; border-radius: 8px; filter: url(#stampInk1); mix-blend-mode: multiply;
+    transform: translate(-50%, -50%) rotate(-14deg); opacity: 0;
+    animation: fm-thunk 1.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
   }
+  .fm-stamp--filed { color: var(--pen); }
+  :root[data-theme="dark"] .fm-stamp { mix-blend-mode: normal; }
+  @keyframes fm-thunk {
+    0% { transform: translate(-50%, -50%) rotate(-8deg) scale(1.8); opacity: 0; }
+    18% { transform: translate(-50%, -50%) rotate(-14deg) scale(1); opacity: 0.9; }
+    70% { opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) rotate(-14deg) scale(1); opacity: 0; }
+  }
+
+  /* the foot: void the copy the form came from, or file the form as a new one */
+  .fm-foot { margin-top: 14px; }
+  .fm-acts { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .fm-void {
+    display: inline-flex; flex-direction: column; align-items: center; padding: 4px 12px 3px; cursor: pointer; background: none;
+    color: var(--red-pen); border: 3px solid currentColor; border-radius: 4px; transform: rotate(-4deg); filter: url(#stampInk1);
+    font-family: var(--type); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); line-height: 1; letter-spacing: 4px;
+    max-width: 50%;
+  }
+  .fm-void small { max-width: 100%; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.5px; text-transform: none; }
+  .fm-void:is(:hover, :focus-visible) { transform: rotate(-4deg) scale(1.04); }
+  .fm-void:focus-visible { outline: 2px dashed var(--red-pen); outline-offset: 3px; }
+  .fm-file {
+    padding: 8px 14px; cursor: pointer; color: var(--pen); background: color-mix(in srgb, var(--pen) 8%, var(--paper));
+    border: 2px solid var(--pen); border-radius: 3px; box-shadow: 2px 2px 0 color-mix(in srgb, var(--pen) 25%, transparent); transform: rotate(0.6deg);
+    font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .fm-file:not(:disabled):is(:hover, :focus-visible) { background: var(--pen); color: var(--paper); }
+  .fm-file:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  .fm-file-note, .fm-slip-note { margin: 8px 0 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.4; color: var(--ink-soft); text-align: right; }
+  .fm-slip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+  .fm-slip-lab { font-family: var(--type); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase; color: var(--print); }
+  .fm-slip-input {
+    flex: 1 1 150px; min-width: 0; padding: 0 2px 2px; background: transparent; border: 0; border-bottom: 1.5px solid var(--print);
+    font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); color: var(--pen);
+  }
+  .fm-slip-input:focus { outline: none; border-bottom-width: 2.5px; }
+  .fm-slip-input.is-empty { animation: fm-nudge 0.3s ease; }
+  @keyframes fm-nudge { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  .fm-slip-note { flex-basis: 100%; margin: 0; text-align: left; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fm-copy, .fm-tick .bx path, .fm-loop path, .fm-slip-input.is-empty { transition: none; animation: none; }
+    .fm-stamp { animation-duration: 0.01s; }
+  }
+  body[data-reduce-motion="on"] :is(.fm-copy, .fm-tick .bx path, .fm-loop path, .fm-slip-input.is-empty) { transition: none; animation: none; }
+  body[data-reduce-motion="on"] .fm-stamp { animation-duration: 0.01s; }
+
+  /* the working copy's name on the start row, when it isn't a filed mode yet */
+  .custom-active-name.is-unfiled { color: var(--ink-soft); }
 
   /* Choose Your Path — mid-run perk fork. The overlay covers the answered page
      (the card is position:relative — see .quit-btn) until a perk is chosen. */
@@ -9793,7 +9861,7 @@
   @media (prefers-reduced-motion: reduce) {
     .hint-btn.urge { animation: none; }
     .hint-btn, .flag-btn, .path-skip-btn, .cover-strip, .hist-more, .date-stamp,
-    .sign-pen, .giveup-ticket, .env-btn, .env-sheet, .pencil-half, .set-cover-sticker { transition: none; }
+    .sign-pen, .giveup-ticket, .env-btn, .env-sheet, .set-cover-sticker { transition: none; }
     .feedback .sticker { animation: none; }
   }
 

@@ -686,47 +686,40 @@ export function resetTracks() {
   try { localStorage.removeItem(TRACKS_KEY); } catch (e) { /* ignore */ }
 }
 
-/* ---------- Custom mode: player-authored preset store ---------- */
-// Key: swiftSongAssociation.custom → { presets:[{id,name,mode}], activeId }
-// `mode` is a MODES-shaped lever object (see CUSTOM_DEFAULT_MODE). Purely saved
-// configurations — nothing here feeds stats/records. A fresh/empty store seeds one preset
-// so a first-time player always has something to play.
-// `id` is passed only for the unsaved seed below, which needs a STABLE identity: an untouched
-// store is re-seeded on every read, and things outside it key off the preset id — the
-// randomiser tokenises its draw per preset, so a seed that invented a fresh id each read would
-// look like a brand new mode every time anything asked. A "New mode" gets the random id, which
-// can never collide with the seed's.
-export function defaultCustomPreset(id) {
-  return {
-    id: id || "cp" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
-    // Deliberately not descriptive of the levers: this preset is the player's to edit, and a
-    // name that spelled out the clock or the answer type would start lying the moment they
-    // dragged a slider.
-    name: "My mode",
-    mode: { ...CUSTOM_DEFAULT_MODE },
-  };
+/* ---------- Custom mode: the working copy and the filed modes ----------
+   Key: swiftSongAssociation.custom → { v: 2, draft: {levers}, from: id|null, saved: [{id,name,mode}] }
+   Two halves that never write to each other. `draft` is the one form being filled in: every
+   edit lands there and only there, and Start plays it. `saved` are filed copies, a name and a
+   lever set fixed at the moment of filing and never edited afterwards. Picking a filed copy
+   copies its levers INTO the draft (`from` remembers which, so the form can say what it was
+   copied from), and filing always appends a new copy. There is no overwrite path anywhere, so
+   a mode you filed is exactly the mode you filed.
+   Older notebooks kept { presets, activeId } and edited every preset in place. Each of those
+   presets is kept as a filed copy with its id intact (the randomiser's ledger and a pinned goal
+   key off it) and the active one becomes the draft. Purely saved configurations: nothing here
+   feeds stats or records. */
+export const CUSTOM_DRAFT_ID = "draft";
+export function newCustomId() {
+  return "cp" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
 }
 export function loadCustom() {
-  try {
-    const raw = localStorage.getItem(CUSTOM_KEY);
-    if (raw) {
-      const o = JSON.parse(raw);
-      if (o && Array.isArray(o.presets) && o.presets.length) {
-        const activeId = o.presets.some((p) => p && p.id === o.activeId) ? o.activeId : o.presets[0].id;
-        return { presets: o.presets, activeId };
-      }
-    }
-  } catch (e) { /* ignore */ }
-  const seed = defaultCustomPreset("cpseed");
-  return { presets: [seed], activeId: seed.id };
+  let o = null;
+  try { const raw = localStorage.getItem(CUSTOM_KEY); if (raw) o = JSON.parse(raw); } catch (e) { /* ignore */ }
+  const clean = (list) => list.filter((p) => p && typeof p.id === "string" && p.id && p.id !== CUSTOM_DRAFT_ID && p.mode && typeof p.mode === "object")
+    .map((p) => ({ id: p.id, name: String(p.name || "Custom"), mode: { ...p.mode } }));
+  if (o && Array.isArray(o.presets) && !Array.isArray(o.saved)) {
+    const saved = clean(o.presets);
+    const active = saved.find((p) => p.id === o.activeId) || saved[0];
+    return { v: 2, draft: { ...(active ? active.mode : CUSTOM_DEFAULT_MODE) }, from: active ? active.id : null, saved };
+  }
+  if (o && Array.isArray(o.saved) && o.draft && typeof o.draft === "object") {
+    const saved = clean(o.saved);
+    return { v: 2, draft: { ...o.draft }, from: saved.some((p) => p.id === o.from) ? o.from : null, saved };
+  }
+  return { v: 2, draft: { ...CUSTOM_DEFAULT_MODE }, from: null, saved: [] };
 }
 export function saveCustom(o) {
-  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
-}
-// The preset the player will play / edit next. Never null (loadCustom always seeds one).
-export function activeCustomPreset() {
-  const o = loadCustom();
-  return o.presets.find((p) => p.id === o.activeId) || o.presets[0];
+  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify({ v: 2, draft: o.draft, from: o.from || null, saved: o.saved })); } catch (e) { /* ignore */ }
 }
 export function resetCustom() {
   try { localStorage.removeItem(CUSTOM_KEY); } catch (e) { /* ignore */ }

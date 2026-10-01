@@ -143,7 +143,7 @@ import {
   loadGoal, saveGoal, clearGoal,
   loadCharmFolds, setCharmFold, saveCharmFolds,
   loadSongTally, saveSongTally, recordGameTally,
-  loadCustom, saveCustom, activeCustomPreset, resetCustom, defaultCustomPreset,
+  loadCustom, saveCustom, resetCustom, newCustomId, CUSTOM_DRAFT_ID,
   loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks, bumpMugSips, tapPageMark, pageMarksTapped,
   noteSelfTitledWord,
   loadSettings, saveSettings,
@@ -4405,7 +4405,9 @@ function goalEntries(earn) {
 // the pool was built. normalizeCustomMode fills a blank in with the defaults, so the lever gate
 // reads a real lever set either way rather than throwing on a missing preset.
 function customPresetById(id) {
-  return loadCustom().presets.find((cp) => cp && cp.id === id) || { mode: {} };
+  const s = loadCustom();
+  if (id === CUSTOM_DRAFT_ID) return customDraftPreset(s);
+  return s.saved.find((cp) => cp.id === id) || { mode: {} };
 }
 
 // Button text: "play Ultra", "play a challenge", "play Album Focus on Lyricist".
@@ -13337,12 +13339,32 @@ function renderGuestDetail(id) {
 
 /* ---------- Custom mode start-row (the active preset summary + Change) ----------
    Custom is a first-class game type: selecting the Custom tab shows this row (in place of the
-   difficulty ladder), and the launchpad "Start writing" button runs the active preset. */
+   difficulty ladder), and the launchpad "Start writing" button runs the working copy. */
+// The levers that make two modes the same mode. Lives only bite on an endless run, but they
+// are still compared: a filed copy is the exact form that was filed, nothing looser.
+const CUSTOM_LEVERS = ["seconds", "pool", "examples", "hintBudget", "answer", "rounds", "lives", "dropdown", "noTitle"];
+function sameCustomLevers(a, b) {
+  const x = normalizeCustomMode(a), y = normalizeCustomMode(b);
+  return CUSTOM_LEVERS.every((k) => x[k] === y[k]);
+}
+// The working copy as a playable preset, named for what it honestly is: the filed copy's own
+// name while it still matches that copy, "<name>, edited" once it doesn't, and "Unsaved mode"
+// for a form that was never copied from anything. A run on an edited or blank form carries the
+// draft id, so the randomiser's ledger never credits a filed copy with a run it didn't have.
+function customDraftPreset(store = loadCustom()) {
+  const src = store.from ? store.saved.find((p) => p.id === store.from) : null;
+  const same = !!src && sameCustomLevers(src.mode, store.draft);
+  return {
+    id: same ? src.id : CUSTOM_DRAFT_ID,
+    name: same ? src.name : src ? `${src.name}, edited` : "Unsaved mode",
+    mode: { ...store.draft },
+    src, filed: same,
+  };
+}
 function renderCustomRow() {
   const el = $("customStartSummary");
   if (!el) return;
-  const store = loadCustom();
-  const active = store.presets.find((p) => p.id === store.activeId) || store.presets[0];
+  const active = customDraftPreset();
   const activeMode = normalizeCustomMode(active.mode);
 
   // One clean section: the active preset's name + lever summary, and a single Change button
@@ -13350,7 +13372,7 @@ function renderCustomRow() {
   el.innerHTML =
     `<div class="custom-active">` +
       `<div class="custom-active-head">` +
-        `<span class="custom-active-name">${escapeHtml(active.name || "Custom")}</span>` +
+        `<span class="custom-active-name${active.filed ? "" : " is-unfiled"}">${escapeHtml(active.name)}</span>` +
         `<button type="button" id="customChangeBtn" class="custom-change-btn">${TYPE_GLYPHS.custom}Change</button>` +
       `</div>` +
       `<span class="custom-active-levers">${escapeHtml(customLeverSummary(activeMode))}</span>` +
@@ -15686,7 +15708,7 @@ function refreshStartBoard() {
 }
 // The active custom preset's playable lever set (clamped + derived). Reused by the start-row
 // summary, the tagline, and startCustom.
-function activeCustomMode() { return normalizeCustomMode(activeCustomPreset().mode); }
+function activeCustomMode() { return normalizeCustomMode(loadCustom().draft); }
 // Show/hide the start-screen rows that only apply to a particular game type: the lives
 // variant row (Infinite only) and the difficulty picker (Custom brings its own lever set).
 function applyTypeLayout() {
@@ -17061,15 +17083,15 @@ function buildRandomPool() {
     push("bonus", g.id, "Bonus · " + g.name, { bonus: g.id });
   }
 
-  /* Custom, one entry per preset the player has written. The levers ARE the game here, so two
-     presets are two different things to be dealt in the way two Infinite variants are, and the
-     token goes per preset (see RANDOM_CATEGORIES) — a preset written this afternoon is something
-     the dice have never handed over. Nothing to filter: loadCustom always seeds at least one
-     preset, a preset can't be locked, and playing one spends nothing. */
-  for (const preset of loadCustom().presets) {
-    if (!preset || !preset.id) continue;
-    push("custom", preset.id, "Your own rules · " + preset.name, { preset: preset.id });
-  }
+  /* Custom, one entry per filed mode, plus the working copy when it isn't simply one of them.
+     The levers ARE the game here, so two modes are two different things to be dealt in the way
+     two Infinite variants are, and the token goes per mode (see RANDOM_CATEGORIES). The working
+     copy is always playable, so even a notebook with nothing filed has one entry; a mode can't
+     be locked, and playing one spends nothing. */
+  const customStore = loadCustom();
+  for (const preset of customStore.saved) push("custom", preset.id, "Your own rules · " + preset.name, { preset: preset.id });
+  const draft = customDraftPreset(customStore);
+  if (!draft.filed) push("custom", CUSTOM_DRAFT_ID, "Your own rules · " + draft.name, { preset: CUSTOM_DRAFT_ID });
 
   // Ruthless, one entry per lens. The lens is the thing drawn — six sections are six different
   // games in the way six albums are — and none of them can ever be locked, so there is nothing
@@ -17419,11 +17441,12 @@ function customInfinite() { return gameType === "custom" && currentMode && curre
 // but never records/stats/history/tally/play-counts (see endCustom). The hint budget caps
 // total reveals for the run.
 function startCustom(presetId) {
-  // A preset id comes from the randomiser, the pinned goal and the results card's replay, all of
-  // which mean one specific preset rather than "whatever the shelf is pointing at". Resolving it
-  // here (and falling back to the active one) keeps the active pick a thing only the shelf moves.
-  const preset = (presetId && loadCustom().presets.find((cp) => cp && cp.id === presetId))
-    || activeCustomPreset();
+  // A filed id comes from the randomiser, the pinned goal and the results card's replay, all of
+  // which mean one specific filed mode. Anything else (no id, the draft id, a copy voided since)
+  // plays the working copy, which is what the start screen's Start button means.
+  const store = loadCustom();
+  const preset = (presetId && presetId !== CUSTOM_DRAFT_ID && store.saved.find((cp) => cp.id === presetId))
+    || customDraftPreset(store);
   gameType = "custom";
   notePlayed("custom", preset.id);
   currentMode = normalizeCustomMode(preset.mode);   // clone — never persisted via DIFF_KEY
@@ -28646,353 +28669,366 @@ function closeSettings() {
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
-/* ---------- Custom mode: the "Change" modal (author the active preset) ----------
-   Reuses the settings-modal chrome (.settings-modal / .set-toggle / .set-slider — its rows are
-   its own .cm-tile bento) but its controls read/write a working PRESET'S lever object instead of global
-   settings, dispatching on data-cm-* attributes. Every edit persists immediately to CUSTOM_KEY;
-   the custom page re-renders on close. */
-// The modal is a bento of control tiles (see .cm-grid) rather than a flat list. Each helper
-// emits one tile; a `span` class (cm-tile--hero / --wide / --half) sets how many grid cells it
-// takes so some controls read bigger than others. All still dispatch on the same data-cm-*
-// attributes the wiring listens for.
-function cmTileHead(name, desc) {
-  return `<div class="cm-tile-head"><span class="cm-tile-name">${name}</span>` +
-    (desc ? `<span class="cm-tile-desc">${desc}</span>` : "") + `</div>`;
+/* ---------- Custom mode: the "Change" modal, Form 13 ----------
+   A printed form (Custom's brick rust) filled in by hand in blue ballpoint, with the gesture
+   each answer wants: tally the pages, wind the stopwatch, circle one, tick a box. Reuses the
+   settings-modal chrome; its own stock lives in styles.css under FORM 13.
+
+   The form is ALWAYS the working copy (loadCustom().draft). Nothing on it writes to a filed
+   mode. Filing appends a new copy under a name chosen at that moment, and from then on the copy
+   is locked: picking it copies its levers back onto the form, where they can be changed and
+   filed again as another copy, never over the old one. Voiding deletes a filed copy outright.
+   Every lever edit persists the draft immediately (it is what Start plays); the start row
+   re-renders on close. */
+const FM_STOCK_NAMES = ["canary", "pink", "blue", "green", "goldenrod", "lilac"];
+// A filed copy's stock is seeded off its id, so voiding one never recolours the rest of the pad.
+const fmStock = (id) => fnv1a("stock:" + id) % FM_STOCK_NAMES.length;
+let fmNaming = false;       // the "name this copy" slip is open in the foot
+let fmStamp = null;         // "FILED" / "VOID": pressed onto the next render of the form
+
+// ---- pen marks: seeded, so the same answer is drawn the same way every time ----
+const fmRng = (seed) => { const r = mulberry32(fnv1a(String(seed))); return (a) => (r() - 0.5) * a; };
+// x positions a tally's strokes sit at, index = count (0 = nothing written)
+function fmTallyStops(cap) {
+  const xs = [0]; let x = 4;
+  for (let i = 0; i < cap; i++) { if (i % 5 === 4) { xs.push(x); x += 9; } else { x += 5.6; xs.push(x - 2.8); } }
+  return xs;
 }
-function cmToggleTile(key, name, desc, on, disabled, span) {
-  return `<div class="cm-tile cm-tile--toggle ${span}${disabled ? " cm-disabled" : ""}">` +
-    cmTileHead(name, desc) +
-    `<button type="button" class="set-toggle" data-cm-toggle="${key}" aria-pressed="${!!on}" aria-label="${name}"${disabled ? " disabled" : ""}></button>` +
-    `</div>`;
+function fmTallySvg(n, cap, seed) {
+  const j = fmRng(seed);
+  const h = 30;
+  let x = 4, d = "", ghost = "";
+  for (let i = 0; i < cap; i++) {
+    if (i % 5 === 4) {
+      // the fifth stroke crosses the four before it
+      const x0 = x - 5.6 * 4 - 2;
+      if (i < n) d += `M${(x0 + j(1)).toFixed(1)} ${(h * 0.75 + j(2)).toFixed(1)} L${(x + 2 + j(1)).toFixed(1)} ${(h * 0.22 + j(2)).toFixed(1)} `;
+      x += 9;
+    } else {
+      const top = 6 + j(2.5), bot = h + 2 + j(2.5), lean = j(1.6);
+      if (i < n) d += `M${(x + j(0.6)).toFixed(1)} ${top.toFixed(1)} Q${(x + lean).toFixed(1)} ${((top + bot) / 2).toFixed(1)} ${(x + j(1)).toFixed(1)} ${bot.toFixed(1)} `;
+      else ghost += `M${x.toFixed(1)} ${(h - 2).toFixed(1)} V${(h + 2).toFixed(1)} `;
+      x += 5.6;
+    }
+  }
+  return `<svg viewBox="0 0 ${(x + 4).toFixed(1)} 40" preserveAspectRatio="xMinYMid meet" aria-hidden="true"><path class="ghost" d="${ghost}"/><path class="pen" d="${d}"/></svg>`;
 }
-function cmChoiceTile(key, name, desc, options, cur, span) {
-  const tabs = options.map((o) =>
-    `<button type="button" class="mode-tab${String(o.val) === String(cur) ? " active" : ""}" ` +
-      `data-cm-choice="${key}" data-val="${escapeHtml(String(o.val))}" ` +
-      `aria-pressed="${String(o.val) === String(cur)}">${escapeHtml(o.label)}</button>`
-  ).join("");
-  return `<div class="cm-tile cm-tile--choice ${span}">` +
-    cmTileHead(name, desc) +
-    `<div class="cm-choices" role="group" aria-label="${escapeHtml(name)}">${tabs}</div></div>`;
+function fmTick(seed) {
+  const j = fmRng(seed);
+  return `<svg viewBox="0 0 26 26" aria-hidden="true"><path d="M${(4 + j(1)).toFixed(1)} ${(13 + j(1.5)).toFixed(1)} L${(10 + j(1)).toFixed(1)} ${(20 + j(1)).toFixed(1)} L${(23 + j(1.5)).toFixed(1)} ${(3 + j(1.5)).toFixed(1)}"/></svg>`;
 }
-// Per-lever slider metadata. `sliderMin`/`sliderMax` are the comfortable drag range shown in
-// the modal; `typedMax` is how far the click-to-type value box may go past the slider's end;
-// `infStop` (when set) is the slider position, one past the finite max, that means the
-// endless/unlimited state (rounds → 0, hintBudget → CUSTOM_HINT_UNLIMITED).
-const CM_SLIDER_META = {
-  rounds:     { sliderMin: CUSTOM_ROUNDS_MIN,  sliderMax: CUSTOM_ROUNDS_MAX,  typedMax: CUSTOM_ROUNDS_TYPED_MAX,  infStop: CUSTOM_ROUNDS_MAX + 1 },
-  seconds:    { sliderMin: CUSTOM_SECONDS_MIN, sliderMax: CUSTOM_SECONDS_MAX, typedMax: CUSTOM_SECONDS_TYPED_MAX },
-  hintBudget: { sliderMin: 0,                  sliderMax: CUSTOM_HINT_MAX,    typedMax: CUSTOM_HINT_TYPED_MAX,    infStop: CUSTOM_HINT_MAX + 1 },
-  lives:      { sliderMin: CUSTOM_LIVES_MIN,   sliderMax: CUSTOM_LIVES_MAX,   typedMax: CUSTOM_LIVES_TYPED_MAX },
-};
-// Map a slider's raw thumb position to the lever's stored value (the top stop = endless/unlimited).
-function cmSliderPosToValue(key, pos) {
-  if (key === "rounds") return pos > CUSTOM_ROUNDS_MAX ? 0 : pos;
-  if (key === "hintBudget") return pos > CUSTOM_HINT_MAX ? CUSTOM_HINT_UNLIMITED : pos;
-  return pos;
+function fmHeart(filled, seed) {
+  const j = fmRng(seed);
+  const scrib = filled ? `<path class="s" d="M8 7 L${(17 + j(2)).toFixed(1)} 8 M6 10 L${(20 + j(2)).toFixed(1)} 10.5 M7 13 L${(19 + j(2)).toFixed(1)} 13.6 M9 16 L${(17 + j(2)).toFixed(1)} 16.2 M11 18.6 L${(15 + j(1)).toFixed(1)} 18.8"/>` : "";
+  return `<svg viewBox="0 0 26 24" aria-hidden="true">${scrib}<path class="o" d="M13 21.5 C6 16.5 2.5 12.6 3 8.4 C3.4 5 6.6 3.2 9.4 4 C11.2 4.5 12.4 5.8 13 7.2 C13.7 5.6 15.2 4.3 17.2 4 C20.2 3.6 23.2 5.6 23.1 9 C23 13 19.6 16.8 13 21.5 Z"/></svg>`;
 }
-// Map a stored value back to a thumb position. Values typed past the slider's end pin the thumb
-// at its finite max (the real number still shows in the label beside it).
-function cmValueToSliderPos(key, v) {
-  const meta = CM_SLIDER_META[key];
-  if (key === "rounds") return v === 0 ? meta.infStop : Math.min(v, meta.sliderMax);
-  if (key === "hintBudget") return v < 0 ? meta.infStop : Math.min(Math.max(v, 0), meta.sliderMax);
-  return Math.min(Math.max(v, meta.sliderMin), meta.sliderMax);
+// A loose ballpoint loop around a w×h word: two passes that never quite close, never an oval.
+function fmLoop(w, h, seed) {
+  const r = mulberry32(fnv1a(String(seed)));
+  const cx = w / 2, cy = h / 2, rx = w / 2 + 5, ry = h / 2 + 4;
+  const start = -2.6 + r() * 0.5, sweep = Math.PI * 2 + 0.55 + r() * 0.35;
+  const pts = [];
+  for (let i = 0; i <= 28; i++) {
+    const t = start + (sweep * i) / 28, wob = 1 + (r() - 0.5) * 0.05 + (i / 28) * 0.06;
+    pts.push([cx + Math.cos(t) * rx * wob, cy + Math.sin(t) * ry * wob - (i / 28) * 2.2]);
+  }
+  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length - 1; i += 2) d += ` Q${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)} ${pts[i + 1][0].toFixed(1)} ${pts[i + 1][1].toFixed(1)}`;
+  return `<svg class="fm-loop" width="${(w + 10).toFixed(0)}" height="${(h + 10).toFixed(0)}" aria-hidden="true"><path d="${d}" transform="translate(5 5)"/></svg>`;
 }
-// The value shown beside a slider, as HTML, from the lever's REAL stored value. Endless runs and
-// unlimited hints render the shared infinite glyph (the same mark Infinite mode wears).
-function cmSliderLabelHtml(key, v) {
-  if (key === "seconds") return v > 0 ? v + "s" : "no clock";
-  if (key === "hintBudget") return v < 0 ? INF_GLYPH : (v > 0 ? String(v) : "none");
-  if (key === "rounds") return v === 0 ? INF_GLYPH : String(v);
-  if (key === "lives") return v === 1 ? "Sudden death" : (v + " lives");
-  return String(v);
-}
-function cmSliderAriaValueText(key, v) {
-  if (key === "seconds") return v > 0 ? `${v} seconds` : "No clock";
-  if (key === "hintBudget") return v < 0 ? "Unlimited hints" : (v > 0 ? `${v} hints` : "No hints");
-  if (key === "rounds") return v === 0 ? "Endless" : `${v} round${v === 1 ? "" : "s"}`;
-  if (key === "lives") return v === 1 ? "Sudden death" : `${v} lives`;
-  return String(v);
-}
-// A slider's value readout, marked up so a click turns it into a number field (see wireCmEditables).
-function cmValLabel(key, val, extraCls, disabled = false) {
-  return `<span class="cm-slider-val cm-val-edit${extraCls ? " " + extraCls : ""}" data-cm-slider-val="${key}" ` +
-    `data-cm-edit="${key}"${disabled ? ' aria-disabled="true"' : ' role="button" tabindex="0" title="click to type an exact value"'}>` +
-    `${cmSliderLabelHtml(key, val)}</span>`;
-}
-// A disabled slider greys out and stops taking drags; wireCmEditables also refuses to open the
-// click-to-type field inside a .cm-disabled tile, so a greyed lever is inert on every path.
-function cmSliderTile(key, name, desc, val, disabled, span) {
-  const meta = CM_SLIDER_META[key];
-  const sliderMax = meta.infStop != null ? meta.infStop : meta.sliderMax;
-  return `<div class="cm-tile cm-tile--slider ${span}${disabled ? " cm-disabled" : ""}">` +
-    cmTileHead(name, desc) +
-    `<div class="cm-slider-wrap">` +
-      `<input type="range" class="set-slider cm-slider" data-cm-slider="${key}" min="${meta.sliderMin}" max="${sliderMax}" step="1" ` +
-        `value="${cmValueToSliderPos(key, val)}" aria-label="${name}" aria-valuetext="${cmSliderAriaValueText(key, val)}"${disabled ? " disabled" : ""}>` +
-      cmValLabel(key, val, "", disabled) +
-    `</div></div>`;
-}
-// The run-length hero tile: a big value that reads the round count (or the infinite glyph), a
-// slider whose top stop means "endless", and (only while endless) a lives slider.
-function cmRoundsTile(m) {
-  const infinite = m.rounds === 0;
-  const meta = CM_SLIDER_META.rounds;
-  const livesBlock = infinite
-    ? `<div class="cm-lives">` +
-        `<div class="cm-lives-head"><span class="cm-tile-name cm-lives-lbl">Lives</span>` +
-          cmValLabel("lives", m.lives) + `</div>` +
-        `<input type="range" class="set-slider cm-slider" data-cm-slider="lives" min="${CUSTOM_LIVES_MIN}" max="${CUSTOM_LIVES_MAX}" step="1" ` +
-          `value="${cmValueToSliderPos("lives", m.lives)}" aria-label="Lives" aria-valuetext="${cmSliderAriaValueText("lives", m.lives)}">` +
-      `</div>`
-    : "";
-  return `<div class="cm-tile cm-tile--hero cm-tile--rounds">` +
-    cmTileHead("Rounds", `pages in a run, or slide to the end for endless`) +
-    `<div class="cm-rounds-big cm-val-edit${infinite ? " is-inf" : ""}" data-cm-rounds-big data-cm-edit="rounds" ` +
-      `role="button" tabindex="0" title="click to type an exact round count">${cmSliderLabelHtml("rounds", m.rounds)}</div>` +
-    `<input type="range" class="set-slider cm-slider cm-slider--rounds" data-cm-slider="rounds" min="${meta.sliderMin}" max="${meta.infStop}" step="1" ` +
-      `value="${cmValueToSliderPos("rounds", m.rounds)}" aria-label="Rounds" aria-valuetext="${cmSliderAriaValueText("rounds", m.rounds)}">` +
-    livesBlock +
-    `</div>`;
+// The stopwatch: a printed face, the elapsed part hatched in pen, the hand drawn to the value.
+function fmDialSvg(sec) {
+  const C = 56, R = 46;
+  let ticks = "", labels = "";
+  for (let i = 0; i < 60; i++) {
+    const a = (i / 60) * Math.PI * 2 - Math.PI / 2, big = i % 5 === 0, r1 = big ? R - 7 : R - 4;
+    ticks += `<line class="tk${big ? " big" : ""}" x1="${(C + Math.cos(a) * r1).toFixed(1)}" y1="${(C + Math.sin(a) * r1).toFixed(1)}" x2="${(C + Math.cos(a) * R).toFixed(1)}" y2="${(C + Math.sin(a) * R).toFixed(1)}"/>`;
+    if (i % 15 === 0) labels += `<text x="${(C + Math.cos(a) * (R - 15)).toFixed(1)}" y="${(C + Math.sin(a) * (R - 15) + 3).toFixed(1)}">${i || 60}</text>`;
+  }
+  const s = Math.min(sec, 60), a = (s / 60) * Math.PI * 2 - Math.PI / 2;
+  const hx = C + Math.cos(a) * (R - 6), hy = C + Math.sin(a) * (R - 6);
+  const wedge = s > 0 && s < 60
+    ? `<path class="hatch" d="M${C} ${C} L${C} ${C - R + 2} A${R - 2} ${R - 2} 0 ${s > 30 ? 1 : 0} 1 ${(C + Math.cos(a) * (R - 2)).toFixed(1)} ${(C + Math.sin(a) * (R - 2)).toFixed(1)} Z"/>`
+    : s >= 60 ? `<circle class="hatch" cx="${C}" cy="${C}" r="${R - 2}"/>` : "";
+  return `<svg viewBox="0 0 112 112" aria-hidden="true"><defs><pattern id="fmHatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><path class="hatch-line" d="M0 0 V4"/></pattern></defs>` +
+    `${wedge}<circle class="face" cx="${C}" cy="${C}" r="${R}"/><path class="crown" d="M50 5.6 H62 M56 5.6 V10"/>${ticks}${labels}` +
+    (sec > 0 ? `<path class="hand" d="M${C} ${C} Q${((C + hx) / 2 + 1.2).toFixed(1)} ${((C + hy) / 2 - 1).toFixed(1)} ${hx.toFixed(1)} ${hy.toFixed(1)}"/>` : "") +
+    `<circle class="pin" cx="${C}" cy="${C}" r="2.6"/></svg>`;
 }
 
-function customModalFocusSelector(active) {
-  if (!(active instanceof HTMLElement)) return null;
-  const owner = active.closest("[data-cm-toggle], [data-cm-choice], [data-cm-slider], [data-cm-edit], [data-cm-preset], [data-cm-act]");
-  const d = (owner && owner.dataset) || active.dataset || {};
-  if (d.cmToggle) return `[data-cm-toggle="${CSS.escape(d.cmToggle)}"]`;
-  if (d.cmChoice) return `[data-cm-choice="${CSS.escape(d.cmChoice)}"][data-val="${CSS.escape(d.val)}"]`;
-  if (d.cmSlider) return `[data-cm-slider="${CSS.escape(d.cmSlider)}"]`;
-  if (d.cmEdit) return `[data-cm-edit="${CSS.escape(d.cmEdit)}"]`;
-  if (d.cmPreset) return `[data-cm-preset="${CSS.escape(d.cmPreset)}"]`;
-  if (d.cmAct) return `[data-cm-act="${CSS.escape(d.cmAct)}"]`;
-  return active.id === "cmNameInput" ? "#cmNameInput" : null;
-}
-function restoreCustomModalFocus(selector) {
-  if (!selector || !$("customModal").classList.contains("open")) return;
-  const body = $("customModalBody");
-  let target = body.querySelector(selector);
-  if (target && target.disabled) target = null;
-  target = target || body.querySelector(".cm-preset-chip.active:not([disabled])") || $("cmNameInput");
-  if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
-}
+// ---- the form's parts ----
+const fmLabel = (n, label, em) => `<div class="fm-l"><i>${n}</i>${label}${em ? ` <em>${em}</em>` : ""}</div>`;
+const fmTickBox = (k, label, on) =>
+  `<button type="button" class="fm-tick" data-fm-tick="${k}" aria-pressed="${on}"><span class="bx">${on ? fmTick(k) : ""}</span>${label}</button>`;
+const fmCircleOne = (k, opts, cur) => `<div class="fm-circ" role="group">` + opts.map(([v, label]) =>
+  `<button type="button" class="fm-o" data-fm-circle="${k}" data-val="${escapeHtml(String(v))}" aria-pressed="${String(v) === String(cur)}">${label}</button>`).join("") + `</div>`;
+const fmCount = (k, val, min, max, label) =>
+  `<label class="fm-count"><input type="number" inputmode="numeric" data-fm-num="${k}" min="${min}" max="${max}" value="${val}" placeholder="∞" aria-label="${label}"></label>`;
+// A field the answering lever has switched off, crossed through the way a clerk would. The
+// value stays readable underneath: it is stored, and comes back when answering does.
+const fmNa = (why) => `<div class="fm-na" aria-hidden="true"><svg viewBox="0 0 100 40" preserveAspectRatio="none"><path d="M2 36 C30 26 64 14 98 3" vector-effect="non-scaling-stroke"/></svg><span>n/a · ${why}</span></div>`;
 
-/* New and Delete are the two ends of one pencil: the point writes a new preset, the rubber on
-   the far end rubs one out. Each half is its own button, drawn in three flat facets with the
-   paint cut in scallops where it was sharpened; hover draws that half away from the other. */
-const PENCIL_FACETS = (x0, x1) =>
-  `<path fill="#f2cb5c" d="M${x0} 3.5H${x1}V10.5H${x0}Z"/><path fill="#e5b23c" d="M${x0} 10.5H${x1}V19.5H${x0}Z"/>` +
-  `<path fill="#c99429" d="M${x0} 19.5H${x1}V26.5H${x0}Z"/><path d="M${x0} 10.5H${x1}M${x0} 19.5H${x1}" stroke="rgba(43,38,34,.3)" stroke-width=".8"/>`;
-const PENCIL_POINT = `<svg viewBox="0 0 84 30" aria-hidden="true">` +
-  `<path fill="#e1bd85" d="M1.5 15 24 3.5V26.5Z"/><path fill="#2b2622" d="M1.5 15 9.3 11V19Z"/>` +
-  `<path fill="#f2cb5c" d="M24 3.5C20.4 5 20.4 9 24 10.5Z"/><path fill="#e5b23c" d="M24 10.5C19.6 12.4 19.6 17.6 24 19.5Z"/>` +
-  `<path fill="#c99429" d="M24 19.5C20.4 21 20.4 25 24 26.5Z"/>${PENCIL_FACETS(24, 84)}` +
-  `<path class="o" d="M84 3.5H24L1.5 15 24 26.5H84M24 3.5V26.5"/></svg>`;
-const PENCIL_RUBBER = `<svg viewBox="0 0 96 30" aria-hidden="true">${PENCIL_FACETS(0, 70)}` +
-  `<path fill="#bdb7ab" d="M70 3H81V27H70Z"/><path d="M73 3.4V26.6M75.5 3.4V26.6M78 3.4V26.6" stroke="#8d877a" stroke-width="1"/>` +
-  `<path fill="#e8a4a0" d="M81 3.5H87C90.5 3.5 91.5 7 91.5 15S90.5 26.5 87 26.5H81Z"/>` +
-  `<path class="o" d="M0 3.5H70V3H81V3.5H87C90.5 3.5 91.5 7 91.5 15S90.5 26.5 87 26.5H81V27H70V26.5H0M70 3V27"/></svg>`;
-
-function renderCustomModalBody() {
+function renderCustomModalBody(changed = null) {
   const body = $("customModalBody");
   if (!body) return;
-  // Slider commits and choice clicks rebuild this body. Preserve the logical control so
-  // keyboard users can keep adjusting it instead of being thrown back to the document.
-  const focusSelector = customModalFocusSelector(document.activeElement);
+  const focusKey = (() => {
+    const a = document.activeElement;
+    if (!a || !body.contains(a)) return null;
+    const own = a.closest("[data-fm-focus]");
+    return own ? own.dataset.fmFocus : null;
+  })();
   const store = loadCustom();
-  const preset = store.presets.find((p) => p.id === store.activeId) || store.presets[0];
-  const m = normalizeCustomMode(preset.mode);
-  const atCap = store.presets.length >= CUSTOM_MAX_PRESETS;
-  const canDelete = store.presets.length > 1;
-  // "A Drawer Of My Things" — checked on every render of the modal, so it catches a shelf that filled up via
-  // + New, via an import, or on any later visit, not just the click that crossed the line.
-  if (store.presets.length >= CUSTOM_PRESET_SHELF) unlock("keep-5-custom-presets");
+  const draft = customDraftPreset(store);
+  const m = normalizeCustomMode(store.draft);
+  // "A Drawer Of My Things": checked on every render, so it catches a pad that filled up on any
+  // visit, not only the filing that crossed the line.
+  if (store.saved.length >= CUSTOM_PRESET_SHELF) unlock("keep-5-custom-presets");
+  const endless = m.rounds === 0, line = m.lyricOnly;
+  const atCap = store.saved.length >= CUSTOM_MAX_PRESETS;
 
-  const chips = store.presets.map((p) =>
-    `<button type="button" class="cm-preset-chip${p.id === preset.id ? " active" : ""}" ` +
-      `data-cm-preset="${escapeHtml(p.id)}" aria-pressed="${p.id === preset.id}">${escapeHtml(p.name || "Custom")}</button>`
-  ).join("");
-  const presetRow =
-    `<div class="cm-presets">` +
-      `<div class="cm-preset-head">` +
-        `<input type="text" id="cmNameInput" class="cm-name-input" maxlength="${CUSTOM_NAME_MAX}" ` +
-          `value="${escapeHtml(preset.name || "")}" placeholder="name this mode" aria-label="Preset name" autocomplete="off" spellcheck="false" ` +
+  const status = draft.filed ? `filed as “${escapeHtml(draft.src.name)}”`
+    : draft.src ? `copied from “${escapeHtml(draft.src.name)}” · changed, not filed`
+    : "not filed";
+  const pad =
+    `<div class="fm-pad" role="group" aria-label="Filed modes">` +
+      store.saved.map((p) =>
+        `<button type="button" class="fm-copy fm-stock-${fmStock(p.id)}${p.id === store.from ? (draft.filed ? " is-on" : " is-src") : ""}" data-fm-copy="${escapeHtml(p.id)}" data-fm-focus="copy:${escapeHtml(p.id)}" ` +
+          `title="copy “${escapeHtml(p.name)}” onto the form"><small>${FM_STOCK_NAMES[fmStock(p.id)]} copy</small>${escapeHtml(p.name)}</button>`).join("") +
+      (store.saved.length ? "" : `<span class="fm-pad-empty">nothing filed yet</span>`) +
+      `<button type="button" class="fm-copy fm-copy--blank" data-fm-act="blank" data-fm-focus="blank"><small>pad</small>fresh form</button>` +
+    `</div>`;
+
+  const roundsN = endless ? 0 : Math.min(m.rounds, CUSTOM_ROUNDS_MAX);
+  const hintN = m.hintUnlimited ? 0 : Math.min(m.hintBudget, CUSTOM_HINT_MAX);
+  const form =
+    `<div class="fm-form">` +
+      `<div class="fm-masthead"><b>FORM 13</b><span>working copy · ${status}</span></div>` +
+      `<div class="fm-row"><div class="fm-f wide">${fmLabel(1, "length of run", "tally the pages")}` +
+        `<div class="fm-tally-row"><div class="fm-tally${endless ? " off" : ""}" data-fm-tally="rounds" data-fm-focus="tally:rounds" role="slider" tabindex="0" aria-label="Pages in a run" ` +
+          `aria-valuemin="${CUSTOM_ROUNDS_MIN}" aria-valuemax="${CUSTOM_ROUNDS_MAX}" aria-valuenow="${roundsN}" aria-valuetext="${endless ? "endless" : m.rounds + " pages"}">${fmTallySvg(roundsN, CUSTOM_ROUNDS_MAX, "rounds")}</div>` +
+          fmCount("rounds", endless ? "" : m.rounds, CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_TYPED_MAX, "Pages, exact") + `</div>` +
+        `<div class="fm-ticks fm-gap">${fmTickBox("endless", "endless, play until out of lives", endless)}</div>` +
+        (endless
+          ? `<div class="fm-lives"><span class="fm-l fm-l--inline">lives</span><div class="fm-hearts" role="group" aria-label="Lives">` +
+              Array.from({ length: CUSTOM_LIVES_MAX }, (_, i) => `<button type="button" class="fm-heart" data-fm-life="${i + 1}" data-fm-focus="life:${i + 1}" aria-label="${i + 1} ${i ? "lives" : "life, sudden death"}" aria-pressed="${m.lives === i + 1}">${fmHeart(i < m.lives, "life" + i)}</button>`).join("") +
+            `</div>${fmCount("lives", m.lives, CUSTOM_LIVES_MIN, CUSTOM_LIVES_TYPED_MAX, "Lives, exact")}<span class="fm-hand fm-hand--sm">${m.lives === 1 ? "sudden death" : ""}</span></div>`
+          : "") +
+      `</div></div>` +
+      `<div class="fm-row"><div class="fm-f">${fmLabel(2, "clock", "wind it to the time")}` +
+        `<div class="fm-clock"><div class="fm-dial" data-fm-focus="dial" role="slider" tabindex="0" aria-label="Seconds per page" aria-valuemin="0" aria-valuemax="${CUSTOM_SECONDS_MAX}" ` +
+          `aria-valuenow="${Math.min(m.seconds, CUSTOM_SECONDS_MAX)}" aria-valuetext="${m.seconds ? m.seconds + " seconds" : "no clock"}">${fmDialSvg(m.seconds)}</div>` +
+        `<div class="fm-clock-side"><span class="fm-sec">${fmCount("seconds", m.seconds || "", CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_TYPED_MAX, "Seconds per page, exact")}<span class="fm-hand fm-hand--sm">sec</span></span>` +
+          `${fmTickBox("noclock", "no clock", m.seconds === 0)}</div></div></div>` +
+      `<div class="fm-f">${fmLabel(3, "words", "circle one")}` +
+        fmCircleOne("pool", [["all", "all"], ["easy", "common"], ["hard", "rare"], ["ultra", "rarest"], ["float", "floating"]], m.pool) +
+        `<div class="fm-sub">${m.pool === "float" ? `starts common, rarer after ${ADAPT_PROMO_STREAK} right in a row, down a rung on a miss`
+          : { all: "any word in the notebook", easy: "words in plenty of songs", hard: "words in a handful of songs", ultra: "words in one to three songs" }[m.pool]}</div></div></div>` +
+      `<div class="fm-row"><div class="fm-f wide">${fmLabel(4, "answer with", "circle one")}` +
+        fmCircleOne("answer", [["title", "the title"], ["lyric", "a sung line"], ["either", "either"]], m.answer) + `</div></div>` +
+      `<div class="fm-row"><div class="fm-f${line ? " na" : ""}">${fmLabel(5, "suggest titles", "as you type")}` +
+        `<div class="fm-ticks">${fmTickBox("dropdown", "yes", m.dropdown)}${fmTickBox("dropdownNo", "no", !m.dropdown)}</div>${line ? fmNa("singing") : ""}</div>` +
+      `<div class="fm-f">${fmLabel(6, "word in the title")}<div class="fm-ticks">${fmTickBox("noTitleNo", "allowed", !m.noTitle)}${fmTickBox("noTitle", "never", m.noTitle)}</div></div></div>` +
+      `<div class="fm-row"><div class="fm-f wide${line ? " na" : ""}">${fmLabel(7, "hints for the run", "tally")}` +
+        `<div class="fm-tally-row"><div class="fm-tally fm-tally--hints${m.hintUnlimited ? " off" : ""}" data-fm-tally="hintBudget" data-fm-focus="tally:hintBudget" role="slider" tabindex="${line ? -1 : 0}" aria-label="Hints for the run" ` +
+          `aria-valuemin="0" aria-valuemax="${CUSTOM_HINT_MAX}" aria-valuenow="${hintN}" aria-valuetext="${m.hintUnlimited ? "unlimited" : m.hintBudget + " hints"}">${fmTallySvg(hintN, CUSTOM_HINT_MAX, "hints")}</div>` +
+          fmCount("hintBudget", m.hintUnlimited ? "" : m.hintBudget, 0, CUSTOM_HINT_TYPED_MAX, "Hints, exact") +
+          fmTickBox("unlimited", "unlimited", m.hintUnlimited) + `</div>${line ? fmNa("the last hint is the line") : ""}</div></div>` +
+      `<div class="fm-row"><div class="fm-f wide">${fmLabel(8, "songs shown after a miss", "circle one")}` +
+        fmCircleOne("examples", [[0, "none"], [1, "1"], [2, "2"], [3, "3"]], m.examples) + `</div></div>` +
+      (fmStamp ? `<div class="fm-stamp fm-stamp--${fmStamp.toLowerCase()}" aria-hidden="true">${fmStamp}</div>` : "") +
+    `</div>`;
+
+  const fileNote = draft.filed ? `already filed as “${escapeHtml(draft.src.name)}”. Change something to file a new copy.`
+    : atCap ? `the pad holds ${CUSTOM_MAX_PRESETS}. Void a copy to file another.` : "";
+  const foot = fmNaming
+    ? `<div class="fm-slip"><label class="fm-slip-lab" for="fmNameInput">name this copy</label>` +
+        `<input type="text" id="fmNameInput" class="fm-slip-input" maxlength="${CUSTOM_NAME_MAX}" placeholder="e.g. Sudden death" autocomplete="off" spellcheck="false" ` +
           `data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other">` +
-        `<div class="cm-preset-acts">` +
-          `<button type="button" class="pencil-half point" data-cm-act="new"${atCap ? " disabled" : ""}>${PENCIL_POINT}<span class="pencil-lab">new</span></button>` +
-          `<button type="button" class="pencil-half rubber" data-cm-act="delete"${canDelete ? "" : " disabled"}>${PENCIL_RUBBER}<span class="pencil-lab">delete</span></button>` +
-        `</div>` +
-      `</div>` +
-      (store.presets.length > 1 ? `<div class="cm-preset-chips" role="group" aria-label="Presets">${chips}</div>` : "") +
-    `</div>`;
+        `<button type="button" class="fm-file" data-fm-act="file-it" data-fm-focus="file-it">file it</button>` +
+        `<button type="button" class="btn-link" data-fm-act="file-cancel" data-fm-focus="file-cancel">cancel</button>` +
+        `<p class="fm-slip-note">a filed copy can't be changed afterwards</p></div>`
+    : `<div class="fm-acts">` +
+        (draft.src ? `<button type="button" class="fm-void" data-fm-act="void" data-fm-focus="void" title="void the filed copy “${escapeHtml(draft.src.name)}”">VOID<small>“${escapeHtml(draft.src.name)}”</small></button>` : `<span></span>`) +
+        `<button type="button" class="fm-file" data-fm-act="file" data-fm-focus="file"${draft.filed || atCap ? " disabled" : ""}>file a copy</button>` +
+      `</div>` + (fileNote ? `<p class="fm-file-note">${fileNote}</p>` : "");
 
-  body.innerHTML =
-    presetRow +
-    `<div class="cm-grid">` +
-      cmRoundsTile(m) +
-      cmSliderTile("seconds", "Countdown", "seconds per page (0 for no clock)", m.seconds, false, "cm-tile--half") +
-      cmSliderTile("hintBudget", "Hint budget",
-        m.lyricOnly ? "off while answering by line: the last hint is the line" : "total reveals for the run (past 13 = unlimited)",
-        m.hintBudget, m.lyricOnly, "cm-tile--half") +
-      cmChoiceTile("answer", "Answering", "how a page can be answered", [
-        { val: "title", label: "Titles" }, { val: "lyric", label: "Lyric lines" }, { val: "either", label: "Either" }], m.answer, "cm-tile--wide") +
-      cmChoiceTile("pool", "Word rarity", m.pool === "float" ? "climbs and falls as you play" : "which words you'll be asked", [
-        { val: "all", label: "All" }, { val: "easy", label: "Common" }, { val: "hard", label: "Rare" }, { val: "ultra", label: "Rarest" },
-        { val: "float", label: "Floating" }], m.pool, "cm-tile--wide") +
-      cmChoiceTile("examples", "Examples after a miss", "songs revealed", [
-        { val: 0, label: "0" }, { val: 1, label: "1" }, { val: 2, label: "2" }, { val: 3, label: "3" }], m.examples, "cm-tile--half") +
-      cmToggleTile("dropdown", "Suggestions", m.lyricOnly ? "off while answering by line" : "title dropdown as you type", m.dropdown, m.lyricOnly, "cm-tile--half") +
-      cmToggleTile("noTitle", "Not in the title", "prompt word never in the answer's title", m.noTitle, false, "cm-tile--half") +
-    `</div>`;
+  body.innerHTML = pad + form + `<div class="fm-foot">${foot}</div>`;
 
+  // circle the chosen answers once laid out, so each loop fits the word it's drawn around
+  body.querySelectorAll('.fm-o[aria-pressed="true"]').forEach((b) => {
+    b.insertAdjacentHTML("beforeend", fmLoop(b.offsetWidth, b.offsetHeight, b.dataset.fmCircle + b.dataset.val));
+    if (changed !== b.dataset.fmCircle) b.classList.add("is-still");
+  });
+  body.querySelectorAll(".fm-tick").forEach((b) => {
+    const lever = { dropdownNo: "dropdown", noTitleNo: "noTitle", endless: "rounds", noclock: "seconds", unlimited: "hintBudget" }[b.dataset.fmTick] || b.dataset.fmTick;
+    if (changed !== lever) b.classList.add("is-still");
+  });
+  fmStamp = null;
   wireCustomModalBody();
-  restoreCustomModalFocus(focusSelector);
+  if (fmNaming) { const n = $("fmNameInput"); if (n) n.focus({ preventScroll: true }); }
+  else if (focusKey) {
+    const t = body.querySelector(`[data-fm-focus="${CSS.escape(focusKey)}"]`);
+    if (t && !t.disabled) t.focus({ preventScroll: true });
+  }
 }
 
 function wireCustomModalBody() {
   const body = $("customModalBody");
   if (!body) return;
-  // Apply a mutation to the active preset's mode, re-normalise (clamp + derive), persist, re-render.
-  const mutate = (fn) => {
+  // Every edit lands on the working copy and nowhere else.
+  const mutate = (lever, fn) => {
     const s = loadCustom();
-    const p = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
-    const mode = normalizeCustomMode(p.mode);
+    const mode = normalizeCustomMode(s.draft);
     fn(mode);
-    p.mode = normalizeCustomMode(mode);
+    s.draft = normalizeCustomMode(mode);
     saveCustom(s);
-    renderCustomModalBody();
+    renderCustomModalBody(lever);
   };
+  const set = (k, v) => mutate(k, (m) => { m[k] = v; });
 
-  body.querySelectorAll("[data-cm-toggle]").forEach((b) => b.addEventListener("click", () => {
-    if (b.disabled) return;
-    const k = b.dataset.cmToggle;
-    mutate((mode) => { mode[k] = !mode[k]; });
+  body.querySelectorAll("[data-fm-circle]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.fmCircle;
+    set(k, k === "examples" ? Number(b.dataset.val) : b.dataset.val);
   }));
-  body.querySelectorAll("[data-cm-choice]").forEach((b) => b.addEventListener("click", () => {
-    const k = b.dataset.cmChoice, v = b.dataset.val;
-    // pool + answer are string levers; the rest are integers.
-    mutate((mode) => { mode[k] = (k === "pool" || k === "answer") ? v : (parseInt(v, 10) || 0); });
+  body.querySelectorAll("[data-fm-tick]").forEach((b) => b.addEventListener("click", () => {
+    const m = normalizeCustomMode(loadCustom().draft);
+    // Leaving a sentinel state lands on the default rather than on 1, so ticking "endless" off
+    // and on again doesn't quietly turn a thirteen-page mode into a one-page one.
+    switch (b.dataset.fmTick) {
+      case "endless": set("rounds", m.rounds === 0 ? CUSTOM_DEFAULT_MODE.rounds : 0); break;
+      case "noclock": set("seconds", m.seconds === 0 ? CUSTOM_DEFAULT_MODE.seconds : 0); break;
+      case "unlimited": set("hintBudget", m.hintUnlimited ? CUSTOM_DEFAULT_MODE.hintBudget : CUSTOM_HINT_UNLIMITED); break;
+      case "dropdown": set("dropdown", true); break;
+      case "dropdownNo": set("dropdown", false); break;
+      case "noTitle": set("noTitle", true); break;
+      case "noTitleNo": set("noTitle", false); break;
+    }
   }));
-  body.querySelectorAll("[data-cm-slider]").forEach((sl) => {
-    const k = sl.dataset.cmSlider;
-    // The rounds hero shows its value in a big number, not the standard val span.
-    const lbl = body.querySelector(`[data-cm-slider-val="${k}"]`)
-      || (k === "rounds" ? body.querySelector("[data-cm-rounds-big]") : null);
-    // Live-update the label as they drag; only persist + re-render when the drag ends. The top
-    // stop maps to the endless/unlimited value (0 rounds / -1 hints).
-    sl.addEventListener("input", () => {
-      if (!lbl) return;
-      const val = cmSliderPosToValue(k, parseInt(sl.value, 10) || 0);
-      lbl.innerHTML = cmSliderLabelHtml(k, val);
-      sl.setAttribute("aria-valuetext", cmSliderAriaValueText(k, val));
-      if (k === "rounds") lbl.classList.toggle("is-inf", val === 0);
-    });
-    sl.addEventListener("change", () => {
-      const nv = cmSliderPosToValue(k, parseInt(sl.value, 10) || 0);
-      mutate((mode) => { mode[k] = nv; });
-    });
+  body.querySelectorAll("[data-fm-life]").forEach((b) => b.addEventListener("click", () => set("lives", Number(b.dataset.fmLife))));
+  body.querySelectorAll("[data-fm-num]").forEach((inp) => {
+    inp.dataset.fmFocus = "num:" + inp.dataset.fmNum;
+    inp.addEventListener("change", () => { if (inp.value.trim() !== "") set(inp.dataset.fmNum, Number(inp.value)); });
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
   });
 
-  wireCmEditables(body, mutate);
-
-  // Preset name — live rename of the active preset (no full re-render, to keep input focus).
-  const nameInput = $("cmNameInput");
-  if (nameInput) nameInput.addEventListener("input", () => {
-    const s = loadCustom();
-    const p = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
-    p.name = nameInput.value.slice(0, CUSTOM_NAME_MAX);
-    saveCustom(s);
-    const chip = body.querySelector(".cm-preset-chip.active");
-    if (chip) chip.textContent = p.name || "Custom";
-  });
-
-  // Switch which preset is active (and thus edited / played next).
-  body.querySelectorAll("[data-cm-preset]").forEach((b) => b.addEventListener("click", () => {
-    const s = loadCustom();
-    s.activeId = b.dataset.cmPreset;
-    saveCustom(s);
-    renderCustomModalBody();
-  }));
-
-  // + New — clone the current preset so it's a starting point to tweak, then edit that.
-  const newBtn = body.querySelector('[data-cm-act="new"]');
-  if (newBtn) newBtn.addEventListener("click", () => {
-    const s = loadCustom();
-    if (s.presets.length >= CUSTOM_MAX_PRESETS) return;
-    const src = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
-    const np = defaultCustomPreset();
-    np.name = uniqueCustomName("New mode", s.presets);
-    np.mode = normalizeCustomMode(src.mode);
-    s.presets.push(np);
-    s.activeId = np.id;
-    saveCustom(s);
-    renderCustomModalBody();
-  });
-  // Delete — never the last one (loadCustom always guarantees at least one preset).
-  const delBtn = body.querySelector('[data-cm-act="delete"]');
-  if (delBtn) delBtn.addEventListener("click", () => {
-    const s = loadCustom();
-    if (s.presets.length <= 1) return;
-    s.presets = s.presets.filter((x) => x.id !== s.activeId);
-    s.activeId = s.presets[0].id;
-    saveCustom(s);
-    renderCustomModalBody();
-  });
-}
-
-// Click-to-type on any custom slider's value readout. Turns the number into a small input so a
-// player can set an exact amount past the slider's own range (clamped only to the lever's typed
-// max in normalizeCustomMode). `mutate` writes + re-renders the modal, recreating these elements.
-function wireCmEditables(body, mutate) {
-  body.querySelectorAll("[data-cm-edit]").forEach((el) => {
-    const k = el.dataset.cmEdit;
-    const meta = CM_SLIDER_META[k];
-    if (!meta) return;
-    if (el.closest(".cm-disabled")) return;   // a greyed lever can't be typed into either
-    const open = () => {
-      if (el.querySelector("input")) return;   // already editing
-      const store = loadCustom();
-      const p = store.presets.find((x) => x.id === store.activeId) || store.presets[0];
-      const cur = normalizeCustomMode(p.mode)[k];
-      const input = document.createElement("input");
-      input.type = "number";
-      input.className = "cm-val-input";
-      input.min = String(meta.sliderMin);
-      input.max = String(meta.typedMax);
-      input.step = "1";
-      // Endless/unlimited states have no number to seed; start the field empty.
-      input.value = (cur > 0 || (k !== "rounds" && k !== "hintBudget" && cur >= 0)) ? String(cur) : "";
-      el.textContent = "";
-      el.appendChild(input);
-      input.focus();
-      input.select();
-      let done = false;
-      const finish = (save) => {
-        if (done) return;
-        done = true;
-        if (save && input.value.trim() !== "") {
-          const n = parseInt(input.value, 10);
-          if (Number.isFinite(n)) { mutate((mode) => { mode[k] = n; }); return; }
-        }
-        renderCustomModalBody();   // cancel or empty: repaint from the stored value
-      };
-      input.addEventListener("keydown", (e) => {
-        e.stopPropagation();
-        if (e.key === "Enter") { e.preventDefault(); finish(true); }
-        else if (e.key === "Escape") { e.preventDefault(); finish(false); }
-      });
-      input.addEventListener("blur", () => finish(true));
-      input.addEventListener("click", (e) => e.stopPropagation());
+  // Tallies: the stroke under the pointer is where the count ends, so a tap or a drag along the
+  // row both set it directly. Arrow keys add or rub out one stroke.
+  body.querySelectorAll("[data-fm-tally]").forEach((t) => {
+    const k = t.dataset.fmTally, cap = k === "rounds" ? CUSTOM_ROUNDS_MAX : CUSTOM_HINT_MAX, min = k === "rounds" ? CUSTOM_ROUNDS_MIN : 0;
+    if (t.closest(".na")) return;
+    const at = (e) => {
+      const svg = t.querySelector("svg"), vb = svg.viewBox.baseVal, r = svg.getBoundingClientRect();
+      const x = (e.clientX - r.left) / Math.min(r.width / vb.width, r.height / vb.height);
+      const stops = fmTallyStops(cap);
+      let best = 0;
+      stops.forEach((s, i) => { if (Math.abs(s - x) < Math.abs(stops[best] - x)) best = i; });
+      return Math.max(min, best);
     };
-    el.addEventListener("click", open);
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); }
+    t.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      const apply = (ev) => { const v = at(ev), cur = normalizeCustomMode(loadCustom().draft)[k]; if (v !== cur) set(k, v); };
+      apply(e);
+      const up = () => { window.removeEventListener("pointermove", apply); window.removeEventListener("pointerup", up); };
+      window.addEventListener("pointermove", apply);
+      window.addEventListener("pointerup", up);
     });
+    t.addEventListener("keydown", (e) => {
+      const d = e.key === "ArrowRight" || e.key === "ArrowUp" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowDown" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const cur = Math.max(normalizeCustomMode(loadCustom().draft)[k], min);
+      set(k, Math.max(min, Math.min(cap, cur + d)));
+    });
+  });
+
+  // The stopwatch: drag the hand round the face, or arrow keys a second at a time.
+  const dial = body.querySelector(".fm-dial");
+  if (dial) {
+    const secAt = (e) => {
+      const r = dial.getBoundingClientRect();
+      let a = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) + Math.PI / 2;
+      if (a < 0) a += Math.PI * 2;
+      const s = Math.round((a / (Math.PI * 2)) * 60) % 60;
+      // straight up is either end of the face: whichever side the hand came from
+      return s || (normalizeCustomMode(loadCustom().draft).seconds > 45 ? 60 : 0);
+    };
+    dial.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const apply = (ev) => { const v = secAt(ev); if (v !== normalizeCustomMode(loadCustom().draft).seconds) set("seconds", v); };
+      apply(e);
+      const up = () => { window.removeEventListener("pointermove", apply); window.removeEventListener("pointerup", up); };
+      window.addEventListener("pointermove", apply);
+      window.addEventListener("pointerup", up);
+    });
+    dial.addEventListener("keydown", (e) => {
+      const d = e.key === "ArrowRight" || e.key === "ArrowUp" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowDown" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      set("seconds", Math.max(0, Math.min(CUSTOM_SECONDS_MAX, normalizeCustomMode(loadCustom().draft).seconds + d)));
+    });
+  }
+
+  // Picking a filed copy copies it onto the form. The copy itself is never touched.
+  body.querySelectorAll("[data-fm-copy]").forEach((b) => b.addEventListener("click", () => {
+    const s = loadCustom();
+    const p = s.saved.find((x) => x.id === b.dataset.fmCopy);
+    if (!p) return;
+    s.draft = normalizeCustomMode(p.mode);
+    s.from = p.id;
+    saveCustom(s);
+    fmNaming = false;
+    renderCustomModalBody("*");
+  }));
+  const act = (name, fn) => { const b = body.querySelector(`[data-fm-act="${name}"]`); if (b) b.addEventListener("click", fn); };
+  act("blank", () => {
+    const s = loadCustom();
+    s.draft = normalizeCustomMode(CUSTOM_DEFAULT_MODE);
+    s.from = null;
+    saveCustom(s);
+    fmNaming = false;
+    renderCustomModalBody("*");
+  });
+  act("file", () => { fmNaming = true; renderCustomModalBody(); });
+  act("file-cancel", () => { fmNaming = false; renderCustomModalBody(); const f = body.querySelector('[data-fm-act="file"]'); if (f) f.focus({ preventScroll: true }); });
+  const fileIt = () => {
+    const input = $("fmNameInput");
+    const name = (input ? input.value : "").trim().slice(0, CUSTOM_NAME_MAX);
+    if (!name) { if (input) { input.classList.remove("is-empty"); void input.offsetWidth; input.classList.add("is-empty"); input.focus(); } return; }
+    const s = loadCustom();
+    if (s.saved.length >= CUSTOM_MAX_PRESETS) return;
+    const copy = { id: newCustomId(), name: uniqueCustomName(name, s.saved), mode: normalizeCustomMode(s.draft) };
+    s.saved.push(copy);
+    s.from = copy.id;
+    saveCustom(s);
+    fmNaming = false;
+    fmStamp = "FILED";
+    renderCustomModalBody();
+    const f = body.querySelector(`[data-fm-copy="${CSS.escape(copy.id)}"]`);
+    if (f) f.focus({ preventScroll: true });
+  };
+  act("file-it", fileIt);
+  const nameInput = $("fmNameInput");
+  if (nameInput) nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); fileIt(); }
+    else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fmNaming = false; renderCustomModalBody(); }
+  });
+  // VOID deletes the filed copy the form came from. The form keeps its levers: what you were
+  // looking at is still there to play, it just isn't filed any more.
+  act("void", () => {
+    const s = loadCustom();
+    if (!s.from) return;
+    s.saved = s.saved.filter((p) => p.id !== s.from);
+    s.from = null;
+    saveCustom(s);
+    fmStamp = "VOID";
+    renderCustomModalBody();
+    const f = body.querySelector('[data-fm-act="file"]');
+    if (f) f.focus({ preventScroll: true });
   });
 }
 
-// A preset name not already taken (New mode, New mode 2, …).
+// A name not already on the pad (Sudden death, Sudden death 2, …).
 function uniqueCustomName(base, presets) {
   const taken = new Set(presets.map((p) => (p.name || "").toLowerCase()));
   if (!taken.has(base.toLowerCase())) return base;
@@ -29005,8 +29041,11 @@ function openCustomModal() {
   const m = $("customModal");
   if (m.classList.contains("open")) return;
   lastFocusedBeforeCustomModal = document.activeElement;
-  renderCustomModalBody();
+  fmNaming = false;
+  // Open first, render second: the circled answers are drawn to the measured width of the word
+  // they go round, and a closed modal measures every word at zero.
   m.classList.add("open");
+  renderCustomModalBody();
   m.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
   containDialogBackground(m);
@@ -31321,24 +31360,25 @@ function buildDevApi() {
     },
     // Custom mode — author/seed presets and jump straight into a sandboxed run.
     custom: {
-      presets: () => loadCustom().presets.map((p) => ({ id: p.id, name: p.name, mode: p.mode })),
-      active: () => activeCustomPreset(),
-      // Patch the active preset's levers, e.g. custom.set({ seconds: 5, pool: "ultra", hintBudget: 0 }).
+      // The filed modes (locked) and the working copy (what Start plays).
+      presets: () => loadCustom().saved.map((p) => ({ id: p.id, name: p.name, mode: p.mode })),
+      active: () => customDraftPreset(),
+      // Patch the working copy's levers, e.g. custom.set({ seconds: 5, pool: "ultra", hintBudget: 0 }).
+      // Never touches a filed mode, exactly like the form.
       set: (patch) => {
         const s = loadCustom();
-        const p = s.presets.find((x) => x.id === s.activeId) || s.presets[0];
-        p.mode = normalizeCustomMode({ ...normalizeCustomMode(p.mode), ...(patch || {}) });
+        s.draft = normalizeCustomMode({ ...normalizeCustomMode(s.draft), ...(patch || {}) });
         saveCustom(s);
         syncCustomUI();
-        return p.mode;
+        return s.draft;
       },
-      // Create a fresh named preset from a full/partial lever set and make it active.
+      // File a new mode from a full/partial lever set and load it into the working copy. Past
+      // CUSTOM_MAX_PRESETS it refuses, as the form does.
       seed: (name, mode) => {
         const s = loadCustom();
-        const np = defaultCustomPreset();
-        np.name = name || uniqueCustomName("Dev mode", s.presets);
-        np.mode = normalizeCustomMode({ ...CUSTOM_DEFAULT_MODE, ...(mode || {}) });
-        s.presets.push(np); s.activeId = np.id;
+        if (s.saved.length >= CUSTOM_MAX_PRESETS) return "the pad is full";
+        const np = { id: newCustomId(), name: uniqueCustomName(name || "Dev mode", s.saved), mode: normalizeCustomMode({ ...CUSTOM_DEFAULT_MODE, ...(mode || {}) }) };
+        s.saved.push(np); s.draft = { ...np.mode }; s.from = np.id;
         saveCustom(s);
         syncCustomUI();
         return np;
@@ -31355,8 +31395,8 @@ function buildDevApi() {
         }
         return { level: floatLevel, promo: floatPromo, pool: effectivePool(), floating: floatingPoolNow() };
       },
-      // Start a run: on the active preset, or on any preset by id, which is what the randomiser
-      // and the pinned goal now do (custom.presets() prints the ids).
+      // Start a run: on the working copy, or on a filed mode by id, which is what the randomiser
+      // and the pinned goal do (custom.presets() prints the ids).
       play: (presetId) => startCustom(presetId),
       open: () => { gameType = "custom"; rememberGameType("custom"); renderStartPickers(); showScreen("start"); $("startContent").style.display = ""; },
       reset: () => { resetCustom(); syncCustomUI(); },

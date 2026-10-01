@@ -137,7 +137,7 @@ export const RUTHLESS_KEY = "swiftSongAssociation.ruthless";            // Ruthl
 export const TRACKS_KEY = "swiftSongAssociation.tracks";                // Track by Track board, one best per album — { [album]: {best, plays, last, date} }
 export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift To The Lyric searcher — { mode, view, recent:[] }
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
-export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes — { presets:[{id,name,mode}], activeId }
+export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes: { v:2, draft, from, saved:[{id,name,mode}] } (see storage.js)
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
 export const STICKERS_KEY = "swiftSongAssociation.stickers";           // earned stickers: { [stickerId]: isoDate }, same shape as the keepsakes store
 export const TUMBLR_KEY = "swiftSongAssociation.tumblr";               // found tumblr messages: { [postId]: isoDate }, same shape again
@@ -582,8 +582,8 @@ export const ADAPT_START_LEVEL = 2;     // start in the middle (the "all" bucket
 export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to climb one (a single miss demotes)
 
 /* ---------- Custom mode (player-authored "workshop" modes) ----------
-   A sandboxed gameType. The player builds a MODES-shaped lever object in the Change modal,
-   saves it as a named preset (CUSTOM_KEY), and plays a fixed 13-round run. It folds skill XP
+   A sandboxed gameType. The player fills in a MODES-shaped lever object on the Change modal's
+   working copy, can file it as a named, locked mode (CUSTOM_KEY), and plays the working copy. It folds skill XP
    + achievements ONLY — never ranked stats/records/history/tally/play-counts (like Challenges).
    The one lever the base MODES lack is `hintBudget`: the total number of hint reveals allowed
    across the whole run (each tier-tap spends one; app.js enforces it). `hint` is derived
@@ -4500,7 +4500,7 @@ export const ACHIEVEMENTS = [
      Keeping presets on the shelf is a drawer action rather than a run, so it stays without an
      `earn` the way the desk charms do. */
   { id: "finish-first-custom-run",             name: "My Choice Is You", desc: "Finish your first Custom run",         secret: false, icon: "levers", sitting: true, earn: { cat: "custom" } },
-  { id: "keep-5-custom-presets",             name: "A Drawer Of My Things", desc: `Keep ${CUSTOM_PRESET_SHELF} custom presets on the shelf at once`, secret: false, icon: "presetbox", sitting: true },
+  { id: "keep-5-custom-presets",             name: "A Drawer Of My Things", desc: `Keep ${CUSTOM_PRESET_SHELF} filed Custom modes at once`, secret: false, icon: "presetbox", sitting: true },
   { id: "reach-round-50-endless-custom", name: "Forever & Always", desc: `Reach round ${CUSTOM_ENDLESS_MILESTONE} of an endless Custom run`, tier: 2, secret: false, icon: "infinity", sitting: true, earn: { cat: "custom", lever: "endless" } },
   // The one Custom charm that rewards authoring something punishing rather than comfortable.
   // "No easier than Ultra" is checked lever by lever against MODES.ultra (see customAtLeastUltra),
