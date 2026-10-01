@@ -11301,7 +11301,8 @@
   .stp-slip > span:last-child { font-size: .9em; color: var(--stp-soft); }
   .stp-solo .stp-slip { margin-inline: 14px; }
 
-  /* the quick numbers: label-maker tape, which sticks itself */
+  /* the quick numbers: label-maker tape, which sticks itself. The notebook's one label-maker tape:
+     the Mastery page's start-button words are strips of it too (.lt-strip, js/rewardboard.js). */
   .stp-dymo { display: flex; flex-wrap: wrap; gap: 12px 10px; align-content: flex-start; padding-top: 2px; }
   .stp-dy {
     display: inline-block; padding: 5px 10px 4px; color: #f6f1e4; background: #23406b; border-radius: 2px;
@@ -13521,7 +13522,8 @@
   .see-also:not(.see-also--row) > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
   /* ===== Shared washi-tape surface ==============================================
      One look, reused everywhere the site shows sticky tape: the nav keepsake cards
-     (.nav-tape, injected by app.js), the Stats page's taped-in pieces (.stp-tape), the Records
+     (.nav-tape, injected by app.js), the Stats page's taped-in pieces (.stp-tape), the Mastery
+     bead box's label (.tb-tape), the Records
      page personal-best tiles
      (.pb-tile::before), the bonus-run sleeve (.bg-back::before), the pause card, the
      polaroids, the milestone sticky and the in-game suggestion dropdown
@@ -13549,6 +13551,7 @@
   .ms-tape,
   .run-pause-tape,
   .stp-tape,
+  .tb-tape,
   .pb-tile::before,
   .bg-back::before,
   .dropdown .item::before {
@@ -13582,7 +13585,7 @@
      is what keeps a strip recognisable as the same piece of tape it was by day. The edge goes
      quieter still than by day, for the same reason: any bright hairline on a dark strip is
      just a bright line. */
-  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape, .stp-tape,
+  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape, .stp-tape, .tb-tape,
                                .pb-tile::before, .bg-back::before, .dropdown .item::before) {
     background:
       linear-gradient(102deg,
@@ -14107,7 +14110,6 @@
   .rw-door { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 7px 14px !important; border: 2px solid var(--ink) !important;
     border-radius: 4px; background: var(--paper) !important; font-family: var(--type) !important; font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)) !important;
     letter-spacing: .14em; text-transform: uppercase; color: var(--ink) !important; }
-  .rw-door::after { content: "→"; font-weight: 400; letter-spacing: 0; }
   .rw-door:hover { background: var(--ink) !important; color: var(--paper) !important; }
 
   /* ================= PENS: the roll =================
@@ -14204,10 +14206,9 @@
   .tb-lid::before, .tb-lid::after { content: ""; position: absolute; bottom: -6px; width: 34px; height: 10px; border: 1.6px solid var(--ink); border-radius: 3px; z-index: 2;
     background: linear-gradient(90deg, var(--ow) 0 32%, var(--ink) 32% calc(32% + 1.4px), var(--ow) 0 66%, var(--ink) 66% calc(66% + 1.4px), var(--ow) 0); }
   .tb-lid::before { left: 46%; } .tb-lid::after { right: 9%; }
-  .tb-tape { display: inline-block; padding: 1px 16px 2px; font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1; color: var(--ink);
-    background: #e8dcbc; transform: rotate(-2.4deg);
-    clip-path: polygon(0 8%, 3% 0, 6% 9%, 9% 1%, 91% 0, 94% 8%, 97% 0, 100% 10%, 99% 90%, 96% 100%, 93% 91%, 90% 100%, 8% 100%, 5% 92%, 2% 100%, 0 90%, 1% 50%); }
-  :root[data-theme="dark"] .tb-tape { background: #b9ab88; color: #2b2722; }
+  /* the label is the shared washi tape (its surface, night treatment and tear live in that block) */
+  .tb-tape { display: inline-block; padding: 1px 18px 2px; font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1;
+    color: var(--ink); transform: rotate(-2.4deg); --tape-color: #c9b27a; }
   .tb-box { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 9px 8px 8px; border: 2px solid var(--ink); border-radius: 0 0 10px 10px; background: var(--ow); }
   .tb-cell { position: relative; display: block; height: 78px; border: 1.4px solid var(--ink) !important; border-radius: 8px; background: var(--mpp-card) !important; }
   /* the moulded rim inside each compartment wall */
@@ -14324,22 +14325,19 @@
   .rw-now-btn { display: block; width: 170px; }
   .rw-now-btn .cta-prev { --cta-k: .6; --cta-h: 38px; }
 
-  /* ================= WORDS: label-maker tape ================= */
+  /* ================= WORDS: label-maker tape =================
+     The strips are the notebook's own label-maker tape (.stp-dy, defined with the Stats page's
+     quick numbers); this only tints them in the words' teal and lays them out. */
   .lt { position: relative; }
   .lt-strips { display: flex; flex-wrap: wrap; gap: 12px 12px; align-items: center; }
-  .lt-strip { position: relative; isolation: isolate; display: inline-flex !important; align-items: center; gap: 8px; height: 30px; padding: 0 15px 0 13px !important;
-    color: #f7f2e6 !important; transform: rotate(var(--r)); transition: transform .15s; }
-  .lt-strip::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--o); border-radius: 2px;
-    clip-path: polygon(var(--c1) 0, calc(100% - var(--c3)) 0, 100% 100%, calc(var(--c2) * .4) 100%); }
-  :root[data-theme="dark"] .lt-strip::before { box-shadow: inset 0 0 0 1px rgba(236, 229, 214, .25); }
-  .lt-strip:hover { transform: rotate(var(--r)) translateY(-2px); }
-  .lt-tx { font-family: var(--type); font-weight: 700; font-size: calc(12.5px + var(--text-size-adjust)); letter-spacing: .16em; text-shadow: 0 1px 0 color-mix(in srgb, var(--o) 55%, #000); white-space: nowrap; }
-  .lt-mk { width: 18px; height: 18px; display: block; flex: none; }
+  .lt-pick { position: relative; display: inline-block !important; transition: transform .15s; }
+  .lt-pick:hover { transform: translateY(-2px); }
+  .lt-strip.stp-dy { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 5px; background: #2f6f6a; }
+  .lt-mk { width: 17px; height: 17px; display: block; flex: none; }
   .lt-mk svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .lt-mk .ink-fill { fill: currentColor; stroke: none; }
   .lt-mk .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-  .lt-strip.worn { outline: none; }
-  .lt-strip .rw-loop { left: -5%; width: 110%; top: -30%; height: 160%; }
+  .lt-pick .rw-loop { left: -6%; width: 112%; top: -32%; height: 164%; }
   .lt-coil { display: flex; align-items: center; gap: 14px; margin-left: 8px; }
   .lt-coil svg { width: 74px; height: 74px; flex: none; overflow: visible; }
   .lt-coil circle { fill: none; stroke: var(--oi); stroke-width: 6.5; }

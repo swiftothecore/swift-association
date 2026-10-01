@@ -163,7 +163,8 @@ function loose(t, i) {
   }).join("");
 }
 // The bead organiser every friendship-bracelet table is built round. Nine compartments for nine
-// trinkets; until the set is earned only the star's has anything in it.
+// trinkets; until the set is earned only the star's has anything in it. Its label is a strip of the
+// notebook's shared washi tape (the "Shared washi-tape surface" block in styles.css).
 function trinketBox(D) {
   const slots = [{ id: "", t: "star", name: "Star" }, ...ofKind("trinket").map((r) => ({ id: r.payload.trinket, t: r.payload.trinket, name: r.name.replace(/ trinket$/, ""), rid: r.id }))];
   const open = slots.length > 1 && D.has(slots[1].rid);
@@ -293,8 +294,9 @@ function refill(id, title, sub, members) {
 /* ================================================================
    START BUTTON WORDS: label-maker tape
    ================================================================ */
-// Rewriting a label is a label maker's job: every set of words is punched out in raised capitals,
-// each strip cut by hand. Above them, the real start button wearing the words and finish chosen.
+// Rewriting a label is a label maker's job, so every set of words is a strip of the notebook's own
+// label-maker tape (.stp-dy, the Stats page's quick numbers), in the words' teal. Above them, the
+// real start button wearing the words and finish chosen.
 function labelTape(D) {
   const labels = ofKind("label");
   const slots = [{ id: "", text: "Start writing", mark: "pencil" }, ...labels.map((r) => ({ id: r.payload.label, text: CTA_LABELS[r.payload.label].text, mark: CTA_LABELS[r.payload.label].mark, rid: r.id }))];
@@ -305,10 +307,9 @@ function labelTape(D) {
     if (p.rid && !open) return "";
     const worn = !rnd && D.wear.label === p.id;
     const mk = p.mark ? `<span class="lt-mk">${CTA_MARKS[p.mark]}</span>` : "";
-    const cut = `--c1:${(settle(i + 71) * 5).toFixed(1)}px;--c2:${(settle(i + 72) * 5).toFixed(1)}px;--c3:${(settle(i + 73) * 4).toFixed(1)}px`;
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="label"`;
-    return `<button type="button" class="lt-strip${worn ? " worn" : ""}" style="--r:${jit(i + 60, 1.4).toFixed(2)}deg;${cut}" ${pick(attr, worn, p.text)}>` +
-      `${mk}<span class="lt-tx">${esc(p.text.toUpperCase())}</span>${worn ? loop(51 + i) : ""}</button>`;
+    return `<button type="button" class="lt-pick${worn ? " worn" : ""}" ${pick(attr, worn, p.text)}>` +
+      `<span class="stp-dy lt-strip" style="--r:${jit(i + 60, 1.6).toFixed(2)}deg">${mk}${esc(p.text)}</span>${worn ? loop(51 + i) : ""}</button>`;
   }).join("");
   const coil = open ? "" : `<div class="lt-coil"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34"/><circle cx="40" cy="40" r="27"/><circle cx="40" cy="40" r="20.5"/><circle cx="40" cy="40" r="12" class="lt-core"/><path d="M40 6 H80"/></svg>` +
     `<span><b>${labels.length} more labels</b> wait on the roll till Mastery ${level}</span></div>`;
@@ -337,7 +338,7 @@ function stickerSheet(D) {
     head("Sticker hints", what, stamp(D, D.stickerLevel)) +
     `<div class="ss${open ? " open" : " shut"}"><div class="ss-sheet"><div class="ss-hd"><b>stickers</b><span>kiss-cut</span></div><div class="ss-grid">${cells}</div>${empty}` +
     `<div class="ss-glass"><span>glassine · lift at Mastery ${D.stickerLevel}</span></div></div>` +
-    (open && left.length ? `<button type="button" class="rw-door" data-open-sticker-shelf>open the drawer</button>` : "") + `</div></section>`;
+    (open && left.length ? `<button type="button" class="rw-door" data-open-sticker-shelf><span class="cta-run">open the drawer${D.arrow}</span></button>` : "") + `</div></section>`;
 }
 
 /* ================================================================
@@ -367,7 +368,7 @@ function diary(D) {
     `<path d="M98 86 V94 Q98 98 94 98 H86 M94 91 Q94 94 91 94"/><path d="M14 98 H6 Q2 98 2 94 V86 M9 94 Q6 94 6 91"/></svg>`;
   const what = !open ? "what every secret charm wants, kept under lock" : D.secretsLeft ? "what every secret charm wants from you, written down" : "every secret charm found; nothing left to read";
   const foot = !open ? `<p class="rw-owe">the key comes at Mastery ${D.secretLevel}</p>`
-    : D.secretsLeft ? `<button type="button" class="rw-door" data-open-secret-charms>read the hints</button>` : "";
+    : D.secretsLeft ? `<button type="button" class="rw-door" data-open-secret-charms><span class="cta-run">read the hints${D.arrow}</span></button>` : "";
   return `<section class="rw-obj rw-hint" style="--o:${T.hint}">` +
     head("Secret hints", what, stamp(D, D.secretLevel)) +
     `<div class="dy${open ? " open" : " shut"}"><div class="dy-book"><span class="dy-pages"></span><div class="dy-cover">${orn}<span class="dy-title">Secrets</span><span class="dy-sub">do not read</span></div>` +
@@ -429,7 +430,7 @@ export function titleFileHTML(F) {
 /* D: { issued, level, dates, has(id), wear: { pen, paper, trinket, button, label }, RANDOM,
         superHard, superHardLevel, brutal: [{ name, beaten }], stickerHints, stickerLevel,
         stickersLeft: [sticker], stickerTotal, secretHints, secretLevel, secretsLeft,
-        earned, total, miniButton(finish), nowButton() } */
+        earned, total, miniButton(finish), nowButton(), arrow } */
 export function rewardBoardHTML(D) {
   D.uid = 0;
   const cells = [["pens", pensRoll], ["paper", paperFan], ["trinket", trinketBox], ["hard", cassette], ["button", buttonCard],

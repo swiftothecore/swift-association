@@ -6301,6 +6301,7 @@ function buildRewardBoard(m, mLevel, unlocked) {
     miniButton: (finish) => `<span class="btn-primary play-cta"${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML("", wornFinish(finish))}</span>`,
     // the words preview wears this load's roll when the button is on random, like the real one
     nowButton: () => ctaPreviewHTML(activeCtaLabel(), activeButtonFinish()),
+    arrow: CTA_ARROW,
   });
 }
 
