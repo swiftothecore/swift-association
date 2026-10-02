@@ -31,7 +31,7 @@
 // nothing.
 
 import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, ALBUM_COLORS, CB_ALBUM_COLORS,
-         SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D } from "./config.js";
+         SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D, TREE_D, TREE_TRUNK_D, TREE_TRUNK } from "./config.js";
 import { loadSettings } from "./storage.js";
 import { MONTH_SEASON, southernSeasons, seasonMonth } from "./season.js";
 
@@ -313,7 +313,7 @@ function drawMark(g, mark, cx, cy, colors, s) {
   // lookup lives, so a re-inked pass re-inks its square here too.
   const color = mark.kind === "guest"
     ? (guestInk(mark.guest)?.accent || "#8a7c62")
-    : ((mark.album && colors[mark.album]) || "#8a7c62");
+    : (mark.ink || (mark.album && colors[mark.album]) || "#8a7c62");
   // A guest birthday stamps the paper crown. Grouped so the band seam shares the crown's
   // transform, and both weights are quoted in the 32-box that scale(0.3) is about to divide:
   // 2.7 lands at 0.81 for the silhouette, matching the heart's separating edge, and the seam
@@ -363,6 +363,23 @@ function drawMark(g, mark, cx, cy, colors, s) {
       "stroke-linecap": "round"
     }));
     g.appendChild(shaker);
+    return;
+  }
+  // 25 December stamps the bare tree: three tiers and a trunk, no star or baubles, which would
+  // land at a fifth of a pixel. Same 0.81 separating edge as the heart.
+  if (mark.mark === "tree") {
+    // Half the heart's tilt: a heart can lean 16 degrees and stay a heart, a tree that far over
+    // reads as falling.
+    const tree = el("g", {
+      transform: `translate(${x} ${y}) rotate(${(tilt / 2).toFixed(1)}) scale(0.3) translate(-16 -16)`
+    });
+    tree.appendChild(el("path", {
+      d: TREE_D, fill: color, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2.7, "stroke-linejoin": "round"
+    }));
+    tree.appendChild(el("path", {
+      d: TREE_TRUNK_D, fill: TREE_TRUNK, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
+    g.appendChild(tree);
     return;
   }
   // Stroke weights are quoted in the 32-box and then divided by scale(0.3), so the

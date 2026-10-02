@@ -22,7 +22,7 @@ import {
   GRAVEYARD,
   CREDITS,
   MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
-  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D,
+  ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D, TREE_D, TREE_TRUNK_D, TREE_TRUNK,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
   STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS, pressingName,
@@ -15520,7 +15520,7 @@ function renderAnniversaryNote() {
   const note = dayNote(todayKey());
   el.classList.toggle("anniversary-note--minor", note?.tone === "minor");
   if (!note) { el.hidden = true; el.innerHTML = ""; return; }
-  const accent = noteInk(note)?.deep || milestoneColor(note.album);
+  const accent = noteInk(note)?.deep || note.ink || milestoneColor(note.album);
   // A 13 day writes its headline bare: the ringed "13" beside "Today adds up to 13" said the
   // number twice and read as a scribble, where the heart, cake and crown each add something.
   const mark = note.icon === "thirteen" ? "" : `<span class="an-mark">${dayNoteIcon(note)}</span>`;
@@ -15587,6 +15587,7 @@ function dayNoteIcon(note) {
     : note.icon === "thirteen" ? thirteenSvg()
     : note.icon === "crown" ? crownSvg(ink?.accent || "var(--ink-soft)", ink?.deep, note.soon)
     : note.icon === "salt" ? saltSvg(milestoneColor(note.album) || "var(--bead)")
+    : note.icon === "tree" ? treeSvg(note.ink || milestoneColor(note.album) || "var(--bead)")
     : heartSvg(milestoneColor(note.album) || "var(--bead)");
 }
 // The game-screen counterpart: a tiny taped corner sticky on a milestone day. An era-
@@ -15648,6 +15649,21 @@ function saltSvg(fill) {
     `<path d="${SALT_CAP_D}" fill="none" stroke="rgba(0,0,0,0.26)" stroke-width="0.8" stroke-linecap="round"/>` +
     `<g fill="rgba(0,0,0,0.32)"><circle cx="13.8" cy="6.4" r="0.65"/><circle cx="16" cy="5.9" r="0.65"/><circle cx="18.2" cy="6.4" r="0.65"/></g>` +
     `<path d="M11.2 18.4v6.4" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" stroke-linecap="round"/>` +
+    `</svg>`;
+}
+// The 25 December mark: the shared tree silhouette dressed for the larger surfaces, a gold
+// star, four baubles (Fearless gold, Red's red and two cream) and the heart's white highlight.
+// Fixed colours, not the colour-blind palette: these are decoration, not an era being named.
+function treeSvg(fill) {
+  const bauble = (x, y, r, f) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${f}" stroke="rgba(0,0,0,0.25)" stroke-width="0.4"/>`;
+  return `<svg viewBox="0 0 32 32" width="38" height="38" aria-hidden="true">` +
+    `<path d="${TREE_D}" fill="${fill}" stroke="rgba(0,0,0,0.22)" stroke-width="0.7" stroke-linejoin="round"/>` +
+    `<path d="${TREE_TRUNK_D}" fill="${TREE_TRUNK}" stroke="rgba(0,0,0,0.22)" stroke-width="0.6" stroke-linejoin="round"/>` +
+    `<path d="M14.6 7.6c-.8 1.1-1.5 2.2-2 3.2" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.1" stroke-linecap="round"/>` +
+    `<path d="M0 -12 L2.94 -4.05 L11.41 -3.71 L4.76 1.55 L7.05 9.71 L0 5 L-7.05 9.71 L-4.76 1.55 L-11.41 -3.71 L-2.94 -4.05 Z" ` +
+      `transform="translate(16.4 3.6) rotate(-7) scale(0.3)" fill="#b8943a" stroke="rgba(0,0,0,0.3)" stroke-width="4" stroke-linejoin="round"/>` +
+    bauble(13.6, 14.8, 1.15, "#a32a2a") + bauble(19.4, 20.6, 1.2, "#b8943a") +
+    bauble(11.2, 22.2, 1.05, "#fbf6e9") + bauble(18.6, 12.8, 0.9, "#fbf6e9") +
     `</svg>`;
 }
 // The sacred-13 mark for the minor 13-day sticky: a hand-inked "13" over a soft ring, in

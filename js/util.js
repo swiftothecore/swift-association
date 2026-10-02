@@ -267,7 +267,7 @@ export function anniversaryNote(dateKey, milestones) {
   if (songday) {
     const headline = songday.headline || songday.title;
     return {
-      icon: songday.icon || "heart", album: songday.album, songday: true,
+      icon: songday.icon || "heart", album: songday.album, ink: songday.ink, songday: true,
       headline,
       line: songday.line || "",
       caption: songday.caption,

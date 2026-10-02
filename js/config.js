@@ -2521,6 +2521,18 @@ export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // roun
    songday may also carry `headline` (a line to show instead of the song title) and
    `icon`/`mark` (a sticky/calendar mark other than the era heart).
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
+// The Christmas tree for 25 December, in the same 32x32 box as the heart, the shaker and the
+// crown, centred on (16, 16). Three tiers cut to different depths with the tips at different
+// heights, so it reads as drawn rather than stamped. TREE_TRUNK_D is separate so each surface
+// can colour it. The calendar stamps the bare silhouette; the sticky and the margin note dress
+// it (star, baubles) in app.js, because those are a fifth of a pixel at calendar size.
+// December's title mark is a fir sprig in open pen line; this is a filled, trunked silhouette
+// in the grid, which is what keeps the two from reading as the same object twice on one sheet.
+export const SWIFTMAS_GREEN = "#3f6b4a";
+export const TREE_D = "M16.4 3.4 L11 11.2 L13.6 10.9 L8.6 18.2 L11.8 17.8 L6.2 25 Q16.2 26.9 26.2 24.7 L20.8 17.6 L23.7 18 L19 10.7 L21.6 11.1 Z";
+export const TREE_TRUNK_D = "M14.3 25.6 L14.4 29.2 Q16.1 29.7 17.9 29.1 L17.7 25.6 Z";
+export const TREE_TRUNK = "#6b5136";
+
 export const TS_MILESTONES = [
   { md: "12-13", year: 1989, kind: "birthday", title: "Taylor Swift",                  album: null },
   { md: "10-24", year: 2006, kind: "album",    title: "Taylor Swift", aka: "her debut", album: "Taylor Swift" },
@@ -2556,12 +2568,13 @@ export const TS_MILESTONES = [
   // Christmas is not a date a song names, so these two stretch the songday shape rather than
   // fit it: the headline is the fans' own word for the day and the line is the Taylor fact that
   // earns it. The Eve leans on 'tis the damn season, evermore's coming-home-for-the-holidays
-  // song, and wears evermore's ink. The day itself is the farm she grew up on, inked in the
-  // debut era's colour because her Holiday Collection came out in that era (2007).
+  // song, and wears evermore's ink. The day itself is the farm she grew up on, and it is the one
+  // row that wears no era: `album: null` with its own `ink`, because a Christmas tree is green
+  // and an era colour on it read as a mistake. `icon`/`mark` swap the heart for the tree.
   { md: "12-24", kind: "songday", title: "Merry Swiftmas Eve", album: "evermore", day: "Merry Swiftmas Eve",
     line: "'tis the damn season, on evermore", caption: "swiftmas eve" },
-  { md: "12-25", kind: "songday", title: "Merry Swiftmas", album: "Taylor Swift", day: "Merry Swiftmas",
-    line: "she grew up on a Christmas tree farm", caption: "merry swiftmas" },
+  { md: "12-25", kind: "songday", title: "Merry Swiftmas", album: null, ink: SWIFTMAS_GREEN, day: "Merry Swiftmas",
+    line: "she grew up on a Christmas tree farm", icon: "tree", mark: "tree", caption: "merry swiftmas" },
 ];
 
 // The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
