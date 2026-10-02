@@ -604,10 +604,8 @@ function applySettings() {
   // attribute we just wrote — which is why paintFavicon has to come after it, not before.
   // Unlock state is deliberately NOT consulted here — this paints whatever is chosen, and the
   // choosing path is what refuses a locked ink and falls back if a board reset relocks one.
-  const ink = inkSlugKnown(settings.titleInk) ? settings.titleInk : "";
-  if (ink) body.setAttribute("data-ink", ink);
-  else body.removeAttribute("data-ink");
-  paintTitleGild();   // after data-ink, which it and the favicon both read back off the body
+  // On an album's release day the record's own ink is worn instead (see wornTitleInk).
+  paintTitleInk();
   paintStartButton();
   sfx.setEnabled(!!settings.sound);   // sound gate lives in js/sound.js
   // The boombox only pays out for a run played with the sound on, so turning it off mid-run
@@ -12216,8 +12214,39 @@ function guardTitleInk() {
 // ink you are already wearing has to gild the star on the spot rather than at the next reload.
 // Paints what is chosen, for the same reason applySettings paints the ink it is given: refusing
 // an unearned one is the picker's job, not this one's.
+// On an album's release day the masthead wears that album's ink, the same way the Start writing
+// button wears its finish: whatever the player has chosen, earned or not, and only for the day.
+// Nothing is unlocked by it and settings.titleInk is never written, so the chosen ink comes back
+// the next morning on its own. A re-recording's day wears the original's ink (one album, one
+// ink), and 27 October, which both 1989s share, comes out the same either way.
+//
+// Picking a swatch in the ink tray waives it for the rest of the day. The tray has no preview of
+// its own because the masthead IS the preview, so a title pinned to the album would make every
+// tap there look broken. The waiver is per page load and keyed to the day, so it needs no reset.
+let dayInkWaived = null;
+function dayInkFor(dateKey) {
+  const md = dateKey.slice(5), year = +dateKey.slice(0, 4);
+  const hit = TS_MILESTONES.find((m) => m.md === md && (m.kind === "album" || m.kind === "tv")
+    && year >= m.year && MAST_INKS[m.album]);
+  return hit ? MAST_INKS[hit.album].slug : "";
+}
+function wornTitleInk() {
+  const day = todayKey();
+  const dated = dayInkWaived === day ? "" : dayInkFor(day);
+  if (dated) return dated;
+  return inkSlugKnown(settings.titleInk) ? settings.titleInk : "";
+}
+// The one writer of data-ink. Called by applySettings and again by refreshDateSurfaces, since
+// the release-day ink is a dated surface and has to turn over with the day.
+function paintTitleInk() {
+  const ink = wornTitleInk();
+  if (ink) document.body.setAttribute("data-ink", ink);
+  else document.body.removeAttribute("data-ink");
+  paintTitleGild();   // after data-ink, which it and the favicon both read back off the body
+}
+
 function paintTitleGild() {
-  const ink = inkSlugKnown(settings.titleInk) ? settings.titleInk : "";
+  const ink = wornTitleInk();
   // The shuffle's album is all twelve, so its leaf is all twelve perfected. Stating it here
   // rather than exempting the shuffle keeps one rule for the gild — the ink's album, perfected —
   // and stops the top ink being the one that can never be leafed.
@@ -12385,6 +12414,7 @@ function renderInkTrayPage() {
 
   el.querySelectorAll("[data-ink-pick]").forEach((b) => b.addEventListener("click", () => {
     settings.titleInk = b.dataset.inkPick || "";
+    dayInkWaived = todayKey();   // the masthead is the tray's preview, so a pick has to show
     saveSettings(settings);
     applySettings();
     renderInkTrayPage();
@@ -15630,6 +15660,7 @@ function refreshDateSurfaces() {
   // day after. Repainting it is cheap, so it always repaints; the Mastery page only previews
   // Seasons by the date, so it redraws only for that.
   paintStartButton();
+  paintTitleInk();   // an album's release day wears its ink in the masthead
   if (activeButtonFinish() === "" && $("masteryBody")) renderMasteryPage();
 }
 // The day turning under a page that is already open. This is deliberately a POLL against
@@ -33867,6 +33898,7 @@ function buildDevApi() {
       set: (slug) => {
         if (slug && !inkSlugKnown(slug)) return `no such ink: ${slug}`;
         settings.titleInk = slug || "";
+        dayInkWaived = todayKey();
         saveSettings(settings); applySettings();
         return settings.titleInk || "(brand gold)";
       },
