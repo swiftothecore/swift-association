@@ -76,10 +76,18 @@ const MONTHS = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"];
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
 
-// The heart is app.js's milestone-sticky heart, same path, drawn small; the star
-// is the desk's own folded paper star (the #flStarG geometry in index.html).
+// The heart is app.js's milestone-sticky heart, same path, drawn small.
 const HEART_D = "M16 27.5C15.4 27.1 4.5 19.6 4.5 11.7c0-3.6 2.7-6.4 6-6.4 2.3 0 4.2 1.3 5.5 3.4 1.3-2.1 3.2-3.4 5.5-3.4 3.3 0 6 2.8 6 6.4 0 7.9-10.9 15.4-11.5 15.8z";
-const STAR_D = "M0 -12 L2.94 -4.05 L11.41 -3.71 L4.76 1.55 L7.05 9.71 L0 5 L-7.05 9.71 L-4.76 1.55 L-11.41 -3.71 L-2.94 -4.05 Z";
+// Her birthday cake: a squat sponge, pink icing with uneven drips, and three lit candles. In
+// the corner sticky cake's colours (cakeSvg in app.js), but not its "13" number candles, which
+// close up into one gold lump at this size. Same 32-box as the heart, drawn sitting low in it
+// so the flames clear the numeral. scripts/ui/birthday-cake-calendar.html is the board.
+const CAKE_SPONGE_D = "M5.2 18.4 L5.6 27 Q16 28.6 26.9 26.7 L26.6 18.1 Z";
+const CAKE_ICING_D = "M4.8 18.8 Q4.6 15.7 7.4 15.5 L24.8 15.2 Q27.3 15.3 27.2 18.3 L27.2 20.4 Q26.2 22.3 25.2 20.1 Q22.6 19 20.6 19.7 Q20 22.4 18.6 21.6 Q18 21 18.2 19.5 Q14 19 11.6 19.9 Q11 22 9.8 21.4 Q9.2 20.8 9.3 19.4 Q7 19 5.6 20.6 Q4.7 20.4 4.8 18.8 Z";
+// Each candle as [left, top, right, bottom], hand-set so no two stand the same height.
+const CAKE_CANDLES = [[8, 9.3, 10.6, 15.5], [14.9, 8.4, 17.5, 15.3], [21.6, 9.1, 24.2, 15.4]];
+const flameD = (x, y, k) => `M${x} ${y - 5.6 * k}C${x + 2.1 * k} ${y - 3.6 * k} ${x + 2.2 * k} ${y - 0.7 * k} ${x + 0.1 * k} ${y}` +
+  `C${x - 1.9 * k} ${y - 0.6 * k} ${x - 1.8 * k} ${y - 3.4 * k} ${x} ${y - 5.6 * k}Z`;
 
 // One mark per calendar square. Oct 27 is both 1989 and 1989 (Taylor's Version),
 // and two hearts will not fit in a 26px cell — so the earlier, original release
@@ -142,7 +150,7 @@ const DIGIT_W = 6.6;
 // Two months are drawn around what the GRID already stamps on them, because the
 // same object twice on one sheet reads as a mistake: the sheet that stamps a
 // salt shaker (the 1st, for "august") does not draw one in the title, and the
-// sheet that stamps a folded star (the 13th, her birthday) does not either.
+// sheet that stamps a birthday cake (the 13th) does not draw one either.
 // Both rotations below were checked against that, so a southern August takes
 // the mitten and a southern December the sun.
 //
@@ -288,16 +296,34 @@ function watchForLayout(svg) {
 
 // The days that matter, in the app's own milestone language: an album-coloured
 // heart for a release (exactly what the milestone sticky shows on the day), and
-// the game's gold star for her birthday, which no album colour should stand in
-// for. A lyric day gets the same heart hollowed out — a quieter cousin of a
+// a birthday cake for her birthday, which no album colour should stand in for. A lyric day gets the same heart hollowed out — a quieter cousin of a
 // real release, since the song only named the date, nothing shipped on it. A day carrying its
 // own `mark` gets that object instead (August 1st gets a salt shaker).
 function drawMark(g, mark, cx, cy, colors, s) {
   const x = (cx + MARK_DX).toFixed(1), y = (cy + MARK_DY).toFixed(1);
   const tilt = (-16 + jit(s) * 32).toFixed(1);
+  // Stamped at 0.37 rather than the heart's 0.3, to fill the square the way the gold star it
+  // replaced did, so the weights are quoted lighter to land on the same paper widths: 2.2 is
+  // the heart's 0.81 edge. Half the heart's tilt, like the tree: a cake leaning 16 degrees is
+  // sliding off its plate.
   if (mark.kind === "birthday") {
-    g.appendChild(el("path", { d: STAR_D, class: "cal-star",
-      transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.4)` }));
+    const cake = el("g", {
+      transform: `translate(${x} ${y}) rotate(${(tilt / 2).toFixed(1)}) scale(0.37) translate(-16.5 -13.6)`
+    });
+    const edge = { stroke: "rgba(0,0,0,0.3)", "stroke-linejoin": "round" };
+    cake.appendChild(el("path", { d: CAKE_SPONGE_D, fill: "#f0e2c4", "stroke-width": 2.2, ...edge }));
+    cake.appendChild(el("path", { d: CAKE_ICING_D, fill: "#ec85aa", "stroke-width": 2.2, ...edge }));
+    for (const [x0, y0, x1, y1] of CAKE_CANDLES) {
+      cake.appendChild(el("path", {
+        d: `M${x0} ${y0 + 0.2}L${x1} ${y0}L${x1 + 0.2} ${y1}L${x0 + 0.1} ${y1 + 0.1}Z`,
+        fill: "#e3ad3c", "stroke-width": 1.6, ...edge
+      }));
+      cake.appendChild(el("path", {
+        d: flameD((x0 + x1) / 2, y0 - 0.2, 0.85), fill: "#f29030",
+        stroke: "rgba(150,70,0,0.35)", "stroke-width": 1.1, "stroke-linejoin": "round"
+      }));
+    }
+    g.appendChild(cake);
     return;
   }
   // A guest whose name is on the shelf but whose catalogue has not arrived is drawn hollow,
@@ -384,7 +410,7 @@ function drawMark(g, mark, cx, cy, colors, s) {
   }
   // Stroke weights are quoted in the 32-box and then divided by scale(0.3), so the
   // numbers that matter are what reaches the paper: the filled heart's separating edge
-  // lands at 0.8, matching the birthday star, and the hollow one's outline at 1.05,
+  // lands at 0.8, matching the birthday cake, and the hollow one's outline at 1.05,
   // heavier because there the stroke IS the drawing. The filled edge used to be quoted
   // at 0.9, i.e. 0.27 on paper — sub-pixel, so the thing meant to lift a coloured heart
   // off cream paper was not rendering at all.

@@ -619,9 +619,6 @@
   .di-calendar .cal-today path { fill: none; stroke: #b23a3f; stroke-linecap: round; stroke-width: 1.55; opacity: 0.8; }
   .di-calendar .cal-today path.echo { stroke-width: 1.05; opacity: 0.5; }
   .di-calendar .cal-hl line { stroke: rgba(247, 201, 72, 0.55); stroke-width: 14; stroke-linecap: round; }
-  /* her birthday: the desk's own folded-paper gold, so no album colour stands
-     in for it (album days wear their era's ink, set per-mark in calendar.js) */
-  .di-calendar .cal-star { fill: #dda93f; stroke: #a8752e; stroke-width: 2; stroke-linejoin: round; }
   /* The cassette insert. Same split of voices as the desk calendar: the card is
      a manufactured thing, so its header and spec line are printed in the desk's
      Courier; the title, the version note and the album line are written on the
