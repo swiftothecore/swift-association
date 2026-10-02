@@ -392,38 +392,44 @@ const FRAMES = {
   },
 };
 
-// The heart, drawn fresh for every day it marks. Six points place it: the cleft, the crown of
-// each lobe, the widest reach of each lobe and the point, and each is nudged by its own seeded
-// amount, so the two lobes are never a mirror of each other and no two hearts on a sheet are
-// the same heart. On top of the points the whole heart is stretched a little wider or taller
-// and leant, so the difference shows at 1x and not only up close: some hearts come out
-// plump, some long, some with one lobe riding higher, some with the point pulled off centre.
-// The ranges stop where the heart would stop holding its date: a squashed lobe has to clear
-// a two-digit figure (6.6 either side of centre, 3.2 above and below) by a pen's breadth.
+// The heart, drawn fresh for every day it marks, so no two on a sheet are the same heart.
+// The difference is in its CHARACTER, set for the whole heart at once: plumper or slimmer,
+// taller or squatter, rounder lobes or flatter ones, a softer point or a sharper one, a
+// deeper cleft or a shallower one. Those keep every heart well made, because both sides
+// change together. On top of that each of the six points (the cleft, each lobe's crown and
+// widest reach, the point) gets only a whisper of its own nudge, enough that the lobes are
+// never an exact mirror, which is what keeps it hand-drawn rather than stamped.
+//
+// That split is the lesson of an earlier pass. Varying the six points hard and separately,
+// with the point pulled off centre and one lobe leant above the other, gave hearts that were
+// dented rather than different: a lopsided heart reads as a slip of the pen, not a hand.
 //
 // The pen starts at the cleft, goes round the left lobe, down to the point, up the right
 // side and home, finishing a hair past where it began, the way a hand closes a heart.
-// Starting at the cleft is what keeps the point clean: it is one turn of the pen, a V of
-// about eighty degrees with the sides bowing out as they come into it, and nothing crossing
-// or hooking there. (An earlier heart began and ended AT the point, and the stub and the
-// overshoot both landed under it as a little tail.)
+// Starting at the cleft is what keeps the point clean: it is one turn of the pen, a V with
+// the sides bowing out as they come into it, and nothing crossing or hooking there. (A
+// heart that began and ended AT the point left the stub and the overshoot under it as a
+// little tail.) Every range stops where the heart would stop holding its date: the
+// slimmest still clears a two-digit figure by a pen's breadth.
 function heartPath(seed) {
   const j = (k, a) => (jit(seed + k * 7.3) - 0.5) * 2 * a;
-  const sx = 1 + j(15, 0.07), sy = 1 + j(16, 0.07);
-  // one lobe rides higher than the other by up to a unit and a half, in either direction
-  const lean = j(17, 0.75);
-  const C  = [0.2 + j(1, 0.9), -6.1 + j(2, 0.9)];             // the cleft
-  const T1 = [-5.7 + j(3, 1), -9.6 + j(4, 0.6) - lean];       // left lobe's crown
-  const L  = [-10.9 + j(5, 0.6), -3.2 + j(6, 1.1) - lean];    // left lobe at its widest
-  const B  = [0.3 + j(7, 1.5), 10.3 + j(8, 0.8)];             // the point
-  const R  = [10.9 + j(9, 0.6), -3 + j(10, 1.1) + lean];      // right lobe at its widest
-  const T2 = [5.5 + j(11, 1), -9.7 + j(12, 0.6) + lean];      // right lobe's crown
+  // the heart's character
+  const sx = 1 + j(15, 0.07), sy = 1 + j(16, 0.05);
+  const round = 3 + j(17, 0.6);          // how full the lobes are over the top
+  const bow = 4.2 + j(18, 0.6);          // how the sides swell into the point
+  const cleft = -6.1 + j(19, 0.6);       // how deep the dip between the lobes
+  // the hand: a whisper per point, never mirrored
+  const w = (k) => j(k, 0.3);
+  const C  = [0.2 + w(1), cleft + w(2)];
+  const T1 = [-5.7 + w(3), -9.7 + w(4)];
+  const L  = [-10.9 + w(5), -3.2 + w(6)];
+  const B  = [0.3 + w(7), 10.3 + w(8)];
+  const R  = [10.9 + w(9), -3.1 + w(10)];
+  const T2 = [5.6 + w(11), -9.7 + w(12)];
   const pt = (q, dx = 0, dy = 0) => `${((q[0] + dx) * sx).toFixed(2)} ${((q[1] + dy) * sy).toFixed(2)}`;
-  // how hard each side bows into the point, so one side can come in fuller than the other
-  const bl = 4.3 + j(13, 0.9), br = 4.1 + j(14, 0.9);
-  return `M${pt(C)} C${pt(C, -0.6, -2.3)} ${pt(T1, 2.7)} ${pt(T1)} C${pt(T1, -3.3)} ${pt(L, 0, -3.5)} ${pt(L)} ` +
-    `C${pt(L, 0, 5.2)} ${pt(B, -bl, -5)} ${pt(B)} C${pt(B, br, -5.2)} ${pt(R, 0, 5.2)} ${pt(R)} ` +
-    `C${pt(R, 0, -3.5)} ${pt(T2, 3.3)} ${pt(T2)} C${pt(T2, -2.7)} ${pt(C, 0.7, -2.3)} ${pt(C, 0.3, 0.4)}`;
+  return `M${pt(C)} C${pt(C, -0.6, -2.3)} ${pt(T1, round * 0.9)} ${pt(T1)} C${pt(T1, -round * 1.1)} ${pt(L, 0, -3.5)} ${pt(L)} ` +
+    `C${pt(L, 0, 5.2)} ${pt(B, -bow, -5.1)} ${pt(B)} C${pt(B, bow + w(13), -5.1)} ${pt(R, 0, 5.2)} ${pt(R)} ` +
+    `C${pt(R, 0, -3.5)} ${pt(T2, round * 1.1)} ${pt(T2)} C${pt(T2, -round * 0.9)} ${pt(C, 0.7, -2.3)} ${pt(C, 0.3, 0.4)}`;
 }
 
 // Each frame's ink box in its own units (half-width, top, bottom), for the today loop. When
