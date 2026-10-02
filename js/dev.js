@@ -1268,6 +1268,14 @@ export function initDev(api) {
       toast(n ? `${n} songs found on ${blotSel.value}` : "no such album");
     }, "warn"))));
 
+  /* ---- The Stats stamps ------------------------------------------------------
+     The quickest answer on the stopwatch stamp is a lifetime minimum, so a single bad reading
+     (a 0.0s) stays on it for good. Set it to try the red tick round the dial, or forget it. */
+  const quickN = num(1.5);
+  body.append(section("stats stamps",
+    row("quickest", quickN, btn("set", () => { api.stamps.quickest(+quickN.value); toast("quickest set"); }),
+        btn("forget quickest", () => { api.stamps.quickest(null); toast("quickest forgotten"); }, "warn"))));
+
   // ---- Seeding ---------------------------------------------------------------
   const achSel = select(api.ACHIEVEMENTS, (a) => a.id, (a) => a.name + (a.secret ? " (hidden)" : ""));
   const histN = num(25);

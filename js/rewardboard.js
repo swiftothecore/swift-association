@@ -295,7 +295,7 @@ function refill(id, title, sub, members) {
    START BUTTON WORDS: label-maker tape
    ================================================================ */
 // Rewriting a label is a label maker's job, so every set of words is a strip of the notebook's own
-// label-maker tape (.stp-dy, the Stats page's quick numbers), in the words' teal. Above them, the
+// label-maker tape (.stp-dy in styles.css), in the words' teal. Above them, the
 // real start button wearing the words and finish chosen.
 function labelTape(D) {
   const labels = ofKind("label");

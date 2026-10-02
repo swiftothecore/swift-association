@@ -2662,7 +2662,90 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   return out.join("");
 }
 
-// The All view's lifetime pieces: the sleeve, label tape, blotter, raffle tickets, calendar.
+/* The quick numbers: four postage stamps, licked and stuck on, so like the label tape they
+   replaced they need no tape of their own. They were seven label-maker strips, every character
+   at one weight, which made the eye read all seven to find a number; they are four facts (how
+   often right, how fast, how many lines, how many words), so each gets one stamp, its number big
+   in the corner and what it means small along the foot.
+
+   The picture on each stamp is that number's own diagram, so it reads before a word does, and
+   none of it is decoration: twenty marks in the proportion you get right, a stopwatch whose face
+   is the longest clock any page has, a lyric sheet with the word-perfect share highlighted, and
+   a box with a dot for every playable word, coloured in from the bottom for the ones you've got
+   right. Printed in the stamp's one ink, with the red pen as a second ink where a drawing uses it.
+   A fact with nothing behind it yet (no timed page, no sung line) has no stamp. */
+const STATS_DIAL = 20;   // seconds round the stopwatch: Lyricist and the slow challenges' clock, so every page's answer fits
+function statsTicksSVG(frac) {
+  const r = mulberry32(11), n = Math.round(frac * 20);
+  let ok = "", no = "";
+  for (let i = 0; i < 20; i++) {
+    const x = 4.5 + (i % 5) * 11.6 + (r() - .5) * 1.2, y = 7.5 + (i / 5 | 0) * 11.4 + (r() - .5) * 1.2;
+    if (i < n) ok += `M${(x - 3.4).toFixed(1)} ${(y + .2).toFixed(1)} Q${(x - 2).toFixed(1)} ${(y + 1.4).toFixed(1)} ${(x - .9).toFixed(1)} ${(y + 3.3).toFixed(1)} Q${(x + 1.2).toFixed(1)} ${(y - 1.8).toFixed(1)} ${(x + 4).toFixed(1)} ${(y - 4 + r()).toFixed(1)} `;
+    else no += `M${(x - 2.6).toFixed(1)} ${(y - 2.6).toFixed(1)} L${(x + 2.7).toFixed(1)} ${(y + 2.8).toFixed(1)} M${(x + 2.6).toFixed(1)} ${(y - 2.5).toFixed(1)} L${(x - 2.5).toFixed(1)} ${(y + 2.7).toFixed(1)} `;
+  }
+  return `<svg viewBox="0 0 58 50" aria-hidden="true"><g filter="url(#charmWobble)"><path class="stp-ps-ink" d="${ok}"/><path class="stp-ps-red" d="${no}"/></g></svg>`;
+}
+function statsWatchSVG(usual, quick) {
+  const cx = 29, cy = 29, R = 20.5, f = (v) => v.toFixed(1);
+  const pt = (sec, rr) => { const a = Math.min(sec, STATS_DIAL) / STATS_DIAL * Math.PI * 2 - Math.PI / 2; return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]; };
+  let ticks = "";
+  for (let sec = 0; sec < STATS_DIAL; sec++) {
+    const [x1, y1] = pt(sec, sec % 5 ? 18 : 15.5), [x2, y2] = pt(sec, 20.2);
+    ticks += `M${f(x1)} ${f(y1)} L${f(x2)} ${f(y2)} `;
+  }
+  const [ux, uy] = pt(usual, 13.5), [hx, hy] = pt(usual, 16);
+  const wedge = `M${cx} ${cy} L${cx} ${cy - 13.5} A13.5 13.5 0 ${usual / STATS_DIAL > .5 ? 1 : 0} 1 ${f(ux)} ${f(uy)} Z`;
+  let q = "";
+  if (quick != null) { const [a, b] = pt(quick, 17.2), [c, e] = pt(quick, 23.4); q = `<path class="stp-ps-red stp-ps-fat" d="M${f(a)} ${f(b)} L${f(c)} ${f(e)}"/>`; }
+  return `<svg viewBox="0 -4 58 62" aria-hidden="true"><g filter="url(#charmWobble)"><path class="stp-ps-wash" d="${wedge}"/>` +
+    `<path class="stp-ps-ink" d="M${cx} ${cy - R} V${cy - R - 3.5} M${cx - 3.2} ${cy - R - 4} H${cx + 3.2} M${cx + 14.5} ${cy - 14.5} L${cx + 17} ${cy - 17}"/>` +
+    `<circle class="stp-ps-ink" cx="${cx}" cy="${cy}" r="${R}"/><path class="stp-ps-ink stp-ps-thin" d="${ticks}"/>` +
+    `<path class="stp-ps-ink" d="M${cx} ${cy} L${f(hx)} ${f(hy)}"/><circle class="stp-ps-dot" cx="${cx}" cy="${cy}" r="1.6"/>${q}</g></svg>`;
+}
+function statsSheetSVG(frac) {
+  const r = mulberry32(5), N = 7, k = Math.round(frac * N), f = (v) => v.toFixed(1);
+  // the perfect lines are spread through the sheet, not stacked at the top
+  const perfect = Array.from({ length: N }, (_, i) => i).sort(() => r() - .5).slice(0, k);
+  let hl = "", ln = "";
+  for (let i = 0; i < N; i++) {
+    const y = 5 + i * 6.8, len = 32 + r() * 22 - (i % 4 === 3 ? 12 : 0), w1 = (r() - .5) * .8, w2 = (r() - .5) * .8;
+    if (perfect.includes(i)) hl += `M${f(1 + r())} ${f(y - .6 + w1)} L${f(4 + len + r())} ${f(y - .9 + w2)} `;
+    ln += `M3 ${f(y)} Q${f(len / 2)} ${f(y + w1)} ${f(3 + len)} ${f(y + w2)} `;
+  }
+  return `<svg viewBox="0 -1 58 49" aria-hidden="true"><path class="stp-ps-hl" d="${hl}"/>` +
+    `<g filter="url(#charmWobble)"><path class="stp-ps-ink stp-ps-thin" d="${ln}"/></g></svg>`;
+}
+function statsWordBoxSVG(n, of) {
+  const cols = 30, cell = 1.78, H = Math.ceil(of / cols) * cell, W = cols * cell + 4.8, B = H + 4.8, f = (v) => v.toFixed(1);
+  let on = "";
+  for (let i = 0; i < Math.min(n, of); i++) on += `M${f(2.4 + (i % cols + .5) * cell)} ${f(2.4 + H - ((i / cols | 0) + .5) * cell)}h.01`;
+  return `<svg viewBox="0 0 ${f(W)} ${f(B)}" aria-hidden="true"><path class="stp-ps-word" d="${on}"/>` +
+    `<g filter="url(#charmWobble)"><path class="stp-ps-ink" d="M1 1.4 Q${f(W / 2)} .6 ${f(W - 1)} 1 Q${f(W - .4)} ${f(B / 2)} ${f(W - 1)} ${f(B - 1)} Q${f(W / 2)} ${f(B - .4)} 1.2 ${f(B - 1)} Q.6 ${f(B / 2)} 1 1.4 Z"/></g></svg>`;
+}
+function statsStampsHTML(m, t, beside) {
+  const sec = (ms) => (ms / 1000).toFixed(1);
+  const stamps = [];
+  const right = m.roundsCorrect / m.roundsTotal;
+  stamps.push({ ink: 0, big: Math.round(right * 100), unit: "%", cap: "pages right", det: `${fmtN(m.roundsCorrect)} of ${fmtN(m.roundsTotal)}`, art: statsTicksSVG(right) });
+  if (m.answerN) {
+    const usual = m.answerSumMs / m.answerN / 1000, quick = m.fastestMs == null ? null : m.fastestMs / 1000;
+    stamps.push({ ink: 1, big: usual.toFixed(1), unit: "s", cap: "usual answer", det: quick == null ? "" : `quickest ${sec(m.fastestMs)}s`, art: statsWatchSVG(usual, quick) });
+  }
+  if (m.lyricLines) {
+    const perfect = m.versePerfect || 0;
+    stamps.push({ ink: 2, big: fmtN(m.lyricLines), unit: "", cap: "lines by heart", det: `${fmtN(perfect)} word-perfect`, art: statsSheetSVG(perfect / m.lyricLines) });
+  }
+  const got = Object.keys(t.words || {}).length;
+  stamps.push({ ink: 3, big: fmtN(got), unit: "", cap: "words cracked", det: `of ${fmtN(playableWords.length)}`, art: statsWordBoxSVG(got, playableWords.length) });
+  const tilt = [-1.6, 1.2, .9, -1.3];
+  return `<div class="stp-item ${beside ? "stp-w4" : "stp-w6"} stp-o5"><div class="stp-lab">first class</div><div class="stp-ps">` +
+    stamps.map((s, i) => `<div class="stp-ps-lift" style="--r:${tilt[i]}deg"><div class="stp-ps-st stp-ps--${s.ink}" role="img" aria-label="${s.big}${s.unit} ${s.cap}${s.det ? `, ${s.det}` : ""}">` +
+      `<div class="stp-ps-in"><b class="stp-ps-val">${s.big}${s.unit ? `<small>${s.unit}</small>` : ""}</b><span class="stp-ps-pic">${s.art}</span>` +
+      `<span class="stp-ps-foot"><span class="stp-ps-cap">${s.cap}</span><span class="stp-ps-det">${s.det}</span></span></div></div></div>`).join("") +
+    `</div></div>`;
+}
+
+// The All view's lifetime pieces: the sleeve, stamps, blotter, raffle tickets, calendar.
 function statsLifetimeHTML(W) {
   const phone = W < 520;
   const m = loadMetrics();
@@ -2680,15 +2763,7 @@ function statsLifetimeHTML(W) {
       `<div class="stp-slip"><span class="stp-lab">home album · ${favAlbum.count} right</span>` +
       `<b>${escapeHtml(censor(favSong.key))}</b><span>sung the most, ×${favSong.count}</span></div></div>`);
   }
-  if (m.roundsTotal) {
-    const labels = [`${Math.round((m.roundsCorrect / m.roundsTotal) * 100)}% right`, `${fmtN(m.roundsCorrect)} / ${fmtN(m.roundsTotal)} pages`];
-    if (m.fastestMs != null) labels.push(`quickest ${(m.fastestMs / 1000).toFixed(1)}s`);
-    if (m.answerN) labels.push(`usually ${(m.answerSumMs / m.answerN / 1000).toFixed(1)}s`);
-    if (m.lyricLines) labels.push(`${fmtN(m.lyricLines)} lines by heart`, `${fmtN(m.versePerfect || 0)} word-perfect`);
-    labels.push(`${Object.keys(t.words || {}).length} / ${playableWords.length} words`);
-    out.push(`<div class="stp-item ${favSong ? "stp-w4" : "stp-w6"} stp-o5"><div class="stp-lab">label maker</div><div class="stp-dymo">` +
-      labels.map((l, i) => `<span class="stp-dy stp-dy--${i % 4}" style="--r:${[-1.6, 1.2, -.6, 2, -1.2, .8, -1.8][i % 7]}deg">${l}</span>`).join("") + `</div></div>`);
-  }
+  if (m.roundsTotal) out.push(statsStampsHTML(m, t, !!favSong));
   // Songs found, album by album, in the order the catalogue runs (pseudo-albums included).
   const found = {}, total = {}, order = [];
   for (const s of allSongs) {
@@ -34094,6 +34169,17 @@ function buildDevApi() {
         return songs.length;
       },
       albums: () => [...new Set(allSongs.map((s) => s.album).filter(Boolean))],
+    },
+    // The stamps' quickest answer is a lifetime minimum, so one bad reading sticks forever:
+    // this sets it (seconds) or forgets it (null), then reopens Stats on the stamps.
+    stamps: {
+      quickest: (s) => {
+        const m = loadMetrics();
+        m.fastestMs = s == null ? null : Math.round(s * 1000);
+        saveMetrics(m);
+        renderStats(null, "all"); flipAwayToScreen("stats");
+        return m.fastestMs;
+      },
     },
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,
             infinite: devSeedInfinite,

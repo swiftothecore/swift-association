@@ -11264,7 +11264,7 @@
     .stp > .stp-o0 { order: 0; } .stp > .stp-o1 { order: 1; } .stp > .stp-o2 { order: 2; }
     .stp > .stp-solo { grid-column: span 2; justify-self: center; width: 64%; }
   }
-  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-clip, .stp-slip, .stp-blot, .stp-dy, .stp-rt) {
+  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-clip, .stp-slip, .stp-blot, .stp-dy, .stp-ps-st, .stp-rt) {
     filter: brightness(0.78) saturate(0.94);
   }
 
@@ -11479,9 +11479,9 @@
   .stp-slip > span:last-child { font-size: .9em; color: var(--stp-soft); }
   .stp-solo .stp-slip { margin-inline: 14px; }
 
-  /* the quick numbers: label-maker tape, which sticks itself. The notebook's one label-maker tape:
-     the Mastery page's start-button words are strips of it too (.lt-strip, js/rewardboard.js). */
-  .stp-dymo { display: flex; flex-wrap: wrap; gap: 12px 10px; align-content: flex-start; padding-top: 2px; }
+  /* The notebook's one label-maker tape. It was the Stats page's quick numbers until the stamps
+     below took over; the Mastery page's start-button words are strips of it (.lt-strip,
+     js/rewardboard.js), so the stock stays. */
   .stp-dy {
     display: inline-block; padding: 5px 10px 4px; color: #f6f1e4; background: #23406b; border-radius: 2px;
     font-family: var(--type); font-weight: 700; font-size: calc(13px + var(--text-size-adjust)); line-height: 1.1; letter-spacing: 2.2px; text-transform: uppercase;
@@ -11490,6 +11490,47 @@
   .stp-dy--1 { background: #2b2722; } .stp-dy--2 { background: #8c2f2a; } .stp-dy--3 { background: #2f5a3f; }
   /* black tape on the night page is a hole in it: lifted to the pale side of graphite, as the nav cards' graphite is */
   :root[data-theme="dark"] .stp-dy--1 { background: #57514a; }
+
+  /* the quick numbers: four postage stamps (statsStampsHTML has the why). Gummed, so no tape;
+     perforated by a mask of round holes centred on the edge over a solid content-box, so only the
+     padding is bitten. Each is printed in one ink (--k, the old label tape's four), its drawing
+     included: --ink is re-pointed at the stamp's ink inside it, and the red pen is the second ink. */
+  .stp-ps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; padding: 2px 2px 6px; }
+  .stp-ps-lift { min-width: 0; filter: drop-shadow(1px 1.5px 0 rgba(43, 39, 34, .18)); transform: rotate(var(--r, 0deg)); }
+  /* three stamps (no sung line yet): the odd one centred under the pair, not left with a hole beside it */
+  .stp-ps-lift:last-child:nth-child(odd) { grid-column: span 2; justify-self: center; width: calc(50% - 7px); }
+  .stp-ps-st {
+    --k: #23406b; --pr: 3px; padding: 6px; background: #fcfaf3;
+    -webkit-mask: radial-gradient(circle at center, #0000 var(--pr), #000 calc(var(--pr) + .4px)) calc(-1 * var(--pr) - 1px) calc(-1 * var(--pr) - 1px) / 8.5px 8.5px round,
+                  linear-gradient(#000 0 0) content-box;
+            mask: radial-gradient(circle at center, #0000 var(--pr), #000 calc(var(--pr) + .4px)) calc(-1 * var(--pr) - 1px) calc(-1 * var(--pr) - 1px) / 8.5px 8.5px round,
+                  linear-gradient(#000 0 0) content-box;
+    -webkit-mask-composite: source-over; mask-composite: add;
+  }
+  .stp-ps--1 { --k: #2b2722; } .stp-ps--2 { --k: #8c2f2a; } .stp-ps--3 { --k: #2f5a3f; }
+  .stp-ps-in {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "val pic" "foot foot"; align-items: start;
+    padding: 6px 8px 5px 9px; color: var(--k); background: color-mix(in srgb, var(--k) 11%, #fcfaf3);
+    outline: 1.2px solid var(--k); outline-offset: -3px;
+  }
+  .stp-ps-val { grid-area: val; padding-top: 3px; font-family: var(--type); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); line-height: 1; letter-spacing: -.05em; white-space: nowrap; }
+  .stp-ps-val small { font-size: .55em; letter-spacing: 0; margin-left: 1px; }
+  .stp-ps-pic { grid-area: pic; display: block; width: 46px; margin: 1px 0 0 4px; }
+  .stp-ps-pic svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .stp-ps-foot {
+    grid-area: foot; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 6px; min-width: 0;
+    margin-top: 7px; padding-top: 3px; border-top: 1px solid color-mix(in srgb, var(--k) 45%, transparent); white-space: nowrap;
+  }
+  .stp-ps-cap { font-family: var(--type); font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .9px; text-transform: uppercase; line-height: 1.2; }
+  .stp-ps-det { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); line-height: 1.2; opacity: .85; }
+  .stp-ps-ink, .stp-ps-red { fill: none; stroke: var(--k); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .stp-ps-thin { stroke-width: 1.1; }
+  .stp-ps-fat { stroke-width: 2.2; }
+  .stp-ps-red { stroke: #b2342c; }
+  .stp-ps-dot { fill: var(--k); }
+  .stp-ps-wash { fill: var(--k); fill-opacity: .2; }
+  .stp-ps-hl { fill: none; stroke: var(--highlighter); stroke-width: 5.2; }
+  .stp-ps-word { stroke: var(--k); stroke-width: 1.62; stroke-linecap: round; }
 
   /* songs found: a sheet of blotting paper, an album a drop of ink bled out as far as you've
      found (statsBlotterHTML in app.js). The paper is unsized and shows its fibres, and has no
