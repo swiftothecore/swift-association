@@ -604,11 +604,21 @@
      rule beneath it starts, so the widest month lines up with the rule and no
      other month can reach it. */
   .di-calendar .cal-title { font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); letter-spacing: 1px; fill: #55412a; }
-  .di-calendar .cal-title .cal-year { font-weight: 400; font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 1px; fill: #93876c; }
+  /* The year is on the red plate, with the weekends: the pad is a two-colour job, and a pale
+     grey year read as a third ink with no reason to be there. Same red as a weekend date. */
+  .di-calendar .cal-title .cal-year { font-weight: 400; font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 1px; fill: #a8563e; }
   .di-calendar .cal-week text { font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.6px; fill: #8a7c62; }
   .di-calendar .cal-days text { font-size: calc(11px + var(--text-size-adjust)); fill: #4a4034; }
   .di-calendar .cal-week text.wknd { fill: #b06a50; }
   .di-calendar .cal-days text.wknd { fill: #a8563e; }
+  /* A red-letter day: a marked date printed in its mark's ink, which calendar.js has already
+     darkened enough to read as type (typeInk). After .wknd on purpose, so a release on a
+     Saturday wears its era rather than the weekend red. The small print's day numbers are
+     the same second ink. */
+  .di-calendar .cal-days text.rl, .di-calendar .cal-key .rl { fill: var(--rl); font-weight: 700; }
+  /* The small print at the foot of the sheet: printed, so the pad's Courier, at the size
+     fine print is on a real eight-centimetre pad. A grey line at 1x, readable up close. */
+  .di-calendar .cal-key text { font-size: calc(5.5px + var(--text-size-adjust)); letter-spacing: 0.1px; fill: #7d715a; }
   /* the writer's marks: graphite strikes through the spent days, a red pen
      loop (main stroke + a lighter echo pass) around today, and one gold
      highlighter swipe on the 13th */

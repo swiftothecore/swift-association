@@ -8,8 +8,11 @@
 //   .cal-season  — the month's own hand-drawn mark, left of the title
 //   .cal-week    — S M T W T F S, weekends in the printer's red
 //   .cal-marks   — the days that matter, marked in the app's own milestone
-//                  language (see renderMilestoneSticky in app.js)
-//   .cal-days    — the grid of dates
+//                  language (see renderMilestoneSticky in app.js), hung under
+//                  the numeral they belong to
+//   .cal-days    — the grid of dates. A marked day is a red-letter day: its
+//                  numeral is printed in its mark's ink
+//   .cal-key     — the small print at the foot: each marked day and what it is
 //   .cal-strikes — a graphite stroke through each day already crossed off
 //   .cal-hl      — one gold highlighter swipe on the 13th (of course)
 //   .cal-today   — the red pen loop around today, main stroke plus a lighter
@@ -21,6 +24,10 @@
 // (the days the songs put a date on). A Taylor day wears its album's colour,
 // honouring the colour-blind palette setting; a guest day wears its own pass ink,
 // which is not an album colour and so is not part of that setting.
+//
+// The printed type (title, weekdays, dates, small print) is letterpress: each
+// glyph carries a pale lip where the stock it bit into catches the light, and
+// its own density of ink. See pressSheet.
 //
 // The hand marks use seeded jitter — stable within a day so nothing flickers
 // on re-render, but each day's slash gets its own angle, length and bow, and
@@ -45,6 +52,11 @@ const el = (name, attrs, text) => {
   return n;
 };
 const clear = (g) => { while (g.firstChild) g.removeChild(g.firstChild); };
+// The letter-spacing a text element is set in, in user units. SVG adds it after EVERY glyph,
+// the last one included, and text-anchor="middle" centres that whole advance, so a tracked
+// label sits half its tracking left of its anchor: the weekday initials sat 0.3 left of
+// their columns this way. Anything centred on a column or on the sheet adds half of it back.
+const tracking = (node) => (node && parseFloat(getComputedStyle(node).letterSpacing)) || 0;
 
 // Cheap seeded jitter in [0,1): stable for a given seed, so the pen work
 // looks human without changing between renders on the same day.
@@ -65,12 +77,19 @@ const NUM_DY = 4.1;                     // baseline of the numerals below the ro
 // its baseline to the baseline itself, centred 4.1 - 3.2 = 0.9 below the anchor. The
 // strike and the pen loop both centre here; the printed grid still hangs off cy.
 const NUM_CY = 0.9;
-// The mark sits off the number's lower right, and has to stay unmistakably inside its
-// own square: at 0.3 scale a 32-box mark is 9.6 across, so an offset of 6 leaves 2.3
-// of paper before the 26.3 column boundary. It used to be 7.8/5.6, which put the mark
-// hard against the gutter and left a heart reading as though it belonged to neither
-// the day it marks nor the one after it.
-const MARK_DX = 6, MARK_DY = 4.8;
+// The mark hangs under the numeral's tail, in the paper between rows. It used to sit
+// beside the number at 4.8 down, which on every two-digit day printed it over the last
+// digit (the heart on 22 sat on the 2, the crown on 30 on the 0). At 9.5 down its top
+// clears the baseline (NUM_DY) and its foot leaves five units before the next row's
+// figures. It still has to stay unmistakably inside its own square: at 0.3 scale a
+// 32-box mark is 9.6 across, so a two-digit day's 7.2 leaves 1.2 of paper before the
+// 26.3 column boundary, and a one-digit day sits nearer its narrower figure. 7.8 was
+// tried once and left a heart reading as though it belonged to neither the day it
+// marks nor the one after it.
+const MARK_DX = 6.4, MARK_DX_WIDE = 7.2, MARK_DY = 9.5;
+// How far below the row anchor a hung mark's ink reaches (the cake's sponge is the
+// deepest of them), so the small print knows where the grid's ink ends.
+const MARK_FOOT = MARK_DY + 5.5;
 
 const MONTHS = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"];
@@ -86,6 +105,7 @@ const CAKE_SPONGE_D = "M5.2 18.4 L5.6 27 Q16 28.6 26.9 26.7 L26.6 18.1 Z";
 const CAKE_ICING_D = "M4.8 18.8 Q4.6 15.7 7.4 15.5 L24.8 15.2 Q27.3 15.3 27.2 18.3 L27.2 20.4 Q26.2 22.3 25.2 20.1 Q22.6 19 20.6 19.7 Q20 22.4 18.6 21.6 Q18 21 18.2 19.5 Q14 19 11.6 19.9 Q11 22 9.8 21.4 Q9.2 20.8 9.3 19.4 Q7 19 5.6 20.6 Q4.7 20.4 4.8 18.8 Z";
 // Each candle as [left, top, right, bottom], hand-set so no two stand the same height.
 const CAKE_CANDLES = [[8, 9.3, 10.6, 15.5], [14.9, 8.4, 17.5, 15.3], [21.6, 9.1, 24.2, 15.4]];
+const CAKE_ICING = "#ec85aa";
 const flameD = (x, y, k) => `M${x} ${y - 5.6 * k}C${x + 2.1 * k} ${y - 3.6 * k} ${x + 2.2 * k} ${y - 0.7 * k} ${x + 0.1 * k} ${y}` +
   `C${x - 1.9 * k} ${y - 0.6 * k} ${x - 1.8 * k} ${y - 3.4 * k} ${x} ${y - 5.6 * k}Z`;
 
@@ -103,9 +123,14 @@ const flameD = (x, y, k) => `M${x} ${y - 5.6 * k}C${x + 2.1 * k} ${y - 3.6 * k} 
 // shared square she speaks, but a birthday still outranks a date a song merely names.
 const RANK = { birthday: 0, album: 1, tv: 2, songday: 3, guest: 4, lore: 5 };
 const DAY_MARK = new Map();
+// Every row on a day, not just the winner, for the small print: Oct 27's square shows one
+// heart but its key names both records.
+const DAY_ROWS = new Map();
 for (const m of [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS]) {
   const held = DAY_MARK.get(m.md);
   if (!held || RANK[m.kind] < RANK[held.kind]) DAY_MARK.set(m.md, m);
+  if (!DAY_ROWS.has(m.md)) DAY_ROWS.set(m.md, []);
+  DAY_ROWS.get(m.md).push(m);
 }
 const mdKey = (m, d) => `${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
@@ -252,7 +277,9 @@ function drawMonthMark(svg, title, m, seed) {
   const sm = seasonMonth(m);
   const mark = MONTH_MARKS[sm];
   const size = 24 * MARK_SCALE;
-  const shift = (size + MARK_GAP) / 2;
+  // The year's trailing tracking is inside the measured box but carries no ink, so it is
+  // added back here or the whole block sits half of it left of the sheet's centre.
+  const shift = (size + MARK_GAP + tracking(title.querySelector(".cal-year"))) / 2;
   title.setAttribute("transform", `translate(${shift.toFixed(1)} 0)`);
   const g = el("g", { class: "cal-season", transform:
     `translate(${(b.x - MARK_GAP - size + shift).toFixed(1)} ${(b.y + b.height / 2 - size / 2).toFixed(1)}) scale(${MARK_SCALE})` });
@@ -294,13 +321,60 @@ function watchForLayout(svg) {
   io?.observe(svg);
 }
 
+// The ink a day's mark is drawn in, and whether it is drawn hollow. One answer for the mark
+// and for the numeral it red-letters, so the two can never disagree.
+//
+// A guest whose name is on the shelf but whose catalogue has not arrived is drawn hollow,
+// the same way a lyric day is: on this pad hollow has always meant "marked, but not the
+// real thing", and an announced name has no pass to be coloured by.
+// guestShelfState, not simply "has no ink": an id that is on NEITHER roster has no ink
+// either, and drawing that hollow would dress a typo up as a deliberate state. It falls
+// through to the filled fallback taupe instead, which looks dull, which is the right way
+// for a mistake to look. __dev.guestday.missing() names it.
+// A guest day is coloured by its pass, not by an album: guestInk is the one place that
+// lookup lives, so a re-inked pass re-inks its square here too.
+function markInk(mark, colors) {
+  if (mark.kind === "birthday") return { color: CAKE_ICING, hollow: false };
+  const soft = mark.kind === "guest" && guestShelfState(mark.guest) === "announced";
+  const color = mark.kind === "guest"
+    ? (guestInk(mark.guest)?.accent || "#8a7c62")
+    : (mark.ink || (mark.album && colors[mark.album]) || "#8a7c62");
+  return { color, hollow: mark.kind === "lore" || soft };
+}
+
+// A mark's colour as TYPE. Era inks were picked to fill a heart, and a few of them (Billie's
+// lime, TTPD's sand, the snow blue) are too pale to read as an eleven-pixel figure on cream.
+// So the colour is pulled toward the pad's own ink, a step at a time, until it holds 3.2:1
+// against the stock; a dark era passes the first test and barely moves. Contrast is measured
+// against #f3ead4, the middle of the sheet's gradient.
+const hexRgb = (hex) => {
+  const c = hex.replace("#", "");
+  const n = c.length === 3 ? [...c].map((h) => h + h).join("") : c;
+  return [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16));
+};
+const luminance = (rgb) => {
+  const [r, g, b] = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const STOCK_L = luminance(hexRgb("#f3ead4"));
+const PAD_INK = [0x2e, 0x26, 0x1c];
+function typeInk(hex) {
+  const rgb = hexRgb(hex);
+  let out = rgb;
+  for (let k = 0.12; k <= 0.9; k += 0.04) {
+    out = rgb.map((v, i) => Math.round(v * (1 - k) + PAD_INK[i] * k));
+    if ((STOCK_L + 0.05) / (luminance(out) + 0.05) >= 3.2) break;
+  }
+  return "#" + out.map((v) => v.toString(16).padStart(2, "0")).join("");
+}
+
 // The days that matter, in the app's own milestone language: an album-coloured
 // heart for a release (exactly what the milestone sticky shows on the day), and
 // a birthday cake for her birthday, which no album colour should stand in for. A lyric day gets the same heart hollowed out — a quieter cousin of a
 // real release, since the song only named the date, nothing shipped on it. A day carrying its
 // own `mark` gets that object instead (August 1st gets a salt shaker).
-function drawMark(g, mark, cx, cy, colors, s) {
-  const x = (cx + MARK_DX).toFixed(1), y = (cy + MARK_DY).toFixed(1);
+function drawMark(g, mark, cx, cy, colors, s, wide) {
+  const x = (cx + (wide ? MARK_DX_WIDE : MARK_DX)).toFixed(1), y = (cy + MARK_DY).toFixed(1);
   const tilt = (-16 + jit(s) * 32).toFixed(1);
   // Stamped at 0.37 rather than the heart's 0.3, to fill the square the way the gold star it
   // replaced did, so the weights are quoted lighter to land on the same paper widths: 2.2 is
@@ -312,7 +386,7 @@ function drawMark(g, mark, cx, cy, colors, s) {
     });
     const edge = { stroke: "rgba(0,0,0,0.3)", "stroke-linejoin": "round" };
     cake.appendChild(el("path", { d: CAKE_SPONGE_D, fill: "#f0e2c4", "stroke-width": 2.2, ...edge }));
-    cake.appendChild(el("path", { d: CAKE_ICING_D, fill: "#ec85aa", "stroke-width": 2.2, ...edge }));
+    cake.appendChild(el("path", { d: CAKE_ICING_D, fill: CAKE_ICING, "stroke-width": 2.2, ...edge }));
     for (const [x0, y0, x1, y1] of CAKE_CANDLES) {
       cake.appendChild(el("path", {
         d: `M${x0} ${y0 + 0.2}L${x1} ${y0}L${x1 + 0.2} ${y1}L${x0 + 0.1} ${y1 + 0.1}Z`,
@@ -326,20 +400,7 @@ function drawMark(g, mark, cx, cy, colors, s) {
     g.appendChild(cake);
     return;
   }
-  // A guest whose name is on the shelf but whose catalogue has not arrived is drawn hollow,
-  // the same way a lyric day is: on this pad hollow has always meant "marked, but not the
-  // real thing", and an announced name has no pass to be coloured by.
-  // guestShelfState, not simply "has no ink": an id that is on NEITHER roster has no ink
-  // either, and drawing that hollow would dress a typo up as a deliberate state. It falls
-  // through to the filled fallback taupe instead, which looks dull, which is the right way
-  // for a mistake to look. __dev.guestday.missing() names it.
-  const soft = mark.kind === "guest" && guestShelfState(mark.guest) === "announced";
-  const hollow = mark.kind === "lore" || soft;
-  // A guest day is coloured by its pass, not by an album: guestInk is the one place that
-  // lookup lives, so a re-inked pass re-inks its square here too.
-  const color = mark.kind === "guest"
-    ? (guestInk(mark.guest)?.accent || "#8a7c62")
-    : (mark.ink || (mark.album && colors[mark.album]) || "#8a7c62");
+  const { color, hollow } = markInk(mark, colors);
   // A guest birthday stamps the paper crown. Grouped so the band seam shares the crown's
   // transform, and both weights are quoted in the 32-box that scale(0.3) is about to divide:
   // 2.7 lands at 0.81 for the silhouette, matching the heart's separating edge, and the seam
@@ -445,16 +506,131 @@ function drawToday(g, cx, cy, s) {
   g.appendChild(el("path", { d, class: "echo", transform: `rotate(${(rot + 5.5).toFixed(1)} ${cx} ${cy}) translate(0.9 1)` }));
 }
 
+// --- the small print ---------------------------------------------------------------------
+//
+// Real calendars set their holidays as fine print at the foot of the sheet, and this pad has
+// the room: a five-row month leaves a band of bare stock under the last row. Each marked day
+// is named there with its number in the mark's ink, so a coloured heart never has to be
+// guessed at. It is printed, not written, so it speaks the pad's Courier like the dates.
+//
+// Where it goes is read off the bare paper rather than fixed: the band under the grid first,
+// set to the foot and centred on the sheet like the title; then, on a six-row month, the
+// blank squares after the last day and the gap above them. A sheet with room in neither
+// prints no key rather than a squeezed one. Every right edge stops short of the curled
+// corner, whose fold runs from (211, 288) to (229, 270).
+const KEY_LH = 6.9, KEY_CAP = 3.2, CURL_X = 207;
+const tvShort = (t) => t.replace(" (Taylor's Version)", " (TV)");
+// What the key calls a day. A record says its title (both, on a day two share); a songday its
+// fan name (`day`), unless that would only say the date back, in which case the row carries a
+// `calKey` (August 1st is the song, not "August 1st"); a guest her birthday, or the arrival the
+// row names in `calKey` (Wicked and Hannah Montana are not people).
+function keyLabel(rows) {
+  const top = rows.reduce((a, b) => (RANK[b.kind] < RANK[a.kind] ? b : a));
+  if (top.kind === "birthday") return "Taylor's birthday";
+  if (top.kind === "album" || top.kind === "tv") {
+    return rows.filter((r) => r.kind === "album" || r.kind === "tv").sort((a, b) => a.year - b.year)
+      .map((r) => (r.aka ? `${r.title} (debut)` : tvShort(r.title))).join(" & ");
+  }
+  if (top.kind === "guest") return top.calKey || `${top.name}'s birthday`;
+  return top.calKey || top.day || top.title;
+}
+function drawKey(g, entries, regions) {
+  const partsOf = (e, first) => [
+    ...(first ? [] : [{ s: "  ·  " }]),
+    { s: String(e.d), ink: e.ink },
+    { s: " " + e.label },
+  ];
+  const line = (parts) => {
+    const t = el("text", { "text-anchor": "middle" });
+    for (const p of parts) t.appendChild(el("tspan", p.ink ? { class: "rl", style: `--rl:${p.ink}` } : {}, p.s));
+    return t;
+  };
+  const width = (parts) => { const t = line(parts); g.appendChild(t); const w = t.getComputedTextLength(); t.remove(); return w; };
+  const wrap = (maxW) => {
+    const lines = [[]];
+    let w = 0;
+    for (const e of entries) {
+      const ww = width(partsOf(e, !lines.at(-1).length));
+      if (lines.at(-1).length && w + ww > maxW) { lines.push([]); w = width(partsOf(e, true)); }
+      else w += ww;
+      lines.at(-1).push(e);
+    }
+    return lines;
+  };
+  for (const R of regions) {
+    if (!R) continue;
+    const lines = wrap(R.maxW);
+    const need = KEY_CAP + (lines.length - 1) * KEY_LH;
+    if (need > R.bottom - R.top) continue;
+    const first = R.foot ? R.bottom - (lines.length - 1) * KEY_LH
+      : R.top + (R.bottom - R.top - need) / 2 + KEY_CAP;
+    lines.forEach((ln, i) => {
+      const t = line(ln.flatMap((e, j) => partsOf(e, j === 0)));
+      g.appendChild(t);
+      t.setAttribute("x", (R.cx + tracking(t) / 2).toFixed(2));
+      t.setAttribute("y", (first + i * KEY_LH).toFixed(1));
+    });
+    return;
+  }
+}
+
+// --- letterpress ----------------------------------------------------------------------------
+//
+// The pad is a printed object, and good desk pads are letterpress. That process leaves two
+// marks, and the type here carries both. The forme bites into the stock, so the far wall of
+// every glyph catches the desk lamp: a paper-pale copy set a third of a unit down-right, under
+// the glyph, lit from the upper left like every other prop on the desk (the pencil's foil
+// imprint is set twice for the same reason). And no two impressions take quite the same ink,
+// so each glyph gets its own density, seeded by the sheet so it holds still between renders.
+// Both are below a pixel at 1x; what they change is that the figures stop reading as type laid
+// on a screen.
+//
+// The lip's paint is inline because it has to beat every printed fill on the sheet, the
+// weekend red, the year's red and a red-letter day's era ink among them, and a stylesheet rule
+// can only outrank those with !important. Splitting into glyphs happens after the lips are
+// cut, so a lip stays one quiet unbroken copy.
+const LIP = "#fffaee";
+function pressSheet(texts, seed) {
+  for (const t of texts) {
+    const lip = t.cloneNode(true);
+    lip.classList.add("lip");
+    lip.setAttribute("aria-hidden", "true");
+    lip.setAttribute("transform", `${t.getAttribute("transform") || ""} translate(0.3 0.38)`.trim());
+    lip.style.fill = LIP;
+    lip.style.opacity = "0.82";
+    lip.querySelectorAll("tspan").forEach((sp) => { sp.style.fill = LIP; });
+    t.parentNode.insertBefore(lip, t);
+  }
+  let k = 0;
+  const ink = (floor) => (floor + jit(seed + 500 + ++k) * (1 - floor)).toFixed(2);
+  const split = (node, floor) => {
+    const frag = document.createDocumentFragment();
+    for (const ch of node.textContent) frag.appendChild(el("tspan", { "fill-opacity": ink(floor) }, ch));
+    return frag;
+  };
+  for (const t of texts) {
+    // the big title takes the ink evenly; the small figures wander further
+    const floor = t.classList.contains("cal-title") ? 0.9 : 0.84;
+    for (const node of [...t.childNodes]) {
+      if (node.nodeType === 3) t.replaceChild(split(node, floor), node);
+      else if (node.tagName === "tspan") node.replaceChildren(split(node, floor));
+    }
+  }
+}
+
 export function render(now) {
   if (!svg) return;
+  // the title's letterpress lip lives beside the title rather than in a cleared group
+  svg.querySelectorAll(".cal-title.lip").forEach((n) => n.remove());
   const title   = svg.querySelector(".cal-title");
   const week    = svg.querySelector(".cal-week");
   const marks   = svg.querySelector(".cal-marks");
   const days    = svg.querySelector(".cal-days");
+  const key     = svg.querySelector(".cal-key");
   const strikes = svg.querySelector(".cal-strikes");
   const hl      = svg.querySelector(".cal-hl");
   const today   = svg.querySelector(".cal-today");
-  [week, marks, days, strikes, hl, today].forEach(clear);
+  [week, marks, days, key, strikes, hl, today].forEach(clear);
 
   const y = now.getFullYear(), m = now.getMonth(), D = now.getDate();
   const seed = y * 384 + m * 31;
@@ -465,21 +641,31 @@ export function render(now) {
   // the month's own mark, left of the title. Not one of the cleared groups
   // above: it lives beside the title rather than in a layer of its own.
   svg.querySelectorAll(".cal-season").forEach((n) => n.remove());
-  if (drawMonthMark(svg, title, m, seed + 41)) stopLayoutWatch();
+  // An unmeasurable pad (see watchForLayout) gets no mark and no small print, and is drawn
+  // again whole the first time it can be measured.
+  const measured = drawMonthMark(svg, title, m, seed + 41);
+  if (measured) stopLayoutWatch();
   else watchForLayout(svg);
 
   for (let c = 0; c < 7; c++) {
-    week.appendChild(el("text", {
-      x: colX(c), y: WEEK_Y, "text-anchor": "middle",
+    const t = el("text", {
+      y: WEEK_Y, "text-anchor": "middle",
       class: (c === 0 || c === 6) ? "wknd" : null
-    }, DOW[c]));
+    }, DOW[c]);
+    week.appendChild(t);
+    t.setAttribute("x", (colX(c) + tracking(t) / 2).toFixed(2));
   }
 
   const firstDay = new Date(y, m, 1).getDay();     // 0 = Sunday
   const daysIn = new Date(y, m + 1, 0).getDate();
+  const rows = Math.ceil((firstDay + daysIn) / 7);
+  // How far down each row's ink reaches, numerals or a hung mark, for the small print.
+  const inkFoot = Array.from({ length: rows }, (_, r) => rowY(r) + NUM_DY + 1);
+  const keyed = [];
   for (let d = 1; d <= daysIn; d++) {
     const idx = firstDay + d - 1;
-    const c = idx % 7, cx = colX(c), cy = rowY(Math.floor(idx / 7));
+    const r = Math.floor(idx / 7);
+    const c = idx % 7, cx = colX(c), cy = rowY(r);
 
     if (d === 13) {
       const tilt = (-3.5 + (jit(seed + 99) - 0.5) * 3).toFixed(1);
@@ -490,11 +676,26 @@ export function render(now) {
       }));
     }
     const mark = DAY_MARK.get(mdKey(m, d));
-    if (mark) drawMark(marks, mark, cx, cy, colors, seed + d * 7);
     const num = el("text", {
       x: cx, y: (cy + NUM_DY).toFixed(1), "text-anchor": "middle",
       class: (c === 0 || c === 6) ? "wknd" : null
     }, String(d));
+    if (mark) {
+      drawMark(marks, mark, cx, cy, colors, seed + d * 7, d > 9);
+      inkFoot[r] = Math.max(inkFoot[r], cy + MARK_FOOT);
+      // A red-letter day. Printers have marked the days that matter in a second ink since
+      // the first almanacs, which is where the phrase comes from; on this pad the days that
+      // matter are hers, so the numeral takes its mark's ink and sits over the mark it owns.
+      // A hollow mark gets no red letter: on this pad hollow means "marked, but not the real
+      // thing", and the printer would not have set it in a second ink either.
+      const { color, hollow } = markInk(mark, colors);
+      const ink = typeInk(color);
+      if (!hollow) {
+        num.classList.add("rl");
+        num.style.setProperty("--rl", ink);
+      }
+      keyed.push({ d, ink, label: keyLabel(DAY_ROWS.get(mdKey(m, d))) });
+    }
     days.appendChild(num);
     // Measured AFTER the append, so the figure is in the tree and has a box; an
     // unlaid-out pad answers zero and falls back to the nominal monospace advance.
@@ -504,6 +705,24 @@ export function render(now) {
     }
     if (d === D) drawToday(today, cx, cy + NUM_CY, seed + 200 + d);
   }
+
+  if (measured && keyed.length) {
+    const lastCol = (firstDay + daysIn - 1) % 7, last = rows - 1;
+    drawKey(key, keyed, [
+      // under the grid, centred on the sheet like the title and the rule, and wrapped narrow
+      // enough that a centred line stays clear of the curl
+      { cx: 125, maxW: 2 * (CURL_X - 125), top: inkFoot[last] + 5, bottom: 282.5, foot: true },
+      // the blank squares after the last day, from just clear of its figure and its mark,
+      // and up into the gap under the row above
+      6 - lastCol >= 2 && {
+        cx: (colX(lastCol) + 13 + Math.min(colX(6) + 12, CURL_X)) / 2,
+        maxW: Math.min(colX(6) + 12, CURL_X) - colX(lastCol) - 17,
+        top: inkFoot[last - 1] + 3.5, bottom: 285,
+      },
+    ]);
+  }
+
+  pressSheet([title, ...week.children, ...days.children, ...key.children], seed);
 }
 
 // What day the pad is open to. The app's dev date override (window.__devDate,

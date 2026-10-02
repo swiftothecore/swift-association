@@ -2558,9 +2558,11 @@ export const TS_MILESTONES = [
   // The one songday whose note is the whole joke: no line, just the words fans say to each
   // other the moment the month turns. `headline` overrides the song title in the margin so the
   // dev milestone list still reads "August"; `icon`/`mark` swap the era heart for a salt
-  // shaker, on the sticky and in the desk calendar's square.
+  // shaker, on the sticky and in the desk calendar's square. `calKey` is its name in the
+  // calendar's small print, where `day` would only say the date back ("1 August 1st").
   { md: "08-01", kind: "songday", title: "August",          album: "folklore",   day: "August 1st",
-    headline: "get in the car it's august", icon: "salt", mark: "salt", caption: "it's august" },
+    headline: "get in the car it's august", icon: "salt", mark: "salt", caption: "it's august",
+    calKey: "\u2018august\u2019" },
   // The song is named for the day rather than dated inside it, which is the one way this row
   // differs from the two above. Its line says where it sits: the last track on reputation.
   { md: "01-01", kind: "songday", title: "New Year's Day",  album: "reputation", day: "New Year's Day",
@@ -2666,19 +2668,22 @@ export const TS_LORE_DAYS = [
 
    Two of the seven are not people and are not pretended to be. Wicked has an opening night
    and Hannah Montana has a premiere, so each names its own `headline` and the `arrived`
-   phrase its screen-reader line is built from, exactly the way a songday overrides its note. The remaining
-   five take the default "Happy <nth> birthday, <first name>".
+   phrase its screen-reader line is built from, exactly the way a songday overrides its note, and a
+   `calKey` for the desk calendar's small print, which otherwise calls a day "<name>'s birthday".
+   The remaining five take the default "Happy <nth> birthday, <first name>".
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const GUEST_DAYS = [
   { md: "02-01", year: 1994, kind: "guest", guest: "harry-styles",      name: "Harry Styles" },
   { md: "02-20", year: 2003, kind: "guest", guest: "olivia-rodrigo",    name: "Olivia Rodrigo" },
   { md: "03-24", year: 2006, kind: "guest", guest: "hannah-montana",    name: "Hannah Montana",
-    headline: "Happy premiere day, Hannah", arrived: "first aired on the Disney Channel" },
+    headline: "Happy premiere day, Hannah", arrived: "first aired on the Disney Channel",
+    calKey: "Hannah Montana's premiere" },
   { md: "05-11", year: 1999, kind: "guest", guest: "sabrina-carpenter", name: "Sabrina Carpenter" },
   { md: "06-26", year: 1993, kind: "guest", guest: "ariana-grande",     name: "Ariana Grande" },
   { md: "09-04", year: 1981, kind: "guest", guest: "beyonce",           name: "Beyoncé",        soon: true },
   { md: "10-30", year: 2003, kind: "guest", guest: "wicked-soundtrack", name: "Wicked",
-    headline: "Happy opening night, Wicked", arrived: "opened on Broadway" },
+    headline: "Happy opening night, Wicked", arrived: "opened on Broadway",
+    calKey: "Wicked's opening night" },
   { md: "11-23", year: 1992, kind: "guest", guest: "miley-cyrus",       name: "Miley",          soon: true },
   { md: "12-18", year: 2001, kind: "guest", guest: "billie-eilish",     name: "Billie Eilish" },
 ];
