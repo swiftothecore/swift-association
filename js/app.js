@@ -2188,8 +2188,9 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   bleedStatsBlotter(el);
   el.querySelectorAll("[data-statmode]").forEach((b) =>
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
+  // the "to go" door opens the songbook at the top; a blot opens it at that album's page
   el.querySelectorAll("[data-open-songbook]").forEach((b) =>
-    b.addEventListener("click", () => openSongbook(b.dataset.openSongbook)));
+    b.addEventListener("click", () => openSongbook(b.dataset.openSongbook, b.dataset.songbookAlbum)));
   el.querySelectorAll("[data-daily-date]").forEach((b) =>
     b.addEventListener("click", () => openArchivedDaily(b.dataset.dailyDate)));
   el.querySelector(".cal-nav-prev")?.addEventListener("click", () => {
@@ -2340,7 +2341,7 @@ function statsBlotterHTML(order, found, total, W, phone) {
       `<circle class="stp-bl-tide" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(Math.max(0, rr - 0.6))}"/>` +
       (full ? "" : crumbs.map((c) => `<circle class="stp-bl-crumb" cx="${blotF(c.x)}" cy="${blotF(c.y)}" r="${blotF(c.s)}"/>`).join("")) + `</g>` +
       (full ? crumbs.map((c) => `<path class="stp-bl-spark" style="transform-origin:${blotF(c.x)}px ${blotF(c.y)}px" d="${blotSparkle(c.x, c.y, c.s, rnd)}"/>`).join("") : "") +
-      `<circle class="stp-bl-hit" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(R + 6)}" data-tip="${escapeHtml(a)}: ${f} of ${n}"/>` +
+      `<circle class="stp-bl-hit" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(R + 6)}" data-tip="${escapeHtml(a)}: ${f} of ${n}" data-open-songbook="stats" data-songbook-album="${escapeHtml(a)}"/>` +
       `<text class="stp-bl-nm" x="${blotF(cx)}" y="${blotF(cy + R + 19)}" text-anchor="middle">${escapeHtml((STATS_ALBUM_SHORT[a] || a).toUpperCase())}</text>` +
       `<text class="stp-bl-ct" x="${blotF(cx)}" y="${blotF(cy + R + 36)}" text-anchor="middle">${f}/${n}</text></g>`;
   });
@@ -4763,11 +4764,15 @@ function questCardHTML() {
 
 /* ---------- Songbook — the missing-songs checklist (backs "I Knew Everything") ---------- */
 let songbookBackTarget = "stats";  // where the Songbook's ← back returns to
-function openSongbook(from) {
+function openSongbook(from, album) {
   songbookBackTarget = from;
   routeTo("songbook", from);
   renderSongbook();
-  flipAwayToScreen("songbook");
+  // A blot on the Stats blotter opens the book at its own album. Placed once the turn has
+  // finished, because a turn holds the window's scroll and the page's height for its length,
+  // and a late album sits further down the book than the outgoing page was tall.
+  flipAwayToScreen("songbook", album ? () => revealAfterFlip(() => [...document.querySelectorAll("#songbookBody .sb-album")]
+    .find((sec) => sec.dataset.album === album), { pad: 18 }) : undefined);
 }
 // A full per-album checklist of the catalogue: which songs you've named (gold star) and
 // which are still missing (hollow). Reads the lifetime tally, so it spans every mode.
@@ -4807,7 +4812,7 @@ function renderSongbook() {
         (has ? `<span class="sb-tick">${STAR_SVG}</span>` : `<span class="sb-hollow" aria-hidden="true"></span>`) +
         `<span class="sb-title">${escapeHtml(censor(s.title))}</span></li>`;
     }).join("");
-    return `<section class="sb-album${albDone ? " done" : ""}">
+    return `<section class="sb-album${albDone ? " done" : ""}" data-album="${escapeHtml(album)}">
       <div class="sb-album-head">
         <span class="sb-spine" style="background:${col}"></span>
         <span class="sb-album-name">${escapeHtml(album)}</span>

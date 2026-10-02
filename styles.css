@@ -11515,7 +11515,7 @@
   .stp-bl-crumb.is-wet:not(.is-out) { opacity: 0; }
   .stp-bl-spark.is-wet { transition: transform .45s cubic-bezier(.3, 1.6, .5, 1), opacity .2s ease; }
   .stp-bl-spark.is-wet:not(.is-out) { opacity: 0; transform: scale(.2) rotate(-40deg); }
-  .stp-bl-hit { fill: transparent; }
+  .stp-bl-hit { fill: transparent; cursor: pointer; }
   .stp-bl-nm { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .4px; fill: var(--stp-soft); }
   .stp-bl-ct { font-family: var(--hand); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); fill: var(--stp-pen); }
 
