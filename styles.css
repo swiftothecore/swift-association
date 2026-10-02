@@ -11392,9 +11392,10 @@
   .stp-staff text { font-family: var(--hand); font-size: 14px; fill: var(--stp-soft); text-anchor: middle; }
   .stp-star { fill: #d9a93a; stroke: #8a6418; stroke-width: .9; stroke-linejoin: round; }
 
-  /* every game by score: pencil on a graph-paper scrap */
+  /* every game by score: pencil on a graph-paper scrap. The top padding clears the heading of
+     the corner tape's lower edge, which crossed the top of its first letter at 10px. */
   .stp-graph {
-    padding: 10px 12px 8px; color: var(--stp-pen); border: 1px solid rgba(43,39,34,.14); background-color: #fbfaf5;
+    padding: 18px 12px 8px; color: var(--stp-pen); border: 1px solid rgba(43,39,34,.14); background-color: #fbfaf5;
     background-image: linear-gradient(rgba(70,130,160,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(70,130,160,.16) 1px, transparent 1px);
     background-size: 10px 10px;
   }
