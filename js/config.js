@@ -1124,17 +1124,21 @@ export const BONUS_SNAP_MS = 2000;
    outright, and pooling them cancels each record's prior out. THAT CANCELLATION IS THE GAME'S
    WHOLE DEFENCE, so adding a fifth record means re-measuring rather than appending a string. */
 export const PRODUCER_ALBUMS = ["folklore", "evermore", "Midnights", "The Tortured Poets Department"];
-/* What a page pays, and why the numbers are 2 and 5 rather than 1 and 2.
+/* What a page pays: one for a page placed, three for a joint production named as one.
 
    Only FOUR songs in the pool of 87 are joint productions (betty, Hits Different, But Daddy I
    Love Him, thanK you aIMee), so tapping "both" blind is right 4.6% of the time. That rarity is
    what makes the premium safe: guessing Aaron blind is worth 0.506 of a page and bluffing
    "both" blind is worth 0.046 times whatever it pays, so the bluff only becomes the better play
-   above about ELEVEN. At five the premium is real and the bluff is still strictly worse than
+   above about ELEVEN. At three the premium is real and the bluff is still strictly worse than
    simply saying Aaron, which is the whole balance — "both" pays when you have narrowed the page
-   down to it, and never when you are guessing. Raising it past eleven inverts that. */
-export const WHO_PAY_ONE = 2;
-export const WHO_PAY_BOTH = 5;
+   down to it, and never when you are guessing. Raising it past eleven inverts that.
+
+   The ordinary page pays ONE so that a score reads as pages: a deal with no joint song in it,
+   which is most of them, tops out at ten. It paid two and five until 2026-10-02, a doubled
+   scale that bought a premium of two and a half and nothing else. */
+export const WHO_PAY_ONE = 1;
+export const WHO_PAY_BOTH = 3;
 
 /* ---------- Who Held The Pen ----------
    THE THREE RECORDS SHE ACTUALLY WENT BOTH WAYS ON. Measured over data/writers.json: the debut

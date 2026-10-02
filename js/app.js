@@ -6651,10 +6651,10 @@ let penPlayed = null;
 let nashvilleDoor = null;
 let nashvillePassed = false;
 /* WHAT THIS RUN COULD HAVE PAID. Aaron or Jack has no fixed maximum (see `dealMax`): a page is
-   worth two, or five on the four joint productions, and which of those you are dealt is not
+   worth one, or three on the four joint productions, and which of those you are dealt is not
    something a player did. So the run is scored against the ceiling of its OWN deal, accumulated
    a page at a time here and read once at the end. It is deliberately never shown while the run
-   is live — a denominator climbing by five instead of two announces a joint song before the
+   is live — a denominator climbing by three instead of one announces a joint song before the
    player has looked at the title, which is the same leak the page avoids by not printing the
    album. */
 let whoCeiling = 0;
@@ -6805,10 +6805,10 @@ function endlessRecord(g) { return bonusRecord(endlessId(g)); }
 function bonusSweeps(g) { return !!(g && g.sweep); }
 /* A points game with NO FIXED MAXIMUM, scored instead against what its own deal could have
    paid. Only Aaron or Jack carries it, and the reason is that its top payout is a property of
-   the SONG rather than of the play: five points needs one of the four joint productions to come
+   the SONG rather than of the play: three points needs one of the four joint productions to come
    up, which happens on about two runs in five. A static maximum would therefore misreport most
-   runs — the theoretical 32 needs all four dealt at once, which is a one-in-ten-thousand deal —
-   and quoting a perfect twenty against it reads as a bad run.
+   runs — the theoretical 18 needs all four dealt at once, which is a one-in-ten-thousand deal —
+   and quoting a perfect ten against it reads as a bad run.
 
    So this flag means "ask the run, not the roster". `whoCeiling` is the live answer, and like
    `bonusTimed` it has to be asked BEFORE anything reaches for bonusMaxScore. Three surfaces
@@ -6849,9 +6849,9 @@ function bonusScoreText() {
   if (bonusGame && bonusGame.id === "then-what")
     return `${bonusScore + (bonusLocked ? 0 : chainPage)} points · chain ${Math.max(chainRun, chainNow)}`;
   // THE BARE NUMBER, and the omission is the design. A running "12 / 14" would say a joint song
-  // has already been dealt, and a ceiling climbing by five rather than two says one is on the
+  // has already been dealt, and a ceiling climbing by three rather than one says one is on the
   // page you are looking at. The denominator arrives on the back cover, where it can't leak.
-  if (bonusDealMax(bonusGame)) return `${bonusScore} points`;
+  if (bonusDealMax(bonusGame)) return `${bonusScore} ${bonusScore === 1 ? "point" : "points"}`;
   return `${bonusScore} ${bonusGame && bonusGame.points ? "points" : "correct"}`;
 }
 
@@ -8894,11 +8894,11 @@ function bonusPageScore(correct) {
   // Then What pays per PICK, and the picks are not worth the same: 1, 1, 2, 2 up the page, so
   // what the page banked is already added up in chainPage.
   if (bonusGame && bonusGame.id === "then-what") return chainPage;
-  /* Aaron or Jack pays a flat two for a page placed, and five for a joint production named as
+  /* Aaron or Jack pays a flat one for a page placed, and three for a joint production named as
      one. The premium is not a difficulty bonus — a "both" page is no harder to READ than any
      other — it is the price of a call you can only make deliberately, since four songs out of
      87 are joint and tapping that card on a hunch loses the page outright. See WHO_PAY_BOTH for
-     why five and not eleven. */
+     why three and not eleven. */
   /* THE ONLY PAGE ON THE SHELF THAT CAN CHARGE. A wrong call costs NASHVILLE_WRONG and a pass
      scores nothing, which together put a guess at nothing on average and make zero — rather
      than five — the score for knowing nothing on a two-door page. A run may therefore finish
@@ -9681,8 +9681,8 @@ function endBonusRun() {
   const rec = endless
     ? recordBonusRun(endlessId(bonusGame), bonusScore)
     /* `max` is a CLAMP inside recordBonusRun (a stored best above it is pulled down to it), so
-       a dealMax game must not hand it this run's ceiling: a 23 banked on a generous deal would
-       be cut to 20 by the next stingy one. It has no maximum to be clamped against at all,
+       a dealMax game must not hand it this run's ceiling: a 12 banked on a generous deal would
+       be cut to 10 by the next stingy one. It has no maximum to be clamped against at all,
        which is what Infinity says here. */
     : recordBonusRun(bonusGame.id, bonusScore, bonusDealMax(bonusGame) ? Infinity : bonusMaxScore(bonusGame),
                      timed, sweepSecs, perfect, bonusDealMax(bonusGame) ? whoCeiling : null);
@@ -9703,7 +9703,7 @@ function endBonusRun() {
 
   /* THE RUN'S OWN CEILING on a dealMax game, rather than the roster's. This is the one place
      the number can be shown without leaking anything, because there are no pages left to deal:
-     a clean run reads 20/20 or 23/23 depending on what it was handed, and both are true. */
+     a clean run reads 10/10 or 12/12 depending on what it was handed, and both are true. */
   const max = bonusDealMax(bonusGame) ? whoCeiling : bonusMaxScore(bonusGame);
   // The run written up on the back of its own zine: the cover, the score in pen, and the
   // ten tracks listed out with what each one turned on. A bonus run has no bracelet and no
