@@ -11342,17 +11342,37 @@
   .stp--hero { grid-template-columns: minmax(0, 1fr); max-width: 470px; margin: 4px 0 22px; }
   .stp--hero .stp-item { grid-column: auto; }
 
-  /* average and lately: an index card, red head rule and blue lines */
+  /* The gist: an index card, red head rule and blue lines. Card stock, not a box: no outline,
+     the ticket's lift (same offset, same ink) and a hairline so white stock still has an edge
+     on cream paper. A box-shadow is right here, where the ticket needs a filter: the card is a
+     plain rectangle and nothing is masked. The ruling is one tile from the head rule down and
+     never repeats, because a repeating background also tiles UPWARD from its position, which
+     put a stray blue line in the head band (hidden behind the red rule only by luck of height). */
   .stp-idx {
-    min-height: 132px; padding: 8px 12px 6px; color: var(--stp-pen); border: 1px solid rgba(43,39,34,.18);
+    --row: 26px; --head: 28px;
+    min-height: calc(var(--head) + 4 * var(--row) + 6px); padding: 0 12px; color: var(--stp-pen);
     background-color: #fbf9f2;
-    background-image: linear-gradient(transparent 27px, #d3878a 27px, #d3878a 28.5px, transparent 28.5px), repeating-linear-gradient(transparent 0 25px, #b9cde0 25px 26px);
-    background-position: 0 0, 0 28px;
+    background-image:
+      linear-gradient(transparent calc(var(--head) - 1.5px), #d3878a calc(var(--head) - 1.5px), #d3878a var(--head), transparent var(--head)),
+      repeating-linear-gradient(transparent 0 calc(var(--row) - 1px), #b9cde0 calc(var(--row) - 1px) var(--row));
+    background-position: 0 0, 0 var(--head);
+    background-size: 100% 100%, 100% calc(100% - var(--head));
+    background-repeat: no-repeat;
+    box-shadow: 0 0 0 0.5px rgba(43, 39, 34, 0.12), 1px 1.5px 0 rgba(43, 39, 34, 0.13);
   }
-  .stp-idx .stp-lab { color: var(--stp-soft); height: 21px; }
-  .stp-idx p { margin: 0; font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 26px; }
-  .stp-idx b { font-size: 1.2em; }
+  :root[data-theme="dark"] .stp-idx { box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.3), 1px 1.5px 0 rgba(0, 0, 0, 0.4); }
+  .stp-idx .stp-lab { color: var(--stp-soft); height: var(--head); line-height: 1; padding-top: 11px; box-sizing: border-box; }
+  /* Each line is exactly one row of the ruling. The bold figure is a size up, and its inline box
+     grew every row to 27.5px, so the writing slid a further 1.5px off the ruling with each line;
+     line-height 0 on it holds the row to the ruling's pitch. The 5px drop then sets the
+     baseline on the blue rule, the way a hand writes on a ruled card, instead of floating the
+     writing in the middle of the row. */
+  .stp-idx p { margin: 0; height: var(--row); line-height: var(--row); position: relative; top: 5px; white-space: nowrap;
+    font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); }
+  .stp-idx b { font-size: 1.2em; line-height: 0; }
   .stp-up { color: var(--stp-green); } .stp-down { color: var(--stp-red); }
+  .stp-trend { display: inline-block; width: 0.5em; height: 0.78em; margin-left: 0.28em; vertical-align: -0.04em; overflow: visible; }
+  .stp-trend path { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
   /* the last twelve: a torn strip of staff paper */
   .stp-staff {

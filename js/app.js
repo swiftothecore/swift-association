@@ -2075,20 +2075,29 @@ function recentScores(viewMode, cap = 12) {
     viewMode === "all" ? e.t === "classic" : e.m === viewMode);
   return picked.slice(0, cap).map((e) => e.s).reverse();
 }
-// Rolling "forgiving form" average — the mean score of the last `cap` games for
-// this view (TypeRacer-style, so a bad month stops haunting the number). Same
-// scope as recentScores/the distribution (All = classic runs, a mode tab = that
-// mode); includes hinted runs, which is fine for recent *form*. Returns the
-// average and the actual sample size (< cap when there aren't `cap` games yet),
-// so the label can read "last 8" honestly instead of padding.
-function recentAverage(viewMode, cap = 20) {
-  const picked = loadHistory().filter((e) =>
-    viewMode === "all" ? e.t === "classic" : e.m === viewMode);
-  const window = picked.slice(0, cap);
-  const n = window.length;
-  if (n === 0) return { avg: null, n: 0 };
-  return { avg: window.reduce((a, e) => a + e.s, 0) / n, n };
+// The gist card's "mostly": the narrowest run of scores that holds at least 60% of every game
+// in this view, read off the same per-score counts the graph draws, so "mostly" is always
+// literally true. A tie on width goes to the run holding more games. null under four games,
+// where a range says nothing a single score doesn't.
+function statsMostlyRange(counts, played) {
+  if (played < 4) return null;
+  let best = null;
+  for (let lo = 0; lo < counts.length; lo++) {
+    let n = 0;
+    for (let hi = lo; hi < counts.length; hi++) {
+      n += counts[hi] || 0;
+      if (n < 0.6 * played) continue;
+      if (!best || hi - lo < best.hi - best.lo || (hi - lo === best.hi - best.lo && n > best.n)) best = { lo, hi, n };
+      break;
+    }
+  }
+  return best;
 }
+// The gist's trend marks, drawn in the hand of the page's other arrows rather than a font's.
+const STATS_TREND = {
+  up: `<svg class="stp-trend" viewBox="0 0 10 16" aria-hidden="true"><path d="M5.3 15 Q4.7 9.2 5 2.2 M1.6 5.6 Q3.4 4 5.1 1.6 Q6.6 3.7 8.6 5.1"/></svg>`,
+  down: `<svg class="stp-trend" viewBox="0 0 10 16" aria-hidden="true"><path d="M4.9 1.2 Q5.4 7.4 5.1 13.9 M1.5 10.6 Q3.5 12.4 5 14.5 Q6.5 12.2 8.5 10.9"/></svg>`,
+};
 // Last difficulty viewed under the Classic tier this session — so re-clicking
 // "Classic" (after a detour through All/Infinite) returns there, not to the
 // active play mode. Falls back to currentMode.id until a difficulty is opened.
@@ -2213,7 +2222,7 @@ function albumOfTitle(title) {
    number is stuck into the notebook on the object it would really be written on, and each
    object says something about its number:
      the best score       a ticket stub, kept; its serial is how many games that took
-     average · lately     an index card ("the gist")
+     the gist             an index card: average, lately, and the range most games land in
      the last twelve      a torn strip of staff paper, a note a game, pitched by score
      the distribution     pencil-hatched bars on a graph-paper scrap
      the nemesis          a sticky note you would leave yourself (perfects, where there is none)
@@ -2368,8 +2377,11 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   const avg = s.totalScore / s.played;
   const perfect = s.scoreCounts[TOTAL_ROUNDS] || 0;
   const recent = recentScores(viewMode);
-  const form = recentAverage(viewMode);
-  const lead = form.n >= 3 ? form.avg - avg : 0;
+  // "lately" is the staff's own twelve, so the notes drawn below it add up to it. It waits
+  // until there are games outside that window: before then it is the average again.
+  const lately = recent.length >= 3 && s.played > recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
+  const lead = lately == null ? 0 : lately - avg;
+  const mostly = statsMostlyRange(s.scoreCounts, s.played);
   const phone = W < 520;
   const out = [];
   out.push(statsTicketHTML({
@@ -2381,8 +2393,8 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   }));
   out.push(`<div class="stp-item stp-w2 stp-o1" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx"><div class="stp-lab">the gist</div>` +
     `<p>avg <b>${avg.toFixed(1)}</b></p>` +
-    (form.n >= 2 ? `<p>lately <b>${form.avg.toFixed(1)}</b>${lead > 0.3 ? ` <span class="stp-up" title="up on your average">↑</span>` : lead < -0.3 ? ` <span class="stp-down" title="down on your average">↓</span>` : ""}</p>` : "") +
-    `<p><b>${s.bestInRow || 0}</b> in a row</p></div></div>`);
+    (lately != null ? `<p>lately <b>${lately.toFixed(1)}</b>${lead > 0.3 ? `<span class="stp-up" title="up on your average">${STATS_TREND.up}</span>` : lead < -0.3 ? `<span class="stp-down" title="down on your average">${STATS_TREND.down}</span>` : ""}</p>` : "") +
+    (mostly ? `<p title="${Math.round(mostly.n / s.played * 100)}% of your games">mostly <b>${mostly.lo === mostly.hi ? `${mostly.lo}s` : `${mostly.lo}–${mostly.hi}`}</b></p>` : "") + `</div></div>`);
   const tempo = isAll ? loadMetrics() : null;
   out.push(`<div class="stp-item stp-w6 stp-o3" style="--r:-.4deg">${statsTape("staff")}` +
     `<div class="stp-staff" role="img" aria-label="Last ${recent.length} scores, oldest first: ${recent.join(", ")}. Average ${avg.toFixed(1)}.">` +
