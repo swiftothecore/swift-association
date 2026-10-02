@@ -5626,7 +5626,7 @@ export const CREDITS = [
   { role: "Sounds", who: "Google\u2019s Material Design kit, and freesound", icon: "glockenspiel",
     what: "The verdict sounds are from Google\u2019s Material Design sound kit (CC-BY 4.0). The page turn and the glockenspiel are CC0 recordings from freesound." },
   { role: "Type", who: "Caveat and Courier Prime", icon: "specimen",
-    what: "Caveat for the hand, Courier Prime for the typewriter. Both under the SIL Open Font License." },
+    what: "Caveat for the hand, Courier Prime for the typewriter, and for the one newspaper cutting in the notebook, UnifrakturCook and Playfair Display. All four under the SIL Open Font License." },
   { role: "Small print", who: "Made by a fan", icon: "star",
     what: "Not affiliated with or endorsed by Taylor Swift, her team or her labels." },
   { role: "Special thanks", who: "Taylor, for the songs, and for everything", icon: "letter", hands: true },

@@ -20,7 +20,7 @@ licensed, and the removal offer above covers them too.
 
 ## Fonts
 
-Both families are used under the SIL Open Font License, Version 1.1. The full licence
+All four families are used under the SIL Open Font License, Version 1.1. The full licence
 text, and the copyright notices the OFL requires be distributed with the fonts, are in
 [fonts/OFL.txt](fonts/OFL.txt).
 
@@ -28,8 +28,10 @@ text, and the copyright notices the OFL requires be distributed with the fonts, 
 | --- | --- | --- |
 | `fonts/caveat-latin.woff2` | Caveat | Copyright 2014 The Caveat Project Authors |
 | `fonts/courierprime-400-latin.woff2`, `fonts/courierprime-700-latin.woff2`, `fonts/courierprime-italic-latin.woff2` | Courier Prime | Copyright 2015 The Courier Prime Project Authors |
+| `fonts/unifrakturcook-700-latin.woff2` | UnifrakturCook | Copyright (c) 2010 j. 'mach' wust, with Reserved Font Name UnifrakturCook; Copyright (c) 2009 Peter Wiegel |
+| `fonts/playfairdisplay-900-latin.woff2` | Playfair Display | Copyright 2017 The Playfair Display Project Authors, with Reserved Font Name "Playfair Display" |
 
-Both have been subsetted to Latin and converted to WOFF2. Neither has been renamed, which
+All have been subsetted to Latin and converted to WOFF2. None has been renamed, which
 the OFL requires of any Modified Version distributed under the Reserved Font Name.
 
 ## Sound effects

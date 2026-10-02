@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v337";
+const CACHE = "stta-v338";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -64,7 +64,7 @@ const ASSETS = [
   "ink.css",
   // Keep the revision query exact: Cache.match() includes the query string, and
   // index.html deliberately requests this URL to break the browser HTTP cache.
-  "styles.css?v=82",
+  "styles.css?v=83",
   "textures/oak-figure.svg",
   // Self-hosted fonts (latin subset). Precached so first offline load has the
   // real faces; declared via @font-face in styles.css / search.css.
@@ -72,6 +72,9 @@ const ASSETS = [
   "fonts/courierprime-400-latin.woff2",
   "fonts/courierprime-700-latin.woff2",
   "fonts/courierprime-italic-latin.woff2",
+  // The Stats nemesis clipping's masthead and headline faces.
+  "fonts/unifrakturcook-700-latin.woff2",
+  "fonts/playfairdisplay-900-latin.woff2",
   "js/app.js",
   "js/offline.js",
   "js/cta.js",   // Shared start-button contents and decorative finish layers.
@@ -202,7 +205,7 @@ const ASSETS = [
 
 /* The same list as absolute URLs, for the cache-first branch below to test a request against.
    Resolved against the worker's own location so the relative paths keep working under a project
-   subpath. The href includes the query string, which is what makes "styles.css?v=82" match the
+   subpath. The href includes the query string, which is what makes "styles.css?v=83" match the
    exact URL index.html asks for and nothing else. */
 const PRECACHED = new Set(ASSETS.map((path) => new URL(path, self.location).href));
 

@@ -2224,7 +2224,7 @@ function albumOfTitle(title) {
      the gist             an index card: average, lately, and the range most games land in
      the last twelve      a line graph on a torn strip of staff paper, a dot a game
      the distribution     pencil-hatched bars on a graph-paper scrap
-     the nemesis          a sticky note you would leave yourself (perfects, where there is none)
+     the nemesis          a tabloid clipping: the word in the headline (a sticky of perfects, where there is none)
      the home album       its record sleeve (Track by Track's), the most-sung song on a slip
      the quick numbers    label-maker tape
      songs found          a sheet of blotting paper, an album a drop of ink bled out as far as you've found
@@ -2247,6 +2247,7 @@ const STATS_TAPE = {
   gist:     [{ right: "-9px", top: "-6px", rot: 38, w: 50, tear: 2 }],
   staff:    [{ left: "-7px", top: "-6px", rot: -32, w: 50, tear: 0 }, { right: "-7px", top: "-5px", rot: 30, w: 52, tear: 3 }],
   graph:    [{ left: "-9px", top: "-6px", rot: -40, w: 52, tear: 4 }],
+  clip:     [{ left: "50%", tx: "-50%", top: "-8px", rot: -3, w: 52, tear: 4 }],
   sleeve:   [{ left: "50%", tx: "-50%", top: "-9px", rot: 4, w: 48, tear: 5 }],
   blot:     [{ left: "50%", tx: "-50%", top: "-9px", rot: -2, w: 56, tear: 1 }],
   cal:      [{ left: "-9px", top: "-6px", rot: -38, w: 52, tear: 3 }, { right: "-9px", top: "-6px", rot: 40, w: 54, tear: 0 }],
@@ -2578,6 +2579,46 @@ function statsGraphSVG(counts, youScore, W) {
     `<g class="stp-shade" filter="url(#pencilGrain)">${shade}</g><g class="stp-pencil" filter="url(#pencilGrain)">${lines}</g>${text}</svg>`;
 }
 
+/* The nemesis: a tabloid cutting, taped in. A blackletter masthead, a dateline that carries the
+   count, the word in the headline and the miss's own ordinal in the deck ("Eighth miss. Still at
+   large."), then the column of newsprint the word fills, set the way the reputation cover sets
+   her name: a layout borrowed, none of the art. The paper is printed; the one red thing on it is
+   yours, "look it up" written in the margin.
+
+   It is the one object on the page set in printed faces rather than hand and typewriter, because
+   it is a cutting from a newspaper rather than a thing from the desk (the Tumblr card is the same
+   exception for the same reason). UnifrakturCook and Playfair Display are self-hosted in fonts/
+   beside the other two; the dateline, deck and columns are small enough to set in the system
+   serif. The top and bottom are torn, seeded off the word so the same nemesis tears the same way. */
+const STATS_ORDINALS = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
+  "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth", "twentieth"];
+function statsOrdinal(n) {
+  if (STATS_ORDINALS[n]) return STATS_ORDINALS[n];
+  return n + ([11, 12, 13].includes(n % 100) ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
+}
+function statsClipTear(seed) {
+  const r = mulberry32(seed), f = (v) => v.toFixed(1);
+  const top = [], bot = [];
+  for (let x = 0; x <= 100; x += 4 + r() * 6) top.push(`${f(x)}% ${f(r() * 3.2)}px`);
+  top.push(`100% ${f(r() * 2)}px`);
+  for (let x = 100; x >= 0; x -= 4 + r() * 6) bot.push(`${f(x)}% calc(100% - ${f(r() * 3.4)}px)`);
+  bot.push(`0% calc(100% - ${f(r() * 2)}px)`);
+  return `polygon(${top.concat(bot).join(", ")})`;
+}
+function statsClippingHTML(word, count) {
+  const w = escapeHtml(word), ord = statsOrdinal(count);
+  const seed = [...word].reduce((a, c, i) => a + c.charCodeAt(0) * (i + 3), 17);
+  return `<div class="stp-item stp-w2 stp-o2" style="--r:1.6deg">${statsTape("clip")}` +
+    `<div class="stp-clip" style="clip-path:${statsClipTear(seed)}" role="group" aria-label="The word that gets me most: ${w}, missed ${count} times">` +
+    `<div class="stp-mast" aria-hidden="true">The Nemesis</div>` +
+    `<div class="stp-dl"><span>Late edition</span><span>missed ×${count}</span></div>` +
+    `<div class="stp-head">“${w}” strikes again</div>` +
+    `<div class="stp-deck">${ord.charAt(0).toUpperCase() + ord.slice(1)} miss. Still at large.</div>` +
+    `<div class="stp-cols" aria-hidden="true">${Array.from({ length: 60 }, () => w).join(" ")}</div>` +
+    `<a class="stp-pen-note" href="search/#q=${encodeURIComponent(word)}" title="See every song with “${w}” in the lyric searcher">look it up ${CTA_ARROW}</a>` +
+    `</div></div>`;
+}
+
 // The pieces every view shares: ticket, the gist, the stave, the graph and a sticky note.
 function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   const avg = s.totalScore / s.played;
@@ -2612,11 +2653,8 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
     `<div class="stp-graph" role="img" aria-label="Games at each score: ${s.scoreCounts.map((c, i) => `${i}: ${c}`).join(", ")}">` +
     `<div class="stp-lab">every game, by score</div>${statsGraphSVG(Array.from({ length: TOTAL_ROUNDS + 1 }, (_, i) => s.scoreCounts[i] || 0), youScore, Math.round(phone ? W - 26 : W * 4 / 6 - 30))}</div></div>`);
   const nemesis = isAll ? topTallyEntry(loadSongTally().misses) : null;
-  if (nemesis && nemesis.count > 1) {
-    out.push(`<div class="stp-item stp-w2 stp-o2" style="--r:-2.6deg"><div class="stp-sticky"><div class="stp-lab">the one that gets me</div>` +
-      `<div class="stp-nem">${escapeHtml(nemesis.key)}<svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="M2 24.6 C30 18 64 22 98 15"/></svg></div>` +
-      `<p>missed ×${nemesis.count}</p><p><a class="stp-look" href="search/#q=${encodeURIComponent(nemesis.key)}" title="See every song with “${escapeHtml(nemesis.key)}” in the lyric searcher">look it up ${CTA_ARROW}</a></p></div></div>`);
-  } else {
+  if (nemesis && nemesis.count > 1) out.push(statsClippingHTML(nemesis.key, nemesis.count));
+  else {
     out.push(`<div class="stp-item stp-w2 stp-o2" style="--r:-2deg"><div class="stp-sticky"><div class="stp-lab">perfect pages</div>` +
       `<div class="stp-nem stp-nem--gold">${perfect}</div><p>${perfect ? "and counting" : "one day"}</p></div></div>`);
   }
