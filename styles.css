@@ -156,6 +156,16 @@
   body[data-era="reputation"] { --ink-accent:#2c2c2e; --highlighter:rgba(80,80,86,0.42);   --bead:#3a3a3e; --page-wash:rgba(170,172,180,0.07); }
   body[data-era="lover"]      { --ink-accent:#b8487f; --highlighter:rgba(234,150,196,0.46); --bead:#d472a6; --page-wash:rgba(196,100,154,0.05); }
   body[data-era="evermore"]   { --ink-accent:#6b4a2e; --highlighter:rgba(160,120,80,0.42);  --bead:#8a6038; --page-wash:rgba(122,90,56,0.05); }
+  /* Guest washes: one per guest shelf catalogue, worn for a whole guest run (GUESTS[].era).
+     Kept OUT of ERAS so Taylor's shuffle can never deal one, and drawn from each pass's own
+     ink rather than borrowed from her ten, which dressed other artists in her records. */
+  body[data-era="guest-olivia-rodrigo"]    { --ink-accent:#6b3fa0; --highlighter:rgba(176,128,226,0.46); --bead:#7a55b0; --page-wash:rgba(122,85,176,0.05); }
+  body[data-era="guest-wicked-soundtrack"] { --ink-accent:#1f6a4f; --highlighter:rgba(232,150,186,0.46); --bead:#3c8a5e; --page-wash:rgba(197,121,155,0.05); }
+  body[data-era="guest-hannah-montana"]    { --ink-accent:#673c86; --highlighter:rgba(242,200,64,0.52);  --bead:#8a63a2; --page-wash:rgba(226,182,61,0.06); }
+  body[data-era="guest-billie-eilish"]     { --ink-accent:#18221c; --highlighter:rgba(182,214,43,0.40);  --bead:#26332b; --page-wash:rgba(137,151,136,0.07); }
+  body[data-era="guest-ariana-grande"]     { --ink-accent:#7d4560; --highlighter:rgba(229,170,184,0.48); --bead:#b87a90; --page-wash:rgba(213,162,180,0.06); }
+  body[data-era="guest-harry-styles"]      { --ink-accent:#a4534c; --highlighter:rgba(95,185,224,0.36);   --bead:#c07f7a; --page-wash:rgba(192,127,122,0.05); }
+  body[data-era="guest-sabrina-carpenter"] { --ink-accent:#a3303f; --highlighter:rgba(214,168,128,0.46); --bead:#6b4632; --page-wash:rgba(184,119,103,0.05); }
 
   /* ---- Masthead inks (Album Focus reward, body[data-ink]) ----
      ONE token, --mast-ink, worn by every gold mark in the masthead — the gold word, the star
@@ -317,6 +327,13 @@
   :root[data-theme="dark"] body[data-era="reputation"] { --ink-accent:#cdccd2; --highlighter:rgba(150,150,160,0.26); --bead:#cdccd2; --page-wash:rgba(150,150,160,0.06); }
   :root[data-theme="dark"] body[data-era="lover"]      { --ink-accent:#f194c1; --highlighter:rgba(235,150,196,0.30); --bead:#f194c1; --page-wash:rgba(225,140,186,0.06); }
   :root[data-theme="dark"] body[data-era="evermore"]   { --ink-accent:#cb9568; --highlighter:rgba(190,140,90,0.30);  --bead:#cb9568; --page-wash:rgba(180,130,80,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-olivia-rodrigo"]    { --ink-accent:#c39cf2; --highlighter:rgba(170,125,228,0.30); --bead:#c39cf2; --page-wash:rgba(160,120,220,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-wicked-soundtrack"] { --ink-accent:#6fcf9a; --highlighter:rgba(225,140,180,0.30); --bead:#6fcf9a; --page-wash:rgba(197,121,155,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-hannah-montana"]    { --ink-accent:#cfa6ec; --highlighter:rgba(232,190,70,0.30);  --bead:#cfa6ec; --page-wash:rgba(226,182,61,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-billie-eilish"]     { --ink-accent:#b9c7b9; --highlighter:rgba(170,205,50,0.24);  --bead:#b9c7b9; --page-wash:rgba(150,165,150,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-ariana-grande"]     { --ink-accent:#e6aec2; --highlighter:rgba(225,160,180,0.28); --bead:#e6aec2; --page-wash:rgba(213,162,180,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-harry-styles"]      { --ink-accent:#ec9a90; --highlighter:rgba(95,185,224,0.26);   --bead:#ec9a90; --page-wash:rgba(192,127,122,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-sabrina-carpenter"] { --ink-accent:#f08a94; --highlighter:rgba(205,160,120,0.28); --bead:#d9a27f; --page-wash:rgba(184,119,103,0.06); }
 
   /* Masthead inks on the night desk: the night half of each pair above, switched on here. The
      night column is NOT a lightened copy of the day one and is not derivable from it: at night
@@ -14976,6 +14993,13 @@
   body[data-contrast="high"][data-era="reputation"] { --ink-accent:#000000; --highlighter:rgba(64,64,72,0.6);   --bead:#000000; }
   body[data-contrast="high"][data-era="lover"]      { --ink-accent:#8a0050; --highlighter:rgba(230,90,165,0.62); --bead:#8a0050; }
   body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#452a10; --highlighter:rgba(175,115,50,0.62); --bead:#452a10; }
+  body[data-contrast="high"][data-era="guest-olivia-rodrigo"]    { --ink-accent:#48207a; --highlighter:rgba(160,105,225,0.68); --bead:#48207a; }
+  body[data-contrast="high"][data-era="guest-wicked-soundtrack"] { --ink-accent:#0f4a33; --highlighter:rgba(230,110,165,0.62); --bead:#0f4a33; }
+  body[data-contrast="high"][data-era="guest-hannah-montana"]    { --ink-accent:#46205f; --highlighter:rgba(230,180,20,0.85);  --bead:#46205f; }
+  body[data-contrast="high"][data-era="guest-billie-eilish"]     { --ink-accent:#0a120d; --highlighter:rgba(150,190,20,0.72);  --bead:#0a120d; }
+  body[data-contrast="high"][data-era="guest-ariana-grande"]     { --ink-accent:#5c2140; --highlighter:rgba(215,130,155,0.66); --bead:#5c2140; }
+  body[data-contrast="high"][data-era="guest-harry-styles"]      { --ink-accent:#7a2b25; --highlighter:rgba(50,150,210,0.62);  --bead:#7a2b25; }
+  body[data-contrast="high"][data-era="guest-sabrina-carpenter"] { --ink-accent:#7e0f22; --highlighter:rgba(195,135,85,0.68);  --bead:#7e0f22; }
 
   /* ---- Masthead inks in high contrast ----
      Only the day/night PAIR is restated; --mast-ink is still resolved from it by the two rules
@@ -15071,6 +15095,13 @@
   :root[data-theme="dark"] body[data-contrast="high"][data-era="reputation"] { --ink-accent:#e6e5ec; --highlighter:rgba(180,180,192,0.46); --bead:#e6e5ec; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="lover"]      { --ink-accent:#ffaad3; --highlighter:rgba(255,165,210,0.46); --bead:#ffaad3; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#e8ad7c; --highlighter:rgba(208,155,100,0.48); --bead:#e8ad7c; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-olivia-rodrigo"]    { --ink-accent:#d6b6ff; --highlighter:rgba(180,140,245,0.46); --bead:#d6b6ff; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-wicked-soundtrack"] { --ink-accent:#8eecb6; --highlighter:rgba(235,150,195,0.46); --bead:#8eecb6; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-hannah-montana"]    { --ink-accent:#e1c2ff; --highlighter:rgba(240,195,70,0.46);  --bead:#e1c2ff; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-billie-eilish"]     { --ink-accent:#dbe7db; --highlighter:rgba(175,215,50,0.46);  --bead:#dbe7db; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-ariana-grande"]     { --ink-accent:#ffc3d8; --highlighter:rgba(235,165,190,0.46); --bead:#ffc3d8; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-harry-styles"]      { --ink-accent:#ffb3a8; --highlighter:rgba(105,195,235,0.46); --bead:#ffb3a8; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-sabrina-carpenter"] { --ink-accent:#ffa3ac; --highlighter:rgba(215,165,120,0.48); --bead:#ffa3ac; }
   /* The night desk goes darker still and the lamp pool comes down. The sheet has dropped
      nearly to the desk's own value to buy ink contrast, so if the desk stayed where it was
      the page would stop reading as a separate object sitting on it. The oak grain survives

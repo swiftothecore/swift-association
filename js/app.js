@@ -14485,14 +14485,11 @@ function lineupArtists(song) {
    answered, so your lineup is empty, and gold is what the notebook wears when no run is on. */
 let lineupWash = "gold";      // the wash the desk is CURRENTLY holding, run state
 
-/* One artist's wash. Guests carry their own (GUESTS[].era, which is why __dev.guest.eras()
-   exists to check they are real), and home has no single era, so she wears the one belonging
-   to the RECORD the answered song is on — the same `_record` the bracelet bands her bead
-   from, so the desk and the bead are reading the same fact. */
-// Two artists sharing a wash is accepted, not a bug to design away: Olivia and Hannah are both
-// lavender because both genuinely ARE purple artists, and each guest's era has to be right for
-// that guest's own run first, which is the surface it was chosen for. The only cost is that the
-// desk holds rather than turns when an Olivia page follows a Hannah one.
+/* One artist's wash. Guests carry their own (GUESTS[].era, a "guest-" wash of their own in
+   styles.css, which is why __dev.guest.eras() exists to check each one has its rules), and
+   home has no single era, so she wears the one belonging to the RECORD the answered song is
+   on — the same `_record` the bracelet bands her bead from, so the desk and the bead are
+   reading the same fact. */
 function lineupEraFor(artists, song) {
   const names = artists || [];
   if (!names.length) return null;
@@ -14504,7 +14501,7 @@ function lineupEraFor(artists, song) {
     return (rec && ALBUM_ERA[rec]) || null;
   }
   const g = GUESTS.find((x) => x.name === name);
-  return (g && ERAS.includes(g.era)) ? g.era : null;
+  return (g && g.era) || null;
 }
 
 // Called at ANSWER time, beside the bead and the artist credit, for the reason all three are:
@@ -32857,8 +32854,8 @@ function buildDevApi() {
          frank), and `clear` empties it. tick goes through recordLineupRun rather than writing
          the store directly, so a ticked card is banked by exactly the code a real run uses. */
       // The desk's rolling wash: what it is holding, and what every artist on the shelf would
-      // turn it. `bad` is the one that matters and is the same check __dev.guest.eras() runs,
-      // because a guest whose era is not in ERAS silently paints nothing.
+      // turn it. `bad` lists an artist with no wash at all; whether a guest's wash actually has
+      // rules in the stylesheet is __dev.guest.eras(), since a missing rule silently paints nothing.
       wash: () => ({
         holding: lineupWash,
         byArtist: lineupShelf().map((n) => n + ": " +
@@ -32920,16 +32917,28 @@ function buildDevApi() {
       open: () => openGuestShelf("start"),
       slots: () => ({ filled: GUESTS.length, comingSoon: GUESTS_COMING_SOON.length,
         total: GUEST_SHELF_SLOTS, perRail: guestPerRail() }),
-      /* Every guest's wash, and the check this exists for: an `era` that is not one of the ten
-         in ERAS. Nothing throws on a bad one — data-era just matches no rule and the run plays
-         on the bare root palette — so it is invisible unless something asks. Hannah Montana
+      /* Every guest's wash, and the check this exists for: an `era` the stylesheet has no rule
+         for. Nothing throws on a bad one — data-era just matches no rule and the run plays on
+         the bare root palette — so it is invisible unless something asks. Hannah Montana
          ("speak-now") and Billie Eilish ("folklore") both shipped that way and nobody noticed,
-         which is the argument for this row. The lineup's rolling wash reads the same field. */
-      eras: () => ({
-        shelf: GUESTS.map((g) => g.id + ": " + g.era),
-        bad: GUESTS.filter((g) => !ERAS.includes(g.era)).map((g) => g.id + ": " + g.era),
-        washes: ERAS.slice(),
-      }),
+         which is the argument for this row. A guest wash is four rules (day, night and both
+         high contrasts), and `partial` names one that is missing some, which plays fine in
+         the palette you happen to be testing and wrong in the others. The lineup's rolling
+         wash reads the same field. */
+      eras: () => {
+        const sels = [];
+        for (const sheet of document.styleSheets) {
+          let rules; try { rules = sheet.cssRules; } catch { continue; }
+          for (const r of rules) if (r.selectorText) sels.push(r.selectorText);
+        }
+        const ruled = (era) => sels.filter((t) => t.includes(`[data-era="${era}"]`)).length;
+        return {
+          shelf: GUESTS.map((g) => g.id + ": " + g.era + " (" + ruled(g.era) + " rules)"),
+          bad: GUESTS.filter((g) => !ruled(g.era)).map((g) => g.id + ": " + g.era),
+          partial: GUESTS.filter((g) => { const n = ruled(g.era); return n && n < 4; }).map((g) => g.id + ": " + g.era),
+          shared: GUESTS.filter((g, i) => GUESTS.findIndex((x) => x.era === g.era) !== i).map((g) => g.id + ": " + g.era),
+        };
+      },
       load: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)),
       counts: (id) => loadGuest(id || (GUESTS[0] && GUESTS[0].id)).then(guestCounts),
       // Play one, at any of the difficulties the detail panel offers.

@@ -1380,7 +1380,13 @@ export function initDev(api) {
           const g = api.stickers.guests(); console.log("[dev] guest stickers", g);
           const gap = g.filter((x) => !x.drawn).map((x) => x.guest);
           toast(gap.length ? "no sticker drawn: " + gap.join(", ") : "every guest has a sticker");
-        }, (api.stickers.guests().some((x) => !x.drawn) ? "warn" : ""))),
+        }, (api.stickers.guests().some((x) => !x.drawn) ? "warn" : "")),
+        // Each guest wears its own wash; a missing or half-written one plays on the wrong colours.
+        btn("washes", () => {
+          const e = api.guest.eras(); console.log("[dev] guest washes", e);
+          const off = [...e.bad, ...e.partial];
+          toast(off.length ? "wash rules missing: " + off.join(", ") : "every guest wash is ruled four ways");
+        })),
     // Tumblr messages, the third shelf in the drawer. No post has a real trigger yet, so these
     // buttons are the only way onto the shelf and "untriggered" is the list of what still needs
     // one. When that readout finally comes back empty this row stops being load-bearing.

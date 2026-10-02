@@ -465,10 +465,12 @@ export const GUESTS = [
     // record ticks. Violet, which is SOUR/GUTS as a mood and nothing more.
     ink: { deep: "#2f1c47", accent: "#7a55b0", strap: "#5b3c88", pen: "#4a2f6b",
            ticks: ["#8e7bbf", "#6b4a95", "#3d2a5c"] },
-    // The era wash a guest run wears for all thirteen pages. ALBUM_ERA can't answer this —
-    // it keys on Taylor's albums — and a guest run shuffling through Taylor's eras would
-    // dress someone else's catalogue in her colours. One era per guest, chosen for mood.
-    era: "lavender",
+    // The wash a guest run wears for all thirteen pages: its OWN, "guest-" + id, drawn from
+    // this pass's ink in styles.css beside Taylor's ten. Borrowing one of hers (this pass
+    // wore lavender, Wicked wore evermore brown) dressed someone else's catalogue in her
+    // records, which is the blending the shelf exists to avoid. __dev.guest.eras() checks
+    // every guest's wash has its rules.
+    era: "guest-olivia-rodrigo",
   },
   {
     id: "wicked-soundtrack",
@@ -478,7 +480,8 @@ export const GUESTS = [
     // Two shades each of emerald and rose keep the pass rooted in Elphaba and Glinda.
     ink: { deep: "#234b3f", accent: "#c5799b", strap: "#527a50", pen: "#315746",
            ticks: ["#4f8b63", "#c5799b", "#315746", "#a85e82"] },
-    era: "evermore",
+    // Elphaba is the ink and Glinda the highlighter; the beads already split by singer.
+    era: "guest-wicked-soundtrack",
   },
   {
     id: "hannah-montana",
@@ -488,11 +491,8 @@ export const GUESTS = [
     // The show's violet wordmark and warm yellow star translated into the pass hardware.
     ink: { deep: "#56346f", accent: "#e2b63d", strap: "#76528e", pen: "#5a3971",
            ticks: ["#8a63a2", "#e2b63d", "#c78b35", "#6a4c88"] },
-    // lavender, NOT "speak-now": the wash is named for the colour, not the record, and
-    // ALBUM_ERA maps Speak Now onto lavender for the same reason. It read as speak-now here
-    // for as long as this pass has shipped, which is not one of the ten in ERAS, so the run
-    // wore no wash at all and fell back to the bare root palette.
-    era: "lavender",
+    // Violet wordmark as the ink, the yellow star as the highlighter.
+    era: "guest-hannah-montana",
   },
   {
     id: "billie-eilish",
@@ -502,10 +502,9 @@ export const GUESTS = [
     // Near-black, acid green, and cold grey-green: a nocturnal palette translated into pass ink.
     ink: { deep: "#101512", accent: "#b6d62b", strap: "#26332b", pen: "#17211c",
            ticks: ["#b6d62b", "#6f8d37", "#26332b", "#899788"] },
-    // midnight, NOT "folklore": there is no folklore wash and never has been, so this pass
-    // played unwashed too. Midnight is the right replacement rather than the nearest survivor
-    // — every colour on this card is nocturnal near-black, which is what midnight IS.
-    era: "midnight",
+    // Near-black ink with the acid green softened into the highlighter: full acid green is
+    // a good bead and a harsh mark.
+    era: "guest-billie-eilish",
   },
   {
     id: "ariana-grande",
@@ -517,7 +516,7 @@ export const GUESTS = [
     // The ticks are four rungs off that palette — blush, mauve, caramel, near-black.
     ink: { deep: "#533747", accent: "#d5a2b4", strap: "#8a6574", pen: "#654454",
            ticks: ["#e5b9bb", "#a48c96", "#8a5f3c", "#1b191d"] },
-    era: "lover",
+    era: "guest-ariana-grande",
   },
   {
     id: "harry-styles",
@@ -529,7 +528,8 @@ export const GUESTS = [
     // other guest on the shelf is small enough to do.
     ink: { deep: "#2f3646", accent: "#dcc39b", strap: "#6f7891", pen: "#3a4353",
            ticks: ["#c07f7a", "#5fb9e0", "#dcc39b", "#545c72"] },
-    era: "gold",
+    // The coral and sky ticks: coral ink, a sky highlighter.
+    era: "guest-harry-styles",
   },
   {
     id: "sabrina-carpenter",
@@ -541,7 +541,8 @@ export const GUESTS = [
     // the nine-record palette: cobalt, burnt orange, pale sky, dark brown.
     ink: { deep: "#4b3429", accent: "#b87767", strap: "#8b6a52", pen: "#5c4032",
            ticks: ["#3a63ae", "#a75124", "#bcd8e2", "#472e22"] },
-    era: "denim",
+    // Lipstick ink, a latte highlighter and an espresso bead.
+    era: "guest-sabrina-carpenter",
   },
 ];
 // Names announced on the shelf before their catalogue data is ready. These deliberately have no
