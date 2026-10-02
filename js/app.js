@@ -11889,12 +11889,17 @@ function renderRuthlessPage() {
     const note = rec.plays
       ? (rec.bestGaveUp ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`)
       : "not played";
+    // From the Top is the lens a first run should take: the whole song, from its first word. It
+    // wears a START HERE stamp until it has a time of its own, then the stamp lifts and the pen
+    // ink is what marks it, the same as every other section you have run.
+    const startHere = lens.id === "from-the-top" && !rec.plays;
+    const stamp = startHere ? `<span class="rl-start" aria-hidden="true">start here</span>` : "";
     // data-played is what the sheet's ink hangs off: a lens you have run is written in its own
     // pen, one you have not stays pencil grey. See the LENS SHEET note in styles.css.
     secs += `<button type="button" class="rl-sec" data-lens="${lens.id}" data-played="${rec.plays ? 1 : 0}"` +
-        ` aria-label="${escapeHtml(lens.label)}: ${pool} songs, ${rec.plays ? "best " + fmtTimeFine(rec.best) + ", " : ""}${escapeHtml(note)}">` +
+        ` aria-label="${escapeHtml(lens.label)}${startHere ? " (start here)" : ""}: ${pool} songs, ${rec.plays ? "best " + fmtTimeFine(rec.best) + ", " : ""}${escapeHtml(note)}">` +
       `<span>` +
-        `<span class="rl-h">[${escapeHtml(lens.label)}]<span class="rl-pool">${pool} songs</span></span>` +
+        `<span class="rl-h">[${escapeHtml(lens.label)}]${stamp}<span class="rl-pool">${pool} songs</span></span>` +
         `<span class="rl-lines" aria-hidden="true">${rlStrokes(lens)}</span>` +
       `</span>` +
       `<span class="rl-rec">${best}<span class="rl-note">${escapeHtml(note)}</span></span>` +

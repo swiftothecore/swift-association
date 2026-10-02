@@ -6945,6 +6945,14 @@
     font-size: clamp(.5rem, calc(var(--rl-u) * 24), .6rem); color: var(--ink-soft); opacity: .7;
     margin-left: 9px;
   }
+  /* The recommended first lens, rubber-stamped in red pen with the passport's #stampType ink
+     (index.html). Only From the Top wears it, and only until it has a time: see renderRuthlessPage. */
+  .rl-start {
+    display: inline-block; margin-left: 12px; padding: 2px 7px 1px; vertical-align: 2px;
+    font-weight: 700; font-size: .66em; letter-spacing: .16em; line-height: 1.2;
+    color: var(--red-pen); border: 2px solid currentColor; border-radius: 3px;
+    transform: rotate(-4deg); filter: url(#stampType);
+  }
   .rl-lines { display: grid; gap: clamp(3px, calc(var(--rl-u) * 19), 7px); }
   .rl-ln {
     display: flex; gap: 5px; align-items: center;
@@ -7002,6 +7010,7 @@
   @media (max-height: 700px) { .rl-foot { display: none; } }
   @media (max-width: 480px) {
     .rl-h { letter-spacing: .12em; }
+    .rl-start { margin-left: 8px; letter-spacing: .1em; }
     /* the song count is the first thing to go: it is context, not what a pick turns on */
     .rl-pool { display: none; }
   }
