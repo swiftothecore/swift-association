@@ -2332,7 +2332,7 @@ async function alignStatsTicket(root) {
    it took a legend to read; a line graph needs none, and the paper keeps the strip's character.
    The scale is 6px a score, and the five lines fall on 2, 4, 6, 8 and 10, so they are the
    graph's own rule as well as a stave: a dot on a line is an even score, between two the odd
-   one between them. Nothing marks the last game: the heading says these are the last twelve,
+   one between them, and each line's score is typed in the margin as its axis. Nothing marks the last game: the heading says these are the last twelve,
    and a graph reads left to right. */
 // Caveat's figures at the strip's size, measured off the real ink (canvas measureText): how
 // far each one's ink sits right of its text-anchor middle, and how far it reaches above and
@@ -2345,11 +2345,18 @@ const STAFF_FIG_INK = [
   [.109, .556, .012], [.106, .556, .012], [.115, .556, .012], [.109, .556, .012],
 ];
 function statsStaffSVG(recent, W) {
-  const n = recent.length, H = 124, FS = 14, DOT = 2.9, CLEAR = 5;
+  const n = recent.length, FS = 14, DOT = 2.9, CLEAR = 5, AX = 18;
   const y = (s) => 100 - s * 6;
-  const xs = recent.map((_, i) => n > 1 ? 22 + i * (W - 44) / (n - 1) : W / 2), ys = recent.map(y);
+  const xs = recent.map((_, i) => n > 1 ? AX + 14 + i * (W - AX - 36) / (n - 1) : (W + AX) / 2), ys = recent.map(y);
+  // the axis: each line's score typed in the margin, where the bar graph types its own
   let out = "";
-  for (const s of [2, 4, 6, 8, 10]) out += `<line class="stp-sl" x1="0" x2="${W}" y1="${y(s)}" y2="${y(s)}"/>`;
+  for (const s of [2, 4, 6, 8, 10]) {
+    out += `<text class="stp-ax" x="${AX - 5}" y="${y(s) + 3.2}">${s}</text>`;
+    out += `<line class="stp-sl" x1="${AX}" x2="${W}" y1="${y(s)}" y2="${y(s)}"/>`;
+  }
+  // the strip is as tall as what is drawn on it: the scale is fixed, so a notebook whose
+  // games all sit above 5 would otherwise carry a band of empty stave beneath them
+  let top = y(10) - 6, bot = y(2) + 6;
   if (n > 1) {
     // a pen line, not a ruler's: each stretch bows a fraction off the straight, seeded off the
     // scores so the same twelve always draw the same line
@@ -2372,8 +2379,10 @@ function statsStaffSVG(recent, W) {
     const [dx, asc, desc] = STAFF_FIG_INK[s] || [.1, .55, 0];
     const ty = up ? cy - (star ? 6.2 : DOT) - CLEAR - desc * FS : cy + (star ? 5 : DOT) + CLEAR + asc * FS;
     out += `<text x="${(cx - dx * FS).toFixed(1)}" y="${ty.toFixed(1)}">${s}</text>`;
+    top = Math.min(top, ty - asc * FS - 4);
+    bot = Math.max(bot, ty + Math.max(desc, 0) * FS + 4, cy + 7);
   });
-  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${out}</svg>`;
+  return `<svg viewBox="0 ${top.toFixed(1)} ${W} ${(bot - top).toFixed(1)}" aria-hidden="true">${out}</svg>`;
 }
 
 /* Every game by score, in pencil: hatched bars on graph paper with the count written over
