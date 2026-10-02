@@ -2223,7 +2223,7 @@ function albumOfTitle(title) {
    object says something about its number:
      the best score       a ticket stub, kept; its serial is how many games that took
      the gist             an index card: average, lately, and the range most games land in
-     the last twelve      a torn strip of staff paper, a note a game, pitched by score
+     the last twelve      a line graph on a torn strip of staff paper, a dot a game
      the distribution     pencil-hatched bars on a graph-paper scrap
      the nemesis          a sticky note you would leave yourself (perfects, where there is none)
      the home album       its record sleeve (Track by Track's), the most-sung song on a slip
@@ -2326,28 +2326,52 @@ async function alignStatsTicket(root) {
   });
 }
 
-/* The last twelve as notes on a stave: a line or a space per score, 1 on the low ledger, 11
-   on the top line, 13 above it with a star, and the average as a red dashed line across. */
-const STAFF_NOTE = `<svg class="stp-crotchet" viewBox="0 0 9 16" aria-hidden="true"><ellipse cx="3.6" cy="12.6" rx="3.3" ry="2.4" transform="rotate(-20 3.6 12.6)"/><path d="M6.6 12.2 L6.7 1.4"/></svg>`;
-function statsStaffSVG(recent, avg, W) {
-  const n = recent.length, H = 96, x0 = 24, step = n > 1 ? (W - x0 - 16) / (n - 1) : 0;
-  const y = (s) => 78 - s * 4;   // 12 units of headroom so a 13's star stays on the strip
-  const r = mulberry32(recent.reduce((a, s, i) => a + s * (i + 7), 3));
-  let out = avg != null ? `<line class="stp-avg" x1="0" x2="${W}" y1="${y(avg).toFixed(1)}" y2="${y(avg).toFixed(1)}"/>` : "";
-  for (const ly of [34, 42, 50, 58, 66]) out += `<line class="stp-sl" x1="0" x2="${W}" y1="${ly}" y2="${ly}"/>`;
+/* The last twelve as a line graph drawn on a strip of staff paper: a dot a game, joined by a pen
+   line, the score written beside each dot and a perfect game drawn as a gold star in its place.
+   It used to be notes on the stave, with a tempo key and the average as a red dashed line, and
+   it took a legend to read; a line graph needs none, and the paper keeps the strip's character.
+   The scale is 6px a score, and the five lines fall on 2, 4, 6, 8 and 10, so they are the
+   graph's own rule as well as a stave: a dot on a line is an even score, between two the odd
+   one between them. Nothing marks the last game: the heading says these are the last twelve,
+   and a graph reads left to right. */
+// Caveat's figures at the strip's size, measured off the real ink (canvas measureText): how
+// far each one's ink sits right of its text-anchor middle, and how far it reaches above and
+// below the baseline, in em. Centring on the anchor left every figure 1 to 2px right of its
+// dot, by a different amount for each, which read as the figures being placed at random. So
+// each is moved by its own ink, and set off the dot by the same clear gap above and below.
+const STAFF_FIG_INK = [
+  [.097, .533, -.021], [.106, .556, .012], [.093, .531, -.022], [.099, .538, -.016], [.132, .562, .008],
+  [.084, .556, -.009], [.071, .539, -.022], [.115, .563, .020], [.101, .560, .035], [.138, .574, .027],
+  [.109, .556, .012], [.106, .556, .012], [.115, .556, .012], [.109, .556, .012],
+];
+function statsStaffSVG(recent, W) {
+  const n = recent.length, H = 124, FS = 14, DOT = 2.9, CLEAR = 5;
+  const y = (s) => 100 - s * 6;
+  const xs = recent.map((_, i) => n > 1 ? 22 + i * (W - 44) / (n - 1) : W / 2), ys = recent.map(y);
+  let out = "";
+  for (const s of [2, 4, 6, 8, 10]) out += `<line class="stp-sl" x1="0" x2="${W}" y1="${y(s)}" y2="${y(s)}"/>`;
+  if (n > 1) {
+    // a pen line, not a ruler's: each stretch bows a fraction off the straight, seeded off the
+    // scores so the same twelve always draw the same line
+    const r = mulberry32(recent.reduce((a, s, i) => a + s * (i + 7), 3));
+    let d = `M${xs[0].toFixed(1)} ${ys[0]}`;
+    for (let i = 1; i < n; i++) d += ` Q${((xs[i - 1] + xs[i]) / 2 + (r() - .5) * 2).toFixed(1)} ${((ys[i - 1] + ys[i]) / 2 + (r() - .5) * 2.4).toFixed(1)} ${xs[i].toFixed(1)} ${ys[i]}`;
+    out += `<path class="stp-pen" d="${d}"/>`;
+  }
   recent.forEach((s, i) => {
-    const cx = n > 1 ? x0 + i * step : W / 2, cy = y(s);
-    for (let ly = 74; ly <= cy + 1; ly += 8) out += `<line class="stp-sl" x1="${(cx - 8).toFixed(1)}" x2="${(cx + 8).toFixed(1)}" y1="${ly}" y2="${ly}"/>`;
-    for (let ly = 26; ly >= cy - 1; ly -= 8) out += `<line class="stp-sl" x1="${(cx - 8).toFixed(1)}" x2="${(cx + 8).toFixed(1)}" y1="${ly}" y2="${ly}"/>`;
-    out += `<ellipse class="stp-head" cx="${cx.toFixed(1)}" cy="${cy}" rx="5" ry="3.6" transform="rotate(-20 ${cx.toFixed(1)} ${cy})"/>`;
-    const up = s < 7, sx = up ? cx + 4.4 : cx - 4.4;
-    out += `<line class="stp-stem" x1="${sx.toFixed(1)}" x2="${(sx + (r() - .5) * .7).toFixed(1)}" y1="${cy + (up ? -1 : 1)}" y2="${cy + (up ? -24 : 24)}"/>`;
-    out += `<text x="${cx.toFixed(1)}" y="${up ? cy + 15 : cy - 9}">${s}</text>`;
-    if (s === TOTAL_ROUNDS) {
+    const cx = xs[i], cy = ys[i], star = s === TOTAL_ROUNDS;
+    if (star) {
       let d = "";
-      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 2.3 : 5.2; d += (k ? "L" : "M") + (cx + Math.cos(a) * rr).toFixed(1) + " " + (cy - 22 + Math.sin(a) * rr).toFixed(1); }
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 2.7 : 6.2; d += (k ? "L" : "M") + (cx + Math.cos(a) * rr).toFixed(1) + " " + (cy + Math.sin(a) * rr).toFixed(1); }
       out += `<path class="stp-star" d="${d}Z"/>`;
-    }
+    } else out += `<circle class="stp-dot" cx="${cx.toFixed(1)}" cy="${cy}" r="${DOT}"/>`;
+    // the figure goes on the open side of its dot: above a peak, below a dip, and where the
+    // line runs through, on the side of the neighbour it is further from
+    const a = recent[i - 1], b = recent[i + 1], nb = a == null ? b : b == null ? a : (a + b) / 2;
+    const up = nb == null || s >= nb;
+    const [dx, asc, desc] = STAFF_FIG_INK[s] || [.1, .55, 0];
+    const ty = up ? cy - (star ? 6.2 : DOT) - CLEAR - desc * FS : cy + (star ? 5 : DOT) + CLEAR + asc * FS;
+    out += `<text x="${(cx - dx * FS).toFixed(1)}" y="${ty.toFixed(1)}">${s}</text>`;
   });
   return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true">${out}</svg>`;
 }
@@ -2395,12 +2419,12 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
     `<p>avg <b>${avg.toFixed(1)}</b></p>` +
     (lately != null ? `<p>lately <b>${lately.toFixed(1)}</b>${lead > 0.3 ? `<span class="stp-up" title="up on your average">${STATS_TREND.up}</span>` : lead < -0.3 ? `<span class="stp-down" title="down on your average">${STATS_TREND.down}</span>` : ""}</p>` : "") +
     (mostly ? `<p title="${Math.round(mostly.n / s.played * 100)}% of your games">mostly <b>${mostly.lo === mostly.hi ? `${mostly.lo}s` : `${mostly.lo}–${mostly.hi}`}</b></p>` : "") + `</div></div>`);
-  const tempo = isAll ? loadMetrics() : null;
+  // headed in the gist's word, since the gist's lately is these twelve; on a notebook with no
+  // games outside them it is simply every game
   out.push(`<div class="stp-item stp-w6 stp-o3" style="--r:-.4deg">${statsTape("staff")}` +
-    `<div class="stp-staff" role="img" aria-label="Last ${recent.length} scores, oldest first: ${recent.join(", ")}. Average ${avg.toFixed(1)}.">` +
-    `<div class="stp-lab"><span>lately · a note a game, oldest first · <em>- - - my average, ${avg.toFixed(1)}</em></span>` +
-    (tempo && tempo.answerN ? `<i>${STAFF_NOTE} = ${(tempo.answerSumMs / tempo.answerN / 1000).toFixed(1)}s a page</i>` : "") + `</div>` +
-    statsStaffSVG(recent, avg, Math.round(Math.max(260, W - 30))) + `</div></div>`);
+    `<div class="stp-staff" role="img" aria-label="${s.played > recent.length ? `Last ${recent.length} scores` : "Every score so far"}, oldest first: ${recent.join(", ")}.">` +
+    `<div class="stp-lab">${s.played > recent.length ? `lately · my last ${recent.length} games` : "every game so far"}</div>` +
+    statsStaffSVG(recent, Math.round(Math.max(260, W - 30))) + `</div></div>`);
   const youScore = (isAll || viewMode === currentMode.id) ? lastScore : null;
   out.push(`<div class="stp-item stp-w4 stp-o3" style="--r:.7deg">${statsTape("graph")}` +
     `<div class="stp-graph" role="img" aria-label="Games at each score: ${s.scoreCounts.map((c, i) => `${i}: ${c}`).join(", ")}">` +
