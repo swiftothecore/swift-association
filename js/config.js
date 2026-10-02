@@ -2519,15 +2519,15 @@ export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // roun
    is the front page's second handwritten line, so it stays short enough to sit beside the
    best line (about thirty-five characters). `day` names the date for screen readers. A
    songday may also carry `headline` (a line to show instead of the song title) and
-   `icon`/`mark` (a sticky/calendar mark other than the era heart).
+   `icon`/`mark` (a sticky mark, and the outline the desk calendar draws round the date,
+   other than the era heart).
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 // The Christmas tree for 25 December, in the same 32x32 box as the heart, the shaker and the
 // crown, centred on (16, 16). Three tiers cut to different depths with the tips at different
 // heights, so it reads as drawn rather than stamped. TREE_TRUNK_D is separate so each surface
-// can colour it. The calendar stamps the bare silhouette; the sticky and the margin note dress
-// it (star, baubles) in app.js, because those are a fifth of a pixel at calendar size.
-// December's title mark is a fir sprig in open pen line; this is a filled, trunked silhouette
-// in the grid, which is what keeps the two from reading as the same object twice on one sheet.
+// can colour it. The sticky and the margin note dress it (star, baubles) in app.js. The desk
+// calendar does not stamp it: it draws its own tree outline round the date (FRAMES in
+// js/calendar.js), with the 25 standing in the bottom tier.
 export const SWIFTMAS_GREEN = "#3f6b4a";
 export const TREE_D = "M16.4 3.4 L11 11.2 L13.6 10.9 L8.6 18.2 L11.8 17.8 L6.2 25 Q16.2 26.9 26.2 24.7 L20.8 17.6 L23.7 18 L19 10.7 L21.6 11.1 Z";
 export const TREE_TRUNK_D = "M14.3 25.6 L14.4 29.2 Q16.1 29.7 17.9 29.1 L17.7 25.6 Z";
@@ -2580,13 +2580,13 @@ export const TS_MILESTONES = [
 ];
 
 // The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
-// sticky's heart and centred on (16, 16) so it drops into either transform unchanged. Shared
-// rather than copied because two surfaces stamp it: the sticky (js/app.js) and the desk
-// calendar's square (js/calendar.js).
+// sticky's heart and centred on (16, 16). The sticky (js/app.js) stamps it; the desk calendar
+// used to, and now draws its own open shaker round the 1 of August (FRAMES in js/calendar.js),
+// which follows the same profile rules below.
 //
-// The whole job of this outline is to survive the calendar, where it is stamped about 10px
-// wide with no room for the perforation dots the sticky can afford. Two shapes have failed
-// there already and both failures are instructive. A flat lid sitting flush with the body
+// The outline was drawn to survive the calendar's old 10px stamp, with no room for the
+// perforation dots the sticky can afford. Two shapes failed there and both failures are
+// instructive. A flat lid sitting flush with the body
 // is a JAR, which is what the first attempt read as. A semicircular dome over a squat body
 // is a PADLOCK, which is what the second one read as — the crown and the seam together make
 // a handle, and the heavier the ink the more certain the handle becomes.
@@ -2608,9 +2608,9 @@ export const SALT_SHAKER_D =
 export const SALT_CAP_D = "M11.6 9.2H20.4";
 
 // The guest-day crown, in the same 32x32 box as the heart and the shaker and centred on
-// (16, 16), so it drops into either the sticky's transform or the calendar's unchanged.
-// Shared rather than copied because two surfaces stamp it: the milestone sticky (js/app.js)
-// and the desk calendar's square (js/calendar.js).
+// (16, 16). The milestone sticky (js/app.js) stamps it; the desk calendar used to, and now
+// draws its own open crown round the date (FRAMES in js/calendar.js), keeping the rules below:
+// centre peak tallest, notches deep, a bead on each point.
 //
 // Nothing on it is regular, and that is the drawing rather than a wobble for its own sake: a
 // symmetrical crown with three matched points is a playing-card suit or a logo, and this has
@@ -2618,8 +2618,7 @@ export const SALT_CAP_D = "M11.6 9.2H20.4";
 // heights, the two valleys are cut to different depths, and the band sags across the middle
 // the way a paper band does.
 //
-// The whole job of this outline is to survive the calendar, where it is stamped about 10px
-// wide. What failed there first was SHALLOW NOTCHES: valleys at 15.8 and 14.7 left points
+// The outline was drawn to survive the calendar's old 10px stamp. What failed there first was SHALLOW NOTCHES: valleys at 15.8 and 14.7 left points
 // only about seven units proud of them, and at 0.3 scale seven units is two pixels, so the
 // three points merged into one lumpy roof and the crown read as a bucket. Cutting the valleys
 // to 17.8 and 16.6 while lifting the centre peak to 5.6 is what separated them. So if you

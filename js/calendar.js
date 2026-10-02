@@ -7,9 +7,8 @@
 //   .cal-title   — MONTH + year
 //   .cal-season  — the month's own hand-drawn mark, left of the title
 //   .cal-week    — S M T W T F S, weekends in the printer's red
-//   .cal-marks   — the days that matter, marked in the app's own milestone
-//                  language (see renderMilestoneSticky in app.js), hung under
-//                  the numeral they belong to
+//   .cal-marks   — the days that matter: the occasion drawn round the date in
+//                  the era's pen, over a smudge of its colour (see drawFrame)
 //   .cal-days    — the grid of dates. A marked day is a red-letter day: its
 //                  numeral is printed in its mark's ink
 //   .cal-key     — the small print at the foot: each marked day and what it is
@@ -37,8 +36,7 @@
 // non-interactive, like every desk prop; if the markup isn't there it does
 // nothing.
 
-import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, ALBUM_COLORS, CB_ALBUM_COLORS,
-         SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D, TREE_D, TREE_TRUNK_D, TREE_TRUNK } from "./config.js";
+import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, ALBUM_COLORS, CB_ALBUM_COLORS } from "./config.js";
 import { loadSettings } from "./storage.js";
 import { MONTH_SEASON, southernSeasons, seasonMonth } from "./season.js";
 
@@ -77,37 +75,16 @@ const NUM_DY = 4.1;                     // baseline of the numerals below the ro
 // its baseline to the baseline itself, centred 4.1 - 3.2 = 0.9 below the anchor. The
 // strike and the pen loop both centre here; the printed grid still hangs off cy.
 const NUM_CY = 0.9;
-// The mark hangs under the numeral's tail, in the paper between rows. It used to sit
-// beside the number at 4.8 down, which on every two-digit day printed it over the last
-// digit (the heart on 22 sat on the 2, the crown on 30 on the 0). At 9.5 down its top
-// clears the baseline (NUM_DY) and its foot leaves five units before the next row's
-// figures. It still has to stay unmistakably inside its own square: at 0.3 scale a
-// 32-box mark is 9.6 across, so a two-digit day's 7.2 leaves 1.2 of paper before the
-// 26.3 column boundary, and a one-digit day sits nearer its narrower figure. 7.8 was
-// tried once and left a heart reading as though it belonged to neither the day it
-// marks nor the one after it.
-const MARK_DX = 6.4, MARK_DX_WIDE = 7.2, MARK_DY = 9.5;
-// How far below the row anchor a hung mark's ink reaches (the cake's sponge is the
-// deepest of them), so the small print knows where the grid's ink ends.
-const MARK_FOOT = MARK_DY + 5.5;
+// How far below the row anchor an occasion's frame reaches (the heart's point and the
+// tree's trunk are the deepest), so the small print knows where the grid's ink ends.
+const FRAME_FOOT = 12.4;
 
 const MONTHS = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"];
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
 
-// The heart is app.js's milestone-sticky heart, same path, drawn small.
-const HEART_D = "M16 27.5C15.4 27.1 4.5 19.6 4.5 11.7c0-3.6 2.7-6.4 6-6.4 2.3 0 4.2 1.3 5.5 3.4 1.3-2.1 3.2-3.4 5.5-3.4 3.3 0 6 2.8 6 6.4 0 7.9-10.9 15.4-11.5 15.8z";
-// Her birthday cake: a squat sponge, pink icing with uneven drips, and three lit candles. In
-// the corner sticky cake's colours (cakeSvg in app.js), but not its "13" number candles, which
-// close up into one gold lump at this size. Same 32-box as the heart, drawn sitting low in it
-// so the flames clear the numeral. scripts/ui/birthday-cake-calendar.html is the board.
-const CAKE_SPONGE_D = "M5.2 18.4 L5.6 27 Q16 28.6 26.9 26.7 L26.6 18.1 Z";
-const CAKE_ICING_D = "M4.8 18.8 Q4.6 15.7 7.4 15.5 L24.8 15.2 Q27.3 15.3 27.2 18.3 L27.2 20.4 Q26.2 22.3 25.2 20.1 Q22.6 19 20.6 19.7 Q20 22.4 18.6 21.6 Q18 21 18.2 19.5 Q14 19 11.6 19.9 Q11 22 9.8 21.4 Q9.2 20.8 9.3 19.4 Q7 19 5.6 20.6 Q4.7 20.4 4.8 18.8 Z";
-// Each candle as [left, top, right, bottom], hand-set so no two stand the same height.
-const CAKE_CANDLES = [[8, 9.3, 10.6, 15.5], [14.9, 8.4, 17.5, 15.3], [21.6, 9.1, 24.2, 15.4]];
+// The cake's icing pink: the colour her birthday's frame is washed in and its date printed in.
 const CAKE_ICING = "#ec85aa";
-const flameD = (x, y, k) => `M${x} ${y - 5.6 * k}C${x + 2.1 * k} ${y - 3.6 * k} ${x + 2.2 * k} ${y - 0.7 * k} ${x + 0.1 * k} ${y}` +
-  `C${x - 1.9 * k} ${y - 0.6 * k} ${x - 1.8 * k} ${y - 3.4 * k} ${x} ${y - 5.6 * k}Z`;
 
 // One mark per calendar square. Oct 27 is both 1989 and 1989 (Taylor's Version),
 // and two hearts will not fit in a 26px cell — so the earlier, original release
@@ -368,121 +345,131 @@ function typeInk(hex) {
   return "#" + out.map((v) => v.toString(16).padStart(2, "0")).join("");
 }
 
-// The days that matter, in the app's own milestone language: an album-coloured
-// heart for a release (exactly what the milestone sticky shows on the day), and
-// a birthday cake for her birthday, which no album colour should stand in for. A lyric day gets the same heart hollowed out — a quieter cousin of a
-// real release, since the song only named the date, nothing shipped on it. A day carrying its
-// own `mark` gets that object instead (August 1st gets a salt shaker).
-function drawMark(g, mark, cx, cy, colors, s, wide) {
-  const x = (cx + (wide ? MARK_DX_WIDE : MARK_DX)).toFixed(1), y = (cy + MARK_DY).toFixed(1);
-  const tilt = (-16 + jit(s) * 32).toFixed(1);
-  // Stamped at 0.37 rather than the heart's 0.3, to fill the square the way the gold star it
-  // replaced did, so the weights are quoted lighter to land on the same paper widths: 2.2 is
-  // the heart's 0.81 edge. Half the heart's tilt, like the tree: a cake leaning 16 degrees is
-  // sliding off its plate.
-  if (mark.kind === "birthday") {
-    const cake = el("g", {
-      transform: `translate(${x} ${y}) rotate(${(tilt / 2).toFixed(1)}) scale(0.37) translate(-16.5 -13.6)`
-    });
-    const edge = { stroke: "rgba(0,0,0,0.3)", "stroke-linejoin": "round" };
-    cake.appendChild(el("path", { d: CAKE_SPONGE_D, fill: "#f0e2c4", "stroke-width": 2.2, ...edge }));
-    cake.appendChild(el("path", { d: CAKE_ICING_D, fill: CAKE_ICING, "stroke-width": 2.2, ...edge }));
-    for (const [x0, y0, x1, y1] of CAKE_CANDLES) {
-      cake.appendChild(el("path", {
-        d: `M${x0} ${y0 + 0.2}L${x1} ${y0}L${x1 + 0.2} ${y1}L${x0 + 0.1} ${y1 + 0.1}Z`,
-        fill: "#e3ad3c", "stroke-width": 1.6, ...edge
-      }));
-      cake.appendChild(el("path", {
-        d: flameD((x0 + x1) / 2, y0 - 0.2, 0.85), fill: "#f29030",
-        stroke: "rgba(150,70,0,0.35)", "stroke-width": 1.1, "stroke-linejoin": "round"
-      }));
-    }
-    g.appendChild(cake);
-    return;
-  }
+// --- the days that matter -------------------------------------------------------------------
+//
+// An occasion is not a sticker beside the date: the owner draws it AROUND the date, in the
+// era's pen, over a smudge of the era's colour. That is the same two layers the month's own
+// drawing wears in the title (MARK_WASH_D under an open pen line), grown to hold a number. A
+// release, a songday and a lyric day are a heart; her birthday is a cake with the date on its
+// front and three candles over it; a guest's birthday is a crown (we all got crowns); 25
+// December stands in the bottom tier of a tree, and the 1 of August inside the salt shaker.
+// scripts/ui/calendar-occasions.html is the board it was picked from, beside three others.
+//
+// A hollow day is PENCILLED IN: the outline in the strikes' graphite with no colour under
+// it, which is exactly what pencilling something in means. That covers a guest announced but
+// not on the shelf yet, and a lyric day, the pad's two "marked, but not the real thing" states.
+//
+// Every frame is drawn in a box centred on the numeral's optical centre, sized so a two-digit
+// figure (13.2 by 6.4) has a hand's clearance all round; a one-digit day draws it smaller all
+// round rather than narrower, or a heart round a "3" stretches into a balloon.
+const GRAPHITE = "#6a6357";
+const FRAMES = {
+  // the date on the cake's front: sponge, a row of icing scallops under the top edge, a plate,
+  // and three candles of different heights
+  cake: {
+    d: "M-10.2 6.2 L-10 -3.8 Q-10 -6 -7.6 -6.1 L7.8 -6.3 Q10.4 -6.3 10.4 -3.9 L10.6 6 Z",
+    seams: "M-10 -3.9 Q-8.6 -3.6 -8 -4.6 Q-7.2 -3.4 -6 -4.4 M-1.4 -4.5 Q-0.4 -3.5 0.8 -4.6 M5.4 -4.6 Q6.6 -3.6 7.6 -4.7 Q8.6 -3.7 10.2 -4.2 M-12.6 6.9 Q0 7.7 12.4 6.6",
+    candles: [[-5.6, -6.1, -9.4], [0.3, -6.3, -10.2], [5.9, -6.3, -9.2]],
+  },
+  // the date in the band: three points at three heights, valleys cut well clear of the seam,
+  // a bead on each point so it reads as a crown and not a fence
+  crown: {
+    d: "M-10.2 5.4 L-10.8 -4.4 L-11.1 -10.6 L-5.6 -5.8 L0.2 -12.6 L5.9 -6.1 L10.9 -10.1 L10.6 -4.4 L10.4 5.2 L-10.6 5.5",
+    seams: "M-10.7 -4.1 Q0 -3.5 10.6 -4.4",
+    beads: [[-11.1, -11.6, 0.85], [0.2, -13.8, 1], [10.9, -11.1, 0.8]],
+  },
+  // the date in the bottom tier, which is drawn wide enough to hold it
+  tree: {
+    d: "M0.3 -13 L4.6 -8.2 L3 -8 L9.2 -2.6 L7.2 -2.4 L12 5 L-11.8 5.2 L-7 -2.3 L-9 -2.5 L-3.2 -8 L-4.8 -8.2 Z",
+    seams: "M-1.6 5.3 L-1.7 8.3 L1.8 8.2 L1.6 5.2",
+  },
+  // the 1 of August in the shaker's body, the holes in an arc high on the cap. Neck narrower
+  // than the cap, cap narrower than the lip, lip narrower than the body: config.js's note on
+  // SALT_SHAKER_D is why (a jar and a padlock are what this turns into otherwise)
+  salt: {
+    d: "M-5.2 5.8 Q-5.8 5.8 -5.8 5 L-5.6 -2.4 Q-5.4 -4.2 -3.2 -4.8 L-3 -5.6 L-4.4 -6.2 Q-4.6 -6.9 -3.8 -7 Q-3.6 -9.8 0 -10 Q3.6 -9.8 3.8 -7 Q4.6 -6.9 4.4 -6.2 L3 -5.6 L3.2 -4.8 Q5.4 -4.2 5.6 -2.4 L5.8 5 Q5.8 5.8 5.2 5.8 Z",
+    holes: [[-1.5, -8.2], [0.3, -8.8], [1.9, -8]],
+  },
+};
+
+// The heart, drawn fresh for every day it marks. Six points place it: the cleft, the crown of
+// each lobe, the widest reach of each lobe and the point, and each is nudged by its own seeded
+// amount, so the two lobes are never a mirror of each other and no two hearts on a sheet are
+// the same heart. The pen starts at the cleft, goes round the left lobe, down to the point,
+// up the right side and home, finishing a hair past where it began, the way a hand closes a
+// heart. Starting at the cleft is what keeps the point clean: it is one turn of the pen, a V
+// of about eighty degrees with the sides bowing out as they come into it, and nothing
+// crossing or hooking there. (An earlier heart began and ended AT the point, and the stub and
+// the overshoot both landed under it as a little tail.)
+function heartPath(seed) {
+  const j = (k, a) => (jit(seed + k * 7.3) - 0.5) * 2 * a;
+  const C  = [0.2 + j(1, 0.5), -6.2 + j(2, 0.6)];     // the cleft
+  const T1 = [-5.7 + j(3, 0.6), -9.7 + j(4, 0.5)];    // left lobe's crown
+  const L  = [-10.9 + j(5, 0.5), -3.2 + j(6, 0.7)];   // left lobe at its widest
+  const B  = [0.3 + j(7, 0.7), 10.3 + j(8, 0.5)];     // the point
+  const R  = [10.9 + j(9, 0.5), -3 + j(10, 0.7)];     // right lobe at its widest
+  const T2 = [5.5 + j(11, 0.6), -9.8 + j(12, 0.5)];   // right lobe's crown
+  const pt = (q, dx = 0, dy = 0) => `${(q[0] + dx).toFixed(2)} ${(q[1] + dy).toFixed(2)}`;
+  // how hard each side bows into the point, so one side can come in fuller than the other
+  const bl = 4.3 + j(13, 0.5), br = 4.1 + j(14, 0.5);
+  return `M${pt(C)} C${pt(C, -0.6, -2.3)} ${pt(T1, 2.7)} ${pt(T1)} C${pt(T1, -3.3)} ${pt(L, 0, -3.5)} ${pt(L)} ` +
+    `C${pt(L, 0, 5.2)} ${pt(B, -bl, -5)} ${pt(B)} C${pt(B, br, -5.2)} ${pt(R, 0, 5.2)} ${pt(R)} ` +
+    `C${pt(R, 0, -3.5)} ${pt(T2, 3.3)} ${pt(T2)} C${pt(T2, -2.7)} ${pt(C, 0.7, -2.3)} ${pt(C, 0.3, 0.4)}`;
+}
+
+// Each frame's ink box in its own units (half-width, top, bottom), for the today loop. When
+// today is an occasion the red pen goes round the whole frame instead of cutting through it,
+// so drawToday stretches its loop to clear this box by a pen's breadth and moves its centre to
+// the frame's: a crown and a cake sit high on their date, a heart sits on it. The loop's ink at
+// rest is measured, not its radii: its curves reach about 10.3 across but only 6.7 up and down
+// (a cubic falls short of its control points), and it rides 0.7 above the centre it is given.
+const FRAME_BOX = { heart: [11, -9.9, 10.6], cake: [12.6, -13.6, 7.4], crown: [11.2, -14.8, 5.6],
+                    tree: [12, -13, 8.3], salt: [5.8, -10, 5.8] };
+const frameShape = (mark) => (mark.kind === "birthday" ? "cake" : mark.kind === "guest" ? "crown"
+  : mark.mark === "tree" ? "tree" : mark.mark === "salt" ? "salt" : "heart");
+const frameScale = (shape, narrow) => (shape === "salt" ? 1 : narrow ? 0.8 : 0.93);
+function frameReach(mark, narrow) {
+  const shape = frameShape(mark), k = frameScale(shape, narrow);
+  const [hw, top, bottom] = FRAME_BOX[shape];
+  // an oval round a squarish frame has to run a little wide of its box or the corners (a
+  // crown's side points, a cake's shoulders) poke out through it
+  const kx = (hw * k * 1.12 + 1.6) / 10.3, ky = ((bottom - top) * k / 2 * 1.1 + 2) / 6.7;
+  return { kx, ky, dy: (top + bottom) / 2 * k + 0.7 * ky };
+}
+
+function drawFrame(g, mark, cx, cy, colors, s, narrow) {
   const { color, hollow } = markInk(mark, colors);
-  // A guest birthday stamps the paper crown. Grouped so the band seam shares the crown's
-  // transform, and both weights are quoted in the 32-box that scale(0.3) is about to divide:
-  // 2.7 lands at 0.81 for the silhouette, matching the heart's separating edge, and the seam
-  // at 0.51, lighter because it is an interior line. The sticky's jewels would be a third of
-  // a pixel across here, so they are the larger surface's job, not this one's.
-  if (mark.kind === "guest") {
-    const crown = el("g", {
-      transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16)`
-    });
-    crown.appendChild(el("path", {
-      d: CROWN_D,
-      fill: hollow ? "none" : color,
-      stroke: hollow ? color : "rgba(0,0,0,0.3)",
-      "stroke-width": hollow ? 3.5 : 2.7,
-      "stroke-linejoin": "round"
+  const shape = frameShape(mark);
+  const F = FRAMES[shape] || {};
+  const k = frameScale(shape, narrow);
+  // a heart can lean; a cake, a shaker and a tree leaning that far are falling over
+  const upright = shape === "heart" || shape === "crown" ? 1 : 0.4;
+  const rot = (-5 + jit(s) * 10) * upright;
+  const at = `translate(${(cx + (jit(s + 3) - 0.5) * 0.8).toFixed(2)} ${(cy + NUM_CY + (jit(s + 5) - 0.5) * 0.6).toFixed(2)}) ` +
+    `rotate(${rot.toFixed(1)}) scale(${k})`;
+  const d = shape === "heart" ? heartPath(s) : F.d;
+  // the smudge: the same outline filled, a little smaller and off true, the way a quick
+  // pass of colour never lands exactly inside the line
+  if (!hollow) g.appendChild(el("path", { d, fill: color, opacity: 0.26, transform: `${at} translate(0.7 0.6) scale(0.95)` }));
+  // pen weights are quoted on paper and divided by the frame's scale, so a small heart is
+  // drawn with the same pen as a big one
+  const pen = hollow ? GRAPHITE : typeInk(color);
+  const w = (v) => (v / k).toFixed(2);
+  const frame = el("g", {
+    transform: at, fill: "none", stroke: pen, "stroke-width": w(hollow ? 0.8 : 0.92),
+    "stroke-linecap": "round", "stroke-linejoin": "round", opacity: hollow ? 0.8 : 0.92,
+  });
+  frame.appendChild(el("path", { d }));
+  if (F.seams) frame.appendChild(el("path", { d: F.seams, "stroke-width": w(0.7) }));
+  for (const [x, y, r] of F.beads || []) frame.appendChild(el("circle", { cx: x, cy: y, r, fill: pen, stroke: "none" }));
+  for (const [x, y] of F.holes || []) frame.appendChild(el("circle", { cx: x, cy: y, r: 0.5, fill: pen, stroke: "none" }));
+  for (const [x, y0, y1] of F.candles || []) {
+    frame.appendChild(el("path", { d: `M${x} ${y0} L${x - 0.1} ${y1}`, "stroke-width": w(0.8) }));
+    frame.appendChild(el("path", {
+      d: `M${x - 0.1} ${y1 - 0.5} c1 -0.8 1 -2.1 0 -2.9 c-1 0.8 -1 2.1 0 2.9 z`, fill: hollow ? pen : "#f29030", stroke: "none",
     }));
-    // The band seam is what tells a filled crown's points from its base. On a hollow one the
-    // outline already draws both, and a third line across the middle at 0.5px only muddies it.
-    if (!hollow) {
-      crown.appendChild(el("path", {
-        d: CROWN_BAND_D, fill: "none", stroke: "rgba(0,0,0,0.26)", "stroke-width": 1.7,
-        "stroke-linecap": "round"
-      }));
-    }
-    g.appendChild(crown);
-    return;
   }
-  // A day can ask for its own object instead of the heart (August 1st stamps a salt shaker).
-  // Same 32x32 box and centring as the heart, so it takes the identical transform.
-  if (mark.mark === "salt") {
-    // Grouped so the lip line shares the shaker's transform. Both strokes are quoted in
-    // the 32-box because scale(0.3) is about to divide them: what the paper sees is
-    // 2 * 0.3 = 0.6 for the silhouette and 1.8 * 0.3 = 0.54 for the lip. Deliberately
-    // restrained — the shaker's read lives in two pinches about a pixel and a half deep,
-    // and heavier ink closes them up and turns the object into a padlock. The sticky's
-    // perforation dots would land at a fifth of a pixel here, so they are the larger
-    // surface's job, not this one's.
-    const shaker = el("g", {
-      transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16)`
-    });
-    shaker.appendChild(el("path", {
-      d: SALT_SHAKER_D, fill: color, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2,
-      "stroke-linejoin": "round"
-    }));
-    shaker.appendChild(el("path", {
-      d: SALT_CAP_D, fill: "none", stroke: "rgba(0,0,0,0.26)", "stroke-width": 1.8,
-      "stroke-linecap": "round"
-    }));
-    g.appendChild(shaker);
-    return;
-  }
-  // 25 December stamps the bare tree: three tiers and a trunk, no star or baubles, which would
-  // land at a fifth of a pixel. Same 0.81 separating edge as the heart.
-  if (mark.mark === "tree") {
-    // Half the heart's tilt: a heart can lean 16 degrees and stay a heart, a tree that far over
-    // reads as falling.
-    const tree = el("g", {
-      transform: `translate(${x} ${y}) rotate(${(tilt / 2).toFixed(1)}) scale(0.3) translate(-16 -16)`
-    });
-    tree.appendChild(el("path", {
-      d: TREE_D, fill: color, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2.7, "stroke-linejoin": "round"
-    }));
-    tree.appendChild(el("path", {
-      d: TREE_TRUNK_D, fill: TREE_TRUNK, stroke: "rgba(0,0,0,0.3)", "stroke-width": 2, "stroke-linejoin": "round"
-    }));
-    g.appendChild(tree);
-    return;
-  }
-  // Stroke weights are quoted in the 32-box and then divided by scale(0.3), so the
-  // numbers that matter are what reaches the paper: the filled heart's separating edge
-  // lands at 0.8, matching the birthday cake, and the hollow one's outline at 1.05,
-  // heavier because there the stroke IS the drawing. The filled edge used to be quoted
-  // at 0.9, i.e. 0.27 on paper — sub-pixel, so the thing meant to lift a coloured heart
-  // off cream paper was not rendering at all.
-  g.appendChild(el("path", {
-    d: HEART_D,
-    fill: hollow ? "none" : color,
-    stroke: hollow ? color : "rgba(0,0,0,0.3)",
-    "stroke-width": hollow ? 3.5 : 2.7,
-    "stroke-linejoin": "round",
-    transform: `translate(${x} ${y}) rotate(${tilt}) scale(0.3) translate(-16 -16.4)`
-  }));
+  g.appendChild(frame);
 }
 
 // The red pen loop around today: a fast ellipse that overshoots past a full turn, plus
@@ -494,7 +481,7 @@ function drawMark(g, mark, cx, cy, colors, s, wide) {
 // now and clearly turned off it. The main stroke has come down from 1.9, which made it
 // the heaviest ink on a sheet where everything else is a 1.1 pencil line, and the radii
 // have come in so the loop stops crowding the days either side of it in a 26.3 cell.
-function drawToday(g, cx, cy, s) {
+function drawToday(g, cx, cy, s, reach) {
   const rot = -8 + jit(s) * 15;
   const rx = 9.9 + jit(s + 2) * 1.1, ry = 7.8 + jit(s + 4) * 0.8;
   const d =
@@ -502,8 +489,12 @@ function drawToday(g, cx, cy, s) {
     ` C${(cx + rx * 1.02).toFixed(1)} ${(cy - ry).toFixed(1)} ${(cx - rx * 1.04).toFixed(1)} ${(cy - ry * 1.06).toFixed(1)} ${(cx - rx).toFixed(1)} ${(cy - 0.6).toFixed(1)}` +
     ` C${(cx - rx * 0.97).toFixed(1)} ${(cy + ry).toFixed(1)} ${(cx + rx * 0.98).toFixed(1)} ${(cy + ry * 1.04).toFixed(1)} ${(cx + rx * 1.01).toFixed(1)} ${(cy - 0.4).toFixed(1)}` +
     ` C${(cx + rx * 1.02).toFixed(1)} ${(cy - ry * 0.55).toFixed(1)} ${(cx + rx * 0.5).toFixed(1)} ${(cy - ry * 0.98).toFixed(1)} ${(cx - rx * 0.35).toFixed(1)} ${(cy - ry * 0.92).toFixed(1)}`;
-  g.appendChild(el("path", { d, transform: `rotate(${rot.toFixed(1)} ${cx} ${cy})` }));
-  g.appendChild(el("path", { d, class: "echo", transform: `rotate(${(rot + 5.5).toFixed(1)} ${cx} ${cy}) translate(0.9 1)` }));
+  // stretched round an occasion's frame (frameReach), with the pen's weight held
+  const { kx, ky, dy } = reach || { kx: 1, ky: 1, dy: 0 };
+  const grow = reach ? ` translate(0 ${dy.toFixed(2)}) translate(${cx} ${cy}) scale(${kx.toFixed(3)} ${ky.toFixed(3)}) translate(${-cx} ${-cy})` : "";
+  const weight = (v) => (reach ? { style: `stroke-width:${(v / Math.sqrt(kx * ky)).toFixed(2)}px` } : {});
+  g.appendChild(el("path", { d, transform: `rotate(${rot.toFixed(1)} ${cx} ${cy})${grow}`, ...weight(1.55) }));
+  g.appendChild(el("path", { d, class: "echo", transform: `rotate(${(rot + 5.5).toFixed(1)} ${cx} ${cy}) translate(0.9 1)${grow}`, ...weight(1.05) }));
 }
 
 // --- the small print ---------------------------------------------------------------------
@@ -681,11 +672,11 @@ export function render(now) {
       class: (c === 0 || c === 6) ? "wknd" : null
     }, String(d));
     if (mark) {
-      drawMark(marks, mark, cx, cy, colors, seed + d * 7, d > 9);
-      inkFoot[r] = Math.max(inkFoot[r], cy + MARK_FOOT);
+      drawFrame(marks, mark, cx, cy, colors, seed + d * 7, d < 10);
+      inkFoot[r] = Math.max(inkFoot[r], cy + FRAME_FOOT);
       // A red-letter day. Printers have marked the days that matter in a second ink since
       // the first almanacs, which is where the phrase comes from; on this pad the days that
-      // matter are hers, so the numeral takes its mark's ink and sits over the mark it owns.
+      // matter are hers, so the numeral takes its mark's ink, inside the frame drawn round it.
       // A hollow mark gets no red letter: on this pad hollow means "marked, but not the real
       // thing", and the printer would not have set it in a second ink either.
       const { color, hollow } = markInk(mark, colors);
@@ -703,7 +694,7 @@ export function render(now) {
       const w = num.getBBox().width || String(d).length * DIGIT_W;
       strikes.appendChild(strike(cx, cy, w, seed + d));
     }
-    if (d === D) drawToday(today, cx, cy + NUM_CY, seed + 200 + d);
+    if (d === D) drawToday(today, cx, cy + NUM_CY, seed + 200 + d, mark ? frameReach(mark, d < 10) : null);
   }
 
   if (measured && keyed.length) {

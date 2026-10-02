@@ -2225,8 +2225,10 @@ function albumOfTitle(title) {
 
    THE TAPE IS THE HOME SCREEN'S. Same shared washi surface (.stp-tape is on that rule in
    styles.css, day and night), the same six baked tears (TORN_EDGES), one placement per object
-   that never re-dices, all on the stats card's own denim, so the page is taped down with the
-   roll its nav card was. Sticky notes and label tape carry no strip: they stick themselves.
+   that never re-dices, all from the notebook's plain kraft roll. It used to be the stats
+   card's denim, nine identical strips of it, which read as a theme rather than a desk; this
+   is the most colourful page in the notebook, so the tape is the one thing on it that stays
+   out of the way. Sticky notes and label tape carry no strip: they stick themselves.
 
    The paper objects are physical things in fixed stock, so they write in fixed ink, never
    var(--ink), and at night they are taken down a stop the way the polaroids are, never
@@ -15662,14 +15664,14 @@ function heartSvg(fill) {
 }
 // The guest-day mark: a paper crown in the guest's own pass ink, drawn the same way as the
 // heart (fill, translucent dark edge, one white highlight) so the sticky keeps one hand. The
-// silhouette and its band seam live in config.js, shared with the desk calendar.
+// silhouette and its band seam live in config.js.
 // `edge` is the pass's deep ink for the jewels, which keeps them legible on an accent as pale
 // as Hannah's yellow; it falls back to plain dark when there is no pass.
 //
 // `hollow` is the announced-but-not-playable state (Beyoncé, Miley): an outline in plain ink,
 // no fill, no jewels and no highlight, because the whole point is that there is no pass to be
-// coloured by yet. It is deliberately the SAME language the desk calendar already uses for a
-// lyric day, where hollow means "marked, but not a release" — here it means "named, but not
+// coloured by yet. It is the sticky's form of the desk calendar's rule for the same state,
+// where an announced name is pencilled in (graphite outline, no colour) — "named, but not
 // arrived". The stroke is heavier than the filled crown's separating edge for the same reason
 // it is on the hollow heart: with no fill the stroke IS the drawing.
 function crownSvg(fill, edge, hollow) {
@@ -15688,8 +15690,8 @@ function crownSvg(fill, edge, hollow) {
     `</svg>`;
 }
 // The August 1st mark: a salt shaker, drawn the same way as the heart (era ink, translucent
-// dark edge, one white highlight) so the sticky's icon language stays one hand. Same silhouette
-// the desk calendar stamps on the square, at a tenth the size.
+// dark edge, one white highlight) so the sticky's icon language stays one hand. The desk
+// calendar draws its own open shaker round the 1 of August rather than stamping this one.
 function saltSvg(fill) {
   return `<svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">` +
     `<path d="${SALT_SHAKER_D}" fill="${fill}" stroke="rgba(0,0,0,0.22)" stroke-width="0.7" stroke-linejoin="round"/>` +
