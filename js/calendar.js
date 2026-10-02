@@ -10,10 +10,10 @@
 //   .cal-marks   — the days that matter: the occasion drawn round the date in
 //                  the era's pen, over a smudge of its colour (see drawFrame)
 //   .cal-days    — the grid of dates. A marked day is a red-letter day: its
-//                  numeral is printed in its mark's ink
+//                  numeral is printed in its mark's ink. The 13th is the
+//                  notebook's own, a gold-letter day: foil-stamped (see FOIL)
 //   .cal-key     — the small print at the foot: each marked day and what it is
 //   .cal-strikes — a graphite stroke through each day already crossed off
-//   .cal-hl      — one gold highlighter swipe on the 13th (of course)
 //   .cal-today   — the red pen loop around today, main stroke plus a lighter
 //                  echo pass, like a pen that went around twice
 //
@@ -223,8 +223,8 @@ const MONTH_MARKS = [
     "M12.3 16.2 L7.4 18.6", "M12.4 16.4 L16.8 18.2"] }
 ];
 
-// The smudge under the mark: the same gesture as the gold swipe on the 13th,
-// shrunk to the mark and given its own lopsided edges. Its colour is the
+// The smudge under the mark: a quick pass of highlighter, shrunk to the mark and
+// given its own lopsided edges. Its colour is the
 // season's, which is decoration and not information — the drawing is what says
 // which month it is — so it does not need a colour-blind alternative the way
 // the album-coloured hearts below do.
@@ -543,12 +543,12 @@ function keyLabel(rows) {
 function drawKey(g, entries, regions) {
   const partsOf = (e, first) => [
     ...(first ? [] : [{ s: "  ·  " }]),
-    { s: String(e.d), ink: e.ink },
+    { s: String(e.d), ink: e.ink, foil: e.foil },
     { s: " " + e.label },
   ];
   const line = (parts) => {
     const t = el("text", { "text-anchor": "middle" });
-    for (const p of parts) t.appendChild(el("tspan", p.ink ? { class: "rl", style: `--rl:${p.ink}` } : {}, p.s));
+    for (const p of parts) t.appendChild(el("tspan", p.foil ? { class: "foil" } : p.ink ? { class: "rl", style: `--rl:${p.ink}` } : {}, p.s));
     return t;
   };
   const width = (parts) => { const t = line(parts); g.appendChild(t); const w = t.getComputedTextLength(); t.remove(); return w; };
@@ -595,16 +595,22 @@ function drawKey(g, entries, regions) {
 // weekend red, the year's red and a red-letter day's era ink among them, and a stylesheet rule
 // can only outrank those with !important. Splitting into glyphs happens after the lips are
 // cut, so a lip stays one quiet unbroken copy.
-const LIP = "#fffaee";
+//
+// A foil figure (the 13th, FOIL) is the one exception, and it is the pencil's exception:
+// foil does not bite, it sits ON the stock with its top edge catching the lamp, so its
+// lip is the pale foil a third of a unit ABOVE the stamp (styles.css .pc-imprint-foil is
+// the same pair on the pencil), and foil goes down evenly, so it takes no ink variance.
+const LIP = "#fffaee", FOIL_LIT = "#fbe6ad";
 function pressSheet(texts, seed) {
   for (const t of texts) {
+    const foil = t.classList.contains("foil");
     const lip = t.cloneNode(true);
     lip.classList.add("lip");
     lip.setAttribute("aria-hidden", "true");
-    lip.setAttribute("transform", `${t.getAttribute("transform") || ""} translate(0.3 0.38)`.trim());
-    lip.style.fill = LIP;
-    lip.style.opacity = "0.82";
-    lip.querySelectorAll("tspan").forEach((sp) => { sp.style.fill = LIP; });
+    lip.setAttribute("transform", `${t.getAttribute("transform") || ""} ${foil ? "translate(-0.12 -0.36)" : "translate(0.3 0.38)"}`.trim());
+    lip.style.fill = foil ? FOIL_LIT : LIP;
+    lip.style.opacity = foil ? "0.75" : "0.82";
+    lip.querySelectorAll("tspan").forEach((sp) => { sp.style.fill = foil ? FOIL_LIT : LIP; });
     t.parentNode.insertBefore(lip, t);
   }
   let k = 0;
@@ -616,7 +622,7 @@ function pressSheet(texts, seed) {
   };
   for (const t of texts) {
     // the big title takes the ink evenly; the small figures wander further
-    const floor = t.classList.contains("cal-title") ? 0.9 : 0.84;
+    const floor = t.classList.contains("foil") ? 1 : t.classList.contains("cal-title") ? 0.9 : 0.84;
     for (const node of [...t.childNodes]) {
       if (node.nodeType === 3) t.replaceChild(split(node, floor), node);
       else if (node.tagName === "tspan") node.replaceChildren(split(node, floor));
@@ -634,9 +640,8 @@ export function render(now) {
   const days    = svg.querySelector(".cal-days");
   const key     = svg.querySelector(".cal-key");
   const strikes = svg.querySelector(".cal-strikes");
-  const hl      = svg.querySelector(".cal-hl");
   const today   = svg.querySelector(".cal-today");
-  [week, marks, days, key, strikes, hl, today].forEach(clear);
+  [week, marks, days, key, strikes, today].forEach(clear);
 
   const y = now.getFullYear(), m = now.getMonth(), D = now.getDate();
   const seed = y * 384 + m * 31;
@@ -673,19 +678,17 @@ export function render(now) {
     const r = Math.floor(idx / 7);
     const c = idx % 7, cx = colX(c), cy = rowY(r);
 
-    if (d === 13) {
-      const tilt = (-3.5 + (jit(seed + 99) - 0.5) * 3).toFixed(1);
-      hl.appendChild(el("line", {
-        x1: (cx - 8.4).toFixed(1), y1: (cy + 1).toFixed(1),
-        x2: (cx + 8.4).toFixed(1), y2: (cy - 1.4).toFixed(1),
-        transform: `rotate(${tilt} ${cx} ${cy})`
-      }));
-    }
     const mark = DAY_MARK.get(mdKey(m, d));
     const num = el("text", {
       x: cx, y: (cy + NUM_DY).toFixed(1), "text-anchor": "middle",
       class: (c === 0 || c === 6) ? "wknd" : null
     }, String(d));
+    // A gold-letter day. The marked days are printed in their era's ink; the 13th is the
+    // notebook's own, so the printer set it in gold foil, every month. It used to wear a gold
+    // highlighter swipe in the owner's hand, which read as a smear across the square; this
+    // changes the figure itself and adds nothing round it. On 13 December the foil wins over
+    // the cake's pink, which is the colour of the corner sticky's own "13" candles anyway.
+    if (d === 13) num.classList.add("foil");
     if (mark) {
       drawFrame(marks, mark, cx, cy, colors, seed + d * 7, d < 10);
       inkFoot[r] = Math.max(inkFoot[r], cy + FRAME_FOOT);
@@ -700,7 +703,7 @@ export function render(now) {
         num.classList.add("rl");
         num.style.setProperty("--rl", ink);
       }
-      keyed.push({ d, ink, label: keyLabel(DAY_ROWS.get(mdKey(m, d))) });
+      keyed.push({ d, ink, foil: d === 13, label: keyLabel(DAY_ROWS.get(mdKey(m, d))) });
     }
     days.appendChild(num);
     // Measured AFTER the append, so the figure is in the tree and has a box; an

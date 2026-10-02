@@ -616,19 +616,21 @@
      Saturday wears its era rather than the weekend red. The small print's day numbers are
      the same second ink. */
   .di-calendar .cal-days text.rl, .di-calendar .cal-key .rl { fill: var(--rl); font-weight: 700; }
+  /* The 13th, a gold-letter day: the figure foil-stamped in the pencil imprint's dark gold
+     (calendar.js sets the foil's pale lit edge above it). After .rl, so on 13 December the
+     foil wins over the cake's pink. */
+  .di-calendar .cal-days text.foil, .di-calendar .cal-key .foil { fill: #9c7417; font-weight: 700; }
   /* The small print at the foot of the sheet: printed, so the pad's Courier, at the size
      fine print is on a real eight-centimetre pad. A grey line at 1x, readable up close. */
   .di-calendar .cal-key text { font-size: calc(5.5px + var(--text-size-adjust)); letter-spacing: 0.1px; fill: #7d715a; }
-  /* the writer's marks: graphite strikes through the spent days, a red pen
-     loop (main stroke + a lighter echo pass) around today, and one gold
-     highlighter swipe on the 13th */
+  /* the writer's marks: graphite strikes through the spent days and a red pen
+     loop (main stroke + a lighter echo pass) around today */
   /* no stroke-width or opacity here on purpose: calendar.js varies the pressure of
      every strike per date, and a declaration in this file would win over the
      presentation attribute it sets, flattening twenty-five squares back to one weight */
   .di-calendar .cal-strikes path { fill: none; stroke: #6f675a; stroke-linecap: round; }
   .di-calendar .cal-today path { fill: none; stroke: #b23a3f; stroke-linecap: round; stroke-width: 1.55; opacity: 0.8; }
   .di-calendar .cal-today path.echo { stroke-width: 1.05; opacity: 0.5; }
-  .di-calendar .cal-hl line { stroke: rgba(247, 201, 72, 0.55); stroke-width: 14; stroke-linecap: round; }
   /* The cassette insert. Same split of voices as the desk calendar: the card is
      a manufactured thing, so its header and spec line are printed in the desk's
      Courier; the title, the version note and the album line are written on the
