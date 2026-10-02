@@ -11398,12 +11398,12 @@
   }
   .stp-graph .stp-lab { color: var(--stp-soft); }
   .stp-graph svg { display: block; width: 100%; height: auto; margin-top: 4px; overflow: visible; }
-  .stp-bar { fill: none; stroke: #3f3a33; stroke-width: 1.3; stroke-linejoin: round; stroke-linecap: round; }
-  .stp-hatch { stroke: #3f3a33; stroke-width: .8; opacity: .7; }
-  .stp-hatch.is-you { stroke: var(--stp-red); opacity: .9; }
+  .stp-pencil { fill: #4a4846; }
+  .stp-shade { fill: #6a6764; }
+  .stp-shade .is-you { fill: var(--stp-red); }
   .stp-graph text { text-anchor: middle; }
   .stp-ax { font-family: var(--type); font-size: 9.5px; fill: var(--stp-soft); }
-  .stp-ct { font-family: var(--hand); font-size: 13px; fill: #3f3a33; }
+  .stp-ct { font-family: var(--hand); font-size: 13px; fill: #4a4846; }
   .stp-ct.is-you { fill: var(--stp-red); font-weight: 700; }
 
   /* the nemesis (or the perfects): a sticky note, which needs no tape */

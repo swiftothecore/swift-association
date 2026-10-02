@@ -2377,23 +2377,74 @@ function statsStaffSVG(recent, W) {
 }
 
 /* Every game by score, in pencil: hatched bars on graph paper with the count written over
-   each, the just-played score (from a results screen) hatched in red pen. */
+   each, the just-played score (from a results screen) shaded in red pencil. A stroked SVG line
+   is one weight end to end and gives the game away, so every line here is a filled outline
+   whose width follows a hand's pressure: a soft landing, a fuller middle, a long taper as the
+   pencil lifts, a faint tremor between. The bars keep their tidiness (a corner a hair past, a
+   wall a hair off plumb); the pencil is in the line, and #pencilGrain lays the paper's tooth
+   over it. Seeded off each bar's score and count, so a notebook draws the same chart every
+   visit until a count moves. */
+function pencilCurve(r, x1, y1, x2, y2, over = 0, bow = 0) {
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+  const o1 = (r() - .35) * over, o2 = (r() - .35) * over;   // mostly a hair past, now and then short
+  const ax = x1 - ux * o1, ay = y1 - uy * o1, bx = x2 + ux * o2, by = y2 + uy * o2;
+  const b = (r() - .5) * 2 * bow * Math.min(1, len / 30), t = .35 + r() * .3;
+  return { ax, ay, bx, by, cx: ax + (bx - ax) * t - uy * b, cy: ay + (by - ay) * t + ux * b };
+}
+function pencilStroke(r, c, w) {
+  const fx = (n) => n.toFixed(2), ease = (a, b, t) => { const u = Math.max(0, Math.min(1, (t - a) / (b - a))); return u * u * (3 - 2 * u); };
+  const len = Math.hypot(c.bx - c.ax, c.by - c.ay), n = Math.max(5, Math.ceil(len / 2.2));
+  const p1 = r() * 6.3, p2 = r() * 6.3, f1 = Math.max(.6, len / 22), f2 = Math.max(1.2, len / 8), press = .9 + r() * .2;
+  const P = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, u = 1 - t;
+    P.push([u * u * c.ax + 2 * u * t * c.cx + t * t * c.bx, u * u * c.ay + 2 * u * t * c.cy + t * t * c.by, t]);
+  }
+  const L = [], R = [];
+  P.forEach(([x, y, t], i) => {
+    const a = P[Math.max(0, i - 1)], b = P[Math.min(n, i + 1)], tl = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const nx = -(b[1] - a[1]) / tl, ny = (b[0] - a[0]) / tl;
+    const wob = .2 * (Math.sin(t * f1 * 6.283 + p1) * .65 + Math.sin(t * f2 * 6.283 + p2) * .35);
+    const hw = w * press * (.75 + .25 * ease(0, .14, t)) * (1 - .55 * ease(.7, 1, t)) * (1 + .12 * Math.sin(t * f2 * 9.1 + p2 * 2)) / 2;
+    L.push([x + nx * (wob + hw), y + ny * (wob + hw)]); R.push([x + nx * (wob - hw), y + ny * (wob - hw)]);
+  });
+  // round each end off past its last point, by about the line's own width there
+  const cap = (q, k, s) => { const tx = P[q][0] - P[q - s][0], ty = P[q][1] - P[q - s][1], tl = Math.hypot(tx, ty) || 1, d = Math.hypot(L[q][0] - R[q][0], L[q][1] - R[q][1]) * .7;
+    return `Q${fx(P[q][0] + tx / tl * d)} ${fx(P[q][1] + ty / tl * d)} ${fx(k[0])} ${fx(k[1])}`; };
+  const pts = (A) => A.map((q) => fx(q[0]) + " " + fx(q[1])).join(" L");
+  return `M${pts(L)} ${cap(n, R[n], 1)} L${pts(R.slice(0, n).reverse())} ${cap(0, L[0], -1)}Z`;
+}
 function statsGraphSVG(counts, youScore, W) {
   const H = 122, base = 98, max = Math.max(...counts, 1), bw = (W - 16) / 14;
-  let out = "";
+  let lines = "", shade = "", text = "";
   counts.forEach((c, s) => {
     const h = (c / max) * 74, x = 8 + s * bw + 2.5, w = bw - 5, r = mulberry32(s * 31 + c + 1), you = s === youScore && c > 0;
     if (c) {
-      const j = () => (r() - .5) * 1.2;
-      out += `<path class="stp-bar" d="M${(x + j()).toFixed(1)} ${base} L${(x + j()).toFixed(1)} ${(base - h).toFixed(1)} L${(x + w + j()).toFixed(1)} ${(base - h + j()).toFixed(1)} L${(x + w + j()).toFixed(1)} ${base}"/>`;
-      for (let hy = base - 4; hy > base - h + 2.5; hy -= 5) out += `<line class="stp-hatch${you ? " is-you" : ""}" x1="${(x + 1.5).toFixed(1)}" y1="${hy.toFixed(1)}" x2="${(x + w - 1.5).toFixed(1)}" y2="${(hy - 3.5).toFixed(1)}"/>`;
-      out += `<text class="stp-ct${you ? " is-you" : ""}" x="${(x + w / 2).toFixed(1)}" y="${(base - h - 4).toFixed(1)}">${c}</text>`;
+      const k = Math.min(1, h / 14);   // a stub of a bar gets a steadier hand
+      const lean = (r() - .5) * 1.4 * k, tl = base - h + lean, tr = base - h - lean;
+      const xlb = x + (r() - .5) * .6, xrb = x + w + (r() - .5) * .6;
+      const xlt = xlb + (r() - .5) * 1.2 * k, xrt = xrb + (r() - .5) * 1.2 * k;
+      const wallL = (y) => xlb + (xlt - xlb) * (base - y) / Math.max(1, base - tl);
+      const wallR = (y) => xrb + (xrt - xrb) * (base - y) / Math.max(1, base - tr);
+      // up the left, across the lid, down the right, as a hand draws a bar
+      for (const cv of [pencilCurve(r, xlb, base + .5, xlt, tl, 1.8 * k, .55), pencilCurve(r, xlt, tl, xrt, tr, 1.8 * (.6 + .4 * k), .55), pencilCurve(r, xrt, tr, xrb, base + .5, 1.8 * k, .55)])
+        lines += `<path d="${pencilStroke(r, cv, 1.35)}"/>`;
+      const top = Math.max(tl, tr) + 2.6;
+      for (let hy = base - 3.5 - r() * 1.2; hy > top + 2; hy -= 5 + (r() - .5) * 1.8) {
+        const lift = Math.min(3.5 + (r() - .5) * 1.6, hy - top);   // never through the lid
+        const x1 = wallL(hy) + 1.2 + (r() - .3) * 1.5, x2 = wallR(hy - lift) - 1.2 - (r() - .3) * 1.5;
+        shade += `<path${you ? ` class="is-you"` : ""} d="${pencilStroke(r, pencilCurve(r, x1, hy, x2, hy - lift, 0, .45), .85)}"/>`;
+      }
+      text += `<text class="stp-ct${you ? " is-you" : ""}" x="${((xlt + xrt) / 2 + (r() - .5) * 1.2).toFixed(1)}" y="${(Math.min(tl, tr) - 4).toFixed(1)}">${c}</text>`;
     }
-    out += `<text class="stp-ax" x="${(x + w / 2).toFixed(1)}" y="${base + 13}">${s}</text>`;
+    text += `<text class="stp-ax" x="${(x + w / 2).toFixed(1)}" y="${base + 13}">${s}</text>`;
   });
-  out += `<path class="stp-bar" d="M4 ${base} C${(W / 3).toFixed(0)} ${base + .8} ${(W * .66).toFixed(0)} ${base - .6} ${W - 4} ${base + .4}"/>`;
-  if (youScore != null && counts[youScore]) out += `<text class="stp-ct is-you" x="${(8 + youScore * bw + bw / 2).toFixed(1)}" y="${base + 24}">this game</text>`;
-  return `<svg viewBox="0 0 ${W} ${H + (youScore != null ? 4 : 0)}" aria-hidden="true">${out}</svg>`;
+  // the axis in two pulls of the pencil, overlapping where the hand moved along
+  const rb = mulberry32(counts.length * 7 + max), mid = W * (.45 + rb() * .1);
+  lines += `<path d="${pencilStroke(rb, pencilCurve(rb, 3, base + .4, mid + 6, base - .1, 0, .5), 1.35)}"/><path d="${pencilStroke(rb, pencilCurve(rb, mid - 5, base + .3, W - 3, base + .5, 0, .5), 1.35)}"/>`;
+  if (youScore != null && counts[youScore]) text += `<text class="stp-ct is-you" x="${(8 + youScore * bw + bw / 2).toFixed(1)}" y="${base + 24}">this game</text>`;
+  return `<svg viewBox="0 0 ${W} ${H + (youScore != null ? 4 : 0)}" aria-hidden="true">` +
+    `<g class="stp-shade" filter="url(#pencilGrain)">${shade}</g><g class="stp-pencil" filter="url(#pencilGrain)">${lines}</g>${text}</svg>`;
 }
 
 // The pieces every view shares: ticket, the gist, the stave, the graph and a sticky note.
