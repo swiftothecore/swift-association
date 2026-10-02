@@ -10224,10 +10224,52 @@
     to { clip-path: inset(-4px -4px -4px 0); }
   }
 
-  /* Lyric cards — shared base */
+  /* Lyric cards — shared base.
+     The album's bar down the left is a bookmark ribbon: both ends cut in a shallow V with the
+     corners rounded and the peak softened. It is a masked ::before rather than a border so the
+     ends can be cut at all. The two caps are fixed 3x2 masks and only the gradient between them
+     stretches, so the notch is the same 1.1px on a two-line card and a ten-line one. The middle
+     overlaps each cap by half a pixel (still clear of the notch): butted exactly, the two layers
+     leave an anti-aliased seam you can see at 2x. Design board: scripts/ui/first-find-ribbon.html. */
   .lyric-card {
-    border-left: 3px solid var(--album-color, var(--ink-soft));
-    padding: 2px 0 2px 14px; margin-bottom: 14px;
+    --ribbon-top: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3Cpath d='M0,0.32 Q0,0 0.32,0.07 L1.23,1.01 Q1.5,1.1 1.77,1.01 L2.68,0.07 Q3,0 3,0.32 L3,2 L0,2 Z'/%3E%3C/svg%3E");
+    --ribbon-end: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3Cpath d='M0,0 L3,0 L3,1.68 Q3,2 2.68,1.93 L1.77,0.99 Q1.5,0.9 1.23,0.99 L0.32,1.93 Q0,2 0,1.68 Z'/%3E%3C/svg%3E");
+    position: relative;
+    padding: 2px 0 2px 17px; margin-bottom: 14px;
+  }
+  .lyric-card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--album-color, var(--ink-soft));
+    -webkit-mask: var(--ribbon-top) 0 0 / 3px 2px no-repeat, var(--ribbon-end) 0 100% / 3px 2px no-repeat,
+      linear-gradient(#000 0 0) 0 1.5px / 3px calc(100% - 3px) no-repeat;
+    mask: var(--ribbon-top) 0 0 / 3px 2px no-repeat, var(--ribbon-end) 0 100% / 3px 2px no-repeat,
+      linear-gradient(#000 0 0) 0 1.5px / 3px calc(100% - 3px) no-repeat;
+  }
+  /* A song named for the first time ever (see isFirstFind): the ribbon is left hanging out of
+     the book. The bar stops square 3px short of the card's foot and a tail carries on past it,
+     a few degrees off true, swinging into place as the card lands. The top is untouched, so
+     the only news is at the bottom, where the eye finishes reading the card. */
+  .lyric-card.first-find::before {
+    bottom: 3px;
+    -webkit-mask: var(--ribbon-top) 0 0 / 3px 2px no-repeat, linear-gradient(#000 0 0) 0 1.5px / 3px calc(100% - 1.5px) no-repeat;
+    mask: var(--ribbon-top) 0 0 / 3px 2px no-repeat, linear-gradient(#000 0 0) 0 1.5px / 3px calc(100% - 1.5px) no-repeat;
+  }
+  .lyric-card.first-find::after {
+    content: ""; position: absolute; left: 0; top: calc(100% - 4.5px); width: 3px; height: 13.5px;
+    background: var(--album-color, var(--ink-soft));
+    -webkit-mask: var(--ribbon-end) 0 100% / 3px 2px no-repeat, linear-gradient(#000 0 0) 0 0 / 3px calc(100% - 1.5px) no-repeat;
+    mask: var(--ribbon-end) 0 100% / 3px 2px no-repeat, linear-gradient(#000 0 0) 0 0 / 3px calc(100% - 1.5px) no-repeat;
+    transform-origin: 1.5px 0.5px; rotate: 7deg;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .lyric-card.first-find::after { animation: ribbonSwing 0.95s ease-in-out 0.3s both; }
+  }
+  /* Let go straight, it swings past where it will lie and comes back to rest. */
+  @keyframes ribbonSwing {
+    0% { rotate: 0deg; }
+    50% { rotate: 9.5deg; }
+    78% { rotate: 6deg; }
+    100% { rotate: 7deg; }
   }
   .lyric-card .song-title {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1px;

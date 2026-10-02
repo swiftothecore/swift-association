@@ -25220,8 +25220,24 @@ function standaloneLyricContext(song, word, anchorLine) {
       `<div class="lyric-ctx-lines">${rows}</div>${fullLyricsButton(entry)}</div></div>`;
 }
 
+/* A first find: the song this page is credited with, never recorded in the lifetime tally and
+   not already named earlier in this run. Its card's ribbon is left hanging out of the book
+   (.lyric-card.first-find). Only the credited song can qualify, because it is the only one the
+   tally will write: a Name Three page names several but folds one. And only on game types that
+   fold the catalogue at all, or a custom or guest run would mark the same song "first" every
+   time it was played, since nothing there is ever remembered. */
+let devFirstFind = false;       // dev: every correct card wears the first-find ribbon
+function isFirstFind(song) {
+  if (!song) return false;
+  if (devFirstFind) return true;
+  if (!foldsCatalogue() || roundSongs[round - 1] !== song.title) return false;
+  if (roundSongs.slice(0, round - 1).includes(song.title)) return false;
+  return !loadSongTally().songs[song.title];
+}
+
 // `wave` draws the song under its title with the word's lines lit (see waveVerdictActive).
-function lyricCard(song, word, isWrong, lineOverride, context, wave = false) {
+// `first` hangs the ribbon out for a first find (see isFirstFind).
+function lyricCard(song, word, isWrong, lineOverride, context, wave = false, first = false) {
   const color = albumColor(song.album) || "var(--ink-soft)";
   const proofTitle = titleProofActive();
   const title = proofTitle
@@ -25230,7 +25246,7 @@ function lyricCard(song, word, isWrong, lineOverride, context, wave = false) {
   const proof = proofTitle
     ? `<div class="lyric-title-proof"><span aria-hidden="true">↳</span> the word is in the title</div>`
     : registerLyricReveal(song, word, lyricCardLine(song, word, lineOverride), { context });
-  const cls = isWrong ? " wrong-card" : "";
+  const cls = isWrong ? " wrong-card" : first ? " first-find" : "";
   const headingId = nextLyricRevealId("title");
   return `<article class="lyric-card${cls}${proofTitle ? " title-proof" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
     `<div class="song-title" id="${headingId}">${title}${albumTag(song, color)}</div>` +
@@ -25245,7 +25261,7 @@ function bothProofCard(song, isWrong) {
   const headingId = nextLyricRevealId("title");
   const lines = bothWords.map((word) =>
     registerLyricReveal(song, word, lyricCardLine(song, word, null), { context: true })).join("");
-  return `<article class="lyric-card both-proof${isWrong ? " wrong-card" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
+  return `<article class="lyric-card both-proof${isWrong ? " wrong-card" : isFirstFind(song) ? " first-find" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
     `<div class="song-title" id="${headingId}">${escapeHtml(censor(song.title))}${albumTag(song, color)}</div>` +
     `${lines}</article>`;
 }
@@ -25494,12 +25510,13 @@ function showCorrectFeedback(song, lyricMatch) {
       ` · ${Math.max(0, inkTarget() - gameInk)} still to write</p>`
     : "";
   const card = multi
-    ? roundNamed.map((t) => lyricCard(currentSongs.find((s) => s.title === t) || song, currentWord, false, null, true)).join("")
+    ? roundNamed.map((t) => {
+      const named = currentSongs.find((s) => s.title === t) || song;
+      return lyricCard(named, currentWord, false, null, true, false, isFirstFind(named));
+    }).join("")
     : both
       ? bothProofCard(song, false)
-    : lyricMatch
-      ? lyricCard(song, currentWord, false, lyricMatch.line, true)
-      : lyricCard(song, currentWord, false, null, true);
+    : lyricCard(song, currentWord, false, lyricMatch ? lyricMatch.line : null, true, false, isFirstFind(song));
   // The first time a word FORM is what earned the page ("pray" credited on "praying"), name the
   // rule — the card above is already showing the highlighted variant, so it lands with the
   // evidence in view. Once, then silent. Skipped when the verse note is already talking.
@@ -30593,6 +30610,24 @@ function buildDevApi() {
         near: wordProximity(s, currentWord),          // 0 the word, 1 a variant, 2 neither
         studio: STUDIO_ALBUMS.includes(s.album),
       })),
+      /* The first-find ribbon. A real one needs a song the tally has never seen, which a
+         well-played notebook runs out of, so `force` hangs it on every correct card. `state`
+         says whether the page just answered was a real first find, and why not when it isn't. */
+      firstFind: {
+        force: (on = !devFirstFind) => { devFirstFind = !!on; return devFirstFind; },
+        state: () => {
+          const title = roundSongs[round - 1] || null;
+          const found = title ? (loadSongTally().songs[title] || 0) : 0;
+          return {
+            forced: devFirstFind, title,
+            first: !!title && !devFirstFind && isFirstFind({ title }),
+            why: !title ? "no credited song on this page"
+              : !foldsCatalogue() ? `${gameType} never folds the catalogue`
+              : roundSongs.slice(0, round - 1).includes(title) ? "already named earlier this run"
+              : found ? `in the tally ×${found}` : "first find",
+          };
+        },
+      },
     },
     catalogue: {
       recipes: () => CATALOGUE_RECIPES.map((r) => ({

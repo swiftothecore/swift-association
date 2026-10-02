@@ -346,9 +346,22 @@ export function initDev(api) {
           ? `${s.rendered}/${s.extra} extras loaded · batch ${s.batch} · ${s.remaining} remaining`
           : `no expansion${s.refusedBy ? ` · ${s.refusedBy}` : ""}`);
   };
+  // The first-find ribbon hangs out of the card of a song named for the first time ever. Forcing
+  // it puts it on every correct card from the next page on; "first find?" reads the page just
+  // answered and says why it did or didn't qualify.
+  const ffOut = mk("span", { class: "dv-note" }, "—");
+  const ffBtn = btn(`force first find: ${api.reveal.firstFind.state().forced ? "on" : "off"}`, () => {
+    const on = api.reveal.firstFind.force();
+    ffBtn.textContent = `force first find: ${on ? "on" : "off"}`;
+    ffBtn.classList.toggle("on", on);
+  });
   body.append(section("answer reveal",
     row(btn("widest page", () => { api.reveal.widest(); readReveal(); }),
-        btn("read", readReveal), revOut)));
+        btn("read", readReveal), revOut),
+    row(ffBtn, btn("first find?", () => {
+      const s = api.reveal.firstFind.state();
+      ffOut.textContent = s.title ? `${s.title}: ${s.why}` : s.why;
+    }), ffOut)));
 
   // ---- Typed answers ---------------------------------------------------------
   // The typo allowance is a fairness lever on the modes that make you type the whole
