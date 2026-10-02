@@ -31,7 +31,9 @@
 // day the tape is labelled a re-recording, because on that day which pressing
 // it is IS knowable. The anniversary track skips the length cut below: the day
 // names the song, so it is written and fitLine shrinks it as far as it can.
-// Release day itself (age 0) has no track to name and keeps the ordinary draw.
+// Release day itself (age 0) has no track to name, so the tape is labelled
+// with the record's own name and "out today", and a release outranks any
+// birthday sharing its date (1989 TV came out on 1989's ninth).
 //
 // The markup starts blank and CSS keeps the mutable ink hidden while the pool
 // is measured. write() reveals both finished lines together, so the player
@@ -104,9 +106,11 @@ function anniversaryTrack(dateKey) {
   const md = dateKey.slice(5), year = +dateKey.slice(0, 4);
   // Originals sort ahead of re-recordings, so a shared day goes to the older record.
   const hit = TS_MILESTONES
-    .filter((m) => m.md === md && (m.kind === "album" || m.kind === "tv") && STUDIO.has(m.album) && year > m.year)
-    .sort((a, b) => (a.kind === "tv") - (b.kind === "tv"))[0];
+    .filter((m) => m.md === md && (m.kind === "album" || m.kind === "tv") && STUDIO.has(m.album) && year >= m.year)
+    .sort((a, b) => (b.year === year) - (a.year === year) || (a.kind === "tv") - (b.kind === "tv"))[0];
   if (!hit) return null;
+  if (hit.year === year)
+    return { song: { title: hit.album, album: hit.album, release: true }, tv: hit.kind === "tv", anniversary: 0 };
   const list = byAlbum.get(hit.album);
   if (!list || !list.length) return null;
   const length = Math.min(ALBUM_TRACKS[hit.album] || list.length, list.length);
@@ -175,7 +179,7 @@ function write(song, tv) {
     sub.textContent = "(Taylor\u2019s Version)";
     titleEl.appendChild(sub);
   }
-  noteEl.textContent = `${song.album} \u00b7 track ${song.track}`;
+  noteEl.textContent = song.release ? "out today" : `${song.album} \u00b7 track ${song.track}`;
   const span = visibleSpan();
   fitLine(titleEl, "--cs-title-size", TITLE_BASE, ["--cs-sub-size", SUB_BASE], span);
   fitLine(noteEl, "--cs-note-size", NOTE_BASE, null, span);
