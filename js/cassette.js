@@ -21,6 +21,18 @@
 // dubbed, and this desk has both: HOUSE_TV_SHARE of the days it comes up it is
 // the 1989 (Taylor's Version) copy, the rest of the time the original.
 //
+// ANNIVERSARY DAYS OVERRIDE ALL OF THAT. On the day a studio album (or one of
+// its Taylor's Versions) turns N, the tape is that album's Nth track: Midnights
+// turning 4 dubs Snow On The Beach. The count runs against ALBUM_TRACKS, the
+// same pressing every track-number surface in the game counts against, and
+// wraps back to track one once the age runs past the record. When an original
+// and its re-recording share a day (Oct 27, 1989 and 1989 TV) the original
+// wins, being the older birthday. A Taylor's Version birthday is the one other
+// day the tape is labelled a re-recording, because on that day which pressing
+// it is IS knowable. The anniversary track skips the length cut below: the day
+// names the song, so it is written and fitLine shrinks it as far as it can.
+// Release day itself (age 0) has no track to name and keeps the ordinary draw.
+//
 // The markup starts blank and CSS keeps the mutable ink hidden while the pool
 // is measured. write() reveals both finished lines together, so the player
 // never sees a fallback or measurement title before the seeded one.
@@ -37,7 +49,7 @@
 // Purely decorative, like every desk prop: if the markup isn't there — narrow
 // screens, quiet desk density — every entry point here does nothing.
 
-import { STUDIO_ALBUMS } from "./config.js";
+import { STUDIO_ALBUMS, ALBUM_TRACKS, TS_MILESTONES } from "./config.js";
 import { mulberry32, dailySeed } from "./util.js";
 
 const svg = document.querySelector(".di-cassette svg");
@@ -67,6 +79,7 @@ const SAFE_CHARS = 22;
 let pool = [];              // every song the draw can reach, in songs.json order
 let house = null;           // the Clean entry, drawn separately so it can't double up
 let cut = [];               // what the card was too small to hold, kept for the dev panel
+let byAlbum = new Map();    // every studio song by album, in running order, for anniversary days
 
 /* ---------- the draw ---------- */
 
@@ -75,12 +88,31 @@ let cut = [];               // what the card was too small to hold, kept for the
 // other seeded thing on the page, so the daily challenge and the cassette never
 // move together.
 function drawFor(dateKey) {
+  const birthday = anniversaryTrack(dateKey);
+  if (birthday) return birthday;
   const rng = mulberry32(dailySeed("cassette:" + dateKey));
   if (!pool.length || (house && rng() < CLEAN_SHARE))
     return { song: house, tv: !!house && rng() < HOUSE_TV_SHARE };
   // Only the house tape is ever labelled a re-recording, so every other draw is
   // written plain and the version coin is never tossed.
   return { song: pool[Math.floor(rng() * pool.length)] || house, tv: false };
+}
+
+// The track an album's age names on its release day, or null on any other day.
+function anniversaryTrack(dateKey) {
+  if (!dateKey || dateKey.length < 10) return null;
+  const md = dateKey.slice(5), year = +dateKey.slice(0, 4);
+  // Originals sort ahead of re-recordings, so a shared day goes to the older record.
+  const hit = TS_MILESTONES
+    .filter((m) => m.md === md && (m.kind === "album" || m.kind === "tv") && STUDIO.has(m.album) && year > m.year)
+    .sort((a, b) => (a.kind === "tv") - (b.kind === "tv"))[0];
+  if (!hit) return null;
+  const list = byAlbum.get(hit.album);
+  if (!list || !list.length) return null;
+  const length = Math.min(ALBUM_TRACKS[hit.album] || list.length, list.length);
+  const age = year - hit.year;
+  const song = list[(age - 1) % length];
+  return song ? { song, tv: hit.kind === "tv", anniversary: age } : null;
 }
 
 // The song alone, for the dev panel and console poking.
@@ -217,6 +249,12 @@ export const refresh = () => render(currentKey());
 // run, so this is deliberately not re-pointed when the corpus swaps.
 export function install(songs) {
   if (!svg || !Array.isArray(songs)) return;
+  byAlbum = new Map();
+  for (const s of songs) {
+    if (!STUDIO.has(s.album)) continue;
+    if (!byAlbum.has(s.album)) byAlbum.set(s.album, []);
+    byAlbum.get(s.album).push(s);
+  }
   pool = songs.filter((s) => STUDIO.has(s.album) &&
     !(s.album === HOUSE_TAPE.album && s.title === HOUSE_TAPE.title));
   house = songs.find((s) => s.album === HOUSE_TAPE.album && s.title === HOUSE_TAPE.title) || null;
