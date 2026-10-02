@@ -11213,7 +11213,9 @@
      pieces pair up and the ticket, the gist and the sticky note come first.
 
      THE TAPE IS THE HOME SCREEN'S: .stp-tape is on the shared washi rule (surface, night
-     treatment, tears), and this block only sizes it and tints it with the stats card's denim.
+     treatment, tears), and this block only sizes it. It wears the rule's own kraft default:
+     the stats card's denim on every strip read as a theme rather than a desk, and on a page
+     this full of coloured objects the tape should be the quiet thing.
 
      The paper objects are fixed stock (a ticket is buff by day and by night), so they write in
      fixed ink rather than var(--ink), and at night they are taken down a stop with one
@@ -11222,7 +11224,6 @@
      each dimmed object, never inside it, because no filter may reach a strip. */
   .stp {
     --stp-pen: #2b2722; --stp-soft: #6f675a; --stp-red: #a8322e; --stp-green: #2f6340;
-    --tape-color: rgb(91, 135, 184);
     display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px 18px; align-items: start;
     margin-top: 6px;
   }
