@@ -395,23 +395,32 @@ const FRAMES = {
 // The heart, drawn fresh for every day it marks. Six points place it: the cleft, the crown of
 // each lobe, the widest reach of each lobe and the point, and each is nudged by its own seeded
 // amount, so the two lobes are never a mirror of each other and no two hearts on a sheet are
-// the same heart. The pen starts at the cleft, goes round the left lobe, down to the point,
-// up the right side and home, finishing a hair past where it began, the way a hand closes a
-// heart. Starting at the cleft is what keeps the point clean: it is one turn of the pen, a V
-// of about eighty degrees with the sides bowing out as they come into it, and nothing
-// crossing or hooking there. (An earlier heart began and ended AT the point, and the stub and
-// the overshoot both landed under it as a little tail.)
+// the same heart. On top of the points the whole heart is stretched a little wider or taller
+// and leant, so the difference shows at 1x and not only up close: some hearts come out
+// plump, some long, some with one lobe riding higher, some with the point pulled off centre.
+// The ranges stop where the heart would stop holding its date: a squashed lobe has to clear
+// a two-digit figure (6.6 either side of centre, 3.2 above and below) by a pen's breadth.
+//
+// The pen starts at the cleft, goes round the left lobe, down to the point, up the right
+// side and home, finishing a hair past where it began, the way a hand closes a heart.
+// Starting at the cleft is what keeps the point clean: it is one turn of the pen, a V of
+// about eighty degrees with the sides bowing out as they come into it, and nothing crossing
+// or hooking there. (An earlier heart began and ended AT the point, and the stub and the
+// overshoot both landed under it as a little tail.)
 function heartPath(seed) {
   const j = (k, a) => (jit(seed + k * 7.3) - 0.5) * 2 * a;
-  const C  = [0.2 + j(1, 0.5), -6.2 + j(2, 0.6)];     // the cleft
-  const T1 = [-5.7 + j(3, 0.6), -9.7 + j(4, 0.5)];    // left lobe's crown
-  const L  = [-10.9 + j(5, 0.5), -3.2 + j(6, 0.7)];   // left lobe at its widest
-  const B  = [0.3 + j(7, 0.7), 10.3 + j(8, 0.5)];     // the point
-  const R  = [10.9 + j(9, 0.5), -3 + j(10, 0.7)];     // right lobe at its widest
-  const T2 = [5.5 + j(11, 0.6), -9.8 + j(12, 0.5)];   // right lobe's crown
-  const pt = (q, dx = 0, dy = 0) => `${(q[0] + dx).toFixed(2)} ${(q[1] + dy).toFixed(2)}`;
+  const sx = 1 + j(15, 0.07), sy = 1 + j(16, 0.07);
+  // one lobe rides higher than the other by up to a unit and a half, in either direction
+  const lean = j(17, 0.75);
+  const C  = [0.2 + j(1, 0.9), -6.1 + j(2, 0.9)];             // the cleft
+  const T1 = [-5.7 + j(3, 1), -9.6 + j(4, 0.6) - lean];       // left lobe's crown
+  const L  = [-10.9 + j(5, 0.6), -3.2 + j(6, 1.1) - lean];    // left lobe at its widest
+  const B  = [0.3 + j(7, 1.5), 10.3 + j(8, 0.8)];             // the point
+  const R  = [10.9 + j(9, 0.6), -3 + j(10, 1.1) + lean];      // right lobe at its widest
+  const T2 = [5.5 + j(11, 1), -9.7 + j(12, 0.6) + lean];      // right lobe's crown
+  const pt = (q, dx = 0, dy = 0) => `${((q[0] + dx) * sx).toFixed(2)} ${((q[1] + dy) * sy).toFixed(2)}`;
   // how hard each side bows into the point, so one side can come in fuller than the other
-  const bl = 4.3 + j(13, 0.5), br = 4.1 + j(14, 0.5);
+  const bl = 4.3 + j(13, 0.9), br = 4.1 + j(14, 0.9);
   return `M${pt(C)} C${pt(C, -0.6, -2.3)} ${pt(T1, 2.7)} ${pt(T1)} C${pt(T1, -3.3)} ${pt(L, 0, -3.5)} ${pt(L)} ` +
     `C${pt(L, 0, 5.2)} ${pt(B, -bl, -5)} ${pt(B)} C${pt(B, br, -5.2)} ${pt(R, 0, 5.2)} ${pt(R)} ` +
     `C${pt(R, 0, -3.5)} ${pt(T2, 3.3)} ${pt(T2)} C${pt(T2, -2.7)} ${pt(C, 0.7, -2.3)} ${pt(C, 0.3, 0.4)}`;
