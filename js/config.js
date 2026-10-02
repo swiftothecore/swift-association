@@ -2553,6 +2553,15 @@ export const TS_MILESTONES = [
   // differs from the two above. Its line says where it sits: the last track on reputation.
   { md: "01-01", kind: "songday", title: "New Year's Day",  album: "reputation", day: "New Year's Day",
     line: "the last song on reputation", caption: "happy new year" },
+  // Christmas is not a date a song names, so these two stretch the songday shape rather than
+  // fit it: the headline is the fans' own word for the day and the line is the Taylor fact that
+  // earns it. The Eve leans on 'tis the damn season, evermore's coming-home-for-the-holidays
+  // song, and wears evermore's ink. The day itself is the farm she grew up on, inked in the
+  // debut era's colour because her Holiday Collection came out in that era (2007).
+  { md: "12-24", kind: "songday", title: "Merry Swiftmas Eve", album: "evermore", day: "Merry Swiftmas Eve",
+    line: "'tis the damn season, on evermore", caption: "swiftmas eve" },
+  { md: "12-25", kind: "songday", title: "Merry Swiftmas", album: "Taylor Swift", day: "Merry Swiftmas",
+    line: "she grew up on a Christmas tree farm", caption: "merry swiftmas" },
 ];
 
 // The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
