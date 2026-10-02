@@ -2167,6 +2167,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   // Infinite is its own game type, with its own ticket and strands, not the 0–13 distribution.
   if (isInf) {
     el.innerHTML = tabs + infiniteTabHTML();
+    alignStatsTicket(el);
     el.querySelectorAll("[data-statmode]").forEach((b) =>
       b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
     return;
@@ -2176,6 +2177,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   // (the catalogue, the quick numbers, the daily) are All only, as they always were.
   const s = isAll ? aggregateStats() : loadStats(viewMode);
   el.innerHTML = tabs + statsBoardHTML(s, viewMode, isAll, lastScore);
+  alignStatsTicket(el);
   el.querySelectorAll("[data-statmode]").forEach((b) =>
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
   el.querySelectorAll("[data-open-songbook]").forEach((b) =>
@@ -2262,12 +2264,55 @@ function statsInnerWidth() {
 const pad3 = (n) => (n < 1000 ? String(n).padStart(3, "0") : String(n));
 const fmtN = (n) => n.toLocaleString("en-GB");
 
-function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip }) {
+// The day a best was first set: the earliest dated record at that score across the given
+// record tokens (a mode, every mode for All, or one infinite combo). Each mode keeps its top
+// five, so a score reached more than five times may have dropped its first date; the
+// migrated "best so far" seed has none at all, and then the ticket prints no date.
+function statsBestSetDate(tokens, best) {
+  let first = null;
+  for (const t of tokens) for (const r of loadRecords(t)) {
+    if (r.score !== best || !r.date) continue;
+    const d = r.date.slice(0, 10);
+    if (!first || d < first) first = d;
+  }
+  return first;
+}
+const STATS_MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip, set }) {
+  let date = "";
+  if (set) {
+    const [y, m, d] = set.split("-");
+    date = `<div class="stp-ticket-date"><span class="m">${STATS_MONTHS[+m - 1]}</span><span class="n">${+d}</span><span class="y">${y}</span></div>`;
+    if (tip) tip += `, set ${+d} ${STATS_MONTHS[+m - 1].charAt(0) + STATS_MONTHS[+m - 1].slice(1).toLowerCase()} ${y}`;
+  }
   return `<div class="stp-item stp-w4 stp-o0" style="--r:-1.2deg">${statsTape("ticket")}` +
-    `<div class="stp-ticket"${tip ? ` role="img" aria-label="${tip}"` : ""}><div class="stp-ticket-main">` +
+    `<div class="stp-ticket-lift"><div class="stp-ticket"${tip ? ` role="img" aria-label="${tip}"` : ""}>` +
+    `<div class="stp-ticket-main"><span class="stp-ticket-frame" aria-hidden="true"></span><div class="stp-ticket-copy">` +
     `<div class="stp-adm">ADMIT ONE${kicker ? ` · ${kicker}` : ""}</div>` +
-    `<div class="stp-ticket-big"><b>${value}</b><span>${unit}</span></div><div class="stp-ticket-line">${line}</div></div>` +
-    `<div class="stp-ticket-stub"><span class="stp-stub-no">NO.</span><b>${serial}</b><span>${serialLabel}</span></div></div></div>`;
+    `<div class="stp-ticket-big"><b>${value}</b><span>${unit}</span></div><div class="stp-ticket-line">${line}</div></div>${date}</div>` +
+    `<div class="stp-ticket-stub"><span class="stp-ticket-frame" aria-hidden="true"></span><span class="stp-stub-no">NO.</span>` +
+    `<b style="--digits:${String(serial).length}">${serial}</b><span>${serialLabel}</span></div></div></div></div>`;
+}
+// Caveat's digits start well right of their advance, so the ticket's numeral is pulled back
+// onto the typed edge by its measured ink, and the date's numeral centred the same way
+// (centreDayNumerals does this for the daily ticket). CSS holds a median until it runs.
+async function alignStatsTicket(root) {
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const cx = document.createElement("canvas").getContext("2d");
+  const measure = (el) => {
+    const cs = getComputedStyle(el);
+    cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const m = cx.measureText(el.textContent.trim());
+    return "actualBoundingBoxLeft" in m ? m : null;
+  };
+  root.querySelectorAll(".stp-ticket-big b").forEach((el) => {
+    const m = measure(el);
+    if (m) el.style.setProperty("--n-nudge", m.actualBoundingBoxLeft.toFixed(2) + "px");
+  });
+  root.querySelectorAll(".stp-ticket-date .n").forEach((el) => {
+    const m = measure(el);
+    if (m) el.style.setProperty("--d-nudge", (m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2).toFixed(2) + "px");
+  });
 }
 
 /* The last twelve as notes on a stave: a line or a space per score, 1 on the low ledger, 11
@@ -2327,9 +2372,10 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   const out = [];
   out.push(statsTicketHTML({
     kicker: "BEST SCORE", value: s.best, unit: `/${TOTAL_ROUNDS}`,
-    line: perfect ? `${perfect} perfect ${perfect === 1 ? "page" : "pages"}` : s.best >= 11 ? "so close to perfect" : "still climbing",
+    line: perfect ? `${perfect} perfect ${perfect === 1 ? "game" : "games"}` : s.best >= 11 ? "so close to perfect" : "still climbing",
     serial: pad3(s.played), serialLabel: `${s.played === 1 ? "GAME" : "GAMES"}<br>PLAYED`,
     tip: `Best score ${s.best} of ${TOTAL_ROUNDS}, ${s.played} games played`,
+    set: s.best > 0 ? statsBestSetDate(isAll ? MODE_ORDER : [viewMode], s.best) : null,
   }));
   out.push(`<div class="stp-item stp-w2 stp-o1" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx"><div class="stp-lab">the gist</div>` +
     `<p>avg <b>${avg.toFixed(1)}</b></p>` +
@@ -2692,6 +2738,7 @@ function infiniteTabHTML() {
     line: `${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}`,
     serial: pad3(games), serialLabel: `INFINITE<br>${games === 1 ? "RUN" : "RUNS"}`,
     tip: `Longest infinite run ${top.best} pages, ${VARIANT_LABELS[top.variant]}, ${MODES[top.mode].label}`,
+    set: statsBestSetDate([`inf-${top.variant}-${top.mode}`], top.best),
   }) + `</div>`;
   const group = (variant) => {
     const sty = INF_VARIANT_STYLE[variant];
