@@ -1256,6 +1256,18 @@ export function initDev(api) {
     })),
     catOut));
 
+  /* ---- The Stats blotter ------------------------------------------------------
+     Its drops bleed in once per opening of Stats, so replay is the way to watch it again.
+     Finishing an album fills it in the lifetime tally, which is what turns that drop's
+     crumbs into sparkles. */
+  const blotSel = select(api.blotter.albums(), (a) => a, (a) => a);
+  body.append(section("stats blotter",
+    row(btn("replay the bleed", () => api.blotter.replay())),
+    row(blotSel, btn("finish album", () => {
+      const n = api.blotter.finish(blotSel.value);
+      toast(n ? `${n} songs found on ${blotSel.value}` : "no such album");
+    }, "warn"))));
+
   // ---- Seeding ---------------------------------------------------------------
   const achSel = select(api.ACHIEVEMENTS, (a) => a.id, (a) => a.name + (a.secret ? " (hidden)" : ""));
   const histN = num(25);

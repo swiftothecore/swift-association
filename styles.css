@@ -11245,7 +11245,7 @@
     .stp > .stp-o0 { order: 0; } .stp > .stp-o1 { order: 1; } .stp > .stp-o2 { order: 2; }
     .stp > .stp-solo { grid-column: span 2; justify-self: center; width: 64%; }
   }
-  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-slip, .stp-chips, .stp-dy, .stp-rt) {
+  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-slip, .stp-blot, .stp-dy, .stp-rt) {
     filter: brightness(0.78) saturate(0.94);
   }
 
@@ -11457,20 +11457,33 @@
   /* black tape on the night page is a hole in it: lifted to the pale side of graphite, as the nav cards' graphite is */
   :root[data-theme="dark"] .stp-dy--1 { background: #57514a; }
 
-  /* songs found: a paint-chip card, a chip an album filled to what you've found */
-  .stp-chips { padding: 12px 12px 10px; color: var(--stp-pen); background: #fdfcf8; border: 1px solid rgba(43,39,34,.14); }
-  .stp-chips-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 10px; }
-  .stp-chips-hd b { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; }
-  .stp-chips-hd span { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--stp-soft); }
+  /* songs found: a sheet of blotting paper, an album a drop of ink bled out as far as you've
+     found (statsBlotterHTML in app.js). The paper is unsized and shows its fibres, and has no
+     ruling to write on. The ink and its tide line take the album's own colour through --c. */
+  .stp-blot {
+    padding: 12px 12px 6px; color: var(--stp-pen); border: 1px solid rgba(43,39,34,.14);
+    background-color: #f7f1ea;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.3  0 0 0 -2.6 1.45'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)' opacity='.11'/%3E%3C/svg%3E");
+  }
+  .stp-blot-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-bottom: 8px; }
+  .stp-blot-hd b { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; }
+  .stp-blot-hd span { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--stp-soft); }
   .stp-door { border: 0; background: none; padding: 2px 0; cursor: pointer; color: var(--stp-red); font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); }
   .stp-door:is(:hover, :focus-visible) { text-decoration: underline; text-underline-offset: 3px; outline: none; }
   .stp-door .cta-arrow { width: 1.4em; height: .7em; vertical-align: -0.05em; }
-  .stp-chip-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px 6px; }
-  @media (max-width: 560px) { .stp-chip-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-  .stp-sw { position: relative; height: 40px; background: color-mix(in srgb, var(--c) 18%, #fdfcf8); border: 1px solid rgba(43,39,34,.18); }
-  .stp-sw i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--c); }
-  .stp-nm { margin-top: 4px; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 0; text-transform: uppercase; color: var(--stp-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .stp-ct2 { font-family: var(--hand); font-weight: 700; font-size: calc(14px + var(--text-size-adjust)); line-height: 1; }
+  .stp-blot-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .stp-bl-ring { fill: none; stroke: #7d776c; stroke-opacity: .62; stroke-width: .85; stroke-linecap: round; }
+  .stp-bl-ink { fill: var(--c); fill-opacity: .68; }
+  .stp-bl-tide { fill: none; stroke: var(--c); stroke-width: 1.5; stroke-opacity: .75; filter: brightness(.82); }
+  .stp-bl-crumb { fill: var(--c); fill-opacity: .7; }
+  /* a finished album's crumbs: sparkles, in its own ink, a shade deeper at the edge */
+  .stp-bl-spark { fill: var(--c); stroke: color-mix(in srgb, var(--c) 72%, #2b2722); stroke-width: .7; stroke-linejoin: round; }
+  .stp-bl-crumb.is-wet:not(.is-out) { opacity: 0; }
+  .stp-bl-spark.is-wet { transition: transform .45s cubic-bezier(.3, 1.6, .5, 1), opacity .2s ease; }
+  .stp-bl-spark.is-wet:not(.is-out) { opacity: 0; transform: scale(.2) rotate(-40deg); }
+  .stp-bl-hit { fill: transparent; }
+  .stp-bl-nm { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .4px; fill: var(--stp-soft); }
+  .stp-bl-ct { font-family: var(--hand); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); fill: var(--stp-pen); }
 
   /* the daily: the streak as a strip of raffle tickets, each a way back to its day */
   .stp-raffle-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 9px;

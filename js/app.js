@@ -1567,7 +1567,7 @@ function backToScreen(prev) {
 const routeOpeners = {
   records: () => openRecords("start"),
   charms: () => openAchievements("start"),
-  stats: () => { statsBackTarget = "start"; statsCalendarMonth = null; renderStats(null); flipAwayToScreen("stats"); },
+  stats: () => { statsBackTarget = "start"; statsCalendarMonth = null; statsBleedSeq++; renderStats(null); flipAwayToScreen("stats"); },
   mastery: () => openMastery("start"),
   challenges: () => openChallenges("start"),
   bonus: () => openBonus("start"),
@@ -2106,7 +2106,7 @@ let lastStatsDifficulty = null;
 function playCTA(label = "start writing") {
   return `<button type="button" class="empty-cta" data-go-play>${label} ${CTA_ARROW}</button>`;
 }
-// The hand-drawn arrow on the two catalogue buttons (the Stats paint chips and the charm quest), which
+// The hand-drawn arrow on the two catalogue buttons (the Stats blotter and the charm quest), which
 // both open the songbook. Drawn rather than typed so it sits on the type line's middle instead
 // of wherever Caveat's arrow glyph happens to land; the head's two strokes are deliberately unequal.
 // It is also THE right-pointing arrow: every "go on" control in the game draws this one rather
@@ -2185,6 +2185,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   const s = isAll ? aggregateStats() : loadStats(viewMode);
   el.innerHTML = tabs + statsBoardHTML(s, viewMode, isAll, lastScore);
   alignStatsTicket(el);
+  bleedStatsBlotter(el);
   el.querySelectorAll("[data-statmode]").forEach((b) =>
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
   el.querySelectorAll("[data-open-songbook]").forEach((b) =>
@@ -2226,7 +2227,7 @@ function albumOfTitle(title) {
      the nemesis          a sticky note you would leave yourself (perfects, where there is none)
      the home album       its record sleeve (Track by Track's), the most-sung song on a slip
      the quick numbers    label-maker tape
-     songs found          a paint-chip card, a chip an album, each filled to what you've found
+     songs found          a sheet of blotting paper, an album a drop of ink bled out as far as you've found
      the daily streak     a strip of raffle tickets, gold for a perfect day
    and the calendar keeps its marker X's on a sheet taped in beneath.
 
@@ -2247,7 +2248,7 @@ const STATS_TAPE = {
   staff:    [{ left: "-7px", top: "-6px", rot: -32, w: 50, tear: 0 }, { right: "-7px", top: "-5px", rot: 30, w: 52, tear: 3 }],
   graph:    [{ left: "-9px", top: "-6px", rot: -40, w: 52, tear: 4 }],
   sleeve:   [{ left: "50%", tx: "-50%", top: "-9px", rot: 4, w: 48, tear: 5 }],
-  chips:    [{ left: "50%", tx: "-50%", top: "-9px", rot: -2, w: 56, tear: 1 }],
+  blot:     [{ left: "50%", tx: "-50%", top: "-9px", rot: -2, w: 56, tear: 1 }],
   cal:      [{ left: "-9px", top: "-6px", rot: -38, w: 52, tear: 3 }, { right: "-9px", top: "-6px", rot: 40, w: 54, tear: 0 }],
 };
 function statsTape(key) {
@@ -2255,12 +2256,135 @@ function statsTape(key) {
     `<span class="stp-tape" aria-hidden="true" style="${s.left ? `left:${s.left};` : ""}${s.right ? `right:${s.right};` : ""}` +
     `top:${s.top};width:${s.w}px;transform:translateX(${s.tx || "0"}) rotate(${s.rot}deg);clip-path:${TORN_EDGES[s.tear]}"></span>`).join("");
 }
-// Short names for the paint chips, where a full album title would not fit under a chip.
+// Short names for the blotter, where a full album title would not fit under a drop.
 const STATS_ALBUM_SHORT = {
   "The Tortured Poets Department": "TTPD", "The Life of a Showgirl": "Showgirl",
   "Holiday Collection": "Holiday", "Songs From Movies": "Films",
   "Written for Others": "For others", "Collaborations": "Collabs",
 };
+
+/* ---------- Songs found: the blotter ----------
+   A sheet of blotting paper with one drop of ink per album, bled out as far as the songs you've
+   found have carried it. A bloom's AREA is its share (2 of 6 covers a third of its ring, not a
+   third of the way across it). A pencil ring marks how far the drop reaches with every song
+   found; a finished album has met its ring and the ring is rubbed out, and the crumbs of ink
+   thrown off where it landed are little sparkles instead of specks. Picked from
+   scripts/stats/found.html over the ink shelf, the bead jar and the music box.
+
+   The edge is two displacements under one filter, a slow one for the bloom's shape and a fast
+   one for the feathering, then a mottle taken out of the ink's strength the way it settles
+   unevenly into the fibres. The tide line (the darker rim drying ink leaves) is a stroke under
+   the same filter, so it follows the edge it belongs to. The sparkles sit OUTSIDE the filter:
+   at their size the feathering would chew them into specks again.
+
+   The markup is written at rest. bleedStatsBlotter() runs the drops in when the card comes
+   into view, once per opening of the Stats screen (statsBleedSeq), so switching tabs or months
+   redraws it still. */
+let statsBlotUid = 0, statsBleedSeq = 0, statsBledSeq = -1;
+const blotF = (v) => (+v).toFixed(1);
+function blotPencilRing(cx, cy, r, rnd) {
+  const a0 = rnd() * Math.PI * 2, sweep = Math.PI * 2 * (1.04 + rnd() * 0.06), pts = [];
+  for (let k = 0; k <= 48; k++) {
+    const t = k / 48, a = a0 + sweep * t, rr = r * (1 + 0.025 * Math.sin(a * 2) + t * 0.03);
+    pts.push(`${blotF(cx + Math.cos(a) * rr)} ${blotF(cy + Math.sin(a) * rr * 0.97)}`);
+  }
+  return `M${pts.join(" L")}`;
+}
+/* A sparkle drawn by hand: four arms of different lengths, not quite square to each other, so
+   no two on the sheet are the same shape and none of them is a stamped star. */
+function blotSparkle(x, y, size, rnd) {
+  const tilt = (rnd() - 0.5) * 0.5, tips = [];
+  for (let k = 0; k < 4; k++) {
+    const a = tilt + k * Math.PI / 2 + (rnd() - 0.5) * 0.14, arm = size * (0.78 + rnd() * 0.44);
+    tips.push([x + Math.cos(a) * arm, y + Math.sin(a) * arm, a]);
+  }
+  // each side bows in toward the middle, by its own amount
+  let d = `M${blotF(tips[0][0])} ${blotF(tips[0][1])}`;
+  for (let k = 0; k < 4; k++) {
+    const b = tips[(k + 1) % 4], m = tips[k][2] + Math.PI / 4, w = size * (0.14 + rnd() * 0.08);
+    d += ` Q${blotF(x + Math.cos(m) * w)} ${blotF(y + Math.sin(m) * w)} ${blotF(b[0])} ${blotF(b[1])}`;
+  }
+  return d + "Z";
+}
+function statsBlotterHTML(order, found, total, W, phone) {
+  const uid = ++statsBlotUid;
+  const VW = Math.max(260, Math.round(W - 24)), perRow = phone ? 4 : 8, colW = VW / perRow;
+  const R = Math.min(25, colW * 0.36), rowH = R * 2 + 52, H = Math.ceil(order.length / perRow) * rowH;
+  let defs = "", body = "";
+  order.forEach((a, i) => {
+    const rnd = mulberry32(fnv1a("blot:" + a));
+    const f = found[a] || 0, n = total[a], frac = n ? f / n : 0, full = f === n && n > 0;
+    const cx = colW * (i % perRow + 0.5) + (rnd() - 0.5) * 5, cy = Math.floor(i / perRow) * rowH + R + 8 + (rnd() - 0.5) * 4;
+    const rr = R * Math.sqrt(frac), seed = fnv1a(a) % 997, id = `stpBl${uid}-${i}`;
+    defs += `<filter id="${id}" x="-40%" y="-40%" width="180%" height="180%">` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.055" numOctaves="2" seed="${seed}" result="slow"/>` +
+      `<feDisplacementMap in="SourceGraphic" in2="slow" scale="8.5" xChannelSelector="R" yChannelSelector="G" result="shape"/>` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="${seed + 3}" result="fast"/>` +
+      `<feDisplacementMap in="shape" in2="fast" scale="2.2" xChannelSelector="R" yChannelSelector="G" result="edge"/>` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.11" numOctaves="3" seed="${seed + 7}" result="mott"/>` +
+      `<feColorMatrix in="mott" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.1 0 0 0 0.3" result="mask"/>` +
+      `<feComposite in="edge" in2="mask" operator="in"/></filter>`;
+    // what the drop threw off as it landed: one to three crumbs, sparkles once the album is done
+    // They are spread round the drop, never straight below it, where the album's name is written.
+    const nCrumbs = !frac ? 0 : full ? 2 + Math.floor(rnd() * 2) : 1 + Math.floor(rnd() * 3), a0 = rnd() * Math.PI * 2;
+    const crumbs = Array.from({ length: nCrumbs }, (_, k) => {
+      let ang = a0 + k * Math.PI * 2 / nCrumbs + (rnd() - 0.5) * 0.9;
+      if (Math.sin(ang) > 0.5) ang = -ang;
+      const dd = rr + (full ? 5 : 3) + rnd() * (full ? 5 : 6);
+      return { x: cx + Math.cos(ang) * dd, y: cy + Math.sin(ang) * dd, s: full ? 3 + rnd() * 1.6 : 0.7 + rnd() * 1.3 };
+    });
+    const ring = full ? "" : `<path class="stp-bl-ring" d="${blotPencilRing(cx, cy, R + 1.6, rnd)}"/>`;
+    body += `<g class="stp-bl-d" style="--c:${albumColor(a) || "#8a7f6b"}" data-r="${blotF(rr)}">${ring}` +
+      `<g filter="url(#${id})"><circle class="stp-bl-ink" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(rr)}"/>` +
+      `<circle class="stp-bl-tide" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(Math.max(0, rr - 0.6))}"/>` +
+      (full ? "" : crumbs.map((c) => `<circle class="stp-bl-crumb" cx="${blotF(c.x)}" cy="${blotF(c.y)}" r="${blotF(c.s)}"/>`).join("")) + `</g>` +
+      (full ? crumbs.map((c) => `<path class="stp-bl-spark" style="transform-origin:${blotF(c.x)}px ${blotF(c.y)}px" d="${blotSparkle(c.x, c.y, c.s, rnd)}"/>`).join("") : "") +
+      `<circle class="stp-bl-hit" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(R + 6)}" data-tip="${escapeHtml(a)}: ${f} of ${n}"/>` +
+      `<text class="stp-bl-nm" x="${blotF(cx)}" y="${blotF(cy + R + 19)}" text-anchor="middle">${escapeHtml((STATS_ALBUM_SHORT[a] || a).toUpperCase())}</text>` +
+      `<text class="stp-bl-ct" x="${blotF(cx)}" y="${blotF(cy + R + 36)}" text-anchor="middle">${f}/${n}</text></g>`;
+  });
+  return `<svg class="stp-blot-svg" viewBox="0 0 ${VW} ${H}" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
+}
+/* The drops land one at a time and wick out through the sheet, fast and then slower, the ink
+   thinning as it spreads; a finished album's sparkles come out once its ink has stopped. */
+function bleedStatsBlotter(root) {
+  const svg = root.querySelector(".stp-blot-svg");
+  if (!svg || statsBledSeq === statsBleedSeq || motionReduced() || animInstant()) return;
+  statsBledSeq = statsBleedSeq;
+  const drops = [...svg.querySelectorAll(".stp-bl-d")].map((g, k) => ({
+    g, k, rr: +g.dataset.r, ink: g.querySelector(".stp-bl-ink"), tide: g.querySelector(".stp-bl-tide"),
+    disp: svg.querySelector(`${g.querySelector("[filter]").getAttribute("filter").slice(4, -1)} feDisplacementMap`),
+    bits: [...g.querySelectorAll(".stp-bl-crumb, .stp-bl-spark")],
+  }));
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  const draw = (d, t) => {
+    const grow = ease(t), r = d.rr ? Math.max(1.6, d.rr * grow) : 0;
+    d.ink.setAttribute("r", blotF(r));
+    d.ink.style.fillOpacity = (0.95 - 0.27 * grow).toFixed(3);
+    d.tide.setAttribute("r", blotF(Math.max(0, r - 0.6)));
+    d.tide.style.strokeOpacity = (0.25 + 0.5 * grow).toFixed(3);
+    d.disp?.setAttribute("scale", blotF(1.5 + 7 * grow));
+    d.bits.forEach((b) => b.classList.toggle("is-out", b.classList.contains("stp-bl-spark") ? t >= 1 : t > 0.15));
+  };
+  drops.forEach((d) => { d.bits.forEach((b) => b.classList.add("is-wet")); draw(d, 0); });
+  const io = new IntersectionObserver((es) => {
+    if (!es.some((e) => e.isIntersecting)) return;
+    io.disconnect();
+    const scale = animScale() || 1, t0 = performance.now();
+    const step = (now) => {
+      const s = (now - t0) / 1000 / scale;
+      let busy = false;
+      for (const d of drops) {
+        const t = Math.min(1, Math.max(0, (s - 0.1 - d.k * 0.11) / 1.7));
+        if (t < 1) busy = true;
+        draw(d, t);
+      }
+      if (busy && svg.isConnected) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, { threshold: 0.35 });
+  io.observe(svg);
+}
 // The page's inner width, for sizing the drawn pieces before the screen is shown (it is
 // rendered while still hidden, so it cannot always be measured). Coarse on purpose: the
 // drawings scale to their box either way; this only decides how much room to draw in.
@@ -2499,7 +2623,7 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   return out.join("");
 }
 
-// The All view's lifetime pieces: the sleeve, label tape, paint chips, raffle tickets, calendar.
+// The All view's lifetime pieces: the sleeve, label tape, blotter, raffle tickets, calendar.
 function statsLifetimeHTML(W) {
   const phone = W < 520;
   const m = loadMetrics();
@@ -2537,14 +2661,10 @@ function statsLifetimeHTML(W) {
   const discovered = Object.values(found).reduce((a, b) => a + b, 0);
   if (discovered) {
     const left = allSongs.length - discovered;
-    out.push(`<div class="stp-item stp-w6 stp-o6" style="--r:-.5deg">${statsTape("chips")}<div class="stp-chips">` +
-      `<div class="stp-chips-hd"><b>${discovered}</b><span>of ${allSongs.length} songs found</span>` +
-      `<button type="button" class="stp-door" data-open-songbook="stats">${left ? `${left} to go` : "every one found"} ${CTA_ARROW}</button></div><div class="stp-chip-grid">` +
-      order.map((a) => {
-        const f = found[a] || 0, n = total[a];
-        return `<div class="stp-chip" style="--c:${albumColor(a) || "#8a7f6b"}" data-tip="${escapeHtml(a)}: ${f} of ${n}">` +
-          `<div class="stp-sw"><i style="height:${((f / n) * 100).toFixed(0)}%"></i></div><div class="stp-nm">${escapeHtml(STATS_ALBUM_SHORT[a] || a)}</div><div class="stp-ct2">${f}/${n}</div></div>`;
-      }).join("") + `</div></div></div>`);
+    out.push(`<div class="stp-item stp-w6 stp-o6" style="--r:-.5deg">${statsTape("blot")}<div class="stp-blot">` +
+      `<div class="stp-blot-hd"><b>${discovered}</b><span>of ${allSongs.length} songs found</span>` +
+      `<button type="button" class="stp-door" data-open-songbook="stats">${left ? `${left} to go` : "every one found"} ${CTA_ARROW}</button></div>` +
+      statsBlotterHTML(order, found, total, W, phone) + `</div></div>`);
   }
   // The daily: a strip of raffle tickets, one per day of the streak still standing, newest
   // last. A torn-off ticket is a real button: it reopens that day, as the calendar's X does.
@@ -33917,6 +34037,21 @@ function buildDevApi() {
     },
     offline: { status: readOfflineStatus },
     // Seeding
+    /* The Stats blotter. `replay` reopens Stats on All and runs the drops in again (it bleeds
+       once per opening, so a re-render alone draws it still). `finish` names every song on an
+       album in the lifetime tally, which is the only way to see a finished drop's sparkles
+       without playing the record out; it writes the real tally, like the seeders below. */
+    blotter: {
+      replay: () => { statsBleedSeq++; renderStats(null, "all"); flipAwayToScreen("stats"); },
+      finish: (album) => {
+        const t = loadSongTally(), songs = allSongs.filter((s) => s.album === album);
+        if (!songs.length) return null;
+        for (const s of songs) t.songs[s.title] = t.songs[s.title] || 1;
+        saveSongTally(t);
+        return songs.length;
+      },
+      albums: () => [...new Set(allSongs.map((s) => s.album).filter(Boolean))],
+    },
     seed: { records: devSeedRecords, history: devSeedHistory, tally: devSeedTally,
             infinite: devSeedInfinite,
             unlockAch: devUnlockAllAch, lockAch: devLockAllAch,
@@ -34149,8 +34284,8 @@ async function init() {
     else startGame();
   });
   $("dailyBtn").addEventListener("click", startDaily);
-  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; statsCalendarMonth = null; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
-  $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; statsCalendarMonth = null; renderStats(score); flipAwayToScreen("stats"); });
+  $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; statsCalendarMonth = null; statsBleedSeq++; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
+  $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; statsCalendarMonth = null; statsBleedSeq++; renderStats(score); flipAwayToScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => backToScreen(statsBackTarget));
   // Empty-state "start writing →" affordance: wherever a zero-data screen renders one, send the
   // player straight to the start screen's launchpad (same page-flip as a back tap). Delegated once
