@@ -1342,7 +1342,7 @@
      background-image gradients can't be interpolated, so without this the
      pattern snaps to its hover colour instantly while the wash fades, flashing
      the button. Driving both through animatable custom properties keeps them
-     even. See #backToChallenges / #replayChallenge / #againBtn below. */
+     even. See #backToChallenges / #replayChallenge below. */
   @property --btn-wash { syntax: "<color>"; inherits: false; initial-value: transparent; }
   @property --btn-mark { syntax: "<color>"; inherits: false; initial-value: transparent; }
   button {
@@ -1404,10 +1404,6 @@
   .cta-mark--pencil { transform-origin: 70% 90%; }
   .cta-mark .ink-fill { fill: currentColor; stroke: none; }
   .cta-mark .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-  /* The results button's mark, weighted the way the chance dice are and for the same reason:
-     .cta-mark sets no stroke-width, so an unweighted mark draws hairline and reads as a
-     different family standing next to the CTA's pencil. */
-  .again-mark .ink { stroke-width: 1.8; }
   .btn-primary.play-cta::after {
     content: ""; position: absolute; z-index: 1; left: 16%; right: 16%; bottom: 9px; height: 2px;
     background: currentColor; border-radius: 2px; opacity: .7;
@@ -6608,10 +6604,10 @@
   .chall-result-token { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: #2b2722; margin-bottom: 4px; }
   .chall-result-meta { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-bottom: 12px; }
   /* Two half-width buttons in a row (back to the list · replay this challenge), sitting above
-     the full-width gold "front page" button. Each of the three gets its own coloured-pencil
-     wash + hand-drawn pattern so they read as three distinct choices, not one repeated stamp:
-     ← challenges is inked in denim blue with a dotted-notebook grid, replay is a fresh green
-     with hand-ruled diagonal lines, and the front page button keeps its gold highlighter. */
+     the full-width way home (the page block, .riffle). Each of the two gets its own
+     coloured-pencil wash + hand-drawn pattern so they read as distinct choices, not one repeated
+     stamp: ← challenges is inked in denim blue with a dotted-notebook grid, replay is a fresh
+     green with hand-ruled diagonal lines. */
   .chall-result-actions { display: flex; gap: 12px; margin-top: 8px; }
   .chall-result-actions .btn-primary { flex: 1; width: auto; margin: 0; padding: 11px 10px; font-size: calc(13px + var(--text-size-adjust)); }
   .chall-result-actions .btn-primary:first-child { transform: rotate(0.6deg); }
@@ -6918,9 +6914,8 @@
     --btn-mark: rgba(245, 239, 225, 0.30);
   }
 
-  /* The Change modal's OK button echoes the results "front page" button: the gold
-     highlighter wash under a faint graph-paper grid, so it reads as a patterned stamp
-     rather than a plain block. */
+  /* The Change modal's OK button: the gold highlighter wash under a faint graph-paper grid,
+     so it reads as a patterned stamp rather than a plain block. */
   #customModalOkBtn {
     --btn-mark: rgba(43, 39, 34, 0.08);
     padding: 10px 34px;
@@ -6931,19 +6926,77 @@
   }
   #customModalOkBtn:hover { --btn-mark: rgba(245, 239, 225, 0.12); }
 
-  /* The full-width "front page" button keeps its era highlighter wash, but picks up a
-     faint graph-paper grid so it reads as patterned alongside the dotted challenges and
-     diagonally-ruled replay buttons. Inked (not a fixed hue) so it rides every era. */
-  :is(#againBtn, [data-flip-id="againBtn"]) {
-    --btn-mark: rgba(43, 39, 34, 0.07);
-    background-image:
-      repeating-linear-gradient(0deg, var(--btn-mark) 0 1px, transparent 1px 11px),
-      repeating-linear-gradient(90deg, var(--btn-mark) 0 1px, transparent 1px 11px);
-    transition: --btn-mark 0.22s ease, background-color 0.22s ease, color 0.2s ease, transform 0.12s, box-shadow 0.2s;
+  /* ---------- The way home: thumb back ----------
+     The run's last page, sitting on the block of pages written before it (paintRiffle in
+     app.js). Each page underneath shows only its fore-edge and tail, a band of its bead's
+     colour with a hairline of paper where the next page down begins, so at rest the button is
+     already a picture of the run; nothing about it depends on hover, which a phone never does.
+     The top sheet is ruled and margined like every other page, and the label is highlighted
+     on it in the era's ink, a stroke per line so a label that wraps on a phone is highlighted
+     twice rather than boxed. Styled by class only: the page-turn clone swaps the id for
+     data-flip-id, and the leaving page has to keep its look as it turns. */
+  .riffle {
+    --riffle-dx: 2.5px; --riffle-dy: 1.2px; --riffle-n: 0;
+    display: block; width: 100%; margin: 18px 0 0; padding:
+      0 calc(var(--riffle-n) * var(--riffle-dx)) calc(var(--riffle-n) * var(--riffle-dy)) 0;
+    background: none; border: 0; color: var(--ink); text-align: center;
   }
-  :is(#againBtn, [data-flip-id="againBtn"]):hover {
-    --btn-mark: rgba(245, 239, 225, 0.10);
+  .riffle:active { transform: none; }
+  .riffle:focus-visible { outline: 2px solid var(--ink); outline-offset: 5px; border-radius: 3px; }
+  .riffle-block { position: relative; display: block; transform: rotate(-0.6deg); }
+  .riffle-edges { position: absolute; inset: 0; }
+  .riffle-edge {
+    position: absolute; inset: 0; display: block;
+    transform: translate(calc(var(--d) * var(--riffle-dx)), calc(var(--d) * var(--riffle-dy)));
+    background: var(--c, var(--bead));
+    box-shadow: inset -0.8px -0.6px 0 var(--paper);
+    border-radius: 1px 2px 2px 1px;
   }
+  .riffle-edge.is-blank { background: color-mix(in srgb, var(--ink) 10%, var(--paper)); }
+  /* the last page down draws the block's outline */
+  .riffle-edge:first-child { box-shadow: 0 0 0 1.4px var(--ink), 2px 2px 0 1.4px rgba(43, 39, 34, 0.12); }
+  .riffle-edge.is-flick { animation: riffleFlick 0.24s cubic-bezier(.3,.8,.4,1); }
+  @keyframes riffleFlick {
+    45% { transform: translate(calc(var(--d) * var(--riffle-dx) - 2.5px), calc(var(--d) * var(--riffle-dy) - 3px)); }
+  }
+  .riffle-sheet {
+    --riffle-flash: transparent;
+    --riffle-rule: 34px;
+    position: relative; display: flex; align-items: center; justify-content: center;
+    min-height: 60px; padding: 8px 66px 8px 54px;
+    border: 2px solid var(--ink); border-radius: 1px 2px 2px 1px;
+    background:
+      linear-gradient(color-mix(in srgb, var(--riffle-flash) 24%, transparent), color-mix(in srgb, var(--riffle-flash) 24%, transparent)),
+      linear-gradient(to right, transparent var(--riffle-rule), var(--margin) var(--riffle-rule) calc(var(--riffle-rule) + 1.5px), transparent calc(var(--riffle-rule) + 1.5px)),
+      repeating-linear-gradient(to bottom, transparent 0 19px, color-mix(in srgb, var(--ink) 9%, transparent) 19px 20px),
+      var(--paper);
+    transition: transform 0.2s;
+  }
+  .riffle:is(:hover, :focus-visible) .riffle-sheet { transform: translate(-1px, -1.5px); }
+  .riffle:active .riffle-sheet { transform: translate(1px, 1px); transition-duration: 0.06s; }
+  .riffle-label {
+    font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 1px; line-height: 1.75;
+  }
+  .riffle-hl {
+    padding: 3px 9px 3px 7px; background: var(--highlighter);
+    border-radius: 3px 10px 4px 12px / 8px 5px 10px 4px;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  /* the folio, numbered by hand in the outer corner the way the pages are */
+  .riffle-folio {
+    position: absolute; right: 13px; top: 50%; width: 42px; margin-top: -16px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); line-height: 1;
+  }
+  .riffle-folio.is-flip { animation: riffleNum 0.12s ease-out; }
+  @keyframes riffleNum { from { transform: translateY(-5px); opacity: 0.2; } }
+  @media (max-width: 480px) {
+    .riffle-sheet { --riffle-rule: 26px; padding: 8px 46px 8px 40px; }
+    .riffle-label { font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 0.3px; line-height: 1.85; }
+    .riffle-hl { padding: 2px 6px 2px 5px; }
+    .riffle-folio { right: 4px; }
+  }
+  body[data-reduce-motion="on"] .riffle * { animation: none !important; transition: none !important; }
 
   /* ---------- Ruthless page — the lyric sheet you point at ----------
      Not a board of six tiles: one document. The six lenses are the section headings of a

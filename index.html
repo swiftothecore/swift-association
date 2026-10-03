@@ -3309,7 +3309,18 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="newBestBanner" class="new-best-banner" style="display:none;"></div>
     <p class="podium-title" style="margin-top:22px;">Your best</p>
     <div id="resultPodium" class="podium"></div>
-    <button id="againBtn" class="btn-primary" style="margin-top:18px;"><span class="cta-mark again-mark" aria-hidden="true"></span><span class="cta-label">Turn back to the front page</span></button>
+    <!-- The way home: this run's last page on the block of pages written before it, their
+         edges inked in the run's bead colours (paintRiffle fills .riffle-edges and the folio
+         off the finished strand). The label is highlighted on the page in the era's ink. -->
+    <button id="againBtn" class="riffle" type="button">
+      <span class="riffle-block">
+        <span class="riffle-edges" aria-hidden="true"></span>
+        <span class="riffle-sheet">
+          <span class="riffle-label"><span class="riffle-hl">Turn back to the front page</span></span>
+          <span class="riffle-folio" aria-hidden="true"></span>
+        </span>
+      </span>
+    </button>
     <!-- The two stamps, cut from the same rubber. PLAY AGAIN is the replay, in stamp-pad
          navy, over the mode it will play again (paintReplayStamp). It once carried numbering
          wheels counting the take, and nobody could tell a run count from a score. ENCORE is "keep

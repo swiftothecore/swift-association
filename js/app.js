@@ -13796,6 +13796,8 @@ function renderFinishedBracelet(results, albums, opts = {}) {
     centreStrand(el);
   }
   renderBraceletDetails(results, albums, resolved);
+  // The way home is drawn off the same beads, so the two can never disagree.
+  paintRiffle(results, albums, resolved);
   return resolved;
 }
 
@@ -20553,29 +20555,100 @@ function openArchivedDaily(dateStr) {
   renderDailyResultPanel();
 }
 
-/* The two places this button can put you back down, drawn rather than typed. The mark
-   NAMES THE DESTINATION instead of pointing at it: a left arrow would only repeat what
-   the label already says, and the rest of the family sets marks as nouns anyway — the
-   play CTA wears a pencil, the chance stamp wears dice, and neither reaches for an
-   arrow. So the front page is its own spiral cover, and the calendar is the daily's
-   monthly pass from the Stats panel with a day punched through, the same punch that makes
-   a day clickable there in the first place.
+/* The way home is the run's last page, sitting on the block of pages written before it.
+   Their fore-edges show past it, each inked the colour of the bead that page strung, so the
+   button is a picture of this run before it is touched. A missed page is a bare edge, exactly
+   as it is a frosted bead on the strand. Hovering riffles back down the block, the folio
+   counting down to page one, which is the turn the click then makes for real.
 
-   They replace a typed "←" that used to sit in the calendar label. A font glyph was the
-   wrong material for a mark on this desk, and it also made the two states inconsistent:
-   one wore an arrow and the other wore nothing. Now both wear ink, and neither wears an
-   arrow. Stroke weight is set in styles.css (.again-mark .ink) to match the CTA's pencil
-   — .cta-mark deliberately sets none, so a mark that says nothing draws hairline. */
-const AGAIN_MARK_COVER =
-  `<path class="ink" d="M7.4 4.3 L19 4.7 L18.6 20 L7 19.6Z"/>` +
-  `<path class="ink" d="M7.6 6.7 Q4 6.3 4.5 8.2"/>` +
-  `<path class="ink" d="M7.5 11 Q3.9 10.6 4.4 12.5"/>` +
-  `<path class="ink" d="M7.4 15.3 Q3.8 14.9 4.3 16.8"/>`;
-const AGAIN_MARK_CALENDAR =
-  `<path class="ink" d="M3.6 5.6 L20.4 6 L20 20.4 L4 20Z"/>` +
-  `<path class="ink" d="M3.75 10 L20.25 10.3"/>` +
-  `<path class="ink" d="M16.3 10.6 L16.2 11.8 M16.2 13.4 L16.2 14.6 M16.1 16.2 L16.1 17.4 M16.1 19 L16.1 19.9"/>` +
-  `<path class="ink" d="M10 12.6 C11.7 12.5 12.9 13.8 12.8 15.3 C12.7 16.8 11.5 17.8 10 17.7 C8.5 17.6 7.4 16.5 7.5 15.1 C7.6 13.7 8.6 12.6 10 12.6Z"/>`;
+   The block draws at most thirteen sheets. A longer run (Infinite) is SAMPLED evenly from
+   its first page to its last rather than cut to its latest thirteen, so the edges stand for
+   the whole run, and every sheet keeps its real page number, so the count runs 47 … 1 rather
+   than pretending the run was thirteen pages long.
+
+   The riffle ends on the number and nothing else. A red-pen ring round the 1 was tried and
+   dropped: red pen on this desk is the editor's correction, so a circled page read as a page
+   marked wrong, and a second gesture after the count overstayed a hover the page turn is
+   about to finish anyway. */
+const RIFFLE_SHEETS = 13;
+let riffleSheets = [];   // [{ page, colour }] in page order, the last one the top sheet
+let riffleTimers = [];
+
+// The colour a page's edge takes: the bead's own, by the same rule the strand uses (a rule's
+// tint first, then the album). A bead painted in several colours lends its first. A correct
+// page with no colour at all wears the era's bead, as its bead does; a miss has no colour.
+function riffleEdgeColour(results, albums, opts, i) {
+  if (results[i] !== true) return null;
+  const hex = (c) => typeof c === "string" && /^#[0-9a-f]{3,8}$/i.test(c) ? c : null;
+  const raw = (Array.isArray(opts.beadTints) && opts.beadTints[i])
+    || (albums[i] && (opts.colors || albumPalette())[albums[i]]) || null;
+  const first = Array.isArray(raw) ? raw[0] : raw && Array.isArray(raw.colors) ? raw.colors[0] : raw;
+  return hex(first) || "var(--bead)";
+}
+
+function paintRiffle(results, albums, opts = {}) {
+  const btn = $("againBtn");
+  if (!btn) return;
+  resetRiffle();
+  const played = results.reduce((m, v, i) => (v == null ? m : i + 1), 0);
+  const n = Math.max(1, played);
+  const count = Math.min(RIFFLE_SHEETS, n);
+  const pages = count === 1 ? [n - 1]
+    : Array.from({ length: count }, (_, k) => Math.round((k * (n - 1)) / (count - 1)));
+  riffleSheets = pages.map((i) => ({ page: i + 1, colour: riffleEdgeColour(results, albums, opts, i) }));
+  // Deepest first: the bottom sheet is page one and draws the block's outline.
+  const under = riffleSheets.slice(0, -1);
+  btn.style.setProperty("--riffle-n", under.length);
+  btn.querySelector(".riffle-edges").innerHTML = under.map((s, k) =>
+    `<i class="riffle-edge${s.colour ? "" : " is-blank"}" style="--d:${under.length - k};` +
+    `${s.colour ? `--c:${s.colour}` : ""}" data-page="${s.page}"></i>`).join("");
+  btn.querySelector(".riffle-folio").textContent = n;
+}
+
+function resetRiffle() {
+  riffleTimers.forEach(clearTimeout);
+  riffleTimers = [];
+  const btn = $("againBtn");
+  if (!btn) return;
+  btn.querySelectorAll(".riffle-edge.is-flick").forEach((e) => e.classList.remove("is-flick"));
+  btn.querySelector(".riffle-sheet")?.style.removeProperty("--riffle-flash");
+  const top = riffleSheets[riffleSheets.length - 1];
+  const folio = btn.querySelector(".riffle-folio");
+  if (folio) folio.textContent = top ? top.page : "1";
+}
+
+// One sheet a beat, top to bottom: the edge lifts as it goes past, the folio takes its number
+// and the face catches its colour for a moment. The colour clears once page one is reached.
+function runRiffle() {
+  resetRiffle();
+  const btn = $("againBtn");
+  const n = riffleSheets.length;
+  if (!btn || n < 2 || document.body.getAttribute("data-reduce-motion") === "on") return;
+  const sheet = btn.querySelector(".riffle-sheet"), folio = btn.querySelector(".riffle-folio");
+  const step = Math.max(38, Math.min(70, 760 / n));
+  for (let k = n - 2, beat = 0; k >= 0; k--, beat++) {
+    const s = riffleSheets[k];
+    riffleTimers.push(setTimeout(() => {
+      btn.querySelector(`.riffle-edge[data-page="${s.page}"]`)?.classList.add("is-flick");
+      folio.textContent = s.page;
+      folio.classList.remove("is-flip"); void folio.offsetWidth; folio.classList.add("is-flip");
+      if (s.colour) sheet.style.setProperty("--riffle-flash", s.colour);
+      else sheet.style.removeProperty("--riffle-flash");
+    }, 90 + beat * step));
+  }
+  riffleTimers.push(setTimeout(() => sheet.style.removeProperty("--riffle-flash"), 90 + (n - 1) * step + 90));
+}
+
+function initRiffle() {
+  const btn = $("againBtn");
+  if (!btn) return;
+  // A touch never hovers, and a tap is the page turn itself, so only a pointer that can hover
+  // (and the keyboard) gets the riffle.
+  btn.addEventListener("pointerenter", (e) => { if (e.pointerType !== "touch") runRiffle(); });
+  btn.addEventListener("pointerleave", resetRiffle);
+  btn.addEventListener("focus", () => { if (btn.matches(":focus-visible")) runRiffle(); });
+  btn.addEventListener("blur", resetRiffle);
+}
 
 // The results page's two stamps, shown and hidden together so neither is left standing from the
 // last run. Side by side when both are up (the CSS stacks them on a phone), full width alone.
@@ -20646,22 +20719,13 @@ function paintReplayStamp() {
   replayRun = { type: infinite ? "infinite" : "classic", mode: currentMode, variant: infiniteVariant };
 }
 
-// The results screen's "leave" stamp reads differently depending on how we got here:
+// The results screen's way home reads differently depending on how we got here:
 // finishing a real run turns back to the front page, but flipping back to an old
-// Daily from the calendar should turn back to the calendar. One button, one label,
-// one mark. The label is written into its own span rather than over the button, so
-// setting it cannot wipe the mark standing beside it.
+// Daily from the calendar should turn back to the calendar. The label is written into
+// its own span rather than over the button, so setting it cannot wipe the page block.
 function applyAgainBtnLabel() {
-  const btn = $("againBtn");
-  if (!btn) return;
-  const archived = !!archivedDailyDate;
-  const label = btn.querySelector(".cta-label");
-  const mark = btn.querySelector(".again-mark");
-  if (label) label.textContent = archived ? "Back to your calendar" : "Turn back to the front page";
-  if (mark) {
-    mark.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
-      (archived ? AGAIN_MARK_CALENDAR : AGAIN_MARK_COVER) + `</svg>`;
-  }
+  const label = $("againBtn")?.querySelector(".riffle-hl");
+  if (label) label.textContent = archivedDailyDate ? "Back to your calendar" : "Turn back to the front page";
 }
 
 /* The three pieces of the shared summary, derived once and used twice: they are what
@@ -34561,10 +34625,7 @@ function seatLoadTag() {
 
 async function init() {
   initCtaInteractions();
-  // Inks the results button's mark before anything can reach that screen. The markup
-  // ships the span empty rather than duplicating the path data, so this is the one
-  // place the default (the spiral cover) is put down.
-  applyAgainBtnLabel();
+  initRiffle();
   showScreen("start");
   applyEra("gold");
   // Before the first read of either store: the purge rewrites achievements and settings, and a
@@ -34766,6 +34827,7 @@ async function init() {
     if (screens.guests.classList.contains("active")) renderGuestShelfPage();
   });
   $("againBtn").addEventListener("click", () => {
+    resetRiffle();
     // A Daily reopened from the Stats calendar turns back to the calendar, not the
     // front page — this button relabels itself for that visit (see applyAgainBtnLabel).
     if (archivedDailyDate) {
