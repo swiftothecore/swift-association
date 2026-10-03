@@ -25,7 +25,7 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D, TREE_D, TREE_TRUNK_D, TREE_TRUNK,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
-  STUDIO_ALBUMS, TITLE_ALIASES, STAMP_INKS, pressingName,
+  STUDIO_ALBUMS, NON_ALBUM_TRACKS, TITLE_ALIASES, STAMP_INKS, pressingName,
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   ACH_FAMILIES, ACH_FAMILY_COLORS,
@@ -2013,32 +2013,21 @@ function wordProximity(song, word) {
   if (new RegExp("\\b" + escapeRegExp(word) + "e?s\\b", "i").test(lyrics)) return 1;
   return 2;
 }
-/* Shuffle first, then sort by proximity — a stable sort keeps the shuffle as the
-   tiebreak, so the reveal stays varied within each tier instead of showing the same
-   song every time a word comes round. Strict rounds have no variants to sort.
-
-   The second key is the catalogue's own shape. A missed page is the game's only
-   teaching moment, and three cards drawn from the Holiday Collection, the film songs,
-   the songs written for other artists and the collaborations don't tell the player they
-   missed something findable — they tell them the page was never really answerable,
-   which lands worse than being beaten. So inside each proximity tier the twelve studio
-   albums come first, and the fringe four fill in behind them.
-
-   The keys are in this order and not the other one on purpose: proximity has to stay
-   dominant, or a stem variant on a studio album ("shines") outranks a song saying the
-   actual word, which is the exact failure the proximity sort exists to prevent. Since
-   wordProximity only answers 0, 1 or 2, ties are the normal case and the studio lean
-   bites on almost every page anyway. It costs a little of the shuffle's variety — on a
-   word held by only one or two studio songs the fringe ones become predictably last —
-   and the shuffle still varies the order within each half. */
+function isAlbumAnswer(song) {
+  return STUDIO_ALBUMS.includes(song.album) && !NON_ALBUM_TRACKS.has(song.title);
+}
+/* Shuffle first, then put studio-album songs before non-album songs. Within each
+   group, closer word matches come first; stable sorting keeps the shuffle as the
+   tiebreak so equally useful examples stay varied. Non-album songs still fill any
+   remaining slots, including pages whose only answers are outside the albums. */
 function rankByProximity(songs, word) {
   const pool = shuffle(songs.slice());
-  const fringe = new Map(pool.map((s) => [s, STUDIO_ALBUMS.includes(s.album) ? 0 : 1]));
+  const fringe = new Map(pool.map((s) => [s, isAlbumAnswer(s) ? 0 : 1]));
   // A strict round has no variants to sort, but it still has a reveal to teach with, so
   // it takes the studio key on its own rather than skipping the sort altogether.
   if (effectiveStrict()) return pool.sort((a, b) => fringe.get(a) - fringe.get(b));
   const rank = new Map(pool.map((s) => [s, wordProximity(s, word)]));
-  return pool.sort((a, b) => (rank.get(a) - rank.get(b)) || (fringe.get(a) - fringe.get(b)));
+  return pool.sort((a, b) => (fringe.get(a) - fringe.get(b)) || (rank.get(a) - rank.get(b)));
 }
 
 /* ---------- Stats ---------- */
@@ -25621,10 +25610,12 @@ function showWrongFeedback(song, isTimeout) {
     for (const s of [deepCutRevealSong(pool), revealedHintSong()]) {
       if (s && pool.includes(s) && !leads.includes(s)) leads.push(s);
     }
-    // Then the songs that hold the word most squarely, so the cards never lead with a
-    // stem variant while a song saying the actual word goes unshown.
+    // Album songs come first, with closer word matches first within each group.
     const rest = rankByProximity(pool.filter((s) => !leads.includes(s)), currentWord);
-    const ordered = [...leads, ...rest];
+    // Keep hint / tally leads first within their group, but a non-album hint must
+    // still follow the album answers.
+    const ordered = [...leads, ...rest].sort((a, b) =>
+      Number(!isAlbumAnswer(a)) - Number(!isAlbumAnswer(b)));
     if (bothRuleActive() && bothWords.length > 1) {
       // Both Of Us: the useful reveal isn't three more songs for one word, it's songs shown
       // holding EVERY word on the page — the answers you couldn't find, proved a word at a
@@ -30633,6 +30624,7 @@ function buildDevApi() {
         n: i + 1, title: s.title, album: s.album,
         near: wordProximity(s, currentWord),          // 0 the word, 1 a variant, 2 neither
         studio: STUDIO_ALBUMS.includes(s.album),
+        albumAnswer: isAlbumAnswer(s),
       })),
       /* The first-find ribbon. A real one needs a song the tally has never seen, which a
          well-played notebook runs out of, so `force` hangs it on every correct card. `state`

@@ -2739,6 +2739,12 @@ export const STUDIO_ALBUMS = [
   "The Tortured Poets Department", "The Life of a Showgirl",
 ];
 
+// Filed under a studio era in songs.json, but never tracks on that studio album.
+// Bonus, vault and alternate-edition album tracks remain ordinary album answers.
+export const NON_ALBUM_TRACKS = new Set([
+  "Beautiful Eyes", "I Heart ?", "I'd Lie", "All Of The Girls You Loved Before", "Need",
+]);
+
 /* How far up each of the twelve the track numbers run, which is a different number from how
    many songs sit under that album in songs.json. It is held here as literals for the same
    reason the vault list is: it is a fact about the pressings rather than anything the lyric
