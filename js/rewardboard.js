@@ -10,8 +10,8 @@
    member of a ladder (a pen, a title rank) carries that stamp's outline and number (passportGhost,
    inked), and anything still owed carries the pencil tracing exactly as its passport slot does.
    What the player is wearing is marked by the object itself, never by a mark laid over it: the
-   pen's pocket is satin-stitched in the roll's gold, the stock you write on is swung out of the
-   fan on its rivet, the bead compartment is lined in felt, the button is sewn over a square of
+   pen's pocket is satin-stitched in the roll's gold, the stock you write on keeps its place in the
+   fan and the others swing back off it on the rivet, the bead compartment is lined in felt, the button is sewn over a square of
    gingham, and the label strips not in use go pale. (It used to be the editor's red pen looped
    round each one, and a page of red rings read as corrections rather than choices.)
 
@@ -136,24 +136,35 @@ function pensRoll(D) {
    ================================================================ */
 // Angles spaced by hand, not divided evenly: a fan opened by a thumb.
 const FAN_AT = [-9, 5.6, 19.6, 34.1, 48.3, 62.8];
-// The stock in use is swung out past the end of the fan, nearly flat, and the other five close up
-// behind it, still spaced by hand. A riveted strip cannot slide out, but it can swing.
-const FAN_REST = [-9, 4.2, 17.8, 30.6, 44.9];
-const FAN_SWUNG = 79;
+// The stock in use keeps its own place, and the others swing back off it by FAN_PUSH on either
+// side, so picking a stock never reshuffles the deck. The low side cannot swing far before it
+// leaves the cell, so whatever would pass FAN_LO closes up between FAN_LO and its neighbour.
+const FAN_PUSH = 10;
+const FAN_LO = -14;
+function fanAngles(n, w) {
+  const at = Array.from({ length: n }, (_, i) => FAN_AT[i] ?? (-9 + i * 14));
+  if (w < 0) return at;
+  const a = at.map((x, i) => i < w ? x - FAN_PUSH : i > w ? x + FAN_PUSH : x);
+  if (w > 0 && a[0] < FAN_LO) {
+    const top = a[w - 1];
+    const k = top > FAN_LO ? (top - FAN_LO) / (top - a[0]) : 0;
+    for (let i = 0; i < w; i++) a[i] = top > FAN_LO ? top - (top - a[i]) * k : FAN_LO;
+  }
+  return a;
+}
 const PAPER_LABEL = { default: "Plain", manila: "Manila", parchment: "Parchment", blush: "Blush", slate: "Slate", sage: "Sage" };
 
 // Six strips of the real stock (the game's .paper-chip) on one brass rivet. Shut and banded until
-// the set is earned, with the plain sheet you already own on top; open, the stock you write on is
-// swung out on the rivet, apart from the rest.
+// the set is earned, with the plain sheet you already own on top; open, the stock you write on
+// holds its place and the rest swing back off it.
 function paperFan(D) {
   const slots = [{ id: "", paper: "default", name: "Plain" }, ...ofKind("paper").map((r) => ({ id: r.payload.paper, paper: r.payload.paper, name: r.name, rid: r.id }))];
   const open = slots.length > 1 && D.has(slots[1].rid);
   const n = slots.length;
-  const swung = open && slots.some((p) => p.id === D.wear.paper);
-  let rest = 0;
+  const fan = fanAngles(n, open ? slots.findIndex((p) => p.id === D.wear.paper) : -1);
   const strips = slots.map((p, i) => {
     const worn = open && D.wear.paper === p.id;
-    const a = !open ? 38 + i * 0.9 : !swung ? FAN_AT[i] ?? (-9 + i * 14) : worn ? FAN_SWUNG : FAN_REST[rest++] ?? (-9 + i * 13);
+    const a = !open ? 38 + i * 0.9 : fan[i];
     const inner = `<span class="pf-name">${esc(PAPER_LABEL[p.paper] || p.name)}</span><span class="pf-hole"></span>`;
     const z = !open ? n - i : worn ? 20 : i + 1;
     const st = `style="--a:${a.toFixed(1)}deg;z-index:${z}"`;
