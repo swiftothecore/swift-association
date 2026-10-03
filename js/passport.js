@@ -222,6 +222,18 @@ export const passportGhost = (L, frac = null) => ghostSVG(L, frac);
 export const passportCaption = (L) => STAMPS[L] ? STAMPS[L].caption : "";
 export const passportStampInk = (L) => STAMPS[L] ? tileInk(STAMPS[L].tile) : tileInk("title");
 
+/* A ladder member's stamp cut down to a badge: the stamp's own outline at the angle it lands
+   and its mark in the middle, with no rubber type, for a pocket too small to letter. Level 0 is
+   the pencil every notebook starts with, which no stamp opened, so it borrows the fountain pen's
+   ring. Drawn in currentColor; the caller says whether it is sewn solid or still owed. */
+const BADGE_PENCIL = { shape: "circle", glyph: ["mi", "hbpencil"] };
+export function passportBadge(L) {
+  const sp = L ? STAMPS[L] : BADGE_PENCIL;
+  const at = `rotate(${tilt(L || 7).toFixed(1)})`;
+  return `<svg class="mpp-stamp mpp-badge" viewBox="-41 -41 82 82" aria-hidden="true" focusable="false"><g transform="${at}">` +
+    outline(sp.shape, `class="mpp-badge-fr"`) + glyph(sp.glyph, 44) + `</g></svg>`;
+}
+
 /* ISSUED, pressed the way NOT YET ISSUED is (one office, two verdicts), in the laurel green of the
    title tile, for the one level-up spread that has no stamp of its own yet: the unlock. */
 export const issuedStampSVG = (date) => `<svg class="mpp-stamp" viewBox="-62 -31 124 62" aria-hidden="true" focusable="false"><g class="mpp-inked" style="--mpp-ink:${tileInk("title")}" transform="rotate(-7)">` +

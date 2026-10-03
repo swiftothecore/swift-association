@@ -15,7 +15,7 @@
    its colours at night, the way the start-button finishes do; only what is ink on the page
    follows the theme. The styles are the REWARD BOARD block in styles.css. */
 import { MASTERY_REWARDS, MASTERY_TILE_MARKS, MASTERY_ICONS, MASTERY_TITLES, MASTERY_TIER_ICONS, CTA_LABELS, CTA_MARKS } from "./config.js";
-import { passportStamp, passportGhost, passportStampInk } from "./passport.js";
+import { passportStamp, passportGhost, passportStampInk, passportBadge } from "./passport.js";
 import { trinketPreviewSVG } from "./bracelet.js";
 import { stickerArt } from "./stickers.js";
 
@@ -100,7 +100,8 @@ function pensRoll(D) {
   const pockets = slots.map((p, i) => {
     const open = !p.rid || D.has(p.rid);
     const worn = open && D.wear.pen === p.id;
-    const badge = p.L ? tag(D, p.L, "pr-tagc") : `<span class="pr-hb">HB</span>`;
+    // each pocket wears its passport stamp's outline and mark, sewn; the pencil's is its own
+    const badge = `<span class="pr-tagc ${!p.L || reached(D, p.L) ? "on" : "owed"}">${passportBadge(p.L)}</span>`;
     const face = `<span class="pr-face"><span class="pr-badge">${badge}</span><span class="pr-nm">${esc(p.short)}</span></span>`;
     if (!open) return `<div class="pr-pk empty">${face}</div>`;
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="pen"`;

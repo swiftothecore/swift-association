@@ -14449,15 +14449,15 @@
   .pr-face::before { content: ""; position: absolute; left: 3px; right: 3px; top: 4px; border-top: 1.4px dashed var(--thread); opacity: .85; }
   .pr-pk + .pr-pk .pr-face { border-left: 1.4px dashed var(--thread); }
   .pr-badge { display: flex; align-items: center; justify-content: center; height: 34px; }
-  .pr .pr-tagc { width: 34px; height: 34px; filter: none; }
-  /* the level, sewn: a satin outline in gold once earned, the passport's dashes in pale thread while owed */
-  .pr .pr-tagc .mpp-ghost, :root[data-theme="dark"] .pr .pr-tagc.on .mpp-ghost { color: var(--thread); }
-  .pr .pr-tagc.on .mpp-ghost-fr { stroke-width: 4; }
-  .pr .pr-tagc.owed .mpp-ghost, :root[data-theme="dark"] .pr .pr-tagc.owed .mpp-ghost { color: #c9d3e6; }
-  .pr .pr-tagc.owed .mpp-ghost-fr { opacity: .6; stroke-width: 2.6; }
-  .pr .pr-tagc.owed .mpp-ghost-n { opacity: .7; }
-  .pr-hb { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1.6px solid var(--thread); border-radius: 50%;
-    font-family: var(--type); font-weight: 700; font-size: 10.5px; color: var(--thread); transform: rotate(-8deg); }
+  .pr .pr-tagc { display: block; width: 36px; height: 36px; color: var(--thread); }
+  .pr .pr-tagc .mpp-stamp { width: 100%; height: 100%; mix-blend-mode: normal; }
+  /* the passport stamp, sewn: a satin outline and its mark in gold once earned, the passport's
+     dashes and a faint mark in pale thread while owed. The marks' paper knockouts show denim. */
+  .pr .mpp-badge-fr { fill: none; stroke: currentColor; stroke-width: 4.4; }
+  .pr .mpp-badge [fill="var(--paper)"] { fill: var(--dn-pk); }
+  .pr .pr-tagc.owed { color: #c9d3e6; }
+  .pr .pr-tagc.owed .mpp-badge-fr { stroke-width: 2.6; stroke-dasharray: 5 6.4; opacity: .6; }
+  .pr .pr-tagc.owed .mpp-gl { opacity: .45; }
   .pr-nm { font-family: var(--type); font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .06em; text-transform: uppercase; color: var(--thread); white-space: nowrap; }
   .pr-pk.empty .pr-nm { color: #c9d3e6; opacity: .7; font-weight: 400; }
   .pr-pk.worn .pr-nm { color: #fff3e2; }
