@@ -950,6 +950,10 @@
        ambient, and the remaining shadow is a half-pixel blur rather than a glow,
        just enough to seat the gold on the wood instead of floating over it. */
     filter: drop-shadow(0 1px 0.5px color-mix(in srgb, var(--mast-ink, var(--brand-gold)), #000 55%));
+    /* Safari paints a filtered inline element only inside its own box, and the "g" overhangs
+       its advance, so its right side was sheared off flat (Chromium lets the ink spill). Same
+       pad-and-hand-back as .mast-line: the paint box grows, the spacing does not move. */
+    padding-right: 0.12em; margin-right: -0.12em;
   }
   /* the dot on the first i becomes the game's gold star */
   .mast-i { position: relative; }
@@ -11057,7 +11061,8 @@
     font-size: clamp(30px, 5.4vw, 44px); color: #43301a;
     text-shadow: 0 1px 0 rgba(255,248,232,0.5);
   }
-  .nb-cover-gold { color: var(--mast-ink, var(--ink-accent)); }
+  /* padded for the same Safari clip as .mast-gold: the dark cover filters this word */
+  .nb-cover-gold { color: var(--mast-ink, var(--ink-accent)); padding-right: 0.12em; margin-right: -0.12em; }
   .nb-cover-sub {
     margin: 12px 0 0; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.6px;
     color: #7b7062;
