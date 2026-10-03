@@ -7021,13 +7021,15 @@ let onlyDealt = new Set();
    `chainNow` and `chainRun` are the longest unbroken chain: not scored, deliberately, and
    carried across the whole run because a 0-60 total gives a run no personal chase. */
 let chainStep = 0;
-let chainTaken = [];       // per pick: { picked: card index or -1 for the clock, right }
+let chainTaken = [];       // per pick: { picked: card index or -1 for the clock, right, late: never reached }
 let chainPage = 0;         // points banked on THIS page
 let chainNow = 0;
 let chainRun = 0;
 let chainBusy = false;
 let chainBeatId = null;
 let chainBeatDeadline = 0;
+let chainLeft = 0;         // ms left in the page's one shared clock, held across the beat between picks
+let chainClockSecs = 0;    // dev only: a trial length for that clock (__dev.bonus.chainClock), 0 = the real one
 let chainBeatFn = null;
 // Ruthless Game: how much of the stream is out, when this page started, what it has been fined
 // for a give-up, and the frozen cost of the page once it settles. `ruthlessSpent` exists so the
@@ -7502,10 +7504,10 @@ function bonusSeconds() {
   if (bonusGame.id === "sing-it-back") return BONUS_BLANK_SECONDS;
   if (bonusGame.id === "redacted") return BONUS_REDACT_SECONDS;
   if (bonusGame.id === "only-here") return BONUS_ONLY_SECONDS;
-  // Then What's budget is spent per PICK rather than per page: the clock restarts under
-  // every set of three cards, which is what keeps the answer an instinct rather than a
-  // deliberation.
-  if (bonusGame.id === "then-what") return BONUS_CHAIN_SECONDS;
+  // Then What's budget is ONE pool for the page, spent across all four picks: it does not
+  // restart under each set of three cards, so time a quick pick saves is time a hard one has.
+  // startBonusClock carries the remainder over (chainLeft).
+  if (bonusGame.id === "then-what") return chainClockSecs || BONUS_CHAIN_SECONDS;
   // Long enough to type a title you already know, nowhere near long enough to count up from
   // track one, which is the whole game (see BONUS_TRACK_SECONDS).
   if (bonusGame.id === "running-order") return BONUS_TRACK_SECONDS;
@@ -7701,6 +7703,7 @@ function nextBonusRound(options = {}) {
   chainTaken = [];
   chainPage = 0;
   chainBusy = false;
+  chainLeft = 0;
   stopChainBeat();
   // Nothing of the song is out yet, nothing has been fined, and the page has cost nothing.
   ruthlessShown = 0;
@@ -8211,6 +8214,10 @@ function startBonusClock(resumeState = null) {
   stopBonusClock();
   if (bonusLocked) return;
   if (bonusTimed(bonusGame)) { startRuthlessClock(resumeState); return; }
+  // Then What past its first pick picks the page's clock up where the last pick left it,
+  // rather than handing out a fresh one: the four picks share one pool.
+  if (!resumeState && bonusGame && bonusGame.id === "then-what" && chainStep > 0)
+    resumeState = { kind: "countdown", total: bonusSeconds() * 1000, remaining: chainLeft };
   // The page is genuinely live now, so its score starts with the clock the player can see.
   if (!resumeState) bonusPageStart = performance.now();
   const fill = $("bonusTimerFill");
@@ -8475,9 +8482,8 @@ function revealRuthless() {
 
 function bonusTimeout() {
   if (bonusLocked) return;
-  // Then What's clock runs per PICK, so its timeout is a missed pick rather than a lost page:
-  // the correct line still locks in and the chain carries on. It is the one game here whose
-  // page cannot time out at all.
+  // Then What's clock is the page's, so running it dry misses every pick still to come. The
+  // verse still writes itself out in full, so the page ends reading as the song.
   if (bonusGame && bonusGame.id === "then-what") { judgeChain(-1); return; }
   // Spot the Slip names the impostor even on a timeout: that word is the one thing the page
   // still has to teach, and unlike the other two games the answer card can't carry it (the card
@@ -8575,8 +8581,8 @@ function chainSheetRows() {
   const p = bonusPuzzle;
   const rows = [{ text: p.anchor.text, label: p.anchor.label, si: p.anchor.si }];
   chainTaken.forEach((t, i) => {
-    if (!t.right) rows.push({ miss: true, text: t.picked >= 0 ? p.picks[i].cards[t.picked].text : null });
-    rows.push({ ...p.picks[i].answer, fresh: i === chainTaken.length - 1 });
+    if (!t.right && !t.late) rows.push({ miss: true, text: t.picked >= 0 ? p.picks[i].cards[t.picked].text : null });
+    rows.push({ ...p.picks[i].answer, late: !!t.late, fresh: !t.late && i === chainTaken.length - 1 });
   });
   return rows;
 }
@@ -8594,7 +8600,7 @@ function renderChainSheet() {
           (r.text
             ? `<span class="bg-chain-text"><s>${escapeHtml(censor(r.text))}</s></span>` +
               `<span class="sr-only">you picked this, and it was wrong</span>`
-            : `<span class="bg-chain-text is-late">the clock took this one</span>`) +
+            : `<span class="bg-chain-text is-late">the clock ran out here</span>`) +
         `</div>`;
     // The section is noted in the margin only where it CHANGES, so a chain crossing a boundary
     // shows where it crossed instead of repeating one word down the whole page.
@@ -8605,8 +8611,11 @@ function renderChainSheet() {
     // The newest line inks in. Nothing depends on the animation finishing, so reduced motion
     // and instant speed simply have it there already.
     const fresh = r.fresh && !motionReduced() && !animInstant() ? " is-new" : "";
-    return `<div class="bg-chain-row${fresh}">${sec}` +
-        `<span class="bg-chain-text">${escapeHtml(censor(r.text))}</span></div>`;
+    // A line the clock never reached is written in, but faintly: it is the song, not a pick.
+    const late = r.late ? " is-unsung" : "";
+    return `<div class="bg-chain-row${fresh}${late}">${sec}` +
+        `<span class="bg-chain-text">${escapeHtml(censor(r.text))}</span>` +
+        (r.late ? `<span class="sr-only">not reached before the clock ran out</span>` : "") + `</div>`;
   }).join("");
 }
 
@@ -8629,14 +8638,17 @@ function renderChainCards() {
     `pick ${chainStep + 1} of ${CHAIN_PICKS} · worth ${CHAIN_PAY[chainStep]}`;
 }
 
-/* One tap, judged on the spot. `i` is -1 when the clock took the pick, which counts as a miss
-   in every way except that there is nothing to strike through: the correct line still locks in
-   and the chain carries on, exactly as a wrong tap does. */
+/* One tap, judged on the spot. `i` is -1 when the page's clock ran dry, which misses this pick
+   and every one after it: nothing to strike through, and the rest of the verse is written in
+   faintly (`late`) so the page still ends as the song. */
 function judgeChain(i) {
   if (bonusLocked || chainBusy || !bonusPuzzle) return;
   const pick = bonusPuzzle.picks[chainStep];
   if (!pick) return;
   chainBusy = true;
+  // Bank what is left of the page's clock before stopping it: the beat between picks is free,
+  // and the next pick resumes from exactly here.
+  chainLeft = bonusClockDeadline ? Math.max(0, bonusClockDeadline - performance.now()) : 0;
   stopBonusClock();
 
   const right = i >= 0 && !!pick.cards[i].right;
@@ -8657,6 +8669,8 @@ function judgeChain(i) {
     else if (idx === i) b.classList.add("is-wrong");
   });
   chainStep++;
+  // Out of time: the picks still to come are missed unseen, and the page ends here.
+  if (i < 0) for (; chainStep < CHAIN_PICKS; chainStep++) chainTaken.push({ picked: -1, right: false, late: true });
   renderChainSheet();
   $("bonusScore").textContent = bonusScoreText();
 
@@ -32344,7 +32358,7 @@ function buildDevApi() {
         $("bonusBody").prepend(strip);
         return [...BONUS_GAMES, RUTHLESS_GAME].map((g) => `${g.id}: ${hasCover(g.id) ? "drawn" : "NO COVER: blank kraft"}`);
       },
-      /* Then What. The ramp is the whole design and NONE of it is visible on screen — three
+      /* Then What. `chainClock(s)` trials the shared page clock's length. The ramp is the whole design and NONE of it is visible on screen — three
          lines look the same whether they came from another album or from this very song — so
          `chain()` is the only way to see whether a page ramped at all: it prints each pick's
          true successor and where every decoy was mined from.
@@ -32394,6 +32408,15 @@ function buildDevApi() {
         renderBonusRound();
         startBonusClock();
         return { song: p.song.title, chain: devChainLines(p) };
+      },
+      // Then What's shared page clock on trial: chainClock(18) deals every page from here on
+      // eighteen seconds, chainClock(0) puts the real BONUS_CHAIN_SECONDS back. Session only,
+      // never stored. It takes effect on the next page.
+      chainClock: (secs) => {
+        if (secs !== undefined) chainClockSecs = Math.max(0, +secs || 0);
+        return { seconds: chainClockSecs || BONUS_CHAIN_SECONDS, trial: chainClockSecs > 0,
+                 left: bonusGame && bonusGame.id === "then-what" && bonusClockDeadline
+                   ? +((bonusClockDeadline - performance.now()) / 1000).toFixed(2) : null };
       },
       chainAudit: (n = 200) => {
         let built = 0, crossed = 0, fell = 0, picks = 0;

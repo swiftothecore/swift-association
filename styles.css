@@ -5516,6 +5516,9 @@
   }
   .bg-chain-row.is-miss s { text-decoration-color: rgba(43,39,34,0.4); }
   .bg-chain-row.is-miss .bg-chain-text.is-late { font-style: italic; }
+  /* Lines the clock never reached: the verse finishes itself, faintly, so the page still reads
+     as the song without passing them off as picks. */
+  .bg-chain-row.is-unsung .bg-chain-text { opacity: 0.45; }
   .bg-chain-mark { position: absolute; left: -19px; top: 50%; transform: translateY(-50%); width: 13px; }
   /* The section noted in the margin, and only where it changes — a chain that crosses a
      boundary shows where it crossed. */

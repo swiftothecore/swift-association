@@ -1044,11 +1044,17 @@ export const BONUS_ONLY_SECONDS = 20;
 // COMPRESSED, with several words in the same one-to-three band and a false exotic among them.
 // Hand composition is the only ramp this game has, since there is nothing else left to move.
 export const ONLY_WIDE_PAGES = 3;
-// Then What's clock is PER PICK, not per page, and it is load-bearing rather than decoration:
-// without it the optimal play is to sit and reason about three lines, which drains the
-// sing-it-forward instinct the whole game exists to test. Long enough to read three lines and
-// commit, short enough that deliberating costs you the pick.
-export const BONUS_CHAIN_SECONDS = 11;
+// Then What's clock is ONE POOL FOR THE WHOLE PAGE, spent across all four picks, and it is
+// load-bearing rather than decoration: without it the optimal play is to sit and reason about
+// three lines, which drains the sing-it-forward instinct the whole game exists to test. It was
+// eleven seconds PER PICK, and that clock never asked a question: a song you know is tapped in
+// two seconds and the other nine are thrown away, and one you don't is not saved by more of
+// them. A shared pool turns the easy picks (decoys from other records) into time banked for
+// the hard ones (decoys from this very song, paid double), and a hesitation on pick 1 is paid
+// for on pick 4. The clock stops during the beat between picks, so only reading costs time.
+// Twenty-two is a fan reading four sets of three lines with a little to spare; a half-known
+// song runs dry. Tune it with __dev.bonus.chainClock(s).
+export const BONUS_CHAIN_SECONDS = 22;
 // Pages 1 to CHAIN_EASY_PAGES keep the chain inside one section; after that it is allowed to
 // cross a section boundary, which asks a harder question — does the verse hand off to the
 // chorus, the pre-chorus, the bridge? — and tests the song's architecture rather than its lines.
