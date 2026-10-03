@@ -28044,7 +28044,7 @@ function renderSettingsBody() {
         setCheckHTML("enterOnMiss", "Enter advances on a miss", "leaves the answer screen"),
         setCheckHTML("showExamples", "Show example songs", "cards after a miss, and the rest of the field on either verdict"),
         setCheckHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)"),
-        setCheckHTML("enableHints", "Hints", "Easy &amp; Relaxed; records note how many you took"),
+        setCheckHTML("enableHints", "Hints", "Relaxed only; records note how many you took"),
         setCheckHTML("censorExplicit", "Censor explicit words", "mask swearing in lyrics &amp; titles (f**k, s**t)"),
         ...(phoneViewport() ? [setCheckHTML("openKeyboard", "Open keyboard each round", "focus the answer line as a new page opens")] : []),
         setCheckHTML("confirmLeave", "Confirm before leaving a run", "requires a second tap before giving up"),
@@ -30819,7 +30819,7 @@ function buildDevApi() {
         if (screens.game && screens.game.classList.contains("active")) showGuideBeat("guideType");
       },
       // Force any beat on screen now, bypassing the first-game gate — needs an open game (and, for
-      // guideHint, the hint button showing, i.e. an Easy/Relaxed round). False if it can't anchor.
+      // guideHint, the hint button showing, i.e. a Relaxed round). False if it can't anchor.
       guideBeat: (id) => {
         if (!(screens.game && screens.game.classList.contains("active"))) return false;
         return showGuideBeat(id);
