@@ -12,16 +12,17 @@
    What the player is wearing is marked by the object itself, never by a mark laid over it: the
    pen's pocket is satin-stitched in the roll's gold, the stock you write on keeps its place in the
    fan and the others swing back off it on the rivet, the bead compartment is lined in felt, the button is sewn over a square of
-   gingham, and the label strips not in use go pale. (It used to be the editor's red pen looped
+   gingham, and the words in use are the one real button among charcoal sketches. (It used to be the editor's red pen looped
    round each one, and a page of red rings read as corrections rather than choices.)
 
-   Objects with a material of their own (denim, a cassette, leather, label tape, card stock) keep
+   Objects with a material of their own (denim, a cassette, leather, card stock) keep
    its colours at night, the way the start-button finishes do; only what is ink on the page
    follows the theme. The styles are the REWARD BOARD block in styles.css. */
-import { MASTERY_REWARDS, MASTERY_TILE_MARKS, MASTERY_ICONS, MASTERY_TITLES, MASTERY_TIER_ICONS, CTA_LABELS, CTA_MARKS } from "./config.js";
+import { MASTERY_REWARDS, MASTERY_TILE_MARKS, MASTERY_ICONS, MASTERY_TITLES, MASTERY_TIER_ICONS, CTA_LABELS } from "./config.js";
 import { passportStamp, passportGhost, passportTracing, passportStampInk, passportBadge } from "./passport.js";
 import { trinketPreviewSVG } from "./bracelet.js";
 import { stickerArt } from "./stickers.js";
+import { ctaSketch } from "./ctasketch.js";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const T = MASTERY_TILE_MARKS;
@@ -324,32 +325,34 @@ function refill(id, title, sub, members) {
 }
 
 /* ================================================================
-   START BUTTON WORDS: label-maker tape
+   START BUTTON WORDS: the button, sketched
    ================================================================ */
-// Rewriting a label is a label maker's job, so every set of words is a strip of the notebook's own
-// label-maker tape (.stp-dy in styles.css), in the words' teal. Above them, the
-// real start button wearing the words and finish chosen.
+// Every set of words is the start button itself, roughed out in charcoal on the page with no
+// colour (js/ctasketch.js). The words being worn are not sketched at all: their slot holds the
+// real button, in the finish chosen above, so it is both the choice and the preview, and there
+// is no separate "on your page" row. The sketches are sized to their words and wrap, and the
+// matchbox rides in the header as it does on the button card. Locked, the eight owed are blank
+// outlines, faint, since all eight arrive together and the words are the reward.
+// Designed on scripts/mastery/words-board.html (option E).
 function labelTape(D) {
   const labels = ofKind("label");
   const slots = [{ id: "", text: "Start writing", mark: "pencil" }, ...labels.map((r) => ({ id: r.payload.label, text: CTA_LABELS[r.payload.label].text, mark: CTA_LABELS[r.payload.label].mark, rid: r.id }))];
   const open = labels.length > 0 && D.has(labels[0].id);
   const level = labels.length ? labels[0].level : 12;
   const rnd = D.wear.label === D.RANDOM;
-  const strips = slots.map((p, i) => {
-    if (p.rid && !open) return "";
+  const cells = slots.map((p, i) => {
+    const r = `--r:${(-.6 + jit(i + 200, .5)).toFixed(2)}deg`;
+    if (p.rid && !open) return `<span class="ls-pick owed" style="${r}" aria-hidden="true">${ctaSketch(p, i, { blank: true })}</span>`;
     const worn = !rnd && D.wear.label === p.id;
-    const mk = p.mark ? `<span class="lt-mk">${CTA_MARKS[p.mark]}</span>` : "";
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="label"`;
-    return `<button type="button" class="lt-pick${worn ? " worn" : ""}" ${pick(attr, worn, p.text)}>` +
-      `<span class="stp-dy lt-strip" style="--r:${jit(i + 60, 1.6).toFixed(2)}deg">${mk}${esc(p.text)}</span></button>`;
+    return `<button type="button" class="ls-pick${worn ? " worn" : ""}" style="${r}" ${pick(attr, worn, p.text)}>` +
+      (worn ? `<span class="ls-real">${D.nowButton()}</span>` : ctaSketch(p, i)) + `</button>`;
   }).join("");
-  const coil = open ? "" : `<div class="lt-coil"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34"/><circle cx="40" cy="40" r="27"/><circle cx="40" cy="40" r="20.5"/><circle cx="40" cy="40" r="12" class="lt-core"/><path d="M40 6 H80"/></svg>` +
-    `<span><b>${labels.length} more labels</b> wait on the roll till Mastery ${level}</span></div>`;
   return `<section class="rw-obj rw-words" style="--o:${T.cta}">` +
-    head("Start button words", rnd ? "different words punched out every visit" : "what the front-page button says", stamp(D, level)) +
-    `<div class="lt"><div class="rw-now"><span class="rw-now-k">on your page</span><span class="rw-now-btn">${D.nowButton()}</span></div>` +
-    `<div class="lt-strips${rnd ? "" : " picked"}">${strips}${coil}</div>` +
-    (open ? `<div class="lt-foot">${dieControl("label", rnd, "Different words every visit")}<span>${rnd ? "a new strip every visit" : "or let the button pick its own words"}</span></div>` : "") + `</div></section>`;
+    head("Start button words", rnd ? "different words every visit" : "what the front-page button says",
+      (open ? dieControl("label", rnd, "Different words every visit") : "") + stamp(D, level)) +
+    `<div class="ls">${cells}</div>` +
+    (open ? "" : `<p class="rw-owe ls-owe">${labels.length} more get sketched in at Mastery ${level}</p>`) + `</section>`;
 }
 
 /* ================================================================

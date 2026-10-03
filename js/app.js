@@ -2233,7 +2233,7 @@ function albumOfTitle(title) {
      the distribution     pencil-hatched bars on a graph-paper scrap
      the nemesis          a tabloid clipping: the word in the headline (a sticky of perfects, where there is none)
      the home album       its record sleeve (Track by Track's), the most-sung song on a slip
-     the quick numbers    label-maker tape
+     the quick numbers    four postage stamps
      songs found          a sheet of blotting paper, an album a drop of ink bled out as far as you've found
      the daily            a monthly pass, a day punched through for every daily finished
 
@@ -2242,7 +2242,7 @@ function albumOfTitle(title) {
    that never re-dices, all from the notebook's plain kraft roll. It used to be the stats
    card's denim, nine identical strips of it, which read as a theme rather than a desk; this
    is the most colourful page in the notebook, so the tape is the one thing on it that stays
-   out of the way. Sticky notes and label tape carry no strip: they stick themselves.
+   out of the way. Sticky notes and stamps carry no strip: they stick themselves.
 
    The paper objects are physical things in fixed stock, so they write in fixed ink, never
    var(--ink), and at night they are taken down a stop the way the polaroids are, never

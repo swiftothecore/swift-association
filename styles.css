@@ -11480,7 +11480,7 @@
     .stp > .stp-o0 { order: 0; } .stp > .stp-o1 { order: 1; } .stp > .stp-o2 { order: 2; }
     .stp > .stp-solo { grid-column: span 2; justify-self: center; width: 64%; }
   }
-  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-clip, .stp-slip, .stp-blot, .stp-dy, .stp-ps-st) {
+  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-clip, .stp-slip, .stp-blot, .stp-ps-st) {
     filter: brightness(0.78) saturate(0.94);
   }
 
@@ -11705,18 +11705,6 @@
   .stp-slip-cap { margin-top: 4px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.1px;
     text-transform: uppercase; color: var(--stp-soft); }
   .stp-slip-cap i { font-style: normal; white-space: nowrap; color: color-mix(in srgb, var(--era) 50%, var(--stp-pen)); }
-
-  /* The notebook's one label-maker tape. It was the Stats page's quick numbers until the stamps
-     below took over; the Mastery page's start-button words are strips of it (.lt-strip,
-     js/rewardboard.js), so the stock stays. */
-  .stp-dy {
-    display: inline-block; padding: 5px 10px 4px; color: #f6f1e4; background: #23406b; border-radius: 2px;
-    font-family: var(--type); font-weight: 700; font-size: calc(13px + var(--text-size-adjust)); line-height: 1.1; letter-spacing: 2.2px; text-transform: uppercase;
-    transform: rotate(var(--r, 0deg)); clip-path: polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%);
-  }
-  .stp-dy--1 { background: #2b2722; } .stp-dy--2 { background: #8c2f2a; } .stp-dy--3 { background: #2f5a3f; }
-  /* black tape on the night page is a hole in it: lifted to the pale side of graphite, as the nav cards' graphite is */
-  :root[data-theme="dark"] .stp-dy--1 { background: #57514a; }
 
   /* the quick numbers: four postage stamps (statsStampsHTML has the why). Gummed, so no tape;
      perforated by a mask of round holes centred on the edge over a solid content-box, so only the
@@ -14898,38 +14886,38 @@
   .bc-refill-hd span { font-family: var(--type); font-size: 10px; color: var(--ink-soft); }
   .bc-refill-hd button { margin-left: auto !important; font-family: var(--type) !important; font-size: 10px !important; text-decoration: underline; color: var(--ink-soft) !important; }
 
-  /* the live start button, wherever words are chosen */
-  .rw-now { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; }
-  .rw-now-k { font-family: var(--type); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
-  .rw-now-btn { display: block; width: 170px; }
-  .rw-now-btn .cta-prev { --cta-k: .6; --cta-h: 38px; }
-
-  /* ================= WORDS: label-maker tape =================
-     The strips are the notebook's own label-maker tape (.stp-dy, defined with the Stats page's
-     quick numbers); this only tints them in the words' teal and lays them out. */
-  .lt { position: relative; }
-  .lt-strips { display: flex; flex-wrap: wrap; gap: 12px 12px; align-items: center; }
-  .lt-pick { position: relative; display: inline-block !important; transition: transform .15s; }
-  .lt-pick:hover { transform: translateY(-2px); }
-  .lt-strip.stp-dy { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 5px; background: #2f6f6a; }
-  .lt-mk { width: 17px; height: 17px; display: block; flex: none; }
-  .lt-mk svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .lt-mk .ink-fill { fill: currentColor; stroke: none; }
-  .lt-mk .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-  /* the words in use keep their full teal; every other strip goes pale until it is reached for */
-  .lt-strips.picked .lt-pick:not(.worn) .lt-strip { opacity: .36; transition: opacity .15s; }
-  :root[data-theme="dark"] .lt-strips.picked .lt-pick:not(.worn) .lt-strip { opacity: .46; }
-  .lt-strips.picked .lt-pick:not(.worn):hover .lt-strip,
-  .lt-strips.picked .lt-pick:not(.worn):focus-visible .lt-strip { opacity: .7; }
-  .lt-coil { display: flex; align-items: center; gap: 14px; margin-left: 8px; }
-  .lt-coil svg { width: 74px; height: 74px; flex: none; overflow: visible; }
-  .lt-coil circle { fill: none; stroke: var(--oi); stroke-width: 6.5; }
-  .lt-coil circle.lt-core { fill: var(--mpp-card); stroke: var(--ink); stroke-width: 1.6; }
-  .lt-coil path { stroke: var(--oi); stroke-width: 9; }
-  .lt-coil span { font-family: var(--type); font-size: 10.5px; line-height: 1.5; color: var(--ink-soft); }
-  .lt-coil span b { color: var(--ink); font-family: var(--hand); font-size: 19px; font-weight: 700; display: block; line-height: 1.1; }
-  .lt-stamp { right: 0; top: -6px; width: 74px; height: 74px; }
-  .lt-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-family: var(--hand); font-weight: 600; font-size: 16px; color: var(--ink-soft); }
+  /* ================= WORDS: the button, sketched =================
+     Each set of words is the start button roughed out in charcoal (js/ctasketch.js, filters
+     #ctaSkH/#ctaSkV/#ctaSkText in index.html). The charcoal is ink, so it follows the theme and
+     reads as chalk at night. The words in use are not sketched: their slot holds the real button
+     (D.nowButton, a .cta-prev) at two thirds, sized by CSS zoom rather than the preview's own
+     scale transform, so the slot takes the button's real width and the row wraps round it. */
+  .ls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 2px; margin: -2px -8px 0; }
+  .rw-words .rw-cap > .rw-die { align-self: center; margin: 0 10px 0 0; }
+  /* narrow, the matchbox would squeeze the name onto two lines: it drops under the subtitle
+     instead, the margin taking up the rest of its row so it wraps rather than shrinks */
+  @container rw (max-width: 440px) {
+    .rw-words .rw-cap { flex-wrap: wrap; }
+    .rw-words .rw-cap > .rw-die { order: 5; margin: 6px calc(100% - 85px * var(--mbz)) 0 0; }
+  }
+  .ls-pick { display: block; color: var(--ink) !important; transform: rotate(var(--r, -.6deg)); transition: transform .15s; }
+  .ls-sk { display: block; overflow: visible; }
+  body[data-text-size="small"] .ls-sk { zoom: .94; }
+  body[data-text-size="large"] .ls-sk { zoom: 1.12; }
+  .ls-face { fill: var(--paper); opacity: .7; }
+  .ls-ln path { fill: none; stroke: currentColor; stroke-linecap: round; }
+  .ls-tx { font-family: var(--type); font-weight: 700; fill: currentColor; }
+  .ls-mk .ink-fill { fill: currentColor; stroke: none; }
+  .ls-mk .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  /* the ones not in use are a light first pass, darkening when reached for */
+  .ls-pick:not(.worn) .ls-sk { opacity: .58; transition: opacity .15s; }
+  .ls-pick:not(.worn):is(:hover, :focus-visible) .ls-sk { opacity: .82; }
+  .ls-pick:not(.worn):not(.owed):hover { transform: rotate(var(--r, -.6deg)) translateY(-2px); }
+  .ls-pick.owed .ls-sk { opacity: .2; }
+  .ls-real { display: block; padding: 6px 6px 9px; }
+  .ls-real .cta-prev { width: auto; height: auto; }
+  .ls-real .cta-prev .play-cta { position: relative; top: auto; left: auto; min-width: 0; transform: rotate(-.6deg); zoom: .66; }
+  .ls-owe { margin: 6px 0 0; text-align: center; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
 
   /* ================= STICKER HINTS: the sheet ================= */
   .ss { position: relative; }

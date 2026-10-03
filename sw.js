@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v366";
+const CACHE = "stta-v367";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -102,6 +102,7 @@ const ASSETS = [
   // imports both at load).
   "js/passport.js",
   "js/rewardboard.js",
+  "js/ctasketch.js",
   "js/skillmarks.js",
   // The randomiser's weighting (pure; see js/random.js). app.js imports it at load, so an
   // uncached copy would break a cold offline start rather than just the button.

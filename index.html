@@ -189,6 +189,28 @@ if (location.pathname.endsWith('/index.html')) {
     <feTurbulence type="fractalNoise" baseFrequency="0.018 0.075" numOctaves="2" seed="23" result="noise"/>
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
+  <!-- Charcoal for the sketched start buttons (js/ctasketch.js). The lines wobble a touch and lose
+       ink in streaks that run ALONG the stroke, so there is one filter for the strokes running
+       across and one for those running down; the words get a finer, lighter grain of the same. -->
+  <filter id="ctaSkH" x="-8%" y="-40%" width="116%" height="180%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="1.15" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.06 1.4" numOctaves="2" seed="9" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  4 0 0 0 -.95" result="gm"/>
+    <feComposite in="d" in2="gm" operator="in"/>
+  </filter>
+  <filter id="ctaSkV" x="-40%" y="-8%" width="180%" height="116%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="11" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="1.15" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency="1.4 0.06" numOctaves="2" seed="16" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  4 0 0 0 -.95" result="gm"/>
+    <feComposite in="d" in2="gm" operator="in"/>
+  </filter>
+  <filter id="ctaSkText" x="-4%" y="-20%" width="108%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.09 1.5" numOctaves="2" seed="21" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  4 0 0 0 -.62" result="gm"/>
+    <feComposite in="SourceGraphic" in2="gm" operator="in"/>
+  </filter>
   <!-- The reward board's three materials (js/rewardboard.js). rwKiss draws a sticker's kiss-cut:
        a hairline ring a few pixels outside the shape, and a ghost of the shape on the backing.
        rwDeckle tears the edge of the rank II title card. rwGlitter is the gel pen's clear barrel,
