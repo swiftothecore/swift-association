@@ -14375,14 +14375,17 @@
   .msc-s { position: relative; aspect-ratio: 1; width: 100%; max-width: 24px; justify-self: center; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: color-mix(in srgb, var(--t) 75%, var(--paper)); }
-  .msc-s.off, .msc-s.part { border: 1.5px dotted color-mix(in srgb, var(--t) 55%, var(--paper)); }
   .msc-s.on { background: var(--t); color: var(--paper); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust));
     filter: url(#stampInk0); transform: rotate(var(--r, 0deg)); }
   .msc-s.on:nth-child(3n+1) { filter: url(#stampInk1); }
   .msc-s.on:nth-child(3n+2) { filter: url(#stampInk2); }
-  .msc-s.part { color: var(--t); }
-  .msc-s.part svg { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); overflow: visible; transform: rotate(-90deg); }
-  .msc-s.part b { font-weight: 400; color: color-mix(in srgb, var(--t) 75%, var(--paper)); }
+  /* an owed level, pencilled (pencilSlot): graphite until it is stamped */
+  .msc-s.off { color: var(--ink-soft); }
+  .msc-s.off svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .msc-pencil ellipse { fill: none; stroke: currentColor; stroke-width: 1.35; }
+  .msc-pencil .msc-sketch { stroke-width: 1; opacity: .4; }
+  .msc-owed { fill: none; stroke: var(--t); stroke-width: 3.8; stroke-linecap: round; }
+  .msc-pencil-n { font-family: var(--hand); font-weight: 700; font-size: 18px; fill: currentColor; }
   .msc-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .msc-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
   .msc-next { font-family: var(--type); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); white-space: nowrap; color: var(--ink); }

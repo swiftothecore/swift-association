@@ -297,9 +297,17 @@ export function passportHTML(d) {
   return `<div class="mpp${d.issued ? "" : " unissued"}"><div class="mpp-head">${head}</div><div class="mpp-grid">${slots}${notIssued}</div><div class="mpp-foot">${foot}</div></div>`;
 }
 
-function slotRing(frac) {
-  const r = 14, c = 2 * Math.PI * r;
-  return `<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="${r}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${(c * frac).toFixed(2)} ${c.toFixed(2)}"/></svg>`;
+/* A level not yet stamped, pencilled in the way the passport traces its owed stamps: the ring the
+   stamp will fill, gone over twice with the second pass a hair off, and the number written in by
+   hand. Ink and graphite, so a stamped level and an owed one never read alike. On the level being
+   worked toward, `frac` inks that same ring round in the skill's colour as far as earned, so the
+   progress sits on the stamp it is filling rather than on a ring of its own. */
+function pencilSlot(k, frac, seed) {
+  const tilt = (settle(seed) * 30 - 15).toFixed(0), ring = (at = "") => `<ellipse rx="14.2" ry="13.7" ${at}/>`;
+  return `<svg viewBox="-16 -16 32 32" aria-hidden="true" focusable="false"><g transform="rotate(${tilt})">` +
+    `<g class="msc-pencil" filter="url(#pencilLine)">${ring(`class="msc-sketch" transform="translate(.7 -.5) rotate(9)"`)}${ring()}</g>` +
+    (frac > 0 ? `<g filter="url(#stampInk1)">${ring(`class="msc-owed" pathLength="1" stroke-dasharray="${frac.toFixed(3)} 1" transform="rotate(-90)"`)}</g>` : "") +
+    `</g><text class="msc-pencil-n" y="6" text-anchor="middle" filter="url(#pencilLine)">${k}</text></svg>`;
 }
 /* A full card's level count, stamped over: it takes the "10/10" corner rather than crossing the
    card, so nothing it lands on is text, and the full row of slots stays at full strength. */
@@ -338,8 +346,7 @@ export function stampCardsHTML(d) {
     let slots = "";
     for (let k = 1; k <= d.maxLevel; k++) {
       if (k <= s.lvl) slots += `<span class="msc-s on" style="--r:${(settle(k * 7 + i) * 24 - 12).toFixed(0)}deg">${k}</span>`;
-      else if (k === s.lvl + 1 && s.frac > 0) slots += `<span class="msc-s part">${slotRing(s.frac)}<b>${k}</b></span>`;
-      else slots += `<span class="msc-s off">${k}</span>`;
+      else slots += `<span class="msc-s off">${pencilSlot(k, k === s.lvl + 1 ? s.frac : 0, k * 5 + i)}</span>`;
     }
     return `<div class="msc${s.maxed ? " maxed" : ""}" style="--t:${s.ink}" data-tip="${s.blurb}" data-tip-delay="400">` +
       `<div class="msc-top"><span class="msc-mark">${skillMarkHTML(s.id)}</span><span class="msc-name">${s.name}</span>` +
