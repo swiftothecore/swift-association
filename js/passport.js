@@ -302,12 +302,28 @@ export function passportHTML(d) {
    hand. Ink and graphite, so a stamped level and an owed one never read alike. On the level being
    worked toward, `frac` inks that same ring round in the skill's colour as far as earned, so the
    progress sits on the stamp it is filling rather than on a ring of its own. */
+/* Where each numeral's ink actually sits, in ems from the point text-anchor="middle" puts on the
+   baseline: [right of centre, above baseline], measured off the glyphs' ink boxes. Centring by the
+   line box or the advance is not centring: Caveat leans, so its ink overhangs a seventh of an em
+   right of its advance, and Courier's digits ride high in their line box. Placing the text at the
+   negated offset puts the ink's own middle on the slot's, whatever tilt it then turns through. */
+const NUMERAL_INK = {
+  hand: { 1: [.131, .274], 2: [.096, .276], 3: [.112, .280], 4: [.130, .277], 5: [.103, .282], 6: [.094, .280], 7: [.136, .268], 8: [.105, .263], 9: [.145, .273], 10: [.128, .274] },
+  type: { 1: [.006, .296], 2: [-.002, .295], 3: [0, .290], 4: [-.002, .295], 5: [-.001, .284], 6: [.002, .290], 7: [.010, .284], 8: [0, .290], 9: [-.002, .290], 10: [.013, .291] },
+};
+const numeral = (k, face, size, cls, at = "") => {
+  const [dx, dy] = NUMERAL_INK[face][k] || [0, .28];
+  return `<text class="${cls}" x="${(-dx * size).toFixed(2)}" y="${(dy * size).toFixed(2)}" text-anchor="middle" ${at}>${k}</text>`;
+};
+/* An earned level's number, as text in the disc's own frame so it lands on the disc's middle. */
+const stampedNumeral = (k) => `<svg viewBox="-16 -16 32 32" aria-hidden="true" focusable="false">${numeral(k, "type", 15.5, "msc-on-n")}</svg>`;
+
 function pencilSlot(k, frac, seed) {
   const tilt = (settle(seed) * 30 - 15).toFixed(0), ring = (at = "") => `<ellipse rx="14.2" ry="13.7" ${at}/>`;
   return `<svg viewBox="-16 -16 32 32" aria-hidden="true" focusable="false"><g transform="rotate(${tilt})">` +
     `<g class="msc-pencil" filter="url(#pencilLine)">${ring(`class="msc-sketch" transform="translate(.7 -.5) rotate(9)"`)}${ring()}</g>` +
     (frac > 0 ? `<g filter="url(#stampInk1)">${ring(`class="msc-owed" pathLength="1" stroke-dasharray="${frac.toFixed(3)} 1" transform="rotate(-90)"`)}</g>` : "") +
-    `</g><text class="msc-pencil-n" y="6" text-anchor="middle" filter="url(#pencilLine)">${k}</text></svg>`;
+    `</g>${numeral(k, "hand", 18, "msc-pencil-n", `filter="url(#pencilLine)"`)}</svg>`;
 }
 /* A full card's level count, stamped over: it takes the "10/10" corner rather than crossing the
    card, so nothing it lands on is text, and the full row of slots stays at full strength. */
@@ -345,7 +361,7 @@ export function stampCardsHTML(d) {
   const cards = d.skills.map((s, i) => {
     let slots = "";
     for (let k = 1; k <= d.maxLevel; k++) {
-      if (k <= s.lvl) slots += `<span class="msc-s on" style="--r:${(settle(k * 7 + i) * 24 - 12).toFixed(0)}deg">${k}</span>`;
+      if (k <= s.lvl) slots += `<span class="msc-s on" style="--r:${(settle(k * 7 + i) * 24 - 12).toFixed(0)}deg">${stampedNumeral(k)}</span>`;
       else slots += `<span class="msc-s off">${pencilSlot(k, k === s.lvl + 1 ? s.frac : 0, k * 5 + i)}</span>`;
     }
     return `<div class="msc${s.maxed ? " maxed" : ""}" style="--t:${s.ink}" data-tip="${s.blurb}" data-tip-delay="400">` +

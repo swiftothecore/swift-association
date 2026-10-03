@@ -14381,7 +14381,8 @@
   .msc-s.on:nth-child(3n+2) { filter: url(#stampInk2); }
   /* an owed level, pencilled (pencilSlot): graphite until it is stamped */
   .msc-s.off { color: var(--ink-soft); }
-  .msc-s.off svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .msc-s svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .msc-on-n { font-family: var(--type); font-weight: 700; font-size: 15.5px; fill: currentColor; }
   .msc-pencil ellipse { fill: none; stroke: currentColor; stroke-width: 1.35; }
   .msc-pencil .msc-sketch { stroke-width: 1; opacity: .4; }
   .msc-owed { fill: none; stroke: var(--t); stroke-width: 3.8; stroke-linecap: round; }
