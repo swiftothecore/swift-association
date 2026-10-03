@@ -2199,11 +2199,11 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     b.addEventListener("click", () => openSongbook(b.dataset.openSongbook, b.dataset.songbookAlbum)));
   el.querySelectorAll("[data-daily-date]").forEach((b) =>
     b.addEventListener("click", () => openArchivedDaily(b.dataset.dailyDate)));
-  el.querySelector(".cal-nav-prev")?.addEventListener("click", () => {
+  el.querySelector(".stp-dp-nav-prev")?.addEventListener("click", () => {
     statsCalendarMonth = shiftMonthKey(statsCalendarMonth || todayKey().slice(0, 7), -1);
     renderStats(lastScore, "all");
   });
-  el.querySelector(".cal-nav-next")?.addEventListener("click", () => {
+  el.querySelector(".stp-dp-nav-next")?.addEventListener("click", () => {
     statsCalendarMonth = shiftMonthKey(statsCalendarMonth || todayKey().slice(0, 7), 1);
     renderStats(lastScore, "all");
   });
@@ -2235,8 +2235,7 @@ function albumOfTitle(title) {
      the home album       its record sleeve (Track by Track's), the most-sung song on a slip
      the quick numbers    label-maker tape
      songs found          a sheet of blotting paper, an album a drop of ink bled out as far as you've found
-     the daily streak     a strip of raffle tickets, gold for a perfect day
-   and the calendar keeps its marker X's on a sheet taped in beneath.
+     the daily            a monthly pass, a day punched through for every daily finished
 
    THE TAPE IS THE HOME SCREEN'S. Same shared washi surface (.stp-tape is on that rule in
    styles.css, day and night), the same six baked tears (TORN_EDGES), one placement per object
@@ -2257,7 +2256,7 @@ const STATS_TAPE = {
   clip:     [{ left: "50%", tx: "-50%", top: "-8px", rot: -3, w: 52, tear: 4 }],
   sleeve:   [{ left: "50%", tx: "-50%", top: "-8px", rot: -3, w: 48, tear: 5 }],
   blot:     [{ left: "50%", tx: "-50%", top: "-9px", rot: -2, w: 56, tear: 1 }],
-  cal:      [{ left: "-9px", top: "-6px", rot: -38, w: 52, tear: 3 }, { right: "-9px", top: "-6px", rot: 40, w: 54, tear: 0 }],
+  pass:     [{ left: "50%", tx: "-50%", top: "-9px", rot: -2, w: 62, tear: 3 }],
 };
 function statsTape(key) {
   return (STATS_TAPE[key] || []).map((s) =>
@@ -2751,12 +2750,11 @@ function statsStampsHTML(m, t, beside) {
     `</div></div>`;
 }
 
-// The All view's lifetime pieces: the sleeve, stamps, blotter, raffle tickets, calendar.
+// The All view's lifetime pieces: the sleeve, stamps, blotter and the daily's pass.
 function statsLifetimeHTML(W) {
   const phone = W < 520;
   const m = loadMetrics();
   const t = loadSongTally();
-  const dt = dailyTotals();
   const d = effectiveDailyStreak(todayKey());
   const out = [];
   const favSong = topTallyEntry(t.songs), favAlbum = topTallyEntry(t.albums);
@@ -2796,30 +2794,8 @@ function statsLifetimeHTML(W) {
       `<button type="button" class="stp-door" data-open-songbook="stats">${left ? `${left} to go` : "every one found"} ${CTA_ARROW}</button></div>` +
       statsBlotterHTML(order, found, total, W, phone) + `</div></div>`);
   }
-  // The daily: a strip of raffle tickets, one per day of the streak still standing, newest
-  // last. A torn-off ticket is a real button: it reopens that day, as the calendar's X does.
-  const played = dailyPlayedDates();
-  let strip = "";
-  if (d.current) {
-    const end = new Date(todayKey() + "T12:00:00Z");
-    if (!d.playedToday) end.setUTCDate(end.getUTCDate() - 1);
-    const cap = phone ? 6 : 11, shown = Math.min(d.current, cap);
-    for (let i = shown - 1; i >= 0; i--) {
-      const day = new Date(end); day.setUTCDate(end.getUTCDate() - i);
-      const key = day.toISOString().slice(0, 10), sc = played[key];
-      strip += `<button type="button" class="stp-rt${sc === TOTAL_ROUNDS ? " is-perfect" : ""}" data-daily-date="${key}"` +
-        `${sc != null ? ` data-tip="${sc}/${TOTAL_ROUNDS} · tap to reopen" data-tip-delay="200"` : ""}>` +
-        `<span class="stp-rt-m">${MONTH_NAMES[day.getUTCMonth()].slice(0, 3).toUpperCase()}</span><span class="stp-rt-d">${day.getUTCDate()}</span></button>`;
-    }
-    if (d.current > cap) strip = `<span class="stp-rt-more">+${d.current - cap} more</span>` + strip;
-  }
-  out.push(`<div class="stp-item stp-w6 stp-o7 stp-raffle"><div class="stp-lab">the daily</div><div class="stp-raffle-hd">` +
-    (d.lastPlayed
-      ? `<span><b>${d.current}</b> ${d.current === 1 ? "day" : "days"} running</span><span>longest <b>${d.best}</b></span>` +
-        `<span><b>${dt.played}</b> in all, <b>${dt.perfect}</b> perfect</span><span class="${d.playedToday ? "stp-done" : ""}">${d.playedToday ? "done today" : "today's is waiting"}</span>`
-      : `<span>no dailies yet. today's is waiting.</span>`) +
-    `</div>${strip ? `<div class="stp-strip">${strip}</div>` : ""}</div>`);
-  out.push(`<div class="stp-item stp-w6 stp-o8" style="--r:.4deg">${statsTape("cal")}<div class="stp-cal">${dailyCalendarHTML()}</div></div>`);
+  // The daily: its monthly pass, a box a day, punched through for every daily finished.
+  out.push(statsDailyPassHTML(d));
   return out.join("");
 }
 
@@ -2834,90 +2810,6 @@ function statsBoardHTML(s, viewMode, isAll, lastScore) {
   }
   if (isAll) items += statsLifetimeHTML(W);
   return `<div class="stp">${items}</div>`;
-}
-
-// The daily calendar on the Stats page (All only), taped in under the raffle tickets.
-// --- Hand-inked marker marks for the daily calendar ---------------------------
-// Each X/O is a one-off: drawn from pressure-tapered ribbon strokes (fat-marker
-// profile — near-uniform body, blunt rounded tips) with per-mark jitter, so no two
-// look stamped. Rendered as inline SVG strings (the Stats body is set via innerHTML),
-// re-randomised on every renderStats call. multiply blend makes the X's crossing and
-// the O's self-overlap bleed darker, like wet ink. See CLAUDE.md "daily calendar".
-const MARK_REDS = ["#c0352b", "#b62f27", "#c43d31", "#aa2c25"];
-const MARK_GREENS = ["#2f6d4f", "#356f4a", "#2b6044"];
-const mRand = (a, b) => a + Math.random() * (b - a);
-const mPick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-// Centerline → filled ribbon path (+ rounded tip circles). wmax = full body width.
-function markerRibbon(pts, wmax) {
-  const N = pts.length - 1, left = [], right = [];
-  for (let i = 0; i <= N; i++) {
-    const t = i / N;
-    const shape = Math.pow(Math.sin(Math.PI * t), 0.32);   // flat-topped: blunt ends
-    const w = wmax * (0.78 + 0.22 * shape);
-    const p0 = pts[Math.max(0, i - 1)], p1 = pts[Math.min(N, i + 1)];
-    const tx = p1[0] - p0[0], ty = p1[1] - p0[1], tl = Math.hypot(tx, ty) || 1;
-    const nx = -ty / tl, ny = tx / tl;
-    left.push([pts[i][0] + nx * w / 2, pts[i][1] + ny * w / 2]);
-    right.push([pts[i][0] - nx * w / 2, pts[i][1] - ny * w / 2]);
-  }
-  let d = "M " + left[0][0].toFixed(2) + " " + left[0][1].toFixed(2);
-  for (let i = 1; i <= N; i++) d += " L " + left[i][0].toFixed(2) + " " + left[i][1].toFixed(2);
-  for (let i = N; i >= 0; i--) d += " L " + right[i][0].toFixed(2) + " " + right[i][1].toFixed(2);
-  return { d: d + " Z", a: pts[0], b: pts[N], r: wmax * 0.39 };
-}
-
-// One marker stroke: a single smooth arc (wrist pivot) with overshoot + soft lift.
-function markerSlash(a, b, bow, hook) {
-  const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
-  const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
-  const os = len * mRand(0.02, 0.06);
-  const A = [a[0] - ux * os, a[1] - uy * os], B = [b[0] + ux * os, b[1] + uy * os];
-  const cx = (A[0] + B[0]) / 2 + nx * bow, cy = (A[1] + B[1]) / 2 + ny * bow;
-  const N = 24, pts = [];
-  for (let i = 0; i <= N; i++) {
-    const t = i / N, mt = 1 - t;
-    pts.push([mt * mt * A[0] + 2 * mt * t * cx + t * t * B[0], mt * mt * A[1] + 2 * mt * t * cy + t * t * B[1]]);
-  }
-  if (hook) {
-    const K = 4, piv = pts[N - K], cs = Math.cos(hook), sn = Math.sin(hook);
-    for (let i = N - K + 1; i <= N; i++) {
-      const vx = pts[i][0] - piv[0], vy = pts[i][1] - piv[1];
-      pts[i] = [piv[0] + vx * cs - vy * sn, piv[1] + vx * sn + vy * cs];
-    }
-  }
-  return pts;
-}
-
-function ribbonSVG(rib, col, op) {
-  const o = op.toFixed(2), cap = (p) =>
-    `<circle cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="${rib.r.toFixed(2)}" fill="${col}" opacity="${o}" style="mix-blend-mode:multiply"/>`;
-  return `<path d="${rib.d}" fill="${col}" opacity="${o}" stroke-linejoin="round" style="mix-blend-mode:multiply"/>` + cap(rib.a) + cap(rib.b);
-}
-
-function markerX(s) {
-  const col = mPick(MARK_REDS), w = s * mRand(0.12, 0.155), op = mRand(0.8, 0.9);
-  const pad = s * mRand(0.18, 0.23), off = mRand(-s * 0.05, s * 0.05);
-  const j = (v) => v + mRand(-s * 0.04, s * 0.04);
-  const s1 = markerSlash([j(pad), j(pad)], [j(s - pad), j(s - pad)], mRand(-s * 0.06, s * 0.06), mRand(0.05, 0.22) * mPick([1, -1]));
-  const s2 = markerSlash([j(s - pad) + off, j(pad)], [j(pad) + off, j(s - pad)], mRand(-s * 0.06, s * 0.06), mRand(0.05, 0.22) * mPick([1, -1]));
-  const inner = ribbonSVG(markerRibbon(s1, w), col, op) + ribbonSVG(markerRibbon(s2, w * mRand(0.94, 1.06)), col, op);
-  return `<svg class="cal-mark" viewBox="0 0 ${s} ${s}" style="transform:rotate(${mRand(-11, 11).toFixed(1)}deg)">${inner}</svg>`;
-}
-
-function markerO(s) {
-  const col = mPick(MARK_GREENS), w = s * mRand(0.11, 0.14), op = mRand(0.8, 0.9);
-  const cx = s / 2 + mRand(-s * 0.03, s * 0.03), cy = s / 2 + mRand(-s * 0.03, s * 0.03);
-  const rx = s * mRand(0.32, 0.37), ry = s * mRand(0.31, 0.36);
-  const tilt = mRand(-0.3, 0.3), ct = Math.cos(tilt), st = Math.sin(tilt);
-  const start = mRand(-2.6, -1.6), sweep = Math.PI * 2 * mRand(1.05, 1.13), ph = mRand(0, 6.28);
-  const N = 60, pts = [];
-  for (let i = 0; i <= N; i++) {
-    const t = i / N, a = start + sweep * t, wob = 1 + 0.022 * Math.sin(a * 2 + ph);
-    const x = Math.cos(a) * rx * wob, y = Math.sin(a) * ry * wob;
-    pts.push([cx + x * ct - y * st, cy + x * st + y * ct]);
-  }
-  return `<svg class="cal-mark" viewBox="0 0 ${s} ${s}" style="transform:rotate(${mRand(-9, 9).toFixed(1)}deg)">${ribbonSVG(markerRibbon(pts, w), col, op)}</svg>`;
 }
 
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
@@ -2942,56 +2834,79 @@ function earliestPlayedMonth() {
   return dates.sort()[0].slice(0, 7);
 }
 
-// A notebook calendar for the viewed month (current month by default): today ringed in
-// green marker, every completed-daily day struck out with a unique red marker X. A
-// struck day is a real button — tapping it reopens that day's finished bracelet, the
-// way flipping back to a written page would. ‹ › page between months; ‹ stops at the
-// earliest Daily on record, › never pages past the current month (nothing to show yet).
-function dailyCalendarHTML() {
-  const today = todayKey();                       // YYYY-MM-DD in the active zone
-  const [ty, tm, td] = today.split("-").map(Number);
-  const currentKey = `${ty}-${String(tm).padStart(2, "0")}`;
+/* ---------- The daily: a monthly pass ----------
+   The month as a season ticket, a printed box a day. Finishing a day's daily punches its box clean
+   through to the page underneath, and a 13/13 day takes the star punch. Today's box, still to
+   play, is printed with a dashed ring where the punch will go. So a box is only ever plain,
+   waiting, punched or star-punched: no mark on a square ever has to be read against another.
+   A punched box is a real button (it reopens that day's bracelet), and the stub carries the
+   streak at numeral size with the tallies as printed fields under it.
+   It replaced a strip of pink raffle tickets over a calendar of marker X's: two drawings of one
+   streak, the strip pink for no reason, and today's square wearing a green O and a red X at once.
+   THE PASS IS NOT THE FRONT PAGE'S TICKET. It shares the ticket's rules (the bite at the
+   perforation, a printed frame set in from the edge, a stub) but deliberately not its buff and
+   oxblood, which made it read as a second copy of the button: transit-pass celadon, printed in
+   petrol, a petrol stub with a guilloche, and persimmon for the one live thing on it, today.
+   Picked from scripts/stats/daily.html over a calendar of bracelets and a highlighter run. */
+// The punch. The card's thickness throws a crescent of shadow into the hole along the top left
+// of the cut (light is top left everywhere on the desk), so the page is laid in nudged down
+// right, clipped to the cut, over a shade of the cut itself.
+const DP_STAR = (() => {
+  let d = "";
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / 5 + (i % 2 ? 0.04 : -0.03), r = i % 2 ? 5.1 : 11.4 * (i === 4 ? 0.92 : 1);
+    d += (i ? "L" : "M") + (13 + Math.cos(a) * r).toFixed(2) + " " + (13.4 + Math.sin(a) * r).toFixed(2);
+  }
+  return d + "Z";
+})();
+const DP_ROUND = "M13 3.2 A9.8 9.8 0 1 1 12.99 3.2 Z";
+function dailyPunchSVG(star, key) {
+  const d = star ? DP_STAR : DP_ROUND, id = `stp-dp-cut-${key}`;
+  return `<svg class="stp-dp-hole" viewBox="0 0 26 26" aria-hidden="true"><clipPath id="${id}"><path d="${d}"/></clipPath>` +
+    `<path class="sh" d="${d}"/><path class="pg" d="${d}" transform="translate(1.25 1.4)" clip-path="url(#${id})"/><path class="cut" d="${d}"/></svg>`;
+}
+// ‹ › stop at the earliest Daily on record and at the current month.
+function statsDailyPassHTML(streak) {
+  const today = todayKey();
+  const currentKey = today.slice(0, 7);
   const viewKey = statsCalendarMonth || currentKey;
-  const isCurrentMonth = viewKey === currentKey;
   const [yy, mm] = viewKey.split("-").map(Number);
-  const monthIdx = mm - 1;
   const daysInMonth = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
-  const firstDow = new Date(Date.UTC(yy, monthIdx, 1)).getUTCDay();   // 0 = Sunday
-  const pad2 = (n) => String(n).padStart(2, "0");
-  const monthPrefix = `${yy}-${pad2(mm)}-`;
+  const firstDow = new Date(Date.UTC(yy, mm - 1, 1)).getUTCDay();   // 0 = Sunday
+  const rows = Math.ceil((firstDow + daysInMonth) / 7);
   const played = dailyPlayedDates();
+  const totals = dailyTotals();
   const earliest = earliestPlayedMonth();
-
-  let cells = "";
-  for (let i = 0; i < firstDow; i++) cells += `<div class="cal-cell cal-blank"></div>`;
+  const blank = `<div class="stp-dp-box is-blank"></div>`;
+  let boxes = blank.repeat(firstDow);
   for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = monthPrefix + pad2(day);
-    const isToday = isCurrentMonth && day === td;
-    const isFuture = isCurrentMonth && day > td;
-    const score = played[dateStr];
-    const done = score != null;
-    let ink = "";
-    if (isToday) ink += markerO(30);
-    if (done) ink += markerX(30);
-    const cls = "cal-cell" + (isFuture ? " cal-future" : "") + (isToday ? " cal-today" : "") + (done ? " cal-cell--done" : "");
-    const inner = `<span class="cal-num">${day}</span><span class="cal-ink">${ink}</span>`;
-    cells += done
-      ? `<button type="button" class="${cls}" data-daily-date="${dateStr}" ` +
-        `data-tip="${score}/${TOTAL_ROUNDS} · tap to reopen" data-tip-delay="200">${inner}</button>`
+    const key = `${viewKey}-${String(day).padStart(2, "0")}`, score = played[key];
+    const isToday = key === today, done = score != null;
+    const cls = "stp-dp-box" + (key > today ? " is-future" : "") + (isToday ? " is-today" : "") + (done ? " is-done" : "");
+    const inner = `<span class="stp-dp-n">${day}</span>` +
+      (done ? dailyPunchSVG(score === TOTAL_ROUNDS, key) : isToday ? `<span class="stp-dp-aim" aria-hidden="true"></span>` : "") +
+      (isToday ? `<span class="stp-dp-today">today</span>` : "");
+    boxes += done
+      ? `<button type="button" class="${cls}" data-daily-date="${key}" aria-label="${MONTH_NAMES[mm - 1]} ${day}, ${score} of ${TOTAL_ROUNDS}, reopen" ` +
+        `data-tip="${score}/${TOTAL_ROUNDS}${score === TOTAL_ROUNDS ? " · star punch" : ""} · tap to reopen" data-tip-delay="200">${inner}</button>`
       : `<div class="${cls}">${inner}</div>`;
   }
-  const dows = ["S", "M", "T", "W", "T", "F", "S"].map((x) => `<div class="cal-dow">${x}</div>`).join("");
-  const prevAttrs = (earliest != null && viewKey <= earliest) ? " disabled aria-disabled=\"true\"" : "";
-  const nextAttrs = isCurrentMonth ? " disabled aria-disabled=\"true\"" : "";
-  return `<div class="daily-cal">` +
-    `<div class="cal-head">` +
-    `<button type="button" class="cal-nav cal-nav-prev" aria-label="previous month"${prevAttrs}>&#8249;</button>` +
-    `<span class="cal-headline"><span class="cal-month">${MONTH_NAMES[monthIdx]}</span><span class="cal-year">${yy}</span></span>` +
-    `<button type="button" class="cal-nav cal-nav-next" aria-label="next month"${nextAttrs}>&#8250;</button>` +
-    `</div>` +
-    `<div class="cal-grid cal-dows">${dows}</div>` +
-    `<div class="cal-grid cal-days">${cells}</div>` +
-    `</div>`;
+  // the printed grid closes as a rectangle, the way a pass is printed
+  boxes += blank.repeat(rows * 7 - firstDow - daysInMonth);
+  const dows = ["S", "M", "T", "W", "T", "F", "S"].map((x) => `<span>${x}</span>`).join("");
+  const nav = (dir, on) => `<button type="button" class="stp-dp-nav stp-dp-nav-${dir}" aria-label="${dir === "prev" ? "previous" : "next"} month"` +
+    `${on ? "" : ` disabled aria-disabled="true"`}>${dir === "prev" ? BACK_ARROW : CTA_ARROW}</button>`;
+  const stub = streak.lastPlayed
+    ? `<div class="stp-dp-big"><b>${streak.current}</b><span>${streak.current === 1 ? "day" : "days"}<br>running</span></div>` +
+      `<dl class="stp-dp-fields"><div><dt>longest</dt><dd>${streak.best}</dd></div><div><dt>punched</dt><dd>${totals.played}</dd></div>` +
+      `<div><dt>star punch</dt><dd>${totals.perfect}</dd></div></dl>`
+    : `<div class="stp-dp-big is-none"><span>first<br>punch<br>today</span></div>`;
+  return `<div class="stp-item stp-w6 stp-o7" style="--r:-.45deg">${statsTape("pass")}<div class="stp-dp-lift"><div class="stp-dp">` +
+    `<div class="stp-dp-main"><div class="stp-dp-head"><span class="stp-dp-title">DAILY CHALLENGE</span><span class="stp-dp-kind">monthly pass</span>` +
+    `<span class="stp-dp-month">${nav("prev", earliest != null && viewKey > earliest)}<b>${MONTH_NAMES[mm - 1]}</b><i>${yy}</i>${nav("next", viewKey < currentKey)}</span></div>` +
+    `<div class="stp-dp-grid stp-dp-dows">${dows}</div><div class="stp-dp-grid stp-dp-boxes">${boxes}</div>` +
+    `<p class="stp-dp-terms">one punch per daily finished · star punch for 13/13</p></div>` +
+    `<div class="stp-dp-stub">${stub}</div></div></div></div>`;
 }
 
 // Infinite runs aren't comparable to the 13-round game (scores can exceed 13 and the
@@ -20641,9 +20556,9 @@ function openArchivedDaily(dateStr) {
    NAMES THE DESTINATION instead of pointing at it: a left arrow would only repeat what
    the label already says, and the rest of the family sets marks as nouns anyway — the
    play CTA wears a pencil, the chance stamp wears dice, and neither reaches for an
-   arrow. So the front page is its own spiral cover, and the calendar is the month card
-   from the Stats panel with a day struck out, the same red-marker X that makes a day
-   clickable there in the first place.
+   arrow. So the front page is its own spiral cover, and the calendar is the daily's
+   monthly pass from the Stats panel with a day punched through, the same punch that makes
+   a day clickable there in the first place.
 
    They replace a typed "←" that used to sit in the calendar label. A font glyph was the
    wrong material for a mark on this desk, and it also made the two states inconsistent:
@@ -20658,10 +20573,8 @@ const AGAIN_MARK_COVER =
 const AGAIN_MARK_CALENDAR =
   `<path class="ink" d="M3.6 5.6 L20.4 6 L20 20.4 L4 20Z"/>` +
   `<path class="ink" d="M3.75 10 L20.25 10.3"/>` +
-  `<path class="ink" d="M8.2 3.3 L8.1 7"/>` +
-  `<path class="ink" d="M16 3.4 L15.9 7.1"/>` +
-  `<path class="ink" d="M9.6 13.6 L14.4 17.4"/>` +
-  `<path class="ink" d="M14.5 13.7 L9.5 17.3"/>`;
+  `<path class="ink" d="M16.3 10.6 L16.2 11.8 M16.2 13.4 L16.2 14.6 M16.1 16.2 L16.1 17.4 M16.1 19 L16.1 19.9"/>` +
+  `<path class="ink" d="M10 12.6 C11.7 12.5 12.9 13.8 12.8 15.3 C12.7 16.8 11.5 17.8 10 17.7 C8.5 17.6 7.4 16.5 7.5 15.1 C7.6 13.7 8.6 12.6 10 12.6Z"/>`;
 
 // The results page's two stamps, shown and hidden together so neither is left standing from the
 // last run. Side by side when both are up (the CSS stacks them on a phone), full width alone.

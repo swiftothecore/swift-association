@@ -11410,7 +11410,7 @@
     .stp > .stp-o0 { order: 0; } .stp > .stp-o1 { order: 1; } .stp > .stp-o2 { order: 2; }
     .stp > .stp-solo { grid-column: span 2; justify-self: center; width: 64%; }
   }
-  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-clip, .stp-slip, .stp-blot, .stp-dy, .stp-ps-st, .stp-rt) {
+  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-clip, .stp-slip, .stp-blot, .stp-dy, .stp-ps-st) {
     filter: brightness(0.78) saturate(0.94);
   }
 
@@ -11717,28 +11717,96 @@
   .stp-bl-nm { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .4px; fill: var(--stp-soft); }
   .stp-bl-ct { font-family: var(--hand); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); fill: var(--stp-pen); }
 
-  /* the daily: the streak as a strip of raffle tickets, each a way back to its day */
-  .stp-raffle-hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 9px;
-    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .stp-raffle-hd b { color: var(--ink); font-size: 1.3em; }
-  .stp-raffle-hd .stp-done { color: var(--green-pen); }
-  .stp-strip { display: flex; align-items: center; transform: rotate(-.8deg); transform-origin: left center; }
-  .stp-rt {
-    flex: 0 0 auto; width: 44px; height: 56px; padding: 0; cursor: pointer; color: var(--stp-pen);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    background: #ecb2b5; border: 1.2px solid rgba(43,39,34,.4); border-right: 1.5px dashed rgba(43,39,34,.45);
-    transition: transform .15s ease;
+  /* The daily: a monthly pass (statsDailyPassHTML). A season ticket, not the front page's ticket:
+     it keeps that ticket's rules (the bite at the perforation, a printed frame set in from the
+     edge, a stub) but deliberately not its buff and oxblood, which read as a second copy of the
+     button. Transit-pass celadon printed in petrol, a petrol stub with a guilloche, and
+     persimmon for the one live thing on it, today. Fixed stock like every paper object here,
+     taken down a stop at night by the shared brightness() rule. A punched hole shows the page
+     it lies on, so it is var(--paper) by day and by night: a hole is never dimmed. */
+  .stp-dp-lift { filter: drop-shadow(1px 1.5px 0 rgba(43, 39, 34, 0.13)); container: stp-dp / inline-size; }
+  :root[data-theme="dark"] .stp-dp-lift { filter: drop-shadow(1px 1.5px 0 rgba(0, 0, 0, 0.4)); }
+  .stp-dp {
+    --dp-stock: #dce5d4; --dp-pen: #1f3d3d; --dp-soft: #4c6461; --dp-hot: #bf5229;
+    --dp-rule: rgba(31, 61, 61, 0.34); --dp-hatch: rgba(31, 61, 61, 0.1);
+    --dp-stub: #24504e; --dp-stub-ink: #e8eedf; --dp-stub-rule: rgba(232, 238, 223, 0.36);
+    --dp-stubw: 132px; --dp-bite: 10px;
+    display: flex; color: var(--dp-pen); background: var(--dp-stock);
+    -webkit-mask:
+      radial-gradient(circle var(--dp-bite) at calc(100% - var(--dp-stubw)) 0, transparent 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle var(--dp-bite) at calc(100% - var(--dp-stubw)) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
+            mask:
+      radial-gradient(circle var(--dp-bite) at calc(100% - var(--dp-stubw)) 0, transparent 97%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle var(--dp-bite) at calc(100% - var(--dp-stubw)) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
   }
-  .stp-rt:last-child { border-right: 1.2px solid rgba(43,39,34,.4); }
-  .stp-rt.is-perfect { background: #ecd17a; }
-  .stp-rt:is(:hover, :focus-visible) { transform: translateY(-3px); outline: none; }
-  .stp-rt:focus-visible { box-shadow: 0 0 0 2px var(--ink-accent); }
-  .stp-rt-m { font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 1px; }
-  .stp-rt-d { font-family: var(--type); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1; }
-  .stp-rt-more { flex: none; padding-right: 8px; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); }
-
-  /* the calendar keeps its marker X's, on a sheet of its own taped in under the strip */
-  .stp-cal { padding: 6px 10px 4px; background: var(--paper); border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent); box-shadow: 1px 2px 0 rgba(43,39,34,.06); }
+  /* the day stock at brightness(.78), written out */
+  :root[data-theme="dark"] .stp-dp {
+    --dp-stock: #acb3a5; --dp-pen: #182f2f; --dp-soft: #3b4e4c; --dp-hot: #95401f;
+    --dp-rule: rgba(24, 47, 47, 0.36); --dp-hatch: rgba(24, 47, 47, 0.12);
+    --dp-stub: #1c3e3d; --dp-stub-ink: #b5baae; --dp-stub-rule: rgba(181, 186, 174, 0.34);
+  }
+  .stp-dp-main { position: relative; flex: 1; min-width: 0; padding: 12px 16px 10px; border-right: 2px dotted var(--dp-rule); }
+  .stp-dp-main::before { content: ""; position: absolute; inset: 6px 8px 6px 7px; border: 1px solid var(--dp-rule); pointer-events: none; }
+  .stp-dp-head { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; padding: 2px 4px 8px; margin-bottom: 6px; border-bottom: 1px solid var(--dp-rule); }
+  .stp-dp-title { font-family: var(--type); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); letter-spacing: 2.6px; }
+  .stp-dp-kind { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: uppercase; color: var(--dp-soft); }
+  .stp-dp-month { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; font-family: var(--type); }
+  .stp-dp-month b { font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 2.4px; text-transform: uppercase; color: var(--dp-hot); }
+  .stp-dp-month i { font-style: normal; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.4px; color: var(--dp-soft); margin-left: 7px; }
+  .stp-dp-nav { border: 0; background: none; padding: 4px 6px; margin: 0; cursor: pointer; color: var(--dp-soft); border-radius: 5px; }
+  .stp-dp-nav svg { display: block; width: 18px; height: 9px; }
+  .stp-dp-nav:is(:hover, :focus-visible):not(:disabled) { color: var(--dp-pen); background: rgba(31, 61, 61, 0.08); outline: none; }
+  .stp-dp-nav:disabled { opacity: 0.25; cursor: default; }
+  .stp-dp-grid { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .stp-dp-dows span { text-align: center; font-family: var(--type); font-weight: 700; font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.5px; color: var(--dp-soft); padding: 2px 0 4px; }
+  .stp-dp-boxes { border-top: 1px solid var(--dp-rule); border-left: 1px solid var(--dp-rule); }
+  .stp-dp-box { position: relative; height: 44px; margin: 0; padding: 0; border: 0; border-right: 1px solid var(--dp-rule); border-bottom: 1px solid var(--dp-rule); background: none; font: inherit; color: inherit; }
+  button.stp-dp-box { cursor: pointer; }
+  button.stp-dp-box:is(:hover, :focus-visible) { background: rgba(31, 61, 61, 0.07); outline: none; }
+  button.stp-dp-box:focus-visible { box-shadow: inset 0 0 0 2px var(--dp-hot); }
+  .stp-dp-box.is-blank { background: repeating-linear-gradient(135deg, transparent 0 7px, var(--dp-hatch) 7px 8px); }
+  .stp-dp-n { position: absolute; left: 4px; top: 2px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2; color: var(--dp-soft); }
+  .stp-dp-box.is-future .stp-dp-n { opacity: 0.45; }
+  .stp-dp-box.is-today .stp-dp-n { color: var(--dp-hot); font-weight: 700; }
+  .stp-dp-hole { position: absolute; left: 50%; top: 54%; width: 27px; height: 27px; margin: -13.5px 0 0 -13.5px; overflow: visible; }
+  .stp-dp-hole .sh { fill: rgba(28, 40, 38, 0.44); }
+  .stp-dp-hole .pg { fill: var(--paper); }
+  .stp-dp-hole .cut { fill: none; stroke: rgba(31, 61, 61, 0.5); stroke-width: 0.7; stroke-linejoin: round; }
+  .stp-dp-aim { position: absolute; left: 50%; top: 53%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 1.4px dashed var(--dp-hot); }
+  .stp-dp-today { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-family: var(--type); font-weight: 700; font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 1.3px; text-transform: uppercase; color: var(--dp-hot); }
+  .stp-dp-terms { margin: 7px 2px 0; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 0.9px; text-transform: uppercase; color: var(--dp-soft); }
+  /* the stub, printed over a guilloche in its own ink a shade up, the security print a real pass carries */
+  .stp-dp-stub {
+    flex: 0 0 var(--dp-stubw); display: flex; flex-direction: column; justify-content: center; gap: 22px;
+    padding: 18px 14px 16px 16px; color: var(--dp-stub-ink); background-color: var(--dp-stub);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='18'%3E%3Cg fill='none' stroke='%23e8eedf' stroke-opacity='.09' stroke-width='.8'%3E%3Cpath d='M0 9 C11 1 11 1 22 9 S33 17 44 9'/%3E%3Cpath d='M0 9 C11 17 11 17 22 9 S33 1 44 9'/%3E%3Cpath d='M0 4 C11 -2 11 -2 22 4 S33 10 44 4'/%3E%3Cpath d='M0 14 C11 20 11 20 22 14 S33 8 44 14'/%3E%3C/g%3E%3C/svg%3E");
+    box-shadow: inset 0 0 0 5px var(--dp-stub), inset 0 0 0 6px var(--dp-stub-rule);
+  }
+  .stp-dp-big { display: flex; align-items: flex-end; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--dp-stub-rule); }
+  .stp-dp-big b { font-family: var(--type); font-weight: 700; font-size: calc(46px + var(--text-size-adjust)); line-height: 0.8; }
+  .stp-dp-big span { padding-bottom: 1px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.25; }
+  .stp-dp-big.is-none { border: 0; padding: 0; }
+  .stp-dp-big.is-none span { font-size: calc(12px + var(--text-size-adjust)); line-height: 1.35; }
+  .stp-dp-fields { display: grid; gap: 7px; margin: 0; }
+  .stp-dp-fields div { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; padding-bottom: 3px; border-bottom: 1px dotted var(--dp-stub-rule); }
+  .stp-dp-fields dt { font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.3px; text-transform: uppercase; }
+  .stp-dp-fields dd { margin: 0; font-family: var(--type); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); }
+  /* narrow: the stub drops under the card and its fields sit in a row */
+  @container stp-dp (max-width: 520px) {
+    .stp-dp { flex-direction: column; -webkit-mask: none; mask: none; }
+    .stp-dp-main { padding: 10px 10px 8px; border-right: 0; border-bottom: 2px dotted var(--dp-rule); }
+    .stp-dp-main::before { inset: 5px; }
+    .stp-dp-title { font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 2px; }
+    .stp-dp-kind, .stp-dp-terms { display: none; }
+    .stp-dp-box { height: 40px; }
+    .stp-dp-hole { width: 23px; height: 23px; margin: -11.5px 0 0 -11.5px; }
+    .stp-dp-stub { flex: none; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
+    .stp-dp-big { padding: 0 12px 0 0; border-bottom: 0; border-right: 1px solid var(--dp-stub-rule); }
+    .stp-dp-big.is-none { border: 0; }
+    .stp-dp-big b { font-size: calc(38px + var(--text-size-adjust)); }
+    .stp-dp-fields { grid-auto-flow: column; gap: 12px; }
+    .stp-dp-fields div { flex-direction: column; align-items: center; gap: 2px; padding: 0; border: 0; }
+  }
 
   .stp-empty { margin: 0 0 4px; font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); line-height: 1.3; color: var(--ink-soft); }
   .stp-empty + .empty-cta { margin-left: 0; }
@@ -15171,35 +15239,6 @@
   /* Daily-streak status line under the streak numbers on the Stats page. */
   .daily-streak-note { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
 
-  /* Daily calendar on the Stats page — current month, today ringed in green
-     marker, completed days struck out with hand-inked red marker X's. */
-  .daily-cal { margin-top: 16px; }
-  .cal-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; padding: 0 2px; }
-  .cal-headline { display: flex; align-items: baseline; gap: 6px; }
-  .cal-month { font-family: var(--hand); font-size: calc(28px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); line-height: 1; }
-  .cal-year { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); }
-  /* Month-page turners either side of the headline. Plain notebook ink, not a UI
-     chrome button — a wash on hover is the only tell that they do anything. */
-  .cal-nav { font-family: var(--type); font-size: calc(20px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft); background: none; border: none; padding: 4px 8px; margin: 0; cursor: pointer; border-radius: 6px; }
-  .cal-nav:hover:not(:disabled), .cal-nav:focus-visible:not(:disabled) { background: var(--paper-edge); color: var(--ink); }
-  .cal-nav:disabled { opacity: 0.25; cursor: default; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-  .cal-dow { text-align: center; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); padding-bottom: 4px; }
-  .cal-cell { position: relative; height: 40px; display: flex; align-items: center; justify-content: center; }
-  /* A struck day is a real button (reopens that page's bracelet), styled to disappear
-     until touched — the marker X already says "something happened here". */
-  button.cal-cell { font: inherit; width: 100%; background: none; border: none; margin: 0; }
-  .cal-cell--done { cursor: pointer; border-radius: 8px; }
-  .cal-cell--done:hover, .cal-cell--done:focus-visible { background: var(--paper-edge); }
-  .cal-num { font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); color: var(--ink); position: relative; z-index: 1; }
-  /* A day that has not happened yet is the ink faded, not a grey. Written as a mix of --ink
-     rather than a literal rgba of it so it follows the theme: the literal was the light ink,
-     which on the dark page put the future half of every month at 1.01:1 against the paper —
-     the numbers were there and could not be seen. Composites identically by day. */
-  .cal-future .cal-num { color: color-mix(in srgb, var(--ink) 30%, transparent); }
-  .cal-today .cal-num { font-weight: 700; }
-  .cal-ink { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; pointer-events: none; }
-  .cal-mark { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
 
   /* ---------- The share stub (daily results) ----------
      The result prints as a perforated ticket at the foot of the page: the emoji
