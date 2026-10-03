@@ -14531,9 +14531,15 @@
   .pr .pr-tagc.owed .mpp-gl { opacity: .45; }
   .pr-nm { font-family: var(--type); font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .06em; text-transform: uppercase; color: var(--thread); white-space: nowrap; }
   .pr-pk.empty .pr-nm { color: #c9d3e6; opacity: .7; font-weight: 400; }
-  .pr-pk.worn .pr-nm { color: #fff3e2; }
-  .pr-pk .rw-loop { left: 4%; width: 92%; top: -44px; height: 112px; }
-  .pr-pk .rw-loop path { stroke: #e2584f; stroke-width: 2; }
+  /* the pocket in use is satin-stitched solid in the roll's gold thread, its name and stamp in
+     denim: the roll's own material marks it, and like the rest of the roll it holds at night */
+  .pr-pk.worn .pr-face { background-color: var(--thread);
+    background-image: repeating-linear-gradient(-58deg, rgba(255, 248, 228, .3) 0 1px, transparent 1px 2.4px),
+      repeating-linear-gradient(-58deg, rgba(120, 80, 20, .16) 1.2px 1.8px, transparent 1.8px 2.4px); }
+  .pr-pk.worn .pr-face::before { border-top-color: var(--dn-dark); opacity: .75; }
+  .pr .pr-pk.worn .pr-nm { color: #24385a; }
+  .pr .pr-pk.worn .pr-tagc { color: #24385a; }
+  .pr .pr-pk.worn .mpp-badge [fill="var(--paper)"] { fill: var(--thread); }
   .pr-end { position: absolute; right: 9px; top: 0; bottom: 0; width: 27px; border: 2px solid var(--ink); border-radius: 13px; background-color: var(--dn);
     background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 3.4px); }
   .pr-end::before, .pr-end::after { content: ""; position: absolute; top: 6px; bottom: 6px; border-left: 1.4px dashed var(--thread); opacity: .8; }
@@ -14589,8 +14595,13 @@
   .tb-bit { position: absolute; width: 27px; height: 27px; transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--s)); pointer-events: none; }
   .tb-bit svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .tb-nm { position: absolute; left: 8px; top: 5px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: .04em; color: var(--ink-soft); }
-  .tb-cell.worn .tb-nm { color: var(--red-pen); font-weight: 700; }
+  .tb-cell.worn .tb-nm { color: var(--ink); font-weight: 700; }
   .tb-cell:not(.empty):hover { background: color-mix(in srgb, var(--o) 7%, var(--mpp-card)) !important; }
+  /* the compartment you string from is lined in the box's rose felt, stitched in at the rim */
+  .tb-cell.worn, .tb-cell.worn:hover { background: color-mix(in srgb, var(--o) 26%, var(--mpp-card)) !important;
+    background-image: repeating-linear-gradient(32deg, rgba(255, 255, 255, .09) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(-41deg, rgba(60, 20, 40, .06) 0 1px, transparent 1px 2.6px) !important; }
+  .tb-cell.worn::before { border: 1.6px dashed color-mix(in srgb, var(--o) 70%, var(--ink)); }
   .tb.shaken .tb-cell .tb-bit { transform: translate(-50%, -50%) rotate(calc(var(--r) * -1.6)) scale(var(--s)); }
   .tb-stamp { right: -20px; bottom: -26px; width: 76px; height: 76px; }
   .tb-owe { margin: 8px 0 0; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
@@ -14709,7 +14720,11 @@
   .lt-mk svg { width: 100%; height: 100%; display: block; overflow: visible; }
   .lt-mk .ink-fill { fill: currentColor; stroke: none; }
   .lt-mk .ink { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-  .lt-pick .rw-loop { left: -6%; width: 112%; top: -32%; height: 164%; }
+  /* the words in use keep their full teal; every other strip goes pale until it is reached for */
+  .lt-strips.picked .lt-pick:not(.worn) .lt-strip { opacity: .36; transition: opacity .15s; }
+  :root[data-theme="dark"] .lt-strips.picked .lt-pick:not(.worn) .lt-strip { opacity: .46; }
+  .lt-strips.picked .lt-pick:not(.worn):hover .lt-strip,
+  .lt-strips.picked .lt-pick:not(.worn):focus-visible .lt-strip { opacity: .7; }
   .lt-coil { display: flex; align-items: center; gap: 14px; margin-left: 8px; }
   .lt-coil svg { width: 74px; height: 74px; flex: none; overflow: visible; }
   .lt-coil circle { fill: none; stroke: var(--oi); stroke-width: 6.5; }

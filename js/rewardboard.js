@@ -9,7 +9,10 @@
    it. A single-level object carries the passport's real stamp beside its name (passportStamp), a
    member of a ladder (a pen, a title rank) carries that stamp's outline and number (passportGhost,
    inked), and anything still owed carries the pencil tracing exactly as its passport slot does.
-   What the player is wearing is looped in the editor's red pen.
+   What the player is wearing is marked in the object's own material, never by a mark laid over
+   it: the pen's pocket is satin-stitched in the roll's gold, the bead compartment is lined in
+   felt, and the label strips not in use go pale. The paper fan and the button card still wear
+   the editor's red loop until theirs are chosen.
 
    Objects with a material of their own (denim, a cassette, leather, label tape, card stock) keep
    its colours at night, the way the start-button finishes do; only what is ink on the page
@@ -106,7 +109,7 @@ function pensRoll(D) {
     if (!open) return `<div class="pr-pk empty">${face}</div>`;
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="pen"`;
     return `<button type="button" class="pr-pk${worn ? " worn" : ""}" data-pen="${p.id}" ${pick(attr, worn, p.name)}>` +
-      `<span class="pr-pen">${PEN_ART[p.id] || PEN_ART[""]}</span>${face}${worn ? loop(11 + i) : ""}</button>`;
+      `<span class="pr-pen">${PEN_ART[p.id] || PEN_ART[""]}</span>${face}</button>`;
   }).join("");
   return `<section class="rw-obj rw-pens" style="--o:${T.pens}">` +
     head("Pens", "the one resting by your answer line") +
@@ -177,7 +180,7 @@ function trinketBox(D) {
     if (!avail) return `<span class="tb-cell empty"></span>`;
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="trinket"`;
     return `<button type="button" class="tb-cell${worn ? " worn" : ""}" ${pick(attr, worn, p.name)}>` +
-      `${loose(p.t, i)}<span class="tb-nm">${esc(p.name.toLowerCase())}</span>${worn ? loop(21 + i) : ""}</button>`;
+      `${loose(p.t, i)}<span class="tb-nm">${esc(p.name.toLowerCase())}</span></button>`;
   }).join("");
   return `<section class="rw-obj rw-trinket" style="--o:${T.trinket}">` +
     head("Trinkets", rnd ? "every bead deals its own, out of the whole box" : "what hangs from every bead you earn", stamp(D, level)) +
@@ -310,14 +313,14 @@ function labelTape(D) {
     const mk = p.mark ? `<span class="lt-mk">${CTA_MARKS[p.mark]}</span>` : "";
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="label"`;
     return `<button type="button" class="lt-pick${worn ? " worn" : ""}" ${pick(attr, worn, p.text)}>` +
-      `<span class="stp-dy lt-strip" style="--r:${jit(i + 60, 1.6).toFixed(2)}deg">${mk}${esc(p.text)}</span>${worn ? loop(51 + i) : ""}</button>`;
+      `<span class="stp-dy lt-strip" style="--r:${jit(i + 60, 1.6).toFixed(2)}deg">${mk}${esc(p.text)}</span></button>`;
   }).join("");
   const coil = open ? "" : `<div class="lt-coil"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34"/><circle cx="40" cy="40" r="27"/><circle cx="40" cy="40" r="20.5"/><circle cx="40" cy="40" r="12" class="lt-core"/><path d="M40 6 H80"/></svg>` +
     `<span><b>${labels.length} more labels</b> wait on the roll till Mastery ${level}</span></div>`;
   return `<section class="rw-obj rw-words" style="--o:${T.cta}">` +
     head("Start button words", rnd ? "different words punched out every visit" : "what the front-page button says", stamp(D, level)) +
     `<div class="lt"><div class="rw-now"><span class="rw-now-k">on your page</span><span class="rw-now-btn">${D.nowButton()}</span></div>` +
-    `<div class="lt-strips">${strips}${coil}</div>` +
+    `<div class="lt-strips${rnd ? "" : " picked"}">${strips}${coil}</div>` +
     (open ? `<div class="lt-foot">${dieControl("label", rnd, "Different words every visit")}<span>${rnd ? "a new strip every visit" : "or let the button pick its own words"}</span></div>` : "") + `</div></section>`;
 }
 
