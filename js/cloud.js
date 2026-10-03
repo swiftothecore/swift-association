@@ -102,18 +102,28 @@ function sprite(word, pt, rot) {
 // without any of the placement code knowing about it.
 function dilate(mask, w, h, r) {
   if (!r) return mask;
+  // A square dilation is a horizontal window followed by a vertical one.
+  // Count occupied pixels in each sliding window instead of writing the same
+  // overlapping neighbourhood once for every ink pixel. The mask is identical.
+  const across = new Uint8Array(w * h);
   const out = new Uint8Array(w * h);
   for (let y = 0; y < h; y++) {
+    const row = y * w;
+    let occupied = 0;
+    for (let x = 0; x < Math.min(w, r); x++) occupied += mask[row + x] ? 1 : 0;
     for (let x = 0; x < w; x++) {
-      if (!mask[y * w + x]) continue;
-      for (let dy = -r; dy <= r; dy++) {
-        const yy = y + dy;
-        if (yy < 0 || yy >= h) continue;
-        for (let dx = -r; dx <= r; dx++) {
-          const xx = x + dx;
-          if (xx >= 0 && xx < w) out[yy * w + xx] = 1;
-        }
-      }
+      if (x + r < w) occupied += mask[row + x + r] ? 1 : 0;
+      across[row + x] = occupied > 0 ? 1 : 0;
+      if (x - r >= 0) occupied -= mask[row + x - r] ? 1 : 0;
+    }
+  }
+  for (let x = 0; x < w; x++) {
+    let occupied = 0;
+    for (let y = 0; y < Math.min(h, r); y++) occupied += across[y * w + x];
+    for (let y = 0; y < h; y++) {
+      if (y + r < h) occupied += across[(y + r) * w + x];
+      out[y * w + x] = occupied > 0 ? 1 : 0;
+      if (y - r >= 0) occupied -= across[(y - r) * w + x];
     }
   }
   return out;

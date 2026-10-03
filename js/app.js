@@ -1937,21 +1937,37 @@ function wordRegex(word, strict) {
   if (strict === undefined) strict = effectiveStrict();
   return wordRegexCore(word, strict);
 }
+// Derived only from this corpus and the matching rule. Run-specific restrictions
+// stay with their callers. Return copies below so shuffling an answer list cannot
+// reorder a later page or change a seeded draw.
+let wordSongCache = new Map();
+function wordSongMatches(word, strict) {
+  if (strict === undefined) strict = effectiveStrict();
+  const key = JSON.stringify([word, !!strict]);
+  let matches = wordSongCache.get(key);
+  if (!matches) {
+    matches = { rx: wordRegex(word, strict), lyrics: null, noTitle: null, titles: null };
+    wordSongCache.set(key, matches);
+  }
+  return matches;
+}
 function songsContainingWord(word, strict) {
-  const rx = wordRegex(word, strict);
-  return allSongs.filter((s) => rx.test(s.lyrics));
+  const matches = wordSongMatches(word, strict);
+  return (matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics))).slice();
 }
 // Valid answers for a round: lyrics contain the word and — when noTitle (Hard/
 // Ultra) — the title does NOT, so you can't just name the obvious title song.
 function validSongs(word, strict, noTitle) {
-  const rx = wordRegex(word, strict);
-  return allSongs.filter((s) => rx.test(s.lyrics) && !(noTitle && rx.test(s.title)));
+  const matches = wordSongMatches(word, strict);
+  const lyrics = matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics));
+  return (noTitle ? (matches.noTitle ??= lyrics.filter((s) => !matches.rx.test(s.title))) : lyrics).slice();
 }
 // Songs whose TITLE contains the prompt word — the ones the Hard/Ultra "not in
 // the title" rule blocks, so we can warn the player before they waste the clock.
 function titleSongsForWord(word, strict) {
-  const rx = wordRegex(word, strict);
-  return allSongs.filter((s) => rx.test(s.title));
+  // A title-only challenge must not pay for a full lyric scan on its first visit.
+  const matches = wordSongMatches(word, strict);
+  return (matches.titles ??= allSongs.filter((s) => matches.rx.test(s.title))).slice();
 }
 // Marginalia warning: in noTitle modes with no list to lean on (Hard/Ultra), name the songs
 // whose title holds the word so the player knows e.g. "All Too Well" won't be accepted. Modes
@@ -3469,11 +3485,11 @@ function superHardTierOpen() {
 
 // True if the player can start this challenge right now. Mastery-gated challenges open
 // purely on Mastery level (never via tokens); others on free/already-unlocked.
-function challengeUnlocked(id) {
+function challengeUnlocked(id, record) {
   const c = CHALLENGE_BY_ID[id];
   if (!c) return false;
   if (c.mastery) return challengeMasteryReached(c);
-  return c.free || challengeRecord(id).unlocked;
+  return c.free || (record || challengeRecord(id)).unlocked;
 }
 
 // Bump the attempt counter (called when a challenge run starts). Dark runs count on their
@@ -6876,23 +6892,24 @@ function renderTitleStepper() {
    game's scoring. */
 let bonusBackTarget = "start";       // where the shelf's back link returns to
 
-// The puzzle builders need three catalogue-wide indexes (see js/bonus.js). Each is a full pass
-// over every lyric line, so they're built once on first play and cached for the session —
-// never at load, since most sessions never open the shelf.
-let bonusLineIndex = null;
-let bonusSlipCtx = null;
-let bonusWordIndex = null;
-let bonusTrackIndex = null;
+// Build each index only when a game asks for it. Keep the full corpus as the key:
+// new song data and guest switches cannot inherit another catalogue's indexes.
+const bonusCorpusIndexes = new WeakMap();
 function bonusIndexes() {
-  if (!bonusLineIndex) bonusLineIndex = buildLineIndex(allSongs);
-  if (!bonusSlipCtx) bonusSlipCtx = buildSlipContext(allSongs);
-  if (!bonusWordIndex) bonusWordIndex = buildWordIndex(allSongs);
-  // Off allSongs like the other three, and for a sharper reason than theirs: a track number is
-  // counted over every song the record has, so building this on the dealable pool would shuffle
-  // every position after a barred title up by one. See buildTrackIndex.
-  if (!bonusTrackIndex) bonusTrackIndex = buildTrackIndex(allSongs);
-  return { lineIndex: bonusLineIndex, ctx: bonusSlipCtx, wordIndex: bonusWordIndex,
-           trackIndex: bonusTrackIndex };
+  let indexes = bonusCorpusIndexes.get(allSongs);
+  if (!indexes) {
+    const songs = allSongs;
+    let lineIndex, ctx, wordIndex, trackIndex;
+    indexes = {
+      get lineIndex() { return lineIndex ??= buildLineIndex(songs); },
+      get ctx() { return ctx ??= buildSlipContext(songs); },
+      get wordIndex() { return wordIndex ??= buildWordIndex(songs); },
+      // Full running order, including barred titles, so later tracks never shift.
+      get trackIndex() { return trackIndex ??= buildTrackIndex(songs); },
+    };
+    bonusCorpusIndexes.set(songs, indexes);
+  }
+  return indexes;
 }
 
 // What the whole shelf deals from: the twelve studio albums, less the handful of titles the
@@ -7497,18 +7514,18 @@ function bonusSeconds() {
 // This game's puzzle for one page, avoid-lists included. Split out from nextBonusRound so the
 // dev tools can build a page's worth without driving the screen.
 function buildBonusPuzzle() {
-  const { lineIndex, ctx } = bonusIndexes();
+  const indexes = bonusIndexes();
   const songs = bonusSongs();
   if (bonusGame.id === "spot-the-slip")
-    return buildSlipPuzzle(songs, playableWords, lineIndex, ctx, Math.random, 120, new Set(bonusRecentFakes));
+    return buildSlipPuzzle(songs, playableWords, indexes.lineIndex, indexes.ctx, Math.random, 120, new Set(bonusRecentFakes));
   if (bonusGame.id === "sing-it-back")
-    return buildBlankPuzzle(songs, ctx, Math.random, 120, new Set(bonusRecentSongs));
+    return buildBlankPuzzle(songs, indexes.ctx, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "redacted")
-    return buildRedactedPuzzle(songs, ctx, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
+    return buildRedactedPuzzle(songs, indexes.ctx, indexes.lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "only-here")
     // The run's ramp: the early pages deal a wide hand with an obvious outlier, the later ones
     // a compressed one where the answer is a judgement rather than a read.
-    return buildOnlyHerePuzzle(songs, bonusIndexes().wordIndex, Math.random, 120,
+    return buildOnlyHerePuzzle(songs, indexes.wordIndex, Math.random, 120,
                                new Set(bonusRecentSongs),
                                { tight: bonusRound > ONLY_WIDE_PAGES, words: onlyDealt });
   if (bonusGame.id === "then-what")
@@ -7517,12 +7534,12 @@ function buildBonusPuzzle() {
     return buildChainPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs),
                             { cross: bonusRound > CHAIN_EASY_PAGES });
   if (bonusGame.id === "running-order")
-    return buildTrackPuzzle(songs, bonusIndexes().trackIndex, Math.random, 120,
+    return buildTrackPuzzle(songs, indexes.trackIndex, Math.random, 120,
                             new Set(bonusRecentSongs), new Set(bonusRecentAlbums));
   if (bonusGame.id === "word-cloud")
     // The run's ramp, and its only one: the first pages deal a wide cloud and the rest a spare
     // one, so the page gives you less of the song to go on as the run goes on.
-    return buildCloudPuzzle(songs, bonusIndexes().wordIndex, Math.random, 120,
+    return buildCloudPuzzle(songs, indexes.wordIndex, Math.random, 120,
                             new Set(bonusRecentSongs),
                             { words: bonusRound > CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
   if (bonusGame.id === "aaron-or-jack")
@@ -7537,7 +7554,7 @@ function buildBonusPuzzle() {
     return buildCapitalsPuzzle(songs, secretMessages, Math.random, 120, new Set(bonusRecentSongs));
   if (isRuthlessRun())
     return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
-  return buildNamePuzzle(songs, lineIndex, Math.random, 120, new Set(bonusRecentSongs));
+  return buildNamePuzzle(songs, indexes.lineIndex, Math.random, 120, new Set(bonusRecentSongs));
 }
 
 /* How many songs this game can actually deal, which is what the endless run's no-repeat list
@@ -10987,7 +11004,12 @@ function renderChallengesPage() {
   checkChallengeBoardCharms();   // mastery-gated locks fall with no purchase to notice them
   const wallet = loadChallengeTokens();
   const tk = wallet.balance;
-  const defeated = CHALLENGES.filter((c) => challengeRecord(c.id).defeated).length;
+  // A snapshot for this synchronous render only; the next render rereads storage.
+  const board = loadChallengeState();
+  const records = new Map(CHALLENGES.map((c) => [c.id, challengeRecord(c.id, board)]));
+  const unlocked = new Map(CHALLENGES.map((c) => [c.id, challengeUnlocked(c.id, records.get(c.id))]));
+  const pinned = CHALLENGES.filter((c) => records.get(c.id).pinned && unlocked.get(c.id));
+  const defeated = CHALLENGES.filter((c) => records.get(c.id).defeated).length;
 
   // Default selection: keep the current pick if still valid, else the first
   // not-yet-defeated challenge on the shelf, else the shelf's first row.
@@ -10995,7 +11017,7 @@ function renderChallengesPage() {
     // Shelf order, not authoring order, so the pre-selected row is the first one
     // you can actually see rather than an arbitrary one further down the list.
     const shelf = byShelf(CHALLENGES);
-    const firstOpen = shelf.find((c) => !challengeRecord(c.id).defeated);
+    const firstOpen = shelf.find((c) => !records.get(c.id).defeated);
     challSelectedId = (firstOpen || shelf[0]).id;
   }
 
@@ -11010,14 +11032,14 @@ function renderChallengesPage() {
       `<path class="ink" d="M15.5 8.7 C17.3 10.3 18.8 11.7 20.4 13 C18.8 14.4 17.2 15.8 15.3 17.4"/>` +
     `</svg></span>`;
   const challengeRow = (c) => {
-    const rec = challengeRecord(c.id);
-    const open = challengeUnlocked(c.id);
+    const rec = records.get(c.id);
+    const open = unlocked.get(c.id);
     let mark, stateCls;
     if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
     else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
     else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
     else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
-    const pinLimitReached = !rec.pinned && pinnedChallenges().length >= CHALLENGE_PIN_LIMIT;
+    const pinLimitReached = !rec.pinned && pinned.length >= CHALLENGE_PIN_LIMIT;
     const pin = open
       ? `<button type="button" class="chall-item-pin${rec.pinned ? " is-pinned" : ""}" data-pin="${c.id}"` +
           `${pinLimitReached ? " disabled aria-disabled=\"true\"" : ""}` +
@@ -11030,7 +11052,6 @@ function renderChallengesPage() {
       `<span class="chall-item-mark">${mark}</span>${pin}</div>`;
   };
   let list = "";
-  const pinned = pinnedChallenges();
   if (pinned.length) {
     list += `<div class="chall-group chall-group--pinned">` +
       `<div class="chall-group-head chall-group-head--pinned">${CHALL_PIN}` +
@@ -14660,7 +14681,7 @@ let activeCorpus = "taylor";          // which catalogue the globals currently h
 
 function snapshotCorpus() {
   return { allSongs, titleIndex, spacelessIndex, playableWords, challengeWordPools,
-           albumWordMap, albumOrder, wordBuckets, lyricVocab, lyricApostrophes };
+           albumWordMap, albumOrder, wordBuckets, lyricVocab, lyricApostrophes, wordSongCache };
 }
 function applyCorpus(c) {
   allSongs = c.allSongs; titleIndex = c.titleIndex; spacelessIndex = c.spacelessIndex;
@@ -14668,6 +14689,7 @@ function applyCorpus(c) {
   albumWordMap = c.albumWordMap;
   albumOrder = c.albumOrder; wordBuckets = c.wordBuckets; lyricVocab = c.lyricVocab;
   lyricApostrophes = c.lyricApostrophes;
+  wordSongCache = c.wordSongCache;
   promptRxCache = new Map();          // built from the index above, so it changes with it
 }
 // Put Taylor's catalogue back. Safe to call at any time, including when it is already
@@ -14685,6 +14707,8 @@ function restoreCorpus() {
 // `opts.aliases` folds in TITLE_ALIASES (Taylor-specific, so guests pass it false);
 // `opts.buckets` is the rarity threshold set (a guest carries its own, see indexPlayableWords).
 function installCorpus(grouped, words, opts = {}) {
+  // New songs or changed lyrics always arrive with a fresh derived cache.
+  wordSongCache = new Map();
   // songs.json stores lyrics as structured sections ([{label, lines}]); the game
   // works off a flat newline-joined `lyrics` string, so derive it here once. The
   // `sections` stay on the song object (line numbers + verse/chorus/bridge) for the
@@ -15617,8 +15641,7 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     // Hard/Ultra count only *valid* answers (word in lyrics but NOT the title), so
     // every bucketed word still has at least one answerable, non-giveaway song.
     let easyN = 0, hardN = 0, ultraN = 0;
-    for (const s of allSongs) {
-      if (!lenient.test(s.lyrics)) continue;
+    for (const s of songsContainingWord(w, false)) {
       easyN++;
       albums.add(s.album);
       if (!lenient.test(s.title)) hardN++;
@@ -23792,7 +23815,7 @@ function matchLyricLine(phrase) {
   // leaves trailing lyric free, so longer songs aren't penalised.
   let best = null;
   for (const s of currentSongs) {
-    const ratio = fuzzySubstringRatio(normPhrase, s._normLyrics);
+    const ratio = fuzzySubstringRatio(normPhrase, s._normLyrics, FUZZY_THRESHOLD);
     if (ratio < FUZZY_THRESHOLD) continue;
     if (!best || ratio > best.ratio ||
         (ratio === best.ratio && (s.lyrics.length < best.song.lyrics.length ||

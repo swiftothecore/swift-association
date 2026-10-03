@@ -112,17 +112,24 @@ export function swappedNeighbours(a, b) {
 // `text`, in [0,1] (1 = a clean substring; less for typos / partial). The DP's first
 // row stays 0 so the pattern may start anywhere in `text`, and leftover `text` past
 // the match is free — the score is 1 - min(last row) / pattern.length.
-export function fuzzySubstringRatio(pattern, text) {
+// With a minimum score, a rejected comparison may return 0 early. Accepted scores
+// remain exact, including ties; callers without a minimum still get the full ratio.
+export function fuzzySubstringRatio(pattern, text, minimum = 0) {
   if (!pattern.length) return 0;
   if (!text.length) return 0;
   let prev = new Array(text.length + 1).fill(0);
   let curr = new Array(text.length + 1);
   for (let i = 1; i <= pattern.length; i++) {
     curr[0] = i;
+    let rowMin = i;
     for (let j = 1; j <= text.length; j++) {
       const cost = pattern[i - 1] === text[j - 1] ? 0 : 1;
       curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+      if (curr[j] < rowMin) rowMin = curr[j];
     }
+    // Row minima never decrease. Compare ratios directly: rounding an integer
+    // edit budget from (1 - minimum) can wrongly reject an exact boundary score.
+    if (1 - rowMin / pattern.length < minimum) return 0;
     [prev, curr] = [curr, prev];
   }
   let best = Infinity;

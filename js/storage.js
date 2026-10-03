@@ -203,8 +203,8 @@ export function saveChallengeState(o) {
   try { localStorage.setItem(CHALLENGES_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ }
 }
 // One challenge's record, with defaults filled in.
-export function challengeRecord(id) {
-  const e = loadChallengeState()[id] || {};
+export function challengeRecord(id, state = loadChallengeState()) {
+  const e = state[id] || {};
   return {
     unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0,
     darkDefeated: !!e.darkDefeated, darkAttempts: e.darkAttempts || 0, darkBest: e.darkBest || 0,

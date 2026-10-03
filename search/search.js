@@ -116,6 +116,8 @@ async function loadData() {
   SONGS = grouped.flatMap(({ album, songs }) =>
     songs.map((s) => ({ title: s.title, album, sections: Array.isArray(s.sections) ? s.sections : [] }))
   );
+  lineTokenCache.clear();
+  lastSearch = null;
   const set = new Set();
   for (const s of SONGS) for (const sec of s.sections) set.add(sectionType(sec.label));
   SECTION_TYPES = SECTION_ORDER.filter((t) => set.has(t))
@@ -172,33 +174,69 @@ function markRanges(line, ranges) {
 // Highlight every occurrence of every term in one pass (stem/exact). Mirrors the game's
 // highlightWord: prefer the exact word when the line holds it, else the stem variants, so
 // "babe" never circles "baby". One combined global regex marks all the terms at once.
-function termBody(line, term, strict) {
-  if (strict) return exactWordBody(term);
-  const exactRx = new RegExp(boundedWordBody(exactWordBody(term)), "iu");
-  return exactRx.test(line) ? exactWordBody(term) : variantBody(term);
-}
-function highlightTerms(line, terms, strict) {
-  const body = terms.map((t) => termBody(line, t, strict)).join("|");
-  return escapeHtml(line).replace(new RegExp(boundedWordBody("(" + body + ")"), "giu"), "<mark>$1</mark>");
+function highlightTerms(line, query) {
+  const body = query.terms.map((t) => query.mode === "exact" || t.exactRx.test(line)
+    ? t.exactBody : t.variantBody).join("|");
+  let rx = query.highlights.get(body);
+  if (!rx) {
+    rx = new RegExp(boundedWordBody("(" + body + ")"), "giu");
+    query.highlights.set(body, rx);
+  }
+  rx.lastIndex = 0;
+  return escapeHtml(line).replace(rx, "<mark>$1</mark>");
 }
 
 const WORD_TOKEN_RE = /[\p{L}\p{M}]+(?:['’‘][\p{L}\p{M}]+)*/gu;
 const comparableToken = (text) => canonicalMatchText(text).toLowerCase();
 
+// Only catalogue lines enter this cache; arbitrary queries cannot grow it.
+// Original offsets and lengths stay alongside normalized text for exact highlighting.
+const lineTokenCache = new Map();
+function tokensForLine(line) {
+  let tokens = lineTokenCache.get(line);
+  if (!tokens) {
+    tokens = [...line.matchAll(WORD_TOKEN_RE)].map((m) => ({
+      start: m.index, len: m[0].length, text: comparableToken(m[0]),
+    }));
+    lineTokenCache.set(line, tokens);
+  }
+  return tokens;
+}
+
+function prepareSearch(terms, mode) {
+  return {
+    mode, highlights: new Map(),
+    terms: terms.map((term) => {
+      const ql = comparableToken(term);
+      if (mode === "fuzzy" || mode === "contains") {
+        return { ql, minimum: ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN, scores: new Map() };
+      }
+      const rx = wordRegex(term, mode === "exact");
+      const exactBody = exactWordBody(term);
+      return {
+        rangeRx: new RegExp(rx.source, rx.flags.includes("g") ? rx.flags : rx.flags + "g"),
+        exactBody, exactRx: new RegExp(boundedWordBody(exactBody), "iu"),
+        variantBody: mode === "exact" ? exactBody : variantBody(term),
+      };
+    }),
+  };
+}
+
 // Every fuzzy token range for one term in a line. Four-letter words explicitly allow
 // one edit, while three-letter words keep the normal bar so fuzzy mode does not turn a
 // short prompt into most of the dictionary. Adjacent swaps are handled as one typo.
 function fuzzyTermRanges(line, term) {
-  const ql = comparableToken(term);
-  const min = ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN;
+  const { ql, minimum, scores } = term;
   const ranges = [];
-  for (const m of line.matchAll(WORD_TOKEN_RE)) {
-    const tok = m[0];
-    if (tok.length < 2 || Math.abs(tok.length - ql.length) > 2) continue;   // cheap length prefilter
-    const tl = comparableToken(tok);
-    const swapped = ql.length >= FUZZY_SWAP_MIN_LENGTH && swappedNeighbours(ql, tl);
-    const score = swapped ? 1 : fuzzySubstringRatio(ql, tl);
-    if (score >= min) ranges.push({ start: m.index, len: tok.length, score });
+  for (const tok of tokensForLine(line)) {
+    if (tok.len < 2 || Math.abs(tok.len - ql.length) > 2) continue;
+    let score = scores.get(tok.text);
+    if (score === undefined) {
+      const swapped = ql.length >= FUZZY_SWAP_MIN_LENGTH && swappedNeighbours(ql, tok.text);
+      score = swapped ? 1 : fuzzySubstringRatio(ql, tok.text, minimum);
+      scores.set(tok.text, score);
+    }
+    if (score >= minimum) ranges.push({ start: tok.start, len: tok.len, score });
   }
   return ranges;
 }
@@ -209,15 +247,15 @@ function fuzzyTermRanges(line, term) {
 // tool and the UI labels it as such. Scoped to one token so it never runs across a space,
 // and it returns just the matched letters' range (not the whole word) so the mark is tight.
 function containsTermRanges(line, term) {
-  const ql = comparableToken(term);
+  const { ql } = term;
   const ranges = [];
-  for (const m of line.matchAll(WORD_TOKEN_RE)) {
-    const token = comparableToken(m[0]);
+  for (const tok of tokensForLine(line)) {
+    const token = tok.text;
     let from = 0;
     while (from <= token.length - ql.length) {
       const idx = token.indexOf(ql, from);
       if (idx < 0) break;
-      ranges.push({ start: m.index + idx, len: ql.length, score: 1 });
+      ranges.push({ start: tok.start + idx, len: ql.length, score: 1 });
       from = idx + 1;
     }
   }
@@ -232,16 +270,15 @@ function passesPosition(line, range) {
   return true;
 }
 
-function regexTermRanges(line, term, strict) {
-  const rx = wordRegex(term, strict);
-  const global = new RegExp(rx.source, rx.flags.includes("g") ? rx.flags : rx.flags + "g");
-  return [...line.matchAll(global)].map((m) => ({ start: m.index, len: m[0].length, score: 1 }));
+function regexTermRanges(line, term) {
+  term.rangeRx.lastIndex = 0;
+  return [...line.matchAll(term.rangeRx)].map((m) => ({ start: m.index, len: m[0].length, score: 1 }));
 }
 
-function termRanges(line, term, mode, strict) {
+function termRanges(line, term, mode) {
   if (mode === "fuzzy") return fuzzyTermRanges(line, term);
   if (mode === "contains") return containsTermRanges(line, term);
-  return regexTermRanges(line, term, strict);
+  return regexTermRanges(line, term);
 }
 
 // Prefer the strongest match, but apply the structural position filter to all possible
@@ -255,23 +292,22 @@ function chooseRange(line, candidates, enforcePosition) {
 // One song's hits for an AND-list of terms: a line counts only if EVERY term matches it
 // (each per the active mode). Section filter is applied once per section; the position
 // filter against the first term's match.
-function searchSong(song, terms, mode) {
+function searchSong(song, terms, mode, query = prepareSearch(terms, mode)) {
   const hits = [];
   const disp = sectionDisplays(song);
-  const strict = mode === "exact";
   song.sections.forEach((sec, si) => {
     if (state.section !== "any" && sectionType(sec.label) !== state.section) return;
     (sec.lines || []).forEach((line, li) => {
       let ranges = [];
       for (let i = 0; i < terms.length; i++) {
-        const candidates = termRanges(line, terms[i], mode, strict);
+        const candidates = termRanges(line, query.terms[i], mode);
         const range = chooseRange(line, candidates, i === 0 && state.pos !== "any");
         if (!range) { ranges = null; break; }
         ranges.push(range);
       }
       if (!ranges) return;
       const html = mode === "fuzzy" || mode === "contains"
-        ? markRanges(line, ranges) : highlightTerms(line, terms, strict);
+        ? markRanges(line, ranges) : highlightTerms(line, query);
       hits.push(makeHit(sec, si, li, disp[si], html));
     });
   });
@@ -313,18 +349,28 @@ function renderExplain() {
   el.innerHTML = `${how} &middot; ${layout}.${caveat}`;
 }
 
+// Retain only the latest result. Layout changes still run the normal renderer and
+// its side effects, but do not search every lyric again.
+let lastSearch = null;
 function runSearch() {
   renderChips();
   renderExplain();
   const terms = activeTerms();
-  if (!terms.length) { renderInitial(state.q.trim()); return; }
+  if (!terms.length) { lastSearch = null; renderInitial(state.q.trim()); return; }
+  const key = JSON.stringify([terms, state.mode, state.section, state.pos]);
+  if (lastSearch && lastSearch.songs === SONGS && lastSearch.key === key) {
+    render(terms, lastSearch.groups);
+    return;
+  }
+  const query = prepareSearch(terms, state.mode);
   const groups = [];
   for (const song of SONGS) {
-    const hits = searchSong(song, terms, state.mode);
+    const hits = searchSong(song, terms, state.mode, query);
     if (hits.length) groups.push({ song, hits });
   }
   groups.sort((a, b) =>
     (ALBUM_INDEX.get(a.song.album) - ALBUM_INDEX.get(b.song.album)) || a.song.title.localeCompare(b.song.title));
+  lastSearch = { songs: SONGS, key, groups };
   render(terms, groups);
 }
 

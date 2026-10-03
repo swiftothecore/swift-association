@@ -28,7 +28,15 @@ const TL_P = 4.3;           // its pitch
 const TL_ALBUM_GAP = 4;     // between one album's block and the next
 const TL_ROWS_MIN = 3, TL_ROWS_MAX = 12;
 
-const words = (s) => (s.lyrics.match(/\S+/g) || []).length;
+const wordCounts = new WeakMap();
+function words(song) {
+  let cached = wordCounts.get(song);
+  if (!cached || cached.lyrics !== song.lyrics) {
+    cached = { lyrics: song.lyrics, count: (song.lyrics.match(/\S+/g) || []).length };
+    wordCounts.set(song, cached);
+  }
+  return cached.count;
+}
 
 function hand(seed) {
   const r = mulberry32(fnv1a(seed));
