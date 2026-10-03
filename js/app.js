@@ -9122,6 +9122,10 @@ const NASH_FIST =
   `c.9.6 1.1 1.4 1 2.1-.1.9-.8 1.3-1.7 1.3.7.5.9 1.2.7 1.9-.3.8-1 1.1-1.8 1.1.4.5.5 1.1.2 1.6-.4.6-1.1.8-2 .8H11c-2 0-3.4-.6-4.4-1.2z"/>` +
   `<path class="knuck" d="M16.2 7.7h5.2M16.6 11.1h4.1M16.6 14.1h3.2"/></svg>`;
 
+const NASH_TICK =
+  `<svg class="bg-nash-tick" viewBox="0 0 17 15" aria-hidden="true">` +
+  `<path d="M1.8 8.4C3.4 9.2 4.8 10.8 6 13.2 8.4 8 11.4 4.4 15.4 1.9"/></svg>`;
+
 /* One tap and the page is answered, on any of the three doors. A pass settles as NOT CORRECT,
    which is right — nothing was called — and `nashvillePassed` is what stops the rest of the
    page treating it as a miss: the score pays nothing instead of charging, and the banner says
@@ -9147,6 +9151,9 @@ function markNashvilleDoors(choice) {
     const isTrue = (v === "hers") === bonusPuzzle.hers;
     b.classList.add(isTrue ? "is-answer" : "is-blank");
     if (choice && v === choice) b.classList.add(isTrue ? "is-got" : "is-missed");
+    // The right call's mark, printed into the block it chose (see .bg-nash-tick in styles.css).
+    if (choice && v === choice && isTrue)
+      b.querySelector(".bg-nash-card").insertAdjacentHTML("beforeend", NASH_TICK);
   });
   const pass = $("bonusPlayBody").querySelector(".bg-nash-pass");
   if (pass) { pass.disabled = true; if (choice === "pass") pass.classList.add("is-took"); }
