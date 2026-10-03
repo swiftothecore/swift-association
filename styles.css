@@ -11527,15 +11527,26 @@
   .stp-pen-note:is(:hover, :focus-visible) { outline: none; text-decoration: underline; text-underline-offset: 3px; }
 
   /* the home album: its record sleeve (Track by Track's own art, which brings its own torn
-     edges and dark ground, so it takes no night dim), with a slip tucked under it */
+     edges and dark ground, so it takes no night dim), with a slip tucked under it. The slip
+     leans WITH the sleeve and is inset the same on both sides: counter-rotating it, or
+     insetting it unevenly, is what made the pair read as two things that happened to land on
+     each other rather than a card tucked into a sleeve. A card lift, not an outline, like the
+     gist's index card. The off-album note darkens the era ink halfway to the pen, because a
+     snow-blue or pale grey record name is unreadable on white at typewriter size. */
+  .stp-pair { position: relative; }
   .stp-sleeve { position: relative; z-index: 1; }
   .stp-sleeve-art { box-shadow: 1px 2px 0 rgba(43,39,34,.12); }
-  .stp-slip { position: relative; margin: -6px 6px 0 10px; padding: 10px 10px 8px; color: var(--stp-pen); background: #fdfcf8;
-    border: 1px solid rgba(43,39,34,.14); transform: rotate(-2.6deg); font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.12; }
-  .stp-slip .stp-lab { display: block; color: var(--stp-soft); margin-bottom: 3px; }
-  .stp-slip b { display: block; }
-  .stp-slip > span:last-child { font-size: .9em; color: var(--stp-soft); }
-  .stp-solo .stp-slip { margin-inline: 14px; }
+  .stp-slip { position: relative; margin: -10px 7px 0; padding: 16px 12px 9px; color: var(--stp-pen); background: #fdfcf8;
+    box-shadow: 1px 1.5px 0 rgba(43,39,34,.14); }
+  .stp-slip-n { display: flex; align-items: baseline; gap: 6px; font-family: var(--hand); line-height: .9; }
+  .stp-slip-n b { font-size: calc(36px + var(--text-size-adjust)); font-weight: 700; }
+  .stp-slip-n span { font-size: calc(17px + var(--text-size-adjust)); color: var(--stp-soft); }
+  .stp-slip-song { margin-top: 9px; padding-top: 7px; border-top: 1px solid rgba(43,39,34,.16); font-family: var(--hand);
+    font-size: calc(19px + var(--text-size-adjust)); line-height: 1.05; }
+  .stp-slip-song span { color: var(--stp-soft); font-size: .86em; white-space: nowrap; }
+  .stp-slip-cap { margin-top: 4px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.1px;
+    text-transform: uppercase; color: var(--stp-soft); }
+  .stp-slip-cap i { font-style: normal; white-space: nowrap; color: color-mix(in srgb, var(--era) 50%, var(--stp-pen)); }
 
   /* The notebook's one label-maker tape. It was the Stats page's quick numbers until the stamps
      below took over; the Mastery page's start-button words are strips of it (.lt-strip,

@@ -2249,7 +2249,7 @@ const STATS_TAPE = {
   staff:    [{ left: "-7px", top: "-6px", rot: -32, w: 50, tear: 0 }, { right: "-7px", top: "-5px", rot: 30, w: 52, tear: 3 }],
   graph:    [{ left: "-9px", top: "-6px", rot: -40, w: 52, tear: 4 }],
   clip:     [{ left: "50%", tx: "-50%", top: "-8px", rot: -3, w: 52, tear: 4 }],
-  sleeve:   [{ left: "50%", tx: "-50%", top: "-9px", rot: 4, w: 48, tear: 5 }],
+  sleeve:   [{ left: "50%", tx: "-50%", top: "-8px", rot: -3, w: 48, tear: 5 }],
   blot:     [{ left: "50%", tx: "-50%", top: "-9px", rot: -2, w: 56, tear: 1 }],
   cal:      [{ left: "-9px", top: "-6px", rot: -38, w: 52, tear: 3 }, { right: "-9px", top: "-6px", rot: 40, w: 54, tear: 0 }],
 };
@@ -2755,13 +2755,23 @@ function statsLifetimeHTML(W) {
   const out = [];
   const favSong = topTallyEntry(t.songs), favAlbum = topTallyEntry(t.albums);
   // The home album is its record: the Track by Track shelf's own sleeve for it (js/sleeves.js),
-  // hand-made per album in its era colour and derived from nothing on the real cover, with the
-  // most-sung song written on a slip tucked under it.
+  // hand-made per album in its era colour and derived from nothing on the real cover, with a
+  // slip tucked under it carrying the count and the most-sung song.
+  // THE SONG IS USUALLY NOT ON THE RECORD. The two are separate tallies (most right by album,
+  // most sung by title), so a slip under Red's sleeve can name an evermore song, and on a bare
+  // slip that reads as a claim it's a Red track. So when it comes off another record the slip
+  // says which, in that record's ink. The count leads at numeral size because it is the stat;
+  // it used to be the middle of a typewriter label, which wrapped and stranded "right".
   if (favSong && favAlbum) {
-    out.push(`<div class="stp-item stp-w2 stp-o4${phone ? " stp-solo" : ""}" style="--r:2.2deg">${statsTape("sleeve")}` +
+    const songAlbum = albumOfTitle(favSong.key);
+    const off = songAlbum && songAlbum !== favAlbum.key
+      ? ` · <i style="--era:${albumColor(songAlbum) || "#6f675a"}">off ${escapeHtml(STATS_ALBUM_SHORT[songAlbum] || songAlbum)}</i>` : "";
+    out.push(`<div class="stp-item stp-w2 stp-o4${phone ? " stp-solo" : ""}" style="--r:1.6deg"><div class="stp-lab">home album</div>` +
+      `<div class="stp-pair">${statsTape("sleeve")}` +
       `<div class="stp-sleeve">${albumSleeve(favAlbum.key, albumColor(favAlbum.key) || "#8a7f6b", null, undefined, "stp-sleeve-art")}</div>` +
-      `<div class="stp-slip"><span class="stp-lab">home album · ${favAlbum.count} right</span>` +
-      `<b>${escapeHtml(censor(favSong.key))}</b><span>sung the most, ×${favSong.count}</span></div></div>`);
+      `<div class="stp-slip"><div class="stp-slip-n"><b>${favAlbum.count}</b><span>right</span></div>` +
+      `<div class="stp-slip-song"><b>${escapeHtml(censor(favSong.key))}</b> <span>×${favSong.count}</span></div>` +
+      `<div class="stp-slip-cap">your most sung${off}</div></div></div></div>`);
   }
   if (m.roundsTotal) out.push(statsStampsHTML(m, t, !!favSong));
   // Songs found, album by album, in the order the catalogue runs (pseudo-albums included).
