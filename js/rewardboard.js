@@ -9,10 +9,11 @@
    it. A single-level object carries the passport's real stamp beside its name (passportStamp), a
    member of a ladder (a pen, a title rank) carries that stamp's outline and number (passportGhost,
    inked), and anything still owed carries the pencil tracing exactly as its passport slot does.
-   What the player is wearing is marked in the object's own material, never by a mark laid over
-   it: the pen's pocket is satin-stitched in the roll's gold, the bead compartment is lined in
-   felt, and the label strips not in use go pale. The paper fan and the button card still wear
-   the editor's red loop until theirs are chosen.
+   What the player is wearing is marked by the object itself, never by a mark laid over it: the
+   pen's pocket is satin-stitched in the roll's gold, the stock you write on is swung out of the
+   fan on its rivet, the bead compartment is lined in felt, the button is sewn over a square of
+   gingham, and the label strips not in use go pale. (It used to be the editor's red pen looped
+   round each one, and a page of red rings read as corrections rather than choices.)
 
    Objects with a material of their own (denim, a cassette, leather, label tape, card stock) keep
    its colours at night, the way the start-button finishes do; only what is ink on the page
@@ -44,17 +45,6 @@ function stamp(D, L) {
 function tag(D, L, cls = "") {
   const on = reached(D, L);
   return `<span class="rw-tag ${on ? "on" : "owed"}${L === 13 ? " wide" : ""} ${cls}" style="--si:${passportStampInk(L)}" aria-hidden="true">${passportGhost(L)}</span>`;
-}
-// The editor's red pen, looped round whatever is being worn. Drawn per item from a seed, so no
-// two loops are the same ellipse, and the tail overshoots the start the way a hand does.
-function loop(seed = 1) {
-  const pts = [], n = 56, a0 = -2.5 + settle(seed) * 1.2, sweep = Math.PI * 2 + 0.5 + settle(seed + 3) * 0.4;
-  for (let i = 0; i <= n; i++) {
-    const t = i / n, a = a0 + sweep * t;
-    const r = 45.5 + Math.sin(a * 2 + seed) * 1.6 + Math.sin(a * 3 + seed * 1.7) * 1.1 + t * 3.4;
-    pts.push(`${(50 + Math.cos(a) * r).toFixed(1)} ${(50 + Math.sin(a) * r).toFixed(1)}`);
-  }
-  return `<svg class="rw-loop" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M${pts.join(" L")}" vector-effect="non-scaling-stroke"/></svg>`;
 }
 // The randomiser, as a matchbox of dice you shake. A red safety-match sleeve with the front
 // page's two thrown dice (#randomGear in index.html: the front die knocks a hole in the back one)
@@ -146,24 +136,30 @@ function pensRoll(D) {
    ================================================================ */
 // Angles spaced by hand, not divided evenly: a fan opened by a thumb.
 const FAN_AT = [-9, 5.6, 19.6, 34.1, 48.3, 62.8];
+// The stock in use is swung out past the end of the fan, nearly flat, and the other five close up
+// behind it, still spaced by hand. A riveted strip cannot slide out, but it can swing.
+const FAN_REST = [-9, 4.2, 17.8, 30.6, 44.9];
+const FAN_SWUNG = 79;
 const PAPER_LABEL = { default: "Plain", manila: "Manila", parchment: "Parchment", blush: "Blush", slate: "Slate", sage: "Sage" };
 
 // Six strips of the real stock (the game's .paper-chip) on one brass rivet. Shut and banded until
 // the set is earned, with the plain sheet you already own on top; open, the stock you write on is
-// fanned to the front (a riveted strip cannot slide out) and looped.
+// swung out on the rivet, apart from the rest.
 function paperFan(D) {
   const slots = [{ id: "", paper: "default", name: "Plain" }, ...ofKind("paper").map((r) => ({ id: r.payload.paper, paper: r.payload.paper, name: r.name, rid: r.id }))];
   const open = slots.length > 1 && D.has(slots[1].rid);
   const n = slots.length;
+  const swung = open && slots.some((p) => p.id === D.wear.paper);
+  let rest = 0;
   const strips = slots.map((p, i) => {
-    const a = open ? FAN_AT[i] ?? (-9 + i * 14) : 38 + i * 0.9;
     const worn = open && D.wear.paper === p.id;
+    const a = !open ? 38 + i * 0.9 : !swung ? FAN_AT[i] ?? (-9 + i * 14) : worn ? FAN_SWUNG : FAN_REST[rest++] ?? (-9 + i * 13);
     const inner = `<span class="pf-name">${esc(PAPER_LABEL[p.paper] || p.name)}</span><span class="pf-hole"></span>`;
     const z = !open ? n - i : worn ? 20 : i + 1;
     const st = `style="--a:${a.toFixed(1)}deg;z-index:${z}"`;
     if (!open && i > 0) return `<span class="pf-strip paper-chip shut" data-paper="${p.paper}" ${st}>${inner}</span>`;
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="paper"`;
-    return `<button type="button" class="pf-strip paper-chip${worn ? " worn" : ""}" data-paper="${p.paper}" ${st} ${pick(attr, worn, p.name)}>${inner}${worn ? loop(5 + i) : ""}</button>`;
+    return `<button type="button" class="pf-strip paper-chip${worn ? " worn" : ""}" data-paper="${p.paper}" ${st} ${pick(attr, worn, p.name)}>${inner}</button>`;
   }).join("");
   const level = slots[1] ? MASTERY_REWARDS.find((r) => r.id === slots[1].rid).level : 4;
   const band = open ? "" : `<span class="pf-arm" style="--a:${(38 + (n - 1) * 0.9).toFixed(1)}deg"><span class="pf-band"><b>${n - 1} more stocks</b><i>banded till Mastery ${level}</i></span></span>`;
@@ -266,7 +262,7 @@ const emptyCell = (name = "&nbsp;") => `<span class="bc-cell empty"><span class=
 function buttonCell(D, attr, finish, name, worn, i, note = "") {
   return `<button type="button" class="bc-cell${worn ? " worn" : ""}" ${attr} aria-pressed="${worn}" aria-label="${esc(name)}">` +
     `<span class="bc-sew">${stitch(i * 5 + 2)}<span class="bc-btn">${D.miniButton(finish)}</span>${stitch(i * 5 + 4)}</span>` +
-    `<span class="bc-nm">${esc(name)}</span>${note ? `<span class="bc-note">${note}</span>` : ""}${worn ? loop(41 + i) : ""}</button>`;
+    `<span class="bc-nm">${esc(name)}</span>${note ? `<span class="bc-note">${note}</span>` : ""}</button>`;
 }
 // They are start BUTTONS, so they are sewn onto a card, each real one held by two gold
 // cross-stitches. Seasons and Pride stay doorways: each set opens on a refill card tucked under

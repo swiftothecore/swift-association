@@ -14463,10 +14463,6 @@
   .rw-tag.wide .mpp-ghost-n { font-size: 40px; transform: translateY(8px); }
   .rw-tag.wide.on .mpp-ghost-n { font-size: 36px; transform: translateY(7px); }
 
-  /* the editor's red pen round what you are wearing */
-  .rw-loop { position: absolute; left: -6%; top: -9%; width: 112%; height: 118%; overflow: visible; pointer-events: none; z-index: 7; }
-  .rw-loop path { fill: none; stroke: var(--red-pen); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
-
   /* the randomiser: a matchbox of dice (dieControl in js/rewardboard.js). The sleeve and tray keep
      their red and kraft at night like every other material object; only the outline is ink. Shut,
      the tray rides under the sleeve; worn, it is slid out of the end and the button widens to show
@@ -14585,8 +14581,7 @@
   .pf .pf-strip:not(.worn):not(.shut):hover { transform: rotate(var(--a)) translateY(-7px); }
   .pf-name { position: absolute; left: 50%; top: 14px; writing-mode: vertical-rl; transform: translateX(-50%) rotate(180deg);
     font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: .1em; color: #2b2722; white-space: nowrap; }
-  .pf-strip.worn .pf-name { color: #a8322e; font-weight: 700; }
-  .pf-strip .rw-loop { left: 9%; width: 82%; top: 5px; height: 92px; }
+  .pf-strip.worn .pf-name { font-weight: 700; }
   .pf-hole { position: absolute; left: 50%; bottom: 12px; width: 13px; height: 13px; margin-left: -6.5px; border-radius: 50%; border: 1.3px solid #2b2722; }
   .pf-rivet { position: absolute; left: -13px; bottom: -13px; width: 26px; height: 26px; z-index: 30; overflow: visible; }
   .pf-rv-o { fill: #c9a457; stroke: #2b2722; stroke-width: 1.6; }
@@ -14707,7 +14702,17 @@
   .bc-btn .play-cta .cta-mark--pencil { animation: none; }
   .bc-cell:not(.empty):hover .bc-btn { transform: translateY(-2px); }
   .bc-nm { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink); text-align: center; }
-  .bc-cell.worn .bc-nm { color: var(--red-pen); font-weight: 700; }
+  /* the button in use is sewn on over a pinked square of gingham in the card's gold, the way a
+     button card shows a button on cloth; its name sits on a little paper label over the check */
+  .bc-cell.worn { isolation: isolate; }
+  .bc-cell.worn::before { content: ""; position: absolute; z-index: -1; inset: -8px 1px -7px; pointer-events: none;
+    background-color: color-mix(in srgb, var(--o) 8%, var(--mpp-card));
+    background-image: linear-gradient(90deg, color-mix(in srgb, var(--o) 34%, transparent) 50%, transparent 50%),
+      linear-gradient(0deg, color-mix(in srgb, var(--o) 34%, transparent) 50%, transparent 50%);
+    background-size: 9px 9px;
+    clip-path: polygon(0% 3%, 2.5% 0%, 5% 3%, 7.5% 0%, 10% 3%, 12.5% 0%, 15% 3%, 17.5% 0%, 20% 3%, 22.5% 0%, 25% 3%, 27.5% 0%, 30% 3%, 32.5% 0%, 35% 3%, 37.5% 0%, 40% 3%, 42.5% 0%, 45% 3%, 47.5% 0%, 50% 3%, 52.5% 0%, 55% 3%, 57.5% 0%, 60% 3%, 62.5% 0%, 65% 3%, 67.5% 0%, 70% 3%, 72.5% 0%, 75% 3%, 77.5% 0%, 80% 3%, 82.5% 0%, 85% 3%, 87.5% 0%, 90% 3%, 92.5% 0%, 95% 3%, 97.5% 0%, 100% 3%,
+      100% 97%, 97.5% 100%, 95% 97%, 92.5% 100%, 90% 97%, 87.5% 100%, 85% 97%, 82.5% 100%, 80% 97%, 77.5% 100%, 75% 97%, 72.5% 100%, 70% 97%, 67.5% 100%, 65% 97%, 62.5% 100%, 60% 97%, 57.5% 100%, 55% 97%, 52.5% 100%, 50% 97%, 47.5% 100%, 45% 97%, 42.5% 100%, 40% 97%, 37.5% 100%, 35% 97%, 32.5% 100%, 30% 97%, 27.5% 100%, 25% 97%, 22.5% 100%, 20% 97%, 17.5% 100%, 15% 97%, 12.5% 100%, 10% 97%, 7.5% 100%, 5% 97%, 2.5% 100%, 0% 97%); }
+  .bc-cell.worn .bc-nm { padding: 0 6px; font-weight: 700; background: var(--mpp-card); border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent); border-radius: 2px; }
   .bc-note { margin-top: -3px; font-family: var(--hand); font-weight: 600; font-size: 15px; line-height: 1; color: var(--ink-soft); }
   .bc-cell.empty .bc-nm { color: var(--ink-soft); }
   .bc-ghost { width: 96px; height: 26px; border: 1.3px dashed color-mix(in srgb, var(--ink) 35%, transparent); border-radius: 8px; margin: 0 4px; }
@@ -14716,7 +14721,6 @@
     radial-gradient(circle at 10px 3px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
     radial-gradient(circle at 3px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
     radial-gradient(circle at 10px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px); }
-  .bc-cell .rw-loop { left: -1%; width: 102%; top: -6px; height: 66px; }
   .bc-owe { margin: 12px 0 0; text-align: center; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
   .bc-refill { position: relative; margin: -1px 22px 0; padding: 12px 12px 14px; background: color-mix(in srgb, var(--o) 9%, var(--mpp-card));
     border: 1.5px solid var(--ink); border-top: 1.5px dashed var(--ink); border-radius: 0 0 6px 6px; }
