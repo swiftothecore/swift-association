@@ -5482,24 +5482,24 @@
   }
   .bg-word.is-wrong { text-decoration: line-through; text-decoration-color: rgba(43,39,34,0.5); opacity: 0.6; }
 
-  /* Sing It Back — one word left out of the line. The gap gets the same highlighter swipe the
-     round screen lays under its prompt word, so the eye lands where the game is asking. Its
-     width is FIXED whatever the answer is: sizing it to the word would hand over the letter
-     count. It grows only once there is something written in it. */
+  /* Sing It Back — one word left out of the line. The gap is gone over with the chisel
+     highlighter a revealed lyric wears (the stroke is the shared rule, named on .lyric-card's
+     mark), so the eye lands where the game is asking and the answer, once it is written in,
+     is already marked the way every other answer in the notebook is. Its width is FIXED
+     whatever the answer is: sizing it to the word would hand over the letter count. It grows
+     only once there is something written in it. The ruled underline is the blank itself and
+     goes once the word is in. */
   .bg-blank-line { margin-bottom: 22px; }
   .bg-blank {
-    display: inline-block; min-width: 4.6ch; text-align: center; line-height: 1.05;
-    color: var(--ink); padding: 0 2px;
-    background: linear-gradient(var(--highlighter), var(--highlighter));
+    display: inline-block; min-width: 4.6ch; min-height: 1.05em; text-align: center; line-height: 1.05;
     border-bottom: 1.5px solid rgba(43,39,34,0.55);
   }
-  /* Reveal: the word you got is written in as if it always belonged; the one you missed
-     goes in red, the same pen that circles Spot the Slip's impostor. */
-  .bg-blank.is-got { border-bottom-color: rgba(63,125,84,0.7); }
-  .bg-blank.is-answer {
-    color: #8a2626; border-bottom-color: rgba(178,58,63,0.6);
-    background: linear-gradient(rgba(178,58,63,0.12), rgba(178,58,63,0.12));
-  }
+  /* Reveal: the word you got is written in as if it always belonged; the one you missed goes
+     in red, the same pen that circles Spot the Slip's impostor, over the wrong card's blush.
+     The fixed width has done its job by now, so the stroke closes in to hug the word the way
+     it hugs one on a lyric card. */
+  .bg-blank:is(.is-got, .is-answer) { min-width: 0; border-bottom-color: transparent; }
+  .bg-blank.is-answer { --hl: rgba(178,58,58,0.15); color: #8a2626; }
 
   /* Then What — a verse growing down the page, and three lines under it of which one comes
      next. The sheet reads as writing on paper; the cards read as loose lines waiting to be
@@ -6166,10 +6166,6 @@
   }
   .bg-feedback .lyric-card { text-align: left; }
   .bg-feedback .countdown { margin-top: 14px; }
-  /* Sing It Back's reveal: the context peek with no card around it (see bonusAnswerCard). The
-     toggle stays on the verdict's centre line; the lines it opens read left-to-right like any
-     other lyric. */
-  .bg-ctx .lyric-ctx { text-align: left; }
 
   /* ---------- End of a run: the back cover ----------
      A bonus run keeps nothing but its own best score, so it has no bracelet and no records
@@ -10399,7 +10395,7 @@
   .lyric-card .lyric-line mark,
   .lyric-reveal--compact .lyric-line mark,
   .vw-say mark, .bg-only-line mark,
-  .bg-scrap.is-best .bg-scrap-word {
+  .bg-scrap.is-best .bg-scrap-word, .bg-blank {
     --hl: var(--highlighter);
     color: var(--ink); font-weight: 700;
     padding: 0 4px; margin: 0;

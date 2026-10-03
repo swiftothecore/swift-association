@@ -9315,9 +9315,9 @@ function fillOnlyDots(label, c) {
    and writes the song's name and album at the top of it, so a card underneath would quote one
    of the lines already sitting in full an inch above itself — which is exactly what it did
    before revealRedacted took over the attribution.
-   Sing It Back is therefore the other exception and gets no card: settleBonusRound writes the
-   missing word back into the gap, under a heading that already names the song and album. What
-   its page genuinely can't show is the lines EITHER SIDE, so the context peek goes out alone. */
+   Sing It Back is therefore the other exception and gets no card, and no context peek either:
+   settleBonusRound writes the missing word back into the gap, under a heading that already
+   names the song and album, and the page is about that one line. */
 function bonusAnswerCard() {
   const p = bonusPuzzle;
   // Then What has no card for Sing It Back's reason: the page finishes as a verse written out
@@ -9338,9 +9338,7 @@ function bonusAnswerCard() {
       bonusGame.id === "then-what" || bonusGame.id === "running-order" ||
       bonusGame.id === "aaron-or-jack" || bonusGame.id === "who-held-the-pen" ||
       bonusGame.id === "the-capitals" || bonusGame.id === "nashville" ||
-      isRuthlessRun()) return "";
-  if (bonusGame.id === "sing-it-back")
-    return `<div class="bg-ctx">${lyricCardContext(p.song, p.answer, p.line)}</div>`;
+      bonusGame.id === "sing-it-back" || isRuthlessRun()) return "";
   if (bonusGame.id === "name-that-song") {
     const color = albumColor(p.song.album) || "var(--ink-soft)";
     const headingId = nextLyricRevealId("title");
