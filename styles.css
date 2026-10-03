@@ -9296,6 +9296,23 @@
   .song-input::-webkit-search-decoration,
   .song-input::-webkit-search-results-button { -webkit-appearance: none; appearance: none; display: none; }
   .song-input::placeholder { color: var(--ink-soft); font-style: italic; }
+  /* The clear X: a touch-screen convenience, so it is off by default and only the coarse
+     pointer block below turns it on, and then only while the line has something on it. */
+  .input-clear {
+    display: none; position: absolute; right: 0; bottom: 3px; z-index: 2;
+    width: 40px; height: 40px; padding: 10px; margin: 0;
+    border: none; background: transparent; color: var(--ink-soft); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .input-clear svg {
+    width: 100%; height: 100%; overflow: visible;
+    fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round;
+  }
+  .input-clear:active { color: var(--ink); }
+  @media (pointer: coarse) {
+    .input-area:has(.input-clear) .song-input:not(:placeholder-shown) { padding-right: 40px; }
+    .song-input:not(:placeholder-shown):not(:disabled) ~ .input-clear { display: block; }
+  }
   /* Focus RECOLOURS the writing rule rather than drawing a second one under it. An inset
      shadow here would sit just inside the border and read as two parallel lines, which is
      a UI underline stack, not pen on paper — and since the input is focused for the whole

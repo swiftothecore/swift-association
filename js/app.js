@@ -7678,6 +7678,7 @@ function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
                ? ` role="combobox" aria-expanded="false" aria-controls="bonusDropdown" ` +
                  `aria-haspopup="listbox" aria-autocomplete="list"`
                : "") + ` />` +
+      `<button type="button" class="input-clear" tabindex="-1" aria-label="Clear what you&#39;ve written"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 5.9c3.6 3.9 7.4 8.1 11.3 12.4"/><path d="M17.6 6.3c-4.1 3.5-7.7 7.6-11.1 11.9"/></svg></button>` +
       `<div id="bonusReject" class="bg-reject"></div>` +
       (dropdown ? `<div id="bonusDropdown" class="dropdown" role="listbox" aria-label="Matching songs"></div>` : "") +
     `</div>` +
@@ -26864,6 +26865,24 @@ function wavePageTitle(title) {
   pageTitleWaveTimers.set(title, setTimeout(() => title.classList.remove("stats-title-waving"),
     PAGE_TITLE_WAVE_MS + Math.max(0, label.length - 1) * PAGE_TITLE_LETTER_MS));
 }
+/* The touch-only X on every writing line (.input-clear, shown by CSS while there is text).
+   Delegated, because bonus pages rebuild their line every page. It goes through a real
+   "input" event so the dropdown, verse gauge and any mirrored gap all empty with the line,
+   and pointerdown is swallowed so the field keeps focus and the keyboard stays up. */
+function wireInputClear() {
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".input-clear")) e.preventDefault();
+  });
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".input-clear");
+    const input = btn && btn.parentElement.querySelector(".song-input");
+    if (!input || input.disabled || input.readOnly) return;
+    input.value = "";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.focus();
+  });
+}
+
 function wirePageTitles() {
   document.addEventListener("click", (event) => {
     const cover = event.target.closest(".bonus-cover-play");
@@ -34852,6 +34871,7 @@ async function init() {
   wireInput();
   wirePageMarks();
   wirePageTitles();
+  wireInputClear();
   wireDeskMug();
   setupTooltips();
   wireFirstRun();
