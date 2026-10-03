@@ -8,14 +8,14 @@
    One rule ties the objects to the passport above them: each reward wears the stamp that opened
    it. A single-level object carries the passport's real stamp beside its name (passportStamp), a
    member of a ladder (a pen, a title rank) carries that stamp's outline and number (passportGhost,
-   inked), and anything still owed carries the dotted ghost exactly as its passport slot does.
+   inked), and anything still owed carries the pencil tracing exactly as its passport slot does.
    What the player is wearing is looped in the editor's red pen.
 
    Objects with a material of their own (denim, a cassette, leather, label tape, card stock) keep
    its colours at night, the way the start-button finishes do; only what is ink on the page
    follows the theme. The styles are the REWARD BOARD block in styles.css. */
 import { MASTERY_REWARDS, MASTERY_TILE_MARKS, MASTERY_ICONS, MASTERY_TITLES, MASTERY_TIER_ICONS, CTA_LABELS, CTA_MARKS } from "./config.js";
-import { passportStamp, passportGhost, passportStampInk, passportBadge } from "./passport.js";
+import { passportStamp, passportGhost, passportTracing, passportStampInk, passportBadge } from "./passport.js";
 import { trinketPreviewSVG } from "./bracelet.js";
 import { stickerArt } from "./stickers.js";
 
@@ -29,11 +29,11 @@ const reached = (D, L) => D.issued && D.level >= L;
 
 /* ---------------- shared pieces ---------------- */
 // The stamp that opened a reward, beside the object's name: the real one once reached, the
-// passport's own dotted ghost while it is owed. The id prefix is per instance, because the
+// passport's own pencil tracing while it is owed. The id prefix is per instance, because the
 // passport above holds the same stamps and a textPath must never point at another copy.
 function stamp(D, L) {
   const on = reached(D, L);
-  const svg = on ? passportStamp(L, D.dates[L] || "", `rw${++D.uid}x`) : passportGhost(L);
+  const svg = on ? passportStamp(L, D.dates[L] || "", `rw${++D.uid}x`) : passportTracing(L, null, `rw${++D.uid}x`);
   return `<span class="rw-stamp ${on ? "on" : "owed"}" aria-hidden="true">${svg}</span>`;
 }
 // A ladder member's stamp in short: the same outline at the same tilt with its level in it,

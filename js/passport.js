@@ -4,9 +4,10 @@
    THE PASSPORT. Mastery's thirteen levels are thirteen pages of stamps. A level you have
    reached is a rubber stamp pressed in the ink of the reward it opens on the reward board below
    (MASTERY_TILE_MARKS, so the passport and the board share one set of hues), and it carries the
-   DAY it was earned, read from the ledger (m.unlocked holds an ISO timestamp per reward). The
-   level you are working toward is a dotted ghost of its stamp with the ink still owed; the
-   rest are ghosts. Locked, the page is overprinted NOT YET ISSUED.
+   DAY it was earned, read from the ledger (m.unlocked holds an ISO timestamp per reward). A
+   level not yet reached is that same stamp traced in pencil, its lettering written in by hand
+   and LVL where the date will go; the one you are working toward is inked round its own edge
+   in red pen, as far as the ink you've earned. Locked, the page is overprinted NOT YET ISSUED.
 
    THE STAMP CARDS. One loyalty card per skill in its own ink: ten slots, one stamp a level,
    the next slot ringed as it fills. A full card is stamped MASTERED where its level count would
@@ -195,20 +196,41 @@ function stampSVG(L, date, pre = "mpp") {
     pressed(stampBody(L, sp, date, uid), tileInk(sp.tile), L % 3, `rotate(${(wide ? tilt(L) / 3 : tilt(L)).toFixed(1)})`) + `</svg>`;
 }
 
-// Where a stamp will go: its own outline pencilled in at the angle it will land, the level
-// number, and, on the one you're working toward, the ink still owed as a small red bar. The
-// dashes are stated per outline so the two shrunken halves of level 9 dash like the rest.
+/* Where a stamp will go: the very stamp, traced in pencil. stampBody draws it, so the tracing
+   cannot drift from what lands; only the pressing differs. The frame and mark go through
+   #pencilLine (index.html) twice, the second pass a hair off, the way a thing traced by hand is
+   gone over; the lettering is written in, once, in the hand face (.mpp-pencilled). `frac`,
+   on the slot being worked toward, inks the stamp's own outline in red pen that far round:
+   the progress sits on the thing being earned rather than in a bar beside it. */
+const SKETCH = ["translate(.7 -.5) rotate(1.2)", "translate(-.6 .5) rotate(-1.1)"];
+const traced = (body, shape, at, i, frac) =>
+  `<g class="mpp-traced" transform="${at}"><g class="mpp-sketch" transform="${SKETCH[i]}" filter="url(#pencilLine)">${body.ink}</g>` +
+  `<g filter="url(#pencilLine)">${body.ink}</g><g class="mpp-pencilled" filter="url(#pencilLine)">${body.type}</g>` +
+  (frac > 0 ? `<g filter="url(#stampInk1)">${outline(shape, `class="mpp-trace" pathLength="1" stroke-dasharray="${frac.toFixed(3)} 1"`)}</g>` : "") + `</g>`;
+function tracingSVG(L, frac, pre) {
+  const sp = STAMPS[L], uid = `${pre}${L}`, wide = sp.shape === "banner";
+  const vb = wide ? "-80 -40 160 80" : "-41 -41 82 82";
+  if (sp.shape === "double") {
+    const [a, b] = doubleBody(L, sp, "", uid);
+    return `<svg class="mpp-stamp mpp-tracing" viewBox="${vb}" aria-hidden="true" focusable="false">` +
+      traced(a, "oval", DOUBLE[0].at, 0, frac) + traced(b, "circle", DOUBLE[1].at, 1, frac) + `</svg>`;
+  }
+  return `<svg class="mpp-stamp mpp-tracing" viewBox="${vb}" aria-hidden="true" focusable="false">` +
+    traced(stampBody(L, sp, "", uid), sp.shape, `rotate(${(wide ? tilt(L) / 3 : tilt(L)).toFixed(1)})`, 0, frac) + `</svg>`;
+}
+
+// A stamp's outline pencilled in dashes at the angle it will land, with its level number: what a
+// ladder's tags are cut from (rewardboard.js). The dashes are stated per outline so the two
+// shrunken halves of level 9 dash like the rest.
 const ghostLine = (k = 1) => `class="mpp-ghost-fr" stroke-width="${(1.3 / k).toFixed(2)}" stroke-dasharray="${(2.5 / k).toFixed(2)} ${(3.2 / k).toFixed(2)}"`;
-function ghostSVG(L, frac) {
+function ghostSVG(L) {
   const sp = STAMPS[L], wide = sp.shape === "banner";
   const vb = wide ? "-80 -40 160 80" : "-41 -41 82 82";
   const frame = sp.shape === "double"
     ? `<g transform="${DOUBLE[0].at}">${outline("oval", ghostLine(.66))}</g><g transform="${DOUBLE[1].at}">${outline("circle", ghostLine(.66))}</g>`
     : `<g transform="rotate(${(wide ? tilt(L) / 3 : tilt(L)).toFixed(1)})">${outline(sp.shape, ghostLine())}</g>`;
   return `<svg class="mpp-stamp mpp-ghost" viewBox="${vb}" aria-hidden="true" focusable="false">${frame}` +
-    `<text class="mpp-ghost-n" x="0" y="${wide ? 7 : 5}" text-anchor="middle" font-size="${wide ? 22 : 17}">${L}</text>` +
-    (frac != null ? `<g transform="translate(0 ${wide ? 18 : 17})"><rect x="-20" y="-3" width="40" height="6" rx="3" class="mpp-owed-bg"/><rect x="-20" y="-3" width="${(40 * frac).toFixed(1)}" height="6" rx="3" class="mpp-owed"/></g>` : "") +
-    `</svg>`;
+    `<text class="mpp-ghost-n" x="0" y="${wide ? 7 : 5}" text-anchor="middle" font-size="${wide ? 22 : 17}">${L}</text></svg>`;
 }
 
 const fmt = (n) => Math.round(n).toLocaleString("en-GB");
@@ -218,7 +240,9 @@ const fmt = (n) => Math.round(n).toLocaleString("en-GB");
 /* The results screen's level-up spread (celebrateMastery) prints single stamps and slots off
    the same table, so the stamp you are shown at the end of a run is the one on the page. */
 export const passportStamp = (L, date, pre = "lvu") => stampSVG(L, date, pre);
-export const passportGhost = (L, frac = null) => ghostSVG(L, frac);
+export const passportGhost = (L) => ghostSVG(L);
+// `pre` as for passportStamp: a tracing carries the stamp's own arc lettering, and so its ids.
+export const passportTracing = (L, frac = null, pre = "lvt") => tracingSVG(L, frac, pre);
 export const passportCaption = (L) => STAMPS[L] ? STAMPS[L].caption : "";
 export const passportStampInk = (L) => STAMPS[L] ? tileInk(STAMPS[L].tile) : tileInk("title");
 
@@ -246,7 +270,7 @@ export function passportHTML(d) {
   for (let L = 1; L <= PASSPORT_LEVELS; L++) {
     const s = state(L);
     const date = d.dates[L] || "";
-    const body = s === "done" ? stampSVG(L, date) : ghostSVG(L, s === "now" ? d.frac : null);
+    const body = s === "done" ? stampSVG(L, date) : tracingSVG(L, s === "now" ? d.frac : null, "mpp");
     const tip = (d.tips[L] || `Level ${L}`) + (s === "done" && date ? ` · stamped ${date.toLowerCase()}` : "");
     slots += `<div class="mpp-slot ${s}${L === PASSPORT_LEVELS ? " cap" : ""}" data-tip="${tip}" data-tip-delay="200">` +
       `<span class="mpp-no">${pad(L)}</span>${body}<div class="mpp-ct">${s === "done" ? STAMPS[L].caption : STAMPS[L].short || STAMPS[L].caption}</div></div>`;

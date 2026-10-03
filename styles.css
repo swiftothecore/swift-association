@@ -14323,8 +14323,20 @@
   .mpp-ghost { color: var(--ink-soft); }
   .mpp-ghost-fr { fill: none; stroke: currentColor; opacity: 0.55; }
   .mpp-stamp .mpp-ghost-n { font-family: var(--hand); font-weight: 700; fill: currentColor; }
-  .mpp-owed-bg { fill: none; stroke: var(--red-pen); stroke-width: 1.2; }
-  .mpp-owed { fill: var(--red-pen); }
+  /* A stamp not yet earned, traced in pencil (tracingSVG): the stamp's own frame and mark at a
+     pencil's weight, gone over twice, lettered by hand; the outline goes first in every body, so
+     :first-child is the heavy edge. The red-pen .mpp-trace is the ink owed on the next one. */
+  .mpp-tracing { color: var(--ink-soft); }
+  .mpp-tracing .mpp-fr { stroke-width: .95; }
+  .mpp-tracing g > .mpp-fr:first-child { stroke-width: 1.45; }
+  .mpp-tracing .mpp-gl .ink { stroke-width: 1.35; }
+  .mpp-tracing .mpp-gl .ink-fill { fill: none; stroke-width: 1.2; }
+  .mpp-tracing .mpp-rw { stroke-width: 1.15; }
+  .mpp-tracing .mpp-tx { fill: none; stroke: currentColor; stroke-width: .9; }
+  .mpp-tracing .mpp-pencilled .mpp-tx { fill: currentColor; stroke: none; }
+  .mpp-stamp .mpp-pencilled text { font-family: var(--hand); font-weight: 700; }
+  .mpp-tracing .mpp-sketch { opacity: .38; }
+  .mpp-trace { fill: none; stroke: var(--red-pen); stroke-width: 3; stroke-linecap: round; }
   .mpp-ct { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.25; text-align: center; color: var(--ink); margin-top: 3px; max-width: 100%; }
   .mpp-slot.todo .mpp-ct, .mpp-slot.locked .mpp-ct { color: var(--ink-soft); }
   .mpp-slot.now .mpp-ct { color: var(--red-pen); font-weight: 700; }
@@ -14433,7 +14445,6 @@
   /* the stamp that opened it, pressed on the object */
   .rw-stamp { position: absolute; z-index: 6; width: 76px; height: 76px; pointer-events: none; }
   .rw-stamp .mpp-stamp { width: 100%; height: 100%; }
-  .rw-stamp.owed .mpp-ghost-n { font-family: var(--hand); }
   /* a ladder member's stamp in short: the passport ghost, inked */
   .rw-tag { display: inline-block; flex: none; width: 40px; height: 40px; }
   .rw-tag .mpp-stamp { width: 100%; height: 100%; mix-blend-mode: normal; }

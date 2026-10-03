@@ -115,7 +115,7 @@ import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact } from "./bonus.js";
-import { passportHTML, stampCardsHTML, passportStamp, passportGhost, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
+import { passportHTML, stampCardsHTML, passportStamp, passportTracing, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
 import { rewardBoardHTML, titleFileHTML } from "./rewardboard.js";
 import { skillMarkHTML } from "./skillmarks.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
@@ -4059,7 +4059,7 @@ function renderSkillsRecap() {
 
 // A first-class Mastery moment on the results card: the unlock or a level-up. It is the Mastery
 // page's passport in the hand, opened at the spread just reached: last level's stamp dry on the
-// left page, and on the right the dotted outline of this level's stamp (the same ghost the page
+// left page, and on the right this level's stamp traced in pencil (the same tracing the page
 // shows while it is owed) with the new stamp pressed onto it. Beside it, the words say it plainly
 // ("Mastery level up", the level) and a rail of thirteen little pages shows the step on the climb:
 // pages already stamped hatched in ink, the new one in its reward's colour under a hand-inked
@@ -4067,7 +4067,7 @@ function renderSkillsRecap() {
 // waiting on the page, dated off the same ledger. Injected at the top of the skills recap.
 // Three spreads are not a plain left/right pair: level 13 strikes its wide capstone across the
 // fold, and the unlock (no level yet) opens at the data page, stamped ISSUED, facing page 01 with
-// its ghost already part-inked by this run.
+// its tracing already part-inked in red pen by this run.
 const LVU_POINTER = `<svg class="lvu-pt" viewBox="0 0 12 10" aria-hidden="true" focusable="false"><path d="M1.2 1.9 C4.2 1.3 7.8 1.7 10.8 1.3 C11 1.4 11 1.7 10.9 1.9 C9.5 4.7 7.9 6.8 6.6 8.8 C6.2 9.3 5.7 9.2 5.4 8.7 C4.1 6.3 2.5 4.6 1 2.6 C0.7 2.2 0.8 1.9 1.2 1.9 Z"/></svg>`;
 // the link's rule is a pen stroke laid under the words, not a text underline
 const LVU_UNDER = `<svg class="lvu-under" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M1.5 3.6 C20 2.2 44 4.4 66 3 C80 2.2 90 3.4 98.5 2.8" vector-effect="non-scaling-stroke"/></svg>`;
@@ -4095,7 +4095,7 @@ function celebrateMastery(res, host) {
   if (issued) {
     const cur = m.masteryXp, span = masteryXpForLevel(1);
     left = dataPage(true);
-    right = page("r", "PAGE 01", `<div class="lvu-slot">${passportGhost(1, Math.min(1, cur / span))}</div>`, passportCaption(1));
+    right = page("r", "PAGE 01", `<div class="lvu-slot">${passportTracing(1, Math.min(1, cur / span))}</div>`, passportCaption(1));
   } else if (cap) {
     left = page("l", `PAGE ${pg(lvl - 1)}`, `<div class="lvu-slot lvu-prev">${passportStamp(lvl - 1, dates[lvl - 1] || "")}</div>`);
     right = page("r", `PAGE ${pg(lvl)}`, "");
@@ -4105,7 +4105,7 @@ function celebrateMastery(res, host) {
       ? page("l", `PAGE ${pg(lvl - 1)}`, `<div class="lvu-slot">${passportStamp(lvl - 1, dates[lvl - 1] || "")}</div>`, passportCaption(lvl - 1))
       : dataPage(false);
     right = page("r", `PAGE ${pg(lvl)}`,
-      `<div class="lvu-slot"><div class="lvu-ghost">${passportGhost(lvl)}</div><div class="lvu-new">${passportStamp(lvl, dates[lvl] || today)}</div></div>`,
+      `<div class="lvu-slot"><div class="lvu-ghost">${passportTracing(lvl)}</div><div class="lvu-new">${passportStamp(lvl, dates[lvl] || today)}</div></div>`,
       passportCaption(lvl));
   }
 
