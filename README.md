@@ -42,7 +42,7 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - Five marks in the corner of every page saying what it will take, so you don't learn the rules by breaking them
 - A streak in the margin that climbs from pencil to your era's own pen to gold
 - A start button that turns with the seasons where you live, southern hemisphere included
-- On each album's release day, Taylor's Versions included, the start button dresses up in that album's own finish, on her birthday it becomes a cake with her age in candles, and on the 13th of every month it counts to thirteen in chalk
+- On each album's release day, Taylor's Versions included, the start button dresses up in that album's own finish, on her birthday it becomes a cake with her age in candles, on Christmas Day it is a netted tree off her family's farm, and on the 13th of every month it counts to thirteen in chalk
 - A rubber stamp on your results when a run has a story worth one
 - Stats kept as a scrapbook: your best score on a ticket stub, your last twelve games as notes on staff paper, the word that keeps beating you in a tabloid headline, every album as a drop of ink bled into blotting paper
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG

@@ -1,6 +1,7 @@
 // The dated Start writing button: sixteen finishes, one per studio album and one per Taylor's
 // Version, and the rule that puts each on the button on its record's release day; one for her
-// birthday, Iced for her; and one more, Thirteen marks, for the 13th of every month.
+// birthday, Iced for her; one for Christmas Day, Fresh off the baler; and one more, Thirteen
+// marks, for the 13th of every month.
 //
 // THE FINISH IS FORCED, AND THAT IS THE POINT. On each album's anniversary the button wears
 // that album's finish over whatever the player has chosen: Seasons, the gold marker, any
@@ -8,13 +9,15 @@
 // day, the notebook dressing up for her record the way a fan does, and support you can switch
 // off would only be a theme. It lasts the one day and hands the button straight back, and it
 // never touches the stored choice, so nothing is lost by it. Her birthday is forced the same way,
-// and so is the 13th, for her lucky number, on the 13th only.
+// and so is Christmas Day, for the tree farm she grew up on, and so is the 13th, for her lucky
+// number, on the 13th only.
 //
 // Every finish is drawn on a 600 x 60 strip cropped from the middle, never stretched, exactly as
 // js/cta.js draws its own (the 13th's count and the birthday's candles are the exceptions, and
 // say why). The twelve were
 // designed on scripts/cta/chosen-board.html, the four Taylor's Versions on scripts/cta/tv-board.html,
-// the birthday on scripts/cta/birthday-board.html and the 13th on scripts/cta/thirteenth-board.html;
+// the birthday on scripts/cta/birthday-board.html, Christmas on scripts/cta/christmas-board.html
+// and the 13th on scripts/cta/thirteenth-board.html;
 // change a finish there first and carry it across, so the board and the button do not drift apart.
 import { TS_MILESTONES, ALBUM_COLORS } from "./config.js";
 
@@ -845,6 +848,175 @@ function layCake(btn) {
 // the button and the margin note cannot disagree about it.
 export const birthdayFinishFor = (dateKey) => dateKey?.slice(5) === BIRTHDAY.md ? "anv-birthday" : "";
 
+/* ---- Christmas Day: Fresh off the baler ---- */
+// The tree you took home from the farm she grew up on, the way it comes off the baler: Fraser fir
+// boughs swept flat toward the tip and held in a red twine net, every cell of it pillowed out
+// between the twines, and the farm's manila tag tied on in baker's twine, which is where the words
+// are written. On hover a pair of scissors runs the length of it, the net springs apart behind
+// them, the boughs relax open, a few needles come down and the tag swings once.
+//
+// One spray of Fraser fir, pointing +x from its base at the origin: a midrib with short flat
+// needles in two ranks, and side shoots off it, each needled the same way and shorter toward the
+// tip. A few needles in thirty are turned over to show the silver underside.
+const DEG = Math.PI / 180;
+function firSpray(rand, L) {
+  const bow = (rand() - .5) * 3.4, end = bow * .3 + (rand() - .5) * 1.2;
+  const at = (t) => [2 * (1 - t) * t * (L / 2) + t * t * L, 2 * (1 - t) * t * bow + t * t * end];
+  // Needles near the end of a shoot are this year's growth and a shade brighter, so every spray
+  // carries its own light toward the tip; that is most of what makes it read as a bough rather
+  // than as a green texture.
+  let green = '', tip = '', silver = '', twig = `M0 0Q${f(L / 2)} ${f(bow)} ${f(L)} ${f(end)}`;
+  const needles = (x, y, ux, uy, n0, k, young) => {
+    for (const side of [-1, 1]) {
+      const a = side * (48 + rand() * 18) * DEG, l = n0 * k * (.82 + rand() * .36);
+      const nx = ux * Math.cos(a) - uy * Math.sin(a), ny = ux * Math.sin(a) + uy * Math.cos(a);
+      const seg = `M${f(x)} ${f(y)}l${f(nx * l)} ${f(ny * l)}`;
+      if (rand() < .03) silver += seg; else if (young) tip += seg; else green += seg;
+    }
+  };
+  for (let t = .03; t < .99; t += (.03 + rand() * .01)) {
+    const [x, y] = at(t), [x2, y2] = at(t + .01), m = Math.hypot(x2 - x, y2 - y);
+    needles(x, y, (x2 - x) / m, (y2 - y) / m, 3.3, 1 - t * .4, t > .7);
+  }
+  let side = rand() < .5 ? -1 : 1;
+  for (const t0 of [.14, .27, .4, .52, .63, .74]) {
+    const t = t0 + (rand() - .5) * .04, [x, y] = at(t), [x2, y2] = at(t + .01), m = Math.hypot(x2 - x, y2 - y);
+    const ux = (x2 - x) / m, uy = (y2 - y) / m, a = side * (34 + rand() * 12) * DEG;
+    const bx = ux * Math.cos(a) - uy * Math.sin(a), by = ux * Math.sin(a) + uy * Math.cos(a);
+    const len = L * (.34 - t * .28) * (.85 + rand() * .3);
+    twig += `M${f(x)} ${f(y)}l${f(bx * len)} ${f(by * len)}`;
+    for (let s = .8; s < len; s += .9 + rand() * .25) needles(x + bx * s, y + by * s, bx, by, 2.7, 1 - s / len * .35, s > len * .6);
+    side = -side;
+  }
+  return { green, tip, silver, twig };
+}
+function balerTree() {
+  const id = `anvNt${++serial}`, rand = R(1225);
+  // Five sprays, used over and over at their own angles and sizes.
+  const KINDS = 5, defs = Array.from({ length: KINDS }, (_, k) => {
+    const s = firSpray(rand, 36);
+    return `<g id="${id}s${k}"><path d="${s.twig}" fill="none" style="stroke:var(--nt-twig)" stroke-width=".8" stroke-linecap="round"/>` +
+      `<path d="${s.green}" fill="none" stroke="currentColor" stroke-width=".8" stroke-linecap="round"/>` +
+      `<path d="${s.tip}" fill="none" style="stroke:var(--tc)" stroke-width=".78" stroke-linecap="round"/>` +
+      `<path d="${s.silver}" fill="none" style="stroke:var(--nt-silver)" stroke-width=".7" stroke-linecap="round" opacity=".7"/></g>`;
+  }).join('');
+  // The cut runs from the left, 0..1 of the way along by x, and everything on hover keys its
+  // delay to where it is, so the net parts and the boughs open just behind the scissors.
+  const RUN = .8, cutAt = (x) => .05 + RUN * Math.min(1, Math.max(0, (x + 20) / 650));
+  // Lit from above: the top of the bundle catches the light and the underside is in its shadow.
+  const tone = (y) => y < 16 ? ['var(--nt-hi)', 'var(--nt-hi-tip)'] : y < 40 ? ['var(--nt-lo)', 'var(--nt-lo-tip)'] : ['var(--nt-dim)', 'var(--nt-dim-tip)'];
+  // Back: a dark mat of sprays every which way, so no gap ever opens onto nothing. It does not move.
+  let back = '';
+  for (let x = -24; x < 616; x += 9 + rand() * 7) for (let y = -4; y < 66; y += 8 + rand() * 5)
+    back += `<use href="#${id}s${Math.floor(rand() * KINDS)}" transform="translate(${f(x)} ${f(y)}) rotate(${f(-40 + rand() * 80)}) scale(${f(.8 + rand() * .4)})"/>`;
+  // Front: the boughs as the baler left them, swept flat toward the tip, and as they open.
+  let front = '';
+  const rows = [-1, 8, 17, 26, 34, 43, 52, 61];
+  for (let x = -44; x < 612; x += 15 + rand() * 8) rows.forEach((r) => {
+    const y = r + (rand() - .5) * 8, up = y < 30, mid = 1 - Math.min(1, Math.abs(y - 30) / 32);
+    const a0 = (up ? 1 : -1) * (5 + rand() * 9) * (1 - mid * .5) + (rand() - .5) * 3;
+    // Open, each bough finds its own angle, leaning out from the trunk on the whole but not in
+    // step with its row, or the rows part along a dark seam.
+    const a1 = (up ? -1 : 1) * (2 + rand() * 24) + (rand() - .5) * 20;
+    const s0 = .82 + rand() * .3, s1 = s0 * (1.12 + rand() * .14);
+    const [c, tc] = tone(y + (rand() - .5) * 12);
+    front += `<g transform="translate(${f(x)} ${f(y)})"><g class="nt-sp" style="--a0:${f(a0)}deg;--a1:${f(a1)}deg;--s0:${f(s0)};--s1:${f(s1)};--d:${f(cutAt(x) + .04 + rand() * .06)}s;color:${c};--tc:${tc}">` +
+      `<use href="#${id}s${Math.floor(rand() * KINDS)}"/></g></g>`;
+  });
+  // The net: a diamond mesh round a cylinder, so the diamonds are tallest across the middle and
+  // squeezed toward the top and bottom edges, where it turns away. A twisted twine, a dark line
+  // under it where it presses into the boughs, and a knot at every crossing.
+  const DX = 27, PHI = [-98, -72, -47, -23, 0, 23, 47, 72, 98].map((p) => p * DEG);
+  const knot = (i, j) => { const r = R(i * 97 + j * 13 + 7); return [i * DX + (j % 2 ? DX / 2 : 0) + (r() - .5) * 2.2, 30 + 31.5 * Math.sin(PHI[j]) + (r() - .5) * 1.4]; };
+  const groups = {};
+  for (let j = 0; j < PHI.length - 1; j++) for (let i = -2; i < 26; i++) {
+    const [ax, ay] = knot(i, j);
+    for (const di of j % 2 ? [0, 1] : [-1, 0]) {
+      const [bx, by] = knot(i + di, j + 1), mx = (ax + bx) / 2, my = (ay + by) / 2;
+      const seg = `M${f(ax)} ${f(ay)}Q${f(mx + (rand() - .5) * 1.4)} ${f(my + .5)} ${f(bx)} ${f(by)}`;
+      const key = `${j < 4 ? 'up' : 'dn'}${Math.round(mx / DX)}`;
+      (groups[key] ||= { up: j < 4, x: mx, d: '' }).d += seg;
+    }
+  }
+  const knots = [];
+  for (let j = 1; j < PHI.length - 1; j++) for (let i = -2; i < 26; i++) knots.push([...knot(i, j), j]);
+  // Every cell of the net bulges out between its twines, lit on the crown and pressed dark into
+  // the groove along each twine. That pillowing is what says "netted" at a glance, and it goes
+  // the moment the net is cut, cell by cell behind the scissors.
+  let pillows = '';
+  for (let j = 1; j < PHI.length - 1; j++) for (let i = -2; i < 26; i++) {
+    const [ax, ay] = knot(i, j), [bx] = knot(i + 1, j), [, ty] = knot(i, j - 1), [, by] = knot(i, j + 1);
+    const cx = (ax + bx) / 2, cy = ay, rx = (bx - ax) * .36, ry = Math.max(1.2, (by - ty) * .3);
+    pillows += `<ellipse class="nt-pillow" cx="${f(cx)}" cy="${f(cy - ry * .15)}" rx="${f(rx)}" ry="${f(ry)}" fill="url(#${id}p)" style="--d:${f(cutAt(cx))}s"/>`;
+  }
+  const net = Object.values(groups).map((g) => {
+    const ks = knots.filter(([x, y, j]) => Math.abs(x - g.x) <= DX / 2 && (g.up ? j <= 3 || (j === 4 && rand() < .5) : j >= 5));
+    return `<g class="nt-net nt-${g.up ? 'up' : 'dn'}" style="--d:${f(cutAt(g.x))}s;--nx:${f(8 + rand() * 10)}px;--nr:${f((g.up ? -1 : 1) * (2 + rand() * 4))}deg">` +
+      `<path d="${g.d}" fill="none" stroke="#050f08" stroke-width="5.2" stroke-linecap="round" opacity=".16"/>` +
+      `<path d="${g.d}" fill="none" stroke="#050f08" stroke-width="3.2" stroke-linecap="round" opacity=".28"/>` +
+      `<path d="${g.d}" fill="none" stroke="var(--nt-twine-lo)" stroke-width="2.4" opacity=".45" transform="translate(.5 .9)"/>` +
+      `<path d="${g.d}" fill="none" stroke="var(--nt-twine)" stroke-width="1.7" stroke-linecap="round"/>` +
+      `<path d="${g.d}" fill="none" stroke="var(--nt-twine-hi)" stroke-width=".6" stroke-dasharray="1.1 1.5" opacity=".75" transform="translate(-.25 -.3)"/>` +
+      ks.map(([x, y]) => `<ellipse cx="${f(x)}" cy="${f(y)}" rx="1.5" ry="1.25" fill="var(--nt-twine)" stroke="var(--nt-twine-lo)" stroke-width=".4"/>`).join('') + `</g>`;
+  }).join('');
+  // The scissors: drawn with the points to the right, run along the middle, snipping.
+  const scissors = `<g transform="translate(-34 30.5)"><g class="nt-scissors">` +
+    `<g class="nt-blade--a"><path d="M-1.4 -.6L21 -2.4Q23 -2.1 23.4 -.9L-.4 1.2Z" fill="#e9edee" stroke="#3e4549" stroke-width=".5" stroke-linejoin="round"/>` +
+    `<path d="M-.6 -.2C-3.6 -1.2 -5.6 -3.4 -6.8 -5.6" fill="none" stroke="#b5332a" stroke-width="2.6" stroke-linecap="round"/>` +
+    `<ellipse cx="-9.6" cy="-7.2" rx="4.4" ry="3.3" transform="rotate(-18 -9.6 -7.2)" fill="none" stroke="#b5332a" stroke-width="2.4"/></g>` +
+    `<g class="nt-blade--b"><path d="M-1.4 .6L21 2.4Q23 2.1 23.4 .9L-.4 -1.2Z" fill="#cfd6d8" stroke="#3e4549" stroke-width=".5" stroke-linejoin="round"/>` +
+    `<path d="M-.6 .2C-3.6 1.2 -5.6 3.4 -6.8 5.6" fill="none" stroke="#962820" stroke-width="2.6" stroke-linecap="round"/>` +
+    `<ellipse cx="-9.6" cy="7.2" rx="4.4" ry="3.3" transform="rotate(18 -9.6 7.2)" fill="none" stroke="#962820" stroke-width="2.4"/></g>` +
+    `<circle r="1.25" fill="#6b7377" stroke="#2e3336" stroke-width=".4"/></g></g>`;
+  // A few needles let go as the boughs open, from either side of the words.
+  let falls = '';
+  for (let k = 0; k < 16; k++) {
+    let x = 20 + rand() * 560; if (x > 200 && x < 400) x = x < 300 ? 200 - rand() * 60 : 400 + rand() * 60;
+    const y = 4 + rand() * 30;
+    falls += `<path class="nt-fall" d="M${f(x)} ${f(y)}l${f(2.4 + rand())} ${f(-1.2 + rand() * 2.4)}" stroke="var(--nt-lo-tip)" stroke-width=".95" stroke-linecap="round" style="--d:${f(cutAt(x) + .35 + rand() * .5)}s;--t:${f(.9 + rand() * .6)}s;--fx:${f(-4 + rand() * 10)}px;--fy:${f(64 - y + rand() * 6)}px;--fr:${f(200 + rand() * 300)}deg;transform-box:fill-box;transform-origin:center"/>`;
+  }
+  const glow = `<linearGradient id="${id}l" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--nt-glow)" stop-opacity=".2"/><stop offset=".6" style="stop-color:var(--nt-glow)" stop-opacity=".06"/><stop offset="1" style="stop-color:var(--nt-glow)" stop-opacity="0"/></linearGradient>` +
+    `<radialGradient id="${id}p"><stop offset="0" style="stop-color:var(--nt-glow)" stop-opacity=".3"/><stop offset=".55" style="stop-color:var(--nt-glow)" stop-opacity=".12"/><stop offset="1" style="stop-color:var(--nt-glow)" stop-opacity="0"/></radialGradient>`;
+  // The tag is empty until layTag has measured the words it goes round.
+  return { fx: strip('nt-tree', `<defs>${defs}${glow}</defs><g style="color:var(--nt-mat);--tc:var(--nt-mat)">${back}</g>${front}<rect class="nt-light" x="-10" y="-10" width="620" height="80" fill="url(#${id}l)"/>${falls}${pillows}${net}${scissors}`) +
+    `<svg class="nt-tag" aria-hidden="true"></svg>` };
+}
+// The tag is the label's own box, measured where it sits: the eyelet end on the left, the string
+// out of it up to a bough off the top of the button. Redrawn whenever the button changes size.
+function layTag(btn) {
+  const tag = btn.querySelector('.nt-tag'), label = btn.querySelector('.cta-label');
+  if (!tag || !label || !label.offsetWidth) return;
+  label.classList.remove('nt-tight');
+  // Where the words would wrap on the tag but not without it, the tag tightens. Only where that
+  // actually saves the line: the longest words wrap on a phone with or without a tag (the plain
+  // button wraps them too), and then the roomier tag is the better one.
+  const wraps = () => label.offsetHeight > parseFloat(getComputedStyle(label).fontSize) * 2 + 8;
+  if (wraps()) { label.classList.add('nt-tight'); if (wraps()) label.classList.remove('nt-tight'); }
+  const tight = label.classList.contains('nt-tight'), ex = tight ? 10 : 12;
+  const w = label.offsetWidth, h = label.offsetHeight, c = tight ? 8 : 9.5, ey = h / 2;
+  Object.assign(tag.style, { left: `${label.offsetLeft}px`, top: `${label.offsetTop}px`, width: `${w}px`, height: `${h}px`, transformOrigin: `${ex}px ${f(ey)}px` });
+  tag.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const body = `M${c} 0H${w - 1.4}Q${w} 0 ${w} 1.4V${h - 1.4}Q${w} ${h} ${w - 1.4} ${h}H${c}L0 ${h - c}V${c}Z`;
+  const fibres = Array.from({ length: Math.floor(h / 3.4) }, (_, k) => `M${c + 2} ${f(2 + k * 3.4)}H${w - 3}`).join('');
+  const id = `anvTg${++serial}`;
+  tag.innerHTML = `<defs><linearGradient id="${id}g" x1="0" y1="0" x2=".15" y2="1"><stop offset="0" stop-color="#f4e9cd"/><stop offset="1" stop-color="#e3d2aa"/></linearGradient>` +
+    `<filter id="${id}b" x="-10%" y="-30%" width="120%" height="170%"><feGaussianBlur stdDeviation="1.6"/></filter></defs>` +
+    `<path d="${body}" fill="#000" opacity=".5" transform="translate(1.4 2.6)" filter="url(#${id}b)"/>` +
+    `<g class="nt-card"><path d="${body}" fill="url(#${id}g)" stroke="#a88f62" stroke-width=".6"/><path d="${fibres}" stroke="#7a6034" stroke-width=".5" opacity=".05"/>` +
+    `<circle cx="${ex}" cy="${f(ey)}" r="6" fill="#cdb98c"/><circle cx="${ex}" cy="${f(ey)}" r="3.4" fill="#6d5a3a"/></g>` +
+    // Baker's twine, red and white, through the eyelet and up out of the top of the button.
+    `<path d="M${ex} ${f(ey)}C${ex - 3} ${f(ey - 7)} ${ex - 6} ${f(-6)} -7 ${f(-30)}" fill="none" stroke="#f3ece0" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<path d="M${ex} ${f(ey)}C${ex - 3} ${f(ey - 7)} ${ex - 6} ${f(-6)} -7 ${f(-30)}" fill="none" stroke="#b8322a" stroke-width="1.5" stroke-dasharray="1.7 1.5"/>` +
+    `<path d="M${ex} ${f(ey - 3.1)}q-2.2 1.1 -1.2 3.6" fill="none" stroke="#b8322a" stroke-width="1.3" stroke-linecap="round"/>`;
+}
+
+// The finish the button is forced into on Christmas Day, or "". The day comes off the Merry
+// Swiftmas row in TS_MILESTONES, so the button and the margin note cannot disagree about it.
+// 25 December is never a 13th and no record has come out on it, so nothing outranks it, though a
+// release day would, being asked first.
+const CHRISTMAS = TS_MILESTONES.find((m) => m.kind === "songday" && m.md === "12-25");
+export const christmasFinishFor = (dateKey) => dateKey?.slice(5) === CHRISTMAS.md ? "anv-christmas" : "";
+
 /* ---------- which finish, on which day ---------- */
 // Keyed by the TS_MILESTONES album name, so the release dates live in one table and a date fix
 // there moves the button with the margin note.
@@ -871,7 +1043,7 @@ const TV_FINISHES = {
 };
 const BY_KIND = { album: ANNIVERSARY_FINISHES, tv: TV_FINISHES };
 const finishOf = (m) => BY_KIND[m.kind]?.[m.album]?.[0] || "";
-const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake]]);
+const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake], ["anv-christmas", balerTree]]);
 
 // The finish the button is forced into on `dateKey` (YYYY-MM-DD, the player's own day), or "" on
 // every other day. Every studio album's release day counts, and so does every Taylor's Version's.
@@ -904,7 +1076,7 @@ export function anniversaryArt(finish, dateKey = "") {
 
 // Anything that has to measure the button once it is on the page. Red's fringe keeps one spacing
 // at every width, so it is hung by the button's width; the 13th's count and the birthday's
-// inscription and candles are laid beside the words, so they are laid by where the label sits,
+// inscription and candles are laid beside the words, and Christmas's tag round them, so they are laid by where the label sits,
 // which moves with the button's size and with the face once it has loaded. Safe to call on every paint; the watcher is attached once per button.
 const watched = new WeakSet();
 export function layoutAnniversaryArt(btn) {
@@ -912,6 +1084,7 @@ export function layoutAnniversaryArt(btn) {
     btn.querySelectorAll(".anv-fringe").forEach((el) => { if (el.offsetWidth) hangFringe(el); });
     if (btn.querySelector(".ch-count")) layCount(btn);
     if (btn.querySelector(".bd-half")) layCake(btn);
+    if (btn.querySelector(".nt-tag")) layTag(btn);
   };
   lay();
   if (watched.has(btn) || typeof ResizeObserver === "undefined") return;

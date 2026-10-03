@@ -4,7 +4,7 @@ import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
-import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
+import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, christmasFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
 import { seasonOn, SEASONS, southernSeasons } from "./season.js";
 import { launchFlock } from "./messengers.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
@@ -554,13 +554,14 @@ function paintStartButton() {
   // Except on an album's release day, when the album's own finish is FORCED over all of that,
   // Mastery pick and random roll included, to show support for the album on its anniversary
   // (the reasoning is at the top of js/anniversarycta.js), on her birthday, which wears Iced for
-  // her the same way, and on the 13th of every month, which wears Thirteen marks. They are asked
-  // in that order: her birthday is always a 13th, so it has to come first to be seen at all, and
-  // a release day would outrank both, though no record has come out on either yet. Only this
+  // her the same way, on Christmas Day, which wears Fresh off the baler, and on the 13th of every
+  // month, which wears Thirteen marks. They are asked in that order: her birthday is always a
+  // 13th, so it has to come first to be seen at all, and a release day would outrank all three,
+  // though no record has come out on any of them yet. Only this
   // button wears any of them: the Mastery board still previews the player's own choice, which is
   // untouched and comes back the next day.
   const day = todayKey();
-  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || thirteenthFinishFor(day) || wornFinish(activeButtonFinish());
+  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || christmasFinishFor(day) || thirteenthFinishFor(day) || wornFinish(activeButtonFinish());
   if (finish) playCta.setAttribute("data-startbtn", finish);
   else playCta.removeAttribute("data-startbtn");
   // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
@@ -31201,6 +31202,13 @@ function buildDevApi() {
         refreshDateSurfaces();
         return { date: window.__devDate, finish: anniversaryFinishFor(window.__devDate) || birthdayFinishFor(window.__devDate), age: +window.__devDate.slice(0, 4) - 1989 };
       },
+      // Christmas Day's Start writing finish, Fresh off the baler (js/anniversarycta.js). Moves the
+      // dev date to 25 December, this year's or, with a year, that one's.
+      christmasButton: (year) => {
+        window.__devDate = `${year | 0 || new Date().getFullYear()}-12-25`;
+        refreshDateSurfaces();
+        return { date: window.__devDate, finish: anniversaryFinishFor(window.__devDate) || christmasFinishFor(window.__devDate) };
+      },
       // The album-anniversary word pool for a date now lives with the rest of the daily
       // tooling, which sees more of the draw than this did: see __dev.daily.preview.
     },
@@ -31264,7 +31272,7 @@ function buildDevApi() {
             if (!tn) continue;
             const shadowed = anniversaryNote(key, TS_MILESTONES) ? "milestone"
               : guestDayNote(key, GUEST_DAYS) ? "guest day" : "";
-            const button = anniversaryFinishFor(key) || birthdayFinishFor(key) || thirteenthFinishFor(key);
+            const button = anniversaryFinishFor(key) || birthdayFinishFor(key) || christmasFinishFor(key) || thirteenthFinishFor(key);
             out.push(`${key}  ${tn.caption}${shadowed ? `  (shadowed by ${shadowed})` : ""}${button ? `  button: ${button}` : ""}`);
           }
         }

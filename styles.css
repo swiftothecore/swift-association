@@ -1942,8 +1942,10 @@
      anv-<album> or anv-<album>-tv, which is what the [data-startbtn^="anv-"] rules key on.
      The twelve were designed on scripts/cta/chosen-board.html, the four on tv-board.html.
      Then her birthday's, anv-birthday (bd- classes), forced the same way by birthdayFinishFor
-     and designed on birthday-board.html, and last the 13th of every month's, anv-13th (ch-
-     classes), forced by thirteenthFinishFor and designed on thirteenth-board.html. */
+     and designed on birthday-board.html, then the 13th of every month's, anv-13th (ch-
+     classes), forced by thirteenthFinishFor and designed on thirteenth-board.html, and last
+     Christmas Day's, anv-christmas (nt- classes), forced by christmasFinishFor and designed on
+     christmas-board.html. */
   .btn-primary.play-cta[data-startbtn^="anv-"]::after { content:none; }
   .anv-out { position:absolute; inset:0; z-index:2; pointer-events:none; }
   .anv-out > * { position:absolute; }
@@ -2511,6 +2513,61 @@
   .ch-ledge-hi { fill:none; stroke:var(--ch-w-hi); stroke-width:.7; opacity:.8; }
   .ch-crumb { fill:var(--chalk); opacity:.35; }
   .ch-stick { fill:#f6f3ea; } .ch-stick-shade { fill:#b8b3a6; } .ch-stick-end { fill:#e2ded2; }
+
+  /* ============ Christmas Day: Fresh off the baler ============
+     25 December, forced by christmasFinishFor and designed on scripts/cta/christmas-board.html.
+     The tree you took home from the farm, the way it comes off the baler: Fraser fir boughs swept
+     flat toward the tip and held in a red twine net, every cell of it pillowed out between the
+     twines, and the farm's manila tag tied on in baker's twine, which is where the words are
+     written. The tag is measured round the label by layTag. On hover a pair of scissors runs the
+     length of the tree, the net springs apart behind them, the boughs relax open, a few needles
+     come down and the tag swings once. */
+  .play-cta[data-startbtn="anv-christmas"] { --cta-fill:#1f3b29; --cta-text:#2b2722; --cta-hover-text:#2b2722;
+    --nt-deep:#11251a; --nt-mat:#1a3726; --nt-dim:#244a33; --nt-dim-tip:#33603f; --nt-lo:#2f5f40; --nt-lo-tip:#4a7d4f; --nt-hi:#41794f; --nt-hi-tip:#6b9e62;
+    --nt-silver:#9ab8a6; --nt-twig:#4b4a30; --nt-glow:#d6f0c0;
+    --nt-twine:#c8412c; --nt-twine-hi:#f39a78; --nt-twine-lo:#4b1209;
+    --cta-art:linear-gradient(180deg, #1b3826 0%, #122a1b 58%, #0b1d12 100%);
+    background-image:linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #0000002e 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-christmas"] { --cta-fill:#0e1e14;
+    --nt-deep:#0b1b11; --nt-mat:#132a1c; --nt-dim:#1b3826; --nt-dim-tip:#264b31; --nt-lo:#244a32; --nt-lo-tip:#3a6240; --nt-hi:#33603f; --nt-hi-tip:#557f4f;
+    --nt-silver:#7f998b; --nt-twig:#3a3a26; --nt-glow:#a9c99a;
+    --nt-twine:#a83524; --nt-twine-hi:#d27f62; --nt-twine-lo:#330b05;
+    --cta-art:linear-gradient(180deg, #132a1c 0%, #0d2015 58%, #08150d 100%);
+    background-image:linear-gradient(168deg, #ffffff0a 0%, #ffffff00 46%, #00000036 100%), var(--cta-art); }
+  /* The words are the tag's: inline-block so the tag can be measured round them, padded for the
+     eyelet end, and the padding taken back off the line so the button keeps its own height. Where
+     the words would wrap on the tag but not without it, layTag tightens it (.nt-tight): a shorter
+     eyelet end, the button's padding lent to it, and the tracking off. */
+  .play-cta[data-startbtn="anv-christmas"] .cta-label { display:inline-block; padding:4px 13px 4px 27px; margin:-4px 0;
+    transform:rotate(var(--nt-tilt, -2.4deg)); transform-origin:12px 50%; }
+  .play-cta[data-startbtn="anv-christmas"] .cta-label.nt-tight { padding:4px 7px 4px 21px; margin:-4px -6px; letter-spacing:0; transform-origin:10px 50%; }
+  /* Nothing until layTag has sized it: an SVG with no size is drawn 300 x 150. */
+  .nt-tag { position:absolute; overflow:visible; width:0; height:0; transform:rotate(var(--nt-tilt, -2.4deg)); }
+  :root[data-theme="dark"] .nt-tag .nt-card { filter:brightness(.84); }
+  .nt-sp { transform-origin:0 0; transform:rotate(var(--a0)) scale(var(--s0)); transition:transform .45s cubic-bezier(.4,0,.3,1); }
+  .nt-net, .nt-pillow { transition:transform .35s ease, opacity .35s ease; }
+  .nt-scissors, .nt-fall, .nt-light { opacity:0; }
+  .nt-light { transition:opacity .3s ease; mix-blend-mode:soft-light; }
+  .nt-blade--a, .nt-blade--b { transform-origin:0 0; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-pillow { opacity:0; transition:opacity .5s var(--d) ease-out; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-light { opacity:1; transition:opacity 1s .5s ease; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-sp { transform:rotate(var(--a1)) scale(var(--s1)); transition:transform 1.1s var(--d) cubic-bezier(.25,1.55,.45,1); }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-up { transform:translate(var(--nx), -13px) rotate(var(--nr)); opacity:0;
+    transition:transform .55s var(--d) cubic-bezier(.2,.9,.35,1), opacity .4s calc(var(--d) + .12s) ease-in; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-dn { transform:translate(var(--nx), 15px) rotate(var(--nr)); opacity:0;
+    transition:transform .55s var(--d) cubic-bezier(.2,.9,.35,1), opacity .4s calc(var(--d) + .12s) ease-in; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-scissors { animation:ntRun .8s .05s linear both; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-blade--a { animation:ntSnipA .11s .05s ease-in-out 8 alternate both; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-blade--b { animation:ntSnipB .11s .05s ease-in-out 8 alternate both; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) .nt-fall { animation:ntFall var(--t) var(--d) cubic-bezier(.45,0,.7,.6) both; }
+  .play-cta[data-startbtn="anv-christmas"]:is(:hover, :focus-visible) :is(.cta-label, .nt-tag) { animation:ntSwing 1.7s .38s ease-in-out both; }
+  @keyframes ntRun { 0% { opacity:1; transform:translateX(0); } 94% { opacity:1; } 100% { opacity:0; transform:translateX(650px); } }
+  @keyframes ntSnipA { from { transform:rotate(-15deg); } to { transform:rotate(-1deg); } }
+  @keyframes ntSnipB { from { transform:rotate(15deg); } to { transform:rotate(1deg); } }
+  @keyframes ntFall { 0% { opacity:0; transform:translate(0, 0) rotate(0); } 12% { opacity:.95; } 85% { opacity:.9; } 100% { opacity:0; transform:translate(var(--fx), var(--fy)) rotate(var(--fr)); } }
+  @keyframes ntSwing { 0% { transform:rotate(var(--nt-tilt, -2.4deg)); } 18% { transform:rotate(calc(var(--nt-tilt, -2.4deg) + 5deg)); }
+    40% { transform:rotate(calc(var(--nt-tilt, -2.4deg) - 3deg)); } 62% { transform:rotate(calc(var(--nt-tilt, -2.4deg) + 1.6deg)); }
+    82% { transform:rotate(calc(var(--nt-tilt, -2.4deg) - .6deg)); } 100% { transform:rotate(var(--nt-tilt, -2.4deg)); } }
 
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.play-cta { animation: playBob 2.8s ease-in-out infinite; }
