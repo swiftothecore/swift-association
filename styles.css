@@ -14273,8 +14273,8 @@
   .mpp-slot.now .mpp-ct { color: var(--red-pen); font-weight: 700; }
   .mpp-foot { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.5; color: var(--ink-soft);
     border-top: 1px dashed color-mix(in srgb, var(--ink) 25%, transparent); margin-top: 6px; padding-top: 7px; }
-  /* Unissued, the page under the NOT YET ISSUED stamp steps back, the way a MASTERED card's
-     slots do: the outlines are there to show what is coming, not to be read through the ink. */
+  /* Unissued, the page under the NOT YET ISSUED stamp steps back: the outlines are there to show
+     what is coming, not to be read through the ink. */
   .mpp.unissued .mpp-slot { opacity: 0.4; }
   .mpp-void { position: absolute; left: 50%; top: 50%; width: 380px; max-width: 94%; transform: translate(-50%, -50%) rotate(-7deg); color: var(--red-pen);
     mix-blend-mode: var(--mpp-blend); pointer-events: none; }
@@ -14283,8 +14283,8 @@
   /* ---- The five skills: one loyalty stamp card each, printed in the skill's own ink (--t,
      handed over inline so the night column in the --skill-* block can reach it). The notches
      either side are a mask, so they are real holes in the card. A full card is stamped MASTERED
-     across the whole of it, and what is under the stamp steps back: nothing there still needs
-     reading, and at full strength it fought the stamp. ---- */
+     in the level count's corner, small enough to sit clear of the slots: stamped across the
+     whole card it landed on the numerals and the blurb, and three inks fought in one band. ---- */
   .mastery-skills { margin-top: 30px; }
   .msc-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
   .msc-note { font-family: var(--hand); font-weight: 600; font-size: calc(19px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft); }
@@ -14317,9 +14317,8 @@
   .msc-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .msc-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
   .msc-next { font-family: var(--type); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); white-space: nowrap; color: var(--ink); }
-  .msc.maxed .msc-slots, .msc.maxed .msc-foot { opacity: 0.32; }
-  .msc.maxed .msc-lv { opacity: 0.45; }
-  .msc-mastered { position: absolute; left: 50%; top: 58%; width: 94%; transform: translate(-50%, -50%) rotate(var(--r));
+  .msc.maxed .msc-lv { display: flex; align-items: center; }
+  .msc-mastered { display: block; width: 112px; height: auto; margin: -8px -6px -8px 0; transform: rotate(var(--r));
     color: var(--mpp-gold); mix-blend-mode: var(--mpp-blend); pointer-events: none; overflow: visible; }
   .msc-mastered text, .msc-post text { font-family: var(--type); font-weight: 700; }
   /* the sixth cell: a postmark, whose waves are the five cards in miniature */

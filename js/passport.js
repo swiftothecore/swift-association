@@ -9,8 +9,8 @@
    rest are ghosts. Locked, the page is overprinted NOT YET ISSUED.
 
    THE STAMP CARDS. One loyalty card per skill in its own ink: ten slots, one stamp a level,
-   the next slot ringed as it fills. A full card is stamped MASTERED across the whole of it,
-   and everything under that stamp steps back, because nothing under it still needs reading.
+   the next slot ringed as it fills. A full card is stamped MASTERED where its level count would
+   be, and the rest of it is left exactly as it is: the full row of slots is the trophy.
    The sixth cell is a postmark: the count in the ring, one cancellation wave per skill running
    as long as that card is full.
 
@@ -277,11 +277,13 @@ function slotRing(frac) {
   const r = 14, c = 2 * Math.PI * r;
   return `<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="${r}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="${(c * frac).toFixed(2)} ${c.toFixed(2)}"/></svg>`;
 }
-const MASTERED_TILT = [-7, -2.5, -9, 1.5, -5];
+/* A full card's level count, stamped over: it takes the "10/10" corner rather than crossing the
+   card, so nothing it lands on is text, and the full row of slots stays at full strength. */
+const MASTERED_TILT = [-6, 4, -3, 0, 5];
 function masteredStamp(i) {
-  return `<svg class="msc-mastered" viewBox="-150 -34 300 68" style="--r:${MASTERED_TILT[i % 5]}deg" aria-hidden="true" focusable="false"><g filter="url(#stampInk${i % 3})">` +
-    `<rect x="-145" y="-29" width="290" height="58" rx="9" fill="none" stroke="currentColor" stroke-width="4.6"/><rect x="-137" y="-21" width="274" height="42" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/>` +
-    `<text y="12" text-anchor="middle" font-size="33" letter-spacing="10" fill="currentColor">MASTERED</text></g></svg>`;
+  return `<svg class="msc-mastered" viewBox="-75 -19 150 38" style="--r:${MASTERED_TILT[i % 5]}deg" aria-hidden="true" focusable="false"><g filter="url(#stampInk${i % 3})">` +
+    `<rect x="-72" y="-16" width="144" height="32" rx="6" fill="none" stroke="currentColor" stroke-width="3.2"/>` +
+    `<text y="7" text-anchor="middle" font-size="19" letter-spacing="4.5" fill="currentColor">MASTERED</text></g></svg>`;
 }
 
 /* The postmark: the count in the ring and one wave per skill, each as long as its card is full. */
@@ -317,9 +319,9 @@ export function stampCardsHTML(d) {
     }
     return `<div class="msc${s.maxed ? " maxed" : ""}" style="--t:${s.ink}" data-tip="${s.blurb}" data-tip-delay="400">` +
       `<div class="msc-top"><span class="msc-mark">${skillMarkHTML(s.id)}</span><span class="msc-name">${s.name}</span>` +
-      `<span class="msc-lv">${s.lvl}<small>/${d.maxLevel}</small></span></div><div class="msc-slots">${slots}</div>` +
-      `<div class="msc-foot"><span class="msc-blurb">${s.blurb}</span><span class="msc-next">${s.maxed ? "" : `${fmt(s.toNext)} ink to ${s.lvl + 1}`}</span></div>` +
-      (s.maxed ? masteredStamp(i) : "") + `</div>`;
+      (s.maxed ? `<span class="msc-lv" role="img" aria-label="Mastered, ${s.lvl} of ${d.maxLevel}">${masteredStamp(i)}</span>`
+        : `<span class="msc-lv">${s.lvl}<small>/${d.maxLevel}</small></span>`) + `</div><div class="msc-slots">${slots}</div>` +
+      `<div class="msc-foot"><span class="msc-blurb">${s.blurb}</span><span class="msc-next">${s.maxed ? "" : `${fmt(s.toNext)} ink to ${s.lvl + 1}`}</span></div></div>`;
   }).join("");
   return `<div class="msc-head"><span class="mpp-kick">Skills</span><span class="msc-note">one stamp a level</span></div>` +
     `<div class="msc-grid">${cards}${postmark(d)}</div>`;
