@@ -331,7 +331,7 @@ function postmark(d) {
   return `<div class="msc msc-post" style="--t:var(--ink-soft)" data-tip="${d.total} of ${d.max} skill levels · Mastery opens at ${d.gate}" data-tip-delay="200">` +
     `<svg viewBox="-47 -47 285 94" aria-hidden="true" focusable="false"><g filter="url(#stampInk1)" transform="rotate(-4)" class="msc-post-ring">` +
     `<circle r="44" fill="none" stroke="currentColor" stroke-width="3.4"/><circle r="33" fill="none" stroke="currentColor" stroke-width="1.3"/>` +
-    `<path id="mscPostT" d="M-37 0 A37 37 0 0 1 37 0" fill="none"/><path id="mscPostB" d="M-40.6 0 A40.6 40.6 0 0 0 40.6 0" fill="none"/>` +
+    `<path id="mscPostT" d="M-35.4 0 A35.4 35.4 0 0 1 35.4 0" fill="none"/><path id="mscPostB" d="M-40.6 0 A40.6 40.6 0 0 0 40.6 0" fill="none"/>` +
     `<text font-size="7.6" letter-spacing="1.6" fill="currentColor"><textPath href="#mscPostT" startOffset="50%" text-anchor="middle">SKILL STAMPS</textPath></text>` +
     `<text font-size="6.6" letter-spacing="1.1" fill="currentColor"><textPath href="#mscPostB" startOffset="50%" text-anchor="middle">${open ? `MASTERY OPEN AT ${d.gate}` : `${d.gate} OPENS MASTERY`}</textPath></text>` +
     `<text class="msc-post-n" y="9" text-anchor="middle" font-size="36" fill="currentColor">${d.total}</text>` +
