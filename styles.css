@@ -14467,16 +14467,39 @@
   .rw-loop { position: absolute; left: -6%; top: -9%; width: 112%; height: 118%; overflow: visible; pointer-events: none; z-index: 7; }
   .rw-loop path { fill: none; stroke: var(--red-pen); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
 
-  /* the randomiser: a die you shake */
-  .rw-die { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px 2px 3px; border: 1.5px solid var(--ink) !important;
-    border-radius: 999px; background: var(--paper) !important; font-family: var(--type) !important; font-size: calc(10px + var(--text-size-adjust)) !important;
-    letter-spacing: .12em; text-transform: uppercase; color: var(--ink) !important; white-space: nowrap; }
-  .rw-die-ic { width: 21px; height: 21px; display: block; }
-  .rw-die-ic svg { width: 100%; height: 100%; display: block; }
-  .rw-die .ink-fill { fill: var(--ink); stroke: var(--ink); }
-  .rw-die.on { background: var(--ink) !important; color: var(--paper) !important; }
-  .rw-die.on .ink-fill { fill: var(--paper); stroke: var(--paper); }
-  .rw-die.on .rw-die-ic g[fill] { fill: var(--ink); }
+  /* the randomiser: a matchbox of dice (dieControl in js/rewardboard.js). The sleeve and tray keep
+     their red and kraft at night like every other material object; only the outline is ink. Shut,
+     the tray rides under the sleeve; worn, it is slid out of the end and the button widens to show
+     it. --mbz follows the text-size setting, because the word is drawn in the SVG. */
+  .rw-die { --mbz: 1; position: relative; display: block; flex: none; width: calc(85px * var(--mbz)); height: calc(34.2px * var(--mbz)); }
+  body[data-text-size="small"] .rw-die { --mbz: .92; }
+  body[data-text-size="large"] .rw-die { --mbz: 1.14; }
+  .rw-die.on { width: calc(108px * var(--mbz)); }
+  .rw-die .mb { position: absolute; left: 0; top: calc(50% - 17.1px * var(--mbz)); width: calc(108px * var(--mbz)); height: calc(34.2px * var(--mbz)); overflow: visible; transform: rotate(-1.4deg); }
+  .rw-die.on .mb { transform: rotate(-.6deg); }
+  .mb-top { fill: #b5372b; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+  .mb-side { fill: #6e4a31; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+  .mb-grit { stroke: #3a271a; stroke-width: 1.1; stroke-linecap: round; }
+  .mb-lab { fill: #f4ead2; stroke: #2b2722; stroke-width: .9; }
+  .mb-rule { fill: none; stroke: #b5372b; stroke-width: .8; }
+  .mb-tx { font-family: var(--type); font-weight: 700; font-size: 10.4px; letter-spacing: .09em; fill: #2b2722; }
+  .rw-die .mb-on, .rw-die.on .mb-off { opacity: 0; }
+  .rw-die.on .mb-on { opacity: 1; }
+  .mb-tray { transform: translateX(-25px); }
+  .rw-die:not(.on):hover .mb-tray { transform: translateX(-20px); }
+  .rw-die.on .mb-tray { transform: none; }
+  .mb-tray-o { fill: #dcbd8e; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
+  .mb-tray-f { fill: #cfa877; stroke: #8a6a43; stroke-width: .8; }
+  .mb-tray-s { fill: #c49a63; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
+  /* the slide plays only when slideMatchbox (app.js) hands the fresh button its old state for a
+     frame, which it skips under reduced motion; the hover peek is gated here the same way */
+  @media (prefers-reduced-motion: no-preference) {
+    .rw-die { transition: width .38s cubic-bezier(.3, 1.25, .5, 1); }
+    .rw-die .mb { transition: transform .3s ease; }
+    .mb-tray { transition: transform .38s cubic-bezier(.3, 1.25, .5, 1); }
+    .mb-tx { transition: opacity .16s ease .1s; }
+  }
+  body[data-reduce-motion="on"] :is(.rw-die, .rw-die .mb, .mb-tray, .mb-tx) { transition: none; }
 
   /* a door out of an object: the bold stamp-like button the notebook uses for real actions */
   .rw-door { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 7px 14px !important; border: 2px solid var(--ink) !important;
@@ -14578,7 +14601,7 @@
 
   /* ================= TRINKETS: the bead box ================= */
   .tb { position: relative; }
-  .tb-lid { position: relative; display: flex; align-items: center; justify-content: flex-start; gap: 14px; height: 40px; padding: 0 10px 4px 12px;
+  .tb-lid { position: relative; display: flex; align-items: center; justify-content: flex-start; gap: 14px; height: 50px; padding: 0 10px 5px 12px;
     border: 2px solid var(--ink); border-bottom: 0; border-radius: 10px 10px 0 0; background: var(--ow2); }
   /* knuckle hinges on the seam between lid and box, three knuckles each */
   .tb-lid::before, .tb-lid::after { content: ""; position: absolute; bottom: -6px; width: 34px; height: 10px; border: 1.6px solid var(--ink); border-radius: 3px; z-index: 2;
@@ -16808,7 +16831,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 @media (pointer: coarse) {
   .btn-link, .countdown-skip, .countdown-hold, .tt-reset, .bc-refill-hd button { min-height: 44px; padding-block: 10px; }
   .tf-arw { width: 44px; height: 44px; }
-  .rw-die { min-height: 44px; }
+  .rw-die { min-height: 44px; }   /* the matchbox stays its own size, centred in the taller hit */
   .see-also--row .nav-card-title {
     position: static; display: block; width: auto; height: auto; margin: 7px 0 0; padding: 0;
     overflow: visible; clip: auto; clip-path: none; border: 0; white-space: normal; text-align: center; line-height: 1.15;

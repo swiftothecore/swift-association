@@ -3789,9 +3789,6 @@ export const ACH_ICONS = {
 // Marks the mastery board draws itself, because nothing in ACH_ICONS means what they mean.
 // Objects dropped or pressed on a desk, tilted off square, not symbols set straight.
 const MASTERY_OWN_ICONS = {
-  // the random bracelet trinket: a tumbled five-face, mid-roll
-  die: `<svg viewBox="0 0 24 24"><g transform="rotate(-13 12 12)"><rect class="ink-fill" x="4.4" y="4.4" width="15.2" height="15.2" rx="3.2" stroke-width="1.1"/><g fill="var(--paper)"><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/></g></g></svg>`,
-
   /* The three pens (levels 1–3) are one family: the same 45° lay across the page, the same
      barrel depth, the same cap band and clip, nib end at the bottom left. `feather` (the
      quill, level 2) sets the diagonal they both follow. Only the writing end differs — a

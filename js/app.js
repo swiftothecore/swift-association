@@ -6596,7 +6596,11 @@ function renderMasteryPage() {
     el.addEventListener("click", () => resetMasteryCosmetic(el.getAttribute("data-reward-reset")));
   });
   body.querySelectorAll("[data-reward-random]").forEach((el) => {
-    el.addEventListener("click", () => chooseRandomCosmetic(el.getAttribute("data-reward-random")));
+    el.addEventListener("click", () => {
+      const kind = el.getAttribute("data-reward-random");
+      chooseRandomCosmetic(kind);
+      slideMatchbox(body, kind);
+    });
   });
   // The set trays (Seasons, Pride) are pure disclosure: they open and shut in the DOM without
   // re-rendering, one at a time, and a pick re-renders the page from scratch with all shut.
@@ -6810,6 +6814,18 @@ function chooseMasteryCosmetic(rewardId, variant) {
 // rides its own set's unlock instead, the same unlock that earned every member it deals from.
 // Pressing it again while it is already on turns it back off, since the die is the only thing
 // marked "in use" while random is worn and there would otherwise be nothing to press.
+// The randomiser is a matchbox whose tray slides out while random is worn, but the click re-renders
+// the page, so the fresh button arrives already in its new state. Hand it the old one for a frame
+// and let its transitions carry it across.
+function slideMatchbox(body, kind) {
+  if (motionReduced()) return;
+  const box = body.querySelector(`[data-reward-random="${kind}"]`);
+  if (!box) return;
+  const on = box.classList.contains("on");
+  box.classList.toggle("on", !on);
+  void box.offsetWidth;
+  box.classList.toggle("on", on);
+}
 function chooseRandomCosmetic(kind) {
   if (!MASTERY_COSMETICS[kind] || !rewardSetUnlocked(loadMastery(), kind)) return;
   const worn = settings[MASTERY_COSMETICS[kind].setting] === COSMETIC_RANDOM;

@@ -56,10 +56,31 @@ function loop(seed = 1) {
   }
   return `<svg class="rw-loop" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M${pts.join(" L")}" vector-effect="non-scaling-stroke"/></svg>`;
 }
-// The randomiser, as a die you shake. Toggles, since while it is worn nothing else is "in use".
+// The randomiser, as a matchbox of dice you shake. A red safety-match sleeve with the front
+// page's two thrown dice (#randomGear in index.html: the front die knocks a hole in the back one)
+// printed on its label. While random is worn the kraft tray is slid out of the sleeve's end with
+// the dice sitting in it. BOTH states are drawn in the one SVG and `.on` moves between them, so
+// slideMatchbox (app.js) can play the change after the page re-renders. Toggles, since while it
+// is worn nothing else is "in use". Designed on scripts/mastery/shake-board.html.
+const mbDice = (x, y, s, knock) =>
+  `<g transform="translate(${x} ${y}) scale(${s})" stroke="#2b2722" stroke-width="1.8" stroke-linejoin="round">` +
+  `<g transform="rotate(-13 8.2 8.6)"><rect x="2" y="2.4" width="12.4" height="12.4" rx="2.8" fill="none"/><circle cx="8.2" cy="8.6" r="1.5" fill="#2b2722" stroke="none"/></g>` +
+  `<g transform="rotate(12 15.6 15.4)"><rect x="9.4" y="9.2" width="12.4" height="12.4" rx="2.8" fill="${knock}"/>` +
+  `<g fill="#2b2722" stroke="none"><circle cx="12.9" cy="12.7" r="1.35"/><circle cx="15.6" cy="15.4" r="1.35"/><circle cx="18.3" cy="18.1" r="1.35"/></g></g></g>`;
+// Sleeve 82 wide, tray showing 24 past its end once out. The tray rides 25 to the left, hidden
+// under the sleeve, while the box is shut. Both strings are fixed, so they are built once.
+const MATCHBOX_ART = `<svg class="mb" viewBox="0 1.8 108 34.2" aria-hidden="true">` +
+  `<g class="mb-tray"><path class="mb-tray-o" d="M52 5.6 L104.6 5.2 Q106 5.2 106 6.6 L106.2 28.4 L52.4 28.8 Z"/>` +
+  `<path class="mb-tray-f" d="M55 8.8 L102.6 8.5 L102.8 25.6 L55 25.9 Z"/>` +
+  `<path class="mb-tray-s" d="M52.4 28.8 L106.2 28.4 L106.1 32.2 Q106.1 33.2 105 33.2 L52.6 33.6 Z"/>${mbDice(83.8, 7.2, 0.76, "#cfa877")}</g>` +
+  `<g class="mb-sleeve"><path class="mb-top" d="M2.4 4.6 Q2.4 3.2 3.9 3.2 L80.4 2.7 Q82 2.7 82 4.2 L82.3 28.6 L2.6 29.2 Z"/>` +
+  `<path class="mb-side" d="M2.6 29.2 L82.3 28.6 L82.2 33 Q82.2 34.4 80.8 34.4 L4 34.9 Q2.6 34.9 2.6 33.5 Z"/>` +
+  `<path class="mb-grit" d="M8 31.2 h1.2 M16.8 32.3 h1 M25.6 31.2 h1 M31.7 32.3 h1.2 M40.5 31.2 h1 M49.3 32.3 h1 M55.4 31.2 h1.2 M64.3 32.3 h1 M73.1 31.2 h1"/>` +
+  `<rect class="mb-lab" x="6.4" y="6.6" width="70.2" height="18.6" rx="1.2"/><rect class="mb-rule" x="8.5" y="8.7" width="66" height="14.4" rx=".6"/>` +
+  `${mbDice(10.2, 6.9, 0.74, "#f4ead2")}` +
+  `<text class="mb-tx mb-off" x="51.4" y="19.5" text-anchor="middle">SHAKE</text><text class="mb-tx mb-on" x="51.4" y="19.5" text-anchor="middle">SHAKEN</text></g></svg>`;
 function dieControl(kind, active, label) {
-  return `<button type="button" class="rw-die${active ? " on" : ""}" data-reward-random="${kind}" aria-pressed="${active}" title="${esc(label)}" aria-label="${esc(label)}">` +
-    `<span class="rw-die-ic">${MASTERY_ICONS.die}</span><span class="rw-die-tx">${active ? "shaken" : "shake"}</span></button>`;
+  return `<button type="button" class="rw-die${active ? " on" : ""}" data-reward-random="${kind}" aria-pressed="${active}" title="${esc(label)}" aria-label="${esc(label)}">${MATCHBOX_ART}</button>`;
 }
 function head(name, what, stampHTML = "") {
   return `<header class="rw-cap"><div class="rw-cap-tx"><h3 class="rw-nm">${esc(name)}</h3><p class="rw-what">${what}</p></div>${stampHTML}</header>`;
