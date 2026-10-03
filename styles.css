@@ -10264,6 +10264,22 @@
   @media (prefers-reduced-motion: no-preference) {
     .lyric-card.first-find::after { animation: ribbonSwing 0.95s ease-in-out 0.3s both; }
   }
+  /* A missed page's card for a song you have never found (see isNotFound): the ribbon is hollow.
+     Both notched ends stay inked for 4.2px so the bookmark cut still reads at a glance, and only
+     the length between them is open, two 0.85px rails with a hair of paper down the middle. Same
+     3px column as the solid ribbon, so nothing on the card moves. */
+  .lyric-card.not-found::before {
+    -webkit-mask: var(--ribbon-top) 0 0 / 3px 2px no-repeat, var(--ribbon-end) 0 100% / 3px 2px no-repeat,
+      linear-gradient(#000 0 0) 0 1.5px / 3px 2.7px no-repeat,
+      linear-gradient(#000 0 0) 0 calc(100% - 1.5px) / 3px 2.7px no-repeat,
+      linear-gradient(#000 0 0) 0 1.5px / 0.85px calc(100% - 3px) no-repeat,
+      linear-gradient(#000 0 0) 100% 1.5px / 0.85px calc(100% - 3px) no-repeat;
+    mask: var(--ribbon-top) 0 0 / 3px 2px no-repeat, var(--ribbon-end) 0 100% / 3px 2px no-repeat,
+      linear-gradient(#000 0 0) 0 1.5px / 3px 2.7px no-repeat,
+      linear-gradient(#000 0 0) 0 calc(100% - 1.5px) / 3px 2.7px no-repeat,
+      linear-gradient(#000 0 0) 0 1.5px / 0.85px calc(100% - 3px) no-repeat,
+      linear-gradient(#000 0 0) 100% 1.5px / 0.85px calc(100% - 3px) no-repeat;
+  }
   /* Let go straight, it swings past where it will lie and comes back to rest. */
   @keyframes ribbonSwing {
     0% { rotate: 0deg; }

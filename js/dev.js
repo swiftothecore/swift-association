@@ -355,13 +355,21 @@ export function initDev(api) {
     ffBtn.textContent = `force first find: ${on ? "on" : "off"}`;
     ffBtn.classList.toggle("on", on);
   });
+  // Its counterpart on a missed page: the cards of songs you've never found wear the ribbon
+  // hollow. Forcing it hollows every one of them, found or not.
+  const hollowBtn = btn(`force hollow ribbon: ${api.reveal.firstFind.hollow() ? "on" : "off"}`, () => {
+    const on = api.reveal.firstFind.forceHollow();
+    hollowBtn.textContent = `force hollow ribbon: ${on ? "on" : "off"}`;
+    hollowBtn.classList.toggle("on", on);
+  });
   body.append(section("answer reveal",
     row(btn("widest page", () => { api.reveal.widest(); readReveal(); }),
         btn("read", readReveal), revOut),
     row(ffBtn, btn("first find?", () => {
       const s = api.reveal.firstFind.state();
       ffOut.textContent = s.title ? `${s.title}: ${s.why}` : s.why;
-    }), ffOut)));
+    }), ffOut),
+    row(hollowBtn)));
 
   // ---- Typed answers ---------------------------------------------------------
   // The typo allowance is a fairness lever on the modes that make you type the whole

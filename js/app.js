@@ -25227,17 +25227,31 @@ function standaloneLyricContext(song, word, anchorLine) {
    fold the catalogue at all, or a custom or guest run would mark the same song "first" every
    time it was played, since nothing there is ever remembered. */
 let devFirstFind = false;       // dev: every correct card wears the first-find ribbon
+let devNotFound = false;        // dev: every missed page's card wears the hollow ribbon
+// Found before this page: in the lifetime tally, or credited on an earlier page of this run,
+// which the tally won't hear about until the run folds.
+function foundBefore(title) {
+  return !!loadSongTally().songs[title] || roundSongs.slice(0, round - 1).includes(title);
+}
 function isFirstFind(song) {
   if (!song) return false;
   if (devFirstFind) return true;
-  if (!foldsCatalogue() || roundSongs[round - 1] !== song.title) return false;
-  if (roundSongs.slice(0, round - 1).includes(song.title)) return false;
-  return !loadSongTally().songs[song.title];
+  return foldsCatalogue() && roundSongs[round - 1] === song.title && !foundBefore(song.title);
+}
+/* The other side of the same ledger. The cards on a missed page are the right answers you
+   didn't give, and one you have never found wears its ribbon hollow (.lyric-card.not-found):
+   the notched ends inked, the length between them left open. Only on the game types that fold
+   the catalogue, for the same reason as above: finding it anywhere else would never fill it in. */
+function isNotFound(song) {
+  if (!song) return false;
+  if (devNotFound) return true;
+  return foldsCatalogue() && !foundBefore(song.title);
 }
 
 // `wave` draws the song under its title with the word's lines lit (see waveVerdictActive).
-// `first` hangs the ribbon out for a first find (see isFirstFind).
-function lyricCard(song, word, isWrong, lineOverride, context, wave = false, first = false) {
+// `ribbon` is an extra class for the ribbon: "first-find" (see isFirstFind) or "not-found"
+// (see isNotFound).
+function lyricCard(song, word, isWrong, lineOverride, context, wave = false, ribbon = "") {
   const color = albumColor(song.album) || "var(--ink-soft)";
   const proofTitle = titleProofActive();
   const title = proofTitle
@@ -25246,7 +25260,7 @@ function lyricCard(song, word, isWrong, lineOverride, context, wave = false, fir
   const proof = proofTitle
     ? `<div class="lyric-title-proof"><span aria-hidden="true">↳</span> the word is in the title</div>`
     : registerLyricReveal(song, word, lyricCardLine(song, word, lineOverride), { context });
-  const cls = isWrong ? " wrong-card" : first ? " first-find" : "";
+  const cls = (isWrong ? " wrong-card" : "") + (ribbon ? " " + ribbon : "");
   const headingId = nextLyricRevealId("title");
   return `<article class="lyric-card${cls}${proofTitle ? " title-proof" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
     `<div class="song-title" id="${headingId}">${title}${albumTag(song, color)}</div>` +
@@ -25261,7 +25275,7 @@ function bothProofCard(song, isWrong) {
   const headingId = nextLyricRevealId("title");
   const lines = bothWords.map((word) =>
     registerLyricReveal(song, word, lyricCardLine(song, word, null), { context: true })).join("");
-  return `<article class="lyric-card both-proof${isWrong ? " wrong-card" : isFirstFind(song) ? " first-find" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
+  return `<article class="lyric-card both-proof${isWrong ? " wrong-card" + (isNotFound(song) ? " not-found" : "") : isFirstFind(song) ? " first-find" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
     `<div class="song-title" id="${headingId}">${escapeHtml(censor(song.title))}${albumTag(song, color)}</div>` +
     `${lines}</article>`;
 }
@@ -25512,11 +25526,11 @@ function showCorrectFeedback(song, lyricMatch) {
   const card = multi
     ? roundNamed.map((t) => {
       const named = currentSongs.find((s) => s.title === t) || song;
-      return lyricCard(named, currentWord, false, null, true, false, isFirstFind(named));
+      return lyricCard(named, currentWord, false, null, true, false, isFirstFind(named) ? "first-find" : "");
     }).join("")
     : both
       ? bothProofCard(song, false)
-    : lyricCard(song, currentWord, false, lyricMatch ? lyricMatch.line : null, true, false, isFirstFind(song));
+    : lyricCard(song, currentWord, false, lyricMatch ? lyricMatch.line : null, true, false, isFirstFind(song) ? "first-find" : "");
   // The first time a word FORM is what earned the page ("pray" credited on "praying"), name the
   // rule — the card above is already showing the highlighted variant, so it lands with the
   // evidence in view. Once, then silent. Skipped when the verse note is already talking.
@@ -25615,7 +25629,7 @@ function showWrongFeedback(song, isTimeout) {
       }
     } else {
       const examples = ordered.slice(0, n);
-      const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true, sentence)).join("");
+      const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true, sentence, isNotFound(s) ? "not-found" : "")).join("");
       // The way into the cards is a label, so it is typed rather than handwritten, and it says
       // how many songs there were before you scroll: "seven songs do".
       const one = ordered.length === 1;
@@ -30615,6 +30629,9 @@ function buildDevApi() {
          says whether the page just answered was a real first find, and why not when it isn't. */
       firstFind: {
         force: (on = !devFirstFind) => { devFirstFind = !!on; return devFirstFind; },
+        // The hollow ribbon on a missed page's cards, forced onto every one of them.
+        forceHollow: (on = !devNotFound) => { devNotFound = !!on; return devNotFound; },
+        hollow: () => devNotFound,
         state: () => {
           const title = roundSongs[round - 1] || null;
           const found = title ? (loadSongTally().songs[title] || 0) : 0;
