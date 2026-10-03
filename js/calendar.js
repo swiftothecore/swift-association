@@ -15,7 +15,8 @@
 //   .cal-key     — the small print at the foot: each marked day and what it is
 //   .cal-strikes — a graphite stroke through each day already crossed off
 //   .cal-today   — the red pen loop around today, main stroke plus a lighter
-//                  echo pass, like a pen that went around twice
+//                  echo pass, like a pen that went around twice. On a marked
+//                  day the pen traces the occasion's own outline instead
 //
 // The marked days come from the real tables in config.js rather than a list of
 // this module's own: TS_MILESTONES (her birthday, the twelve studio albums and
@@ -432,26 +433,12 @@ function heartPath(seed) {
     `C${pt(R, 0, -3.5)} ${pt(T2, round * 1.1)} ${pt(T2)} C${pt(T2, -round * 0.9)} ${pt(C, 0.7, -2.3)} ${pt(C, 0.3, 0.4)}`;
 }
 
-// Each frame's ink box in its own units (half-width, top, bottom), for the today loop. When
-// today is an occasion the red pen goes round the whole frame instead of cutting through it,
-// so drawToday stretches its loop to clear this box by a pen's breadth and moves its centre to
-// the frame's: a crown and a cake sit high on their date, a heart sits on it. The loop's ink at
-// rest is measured, not its radii: its curves reach about 10.3 across but only 6.7 up and down
-// (a cubic falls short of its control points), and it rides 0.7 above the centre it is given.
-const FRAME_BOX = { heart: [11, -9.9, 10.6], cake: [12.6, -13.6, 7.4], crown: [11.2, -14.8, 5.6],
-                    tree: [12, -13, 8.3], salt: [5.8, -10, 5.8] };
 const frameShape = (mark) => (mark.kind === "birthday" ? "cake" : mark.kind === "guest" ? "crown"
   : mark.mark === "tree" ? "tree" : mark.mark === "salt" ? "salt" : "heart");
 const frameScale = (shape, narrow) => (shape === "salt" ? 1 : narrow ? 0.8 : 0.93);
-function frameReach(mark, narrow) {
-  const shape = frameShape(mark), k = frameScale(shape, narrow);
-  const [hw, top, bottom] = FRAME_BOX[shape];
-  // an oval round a squarish frame has to run a little wide of its box or the corners (a
-  // crown's side points, a cake's shoulders) poke out through it
-  const kx = (hw * k * 1.12 + 1.6) / 10.3, ky = ((bottom - top) * k / 2 * 1.1 + 2) / 6.7;
-  return { kx, ky, dy: (top + bottom) / 2 * k + 0.7 * ky };
-}
 
+// Draws the occasion and hands back its outline and placement, so a today that falls on it
+// can be traced over in red (drawTodayTrace) rather than looped round.
 function drawFrame(g, mark, cx, cy, colors, s, narrow) {
   const { color, hollow } = markInk(mark, colors);
   const shape = frameShape(mark);
@@ -485,6 +472,7 @@ function drawFrame(g, mark, cx, cy, colors, s, narrow) {
     }));
   }
   g.appendChild(frame);
+  return { d, at, k };
 }
 
 // The red pen loop around today: a fast ellipse that overshoots past a full turn, plus
@@ -496,7 +484,7 @@ function drawFrame(g, mark, cx, cy, colors, s, narrow) {
 // now and clearly turned off it. The main stroke has come down from 1.9, which made it
 // the heaviest ink on a sheet where everything else is a 1.1 pencil line, and the radii
 // have come in so the loop stops crowding the days either side of it in a 26.3 cell.
-function drawToday(g, cx, cy, s, reach) {
+function drawToday(g, cx, cy, s) {
   const rot = -8 + jit(s) * 15;
   const rx = 9.9 + jit(s + 2) * 1.1, ry = 7.8 + jit(s + 4) * 0.8;
   const d =
@@ -504,12 +492,22 @@ function drawToday(g, cx, cy, s, reach) {
     ` C${(cx + rx * 1.02).toFixed(1)} ${(cy - ry).toFixed(1)} ${(cx - rx * 1.04).toFixed(1)} ${(cy - ry * 1.06).toFixed(1)} ${(cx - rx).toFixed(1)} ${(cy - 0.6).toFixed(1)}` +
     ` C${(cx - rx * 0.97).toFixed(1)} ${(cy + ry).toFixed(1)} ${(cx + rx * 0.98).toFixed(1)} ${(cy + ry * 1.04).toFixed(1)} ${(cx + rx * 1.01).toFixed(1)} ${(cy - 0.4).toFixed(1)}` +
     ` C${(cx + rx * 1.02).toFixed(1)} ${(cy - ry * 0.55).toFixed(1)} ${(cx + rx * 0.5).toFixed(1)} ${(cy - ry * 0.98).toFixed(1)} ${(cx - rx * 0.35).toFixed(1)} ${(cy - ry * 0.92).toFixed(1)}`;
-  // stretched round an occasion's frame (frameReach), with the pen's weight held
-  const { kx, ky, dy } = reach || { kx: 1, ky: 1, dy: 0 };
-  const grow = reach ? ` translate(0 ${dy.toFixed(2)}) translate(${cx} ${cy}) scale(${kx.toFixed(3)} ${ky.toFixed(3)}) translate(${-cx} ${-cy})` : "";
-  const weight = (v) => (reach ? { style: `stroke-width:${(v / Math.sqrt(kx * ky)).toFixed(2)}px` } : {});
-  g.appendChild(el("path", { d, transform: `rotate(${rot.toFixed(1)} ${cx} ${cy})${grow}`, ...weight(1.55) }));
-  g.appendChild(el("path", { d, class: "echo", transform: `rotate(${(rot + 5.5).toFixed(1)} ${cx} ${cy}) translate(0.9 1)${grow}`, ...weight(1.05) }));
+  g.appendChild(el("path", { d, transform: `rotate(${rot.toFixed(1)} ${cx} ${cy})` }));
+  g.appendChild(el("path", { d, class: "echo", transform: `rotate(${(rot + 5.5).toFixed(1)} ${cx} ${cy}) translate(0.9 1)` }));
+}
+
+// Today on an occasion. A loop stretched round the heart (or cake, or crown) put a second
+// outline round the first, an oval with a heart in it, which read as two marks fighting over
+// one square. Instead the red pen goes over the occasion's own outline, twice and a little off
+// the era line each time, the way you would trace again a heart you had already drawn: one
+// shape, and still the red pen that says "today". The pen weights are the loop's, divided by
+// the frame's scale like drawFrame's own, so the trace is the same pen at every frame size.
+function drawTodayTrace(g, { d, at, k }) {
+  const pass = (extra, w, cls) => el("path", {
+    d, class: cls, transform: `${at} ${extra}`, "stroke-linejoin": "round", style: `stroke-width:${(w / k).toFixed(2)}px`,
+  });
+  g.appendChild(pass("translate(0.45 0.35) rotate(1.5)", 1.15));
+  g.appendChild(pass("translate(-0.35 0.5) rotate(-2.5) scale(1.03)", 0.8, "echo"));
 }
 
 // --- the small print ---------------------------------------------------------------------
@@ -690,7 +688,8 @@ export function render(now) {
     // the cake's pink, which is the colour of the corner sticky's own "13" candles anyway.
     if (d === 13) num.classList.add("foil");
     if (mark) {
-      drawFrame(marks, mark, cx, cy, colors, seed + d * 7, d < 10);
+      const drawn = drawFrame(marks, mark, cx, cy, colors, seed + d * 7, d < 10);
+      if (d === D) drawTodayTrace(today, drawn);
       inkFoot[r] = Math.max(inkFoot[r], cy + FRAME_FOOT);
       // A red-letter day. Printers have marked the days that matter in a second ink since
       // the first almanacs, which is where the phrase comes from; on this pad the days that
@@ -712,7 +711,7 @@ export function render(now) {
       const w = num.getBBox().width || String(d).length * DIGIT_W;
       strikes.appendChild(strike(cx, cy, w, seed + d));
     }
-    if (d === D) drawToday(today, cx, cy + NUM_CY, seed + 200 + d, mark ? frameReach(mark, d < 10) : null);
+    if (d === D && !mark) drawToday(today, cx, cy + NUM_CY, seed + 200 + d);
   }
 
   if (measured && keyed.length) {
