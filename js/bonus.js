@@ -586,6 +586,52 @@ export function buildWordIndex(songs) {
   return idx;
 }
 
+/* Where the hand's cards were cut from: for each key, the first line of the song that sings it,
+   split round the word as that line spells it, with the line's own spacing and punctuation kept
+   on either side. The hand deals each card as a scrap cut out of this line, so the words either
+   side run off under the tear. "First" is the same first sighting `lyricTokens` takes the card's
+   spelling from, so the word on the scrap and the word in the line are always one spelling.
+   ONE LINE CAN ONLY BE CUT ONCE. Two cards off the same line ("miss Wicklow sometimes") would
+   otherwise each carry the other's word on its edge, which no pair of scissors could produce, so
+   a scrap's run stops where a neighbouring card was taken out of the line. Null only for a key
+   the song does not sing, which a dealt card never is. */
+function firstCut(lines, key) {
+  for (let li = 0; li < lines.length; li++) {
+    const toks = lines[li].split(/(\s+)/);
+    for (let i = 0; i < toks.length; i++) {
+      const p = splitWord(toks[i]);
+      if (toks[i] && wordKey(p ? p.core : toks[i]) === key) return { li, i, toks, p };
+    }
+  }
+  return null;
+}
+export function onlyCuts(song, keys) {
+  const lines = String(song.lyrics || "").split("\n");
+  const found = keys.map((k) => firstCut(lines, k));
+  return found.map((f, n) => {
+    if (!f) return null;
+    let from = 0, to = f.toks.length;
+    found.forEach((g, m) => {
+      if (!g || m === n || g.li !== f.li) return;
+      if (g.i < f.i) from = Math.max(from, g.i + 1);
+      else to = Math.min(to, g.i);
+    });
+    const { toks, i, p } = f;
+    return { line: lines[f.li], pre: toks.slice(from, i).join("") + (p ? p.pre : ""),
+             core: p ? p.core : toks[i], post: (p ? p.post : "") + toks.slice(i + 1, to).join("") };
+  });
+}
+export function onlyLine(song, key) { return onlyCuts(song, [key])[0]; }
+
+// Does this line sing the card? Keyed exactly as the index keys it, so a line the reveal lights
+// is a line the count was taken from, never a looser match the count knows nothing about.
+export function lineSingsWord(line, key) {
+  return String(line).split(/\s+/).some((w) => {
+    const p = splitWord(w);
+    return wordKey(p ? p.core : w) === key;
+  });
+}
+
 // Every token of a lyric blob, keyed and paired with the spelling it was sung in (the first
 // one seen, so the hand deals "wonderstruck" the way the song sings it).
 function lyricTokens(text) {

@@ -103,7 +103,7 @@ import { albumSleeve, commonNameSize, hasMotif, motifOf, sleeveName } from "./sl
 import { cloudMarkup, cloudFontReady } from "./cloud.js";
 import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
-         buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, ONLY_HAND,
+         buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, onlyCuts, onlyLine, lineSingsWord, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
          buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
@@ -8936,38 +8936,84 @@ function judgeGap() {
 }
 
 /* ---------- Only Here: the hand ----------
-   Six real words off the song, dealt as cut scraps rather than as chips: ransom-note energy
-   fits the notebook, and more practically it makes them read as FOUND words rather than as UI
-   buttons. Two rows of three, because six in a line is a menu.
+   Six real words off the song, dealt as scraps CUT OUT OF ITS OWN LYRIC SHEET rather than as
+   chips: ransom-note energy fits the notebook, and more practically it makes them read as FOUND
+   words rather than as UI buttons. Each scrap is cut from the line the word was first sung in
+   (`onlyCuts`), so the words either side of it run on in pencil and go off under the tear, and
+   the sheet's rule runs under the word. That is the round screen's habit of showing where a
+   word lives, brought down to the size of a scrap, and it is free of any leak: the song is
+   already named at the top of the page, and the line says nothing about how many OTHER songs
+   sing the word, which is the only thing the page asks. Two rows of three, because six in a
+   line is a menu.
+   The tear is generated per card (`scrapTear`) and seeded off the song and the word, so no two
+   scraps tear alike and a scrap keeps its tear when the hand is turned over at the reveal. It
+   is clipped on the PAPER, not the button, so the drop shadow on the button follows the torn
+   edge instead of being clipped away with it, which is what the old shared polygons did.
    One tap answers the page and there is no fail state, so the only way to score nothing is to
-   let the clock go. */
+   let the clock go. Once the page is answered the scraps stay live as a way to READ the hand:
+   a tap focuses that card in the panel under it (see focusOnlyCard). */
+function scrapTear(seed) {
+  const r = mulberry32(fnv1a("scrap:" + seed));
+  const pts = [];
+  /* A tear wanders (a slow walk that sets how deep the edge bites) and has teeth (a quick
+     jitter on top), and the long edges tear deeper than the short ones because there is more
+     paper to go wrong on. Percentages of the paper, so the depth scales with the scrap. */
+  const edge = (n, depth, at) => {
+    let walk = r() * depth * 0.6;
+    for (let k = 0; k < n; k++) {
+      walk = Math.max(0, Math.min(depth * 0.7, walk + (r() - 0.5) * depth * 0.45));
+      pts.push(at(k / n, 0.3 + walk + r() * depth * 0.3));
+    }
+  };
+  edge(14, 6.2, (t, d) => [t * 100, d]);
+  edge(5, 2.6, (t, d) => [100 - d, t * 100]);
+  edge(14, 6.2, (t, d) => [100 - t * 100, 100 - d]);
+  edge(5, 2.6, (t, d) => [d, 100 - t * 100]);
+  return `polygon(${pts.map(([x, y]) => `${x.toFixed(1)}% ${y.toFixed(1)}%`).join(",")})`;
+}
+
 function renderOnlyHand(reveal = false) {
   const wrap = $("bonusHand");
   if (!wrap || !bonusPuzzle) return;
   const p = bonusPuzzle;
   const best = new Set(p.optimal);
+  const cuts = onlyCuts(p.song, p.hand.map((c) => c.key));
   wrap.innerHTML = p.hand.map((c, i) => {
     const picked = !!onlyPlayed && onlyPlayed.i === i;
+    const cut = cuts[i] || { pre: "", post: "" };
     // The reveal turns the WHOLE hand over. Everything this game knows and used to keep to
     // itself goes on the page, including on a page played badly — that is the whole redesign.
     const cls = ["bg-scrap",
       reveal ? (best.has(i) ? "is-best" : "") : "",
       reveal && picked ? (best.has(i) ? "is-got" : "is-missed") : ""].filter(Boolean).join(" ");
     const aria = censor(c.word) +
-      (reveal ? `: sung by ${c.count} song${c.count === 1 ? "" : "s"}, worth ${c.points}` +
-                (best.has(i) ? ", the rarest in the hand" : "") + (picked ? ", your pick" : "")
+      (reveal ? `: sung by ${c.count} song${c.count === 1 ? "" : "s"}` + (bonusEndless ? "" : `, worth ${c.points}`) +
+                (best.has(i) ? ", the rarest in the hand" : "") + (picked ? ", your pick" : "") +
+                ". Show where it is sung"
               : "");
-    return `<button type="button" class="bg-scrap ${cls}" data-i="${i}"${reveal ? " disabled" : ""}` +
+    return `<button type="button" class="${cls}" data-i="${i}"${reveal ? ` aria-pressed="false"` : ""}` +
         ` aria-label="${escapeHtml(aria)}">` +
-        `<span class="bg-scrap-word">${escapeHtml(censor(c.word.toLowerCase()))}</span>` +
-        (reveal
-          ? `<span class="bg-scrap-count">${c.count === 1 ? "only here" : `in ${c.count}`} · ${c.points}</span>` +
-            (picked ? `<span class="bg-scrap-mark" aria-hidden="true">${best.has(i) ? BG_TICK : BG_CROSS}</span>` : "")
+        `<span class="bg-scrap-paper" style="clip-path:${scrapTear(p.song.title + "|" + c.key)}">` +
+          `<span class="bg-scrap-line">` +
+            `<span class="bg-scrap-cut is-pre"><span>${escapeHtml(censor(cut.pre))}</span></span>` +
+            `<span class="bg-scrap-word">${escapeHtml(censor(c.word.toLowerCase()))}</span>` +
+            `<span class="bg-scrap-cut is-post"><span>${escapeHtml(censor(cut.post))}</span></span>` +
+          `</span>` +
+          (reveal
+            ? `<span class="bg-scrap-count">${c.count === 1 ? "only here" : `in ${c.count}`}` +
+              `${bonusEndless ? "" : ` · ${c.points}`}</span>`
+            : "") +
+        `</span>` +
+        // The pick is marked in the felt tip every verdict on the round screen is drawn in, and
+        // it sits OVER the scrap's corner rather than inside it: a mark made on the page after
+        // the scrap was laid down, so it runs off the edge the way a real one would.
+        (reveal && picked
+          ? `<span class="bg-scrap-mark" aria-hidden="true">${verdictMark(best.has(i) ? "good" : "bad")}</span>`
           : "") +
       `</button>`;
   }).join("");
-  if (!reveal) wrap.querySelectorAll(".bg-scrap").forEach((b) =>
-    b.addEventListener("click", () => judgeOnly(+b.dataset.i)));
+  wrap.querySelectorAll(".bg-scrap").forEach((b) => b.addEventListener("click", () =>
+    reveal ? focusOnlyCard(+b.dataset.i, true) : judgeOnly(+b.dataset.i)));
 }
 
 /* One tap, one answer, no confirm — Then What's rule, and for its reason: three cards spaced to
@@ -9167,29 +9213,97 @@ function onlyDetail(p) {
     (p.count === 1 ? "in no other song" : `in <b>${p.count}</b> songs`) + paid;
 }
 
-/* The reveal. The hand turns over in place — every card's true count, the rarest marked in gold,
-   the player's own card ticked or crossed — and under it goes the line the rarest word lives in.
-   There is no lyric card (see bonusAnswerCard): the heading already names the song, and the one
-   thing the page still owes is where that word actually sits. A player who found it is shown
-   THEIR word's line, because the page has nothing better to hold up than what they just played. */
+/* The reveal. The hand turns over in place — every card's true count, the rarest marked in
+   gold, the player's own card ticked or crossed — and under it goes a panel about ONE card,
+   which opens on the rarest. There is no lyric card (see bonusAnswerCard): the heading already
+   names the song, and what the page still owes is where that word actually lives. A player who
+   found it is shown THEIR word, because the page has nothing better to hold up than what they
+   just played. */
 function revealOnlyHere() {
   const body = $("bonusPlayBody");
   const ask = body.querySelector(".bg-ask");
   if (ask) ask.remove();
+  const hint = body.querySelector(".bg-hint");
+  if (hint) hint.remove();
   const p = bonusPuzzle;
   renderOnlyHand(true);
-  const best = p.hand[onlyPlayed && onlyPlayed.best ? onlyPlayed.i : p.optimal[0]];
-  const line = extractLineWithWord(p.song.lyrics, best.word, true);
-  const lead = best.count === 1
-    ? `nothing else in the catalogue sings it`
-    : `<b>${best.count}</b> songs sing it, and that was the fewest on the page`;
-  const html = `<div class="bg-only-reveal">` +
-      `<p class="bg-only-said">${lead}</p>` +
-      `<p class="bg-only-line">${highlightWord(line, best.word, true)}</p>` +
-    `</div>`;
+  const html = `<div class="bg-only-reveal" id="bonusOnlyFocus" aria-live="polite"></div>`;
   const wrap = $("bonusHand");
   if (wrap) wrap.insertAdjacentHTML("afterend", html);
   else body.insertAdjacentHTML("beforeend", html);
+  focusOnlyCard(onlyPlayed && onlyPlayed.best ? onlyPlayed.i : p.optimal[0]);
+}
+
+/* The panel under a turned-over hand, about one card at a time. It is the round screen's verdict
+   furniture brought across whole rather than imitated, since every piece of it answers a
+   question this page raises:
+     • the COUNT is said in the round screen's typed label ("twenty-one songs do") with the
+       songs themselves drawn beside it as dots (js/countdots.js), one per song in its album's
+       colour. The count is the whole game, and a number is the one form of it nobody can feel:
+       a single dot beside "nothing else sings it" against a whole tracklist inked for "love"
+       is the difference the page was asking about, drawn. The dots carry the same bubble as the
+       round screen's, so the other songs that sing a word can be read off them by hovering.
+     • the SONG is drawn as its lyric sheet (js/songwave.js) with the lines that sing the card
+       lit, which says how often THIS song leans on the word and where — a hook word lights up
+       down the whole chorus, a one-off lights a single bar.
+     • the LINE the word lives in, under the same chisel highlighter.
+   Every number here is taken off the same index the card was priced by: the dots are the
+   index's own set, and the wave is lit by `lineSingsWord`, which keys a line exactly as the
+   index keys it. So the drawing can never disagree with the count printed on the card.
+   Tapping any other card refocuses the panel, and a tap that is the player's own reading holds
+   the countdown, for the reason opening "in context" does: the page must not turn out from
+   under someone in the middle of reading it. The opening focus is not a tap and holds nothing. */
+function focusOnlyCard(i, byTap = false) {
+  const panel = $("bonusOnlyFocus");
+  const p = bonusPuzzle;
+  const c = p && p.hand[i];
+  if (!panel || !c) return;
+  if (byTap && +panel.dataset.at === i) return;
+  if (byTap) pauseAutoAdvanceForReading();
+  panel.dataset.at = i;
+  $("bonusHand").querySelectorAll(".bg-scrap").forEach((b) => {
+    const on = +b.dataset.i === i;
+    b.classList.toggle("is-focus", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  const word = escapeHtml(censor(c.word.toLowerCase()));
+  const say = c.count === 1 ? `<b>${word}</b> · nothing else sings it`
+    : `<b>${word}</b> · ${countWord(c.count)} songs do`;
+  const wave = Array.isArray(p.song.sections) && p.song.sections.length
+    ? songWave(p.song, { test: (line) => lineSingsWord(line, c.key) }, "lit") : null;
+  const line = extractLineWithWord(p.song.lyrics, c.word, true);
+  panel.innerHTML =
+    `<p class="bg-only-said"><span class="bg-only-say">${say}</span></p>` +
+    (wave ? `<div class="bg-only-wave">${wave.svg}<span class="wave-count"><b>${wave.hits}</b> / ${wave.lines} lines</span></div>` : "") +
+    (line ? `<p class="bg-only-line">${highlightWord(line, c.word, true)}</p>` : "");
+  fillOnlyDots(panel.querySelector(".bg-only-said"), c);
+}
+
+/* The card's songs as dots, laid out exactly as the round screen lays its count's out: a strip
+   beside the label while it fits, tracklists past that, on a line of their own when even those
+   won't. A re-recording is the song it re-records (see buildWordIndex), so the index holds base
+   titles and each is drawn as the base song. */
+function fillOnlyDots(label, c) {
+  const say = label && label.querySelector(".bg-only-say");
+  if (!say) return;
+  const owners = bonusIndexes().wordIndex.get(c.key);
+  if (!owners) return;
+  const byTitle = new Map();
+  for (const s of allSongs) if (!byTitle.has(s.title)) byTitle.set(s.title, s);
+  const hits = [...owners].map((t) => byTitle.get(t)).filter(Boolean);
+  const full = label.clientWidth;
+  const sung = (s) => (s.lyrics || "").split(/\s+/).filter((w) => lineSingsWord(w, c.key)).length;
+  const { svg, below } = countDots(hits, allSongs, {
+    width: Math.min(260, full - say.offsetWidth - 12),
+    fallbackWidth: full,
+    colour: (s) => albumColor(s.album) || "var(--ink-soft)",
+    title: (s, n) => escapeHtml(`${censor(s.title)} · ${s.album} · ${n} words · sings it ${sung(s)}×`),
+    seed: c.key,
+  });
+  if (!svg) return;
+  label.classList.toggle("is-below", below);
+  label.insertAdjacentHTML("beforeend", svg);
+  if (!motionReduced() && !animInstant()) tipOutCountDots(label.querySelector(".count-dots"), c.key);
 }
 
 /* The proof of the page, using the round screen's lyric-card furniture. Spot the Slip needs the
@@ -32271,7 +32385,11 @@ function buildDevApi() {
         if (!bonusGame || bonusGame.id !== "only-here" || !bonusPuzzle) return "not on an only here page";
         const p = bonusPuzzle;
         return { song: p.song.title, shape: p.shape, fellBack: p.fallback, eligible: p.eligible,
-                 hand: p.hand.map((c, i) => `${p.optimal.includes(i) ? "*" : " "} ${c.word}: in ${c.count}, worth ${c.points}`) };
+                 hand: p.hand.map((c, i) => {
+                   const cut = onlyLine(p.song, c.key);
+                   return `${p.optimal.includes(i) ? "*" : " "} ${c.word}: in ${c.count}, worth ${c.points}` +
+                     (cut ? `  ‹${cut.pre}[${cut.core}]${cut.post}›` : "  (no line to cut from)");
+                 }) };
       },
       deal: (shape = "tight") => {
         if (!bonusGame || bonusGame.id !== "only-here") return "not on an only here page";
@@ -32303,10 +32421,23 @@ function buildDevApi() {
       handAudit: (n = 200) => {
         const { wordIndex } = bonusIndexes();
         let built = 0, tight = 0, fell = 0, exotic = 0, noFive = 0, tied = 0;
+        // The reveal's three drawings of a card, each checked against the count it has to agree
+        // with: a scrap with no line to be cut from (it falls back to the bare word), a song
+        // drawing that lights no line for a word the song sings, and a dot row whose length is
+        // not the number printed on the card. All three should be zero; none of them throws.
+        const byTitle = new Map();
+        for (const s of allSongs) if (!byTitle.has(s.title)) byTitle.set(s.title, s);
+        let uncut = 0, unlit = 0, dotsOff = 0;
         for (let i = 0; i < n; i++) {
           const p = buildOnlyHerePuzzle(allSongs, wordIndex, Math.random, 120, null, { tight: true });
           if (!p) continue;
           built++;
+          for (const c of p.hand) {
+            if (!onlyLine(p.song, c.key)) uncut++;
+            if (Array.isArray(p.song.sections) && p.song.sections.length &&
+                !songWave(p.song, { test: (l) => lineSingsWord(l, c.key) }).hits) unlit++;
+            if ([...(wordIndex.get(c.key) || [])].filter((t) => byTitle.has(t)).length !== c.count) dotsOff++;
+          }
           if (p.shape === "tight") tight++;
           if (p.fallback) fell++;
           if (p.hand.some((c) => c.word.length >= 7 && c.count >= 10)) exotic++;
@@ -32315,7 +32446,8 @@ function buildDevApi() {
         }
         return { tried: n, built, tight, fellBackToWide: fell,
                  fallbackRate: built ? `${((fell / built) * 100).toFixed(1)}%` : "n/a",
-                 withFalseExotic: exotic, noFiveInHand: noFive, tiedForRarest: tied };
+                 withFalseExotic: exotic, noFiveInHand: noFive, tiedForRarest: tied,
+                 cardsWithNoLine: uncut, cardsUnlit: unlit, dotCountMismatch: dotsOff };
       },
       // Sing It Back: read the gap's answer off the page, or fill it in and submit. Testing
       // the tenth round of a run you have to play honestly is nobody's idea of a dev tool.
