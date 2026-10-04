@@ -6928,16 +6928,34 @@
 
   /* ---------- The way home: the postmark ----------
      A third rubber stamp over PLAY AGAIN and ENCORE (js/postmark.js draws it, paintPostmark
-     dates it). It borrows their whole press from .keep-going (the lift on hover, the thump on
-     press, the re-inked print and the ghosted second strike) and only sets its own ink and
-     which of its two cuts prints. Post-office black by day; at night, like the other
+     dates it). Its soft strike lifts the print, cushions its landing and leaves a faint
+     second impression, always level. The shared press still thumps on click, and the
+     two cuts share this motion. Post-office black by day; at night, like the other
      two, the pad lifts to a pale ink that sits on the dark paper instead of multiplying into
      a hole in it. Styled by class only: the page-turn clone swaps the id for data-flip-id. */
   .keep-going.postmark { --stamp-ink: #24211d; margin: 14px auto 0; }
-  .postmark .kg-print { opacity: 0.9; }
+  .postmark .kg-print { opacity: 0.9; transform-box: fill-box; transform-origin: center; }
+  .postmark .kg-ghost { transform: none; transition: none; }
   .postmark .kg-press { transform: none; }
-  .postmark:is(:hover, :focus-visible) .kg-press { transform: scale(1.02); }
+  .postmark:is(:hover, :focus-visible) .kg-press { transform: none; }
+  .postmark:is(:hover, :focus-visible) .kg-print { animation: pm-soft-strike 640ms both; }
+  .postmark:is(:hover, :focus-visible) .kg-ghost { animation: pm-strike-echo 640ms both; }
   .postmark:active .kg-press { transform: scale(0.95); }
+  @keyframes pm-soft-strike {
+    0%   { transform: translateY(0) scale(1); }
+    32%  { transform: translateY(-2px) scale(1.016); }
+    58%  { transform: translateY(1px) scale(0.992); }
+    100% { transform: translateY(-1px) scale(1.008); }
+  }
+  @keyframes pm-strike-echo {
+    0%, 35% { opacity: 0; transform: translateY(-2px); }
+    60%     { opacity: 0.22; transform: translateY(1.5px); }
+    100%    { opacity: 0.12; transform: translateY(1px); }
+  }
+  body[data-reduce-motion="on"] .postmark .kg-print,
+  body[data-reduce-motion="on"] .postmark .kg-ghost { animation: none; transform: none; }
+  body[data-reduce-motion="on"] .postmark .kg-press { transform: none; }
+  body[data-reduce-motion="on"] .postmark .kg-ghost { opacity: 0; }
   .postmark .pm-narrow { display: none; }
   @media (max-width: 560px) {
     .postmark .pm-wide { display: none; }

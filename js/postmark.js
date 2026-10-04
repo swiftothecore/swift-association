@@ -2,7 +2,8 @@
    between two pairs of wavy cancel lines. It is the third rubber stamp on the page, in
    post-office black, cut a different shape from PLAY AGAIN and ENCORE below it but inked
    through the same kind of filter (#pmInk in index.html's shared defs) and pressed with the
-   same .kg-press / .kg-print / .kg-ghost hover. Designed on scripts/ui/turn-back/board-2.html
+   .kg-press / .kg-print / .kg-ghost layers. The level soft-strike hover was selected on
+   scripts/ui/postmark-hover.html (option A); artwork from scripts/ui/turn-back/board-2.html
    (option F).
 
    Pure and state-free like ctasketch.js: a label and a date in, an svg string out. app.js owns
