@@ -20,10 +20,8 @@ const rain = (count, seed) => {
     `--drop-y:${Math.round(rand() * 56)}px;--drop-h:${(6 + rand() * 9).toFixed(1)}px;` +
     `--drop-delay:${(rand() * .5).toFixed(2)}s;--drop-duration:${(.42 + rand() * .24).toFixed(2)}s"></i>`).join("");
 };
-// Watercolour blotches: an irregular closed outline through noisy points round an ellipse,
-// smoothed Catmull-Rom into curves. Drawn as real shapes rather than a blurred box scaled up,
-// so the edge stays soft-cornered but has the darker tide line a wash dries with, and
-// overlapping blotches deepen where they meet, as pigment does (see the multiply in CSS).
+// Ink blotches: an irregular closed outline through noisy points round an ellipse,
+// smoothed Catmull-Rom into curves. Overlapping impressions deepen like pigment.
 const blotch = (cx, cy, rx, ry, rand) => {
   const n = 9, pts = Array.from({ length: n }, (_, i) => {
     const a = i / n * Math.PI * 2 + rand() * .2, k = .87 + rand() * .24;
@@ -37,22 +35,13 @@ const blotch = (cx, cy, rx, ry, rand) => {
   }
   return `${d}Z`;
 };
-// The live wash is a chain of seven blotches spaced so each overlaps only its neighbours:
-// nowhere is paint more than two layers deep, which is what keeps the lettering at 4.7:1 or
-// better over the darkest overlap. It is drawn across the full 600-unit strip and cropped, so
-// a desktop button is painted end to end and a phone sees the middle of the same wash. Each
-// blotch opens from its own centre, starting from the middle and spreading outward.
-const rosePaint = (() => {
-  const rand = seededRandom(1213);
-  const live = [20, 118, 212, 305, 398, 494, 588].map((x, i) => {
-    const d = blotch(x + rand() * 10 - 5, 28 + rand() * 10, 60 + rand() * 8, 24 + rand() * 12, rand);
-    return `<path class="cta-wash-blot" style="--wash-delay:${(Math.abs(x - 300) / 300 * .35).toFixed(2)}s" d="${d}"/>`;
-  }).join("");
-  // Two faint dried washes and their tide lines stay on the paper at rest, so the finish is a
-  // material before it is touched, like every other.
-  const dried = [[248, 44, 70, 16], [372, 16, 58, 13], [70, 34, 60, 20], [540, 30, 56, 18]].map(([x, y, rx, ry]) => `<path d="${blotch(x, y, rx, ry, rand)}"/>`).join("");
-  return `<svg class="cta-wash" viewBox="0 0 600 60" preserveAspectRatio="xMidYMid slice"><g class="cta-wash-dried">${dried}</g><g class="cta-wash-live">${live}</g></svg>`;
-})();
+// Blush is letterpress on dyed cotton stock. Each copy owns its grain filter so a preview
+// cannot resolve to a filter in a hidden screen. The seed holds the fibres still on repaint.
+let letterpressSerial = 0;
+const roseLetterpress = () => {
+  const id = `ctaLetterpress${++letterpressSerial}`;
+  return `<svg class="cta-letterpress-grain"><defs><filter id="${id}"><feTurbulence type="fractalNoise" baseFrequency=".74" numOctaves="3" seed="28" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="100%" height="100%" filter="url(#${id})"/></svg><i class="cta-letterpress-frame"></i>`;
+};
 // Ink press: a stamp impression rather than a glossy slab. At rest the ink has not taken
 // evenly: pale specks where the paper shows through and a few faint mottled patches, all
 // scattered across the full cropped strip so nothing repeats. On hover fresh ink soaks
@@ -440,7 +429,7 @@ const prideRipple = Array.from({ length: FLAG_SLICES }, (_, i) =>
   `<i class="cta-flag-sheen"></i>`;
 const FINISH_ART = {
   ink: inkStamp,
-  rose: rosePaint,
+  rose: roseLetterpress,
   sky: `${dayClouds}${stormBank}<span class="cta-rain cta-rain--far">${rain(18, 1311)}</span><span class="cta-rain">${rain(24, 1989)}</span>${bolt}`,
   meadow: garden,
   ivy,
@@ -529,17 +518,13 @@ export function initCtaInteractions(root = document) {
     const cta = control.matches(".play-cta") ? control : control.querySelector(".play-cta");
     if (!cta) return;
     if (cta.dataset.startbtn === "sky") placeStrike(cta);
-    // A fresh brushstroke each time: the same wash, laid a little along and at a new angle.
     // Fresh ink lands somewhere new each press, to one side or the other of the middle.
     else if (cta.dataset.startbtn === "ink") {
       const side = Math.random() < .5 ? -1 : 1;
       cta.style.setProperty("--ink-x", `${(side * (40 + Math.random() * 120)).toFixed(1)}px`);
       cta.style.setProperty("--ink-turn", `${(Math.random() * 8 - 4).toFixed(2)}deg`);
     }
-    else if (cta.dataset.startbtn === "rose") {
-      cta.style.setProperty("--wash-x", `${(Math.random() * 60 - 30).toFixed(1)}px`);
-      cta.style.setProperty("--wash-turn", `${(Math.random() * 5 - 2.5).toFixed(2)}deg`);
-    } else if (cta.dataset.startbtn === "meadow") {
+    else if (cta.dataset.startbtn === "meadow") {
       // One hand of colours per hover: no two flowers share one, and none keeps its last.
       const flowers = [...cta.querySelectorAll(".cta-flower")];
       const before = flowers.map((flower) => flower.style.getPropertyValue("--flower-colour").trim());

@@ -2400,7 +2400,7 @@ export const MASTERY_REWARDS = [
   // applied by applySettings.
   { level: 8,  id: "btn-gold",   kind: "button", name: "Gold marker", desc: "The notebook's gold, swept with a marker as you hover.", payload: { button: "gold" } },
   { level: 8,  id: "btn-ink",    kind: "button", name: "Ink press", desc: "A solid ink-stamped start button.",   payload: { button: "ink" } },
-  { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "Rose paper that takes a watercolour wash as you hover.", payload: { button: "rose" } },
+  { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "Rose letterpress on cotton paper, with a fine written underline.", payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
   // The default button follows the seasons by the calendar (""; see wornFinish in app.js).
