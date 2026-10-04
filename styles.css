@@ -9126,7 +9126,6 @@
     text-transform: uppercase; color: var(--ink-soft);
   }
   .va-text { font-style: italic; }
-  .va-text mark { background: var(--highlighter); color: var(--ink); padding: 0 2px; font-weight: 700; }
   /* Long anthologies fold: the first few lines show, the rest wait behind "+ N more". */
   .va-row.va-folded { display: none; }
   /* Set between two short rules, the way a typed page marks lines left out. */
@@ -10464,7 +10463,7 @@
      The "more songs" rows are list items, not cards, so they are named here too. */
   .lyric-card .lyric-line mark,
   .lyric-reveal--compact .lyric-line mark,
-  .vw-say mark, .bg-only-line mark,
+  .vw-say mark, .bg-only-line mark, .va-text mark,
   .bg-scrap.is-best .bg-scrap-word, .bg-blank {
     --hl: var(--highlighter);
     color: var(--ink); font-weight: 700;
@@ -10483,6 +10482,8 @@
   .ms-row:nth-child(3n+2) .lyric-line mark { --hl-y: 78%; --hl-h: 62%; }
   .lyric-card:nth-child(3n) .lyric-line mark,
   .ms-row:nth-child(3n) .lyric-line mark { --hl-y: 64%; --hl-h: 70%; }
+  .va-row:nth-child(3n+2) .va-text mark { --hl-y: 78%; --hl-h: 62%; }
+  .va-row:nth-child(3n) .va-text mark { --hl-y: 64%; --hl-h: 70%; }
   /* album tag */
   .album-tag {
     display: inline-block; margin-left: 8px;
