@@ -24126,7 +24126,7 @@ function verseProgress(text) {
 
 const VERSE_METER = {
   fragment: { level: 1, label: "a fragment" },
-  good:     { level: 2, label: "half the verse" },
+  good:     { level: 2, label: "finding the line" },
   perfect:  { level: 3, label: "the whole line" },
   verse:    { level: 4, label: "a whole verse" },
 };

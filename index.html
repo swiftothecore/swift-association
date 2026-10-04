@@ -3207,10 +3207,24 @@ if (location.pathname.endsWith('/index.html')) {
         <div id="dropdown" class="dropdown" role="listbox" aria-label="Matching songs"></div>
       </div>
       <div id="verseMeter" class="verse-meter" aria-hidden="true" hidden>
-        <span class="vm-notch" data-tier="1"></span>
-        <span class="vm-notch" data-tier="2"></span>
-        <span class="vm-notch" data-tier="3"></span>
-        <span class="vm-notch" data-tier="4"></span>
+        <svg class="vm-strokes" width="115" height="18" viewBox="0 0 118 18">
+          <g class="vm-notch" data-tier="1" stroke-width="4">
+            <path class="vm-track" d="M2 10 Q12 7.8 24 9.2"/>
+            <path class="vm-ink" pathLength="1" d="M2 10 Q12 7.8 24 9.2"/>
+          </g>
+          <g class="vm-notch" data-tier="2" stroke-width="3.7">
+            <path class="vm-track" d="M32 9 Q43 10.8 54 8.8"/>
+            <path class="vm-ink" pathLength="1" d="M32 9 Q43 10.8 54 8.8"/>
+          </g>
+          <g class="vm-notch" data-tier="3" stroke-width="4.2">
+            <path class="vm-track" d="M62 10 Q74 7.8 84 9.4"/>
+            <path class="vm-ink" pathLength="1" d="M62 10 Q74 7.8 84 9.4"/>
+          </g>
+          <g class="vm-notch" data-tier="4" stroke-width="3.8">
+            <path class="vm-track" d="M92 9.2 Q103 10.2 115 8.5"/>
+            <path class="vm-ink" pathLength="1" d="M92 9.2 Q103 10.2 115 8.5"/>
+          </g>
+        </svg>
         <span class="vm-label"></span>
       </div>
       <!-- Impostor challenge only: the "or" branch to answering — call a fake word's bluff. -->

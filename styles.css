@@ -9801,11 +9801,17 @@
     display: flex; align-items: center; justify-content: center; gap: 6px;
     margin-top: 12px;
   }
-  .vm-notch {
-    width: 26px; height: 5px; border-radius: 3px;
-    background: rgba(43,39,34,0.13); transition: background 0.22s ease;
+  .vm-strokes { display: block; flex: 0 0 auto; overflow: visible; }
+  .vm-notch { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  /* Pencil ink follows the paper's theme and contrast settings, including empty rungs. */
+  .vm-track { stroke: var(--ink-soft); }
+  .vm-ink { stroke: var(--bead); opacity: 0; stroke-dasharray: 1; stroke-dashoffset: 0; }
+  .vm-notch.lit .vm-ink { opacity: 1; animation: vm-write 0.26s ease both; }
+  @keyframes vm-write {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
   }
-  .vm-notch.lit { background: var(--bead); }
+  body[data-reduce-motion="on"] .vm-notch.lit .vm-ink { animation: none; }
   .vm-label {
     margin-left: 8px; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft);
     white-space: nowrap;
