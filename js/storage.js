@@ -83,6 +83,11 @@ export function loadAchievements() {
       const o = JSON.parse(raw);
       if (o && typeof o === "object") {
         let migrated = false;
+        // Retired with the margin doodles. Do not let an old unlock inflate the charm count.
+        if (Object.prototype.hasOwnProperty.call(o, "tap-scarf-doodle-13-times")) {
+          delete o["tap-scarf-doodle-13-times"];
+          migrated = true;
+        }
         for (const [oldId, newId] of Object.entries(ACH_ID_MIGRATIONS)) {
           if (!Object.prototype.hasOwnProperty.call(o, oldId)) continue;
           if (!Object.prototype.hasOwnProperty.call(o, newId)) o[newId] = o[oldId];
@@ -1057,11 +1062,10 @@ export function recordGameTally(rounds) {
 //   dailyPlayed / dailyPerfect  — lifetime daily challenges finished / perfected
 //   noTimeoutStreak — consecutive non-infinite games finished with zero timeouts
 //   correctRunStreak — correct answers in a row ACROSS game boundaries (see bumpCorrectRunStreak)
-//   scarfClicks — lifetime taps on the scarf margin doodle
 //   mugSips — lifetime taps on the desk mug
 //   marksTapped — { [markKind]: true } for each page-header mark poked, lifetime
 export function loadMetrics() {
-  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, scarfClicks: 0, mugSips: 0, marksTapped: {}, selfTitled: {} };
+  const d = { fastestMs: null, answerSumMs: 0, answerN: 0, lyricLines: 0, versePerfect: 0, wholeVerses: 0, bestVerseBonus: 0, roundsTotal: 0, roundsCorrect: 0, dailyPlayed: 0, dailyPerfect: 0, noTimeoutStreak: 0, correctRunStreak: 0, mugSips: 0, marksTapped: {}, selfTitled: {} };
   try {
     const raw = localStorage.getItem(METRICS_KEY);
     if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return { ...d, ...o }; }
@@ -1104,17 +1108,8 @@ export function bumpCorrectRunStreak(correct) {
   return m.correctRunStreak;
 }
 
-// One tap on the scarf doodle. In METRICS rather than a key of its own: it is a lifetime
-// counter of a thing the player did, which is exactly what this record is for.
-export function bumpScarfClicks() {
-  const m = loadMetrics();
-  m.scarfClicks = (m.scarfClicks || 0) + 1;
-  saveMetrics(m);
-  return m.scarfClicks;
-}
-// One tap on the desk mug. Lifetime, and kept here for the same reason the scarf's tally is:
-// it is a count of a thing the player did, spread over as many sittings as they like. It is
-// read on every load so an interrupted live unlock can be backfilled.
+// One tap on the desk mug. Lifetime: a count of a thing the player did, spread
+// over as many sittings as they like. It is read on every load so an interrupted live unlock can be backfilled.
 export function bumpMugSips() {
   const m = loadMetrics();
   m.mugSips = (m.mugSips || 0) + 1;

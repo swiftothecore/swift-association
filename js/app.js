@@ -59,7 +59,7 @@ import {
   CUSTOM_PRESET_SHELF, CUSTOM_ENDLESS_MILESTONE, MEAN_GRUDGE,
   CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_ROUNDS_TYPED_MAX,
   CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES,
-  PEN_SVG, STAR_SVG, SPARKLE_SVG, DOODLE_SVG, DOODLE_SIZE, DATED_DOODLES,
+  PEN_SVG, STAR_SVG, SPARKLE_SVG,
   WHALE_SURFACE_MS, WHALE_TAIL_SVG, WHALE_SPLASH_SVG,
   BOTTLE_SURFACE_MS, BOTTLE_SVG, BOTTLE_WAVE_SVG,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
@@ -146,7 +146,7 @@ import {
   loadCharmFolds, setCharmFold, saveCharmFolds,
   loadSongTally, saveSongTally, recordGameTally,
   loadCustom, saveCustom, resetCustom, newCustomId, CUSTOM_DRAFT_ID,
-  loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpScarfClicks, bumpMugSips, tapPageMark, pageMarksTapped,
+  loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpMugSips, tapPageMark, pageMarksTapped,
   noteSelfTitledWord,
   loadSettings, saveSettings,
   exportData, importData,
@@ -3234,13 +3234,13 @@ const HIDDEN_ACH_IDS = [
   // Nashville's two failures worn well. Secret for the shelf's usual reason: you have to go and
   // commit them on purpose once you know they exist.
   "finish-nashville-run-below-zero", "pass-last-nashville-page-to-finish-on-zero",
-  /* The Core batch's twenty-three secrets, the scarf first. Listing them roughly two-thirds
+  /* The Core batch's remaining secrets. Listing them roughly two-thirds
      again on the capstone's price, which is the deliberate reading of it: leaving them out
      would make Is It Over Now?'s own description untrue the moment they shipped. Grouped the
      way the batch was classified — how a page was answered, how a run went, what was typed,
      and what the calendar said — rather than in file order, so a future reconsideration can
      see the shape of what it is arguing with. */
-  "tap-scarf-doodle-13-times", "tap-every-page-mark",
+  "tap-every-page-mark",
   "win-with-every-answer-over-10s", "answer-in-final-second-all-13-rounds", "time-out-with-right-answer-typed",
   "type-nothing-until-2s-left-then-answer-right", "take-first-suggestion-all-13-rounds",
   "submit-same-wrong-answer-5-times-one-round", "answer-right-with-song-given-wrongly-earlier",
@@ -26505,7 +26505,7 @@ function quitGame() {
   applyEra("gold");
   renderStartPickers();
   $("startContent").style.display = "";
-  // The page's own contents (the answer card, the typed line, the gutter doodles) are wiped
+  // The page's own contents (the answer card, the typed line, the margin note) are wiped
   // only once the turn has landed. flipInToScreen photographs the game screen as the page
   // being left, so clearing them first tore the answered page in half: the feedback card
   // that makes up its lower half vanished on the tap, before the turn had even begun.
@@ -26554,48 +26554,13 @@ function clearEggs() {
   // (the whale egg is deliberately NOT cleared here — it lives off the page, behind
   // the top edge, and its 13-second visit is meant to survive page turns)
   clearBlueWash();
-  const layer = $("doodleLayer");
+  const layer = $("marginNoteLayer");
   // Every round is a new page of the notebook, so nothing in this layer carries over.
   if (layer) layer.innerHTML = "";
 }
 
-function addDoodle(kind) {
-  const layer = $("doodleLayer");
-  if (!layer || !DOODLE_SVG[kind]) return;
-  layer.querySelectorAll(".doodle").forEach((e) => e.remove());   // one doodle in the gutter, ever
-  const [w, h] = DOODLE_SIZE[kind] || [40, 58];
-  const d = document.createElement("div");
-  d.className = "doodle";
-  d.dataset.kind = kind;   // so a page turn can tell "already hanging" from "needs re-inking"
-  d.style.width = w + "px"; d.style.height = h + "px";
-  d.innerHTML = DOODLE_SVG[kind];
-  // The scarf is the one doodle you can touch: it counts taps, lifetime, across every run. The
-  // counter is kept here rather than in run state because the scarf only turns up on a 14% roll
-  // in one branch of the margin-doodle chain, so a per-run target would be luck, not a feat.
-  // Thirteen taps, however they are spread, hands over You Keep My Old Scarf.
-  if (kind === "scarf") {
-    d.classList.add("doodle-tappable");
-    d.addEventListener("click", () => {
-      if (bumpScarfClicks() >= 13) unlock("tap-scarf-doodle-13-times");
-    });
-  }
-  layer.appendChild(d);
-  // Her stars, back in a margin: the tumblr post she drew them for. It waits until the stars can
-  // actually be seen, which is the end of their 0.8s ink-in (doodleIn): on a page turn they are
-  // drawn under the outgoing sheet, and a toast asking "do u like dem" about a margin still
-  // hidden behind it answers a question you have not been asked yet. The fade outlasts the 0.5s
-  // flip, so its end is also the moment the sheet has cleared. A page turned before then takes
-  // the doodle with it and the event never fires, which is right: you never saw them. Reduced
-  // motion has no fade and no flip, so there the stars are on the page the moment they land.
-  if (kind === "stars" && catalogueCharmsLive()) {
-    const earn = () => earnTumblrPost("stars-do-u-like-dem");
-    if (getComputedStyle(d).animationName === "none") earn();
-    else d.addEventListener("animationend", earn, { once: true });
-  }
-}
-
-/* The margin marks beside each inside page's title are the other drawings you can touch, and
-   the only ones that are always there. Nothing invites the tap: the cursor stays an arrow and
+/* The margin marks beside each inside page's title are drawings you can touch.
+   They are always there. Nothing invites the tap: the cursor stays an arrow and
    there is no hover state, because the point is that you find it by fidgeting. What a poke
    gets you is the kick animation (see .page-mark.mark-poked in styles.css); what a poke on
    every distinct mark gets you is Marked Every Page.
@@ -26629,8 +26594,8 @@ function wirePageMarks() {
 }
 
 /* ---------- The mug: a thousand taps ----------
-   The coffee has been on this desk since the first screen, and it is the third thing in the
-   game you can touch (the scarf doodle and the page marks are the other two). Tapping it does
+   The coffee has been on this desk since the first screen. Like the page marks, it is
+   a thing in the game you can touch. Tapping it does
    one honest thing straight away: the surface ripples. What it does quietly is count, lifetime,
    in METRICS_KEY. At MUG_ACHIEVEMENT_SIPS, The Thousandth Cup goes on the bracelet.
 
@@ -26942,10 +26907,10 @@ function wirePageTitles() {
 }
 
 function addMarginNote(text) {
-  const layer = $("doodleLayer");
+  const layer = $("marginNoteLayer");
   if (!layer) return;
   const n = document.createElement("div");
-  n.className = "doodle-note";
+  n.className = "margin-note";
   n.style.top = "42%";
   n.textContent = text;
   layer.appendChild(n);
@@ -26966,14 +26931,6 @@ function setPen(pen) {
   area.appendChild(g); area.appendChild(l);
 }
 
-// Called from advanceRound once the new page is set up.
-// Which drawing, if any, today's margin is dated to (DATED_DOODLES in config.js).
-function datedDoodleFor(dayKey) {
-  const md = String(dayKey || "").slice(5, 10);
-  const hit = DATED_DOODLES.find((d) => d.md === md);
-  return hit ? hit.kind : null;
-}
-
 function runRoundEggs() {
   clearEggs();
   setPen(null);
@@ -26983,28 +26940,9 @@ function runRoundEggs() {
   const now = new Date();
   const midnightHour = now.getHours() === 0 && now.getMinutes() <= 13;
 
-  /* One page, at most one doodle, rolled fresh each time — because each round IS a new page
-     of the notebook, and ink does not travel from one sheet to the next. An earlier pass made
-     the doodle survive page turns on the theory that a mark coming and going read as UI
-     rather than as ink; what it actually produced was the same drawing redrawn in the same
-     spot on all thirteen pages, which is wallpaper. Occasional is the point: most pages have
-     a bare margin, and the drawing is a thing you catch rather than a thing you look past.
-
-     The midnight note is the same shape of thing and shares the page with a doodle happily:
-     it is a thought scribbled in the margin for thirteen minutes a day. */
-  if (gameType === "classic" && round === 5) {
-    addDoodle("fence");
-  } else if (chance(0.15)) {
-    // On a dated day the pool is that day's drawing and nothing else, at the same odds: a
-    // dated doodle is still a thing you catch, not a banner the whole run wears.
-    const dated = datedDoodleFor(todayKey());
-    const pool = dated ? [dated] : ["scarf", "thirteen", "mirrorball", "paperplane", "willow", "stars"];
-    addDoodle(pool[Math.floor(Math.random() * pool.length)]);
-  }
   if (midnightHour) addMarginNote("meet me at midnight");
 
-  // Yes, whale! — its own rare roll, independent of the margin-doodle chain above,
-  // because the tail lives off the page (behind the top edge), not in the margins.
+  // Yes, whale! — a rare visitor behind the top edge of the notebook.
   // One visitor at a time; the click-to-catch keepsake trigger lives in surfaceWhale.
   // Capped at one surfacing per game — a flat per-round roll made it show up several
   // times in a long infinite run, which cheapened the "rare" visitor it's meant to be.
@@ -27123,7 +27061,7 @@ function clearBlueWash() {
 // (earnPolaroid is idempotent, so it keeps visiting once earned). The wrapper is an
 // overflow-hidden window sitting flush above the card's top edge, so the tail rises
 // into view already clipped at the paper line — as if the desk behind the notebook
-// were open water. Deliberately outside the doodle layer and clearEggs: the visit
+// were open water. Deliberately outside the margin-note layer and clearEggs: the visit
 // spans page turns, and only ends on its own clock (or the catch).
 let whaleTimers = [];
 function stopWhale() {
@@ -31229,8 +31167,8 @@ function buildDevApi() {
       // of its own there.
       marked: () => {
         const yr = todayKey().slice(0, 4);
-        const tag = { birthday: "birthday", album: "album", tv: "TV", songday: "songday", guest: "guest", lore: "lyric", doodle: "doodle" };
-        return [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS, ...DATED_DOODLES.map((d) => ({ ...d, kind: "doodle" }))]
+        const tag = { birthday: "birthday", album: "album", tv: "TV", songday: "songday", guest: "guest", lore: "lyric" };
+        return [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS]
           .map((m) => ({ key: `${yr}-${m.md}`, label: `${m.md}  ${m.title || m.name} (${tag[m.kind]})` }))
           .sort((a, b) => a.key.localeCompare(b.key) || a.label.localeCompare(b.label));
       },
@@ -31717,7 +31655,7 @@ function buildDevApi() {
       reset: () => { resetBreadth(); return { explorer: devExplorerReport(), weekdays: devWeekdayReport(), dates: devDatesReport(), shelf: devShelfReport() }; },
     },
     // The lifetime cross-game counters. Read-only for most of them — they are earned, and a
-    // setter would only ever be used to lie about accuracy. The two exceptions are the counters
+    // setter would only ever be used to lie about accuracy. The exceptions are the counters
     // that take a very long time to fill honestly and have no other way in.
     metrics: {
       all: () => loadMetrics(),
@@ -31725,11 +31663,7 @@ function buildDevApi() {
       // games, so it wants a setter to be testable at all.
       streak: () => loadMetrics().correctRunStreak || 0,
       setStreak: (n) => { const m = loadMetrics(); m.correctRunStreak = Math.max(0, n | 0); saveMetrics(m); return m.correctRunStreak; },
-      // Scarf taps. The doodle itself only appears on a 14% roll, so waiting for thirteen of
-      // them is not a test plan.
-      scarf: () => loadMetrics().scarfClicks || 0,
-      setScarf: (n) => { const m = loadMetrics(); m.scarfClicks = Math.max(0, n | 0); saveMetrics(m); return m.scarfClicks; },
-      // Mug taps. A thousand of them is even less of a test plan than thirteen scarf taps.
+      // Mug taps. A thousand of them needs a setter to be testable.
       // The setter deliberately does NOT hand over the charm: set 999 and tap the cup once,
       // and the chime and unlock happen the way a player would meet them.
       mug: () => loadMetrics().mugSips || 0,
@@ -34460,10 +34394,6 @@ function buildDevApi() {
              tally: resetTally, daily: resetDaily, all: clearAllData },
     // Visual eggs
     eggs: { whale: () => surfaceWhale(), bottle: (side) => surfaceBottle(side),
-            doodle: (k) => addDoodle(k || "scarf"),
-            // the doodle is inked once and then kept for the whole run, so seeing a second
-            // one — or seeing the bare margin the other half of runs get — needs a rubber
-            doodleOut: () => { const l = $("doodleLayer"); if (l) l.querySelectorAll(".doodle").forEach((e) => e.remove()); },
             sparkle: () => celebrateCorrect(3), lyricSparkle: () => lyricSparkle(), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },

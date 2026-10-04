@@ -89,12 +89,6 @@ export const TUMBLR_POSTS = [
     how: "Keep an Infinite run going to page 113",
     text: "The only one that could stop it is ME!\nAnd I can't.",
   },
-  {
-    id: "stars-do-u-like-dem",
-    blog: "taylorswift",
-    how: "Catch her stars doodled in your margin",
-    text: "Stars do u like dem",
-  },
 ];
 
 export const TUMBLR_BY_ID = Object.fromEntries(TUMBLR_POSTS.map((p) => [p.id, p]));

@@ -6,7 +6,7 @@
 
 import { ACHIEVEMENTS, ACH_ICONS, ACH_GROUPS, ACH_GROUP_OF, ACH_GROUP_COLORS,
          CHALLENGES, CHALLENGE_SEALS, WAX_SEEDS, WAX_AUTO_IDS, reseedSeal, waxPourFaults,
-         byShelf, auditChallengeShelf, DOODLE_SVG } from "./config.js";
+         byShelf, auditChallengeShelf } from "./config.js";
 import { POLAROIDS } from "./polaroids.js";
 import { STICKERS } from "./stickers.js";
 
@@ -1490,7 +1490,6 @@ export function initDev(api) {
         btn("dates", () => { console.log("[dev] dates", api.breadth.dates()); toast("date ledger in console"); })),
     row("cross-game streak", streakN,
         btn("set", () => toast(`streak = ${api.metrics.setStreak(+streakN.value)}`)),
-        btn("scarf +13", () => toast(`scarf taps = ${api.metrics.setScarf(api.metrics.scarf() + 13)}`)),
         btn("metrics", () => { console.log("[dev] metrics", api.metrics.all()); toast("metrics in console"); })),
     row("mug taps",
         btn("+100", () => toast(`mug taps = ${api.metrics.setMug(api.metrics.mug() + 100)}`)),
@@ -1536,16 +1535,12 @@ export function initDev(api) {
 
   // ---- Visual eggs -----------------------------------------------------------
   const penSel = select(["", "quill", "fountain", "glitter"], (x) => x, (x) => x || "no pen");
-  // Every drawing DOODLE_SVG holds, the dated four included, so the list cannot go stale.
-  const doodleSel = select(Object.keys(DOODLE_SVG), (x) => x, (x) => x);
   // Seasonal-layer toggles bypass the calendar/clock gate but still respect
   // reduce-motion, so they exercise the real effect rather than a special case.
   const snowBtn = btn("snow", () => snowBtn.classList.toggle("on", api.eggs.snow()));
   const leafBtn = btn("leaves", () => leafBtn.classList.toggle("on", api.eggs.leaves()));
   body.append(section("eggs",
-    row(doodleSel, btn("doodle", () => api.eggs.doodle(doodleSel.value)),
-        btn("rub out", () => api.eggs.doodleOut(), "warn"),
-        btn("sparkle", () => api.eggs.sparkle())),
+    row(btn("sparkle", () => api.eggs.sparkle())),
     row(btn("star shower", () => api.eggs.starShower()), btn("blue wash", () => api.eggs.blueWash()),
         btn("secret 13", () => api.eggs.secret13())),
     row(btn("yes whale", () => api.eggs.whale()),

@@ -18,9 +18,9 @@
 //   art:  a self-contained viewBox="0 0 100 100" SVG, exactly as drawn. The shared die-cut
 //         filters add the paper edge on both game surfaces. The original
 //         set uses .ln stroke classes; guest artwork carries its own finer stroke weights.
-// Stickers are printed objects with a cream border, NOT margin doodles (DOODLE_SVG in
-// js/config.js), which are unfilled line art. Do not let the two families converge, and never
-// render a sticker below 64px: the crowded ones stop being their object.
+// Stickers are printed objects with a cream border. Keep their filled shapes distinct
+// from the notebook's pen drawings, and never render a sticker below 64px:
+// the crowded ones stop being their object.
 // STICKER_BY_ID is the lookup earnSticker works from.
 
 export const STICKERS = [
