@@ -2,9 +2,9 @@
    between two pairs of wavy cancel lines. It is the third rubber stamp on the page, in
    post-office black, cut a different shape from PLAY AGAIN and ENCORE below it but inked
    through the same kind of filter (#pmInk in index.html's shared defs) and pressed with the
-   .kg-press / .kg-print / .kg-ghost layers. The level soft-strike hover was selected on
-   scripts/ui/postmark-hover.html (option A); artwork from scripts/ui/turn-back/board-2.html
-   (option F).
+   .kg-press / .kg-print layers. The cancellation waves scroll right through a fixed window
+   on hover or keyboard focus (scripts/ui/postmark-wave-tape.html); artwork from
+   scripts/ui/turn-back/board-2.html (option F).
 
    Pure and state-free like ctasketch.js: a label and a date in, an svg string out. app.js owns
    deciding what those are (paintPostmark).
@@ -19,10 +19,11 @@
    reads DAILY over that day's date instead of inventing one.
 
    The ring's text runs on textPaths, which need ids, so each cut's ids carry the cut's name.
-   There is one #againBtn, so they are unique on the page. The page-turn clone duplicates them
-   for the length of the turn, which is harmless: the clone's references land on the original's
-   identical geometry. The wavy lines are machine cancels and are allowed to be regular; only
-   their phase and a breath of amplitude move between them. */
+   There is one #againBtn, so they are unique on the page. app.js remaps the page-turn clone's
+   ids and references together, including the wave windows. The wavy lines are machine
+   cancels: each is one periodic tape, extended
+   past both window edges. CSS translates it one wavelength every two seconds, so the loop
+   has no seam and the ring and lettering never move. */
 
 const f = (v) => +v.toFixed(2);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -51,13 +52,13 @@ export function postmarkDate(date, word = "") {
   };
 }
 
-// One wavy cancel line: a sine with a little hand in its amplitude and phase.
+// One seamless tape. Overscan keeps its ends outside the window throughout the 26-unit travel.
 function wave(x0, x1, y, rnd, amp = 2.3, period = 26) {
   const ph = rnd() * Math.PI * 2;
   let d = "";
-  for (let x = x0; x <= x1 + 0.01; x += 2) {
-    const yy = y + Math.sin((x / period) * Math.PI * 2 + ph) * amp * (0.92 + 0.08 * Math.sin(x / 47));
-    d += (x === x0 ? "M" : "L") + f(x) + " " + f(yy) + " ";
+  for (let x = x0 - period - 4; x <= x1 + 4; x += 1) {
+    const yy = y + Math.sin((x / period) * Math.PI * 2 + ph) * amp * 0.96;
+    d += (x === x0 - period - 4 ? "M" : "L") + f(x) + " " + f(yy) + " ";
   }
   return d;
 }
@@ -74,6 +75,9 @@ function cut(name, lines, stamp) {
   const waves = wide ? [cy - 29, cy - 20.5, cy + 20.5, cy + 29] : [cy - 38, cy - 30, cy + 30, cy + 38];
   const textY = wide ? [cy + 7.6] : [cy - 4, cy + 18];
   const ring = `${TYPE} font-size: ${wide ? 7.5 : 7.2}px; letter-spacing: ${wide ? 0.5 : 0.1}px;`;
+  // Match the actual final point of the original two-unit sampled cut (333 on the phone).
+  const waveEnd = x0 + Math.floor((x1 - x0) / 2) * 2;
+  const tape = waves.map((y) => `<path d="${wave(x0, waveEnd, y, rnd)}" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>`).join("");
   const art =
     `<g id="${id}">` +
       `<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="currentColor" stroke-width="2.9"/>` +
@@ -88,16 +92,15 @@ function cut(name, lines, stamp) {
       `<text x="${cx}" y="${f(cy - 8.4)}" text-anchor="middle" fill="currentColor" style="${TYPE} font-size: 7.6px; letter-spacing: 0.6px;">${esc(stamp.top)}</text>` +
       `<text x="${cx}" y="${f(cy + 4.6)}" text-anchor="middle" fill="currentColor" style="${TYPE} font-size: 11.4px; letter-spacing: 0.3px;">${esc(stamp.day)}</text>` +
       `<text x="${cx}" y="${f(cy + 15.6)}" text-anchor="middle" fill="currentColor" style="${TYPE} font-size: 9px; letter-spacing: 1.8px;">${esc(stamp.year)}</text>` +
-      waves.map((y) => `<path d="${wave(x0, x1, y, rnd)}" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/>`).join("") +
       lines.map((t, i) => `<text x="${f(mid)}" y="${f(textY[i])}" text-anchor="middle" fill="currentColor" ` +
         `style="${TYPE} font-size: ${fs}px; letter-spacing: ${track}px;" rotate="-1 1 0 -1 1 0 1 -1">${esc(t)}</text>`).join("") +
     `</g>`;
   // Inside each cut's own svg: the cuts take turns being display:none, and a <use> whose target
   // sits in a hidden svg stops rendering. The filter lives in the always-rendered shared defs.
   return `<svg class="kg-stamp pm-${name}" viewBox="0 0 ${W} ${H}" aria-hidden="true" focusable="false">` +
-    `<defs>${art}</defs>` +
-    `<use class="kg-ghost" href="#${id}" filter="url(#pmInk)"/>` +
+    `<defs>${art}<clipPath id="${id}-window"><rect x="${x0}" y="0" width="${waveEnd - x0}" height="${H}"/></clipPath></defs>` +
     `<use class="kg-print" href="#${id}" filter="url(#pmInk)"/>` +
+    `<g class="pm-window" clip-path="url(#${id}-window)"><g class="pm-tape" filter="url(#pmInk)">${tape}</g></g>` +
   `</svg>`;
 }
 

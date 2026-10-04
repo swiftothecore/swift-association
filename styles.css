@@ -6927,35 +6927,32 @@
   #customModalOkBtn:hover { --btn-mark: rgba(245, 239, 225, 0.12); }
 
   /* ---------- The way home: the postmark ----------
-     A third rubber stamp over PLAY AGAIN and ENCORE (js/postmark.js draws it, paintPostmark
-     dates it). Its soft strike lifts the print, cushions its landing and leaves a faint
-     second impression, always level. The shared press still thumps on click, and the
-     two cuts share this motion. Post-office black by day; at night, like the other
-     two, the pad lifts to a pale ink that sits on the dark paper instead of multiplying into
-     a hole in it. Styled by class only: the page-turn clone swaps the id for data-flip-id. */
+     The dated ring and slogan stay level while the cancellation waves scroll right through
+     a fixed window on hover or keyboard focus. Each periodic tape extends beyond the window
+     and moves one wavelength per loop. Only its transform animates; there is no frame loop
+     rebuilding SVG paths. The shared press still thumps on click. Post-office black by day,
+     pale ink at night. Class selectors also cover the page-turn clone. */
   .keep-going.postmark { --stamp-ink: #24211d; margin: 14px auto 0; }
-  .postmark .kg-print { opacity: 0.9; transform-box: fill-box; transform-origin: center; }
-  .postmark .kg-ghost { transform: none; transition: none; }
+  .postmark .kg-print { opacity: 0.9; }
   .postmark .kg-press { transform: none; }
   .postmark:is(:hover, :focus-visible) .kg-press { transform: none; }
-  .postmark:is(:hover, :focus-visible) .kg-print { animation: pm-soft-strike 640ms both; }
-  .postmark:is(:hover, :focus-visible) .kg-ghost { animation: pm-strike-echo 640ms both; }
   .postmark:active .kg-press { transform: scale(0.95); }
-  @keyframes pm-soft-strike {
-    0%   { transform: translateY(0) scale(1); }
-    32%  { transform: translateY(-2px) scale(1.016); }
-    58%  { transform: translateY(1px) scale(0.992); }
-    100% { transform: translateY(-1px) scale(1.008); }
+  .postmark .pm-window { color: var(--stamp-ink); opacity: 0.9; transition: opacity 0.25s; }
+  .postmark .pm-tape { animation: pm-scroll 2s linear infinite; animation-play-state: paused; }
+  .postmark:is(:hover, :focus-visible) .pm-window { opacity: 1; }
+  .postmark:is(:hover, :focus-visible) .pm-tape { animation-play-state: running; }
+  @keyframes pm-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(26px); }
   }
-  @keyframes pm-strike-echo {
-    0%, 35% { opacity: 0; transform: translateY(-2px); }
-    60%     { opacity: 0.22; transform: translateY(1.5px); }
-    100%    { opacity: 0.12; transform: translateY(1px); }
-  }
-  body[data-reduce-motion="on"] .postmark .kg-print,
-  body[data-reduce-motion="on"] .postmark .kg-ghost { animation: none; transform: none; }
+  body[data-reduce-motion="on"] .postmark .pm-tape { animation: none; }
+  body[data-reduce-motion="on"] .postmark .pm-window { transition: none; }
   body[data-reduce-motion="on"] .postmark .kg-press { transform: none; }
-  body[data-reduce-motion="on"] .postmark .kg-ghost { opacity: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    body:not([data-reduce-motion="off"]) .postmark .pm-tape { animation: none; }
+    body:not([data-reduce-motion="off"]) .postmark .pm-window { transition: none; }
+    body:not([data-reduce-motion="off"]) .postmark .kg-press { transform: none; }
+  }
   .postmark .pm-narrow { display: none; }
   @media (max-width: 560px) {
     .postmark .pm-wide { display: none; }

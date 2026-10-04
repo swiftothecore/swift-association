@@ -20587,7 +20587,8 @@ function openArchivedDaily(dateStr) {
 /* The way home is struck as a postmark (js/postmark.js): a ring with the game's name round it
    and the run's finishing time, day and year in the middle, beside the way home as its slogan
    between wavy cancel lines. A third stamp in post-office black over the navy and red pair, the
-   same press and second strike, cut a different shape. It replaced a block of the run's pages
+   same click press, cut a different shape, with cancellation waves that scroll on hover or
+   keyboard focus. It replaced a block of the run's pages
    riffling back to page one (scripts/ui/turn-back/ has both rounds of the board).
 
    postmarkAt is stamped when the finished strand is drawn, the one moment every end path
