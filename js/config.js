@@ -279,11 +279,9 @@ export const MODES = {
   // Normal completes from the first letter and matches mid-title, Hard waits and only ever
   // completes a beginning, Ultra never helps at all.
   hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: "late", pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · late suggestions · rarer words · not in the title" },
-  // `moreExamples: false` is Ultra's alone: every other mode lets a missed page open out into
-  // the rest of the field (see MORE_EXAMPLES_BATCH). Ultra shows its one card and closes. The
-  // reveal is post-mortem either way, so this isn't about difficulty — it's that Ultra's whole
-  // manner is one glance and gone, and a page you can sit and study contradicts it.
-  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 1, hint: false, moreExamples: false, blurb: "5s · no suggestions · rarest words · not in the title" },
+  // Missed pages show up to three answers, as in the other modes. Ultra's difficulty lives
+  // in the timed page; the reveal afterwards lets the player learn from the miss.
+  ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 3, hint: false, moreExamples: true, blurb: "5s · no suggestions · rarest words · not in the title" },
   // Lyric-only: no title input (lyricOnly), longer clock. You answer by typing a lyric
   // line (a few words around the prompt word are enough — the matcher is fuzzy).
   lyricist: { id: "lyricist", label: "Lyricist", seconds: 20, dropdown: false, pool: "all", strict: false, noTitle: false, examples: 3, hint: false, lyricOnly: true, blurb: "20s · type a lyric line, not the title" },
@@ -5643,4 +5641,3 @@ export const CREDITS = [
     what: "Not affiliated with or endorsed by Taylor Swift, her team or her labels." },
   { role: "Special thanks", who: "Taylor, for the songs, and for everything", icon: "letter", hands: true },
 ];
-

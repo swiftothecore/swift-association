@@ -25840,8 +25840,7 @@ function showWrongFeedback(song, isTimeout) {
   const submitted = song && !isTimeout
     ? `<p class="wrong-submission"><span>your answer</span> ${escapeHtml(censor(song.title))}</p>`
     : "";
-  // Ultra reveals one song rather than three — every lever that makes it hard bites during
-  // the page, and the reveal is post-mortem, so it teaches without softening the round. The
+  // Reveals teach after the page has ended, without softening the round. The
   // "show examples" setting can force 0 in any mode.
   // The tap grids reveal their answers on the grid itself (green tiles), so skip the example
   // cards — and on Whose Line? the "songs with this word" cards would be nonsense anyway.
