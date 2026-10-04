@@ -6929,15 +6929,15 @@
   /* ---------- The way home: the postmark ----------
      A third rubber stamp over PLAY AGAIN and ENCORE (js/postmark.js draws it, paintPostmark
      dates it). It borrows their whole press from .keep-going (the lift on hover, the thump on
-     press, the re-inked print and the ghosted second strike) and only sets its own ink, its
-     tilt and which of its two cuts prints. Post-office black by day; at night, like the other
+     press, the re-inked print and the ghosted second strike) and only sets its own ink and
+     which of its two cuts prints. Post-office black by day; at night, like the other
      two, the pad lifts to a pale ink that sits on the dark paper instead of multiplying into
      a hole in it. Styled by class only: the page-turn clone swaps the id for data-flip-id. */
   .keep-going.postmark { --stamp-ink: #24211d; margin: 14px auto 0; }
   .postmark .kg-print { opacity: 0.9; }
-  .postmark .kg-press { transform: rotate(-0.7deg); }
-  .postmark:is(:hover, :focus-visible) .kg-press { transform: rotate(-0.7deg) scale(1.02); }
-  .postmark:active .kg-press { transform: rotate(-0.7deg) scale(0.95); }
+  .postmark .kg-press { transform: none; }
+  .postmark:is(:hover, :focus-visible) .kg-press { transform: scale(1.02); }
+  .postmark:active .kg-press { transform: scale(0.95); }
   .postmark .pm-narrow { display: none; }
   @media (max-width: 560px) {
     .postmark .pm-wide { display: none; }
