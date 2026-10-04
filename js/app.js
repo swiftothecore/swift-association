@@ -25174,13 +25174,16 @@ function showCircledChoice(song, done, firstThought = false) {
 // A hand-drawn pen ring around a single-line title. The ellipse hugs the text rect: a full √2
 // factor would circumscribe the rect exactly through its corners, but that balloons well past a
 // short word, so we pull in to SNUG. The line-height padding keeps the glyphs clear of the box
-// corners, so the tighter loop never clips a letter. Drawn as four beziers with per-anchor
+// corners, so the tighter loop never clips a letter. That padding is a fixed height, though, so
+// on a short title ("22", "ME!") it made the ring as tall as it was wide, or taller. TALL caps
+// the height at a share of the width: long titles are already flatter than that and never meet
+// it, so only the short ones come down to the same oval the rest of the shelf gets. Drawn as four beziers with per-anchor
 // outward wobble for an uneven, hand-drawn loop. Coordinates are box-local pixels; the SVG
 // viewBox matches the box and overflow is visible, so the ring may bulge past the box freely.
 function buildChoiceRing(bw, bh, tw, th, cx, cy) {
   const p = (x, y) => `${(cx + x).toFixed(1)},${(cy + y).toFixed(1)}`;
-  const CLEAR = 7, k = 0.5523, SNUG = 1.28;
-  const a = (tw / 2 + CLEAR) * SNUG, b = (th / 2 + CLEAR) * SNUG;
+  const CLEAR = 7, k = 0.5523, SNUG = 1.28, TALL = 0.66;
+  const a = (tw / 2 + CLEAR) * SNUG, b = Math.min((th / 2 + CLEAR) * SNUG, a * TALL);
   const wob = () => 1 + Math.random() * 0.05;
   const aL = a * wob(), aR = a * wob(), bT = b * wob(), bB = b * wob();
   const d =
