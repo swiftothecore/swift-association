@@ -709,11 +709,30 @@ function fitAnswerDropdown(dd, input) {
   }
 }
 
+// A remembered lyric wraps on the page instead of disappearing off its right edge.
+// Measure only visible fields, and cap at three lines so the phone keeps room for the word.
+function resizeSongInput() {
+  const input = $("songInput");
+  if (!input || !input.getClientRects().length || !input.clientWidth) return;
+  const css = getComputedStyle(input);
+  const borders = parseFloat(css.borderTopWidth) + parseFloat(css.borderBottomWidth);
+  const padding = parseFloat(css.paddingTop) + parseFloat(css.paddingBottom);
+  const limit = Math.ceil(parseFloat(css.lineHeight) * 3 + padding + borders);
+  const scrollTop = input.scrollTop;
+  input.style.overflowY = "hidden";
+  input.style.height = "auto";
+  const full = input.scrollHeight + borders;
+  input.style.height = Math.min(full, limit) + "px";
+  input.style.overflowY = full > limit ? "auto" : "hidden";
+  input.scrollTop = full > limit ? scrollTop : 0;
+}
+
 function refreshAnswerViewport() {
   const viewport = window.visualViewport;
   // iOS overlays the visual viewport while Android may resize the layout viewport.
   const inset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
   document.documentElement.style.setProperty("--keyboard-inset", inset + "px");
+  resizeSongInput();
   fitAnswerDropdown($("dropdown"), $("songInput"));
   fitAnswerDropdown($("bonusDropdown"), $("bonusInput"));
 }
@@ -23180,6 +23199,7 @@ function hideDropdown() {
   const input = $("songInput");
   input.setAttribute("aria-expanded", "false");
   input.removeAttribute("aria-activedescendant");
+  resizeSongInput();
 }
 
 // Every submission that did NOT clear the page, logged per page. Three charms read this one
@@ -27330,7 +27350,16 @@ function wireInput() {
   window.addEventListener("resize", refreshAnswerViewport);
   document.addEventListener("focusin", refreshAnswerViewport);
   const input = $("songInput");
+  // A page becoming visible or changing width needs a new wrap measurement even without typing.
+  let answerWidth = 0;
+  new ResizeObserver(([entry]) => {
+    if (entry.contentRect.width === answerWidth) return;
+    answerWidth = entry.contentRect.width;
+    refreshAnswerViewport();
+  }).observe(input);
+  document.fonts.ready.then(refreshAnswerViewport);
   input.addEventListener("input", () => {
+    resizeSongInput();
     // Hard/Ultra have no autocomplete — you type the full title.
     if (effectiveDropdown()) {
       updateDropdown();
@@ -27351,14 +27380,14 @@ function wireInput() {
   input.addEventListener("keydown", (e) => {
     if ($("settingsModal").classList.contains("open")) return;   // modal is captive
     if (curtainUp()) return;    // so is a curtain — no answering the word it's covering
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       e.stopPropagation();        // this keypress submits — don't let it also bubble to the page-advance handler
       submitAnswer(null, false);
-    } else if (e.key === "ArrowDown") {
+    } else if (e.key === "ArrowDown" && dropdownItems.length && $("dropdown").classList.contains("show")) {
       e.preventDefault();
       if (dropdownItems.length) { activeIndex = (activeIndex + 1) % dropdownItems.length; renderDropdown(); }
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === "ArrowUp" && dropdownItems.length && $("dropdown").classList.contains("show")) {
       e.preventDefault();
       if (dropdownItems.length) { activeIndex = (activeIndex - 1 + dropdownItems.length) % dropdownItems.length; renderDropdown(); }
     } else if (e.key === "Escape") {

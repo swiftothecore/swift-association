@@ -9345,7 +9345,22 @@
     caret-color: var(--ink-accent);
     -webkit-appearance: none; appearance: none;
   }
-  /* The writing line is type="search" purely so password managers leave it alone; strip
+  /* The main writing field opens to at most three lines. Bonus title fields stay single-line. */
+  #songInput {
+    display: block; resize: none; line-height: 1.35;
+    min-height: calc((17px + var(--text-size-adjust)) * 1.35);
+    padding-top: 0; padding-bottom: 0; border-bottom: none;
+    overflow-y: hidden; overflow-wrap: anywhere;
+  }
+  /* Keep the breathing room outside the scrollable text so a fourth line cannot peek
+     into the bottom padding when the field reaches its three-line cap. */
+  #screen-game .input-area { padding: 10px 0; border-bottom: 3px solid var(--ink); }
+  #screen-game .input-area:has(#songInput:focus) { border-bottom-color: var(--ink-accent); }
+  #screen-game .input-area:has(#songInput.reject-pulse) { animation: input-reject 0.5s ease; }
+  body[data-reduce-motion="on"] #screen-game .input-area:has(#songInput.reject-pulse) { animation: none; }
+  #screen-game .input-area::before { top: 11px; bottom: auto; }
+  #screen-game .input-clear { top: 3px; bottom: auto; }
+  /* The bonus writing line is type="search" purely so password managers leave it alone; strip
      every scrap of search-field chrome the browser would otherwise draw on it. */
   .song-input::-webkit-search-cancel-button,
   .song-input::-webkit-search-decoration,
