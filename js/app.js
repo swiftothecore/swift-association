@@ -3686,35 +3686,59 @@ function scheduleToastDismiss() {
   toastDismissTimer = setTimeout(tick, 4050);   // initial dwell before the first leaves
 }
 
-// The results keepsake: lines the player recalled word-for-word this run, re-written
-// in faint handwriting like verses pressed into the notebook. Skipped when empty or on
-// a held-back daily score (it would leak how the round went). Each line is tagged in
-// typewriter with what it was: "line" for a word-perfect line, "verse" for a whole verse.
-// A word rather than a mark, because the tier is information and a star says nothing
-// about which of the two it means without a key.
-const VA_SHOWN = 3;   // keepsake lines shown before the rest fold behind "+ N more"
+// The results keepsake: lines the player recalled word-for-word this run, copied out onto a
+// slip taped into the page. Skipped when empty or on a held-back daily score (it would leak
+// how the round went). Each row carries the page it was sung on and the song, with a bead in
+// the colour that page wears on the strand, and a whole verse says so beside its song.
+//
+// The slip arrives FOLDED to one line, the run's best (vaBestIndex), with the rest behind a
+// crease. The results page is the play-again page first, and a full list pushed the recap
+// band off it; one real line still says what the slip is in a way a caption alone cannot.
+// Opening puts every line back in page order, the kept one in its place.
+function vaBestIndex(list) {
+  const words = (k) => k.line.trim().split(/\s+/).length;
+  let best = 0;
+  list.forEach((k, i) => {
+    const a = list[best];
+    if ((k.tier === "verse") !== (a.tier === "verse") ? k.tier === "verse" : words(k) > words(a)) best = i;
+  });
+  return best;
+}
+// The bead a keepsake row wears: the same tint its page has on the strand (a guest or lineup
+// page comes pre-tinted), else its album's. Rows saved before either was recorded go bare.
+function vaBeadTint(k) {
+  const t = k.page > 0 ? roundBeadTints[k.page - 1] : null;   // a two-voice page is a pair; its first voice stands for it
+  return (Array.isArray(t) ? t[0] : t) || albumColor(k.album) || null;
+}
 function renderVerseAnthology() {
   const el = $("verseAnthology");
   if (!el) return;
   if (!verseKeepsake.length || dailyResultIsSealed()) {
     el.style.display = "none"; el.innerHTML = ""; return;
   }
-  const rows = verseKeepsake.map((k, i) => {
-    const mark = k.tier === "verse" ? "verse" : "line";
-    return `<li class="va-row${i >= VA_SHOWN ? " va-folded" : ""}"><span class="va-mark">${mark}</span>` +
-      `<span class="va-text">${lyricBreaks(highlightWord(k.line, k.word))}</span></li>`;
-  }).join("");
   const n = verseKeepsake.length;
-  const folded = n - VA_SHOWN;
-  const more = folded > 0
-    ? `<button type="button" class="va-more">+ ${folded} more line${folded > 1 ? "s" : ""}</button>`
+  const pick = vaBestIndex(verseKeepsake);
+  const rows = verseKeepsake.map((k, i) => {
+    const tint = vaBeadTint(k);
+    const bead = tint ? `<i class="va-bead" style="--c:${tint}"></i>` : "";
+    const song = k.song ? `<span class="va-song">${bead}${escapeHtml(k.song)}</span>` : "";
+    const verse = k.tier === "verse" ? `<em class="va-verse">whole verse</em>` : "";
+    return `<li class="va-row${i === pick ? " is-pick" : ""}">` +
+      `<span class="va-pg">${k.page ? `p.${k.page}` : ""}</span><div class="va-body">` +
+      `<span class="va-text">${lyricBreaks(highlightWord(k.line, k.word))}</span>` +
+      (song || verse ? `<span class="va-src">${song}${verse}</span>` : "") + `</div></li>`;
+  }).join("");
+  const fold = n > 1
+    ? `<button type="button" class="va-fold" aria-expanded="false">+ ${n - 1} more line${n > 2 ? "s" : ""}<span class="va-unf" aria-hidden="true">&#8964;</span></button>`
     : "";
-  el.innerHTML = `<p class="va-caption">pages you filled in, ${n} line${n > 1 ? "s" : ""} from memory</p>` +
-    `<ul class="va-list">${rows}</ul>` + more;
-  const moreBtn = el.querySelector(".va-more");
-  if (moreBtn) moreBtn.addEventListener("click", () => {
-    el.querySelectorAll(".va-folded").forEach((r) => r.classList.remove("va-folded"));
-    moreBtn.remove();
+  el.classList.remove("is-open");
+  el.innerHTML = `<span class="stp-tape" aria-hidden="true"></span>` +
+    `<p class="va-caption">${n} line${n > 1 ? "s" : ""} you knew by heart</p>` +
+    `<ul class="va-list">${rows}</ul>` + fold;
+  const foldBtn = el.querySelector(".va-fold");
+  if (foldBtn) foldBtn.addEventListener("click", () => {
+    el.classList.add("is-open");
+    foldBtn.setAttribute("aria-expanded", "true");
   });
   el.style.display = "";
 }
@@ -13498,6 +13522,9 @@ function normalizeDailyBracelet(data, dateStr) {
     line: String(k && k.line || ""),
     word: String(k && k.word || ""),
     tier: k && k.tier === "verse" ? "verse" : "perfect",
+    page: Number.isInteger(k && k.page) && k.page > 0 && k.page <= TOTAL_ROUNDS ? k.page : 0,
+    song: String(k && k.song || ""),
+    album: String(k && k.album || ""),
   })).filter((k) => k.line);
   const seed = Number(saved.trinketSeed);
   return {
@@ -24970,7 +24997,7 @@ function submitAnswer(song, isTimeout) {
     gameLyricistXp += Math.round((LYRIC_TIER_XP[lyricMatch.tier] || 0) * (0.5 + 0.5 * (lyricMatch.coverage || 0)) * lyricLenFactor);
     if (versePlus) {
       gameVersePerfect++;                // lifetime versePerfect / milestone achievements
-      verseKeepsake.push({ line: lyricMatch.line, word: currentWord, tier: lyricMatch.tier });
+      verseKeepsake.push({ line: lyricMatch.line, word: currentWord, tier: lyricMatch.tier, page: round, song: song.title, album: song.album });
     }
     if (lyricMatch.tier === "verse") { gameWholeVerses++; unlock("recall-whole-verse-word-perfect"); earnPolaroid("typewriter"); }
     // The neighbor's dog — the "dyed it key lime green" line recalled word-perfect (or better).
@@ -26545,7 +26572,7 @@ let lyricLineAnswers = 0;        // lyric-line answers this game (for You Knew T
 let verseBonus = 0;              // verse-bonus points this game (fuller lyric recall; separate from score)
 let gameVersePerfect = 0;        // word-perfect-or-better lines this game (lifetime versePerfect / milestones)
 let gameWholeVerses = 0;         // whole-verse (4-line) recalls this game (Overachiever fires per-round)
-let verseKeepsake = [];          // { line, word, tier } for each perfect+ recall — results-page anthology
+let verseKeepsake = [];          // { line, word, tier, page, song, album } for each perfect+ recall — results-page anthology
 let roundVerseTier = [];         // per-round recall tier ("good"/"perfect"/"verse") → nib bracelet trinket
 let lyricAnswerSongs = [];       // titles answered via a lyric line this game (for Someone Has A Favourite Song)
 let gameInk = 0;                 // Long Story Long: characters of real lyric (or title) written this run
@@ -31099,6 +31126,24 @@ function buildDevApi() {
     // they can be compared without playing seven runs to reach them.
     results: {
       cases: () => Object.keys(TALLY_PREVIEWS),
+      // The folded keepsake slip, filled with n real lines from the loaded corpus (one sung as a
+      // whole verse unless verse is false), so the fold and its pick can be seen without singing
+      // them. Replaces this run's keepsake in memory only; nothing is saved.
+      keepsake: (n = 6, verse = true) => {
+        const pool = shuffle(allSongs.filter((s) => s.lyrics)).slice(0, n);
+        const pages = shuffle(Array.from({ length: TOTAL_ROUNDS }, (_, i) => i + 1)).slice(0, pool.length).sort((a, b) => a - b);
+        verseKeepsake = pool.map((s, i) => {
+          const lines = s.lyrics.split("\n").filter((l) => /\b[a-z]{4,}\b/i.test(l));
+          const at = Math.floor(Math.random() * Math.max(1, lines.length - 1));
+          const isVerse = verse && i === pool.length - 1;
+          const line = isVerse ? lines.slice(at, at + 2).join("\n") : lines[at];
+          const word = (line.match(/\b[a-z]{4,}\b/i) || [""])[0];
+          return { line, word, tier: isVerse ? "verse" : "perfect", page: pages[i], song: s.title, album: s.album };
+        });
+        showScreen("results");
+        renderVerseAnthology();
+        return verseKeepsake.map((k) => `p.${k.page} ${k.song}${k.tier === "verse" ? " (verse)" : ""}`);
+      },
       tally: (name = "classic") => {
         const c = TALLY_PREVIEWS[name];
         if (!c) return `no such case: try one of: ${Object.keys(TALLY_PREVIEWS).join(", ")}`;

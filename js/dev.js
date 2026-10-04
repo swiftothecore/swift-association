@@ -481,7 +481,12 @@ export function initDev(api) {
           .map(([k, v]) => `${pad(k, 13)}${String(v.box).padStart(7)}${v.ink === "—" ? "" : String(v.ink).padStart(8)}`)
           .join("\n");
     })),
-    centreOut));
+    centreOut,
+    // The lines-by-heart slip arrives folded to one line; fill it with real lines to see the
+    // fold, the pick (a whole verse beats any single line) and the opened page order.
+    row(btn("keepsake slip", () => { readout.textContent = api.results.keepsake(6, true).join(" · "); }),
+        btn("no verse", () => { readout.textContent = api.results.keepsake(5, false).join(" · "); }),
+        btn("one line", () => { readout.textContent = api.results.keepsake(1, false).join(" · "); }))));
 
   // ---- Ruthless board --------------------------------------------------------
   // The lens sheet is drawn from the records, and its two states read quite differently: a lens
