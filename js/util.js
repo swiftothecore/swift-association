@@ -60,16 +60,19 @@ export function normalizeTitle(s) {
 // on the same stem: "feelings" has no word boundary after its "ing" and would otherwise
 // stay whole while "feeling" became "feelin", leaving the two forms of one word further
 // apart after normalizing than they were before it.
-export function normalizeLyric(s) {
+// Keep interior apostrophes only when checking which word was sung. The ordinary
+// comparison key still ignores them, so punctuation never changes recall grading.
+export function normalizeLyric(s, { keepApostrophes = false } = {}) {
   return s
     .toLowerCase()
-    .replace(/’/g, "'")
+    .replace(/[’‘]/g, "'")
     .replace(/\$/g, "s")
     .replace(/[&+]/g, "and")
-    .replace(/[().!?,:;"'…]/g, "")
+    .replace(keepApostrophes ? /(?<![\p{L}\p{N}])'|'(?![\p{L}\p{N}])/gu : /'/g, "")
+    .replace(/[().!?,:;"…]/g, "")
     .replace(/[-–—/]/g, " ")
-    .replace(/(\S*?)ing(s?)(?=\s|$)/g,                 // dancing / dancin' -> dancin
-             (m, stem, s2) => (/[aeiouy]/.test(stem) ? stem + "in" + s2 : m))
+    .replace(/(\S*?)ing('s|s)?(?=\s|$)/g,            // dancing / dancin' -> dancin
+             (m, stem, s2) => (/[aeiouy]/.test(stem) ? stem + "in" + (s2 || "") : m))
     .replace(/\s+/g, " ")
     .trim();
 }

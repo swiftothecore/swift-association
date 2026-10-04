@@ -23480,8 +23480,8 @@ function lyricRequiredWords() {
 }
 
 // The page's word as the sung-line path has to look for it: normalized into lyric space, and
-// matched with the apostrophe-blind tail lyricWordRegex carries (js/match.js), since everything
-// down here compares against text that has had its apostrophes stripped. Every rule that holds
+// extended with the catalogue's unambiguous flattened apostrophes. Raw spelling can also be
+// checked in this space with normalizeLyric(text, { keepApostrophes: true }). Every rule that holds
 // the page's word up against normalized lyric text goes through this one wrapper, so the gate,
 // the gauge, the near miss and the join repair can never end up disagreeing about what counts.
 // One expression per word per strictness, and a page only ever asks about its own word or two,
@@ -23520,10 +23520,14 @@ function promptWordRegex(word, strict) {
 // any line with "night" in it, which is the loophole this function exists to shut, walked
 // back in through the tolerance meant to be kind about fat fingers. A real typo lands on a
 // non-word ("tuoch", "touc") and is forgiven; a real word is taken at its word.
-function phraseSingsPromptWord(normPhrase) {
+function phraseSingsPromptWord(normPhrase, rawPhrase) {
   const need = lyricRequiredWords();
   if (!need.length) return true;                 // no word to sing (impostor page, guest oddity)
   const tokens = normPhrase.split(" ");
+  // Read the player's apostrophe before it disappears: strict accepts "angel's" by
+  // the same boundary as the ordinary matcher, while bare "angels" remains a plural.
+  // This asks about typed text alone and cannot confirm anything about a song.
+  const spelled = rawPhrase === undefined ? "" : normalizeLyric(rawPhrase, { keepApostrophes: true });
   return need.some((w) => {
     const nw = normalizeLyric(w);
     if (!nw) return false;
@@ -23531,7 +23535,8 @@ function phraseSingsPromptWord(normPhrase) {
     // two words ("New York", the one such word in the list) and a token-wise test could never
     // see it. For the other 732 it is the same question: the pattern is bounded at both ends,
     // and a space is a boundary.
-    if (promptWordRegex(w).test(normPhrase)) return true;
+    const rx = promptWordRegex(w);
+    if (rx.test(normPhrase) || rx.test(spelled)) return true;
     return nw.length >= LYRIC_TYPO_MIN_WORD &&
       tokens.some((t) => !lyricVocab.has(t) && oneTypoApart(t, nw));
   });
@@ -23700,8 +23705,22 @@ function oneTypoApart(a, b) {
 // away nothing about which songs are valid — the same footing that lets the nudge speak at
 // all. Returns { token, word, why } for the first qualifying token IN THE LINE, since the
 // player reads their own line left to right, or null.
-function nearMissPromptWord(normPhrase) {
+function nearMissPromptWord(normPhrase, rawPhrase) {
   const strict = effectiveStrict();
+  // Keep explicit spellings beside their flattened token, so a correctly typed
+  // possessive is never labelled a refused plural in the dev diagnostic.
+  const spellings = new Map();
+  for (const t of rawPhrase === undefined ? [] : normalizeLyric(rawPhrase, { keepApostrophes: true }).split(" ")) {
+    const flat = normalizeLyric(t);
+    if (t !== flat) {
+      if (!spellings.has(flat)) spellings.set(flat, []);
+      spellings.get(flat).push(t);
+    }
+  }
+  const counts = (word, token) => {
+    const rx = promptWordRegex(word, strict);
+    return rx.test(token) || (spellings.get(token) || []).some((t) => rx.test(t));
+  };
   // The page's words in both spellings: `word` to say out loud and to build the regexes from
   // (promptWordRegex folds it into lyric space itself), `norm` for the two tests that compare
   // the word as a plain string. They are not the same text — normalizeLyric g-drops, and would
@@ -23713,7 +23732,7 @@ function nearMissPromptWord(normPhrase) {
     for (const { word, norm } of need) {
       // The gate's own test, so a token the line is ACCEPTED for can never also be reported as
       // the reason it was refused.
-      if (promptWordRegex(word, strict).test(t)) continue;         // it counts; not a near miss
+      if (counts(word, t)) continue;                             // it counts; not a near miss
       if (strict && promptWordRegex(word, false).test(t)) return { token: t, word, why: "strict" };
       const friends = falseFriendRegex(norm);
       if (!strict && friends && friends.test(t)) return { token: t, word, why: "friend" };
@@ -23733,7 +23752,7 @@ function nearMissPromptWord(normPhrase) {
     if (!lyricVocab.has(t)) continue;
     for (const { word, norm } of need) {
       if (t === norm || norm.length < 2 || !t.includes(norm)) continue;
-      if (promptWordRegex(word, strict).test(t)) continue;       // it counts; not a near miss
+      if (counts(word, t)) continue;                           // it counts; not a near miss
       return { token: t, word, why: "inside" };
     }
   }
@@ -23768,7 +23787,7 @@ function nudgeLyricNeedsWord(raw) {
   if (wordConcealed) return;                                   // the word isn't even face up yet
   const np = normalizeSungPhrase(raw);
   if (!np || np.split(" ").length < MIN_LYRIC_WORDS) return;   // too short to have been a line
-  if (phraseSingsPromptWord(np)) return;                       // it sang the word; something else was wrong
+  if (phraseSingsPromptWord(np, raw)) return;                  // it sang the word; something else was wrong
   if (isTitleFragment(np)) return;                             // a half-typed title, not a sung line
   // Every challenge that hides the word behind a warp or a vanish has to be answered from
   // what you managed to read, and this nudge prints the word in plain letters — so on those
@@ -23780,7 +23799,7 @@ function nudgeLyricNeedsWord(raw) {
     softRejectFlash(`a sung line has to be one with the page's word in it`, true);
     return;
   }
-  const near = nearMissPromptWord(np);
+  const near = nearMissPromptWord(np, raw);
   if (near) return nudgeNearMiss(raw, near);
   const which = bothRuleActive() && bothWords.length > 1
     ? bothWordsPhrase(true)
@@ -23876,7 +23895,7 @@ function matchLyricLine(phrase) {
 function lyricLineHit(phrase) {
   const normPhrase = normalizeSungPhrase(phrase);
   if (!normPhrase) return null;
-  if (!phraseSingsPromptWord(normPhrase)) return null;
+  if (!phraseSingsPromptWord(normPhrase, phrase)) return null;
   const wordCount = normPhrase.split(" ").length;
   // Accept 4+ words, OR a 3-word phrase that's long enough by character count.
   if (wordCount < MIN_LYRIC_WORDS &&
@@ -24030,9 +24049,13 @@ function wordSpots(song) {
   // prompt word can be two words ("New York") and would otherwise be sung nowhere at all.
   const needs = lyricRequiredWords().map((w) => ({ rx: promptWordRegex(w), span: normalizeLyric(w).split(" ").length }));
   const toks = song._normLyrics.split(" ");
+  // The two keys have identical word offsets. Retaining the source apostrophes
+  // locates possessives without treating a plural elsewhere in the song as a hit.
+  const spelled = normalizeLyric(song.lyrics, { keepApostrophes: true }).split(" ");
   const spots = [];
   toks.forEach((t, i) => {
-    if (needs.some((n) => n.rx.test(n.span > 1 ? toks.slice(i, i + n.span).join(" ") : t))) spots.push(i);
+    if (needs.some((n) => n.rx.test(n.span > 1 ? toks.slice(i, i + n.span).join(" ") : t) ||
+        n.rx.test(n.span > 1 ? spelled.slice(i, i + n.span).join(" ") : spelled[i]))) spots.push(i);
   });
   wordSpotCache.set(song.title, spots);
   return spots;
@@ -24079,7 +24102,7 @@ function verseProgress(text) {
     // that doesn't sing the page's word — so they stay dark until it does, however much of
     // the line has been typed. Same invariant as the tiny-line cap above: the gauge may run
     // ahead of the answer, but it must never promise more than the answer will honour.
-    const capped = !phraseSingsPromptWord(np);
+    const capped = !phraseSingsPromptWord(np, text);
     if (coverage >= RECALL_PERFECT && lines >= WHOLE_VERSE_LINES) return capped ? "good" : "verse";
     if (coverage >= RECALL_PERFECT) return capped ? "good" : "perfect";
     if (coverage >= RECALL_GOOD) return "good";
@@ -30776,12 +30799,12 @@ function buildDevApi() {
         // than something the other three fields silently disagree about.
         typed: typed === np ? undefined : typed,
         needs: lyricRequiredWords(),
-        singsWord: phraseSingsPromptWord(np),
+        singsWord: phraseSingsPromptWord(np, phrase),
         titleFragment: isTitleFragment(np),
         // The token the nudge would name as the near miss, and which of the three shapes it
         // is. Reported even when the line is ACCEPTED, so a page where a real match and a
         // near miss sit in the same line is visible rather than a surprise later.
-        nearMiss: nearMissPromptWord(np) || null,
+        nearMiss: nearMissPromptWord(np, phrase) || null,
         proximity: LYRIC_PROXIMITY,
         meter: verseProgress(phrase || "") || "dark",
         accepted: !!m,
@@ -33484,7 +33507,7 @@ function buildDevApi() {
             const lines = (sec.lines || []).filter(Boolean);
             for (let i = 0; i + WHOLE_VERSE_LINES <= lines.length; i++) {
               const block = lines.slice(i, i + WHOLE_VERSE_LINES).join(" ");
-              if (phraseSingsPromptWord(normalizeSungPhrase(block))) return { song: song.title, block };
+              if (phraseSingsPromptWord(normalizeSungPhrase(block), block)) return { song: song.title, block };
             }
           }
         }
