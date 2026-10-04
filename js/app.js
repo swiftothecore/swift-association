@@ -23886,13 +23886,6 @@ function inkRuleActive() {
 }
 
 function matchLyricLine(phrase) {
-  const hit = lyricLineHit(phrase);
-  // The proofmarks set the player's own words against the real line, so the match carries
-  // them exactly as typed: the box is cleared long before the mark is drawn.
-  return hit && { ...hit, typed: phrase };
-}
-
-function lyricLineHit(phrase) {
   const normPhrase = normalizeSungPhrase(phrase);
   if (!normPhrase) return null;
   if (!phraseSingsPromptWord(normPhrase, phrase)) return null;
@@ -25080,16 +25073,11 @@ function submitAnswer(song, isTimeout) {
   // The knowledge grids own their whole verdict (grid + card), like Common Thread above.
   if (tapKnowledgeActive()) { revealTapKnowledge(correct); return; }
 
-  // Mark the player's answer before revealing the verdict (skipped on timeout / reduced
-  // motion). A named title is circled. A sung line is never circled, since the circle would
-  // re-draw a title the player never typed: it gets proofmarks instead, the editor's pen
-  // going through their own words against the real line. Sea of Songs shows the verdict on
-  // the grid itself, so it skips the mark too. Both share the one pen-circle setting.
+  // Circle the player's pick before revealing the verdict (skipped on timeout / reduced
+  // motion, and on a lyric answer — the circle re-draws a title the player never typed).
+  // Sea of Songs shows the verdict on the grid itself, so it skips the pen-circle too.
   const reveal = () => (correct ? showCorrectFeedback(song, lyricMatch) : showWrongFeedback(song, isTimeout));
-  const markIt = song && !isTimeout && !tapGridActive() && settings.penCircle && !motionReduced() && !animInstant();
-  if (markIt && lyricMatch && lyricMatch.typed) {
-    showProofmarks(lyricMatch.typed, lyricMatch.line, reveal);
-  } else if (markIt && !lyricMatch) {
+  if (song && !isTimeout && !lyricMatch && !tapGridActive() && settings.penCircle && !motionReduced() && !animInstant()) {
     showCircledChoice(song, reveal, correct && firstThoughtAnswer());
   } else {
     reveal();
@@ -25162,136 +25150,6 @@ function buildChoiceRing(bw, bh, tw, th, cx, cy) {
     `C${p(-k * aL, bB)} ${p(-aL, k * bB)} ${p(-aL, 0)}Z`;
   return `<svg viewBox="0 0 ${bw.toFixed(1)} ${bh.toFixed(1)}" aria-hidden="true">` +
     `<path class="cc-ring" pathLength="1" d="${d}"/></svg>`;
-}
-
-// PROOFMARKS. A sung line, set against the real one, word by word. Each word comes back as
-// one of: ok (what the song sings, give or take case and punctuation), typo (near enough
-// that it was the right word misspelt), wrong (a different word in that slot), missing (a
-// word the song sings that was skipped) or extra (a word typed that the song doesn't sing).
-// Compared in normalizeLyric's space so the verdict and the marks never disagree about what
-// counts as the same word ("dancin'" is "dancing").
-// The real-line side is free at both ends: matchLyricLine hands back WHOLE source lines, so
-// someone who sang from mid-line would otherwise be marked down for every word before the
-// point they started. Inside the span, a skipped word is a real miss.
-function alignSungLine(typedRaw, lineRaw) {
-  const words = (raw) => (raw || "").replace(/[-–—/]/g, " ").split(/\s+/)
-    .map((w) => ({ show: w, norm: normalizeLyric(w) })).filter((w) => w.norm);
-  const T = words(typedRaw), L = words(lineRaw);
-  const near = (a, b) => swappedNeighbours(a, b) ||
-    levenshtein(a, b) <= Math.max(1, Math.floor(Math.max(a.length, b.length) / 3));
-  const sub = (a, b) => (a === b ? 0 : near(a, b) ? 0.5 : 1.2);
-  const n = T.length, m = L.length;
-  // dp[i][j]: cheapest way to account for the first i typed words against a line span that
-  // ENDS at real word j. Row 0 is all zero (start anywhere in the line, for free).
-  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
-  const from = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(""));
-  for (let i = 1; i <= n; i++) {
-    dp[i][0] = i; from[i][0] = "x";
-    for (let j = 1; j <= m; j++) {
-      const diag = dp[i - 1][j - 1] + sub(T[i - 1].norm, L[j - 1].norm);
-      const extra = dp[i - 1][j] + 1, skip = dp[i][j - 1] + 1;
-      if (diag <= extra && diag <= skip) { dp[i][j] = diag; from[i][j] = "d"; }
-      else if (extra <= skip) { dp[i][j] = extra; from[i][j] = "x"; }
-      else { dp[i][j] = skip; from[i][j] = "s"; }
-    }
-  }
-  let j = 0;
-  for (let k = 1; k <= m; k++) if (dp[n][k] < dp[n][j]) j = k;   // and end anywhere, for free
-  const out = [];
-  let i = n;
-  while (i > 0) {
-    const f = from[i][j];
-    if (f === "d") {
-      const t = T[i - 1], l = L[j - 1];
-      out.push({ kind: t.norm === l.norm ? "ok" : near(t.norm, l.norm) ? "typo" : "wrong", typed: t.show, right: l.show });
-      i--; j--;
-    } else if (f === "x") { out.push({ kind: "extra", typed: T[i - 1].show, right: null }); i--; }
-    else { out.push({ kind: "missing", typed: null, right: L[j - 1].show }); j--; }
-  }
-  return out.reverse();
-}
-
-// The proofmarks themselves: the line as the player typed it, then the editor's pen goes
-// through it. A slipped word is struck with the right one written above it (a plain wrong
-// word gets a second, harder stroke), a skipped word gets a caret and the word, an added one
-// a delete loop. Words they had are left alone, so the clean stretches of page are the
-// score, and the tally in the margin says it in numbers. A word-perfect line gets one green
-// tick and nothing else. Drawn from the MEASURED word boxes, like the pen circle, so it holds
-// up when the line wraps. Every stroke is a CSS animation with its delay scaled by the
-// animation-speed setting; the only timer is the hand-off to the verdict.
-const PROOF_MAX_WORDS = 16;
-function showProofmarks(typedRaw, lineRaw, done) {
-  let toks = alignSungLine(typedRaw, lineRaw);
-  const known = toks.filter((t) => t.kind === "ok").length;
-  const total = toks.filter((t) => t.right != null).length;
-  // A whole verse is too long to mark up in a second. Keep a window of the line, opened on
-  // the first slip so the correction is what the player sees, with an ellipsis for the rest.
-  let lead = false, tail = false;
-  if (toks.length > PROOF_MAX_WORDS) {
-    const first = Math.max(0, toks.findIndex((t) => t.kind !== "ok"));
-    const start = Math.max(0, Math.min(first - 3, toks.length - PROOF_MAX_WORDS));
-    lead = start > 0; tail = start + PROOF_MAX_WORDS < toks.length;
-    toks = toks.slice(start, start + PROOF_MAX_WORDS);
-  }
-  const scale = animScale();
-  const fixes = toks.map((t, i) => [t, i]).filter(([t]) => t.kind !== "ok");
-  const STEP = fixes.length ? Math.min(150, 620 / fixes.length) : 0, T0 = 140;
-  const ms = (x) => `${Math.round(x * scale)}ms`;
-  const cen = (w) => escapeHtml(censor(w));
-  const fix = (w) => cen(w.replace(/[,.;:!?"”)]+$/, ""));   // a correction is a word, not the line's punctuation
-  const fb = $("feedback");
-  fb.innerHTML =
-    `<div class="proofmarks"><div class="pf-line${fixes.length ? "" : " is-perfect"}">` +
-      (lead ? `<span class="pf-w pf-ell">…</span> ` : "") +
-      toks.map((t, i) => t.kind === "missing"
-        ? `<span class="pf-gap" data-i="${i}">\u200b<span class="pf-fix">${fix(t.right)}</span></span>`
-        : `<span class="pf-w" data-i="${i}">${cen(t.typed)}` +
-            (t.kind === "typo" || t.kind === "wrong" ? `<span class="pf-fix">${fix(t.right)}</span>` : "") +
-          `</span>`).join(" ") +
-      (tail ? ` <span class="pf-w pf-ell">…</span>` : "") +
-    `</div><div class="pf-tally${fixes.length ? "" : " is-perfect"}">${known}/${total}<small>by heart</small></div></div>`;
-  const line = fb.querySelector(".pf-line");
-  const end = T0 + fixes.length * STEP + (fixes.length ? 200 : 380);
-  fb.querySelector(".pf-tally").style.animationDelay = ms(end);
-  // Measured straight away rather than on the next frame: reading the boxes forces layout,
-  // and a frame that never comes (a background tab) would leave the line unmarked.
-  {
-    const box = line.getBoundingClientRect();
-    const at = (el) => { const r = el.getBoundingClientRect(); return { x0: r.left - box.left, x1: r.right - box.left, y0: r.top - box.top, w: r.width, h: r.height }; };
-    const f = (v) => v.toFixed(1);
-    const wob = () => (Math.random() - 0.5) * 3;
-    const stroke = (d, delay, dur = 160, cls = "") =>
-      `<path class="pf-pen${cls}" pathLength="1" d="${d}" style="animation-delay:${ms(delay)};animation-duration:${ms(dur)}"/>`;
-    let paths = "";
-    if (!fixes.length) {
-      const last = [...line.querySelectorAll(".pf-w:not(.pf-ell)")].pop();
-      if (last) {
-        const r = at(last), x = r.x1 + 12, y = r.y0 + r.h * 0.6;
-        paths += stroke(`M${f(x)},${f(y)} L${f(x + 7)},${f(y + 9)} L${f(x + 24)},${f(y - 16)}`, 220, 240, " is-tick");
-      }
-    }
-    fixes.forEach(([t, i], n) => {
-      const el = line.querySelector(`[data-i="${i}"]`);
-      if (!el) return;
-      const r = at(el), when = T0 + n * STEP, mid = r.y0 + r.h * 0.56;
-      const word = el.querySelector(".pf-fix");
-      if (t.kind === "typo" || t.kind === "wrong") {
-        paths += stroke(`M${f(r.x0 - 3)},${f(mid + wob())} C${f(r.x0 + r.w * 0.35)},${f(mid - 3 + wob())} ${f(r.x0 + r.w * 0.65)},${f(mid + 3 + wob())} ${f(r.x1 + 3)},${f(mid - 1 + wob())}`, when);
-        if (t.kind === "wrong") paths += stroke(`M${f(r.x0 - 1)},${f(mid + 6)} L${f(r.x1 + 1)},${f(mid - 5)}`, when + 70, 110);
-        if (word) word.style.animationDelay = ms(when + 120);
-      } else if (t.kind === "missing") {
-        const cx = r.x0 + r.w / 2, base = r.y0 + r.h * 0.74;
-        paths += stroke(`M${f(cx - 7)},${f(base + 6)} L${f(cx)},${f(base - 8)} L${f(cx + 7)},${f(base + 6)}`, when, 130);
-        if (word) word.style.animationDelay = ms(when + 100);
-      } else {
-        // The delete loop curls UP off the end of the stroke, so it never runs into the next word.
-        const x1 = r.x1 - 2;
-        paths += stroke(`M${f(r.x0 - 3)},${f(mid + 2)} L${f(x1)},${f(mid - 2)} C${f(x1 + 5)},${f(mid - 5)} ${f(x1 + 5)},${f(mid - 15)} ${f(x1 - 1)},${f(mid - 15)} C${f(x1 - 7)},${f(mid - 15)} ${f(x1 - 6)},${f(mid - 6)} ${f(x1 + 3)},${f(mid - 1)}`, when, 230);
-      }
-    });
-    line.insertAdjacentHTML("beforeend", `<svg class="pf-marks" aria-hidden="true">${paths}</svg>`);
-  }
-  setTimeout(done, Math.min(1700, end + 520) * scale);
 }
 
 // A curvy, hand-drawn underline beneath each line of a wrapped title. Each stroke is a gently
@@ -28222,7 +28080,7 @@ function renderSettingsBody() {
       setChoiceHTML("animSpeed", "Animation speed", "", [{ val: "normal", label: "Normal" }, { val: "fast", label: "Fast" }, { val: "instant", label: "Instant" }]) +
       setChecklistHTML([
         setCheckHTML("pageTurn", "Page turn", "the paper flip between rounds"),
-        setCheckHTML("penCircle", "Pen-circle confirm", "marks your answer before the verdict"),
+        setCheckHTML("penCircle", "Pen-circle confirm", "marks your pick before the verdict"),
         setCheckHTML("sparkles", "Sparkles", "a burst on a correct answer"),
         setCheckHTML("timerTension", "Timer tension", "vignette, tremor and the countdown tick as the clock runs low"),
         setCheckHTML("reducedFlashing", "Reduced flashing", "also mutes the perfect-game star shower"),
@@ -30810,10 +30668,6 @@ function buildDevApi() {
         accepted: !!m,
         song: m ? m.song.title : null,
         tier: m ? m.tier : null,
-        // How the proofmarks would mark this line up: each slip as typed→right, a skipped
-        // word as +word, an added one as -word. Clean words are left out, as on the page.
-        proof: m ? alignSungLine(m.typed, m.line).filter((t) => t.kind !== "ok")
-          .map((t) => t.kind === "missing" ? "+" + t.right : t.kind === "extra" ? "-" + t.typed : `${t.typed}→${t.right}`) : null,
       };
     },
     // Typed-title typo forgiveness. Turning it off restores the strict resolution (exact

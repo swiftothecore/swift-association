@@ -39,7 +39,6 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - Every era, plus holiday, movie, collaboration and some unreleased songs
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
-- Type a lyric line and the editor's pen marks it up against the real one before the verdict, with every slip corrected in red
 - Five marks in the corner of every page saying what it will take, so you don't learn the rules by breaking them
 - A streak in the margin that climbs from pencil to your era's own pen to gold
 - A start button that turns with the seasons where you live, southern hemisphere included
