@@ -189,6 +189,16 @@ if (location.pathname.endsWith('/index.html')) {
     <feTurbulence type="fractalNoise" baseFrequency="0.018 0.075" numOctaves="2" seed="23" result="noise"/>
     <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
+  <!-- The way home's postmark ink (js/postmark.js): the result stamps' speckle-and-warp with its
+       own seeds, so the three stamps on the page never share a speckle. Here rather than in
+       the stamps' own defs sheet, which hides with the stamps on the runs that have none. -->
+  <filter id="pmInk" x="-6%" y="-14%" width="112%" height="128%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" seed="57" result="speck"/>
+    <feColorMatrix in="speck" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.95 -0.36" result="holes"/>
+    <feComposite in="SourceGraphic" in2="holes" operator="out" result="patchy"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="22" result="warp"/>
+    <feDisplacementMap in="patchy" in2="warp" scale="2.4"/>
+  </filter>
   <!-- Charcoal for the sketched start buttons (js/ctasketch.js). The lines wobble a touch and lose
        ink in streaks that run ALONG the stroke, so there is one filter for the strokes running
        across and one for those running down; the words get a finer, lighter grain of the same. -->
@@ -3331,17 +3341,12 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="newBestBanner" class="new-best-banner" style="display:none;"></div>
     <p class="podium-title" style="margin-top:22px;">Your best</p>
     <div id="resultPodium" class="podium"></div>
-    <!-- The way home: this run's last page on the block of pages written before it, their
-         edges inked in the run's bead colours (paintRiffle fills .riffle-edges and the folio
-         off the finished strand). The label is highlighted on the page in the era's ink. -->
-    <button id="againBtn" class="riffle" type="button">
-      <span class="riffle-block">
-        <span class="riffle-edges" aria-hidden="true"></span>
-        <span class="riffle-sheet">
-          <span class="riffle-label"><span class="riffle-hl">Turn back to the front page</span></span>
-          <span class="riffle-folio" aria-hidden="true"></span>
-        </span>
-      </span>
+    <!-- The way home, struck as a postmark: a dated ring beside the slogan between wavy cancel
+         lines, a third stamp in post-office black above the two below (js/postmark.js draws
+         it, paintPostmark puts it down with the run's finishing time). The label is the
+         button's own aria-label, since every letter of the print is aria-hidden svg. -->
+    <button id="againBtn" class="keep-going postmark" type="button" aria-label="Turn back to the front page">
+      <span class="kg-press"></span>
     </button>
     <!-- The two stamps, cut from the same rubber. PLAY AGAIN is the replay, in stamp-pad
          navy, over the mode it will play again (paintReplayStamp). It once carried numbering
