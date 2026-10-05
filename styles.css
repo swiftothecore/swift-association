@@ -9808,6 +9808,9 @@
   .vm-notch { fill: none; stroke-linecap: round; stroke-linejoin: round; }
   /* Pencil ink follows the paper's theme and contrast settings, including empty rungs. */
   .vm-track { stroke: var(--ink-soft); }
+  /* On cream paper the faded pencil at full strength reads as a filled-in rung, so the empty
+     tracks sit back. The dark page and high contrast keep them at full strength. */
+  :root:not([data-theme="dark"]) body:not([data-contrast="high"]) .vm-track { opacity: 0.32; }
   .vm-ink { stroke: var(--bead); opacity: 0; stroke-dasharray: 1; stroke-dashoffset: 0; }
   .vm-notch.lit .vm-ink { opacity: 1; animation: vm-write 0.26s ease both; }
   @keyframes vm-write {

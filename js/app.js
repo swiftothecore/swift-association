@@ -24018,7 +24018,31 @@ function recoverLyricLine(song, normPhrase) {
 // "verse bonus" and a louder celebration. A word-perfect block spanning WHOLE_VERSE_LINES
 // real lines is the top "whole verse" rung. `lines` = how many raw lines the match spanned.
 // Returns { tier, bonus, coverage, lines }.
+// Grades never go DOWN as the player sings on. Running past the end of a line into the
+// next one widens the span the phrase is measured against, so a word-perfect line followed
+// by the first half of the next would otherwise fall back to "good" until that line was
+// finished too, flip-flopping all the way to a whole verse. A trailing line the phrase has
+// only started is set aside and the lines before it graded on their own, and the better of
+// the two grades stands.
+const RECALL_RANK = { base: 0, good: 1, perfect: 2, verse: 3 };
 function gradeLyricRecall(normPhrase, line, lines = 1) {
+  const whole = gradeSpan(normPhrase, line, lines);
+  const rows = String(line).split("\n");
+  if (rows.length < 2) return whole;
+  const last = normalizeLyric(rows[rows.length - 1]).split(" ").filter(Boolean);
+  const typed = normPhrase.split(" ");
+  // How much of the last line the phrase ends on: the longest start of that line it ends with.
+  // The final typed word may be half-written ("wh" on the way to "whole"), so it only has to
+  // be the start of its word, or the grade would still drop for a keystroke inside each word.
+  const endsOn = (k) => typed.slice(-k)
+    .every((w, i) => (i === k - 1 ? last[i].startsWith(w) : w === last[i]));
+  let k = Math.min(last.length, typed.length - 1);
+  while (k > 0 && !endsOn(k)) k--;
+  if (k === 0 || (k === last.length && typed[typed.length - 1] === last[k - 1])) return whole;
+  const head = gradeLyricRecall(typed.slice(0, -k).join(" "), rows.slice(0, -1).join("\n"), lines - 1);
+  return RECALL_RANK[head.tier] > RECALL_RANK[whole.tier] ? head : whole;
+}
+function gradeSpan(normPhrase, line, lines) {
   const normLine = normalizeLyric(line);
   const total = normLine ? normLine.split(" ").length : 0;
   const typed = normPhrase ? normPhrase.split(" ").length : 0;
@@ -24105,21 +24129,16 @@ function verseProgress(text) {
     const at = s._normLyrics.indexOf(np);
     if (at < 0) continue;
     if (!nearPromptWord(s, at, np)) continue;
+    // Graded by the verdict's own grader, so the meter can never promise a rung the verdict
+    // won't pay out (the tiny-line cap included) and climbs the same way it does.
     const { text: line, lines } = recoverLyricLine(s, np);
-    const total = normalizeLyric(line).split(" ").length;
-    const coverage = total ? Math.min(np.split(" ").length / total, 1) : 0;
-    // Mirror gradeLyricRecall's cap on tiny lines, so the meter never promises a rung the
-    // verdict won't pay out.
-    if (total && total < RECALL_TIER_MIN_WORDS) return coverage >= RECALL_GOOD ? "good" : "fragment";
+    const { tier } = gradeLyricRecall(np, line, lines);
     // The top two rungs are the ones that pay beads, and the verdict won't pay them for a line
     // that doesn't sing the page's word — so they stay dark until it does, however much of
     // the line has been typed. Same invariant as the tiny-line cap above: the gauge may run
     // ahead of the answer, but it must never promise more than the answer will honour.
-    const capped = !phraseSingsPromptWord(np, text);
-    if (coverage >= RECALL_PERFECT && lines >= WHOLE_VERSE_LINES) return capped ? "good" : "verse";
-    if (coverage >= RECALL_PERFECT) return capped ? "good" : "perfect";
-    if (coverage >= RECALL_GOOD) return "good";
-    return "fragment";
+    if ((tier === "perfect" || tier === "verse") && !phraseSingsPromptWord(np, text)) return "good";
+    return tier === "base" ? "fragment" : tier;
   }
   return null;
 }
