@@ -462,6 +462,7 @@ let currentSongs = [];
 // (lyrics fit, sub-rule doesn't) from a wholly wrong answer.
 let currentLyricSongs = [];
 let dropdownItems = [];
+let dropdownTotal = 0;   // every title the typing matches, of which the card shows the first six
 let activeIndex = -1;
 let timerId = null;
 let countdownId = null;
@@ -679,6 +680,36 @@ function focusRoundInput(input, preventScroll = false) {
 
 // Touch scrolling must not choose the title a finger happened to land on. Prevent mouse
 // focus theft on press, but commit on click so pointer cancellation remains native.
+/* The suggestion card (styles.css, .dropdown): a header carrying the page's own suggestions
+   mark, then the list of titles. Shared by the round screen and the bonus shelf. The header
+   says "6 of 27" only when the card is holding back titles, so you know to keep typing; the
+   mark is the late one on a Hard page, the same broken strokes the page's rule marks wear. */
+function fillSuggestionCard(dd, songs, { total, active, idPrefix, late = false, offLimits = () => false, choose }) {
+  dd.innerHTML = "";
+  const head = document.createElement("div");
+  head.className = "dd-head";
+  head.setAttribute("aria-hidden", "true");
+  head.innerHTML = `<svg viewBox="0 0 24 24"><use href="#${late ? "rule-suggest-late" : "rule-suggest"}"/></svg>` +
+    `<span>suggestions</span><span class="dd-count">${total > songs.length ? `${songs.length} of ${total}` : ""}</span>`;
+  const list = document.createElement("div");
+  list.className = "dd-list";
+  list.setAttribute("role", "none");
+  songs.forEach((song, i) => {
+    const div = document.createElement("div");
+    const off = offLimits(song);
+    div.className = "item" + (i === active ? " active" : "") + (off ? " off-limits" : "");
+    // Combobox/listbox semantics so a screen reader can follow arrow-key selection.
+    div.id = idPrefix + i;
+    div.setAttribute("role", "option");
+    div.setAttribute("aria-selected", i === active ? "true" : "false");
+    div.innerHTML = `<span class="dd-title">${escapeHtml(censor(song.title))}</span>` +
+      (off ? `<span class="dd-tag">in the title</span>` : "");
+    wireSuggestion(div, () => choose(song, i));
+    list.appendChild(div);
+  });
+  dd.append(head, list);
+}
+
 function wireSuggestion(option, choose) {
   option.addEventListener("pointerdown", (e) => {
     if (e.pointerType === "mouse") e.preventDefault();
@@ -696,16 +727,19 @@ function fitAnswerDropdown(dd, input) {
   const below = Math.max(0, bottom - parent.bottom - 12);
   const above = Math.max(0, box.top - top - 12);
   const up = below < 150 && above > below;
+  // The card sits a little clear of the line so its corner tape has somewhere to land.
+  const gap = 14;
   dd.dataset.side = up ? "above" : "below";
-  dd.style.top = up ? "auto" : "100%";
-  dd.style.bottom = up ? Math.max(0, parent.bottom - box.top) + "px" : "auto";
-  dd.style.maxHeight = Math.min(320, up ? above : below) + "px";
-  dd.style.overflowY = "auto";
+  dd.style.top = up ? "auto" : `calc(100% + ${gap}px)`;
+  dd.style.bottom = up ? Math.max(0, parent.bottom - box.top) + gap + "px" : "auto";
+  dd.style.maxHeight = Math.max(0, Math.min(320, (up ? above : below) - gap)) + "px";
+  // The list scrolls inside the card, never the card itself: a scroll box would clip the tape.
+  const scroller = dd.querySelector(".dd-list") || dd;
   const selected = dd.querySelector('[aria-selected="true"]');
   if (selected) {
-    const item = selected.getBoundingClientRect(), list = dd.getBoundingClientRect();
-    if (item.top < list.top) dd.scrollTop -= list.top - item.top;
-    else if (item.bottom > list.bottom) dd.scrollTop += item.bottom - list.bottom;
+    const item = selected.getBoundingClientRect(), list = scroller.getBoundingClientRect();
+    if (item.top < list.top) scroller.scrollTop -= list.top - item.top;
+    else if (item.bottom > list.bottom) scroller.scrollTop += item.bottom - list.bottom;
   }
 }
 
@@ -7710,8 +7744,8 @@ function renderBonusPageRegister() {
 }
 
 /* The writing line, borrowed wholesale from the round screen: same `.input-area` (which is
-   what puts the pencil at the start of the line), same `.song-input`, same washi-taped
-   `.dropdown` cards. A bonus game asks a different question, but it should ask it on the
+   what puts the pencil at the start of the line), same `.song-input`, same taped
+   `.dropdown` suggestion card. A bonus game asks a different question, but it should ask it on the
    same stationery. `hint` mirrors the round screen's hint line under the input. */
 function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
   return `<div class="input-area bg-write${dropdown ? " bg-write--sug" : ""}">` +
@@ -8742,16 +8776,20 @@ function redactDetail(points) {
 }
 
 /* ---------- Name That Song's suggestions ----------
-   The round screen's dropdown, on the shelf: same washi-taped cards, same arrow-keys-then-
+   The round screen's dropdown, on the shelf: same taped suggestion card, same arrow-keys-then-
    Enter feel. It ranks its own matches rather than calling `rankMatches`, deliberately —
    that one filters through `roundAcceptsSong`, which reads the live round's state (Album
    Focus's locked album, a challenge's constraint). A bonus run never sets that state and
    must not be judged by it, so borrowing the ranking would let whatever was played last
    quietly shorten this list. */
 let bonusDdItems = [];
+let bonusDdTotal = 0;
 let bonusDdIndex = -1;
 
 function bonusRankMatches(query) {
+  return bonusAllMatches(query).slice(0, 6);
+}
+function bonusAllMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
   const scored = [];
@@ -8763,11 +8801,13 @@ function bonusRankMatches(query) {
     scored.push({ song, ...match });
   }
   scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
-  return scored.slice(0, 6).map((s) => s.song);
+  return scored.map((s) => s.song);
 }
 
 function updateBonusDropdown() {
-  bonusDdItems = bonusLocked ? [] : bonusRankMatches($("bonusInput").value);
+  const all = bonusLocked ? [] : bonusAllMatches($("bonusInput").value);
+  bonusDdTotal = all.length;
+  bonusDdItems = all.slice(0, 6);
   bonusDdIndex = bonusDdItems.length ? 0 : -1;
   renderBonusDropdown();
 }
@@ -8777,16 +8817,9 @@ function renderBonusDropdown() {
   const input = $("bonusInput");
   if (!dd || !input) return;
   if (!bonusDdItems.length) { hideBonusDropdown(); return; }
-  dd.innerHTML = "";
-  bonusDdItems.forEach((song, i) => {
-    const div = document.createElement("div");
-    div.className = "item" + (i === bonusDdIndex ? " active" : "");
-    div.id = "bg-dd-opt-" + i;
-    div.setAttribute("role", "option");
-    div.setAttribute("aria-selected", i === bonusDdIndex ? "true" : "false");
-    div.textContent = censor(song.title);
-    wireSuggestion(div, () => judgeName(song));
-    dd.appendChild(div);
+  fillSuggestionCard(dd, bonusDdItems, {
+    total: bonusDdTotal, active: bonusDdIndex, idPrefix: "bg-dd-opt-",
+    choose: (song) => judgeName(song),
   });
   dd.classList.add("show");
   input.setAttribute("aria-expanded", "true");
@@ -23130,6 +23163,10 @@ const DROPDOWN_LATE_MIN = 5;
 function dropdownLate() { return effectiveDropdown() === "late"; }
 
 function rankMatches(query) {
+  return allMatches(query).slice(0, 6);
+}
+// Every title the typing matches, ranked. The card shows the first six and counts the rest.
+function allMatches(query) {
   const q = normalizeTitle(query);
   if (!q) return [];
   // The late gate lives HERE rather than in updateDropdown because submitAnswer re-ranks
@@ -23151,12 +23188,13 @@ function rankMatches(query) {
     scored.push({ song, ...match });
   }
   scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
-  return scored.slice(0, 6).map((s) => s.song);
+  return scored.map((s) => s.song);
 }
 
 function updateDropdown() {
-  const q = $("songInput").value;
-  dropdownItems = rankMatches(q);
+  const all = allMatches($("songInput").value);
+  dropdownTotal = all.length;
+  dropdownItems = all.slice(0, 6);
   activeIndex = dropdownItems.length ? 0 : -1;
   renderDropdown();
 }
@@ -23164,25 +23202,17 @@ function renderDropdown() {
   const dd = $("dropdown");
   const input = $("songInput");
   if (!dropdownItems.length) { hideDropdown(); return; }
-  dd.innerHTML = "";
-  dropdownItems.forEach((song, i) => {
-    const div = document.createElement("div");
-    const off = isOffLimitsPick(song);
-    div.className = "item" + (i === activeIndex ? " active" : "") + (off ? " off-limits" : "");
-    // Combobox/listbox semantics so a screen reader can follow arrow-key selection.
-    div.id = "dd-opt-" + i;
-    div.setAttribute("role", "option");
-    div.setAttribute("aria-selected", i === activeIndex ? "true" : "false");
-    div.innerHTML = `${escapeHtml(censor(song.title))}` + (off ? `<span class="dd-tag">in the title</span>` : "");
-    wireSuggestion(div, () => {
+  fillSuggestionCard(dd, dropdownItems, {
+    total: dropdownTotal, active: activeIndex, idPrefix: "dd-opt-", late: dropdownLate(),
+    offLimits: isOffLimitsPick,
+    choose: (song, i) => {
       // Took The Money reads which rung of the list was taken. Set around the call and cleared
       // straight after it, so a pick that gets soft-rejected can't leave a stale rung behind for
       // whatever the player types next (submitAnswer reads it synchronously, before any reveal).
       suggestionIndex = i;
       submitAnswer(song, false);   // off-limits picks route through the soft-reject in submitAnswer
       suggestionIndex = -1;
-    });
-    dd.appendChild(div);
+    },
   });
   dd.classList.add("show");
   // Cold Open asks that the dropdown stay SHUT for a whole run, so the fact it opened is

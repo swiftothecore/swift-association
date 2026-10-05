@@ -9391,53 +9391,113 @@
      a UI underline stack, not pen on paper — and since the input is focused for the whole
      of a round, that doubling would effectively be permanent. */
   .song-input:focus { border-bottom-color: var(--ink-accent); }
-  .dropdown {
-    position: absolute; left: 0; right: 0; top: calc(100% + 6px);
-    z-index: 100; display: none;
-    background: var(--paper); border-radius: 3px; padding: 2px;
-  }
-  .dropdown.show { display: block; }
-  .dropdown .item {
-    position: relative;
-    padding: 11px 14px; cursor: pointer;
-    font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); color: var(--ink);
-    background: var(--paper-edge);
-    border: 1.5px solid var(--ink-soft); border-radius: 2px;
-    margin: 9px 4px 6px; box-shadow: 2px 2px 0 rgba(43,39,34,0.12);
-    transform: rotate(-0.4deg);
-    transition: transform 0.12s, background 0.12s, box-shadow 0.12s;
-  }
-  /* a strip of washi tape pinning each card to the page (shared realistic surface) */
-  .dropdown .item::before {
-    content: ""; position: absolute; top: -7px; left: 50%;
-    width: 32px; height: 14px; transform: translateX(-50%) rotate(-4deg);
-    --tape-color: #e0c478;
-  }
-  .dropdown .item:nth-child(even) { transform: rotate(0.5deg); }
-  .dropdown .item:nth-child(even)::before { transform: translateX(-50%) rotate(5deg); }
-  .dropdown .item:nth-child(3n) { transform: rotate(-0.9deg); }
-  .dropdown .item:last-child { margin-bottom: 4px; }
-  .dropdown .item.active, .dropdown .item:hover {
-    /* translucent highlighter composited over opaque paper so text can't bleed through */
-    background: linear-gradient(var(--highlighter), var(--highlighter)), var(--paper-edge);
-    transform: rotate(0deg) translateY(-2px) scale(1.015);
-    box-shadow: 3px 5px 0 rgba(43,39,34,0.16); z-index: 2;
-  }
+  /* The suggestion card: one ruled index card taped down under the writing line at its two
+     top corners, the matching titles typed on its rules under a red header line. The card IS
+     the container; nothing sits behind it. It replaced a paper box holding a column of
+     full-width cards each taped at the centre, which read as a stack of identical buttons.
 
-  /* greyed-out off-limits entries in the dropdown (Normal mode) — still clickable,
-     but selecting one triggers the reject-flash rather than scoring it. */
-  .dropdown .item.off-limits {
-    opacity: 0.55; color: var(--ink-soft);
-    text-decoration: line-through; text-decoration-color: rgba(178,58,58,0.55);
+     Structure (fillSuggestionCard in js/app.js): .dd-head, the header with the page's own
+     suggestions mark, then .dd-list, which is the part that scrolls. The card itself never
+     scrolls, because a scroll box clips everything outside it and the corner tape hangs off
+     the card's edge. fitAnswerDropdown sets the card's max-height; the list takes what is left.
+
+     will-change is load-bearing. Tilted half a degree, the 1px ruling stair-steps every
+     hundred-odd pixels and reads as a broken dashed line; on its own layer the card is drawn
+     level and rotated whole, so the rules stay continuous. It is ONE persistent layer. The
+     phantom-title bug in the washi notes came from a filter promoting every row strip as it
+     was rebuilt per keystroke, which this is not. */
+  .dropdown {
+    --card: #fcf9f1;
+    --card-edge: rgba(43, 39, 34, 0.16);
+    --card-rule: rgba(72, 104, 160, 0.20);
+    --card-head: rgba(178, 58, 58, 0.50);
+    --row: 36px; --head: 30px;
+    position: absolute; left: 4px; right: 8px; top: calc(100% + 14px);
+    z-index: 100; display: none; flex-direction: column;
+    padding: var(--head) 16px 10px 20px;
+    background:
+      linear-gradient(var(--card-head), var(--card-head)) 0 calc(var(--head) - 3px) / 100% 1.5px no-repeat,
+      linear-gradient(var(--card-head), var(--card-head)) 0 var(--head) / 100% 0.75px no-repeat,
+      var(--card);
+    border: 1px solid var(--card-edge); border-radius: 2px;
+    box-shadow: 0 1px 1.5px rgba(60, 50, 35, 0.14), 0 10px 22px -6px rgba(60, 50, 35, 0.32);
+    transform: rotate(-0.5deg);
+    will-change: transform;
   }
+  /* Laid down rather than flashed on: it settles onto the page when it first opens. The box
+     stays put while the list is rebuilt per keystroke, so typing never replays it. */
+  .dropdown.show { display: flex; animation: dd-lay-down 0.18s cubic-bezier(0.2, 0.75, 0.3, 1); }
+  @keyframes dd-lay-down {
+    from { opacity: 0; transform: translate(-3px, -6px) rotate(-1.6deg); }
+    to   { opacity: 1; transform: rotate(-0.5deg); }
+  }
+  body[data-reduce-motion="on"] .dropdown.show { animation: none; }
+  :root[data-theme="dark"] .dropdown {
+    --card: #3a3227; --card-edge: rgba(0, 0, 0, 0.45);
+    --card-rule: rgba(150, 175, 220, 0.16); --card-head: rgba(229, 120, 112, 0.50);
+    box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.4), 0 12px 24px -6px rgba(0, 0, 0, 0.6);
+  }
+  /* The two corner strips, on the shared washi surface. Two different tears at two different
+     angles: a pair that mirrored each other would look stamped on. */
+  .dropdown::before, .dropdown::after {
+    content: ""; position: absolute; z-index: 3; pointer-events: none; --tape-color: #e0c478;
+  }
+  .dropdown::before {
+    left: -12px; top: -6px; width: 50px; height: 17px; transform: rotate(-31deg);
+  }
+  .dropdown::after {
+    right: -9px; top: -2px; width: 44px; height: 16px; transform: rotate(38deg);
+    --tape-clip: polygon(6.8% 0%, 95.3% 0%, 98.2% 15.7%, 94.2% 32%, 95.3% 44.4%, 92.8% 61%, 93.5% 69.6%, 91.3% 83%, 92.6% 100%, 6.8% 100%, 5.5% 84.8%, 6.4% 66.7%, 6.2% 61.3%, 7.1% 45.7%, 6.8% 26.8%, 4.5% 12.9%);
+  }
+  .dropdown .dd-head {
+    position: absolute; left: 20px; right: 16px; top: 8px;
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
+    letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .dropdown .dd-head svg {
+    width: 15px; height: 15px; flex: none;
+    fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round;
+  }
+  .dropdown .dd-count { margin-left: auto; letter-spacing: 1px; }
+  /* The ruling lives on the list, not the card, so it scrolls with the titles. */
+  .dropdown .dd-list {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    /* out to the card's edges, so the rules run edge to edge the way a printed card's do */
+    margin: 0 -16px 0 -20px; padding: 0 16px 0 20px;
+    background: repeating-linear-gradient(to bottom,
+      transparent 0 calc(var(--row) - 1px), var(--card-rule) calc(var(--row) - 1px) var(--row)) local;
+  }
+  .dropdown .item {
+    position: relative; height: var(--row);
+    display: flex; align-items: flex-end; padding: 0 0 6px; cursor: pointer;
+    font-family: var(--type); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink);
+    white-space: nowrap;
+  }
+  /* A title too long for the card ends in an ellipsis rather than running off its edge. */
+  .dropdown .dd-title { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 auto; padding: 0 4px; }
+  /* Room for a thumb: rows open up on a touch screen. */
+  @media (pointer: coarse) { .dropdown { --row: 42px; } }
+  /* The pick wears the chisel highlighter every revealed lyric wears (named on that shared
+     rule), its height stepping from row to row; hovering a row gives it a lighter pass. */
+  .dropdown .item.active .dd-title { font-weight: 700; }
+  .dropdown .item:hover:not(.active) .dd-title { --hl: color-mix(in srgb, var(--highlighter) 45%, transparent); }
+  .dropdown .item:nth-child(3n+2) .dd-title { --hl-y: 78%; --hl-h: 62%; }
+  .dropdown .item:nth-child(3n) .dd-title { --hl-y: 64%; --hl-h: 70%; }
+
+  /* Off-limits entries (Normal mode): still clickable, but selecting one triggers the
+     reject-flash rather than scoring it. Struck through in red pen, the reason beside it. */
+  .dropdown .item.off-limits .dd-title {
+    color: var(--ink-soft);
+    text-decoration: line-through; text-decoration-thickness: 1.5px; text-decoration-color: rgba(178, 58, 58, 0.75);
+  }
+  .dropdown .item.off-limits:is(.active, :hover) .dd-title { --hl: rgba(178, 58, 63, 0.16); color: var(--ink-soft); }
   .dropdown .item.off-limits .dd-tag {
-    display: inline-block; margin-left: 8px; vertical-align: 1px;
+    flex: none; margin-left: 10px;
     font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px; text-transform: uppercase;
-    color: #9b2226; text-decoration: none;
+    color: #9b2226;
   }
-  .dropdown .item.off-limits.active, .dropdown .item.off-limits:hover {
-    background: linear-gradient(rgba(178,58,58,0.10), rgba(178,58,58,0.10)), var(--paper-edge);
-  }
+  :root[data-theme="dark"] .dropdown .item.off-limits .dd-tag { color: #e5837d; }
 
   /* red reject-flash — pops above the input when a blocked title is picked, then
      fades. The input gets a matching red underline pulse. */
@@ -10498,7 +10558,8 @@
   .lyric-card .lyric-line mark,
   .lyric-reveal--compact .lyric-line mark,
   .vw-say mark, .bg-only-line mark, .va-text mark,
-  .bg-scrap.is-best .bg-scrap-word, .bg-blank {
+  .bg-scrap.is-best .bg-scrap-word, .bg-blank,
+  .dropdown .item:is(.active, :hover) .dd-title {
     --hl: var(--highlighter);
     color: var(--ink); font-weight: 700;
     padding: 0 4px; margin: 0;
@@ -14044,8 +14105,8 @@
      bead box's label (.tb-tape), the Records
      page personal-best tiles
      (.pb-tile::before), the bonus-run sleeve (.bg-back::before), the pause card, the
-     polaroids, the milestone sticky and the in-game suggestion dropdown
-     (.dropdown .item::before). It is deliberately PLAIN: a frosted translucent base with a
+     polaroids, the milestone sticky and the two corner strips holding the suggestion card
+     (.dropdown::before/::after). It is deliberately PLAIN: a frosted translucent base with a
      half-strength tint (so the ruled paper reads faintly through), one soft diagonal sheen,
      and a whisper of an edge. The tear does the rest.
 
@@ -14056,8 +14117,8 @@
        · a bright top edge (0.6 white). It read as a bevel, lifting the strip like a sticker.
        · a drop-shadow(). clip-path is applied AFTER filter, so the torn outline cut the
          shadow off and it never rendered, while still promoting every strip to its own
-         compositing layer. On the dropdown, rebuilt every keystroke, that layer churn left
-         phantom song titles painted on the page in Chromium (bisected to the filter alone,
+         compositing layer. On the old dropdown's per-row strips, rebuilt every keystroke, that
+         layer churn left phantom song titles painted on the page in Chromium (bisected to the filter alone,
          caught in Brave). Never put a filter back on a strip. A shadow would have to live on
          a wrapper element, which the ::before strips cannot have.
      Per-context knobs: --tape-color (any CSS colour) tints the strip; --tape-clip supplies
@@ -14072,7 +14133,8 @@
   .tb-tape,
   .pb-tile::before,
   .bg-back::before,
-  .dropdown .item::before {
+  .dropdown::before,
+  .dropdown::after {
     background:
       /* diagonal wrinkle: a bright sheen band then a faint shadow crease */
       linear-gradient(102deg,
@@ -14104,7 +14166,7 @@
      quieter still than by day, for the same reason: any bright hairline on a dark strip is
      just a bright line. */
   :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape, .stp-tape, .tb-tape,
-                               .pb-tile::before, .bg-back::before, .dropdown .item::before) {
+                               .pb-tile::before, .bg-back::before, .dropdown::before, .dropdown::after) {
     background:
       linear-gradient(102deg,
         rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0) 52%,
@@ -14117,13 +14179,11 @@
       inset 0 0.5px 0 rgba(255, 255, 255, 0.06),
       inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.2);
   }
-  /* Preset hand-torn outlines, cycled so neighbouring tiles/dropdown rows differ. */
-  .pb-tile:nth-child(3n+2)::before,
-  .dropdown .item:nth-child(3n+2)::before {
+  /* Preset hand-torn outlines, cycled so neighbouring tiles differ. */
+  .pb-tile:nth-child(3n+2)::before {
     --tape-clip: polygon(3.7% 0%, 95.9% 0%, 93.6% 21%, 92.6% 29.1%, 92.9% 44.8%, 94.6% 63.7%, 91.8% 83%, 91.1% 100%, 9% 100%, 9.3% 78.3%, 5.7% 58.9%, 5.5% 39.4%, 6.9% 24.4%);
   }
-  .pb-tile:nth-child(3n)::before,
-  .dropdown .item:nth-child(3n)::before {
+  .pb-tile:nth-child(3n)::before {
     --tape-clip: polygon(6.8% 0%, 95.3% 0%, 98.2% 15.7%, 94.2% 32%, 95.3% 44.4%, 92.8% 61%, 93.5% 69.6%, 91.3% 83%, 92.6% 100%, 6.8% 100%, 5.5% 84.8%, 6.4% 66.7%, 6.2% 61.3%, 7.1% 45.7%, 6.8% 26.8%, 4.5% 12.9%);
   }
   /* Geometry + tint for the nav-card strips (size/transform/clip are overridden inline). */
@@ -16979,8 +17039,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   #settingsModal .settings-card { max-height: calc(100dvh - 70px); }
 }
 
-.dropdown { overflow-y: auto; overscroll-behavior: contain; }
-.dropdown[data-side="above"] { box-shadow: 0 -5px 12px rgba(43,39,34,0.12); }
 
 /* An interrupted run: the work on the page is put away (the word, the answer line and whatever
    is dealt below them go, and only the page's head stays: the page count, the bracelet, a bonus
