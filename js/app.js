@@ -24076,6 +24076,65 @@ function isTitleFragment(np) {
   return allSongs.some((s) => s._normTitleLyric.includes(np));
 }
 
+// One letter slip in ONE word, with the rest of the phrase held verbatim. Searching
+// anchored phrases avoids running a whole-catalogue fuzzy comparison on every key.
+// The last token can still be a prefix, just as on the meter's existing exact path.
+function lyricTokenTypoApart(typed, source) {
+  if (oneTypoApart(typed, source)) return true;
+  // A slip in the ending can stop normalizeLyric dropping the g: "dancimg" no longer
+  // folds beside "dancing" -> "dancin". Compare the unfolded spelling too, but only
+  // when it folds right back to this token (so "sing" never becomes "sin").
+  const unfolded = source.replace(/in(s)?$/, "ing$1");
+  return unfolded !== source && normalizeLyric(unfolded) === source && oneTypoApart(typed, unfolded);
+}
+
+function* typoLyricFragments(np, lyrics) {
+  const words = np.split(" ");
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const before = i ? escapeRegExp(words.slice(0, i).join(" ") + " ") : "";
+    const after = i < words.length - 1 ? escapeRegExp(" " + words.slice(i + 1).join(" ")) : "";
+    for (const length of [word.length, word.length - 1, word.length + 1, word.length - 2]) {
+      if (length < 1) continue;
+      const rx = new RegExp(`(?:^| )${before}(\\S{${length}})${after}`, "g");
+      let hit;
+      while ((hit = rx.exec(lyrics))) {
+        const at = hit.index + (hit[0].startsWith(" ") ? 1 : 0);
+        rx.lastIndex = at + 1;                       // repeated phrases may overlap
+        if (!lyricTokenTypoApart(word, hit[1])) continue;
+        yield { at, phrase: hit[0].trim() };
+      }
+    }
+  }
+}
+
+function verseTypoProgress(np, raw) {
+  // Short guesses need to remain exact. Only substantial phrases get the new latitude.
+  const count = np.split(" ").length;
+  if (count < MIN_LYRIC_WORDS &&
+      !(count >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) return null;
+  // A misspelled title must be as uninformative as a correctly spelled one. This reads
+  // ALL titles, including songs that cannot answer the page, just like isTitleFragment.
+  if (allSongs.some((s) => !typoLyricFragments(np, s._normTitleLyric).next().done)) return null;
+  for (const s of currentSongs) {
+    for (const hit of typoLyricFragments(np, s._normLyrics)) {
+      if (isTitleFragment(hit.phrase) || !nearPromptWord(s, hit.at, hit.phrase)) continue;
+      const { text: line, lines } = recoverLyricLine(s, hit.phrase);
+      const { tier } = gradeLyricRecall(np, line, lines);
+      if (!phraseSingsPromptWord(np, raw)) {
+        return RECALL_RANK[tier] > RECALL_RANK.good ? "good" : tier === "base" ? "fragment" : tier;
+      }
+      // Submit the ORIGINAL spelling through the ordinary judge. Never grade a repaired
+      // line more generously than the answer will earn, or widen prompt-word tolerance.
+      const verdict = matchLyricLine(raw);
+      if (!verdict) return null;
+      const earned = RECALL_RANK[tier] < RECALL_RANK[verdict.tier] ? tier : verdict.tier;
+      return earned === "base" ? "fragment" : earned;
+    }
+  }
+  return null;
+}
+
 // Where the page's word(s) actually fall in a song, as word offsets into its flat blob.
 // Built once per song per page and cached, since the answer can't change while the page is
 // up and rebuilding it on every keystroke would mean a regex per token per valid song.
@@ -24119,8 +24178,8 @@ function nearPromptWord(song, at, np) {
 // fragment of a valid song, near where that song sings the page's word, and not merely a
 // song title), and returns a QUANTIZED tier — never a word count, a line length, or any
 // un-typed text. Returns null when the text isn't yet a real fragment (so the meter stays
-// hidden until the player is genuinely on the line they were asked for). Cheap: an indexOf
-// over currentSongs' precomputed _normLyrics blobs, gated behind the input debounce.
+// hidden until the player is genuinely on the line they were asked for). The exact path
+// stays cheap; one-slip recovery only runs when it fails, behind the input debounce.
 function verseProgress(text) {
   const np = normalizeSungPhrase(text);
   if (!np || np.split(" ").length < 2) return null;
@@ -24140,7 +24199,7 @@ function verseProgress(text) {
     if ((tier === "perfect" || tier === "verse") && !phraseSingsPromptWord(np, text)) return "good";
     return tier === "base" ? "fragment" : tier;
   }
-  return null;
+  return verseTypoProgress(np, text);
 }
 
 const VERSE_METER = {
