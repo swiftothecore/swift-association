@@ -14505,8 +14505,8 @@
      At the cap the bar stops being a meter and becomes a strip of gold leaf laid into the
      passport. The leaf's grain is printed and always drawn; .mpp-sheen, one slow pass of light
      down its length, is motion, so passportHTML only emits it when motionReduced() is false. */
-  .mpp-bar.foil { border-color: rgba(150, 105, 20, 0.9); background: rgba(150, 105, 20, 0.14); }
-  .mpp-bar.foil i { border-right: 0; background-color: #c8951f;
+  .mpp-bar.foil, .ms-bar.maxed { border-color: rgba(150, 105, 20, 0.9); background: rgba(150, 105, 20, 0.14); }
+  .mpp-bar.foil i, .ms-bar.maxed i { border-right: 0; background-color: #c8951f;
     /* leaf grain over beaten gold: the flecks tile on co-prime widths so no repeat is visible
        across the bar, and the base gradient is the fold-and-shadow of real foil. */
     background-image:
@@ -14635,7 +14635,7 @@
 
   .ms-bar { height: 9px; border-radius: 5px; background: rgba(43, 39, 34, 0.1); overflow: hidden; margin: 12px auto 0; max-width: 320px; }
   .ms-bar i { display: block; height: 100%; border-radius: 5px; background: rgba(var(--m-accent), 0.7); }
-  .ms-bar.maxed i { background: rgba(199, 149, 31, 0.85); }
+  .ms-bar.maxed { border-style: solid; border-width: 1px; }
   /* ===== REWARD BOARD (js/rewardboard.js) =====
        Every reward family drawn as the object it would come in, each wearing the passport stamp
        that opened it. Objects with a material of their own keep its colours at night; only what
