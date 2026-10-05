@@ -9822,6 +9822,10 @@
     margin-left: 8px; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft);
     white-space: nowrap;
   }
+  /* A line of a title-barred song: no rungs to climb, just the note, in the gauge's own quiet
+     ink since nothing has been refused yet. Allowed to wrap, so a long title fits a phone. */
+  .verse-meter.barred .vm-strokes { display: none; }
+  .verse-meter.barred .vm-label { margin-left: 0; white-space: normal; text-align: center; }
 
   /* ---------- Quit / give-up (close the notebook) ---------- */
   .quit-btn {

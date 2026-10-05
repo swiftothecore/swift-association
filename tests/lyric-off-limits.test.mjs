@@ -78,3 +78,18 @@ test('stays shut when titles are allowed, on Impostor runs, and on Title...?', (
   h.context.currentChallenge = { rule: 'titleHas' };
   assert.equal(h.context.offLimitsLyricSong(LINE), null);
 });
+
+test('the live note waits for the length floor and gives way to valid songs', () => {
+  const h = harness();
+  h.setWord('well');
+  assert.match(h.context.barredLyricProgress(LINE)?.title || '', /^All Too Well/);
+  assert.match(h.context.barredLyricProgress('I remember it all too')?.title || '', /^All Too Well/);
+  assert.equal(h.context.barredLyricProgress('I remember'), null);
+  assert.equal(h.context.barredLyricProgress('all too well'), null);
+  const valid = h.context.currentSongs.find((s) => /\bwell\b/i.test(s.lyrics));
+  const shared = valid._normLyrics.split(' ').slice(0, 5).join(' ');
+  assert.equal(h.context.barredLyricProgress(shared), null, shared);
+  h.context.noTitle = false;
+  h.setWord('well');
+  assert.equal(h.context.barredLyricProgress(LINE), null);
+});

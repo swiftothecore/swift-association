@@ -23971,20 +23971,46 @@ function matchLyricLine(phrase, pool = currentSongs) {
 // Two places it stays shut. Title...? inverts the rule, so there is nothing barred to explain.
 // And an Impostor run must never hear it: a fake word has no title songs, so a reject naming one
 // would tell the player the word on the page is real.
+function barredLyricSongs() {
+  if (!currentWord || !effectiveNoTitle() || impostorRuleActive()) return [];
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas") return [];
+  return validSongs(currentWord, effectiveStrict(), false).filter(isOffLimitsPick);
+}
 function offLimitsLyricSong(phrase) {
-  if (!currentWord || !effectiveNoTitle() || impostorRuleActive()) return null;
-  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas") return null;
-  const barred = validSongs(currentWord, effectiveStrict(), false).filter(isOffLimitsPick);
+  const barred = barredLyricSongs();
   if (!barred.length) return null;
   const m = matchLyricLine(phrase, barred);
   return m ? m.song : null;
 }
+// The same news while the line is still being written, so a ten-second page is not spent typing
+// out a line that was never going to count. Held to less than the verdict, never more: the
+// length floor a sung answer needs, verbatim text only (the fuzzy reading waits for Enter), and
+// near where that song sings the word, the gauge's own proximity rule. Silent whenever the
+// fragment could still be heading into a VALID song, i.e. any valid song holds it word for word,
+// so a line that opens the same way in both never warns someone off the right track. And silent
+// on a bare title fragment, which the title path already answers by name.
+function barredLyricProgress(text) {
+  const np = normalizeSungPhrase(text);
+  if (!np) return null;
+  const count = np.split(" ").length;
+  if (count < MIN_LYRIC_WORDS &&
+      !(count >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) return null;
+  if (isTitleFragment(np)) return null;
+  if (currentSongs.some((s) => s._normLyrics.includes(np))) return null;
+  for (const s of barredLyricSongs()) {
+    const at = s._normLyrics.indexOf(np);
+    if (at >= 0 && nearPromptWord(s, at, np)) return s;
+  }
+  return null;
+}
 // The sung-line twin of rejectOffLimits. Wipes the box like every rule-based reject, since the
 // fix is a different line rather than more of this one. No charm: the title-path one is about
-// typing the title, which this player did not do.
+// typing the title, which this player did not do. On a page whose word can't be read (Vanishing
+// Word and friends) the word itself is left out: this flash must not be what hands it back.
 function rejectOffLimitsLine(song) {
+  const word = promptWordLegible() ? `“${escapeHtml(censor(currentWord))}”` : "the word";
   softRejectFlash(`that line's from <b>“${escapeHtml(censor(song.title))}”</b>, and `
-    + `“${escapeHtml(censor(currentWord))}” is in its title. sing another`);
+    + `${word} is in its title. sing another`);
 }
 
 // Recover a display line for a FUZZY (non-verbatim) match: scan the song's contiguous
@@ -24256,6 +24282,16 @@ function renderVerseMeter(text) {
   // those challenges is that the word is gone, and nothing else on screen may hand it back.
   if (!promptWordLegible()) { meter.hidden = true; return; }
   const tier = (gameType !== "daily" && hintTier >= 3) ? null : verseProgress(text);
+  // Dark gauge, but the line is one of a song the page bars by its title: say so in the gauge's
+  // place instead of letting the clock run out on it. Only ever when the gauge itself is dark.
+  const barred = tier ? null : barredLyricProgress(text);
+  meter.classList.toggle("barred", !!barred);
+  if (barred) {
+    meter.hidden = false;
+    meter.querySelector(".vm-label").textContent =
+      `“${censor(barred.title)}” has “${censor(currentWord)}” in its title`;
+    return;
+  }
   if (!tier) { meter.hidden = true; return; }
   const { level, label } = VERSE_METER[tier];
   meter.hidden = false;
@@ -24689,7 +24725,9 @@ function submitAnswer(song, isTimeout) {
       if (barred) { noteWrongSubmission(barred); rejectOffLimitsLine(barred); return; }
       noteWrongSubmission(null);
       // You had one job: the verse gauge was lit on the line as it was sent, and it still missed.
-      if (triedLyric && !$("verseMeter").hidden && catalogueCharmsLive()) earnTumblrPost("one-job-test-people");
+      // The barred-song note borrows the gauge's place but is not the gauge lighting.
+      const gaugeLit = !$("verseMeter").hidden && !$("verseMeter").classList.contains("barred");
+      if (triedLyric && gaugeLit && catalogueCharmsLive()) earnTumblrPost("one-job-test-people");
       if (triedLyric) nudgeLyricNeedsWord($("songInput").value);
       return;
     }
@@ -30751,6 +30789,9 @@ function buildDevApi() {
         // A refused line the verdict recognised as one of the page's title-barred songs, i.e.
         // the line that gets "is in its title. sing another" instead of silence or the nudge.
         offLimits: m ? null : (offLimitsLyricSong(phrase || "") || {}).title || null,
+        // The same song caught while typing, which is when the gauge's place shows the note.
+        // Stricter than offLimits by design (verbatim, near the word, valid songs first).
+        offLimitsLive: (barredLyricProgress(phrase || "") || {}).title || null,
       };
     },
     // Typed-title typo forgiveness. Turning it off restores the strict resolution (exact
