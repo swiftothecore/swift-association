@@ -23486,9 +23486,9 @@ function shortLineSubstantial(normPhrase, word) {
 
 // The round's valid song that has this phrase as a COMPLETE line, or null. Verbatim
 // only — at this length a fuzzy window match would be noise, not recall.
-function shortLineSong(normPhrase) {
+function shortLineSong(normPhrase, pool = currentSongs) {
   if (!shortLineSubstantial(normPhrase, currentWord)) return null;
-  return currentSongs.find((s) => normLineSet(s).has(normPhrase)) || null;
+  return pool.find((s) => normLineSet(s).has(normPhrase)) || null;
 }
 
 // The word(s) a lyric answer has to actually sing. Normally the page's one word; on a
@@ -23905,7 +23905,10 @@ function inkRuleActive() {
   return gameType === "challenge" && !!currentChallenge && currentChallenge.rule === "ink";
 }
 
-function matchLyricLine(phrase) {
+// `pool` is the set of songs the line may be credited to. It is the page's valid songs everywhere
+// a verdict is being given; offLimitsLyricSong below is the one caller that passes another set,
+// and it only ever uses the answer to explain a rejection.
+function matchLyricLine(phrase, pool = currentSongs) {
   const normPhrase = normalizeSungPhrase(phrase);
   if (!normPhrase) return null;
   if (!phraseSingsPromptWord(normPhrase, phrase)) return null;
@@ -23917,7 +23920,7 @@ function matchLyricLine(phrase) {
     // Resolved here rather than falling through, so the answer is credited to the song
     // whose LINE it is — not to some other valid song that happens to carry the same
     // few words mid-line — and never to the fuzzy path, which is meaningless this short.
-    const song = shortLineSong(normPhrase);
+    const song = shortLineSong(normPhrase, pool);
     if (!song) return null;
     const { text: line, lines } = recoverLyricLine(song, normPhrase);
     return { song, line, fuzzy: false, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
@@ -23927,7 +23930,7 @@ function matchLyricLine(phrase) {
   // stays shut by MIN_LYRIC_WORDS plus a real-line match, as it always was.
 
   // Fast path: a verbatim contiguous run anywhere in the lyrics (incl. across lines).
-  for (const s of currentSongs) {
+  for (const s of pool) {
     if (s._normLyrics.includes(normPhrase)) {
       const { text: line, lines } = recoverLyricLine(s, normPhrase);
       return { song: s, line, fuzzy: false, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
@@ -23941,7 +23944,7 @@ function matchLyricLine(phrase) {
   // not verbatim. fuzzySubstringRatio aligns the typed phrase to its best window and
   // leaves trailing lyric free, so longer songs aren't penalised.
   let best = null;
-  for (const s of currentSongs) {
+  for (const s of pool) {
     const ratio = fuzzySubstringRatio(normPhrase, s._normLyrics, FUZZY_THRESHOLD);
     if (ratio < FUZZY_THRESHOLD) continue;
     if (!best || ratio > best.ratio ||
@@ -23953,6 +23956,35 @@ function matchLyricLine(phrase) {
   if (!best) return null;
   const { text: line, lines } = recoverFuzzyLine(best.song, normPhrase);
   return { song: best.song, line, fuzzy: true, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
+}
+
+// A sung line that missed every valid song but is, by the same matcher and the same thresholds,
+// a line of a song the page bars for holding the word in its TITLE. The typed-title path already
+// refuses those by name ("is in the title. try another"); without this the sung-line path said
+// nothing at all, which reads as "you misremembered the line" when the line was right.
+//
+// It confirms nothing the player can use. The barred songs are the mode's rule applied to the
+// page's word, Hard prints them in the margin before a key is pressed, and this only runs after
+// the valid songs have already failed, so it says nothing about which songs ARE valid. A line
+// shared word for word with a valid song never reaches here: the valid song took it first.
+//
+// Two places it stays shut. Title...? inverts the rule, so there is nothing barred to explain.
+// And an Impostor run must never hear it: a fake word has no title songs, so a reject naming one
+// would tell the player the word on the page is real.
+function offLimitsLyricSong(phrase) {
+  if (!currentWord || !effectiveNoTitle() || impostorRuleActive()) return null;
+  if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas") return null;
+  const barred = validSongs(currentWord, effectiveStrict(), false).filter(isOffLimitsPick);
+  if (!barred.length) return null;
+  const m = matchLyricLine(phrase, barred);
+  return m ? m.song : null;
+}
+// The sung-line twin of rejectOffLimits. Wipes the box like every rule-based reject, since the
+// fix is a different line rather than more of this one. No charm: the title-path one is about
+// typing the title, which this player did not do.
+function rejectOffLimitsLine(song) {
+  softRejectFlash(`that line's from <b>“${escapeHtml(censor(song.title))}”</b>, and `
+    + `“${escapeHtml(censor(currentWord))}” is in its title. sing another`);
 }
 
 // Recover a display line for a FUZZY (non-verbatim) match: scan the song's contiguous
@@ -24652,6 +24684,9 @@ function submitAnswer(song, isTimeout) {
     // Nothing the catalogue recognises. The page isn't burned, but something WAS sent, so it
     // goes in the log: a run that spent three pages guessing at spellings isn't a clean one.
     if (!song) {
+      // A real line, but of a song the page bars by title: say so, the way naming it would.
+      const barred = triedLyric ? offLimitsLyricSong($("songInput").value) : null;
+      if (barred) { noteWrongSubmission(barred); rejectOffLimitsLine(barred); return; }
       noteWrongSubmission(null);
       // You had one job: the verse gauge was lit on the line as it was sent, and it still missed.
       if (triedLyric && !$("verseMeter").hidden && catalogueCharmsLive()) earnTumblrPost("one-job-test-people");
@@ -30713,6 +30748,9 @@ function buildDevApi() {
         accepted: !!m,
         song: m ? m.song.title : null,
         tier: m ? m.tier : null,
+        // A refused line the verdict recognised as one of the page's title-barred songs, i.e.
+        // the line that gets "is in its title. sing another" instead of silence or the nudge.
+        offLimits: m ? null : (offLimitsLyricSong(phrase || "") || {}).title || null,
       };
     },
     // Typed-title typo forgiveness. Turning it off restores the strict resolution (exact
