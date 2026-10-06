@@ -77,6 +77,35 @@ export function normalizeLyric(s, { keepApostrophes = false } = {}) {
     .trim();
 }
 
+// Second pressings of one song: "State Of Grace (Acoustic Version)" beside "State Of Grace",
+// "Karma (Remix)" beside "Karma". Returns a Map from each song object to the song its family
+// is counted as (itself, when it is nobody's version), so "how many songs sing this word"
+// counts a song once however many pressings of it the catalogue carries.
+// A title is a version only when cutting ONE trailing bracketed qualifier leaves the title of
+// another song ON THE SAME ALBUM, and that album guard is load-bearing: Ariana has "Intro",
+// "intro (end of the world)" and "Intro (C&C)" on three different records, and a bare title
+// match would fold all three into one. It also keeps a blended corpus from merging two
+// artists' songs that happen to share a name. "Mary's Song (Oh My My My)" and "Gasoline
+// (Remix)" have no base on their album and stay songs of their own. The cut is applied again
+// to the base, so "X (a) [b]" -> "X (a)" -> "X" resolves to the head of the whole family.
+export function versionFamilies(songs) {
+  const key = (album, title) => album + "\u0000" + title.toLowerCase();
+  const byKey = new Map(songs.map((s) => [key(s.album, s.title), s]));
+  const parent = (s) => {
+    const base = s.title.replace(/\s*[([][^()[\]]*[)\]]\s*$/, "").trim();
+    if (!base || base === s.title) return null;
+    const found = byKey.get(key(s.album, base));
+    return found && found !== s ? found : null;
+  };
+  const heads = new Map();
+  for (const s of songs) {
+    let head = s;
+    for (let up = parent(head); up; up = parent(head)) head = up;
+    heads.set(s, head);
+  }
+  return heads;
+}
+
 // Standard Levenshtein edit distance (two-row DP).
 export function levenshtein(a, b) {
   if (a === b) return 0;

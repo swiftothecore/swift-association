@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { wordRegex } from '../js/match.js';
-import { normalizeTitle, normalizeLyric } from '../js/util.js';
+import { normalizeTitle, normalizeLyric, versionFamilies } from '../js/util.js';
 import { TITLE_ALIASES, TAYLOR_BUCKETS, RECENT_WINDOW } from '../js/config.js';
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -11,7 +11,7 @@ const grouped = read('../data/songs.json'), words = read('../data/words.json');
 const guest = read('../data/guests/olivia-rodrigo.json');
 const section = (a, b) => app.slice(app.indexOf(a), app.indexOf(b, app.indexOf(a)));
 function harness() {
-  const context = vm.createContext({ console, normalizeTitle, normalizeLyric, TITLE_ALIASES,
+  const context = vm.createContext({ console, normalizeTitle, normalizeLyric, versionFamilies, TITLE_ALIASES,
     wordRegexCore: wordRegex, effectiveStrict: () => { throw Error('Pool used live difficulty'); },
     indexPlayableWords() {}, allSongs: [], titleIndex: new Map(), spacelessIndex: new Map(),
     playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {},
@@ -101,13 +101,15 @@ test('reusing lyric membership keeps rarity buckets and album word order identic
   const expected = { easy: [], all: h.context.playableWords, hard: [], ultra: [] }, albums = {};
   for (const w of h.context.playableWords) {
     const lenient = wordRegex(w, false), strict = wordRegex(w, true), held = new Set();
-    let easy = 0, hard = 0, ultra = 0;
+    // Counted in songs, a second pressing as the song it presses (versionFamilies).
+    const easyS = new Set(), hardS = new Set(), ultraS = new Set();
     for (const s of h.context.allSongs) {
       if (!lenient.test(s.lyrics)) continue;
-      easy++; held.add(s.album);
-      if (!lenient.test(s.title)) hard++;
-      if (strict.test(s.lyrics) && !strict.test(s.title)) ultra++;
+      easyS.add(s._family); held.add(s.album);
+      if (!lenient.test(s.title)) hardS.add(s._family);
+      if (strict.test(s.lyrics) && !strict.test(s.title)) ultraS.add(s._family);
     }
+    const easy = easyS.size, hard = hardS.size, ultra = ultraS.size;
     for (const album of held) (albums[album] ??= []).push(w);
     if (easy >= TAYLOR_BUCKETS.easy) expected.easy.push(w);
     if (hard >= TAYLOR_BUCKETS.hard[0] && hard <= TAYLOR_BUCKETS.hard[1]) expected.hard.push(w);

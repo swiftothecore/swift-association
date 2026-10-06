@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies } from "./util.js";
 import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
@@ -2086,6 +2086,26 @@ function wordProximity(song, word) {
 }
 function isAlbumAnswer(song) {
   return STUDIO_ALBUMS.includes(song.album) && !NON_ALBUM_TRACKS.has(song.title);
+}
+/* A second pressing ("Karma (Remix)", "State Of Grace (Acoustic Version)") is the same song
+   to a player, so anything that COUNTS or SHOWS songs goes through these two, while anything
+   that ACCEPTS an answer keeps every pressing: naming either version is still right. */
+function songCount(songs) {
+  return new Set(songs.map((s) => s._family || s)).size;
+}
+// One entry per song, kept in the list's order, with the original standing in for its family
+// whenever the original is in the list too. A word only Kendrick sings keeps Bad Blood (Remix).
+function oneVersionEach(songs) {
+  const present = new Set(songs);
+  const seen = new Set();
+  const out = [];
+  for (const s of songs) {
+    const head = s._family || s;
+    if (seen.has(head)) continue;
+    seen.add(head);
+    out.push(present.has(head) ? head : s);
+  }
+  return out;
 }
 /* Shuffle first, then put studio-album songs before non-album songs. Within each
    group, closer word matches come first; stable sorting keeps the shuffle as the
@@ -5952,7 +5972,7 @@ function checkAnswerStickers(song, lyricMatch) {
   // Measured live off the same call the word buckets are built from rather than kept as a list,
   // because a list would quietly become a lie the first time a lyric was corrected. Six words
   // qualify as this is written, which is about one run in ten dealing you the shot at it.
-  if (cataloguePageHasWord() && songsContainingWord(currentWord, false).length === 1) {
+  if (cataloguePageHasWord() && songCount(songsContainingWord(currentWord, false)) === 1) {
     earnSticker("solitaire");
   }
 
@@ -14905,8 +14925,12 @@ function installCorpus(grouped, words, opts = {}) {
   lyricVocab = new Set();
   lyricApostrophes = new Map();
   const spelledPlain = new Set();      // the same flattened token, seen somewhere WITHOUT one
+  const families = versionFamilies(allSongs);
   for (const s of allSongs) {
     s._norm = normalizeTitle(s.title);
+    // The song this one is a pressing of (itself, when it is nobody's version): what songCount
+    // and oneVersionEach count by. Per-song for the same reason as _normTitleLyric below.
+    s._family = families.get(s);
     s._aliasNorms = [];   // the accepted aliases, normalized, so the dropdown can find a song by them
     s._normLyrics = normalizeLyric(s.lyrics);   // flat blob for lyric-line matching
     // The title in LYRIC normalization (not normalizeTitle's), so isTitleFragment can
@@ -15807,13 +15831,16 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     // Easy counts plain lyric matches (title songs are allowed in Easy/Medium).
     // Hard/Ultra count only *valid* answers (word in lyrics but NOT the title), so
     // every bucketed word still has at least one answerable, non-giveaway song.
-    let easyN = 0, hardN = 0, ultraN = 0;
+    // Each counts SONGS, not pressings: a word in State Of Grace and its acoustic version is
+    // in one song, so it is not pushed a band commoner than it really is.
+    const easyS = new Set(), hardS = new Set(), ultraS = new Set();
     for (const s of songsContainingWord(w, false)) {
-      easyN++;
+      easyS.add(s._family);
       albums.add(s.album);
-      if (!lenient.test(s.title)) hardN++;
-      if (strict.test(s.lyrics) && !strict.test(s.title)) ultraN++;   // strict, no title, rarest
+      if (!lenient.test(s.title)) hardS.add(s._family);
+      if (strict.test(s.lyrics) && !strict.test(s.title)) ultraS.add(s._family);   // strict, no title, rarest
     }
+    const easyN = easyS.size, hardN = hardS.size, ultraN = ultraS.size;
     for (const a of albums) (albumWordMap[a] = albumWordMap[a] || []).push(w);
     if (easyN >= cfg.easy) easy.push(w);
     if (hardN >= cfg.hard[0] && hardN <= cfg.hard[1]) hard.push(w);
@@ -17122,7 +17149,7 @@ function useHint() {
   const tiers = [];
   // Tier 1 — how many songs, and the album of one of them (era/album-coloured chip).
   if (hintTier >= 1) {
-    const n = currentSongs.length;
+    const n = songCount(currentSongs);
     const album = roundHintSong.album || "";
     const color = albumColor(album) || "var(--bead)";
     const chip = album && !albumHintLadder()
@@ -18097,7 +18124,7 @@ function setupNewSongChallenge() {
   if (!target) return;
   const candidates = playableWords.filter((w) => wordRegex(w, false).test(target.lyrics));
   if (!candidates.length) return;                         // can't surface it — leave disabled
-  const scored = candidates.map((w) => ({ w, n: validSongs(w, false, false).length }));
+  const scored = candidates.map((w) => ({ w, n: songCount(validSongs(w, false, false)) }));
   const minN = Math.min(...scored.map((s) => s.n));
   challengeForcedWordVal = shuffle(scored.filter((s) => s.n === minN))[0].w;
   challengeTargetSong = target;
@@ -19537,7 +19564,7 @@ function revolveWord() {
   roundHintSong = pickHintSong();
 
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
-  const rar = rarityTier(currentSongs.length);
+  const rar = rarityTier(songCount(currentSongs));
   wrap.dataset.rarity = rar.name;
   wrap.style.setProperty("--rarity", rar.t);
   renderPromptSwipe();
@@ -21755,7 +21782,7 @@ function renderPerkReveals() {
   if (!currentSongs.length) { el.innerHTML = `<span class="chall-banner-tag">help</span> no song fits, so swap it`; return; }
   const sample = roundHintSong || currentSongs[0];
   const parts = [];
-  if (perkReveals.has("count"))   parts.push(`${currentSongs.length} song${currentSongs.length === 1 ? "" : "s"} fit`);
+  if (perkReveals.has("count")) { const n = songCount(currentSongs); parts.push(`${n} song${n === 1 ? "" : "s"} fit`); }
   if (perkReveals.has("letter"))  parts.push(`starts with “${escapeHtml((sample.title.match(/[A-Za-z]/) || ["?"])[0].toUpperCase())}”`);
   if (perkReveals.has("album") && sample.album) {
     const col = albumColor(sample.album) || "var(--ink-soft)";
@@ -22110,7 +22137,7 @@ function bankPot(quiet) {
 // worded rather than counted, so it stays a feel rather than arithmetic — and a word you've
 // never had says exactly that, which is its own kind of warning.
 function wagerTease() {
-  const tier = rarityTier(currentSongs.length);
+  const tier = rarityTier(songCount(currentSongs));
   const spread = {
     common:   "sung all over the catalogue",
     uncommon: "sung in a fair few songs",
@@ -22484,7 +22511,7 @@ function renderPromptSwipe() {
 // Confidence Wager: while the word is face down the band is the very thing being sold on the
 // stake card, so it stays off the page here and is asked for again at the reveal.
 function renderRarityStamp() {
-  const rar = rarityTier(currentSongs.length);
+  const rar = rarityTier(songCount(currentSongs));
   const hide = impostorRuleActive() || commonRuleActive() || tapGridActive() || wordConcealed;
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
   wrap.dataset.rarity = hide ? "common" : rar.name;
@@ -22506,7 +22533,8 @@ function pickHintSong() {
   const usable = live.length ? live : currentSongs;
   const exactRx = new RegExp("\\b" + escapeRegExp(currentWord) + "\\b", "i");
   const pool = usable.filter((s) => exactRx.test(s.lyrics));
-  const from = pool.length ? pool : usable;
+  // One pressing per song, so a remix is not twice as likely to be the song the hints describe.
+  const from = oneVersionEach(pool.length ? pool : usable);
   return from[Math.floor(Math.random() * from.length)];
 }
 
@@ -25235,7 +25263,7 @@ function submitAnswer(song, isTimeout) {
 
   // Diamonds Are Forever — three rare/scarce prompt words answered right in a row.
   // Disqualified in Ultra (its pool is the rarest words, so a streak there is trivial).
-  const rar = rarityTier(currentSongs.length);
+  const rar = rarityTier(songCount(currentSongs));
   if (currentMode.id !== "ultra" && correct && !commonRuleActive() && (rar.name === "rare" || rar.name === "scarce" || rar.name === "singular")) {
     rareStreak++;
     if (rareStreak >= 3) unlock("streak-3-rare-words-no-ultra");
@@ -26015,8 +26043,10 @@ function showWrongFeedback(song, isTimeout) {
     const rest = rankByProximity(pool.filter((s) => !leads.includes(s)), currentWord);
     // Keep hint / tally leads first within their group, but a non-album hint must
     // still follow the album answers.
-    const ordered = [...leads, ...rest].sort((a, b) =>
-      Number(!isAlbumAnswer(a)) - Number(!isAlbumAnswer(b)));
+    // One card per SONG: a word in Snow On The Beach and its remix shows one of them and lets
+    // the next song have the other card, and the count above the cards counts songs too.
+    const ordered = oneVersionEach([...leads, ...rest].sort((a, b) =>
+      Number(!isAlbumAnswer(a)) - Number(!isAlbumAnswer(b))));
     if (bothRuleActive() && bothWords.length > 1) {
       // Both Of Us: the useful reveal isn't three more songs for one word, it's songs shown
       // holding EVERY word on the page — the answers you couldn't find, proved a word at a
@@ -30500,6 +30530,7 @@ function devApplyWord(word) {
   if (!wordConcealed) $("wordDisplay").textContent = currentWord;   // a face-down page stays face down
   renderExcludedNote();
   renderHintAffordance();
+  renderRarityStamp();                  // or the stamp keeps judging the page that was dealt
 }
 
 /* The widest page in the corpus under the round's own levers — the word the most songs hold.
@@ -30512,7 +30543,7 @@ function devApplyWord(word) {
 function devWidestWord(min = 0) {
   let best = null, bestN = min;
   for (const w of playableWords) {
-    const n = validSongs(w, effectiveStrict(), effectiveNoTitle()).length;
+    const n = songCount(validSongs(w, effectiveStrict(), effectiveNoTitle()));
     if (n > bestN) { best = w; bestN = n; }
   }
   return best;
@@ -30808,6 +30839,10 @@ function buildDevApi() {
       })),
     }),
     words: () => playableWords.slice(),
+    // Every pressing the corpus counts as another song's version, so a new song or guest that
+    // folds something it shouldn't shows up here (tests/version-families pins Taylor's list).
+    versions: () => allSongs.filter((s) => s._family && s._family !== s)
+      .map((s) => `${s.title} -> ${s._family.title} (${s.album})`),
     // Every distinct token in the catalogue the lenient matcher credits to a word, split by
     // the same proximity tiers the reveal sorts on. The stem tail is the one rule whose cost
     // is invisible from any screen — a word can look perfectly playable while nearly all its
@@ -30959,14 +30994,16 @@ function buildDevApi() {
        `state` stays inspection-only, so reading the panel cannot allocate hidden reveal models. */
     reveal: {
       state: () => {
+        const songs = songCount(currentSongs);
         const cards = (settings.showExamples && !tapGridActive())
-          ? Math.min(currentSongs.length, currentMode.examples) : 0;
-        const extra = Math.max(0, currentSongs.length - cards);
+          ? Math.min(songs, currentMode.examples) : 0;
+        const extra = Math.max(0, songs - cards);
         const panel = document.querySelector("#feedback .more-songs");
         const rendered = panel ? Number(panel.dataset.moreShown || 0) : 0;
         return {
           word: currentWord || null,
           valid: currentSongs.length,
+          songs,
           cards,
           batch: MORE_EXAMPLES_BATCH,
           extra,
@@ -30992,7 +31029,7 @@ function buildDevApi() {
          On screen the order is just an order — nothing says why one song made a card and
          another didn't — so the studio-albums key is invisible to anyone checking that it
          works, which is the same reason the chain puzzles carry `from` on every decoy. */
-      order: () => rankByProximity(currentSongs, currentWord).map((s, i) => ({
+      order: () => oneVersionEach(rankByProximity(currentSongs, currentWord)).map((s, i) => ({
         n: i + 1, title: s.title, album: s.album,
         near: wordProximity(s, currentWord),          // 0 the word, 1 a variant, 2 neither
         studio: STUDIO_ALBUMS.includes(s.album),
@@ -33547,7 +33584,7 @@ function buildDevApi() {
       // The words only ONE song in the catalogue sings, derived exactly the way Solitaire derives
       // them. This is the audit for that sticker: the list is never written down anywhere, so if
       // a lyric correction moves it, the sticker moves with it and this is what shows you.
-      lonely: () => playableWords.filter((w) => songsContainingWord(w, false).length === 1),
+      lonely: () => playableWords.filter((w) => songCount(songsContainingWord(w, false)) === 1),
       // The lavender sprig wants STICKER_LINGER_SECONDS on a single page, which is a minute and
       // a half of sitting on your hands per attempt. `sat` is the live figure off the page
       // stopwatch; `linger` ages that stopwatch so the next correct answer reads as pressed.
