@@ -9323,7 +9323,10 @@
   .timer-fill {
     height: 100%; width: 100%; border-radius: 6px;
     background: var(--bead);
-    transition: width 0.1s linear, background 0.3s;
+    /* Drained by a transform animation in startTimer (see drainTimerFill), never by width:
+       the track's overflow clips the slid-out part and its radius rounds the left end. */
+    will-change: transform;
+    transition: background 0.3s;
   }
   /* The editor's red pen, not --margin: the margin token is the printed rule, a 45% wash meant
      to sit under text, and across a whole bar it read as dusty pink at the one moment the page

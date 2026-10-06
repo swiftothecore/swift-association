@@ -22697,6 +22697,34 @@ function baseSeconds() {
   return roundSecondsOverride != null ? roundSecondsOverride : currentMode.seconds;
 }
 
+/* The round bar is a full-width fill slid left out of its track, never a width. It used to be
+   a width re-set on every 100ms tick behind a 0.1s transition, which only reads as smooth when
+   every tick lands on time; a late one let the slide finish and the bar sat still, then lurched.
+   On a 5s Ultra clock each tick is ~6.5px of a 320px bar, so the stutter was plain to see. Now
+   the whole drain is ONE animation the browser composites by itself, handed the seconds left,
+   so a busy main thread (the sparkler, typing) cannot make it hitch. Reduced motion skips the
+   animation and the tick paints the bar in steps, as the transition-less bar always did. */
+let timerFillAnim = null;
+const timerFillShift = (frac) => `translateX(${((Math.max(0, Math.min(1, frac)) - 1) * 100).toFixed(3)}%)`;
+// Stop the drain where it stands: the bar a settled answer leaves behind is the time it took.
+function freezeTimerFill() {
+  if (!timerFillAnim) return;
+  try { timerFillAnim.commitStyles(); } catch (e) { /* not rendered: nothing to hold */ }
+  timerFillAnim.cancel();
+  timerFillAnim = null;
+}
+function paintTimerFill(fill, frac) {
+  freezeTimerFill();
+  fill.style.transform = timerFillShift(frac);
+}
+function drainTimerFill(fill, frac, seconds) {
+  paintTimerFill(fill, frac);
+  if (motionReduced() || !(seconds > 0) || typeof fill.animate !== "function") return;
+  timerFillAnim = fill.animate(
+    [{ transform: timerFillShift(frac) }, { transform: timerFillShift(0) }],
+    { duration: seconds * 1000, easing: "linear", fill: "forwards" });
+}
+
 // Paint the round's clock at full WITHOUT starting it — a paused, full-bar "10.0"
 // look. Used while a challenge curtain holds the round, so the previous round's
 // leftover time never shows through (or beneath) the lifting curtain; the live
@@ -22715,7 +22743,7 @@ function showTimerFull() {
     const shared = Math.max(0, Math.min(cap, comboClock));
     if (!(cap > 0)) { if (wrap) wrap.style.display = "none"; return; }
     if (wrap) wrap.style.display = "";
-    fill.style.width = (shared / cap * 100) + "%";
+    paintTimerFill(fill, shared / cap);
     fill.classList.toggle("low", shared <= 3);
     label.textContent = shared.toFixed(1);
     return;
@@ -22727,7 +22755,7 @@ function showTimerFull() {
   const total = base > 0 ? Math.max(floor, base + (extraSecondsPerRound || 0)) : base;
   if (!(total > 0)) { if (wrap) wrap.style.display = "none"; return; }
   if (wrap) wrap.style.display = "";
-  fill.style.width = "100%";
+  paintTimerFill(fill, 1);
   fill.classList.remove("low");
   label.textContent = total.toFixed(1);
 }
@@ -22906,7 +22934,7 @@ function startTimer(resume, resumeTotal, revolveDelay) {
   timerStart = performance.now() - (total - begin) * 1000;
   roundClockTotal = total;   // what "how long is left?" is measured against this page (see clockRemaining)
   if (comboRuleActive() && begin <= 0) { expireComboRun(); return; }
-  fill.style.width = (begin / total * 100) + "%";
+  drainTimerFill(fill, begin / total, begin);
   fill.classList.remove("low");
   label.textContent = begin.toFixed(1);
   // Reset the screen-reader low-time cue for this round (cleared so the same words
@@ -22938,8 +22966,7 @@ function startTimer(resume, resumeTotal, revolveDelay) {
   timerId = setInterval(() => {
     const elapsed = (performance.now() - timerStart) / 1000;
     const remaining = Math.max(0, total - elapsed);
-    const pct = (remaining / total) * 100;
-    fill.style.width = pct + "%";
+    if (!timerFillAnim) fill.style.transform = timerFillShift(remaining / total);
     label.textContent = remaining.toFixed(1);
     fill.classList.toggle("low", remaining <= 3);
     // One spoken cue when the clock runs low (Relaxed has no clock and never reaches here).
@@ -22958,6 +22985,9 @@ function startTimer(resume, resumeTotal, revolveDelay) {
     }
     if (remaining <= 0) {
       label.textContent = "0.0";
+      // The drain begins a frame after timerStart, so it trails the clock by a hair; an
+      // expired page must read empty, not freeze on a sliver beside "0.0".
+      paintTimerFill(fill, 0);
       // It's A Clock!: the shared clock running out ends the whole run, not just a round.
       if (comboRuleActive()) expireComboRun();
       else submitAnswer(null, true);
@@ -22995,6 +23025,7 @@ function clearTimer() {
   if (revolveId) { clearTimeout(revolveId); revolveId = null; }   // stop Revolving Door's word rotation alongside the clock
   revolveDeadline = 0;
   timerSpark.stop();
+  freezeTimerFill();
 }
 
 // Revolving Door only: schedule each swap from a deadline. A recursive timeout behaves like
