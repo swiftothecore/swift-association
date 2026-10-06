@@ -1949,7 +1949,7 @@ function effectiveNoTitle() {
 }
 function effectivePool() {
   // Custom's "Floating" stop: the level drives the rarity bucket instead of a pinned one.
-  if (floatingPoolNow()) return ADAPT_BUCKETS[floatLevel] || "all";
+  if (floatingPoolNow()) return ADAPT_BUCKETS[floatLevel] || "normal";
   if (perkPoolOverride) return perkPoolOverride;   // Choose Your Path: Crowd Pleaser
   if (gameType === "challenge" && currentChallenge) {
     if (currentChallenge.rule === "devil" && devilPoolHard) return "hard";   // Devil's Path: Rarer Air
@@ -29147,7 +29147,7 @@ const HR_SAY = {
   rounds: (m) => m.rounds === 0 ? "page after page" : m.rounds === 1 ? "one page" : `${m.rounds} pages`,
   lives: (m) => m.lives === 1 ? "my only life" : `${m.lives} lives`,
   seconds: (m) => m.seconds === 0 ? "all the time I need" : m.seconds === 1 ? "one second" : `${m.seconds} seconds`,
-  pool: { all: "any word at all", easy: "only common words", hard: "rare words", ultra: "the rarest words", float: "words that rise and fall with how I'm doing" },
+  pool: { normal: "most words, rare sprinkled in", all: "any word at all", easy: "only common words", hard: "rare words", ultra: "the rarest words", float: "words that rise and fall with how I'm doing" },
   answer: { either: "a title or a sung line", title: "the song's title", lyric: "a line I sing back" },
   dropdown: (on) => on ? "Suggest titles" : "Don't suggest titles",
   hintBudget: (m) => m.hintUnlimited ? "as many hints as I like" : m.hintBudget === 0 ? "no hints" : m.hintBudget === 1 ? "one hint" : `${m.hintBudget} hints`,
@@ -29185,6 +29185,7 @@ function hrExample(pool) {
 }
 const HR_WORDS = {
   pool: { cap: "which words you'll be asked", opts: () => [
+    ["normal", HR_SAY.pool.normal, `e.g. “${hrExample("normal")}”`],
     ["all", HR_SAY.pool.all, `e.g. “${hrExample("all")}”`],
     ["easy", HR_SAY.pool.easy, `e.g. “${hrExample("easy")}”`],
     ["hard", HR_SAY.pool.hard, `e.g. “${hrExample("hard")}”`],

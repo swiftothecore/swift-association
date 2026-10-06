@@ -53,8 +53,8 @@ export const RECENT_WINDOW = 5;
 // Normal pool ("normal") reads this; the rarity-tiered modes draw uniformly. See pickWord / pickNovel.
 export const NOVELTY_BOOST = 6;
 // Normal deals what Hard deals and everything commoner (words a page can answer with at least
-// Hard's floor of songs, three on Taylor's catalogue). Lyricist shares the pool, as it always
-// has. The rarer tail, one- and two-song words, is not cut but held back: each page has this
+// Hard's floor of songs, three on Taylor's catalogue). Relaxed and Lyricist share the pool, as
+// they always have, and Custom offers it as a rarity stop. The rarer tail, one- and two-song words, is not cut but held back: each page has this
 // chance of being dealt from it, and a run gets at most one such page, so a perfect run is
 // never decided by drawing two or three words almost nobody knows. 0.05 is about one tail page
 // every other run, close to the rate Normal dealt them at before October 2026's rare-word batch
@@ -299,7 +299,7 @@ export const MODES = {
   // No-timer practice mode (seconds: 0 → startTimer takes the no-timer path). Normal's word
   // pool and suggestions, with two things neither Normal nor Easy has: no clock at all, and
   // the hint ladder, which lives here and nowhere else on the difficulty ladder.
-  relaxed: { id: "relaxed", label: "Relaxed", seconds: 0, dropdown: true, pool: "all", strict: false, noTitle: false, examples: 3, hint: true,  blurb: "no timer · suggestions & hints · all words" },
+  relaxed: { id: "relaxed", label: "Relaxed", seconds: 0, dropdown: true, pool: "normal", strict: false, noTitle: false, examples: 3, hint: true,  blurb: "no timer · suggestions & hints · all words" },
 };
 /* How many additional proof rows each press on a result page reveals. The player can keep
    pressing until the already-scoped answer pool is exhausted. */
@@ -585,10 +585,10 @@ export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3] };
    whatever the player authored, untouched. Deliberately affects RARITY ONLY — it never
    overrides the suggestions or hints levers, because a preset that quietly disabled the
    controls you set would be lying about what it does. */
-export const ADAPT_BUCKETS = [null, "easy", "all", "hard", "ultra"];   // level 1..4 -> wordBuckets key (index 0 unused)
+export const ADAPT_BUCKETS = [null, "easy", "normal", "hard", "ultra"];   // level 1..4 -> wordBuckets key (index 0 unused)
 export const ADAPT_LEVELS = [null, "Common", "Deeper", "Rare", "Rarest"]; // level 1..4 -> readable tier name
 export const ADAPT_MAX_LEVEL = 4;       // top level (ultra bucket)
-export const ADAPT_START_LEVEL = 2;     // start in the middle (the "all" bucket)
+export const ADAPT_START_LEVEL = 2;     // start in the middle (Normal's bucket)
 export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to climb one (a single miss demotes)
 
 /* ---------- Custom mode (player-authored "workshop" modes) ----------
@@ -608,11 +608,11 @@ export const CUSTOM_SECONDS_TYPED_MAX = 600;
 export const CUSTOM_HINT_MAX = 13;       // slider's finite top (0 = no hints); one stop past = unlimited (-1)
 export const CUSTOM_HINT_TYPED_MAX = 99; // typed finite hint budgets can climb this high
 export const CUSTOM_HINT_UNLIMITED = -1; // sentinel: hints never run out this run
-// Word-rarity stops the picker offers. The first four pin one bucket for the whole run;
+// Word-rarity stops the picker offers. The first five pin one bucket for the whole run;
 // "float" rides the level ladder above instead (see ADAPT_BUCKETS). "float" is never
 // "at least Ultra" for customAtLeastUltra — it opens at Common, and the lever comparison
 // there (m.pool === MODES.ultra.pool) rules it out on its own.
-export const CUSTOM_POOLS = ["easy", "all", "hard", "ultra", "float"];
+export const CUSTOM_POOLS = ["normal", "easy", "all", "hard", "ultra", "float"];
 export const CUSTOM_EXAMPLES_MAX = 3;    // example songs shown after a miss (0..3)
 export const CUSTOM_MAX_PRESETS = 12;    // keep the saved list manageable
 export const MEAN_GRUDGE = 5;            // times a word must have beaten you before answering it right earns "Mean"
@@ -636,7 +636,7 @@ export const CUSTOM_ANSWER_MODES = ["title", "lyric", "either"];   // how a page
 // spend it. 12s sits between Easy (15) and Normal (10). Cloned on use. `answer` is the
 // canonical answering lever; `lyricOnly`/`dropdown`/`hint` are derived.
 export const CUSTOM_DEFAULT_MODE = {
-  id: "custom", label: "Custom", seconds: 12, dropdown: true, pool: "all",
+  id: "custom", label: "Custom", seconds: 12, dropdown: true, pool: "normal",
   strict: false, noTitle: true, examples: 3, hint: true, hintBudget: 3, lyricOnly: false,
   answer: "either", rounds: 13, lives: 3,
 };
