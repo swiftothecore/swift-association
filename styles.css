@@ -10564,6 +10564,8 @@
      touched down and lifted, and a faint pale streak runs along the middle. It sits low over
      the x-height instead of framing the ascenders, and its height steps between three cards
      so neighbouring marks don't read as one stamp. --hl is the ink: the wrong card swaps it.
+     The paint starts --hl-in short of the left edge: the hand leans right and the mark sits
+     low, so an even overhang read as running off to the left of the word.
      The "more songs" rows are list items, not cards, so they are named here too. */
   .lyric-card .lyric-line mark,
   .lyric-reveal--compact .lyric-line mark,
@@ -10576,12 +10578,12 @@
     -webkit-box-decoration-break: clone; box-decoration-break: clone;
     background:
       linear-gradient(transparent 46%, rgba(255,255,255,0.16) 47% 51%, transparent 52%)
-        0 var(--hl-y, 70%) / 100% var(--hl-h, 66%) no-repeat,
+        var(--hl-in, 4px) var(--hl-y, 70%) / calc(100% - var(--hl-in, 4px)) var(--hl-h, 66%) no-repeat,
       linear-gradient(104deg, transparent 0 3px, var(--hl) 3px 8px, transparent 11px calc(100% - 11px),
         var(--hl) calc(100% - 8px) calc(100% - 3px), transparent calc(100% - 3px))
-        0 var(--hl-y, 70%) / 100% var(--hl-h, 66%) no-repeat,
+        var(--hl-in, 4px) var(--hl-y, 70%) / calc(100% - var(--hl-in, 4px)) var(--hl-h, 66%) no-repeat,
       linear-gradient(104deg, transparent 0 3px, var(--hl) 3px calc(100% - 3px), transparent calc(100% - 3px))
-        0 var(--hl-y, 70%) / 100% var(--hl-h, 66%) no-repeat;
+        var(--hl-in, 4px) var(--hl-y, 70%) / calc(100% - var(--hl-in, 4px)) var(--hl-h, 66%) no-repeat;
   }
   .lyric-card:nth-child(3n+2) .lyric-line mark,
   .ms-row:nth-child(3n+2) .lyric-line mark { --hl-y: 78%; --hl-h: 62%; }
