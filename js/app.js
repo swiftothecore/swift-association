@@ -15646,6 +15646,7 @@ function beginLineupRun() {
   updateTagline();
   $("pageTotalWrap").style.display = "";
   $("pageTotal").textContent = TOTAL_ROUNDS;
+  journalRunStart("lineup");   // the one start path that never calls notePlayed
   showScreen("game");
   renderLineupGoals();
   nextRound();
@@ -17266,7 +17267,8 @@ function randomToken(cat, key) { return key == null ? cat : cat + ":" + key; }
 
 // Marked at run START, from every start path, however the run was entered. See the ledger's
 // note in storage.js for why this isn't derived from the boards at draw time.
-function notePlayed(cat, key) { markRandomSeen(randomToken(cat, key)); }
+// It is also the one call every run start already shares, so the dev run journal rides on it.
+function notePlayed(cat, key) { journalRunStart(randomToken(cat, key)); markRandomSeen(randomToken(cat, key)); }
 
 // One-time backfill of the ledger from the boards, at startup. Without it a notebook with
 // months of play behind it starts with an empty ledger, reads as "nothing has ever been
@@ -30503,6 +30505,68 @@ function devActive() {
   } catch (e) { return false; }
 }
 
+/* The run journal behind __dev.lastRun. Every run start photographs the notebook's stores, so
+   "undo last run" can put back every one the run changed: history, records, stats, the boards,
+   charms, stickers, XP, the tally, daily state, all of it, without each end path needing an
+   undo of its own. Diffing against the whole notebook rather than a list of record keys is the
+   point: a list would rot the first time an end path learned to write somewhere new.
+   Dev-armed notebooks only, and never on a "don't log runs" run, which writes nothing and would
+   only push the real last run out of the journal. It lives in sessionStorage, which has its own
+   quota, so a copy of a full notebook can't crowd the real one out of localStorage.
+   The skip list is preference and plumbing, not anything a run earns: undoing a run should
+   never also flip a setting changed on the results page or drop an in-progress checkpoint. */
+const RUN_JOURNAL_KEY = "swiftSongAssociation.devRunJournal";
+const RUN_JOURNAL_SKIP = new Set([
+  DEV_FLAG, "swiftSongAssociation.devHidden", "swiftSongAssociation.nointro",
+  DIFF_KEY, DAILY_OWNER_KEY, "swiftSongAssociation.settings", "swiftSongAssociation.search",
+  "swiftSongAssociation.charmFolds", "swiftSongAssociation.pinnedGoal", "swiftSongAssociation.runCheckpoint", "swiftSongAssociation.runCheckpointReceipts",
+]);
+function journalledKey(k) { return k.startsWith("swiftSongAssociation.") && !RUN_JOURNAL_SKIP.has(k); }
+function journalRunStart(label) {
+  if (devNoLog) return;
+  try {
+    if (localStorage.getItem(DEV_FLAG) !== "1") return;
+    const before = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (journalledKey(k)) before[k] = localStorage.getItem(k);
+    }
+    sessionStorage.setItem(RUN_JOURNAL_KEY, JSON.stringify({ label, at: new Date().toISOString(), before }));
+  } catch (e) { /* a notebook too big to copy just goes unjournalled */ }
+}
+function readRunJournal() {
+  try { return JSON.parse(sessionStorage.getItem(RUN_JOURNAL_KEY) || "null"); } catch (e) { return null; }
+}
+// The keys that differ from the journal, whichever way: changed, added, or removed since.
+function runJournalDiff(j) {
+  const changed = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (journalledKey(k) && !(k in j.before)) changed.push(k);
+  }
+  for (const k of Object.keys(j.before)) if (localStorage.getItem(k) !== j.before[k]) changed.push(k);
+  return changed;
+}
+function peekLastRun() {
+  const j = readRunJournal();
+  if (!j) return null;
+  return { label: j.label, at: j.at, changed: runJournalDiff(j).map((k) => k.replace("swiftSongAssociation.", "")) };
+}
+// Puts the notebook back as it stood when the last run began, then drops the journal so a
+// second press can't reach further back. The caller reloads: half the app holds its stores in
+// memory, and a reload is the only way every surface reads the restored ones.
+function undoLastRun() {
+  const j = readRunJournal();
+  if (!j) return null;
+  const changed = runJournalDiff(j);
+  for (const k of changed) {
+    if (k in j.before) localStorage.setItem(k, j.before[k]);
+    else localStorage.removeItem(k);
+  }
+  try { sessionStorage.removeItem(RUN_JOURNAL_KEY); } catch (e) { /* ignore */ }
+  return { label: j.label, changed: changed.map((k) => k.replace("swiftSongAssociation.", "")) };
+}
+
 // Drive a challenge's completed-run tally straight to a number so the return edge can be
 // reached without playing seven runs out. Writes storage directly and fires no charm.
 function devSetReturnRuns(id, n) {
@@ -34856,6 +34920,8 @@ function buildDevApi() {
       clear: () => { clearRoute(); return currentRouteSlug(); },
     },
     // Misc
+    // The last run taken back out of every store it wrote to (see journalRunStart).
+    lastRun: { peek: peekLastRun, undo: undoLastRun },
     setNoLog: (on) => { devNoLog = !!on; },
     reload: () => location.reload(),
     goStart: () => { $("startContent").style.display = ""; renderStartPickers(); showScreen("start"); },

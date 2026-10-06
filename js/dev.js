@@ -1873,6 +1873,17 @@ export function initDev(api) {
         btn("ach", () => { api.reset.ach(); toast("achievements reset"); }, "warn"),
         btn("tally", () => { api.reset.tally(); toast("tally reset"); }, "warn"),
         btn("daily", () => { api.reset.daily(); toast("daily reset"); }, "warn")),
+    // The whole notebook as it stood when the last run began, so this takes back records,
+    // history, stats, boards, charms and XP in one go. Reloads, because the app holds most of
+    // those in memory.
+    row(btn("undo last run + reload", () => {
+      const p = api.lastRun.peek();
+      if (!p) { toast("no run journalled this session"); return; }
+      if (!p.changed.length) { toast(`${p.label} changed nothing`); return; }
+      if (!confirm(`Undo ${p.label} (started ${new Date(p.at).toLocaleTimeString()})?\n\nRestores: ${p.changed.join(", ")}`)) return;
+      api.lastRun.undo();
+      api.reload();
+    }, "warn")),
     row(btn("WIPE ALL + reload", () => { if (confirm("Wipe ALL app data?")) { api.reset.all(); api.reload(); } }, "danger"))));
 
   // ---- Footer ----------------------------------------------------------------
