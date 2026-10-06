@@ -122,10 +122,10 @@ import { skillMarkHTML } from "./skillmarks.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
          ruleTermsFrom, ruleShapeFor } from "./rulemarks.js";
 import {
-  loadRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
+  loadRecords, saveRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
   getAvatar, setAvatar,
-  loadHistory, appendHistory,
-  loadStats, updateStats, totalPlayed,
+  loadHistory, appendHistory, saveHistory,
+  loadStats, saveStats, updateStats, totalPlayed,
   loadAchievements, saveAchievements,
   loadKeepsakes, saveKeepsakes, resetKeepsakes,
   loadStickers, saveStickers, resetStickers,
@@ -157,8 +157,8 @@ import {
   loadLineupBoard, lineupCardRecord, recordLineupRun, resetLineupBoard,
   purgeAdaptive,
   bonusRecord, recordBonusRun, resetBonus, seedBonusSweep,
-  ruthlessRecord, recordRuthlessRun, resetRuthless,
-  loadTracks, trackRecord, recordTrackRun, resetTracks,
+  ruthlessRecord, recordRuthlessRun, resetRuthless, loadRuthless, saveRuthless,
+  loadTracks, saveTracks, trackRecord, recordTrackRun, resetTracks,
   resetRecords, resetStatsAll, resetAchievements, resetTally, resetDaily, clearAllData,
   loadMastery, saveMastery, recordSkillXp, resetMastery, totalSkillLevels, isMasteryUnlocked,
 } from "./storage.js";
@@ -5132,6 +5132,7 @@ function pbTile(mode, opts = {}) {
   const cls = "pb-tile" + (empty ? " pb-empty" : "") + (isInf ? " pb-inf" : "") +
     (sudden ? " pb-sudden" : "") + (mode === "daily" ? " pb-daily" : "");
   return `<div class="${cls}" style="--pb-accent:${modeAccent(mode)}">` +
+    (!empty && opts.score == null ? recEraseX("rec:" + mode) : "") +
     (kicker ? `<span class="pb-kicker">${escapeHtml(kicker)}</span>` : "") +
     `<span class="pb-mode">${escapeHtml(label)}</span>` +
     `<span class="pb-score">${empty ? "—" : rec.score + (unit ? `<span class="pb-unit">${unit}</span>` : "")}</span>` +
@@ -5146,7 +5147,7 @@ function appendHistoryRows(hist) {
   const rowsEl = $("histRows");
   if (!rowsEl) return;
   const next = hist.slice(historyShown, historyShown + HISTORY_PAGE);
-  rowsEl.insertAdjacentHTML("beforeend", next.map((h) => {
+  rowsEl.insertAdjacentHTML("beforeend", next.map((h, i) => {
     // A Ruthless row is the one whose score is not out of thirteen: it counts the pages NAMED
     // out of the ten the run dealt, and its RECORD is the time in the next column over.
     const ruthless = isRuthlessToken(h.m);
@@ -5167,6 +5168,7 @@ function appendHistoryRows(hist) {
       ? h.tm != null && h.tm === ruthlessRecord(h.m.slice(3)).best
       : h.s > 0 && h.s === _pbByMode[h.m];
     return `<div class="hist-row${isPB ? " hist-pb" : ""}">` +
+      recEraseX("hist:" + (historyShown + i)) +
       `<span class="hist-score">${isPB ? `<span class="hist-crown" aria-hidden="true">${ACH_ICONS.crown}</span>` : ""}${scoreText}${unit ? `<span class="hist-unit">${unit}</span>` : ""}</span>` +
       `<span class="hist-time">${h.tm != null ? (ruthless ? fmtTimeFine(h.tm) : fmtTime(h.tm)) : "—"}</span>` +
       `<span class="hist-verse">${h.v > 0 ? `<span class="hist-verse-nib" aria-hidden="true">${trinketPreviewSVG("nib")}</span>+${h.v}` : "—"}</span>` +
@@ -6392,7 +6394,7 @@ function applyAvatar(url) {
   if ($("settingsModal").classList.contains("open")) renderSettingsBody();
 }
 
-function renderRecordsPage() {
+function renderRecordsPage(keepShown = 0) {
   if (_heatView === null) _heatView = heatDefaultView();
   const name = getPlayerName();
   const avatar = getAvatar();
@@ -6463,6 +6465,7 @@ function renderRecordsPage() {
         const how = rec.bestGaveUp
           ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`;
         return `<div class="pb-tile pb-ruthless" style="--pb-accent:var(--mode-ruthless, #8c4a34)">` +
+          recEraseX("rl:" + lens.id) +
           `<span class="pb-mode">${escapeHtml(lens.label)}</span>` +
           `<span class="pb-score">${fmtTimeFine(rec.best)}</span>` +
           `<span class="pb-sub">${escapeHtml(how)} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +
@@ -6483,6 +6486,7 @@ function renderRecordsPage() {
       tbtPlayed.map((album) => {
         const rec = tbtBoard[album];
         return `<div class="pb-tile" style="--pb-accent:${albumColor(album) || "#999"}">` +
+          recEraseX("tbt:" + album) +
           `<span class="pb-mode">${escapeHtml(album)}</span>` +
           `<span class="pb-score">${fmtTimeFine(rec.best)}</span>` +
           `<span class="pb-sub">played ${rec.plays} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +
@@ -6500,6 +6504,7 @@ function renderRecordsPage() {
       (hist.length > HISTORY_PAGE ? `<div class="hist-more-row"><button id="histMore" class="hist-more"></button></div>` : "")
     : `<p class="rec-group-label">history</p><p class="stats-empty">no runs yet. finish a game to start your log.</p>${playCTA()}`;
 
+  $("recordsBody").classList.toggle("rec-erasing", devRecordErase);
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
     `<p class="rec-group-label">personal bests</p><div class="pb-grid">${classicTiles}</div>` +
@@ -6523,9 +6528,62 @@ function renderRecordsPage() {
 
   historyShown = 0;
   if (hist.length) appendHistoryRows(hist);
+  while (hist.length && historyShown < keepShown) appendHistoryRows(hist);
   const more = $("histMore");
   if (more) more.addEventListener("click", () => appendHistoryRows(hist));
 }
+
+/* ---------- Dev: erase a record from the records page ----------
+   Behind the dev panel's "✕ on records" toggle, every personal-best tile and history row gets
+   a cross that takes it out of storage. A best tile drops its top entry, so the next one up
+   takes the tile (and the mode's stats best follows it, or the startup migration would seed
+   the erased score straight back as a dateless "best so far"). A history row takes its
+   matching top-five entry with it, so a junk run can't leave its crown behind. */
+let devRecordErase = false;
+function recEraseX(key) {
+  return devRecordErase
+    ? `<button type="button" class="rec-erase" data-erase="${escapeHtml(key)}" aria-label="delete this record" title="delete this record">✕</button>`
+    : "";
+}
+function dropRecordEntry(mode, pick) {
+  const list = loadRecords(mode);
+  const i = list.findIndex(pick);
+  if (i < 0) return;
+  list.splice(i, 1);
+  saveRecords(list, mode);
+  const st = loadStats(mode);
+  if (st.played || st.best) { st.best = list[0] ? list[0].score : 0; saveStats(st, mode); }
+}
+function eraseRecord(key) {
+  const cut = key.indexOf(":");
+  const kind = key.slice(0, cut), id = key.slice(cut + 1);
+  if (kind === "rec") dropRecordEntry(id, (r, i) => i === 0);
+  else if (kind === "rl") { const o = loadRuthless(); delete o[id]; saveRuthless(o); }
+  else if (kind === "tbt") { const o = loadTracks(); delete o[id]; saveTracks(o); }
+  else if (kind === "hist") {
+    const hist = loadHistory();
+    const h = hist[+id];
+    if (!h) return;
+    hist.splice(+id, 1);
+    saveHistory(hist);
+    if (typeof h.m === "string") {
+      const days = [localDayKeyOf(h.d), String(h.d).slice(0, 10)];
+      dropRecordEntry(h.m, (r) => r.score === h.s && (r.time ?? null) === (h.tm ?? null) && days.includes(r.date));
+    }
+  }
+}
+function setDevRecordErase(on) {
+  devRecordErase = !!on;
+  if (screens.records.classList.contains("active")) renderRecordsPage();
+  return devRecordErase;
+}
+document.addEventListener("click", (e) => {
+  const x = e.target.closest && e.target.closest(".rec-erase");
+  if (!x || !devRecordErase) return;
+  e.preventDefault(); e.stopPropagation();
+  eraseRecord(x.dataset.erase);
+  renderRecordsPage(historyShown);
+});
 function openRecords(from) {
   recordsBackTarget = from;
   routeTo("records", from);
@@ -34922,6 +34980,7 @@ function buildDevApi() {
     // Misc
     // The last run taken back out of every store it wrote to (see journalRunStart).
     lastRun: { peek: peekLastRun, undo: undoLastRun },
+    recordErase: { set: setDevRecordErase, get: () => devRecordErase },
     setNoLog: (on) => { devNoLog = !!on; },
     reload: () => location.reload(),
     goStart: () => { $("startContent").style.display = ""; renderStartPickers(); showScreen("start"); },

@@ -1325,6 +1325,11 @@ export function loadHistory() {
   } catch (e) { /* ignore */ }
   return [];
 }
+// Writes the whole log back. Only the dev panel's record eraser calls it; a finished run
+// goes through appendHistory.
+export function saveHistory(list) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) { /* ignore */ }
+}
 export function appendHistory(entry) {
   const list = loadHistory();
   list.unshift(entry);                       // newest first

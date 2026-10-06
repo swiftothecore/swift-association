@@ -8701,6 +8701,16 @@
   }
   .hist-rows { margin-top: 2px; }
   .hist-row { padding: 7px; border-bottom: 1px solid rgba(43,39,34,0.07); }
+  /* Dev only: the record eraser's cross (js/dev.js "✕ on records"). */
+  .rec-erasing .hist-row { position: relative; }
+  .rec-erase {
+    position: absolute; top: 2px; right: 2px; z-index: 3;
+    width: 20px; height: 20px; padding: 0; border: 1px solid #b23a3a; border-radius: 50%;
+    background: #fbf7ea; color: #b23a3a; font: 700 11px/18px var(--type); cursor: pointer;
+  }
+  .hist-row .rec-erase { top: 50%; right: -24px; transform: translateY(-50%); }
+  @media (max-width: 600px) { .hist-row .rec-erase { right: 0; } }
+  .rec-erase:hover { background: #b23a3a; color: #fbf7ea; }
   .hist-row.hist-pb { background: var(--highlighter); border-radius: 4px; border-bottom-color: transparent; }
   .hist-score { font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust)); color: var(--ink); line-height: 1; }
   .hist-unit { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }

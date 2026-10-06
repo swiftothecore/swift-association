@@ -1258,7 +1258,14 @@ export function initDev(api) {
     // Stocks the results band's charm half: fire enough at once to push it past its cap.
     row(btn("fire 8 (recap band)", () => toast(api.seed.fireBatch(8) + " charms fired: now end a game")),
         btn("fire 2", () => toast(api.seed.fireBatch(2) + " charms fired"))),
-    row(nameInput, btn("set name", () => { if (nameInput.value.trim()) { api.seed.setName(nameInput.value.trim()); toast("name set"); } }))));
+    row(nameInput, btn("set name", () => { if (nameInput.value.trim()) { api.seed.setName(nameInput.value.trim()); toast("name set"); } })),
+    // Puts a cross on every best tile and history row of the records page; clicking one
+    // deletes that record outright, no confirm, so trim seeded or test runs one at a time.
+    row(mk("label", { class: "dv-check" },
+      mk("input", { type: "checkbox", onchange: (e) => {
+        api.recordErase.set(e.target.checked);
+        toast(e.target.checked ? "✕ on records: click one to delete it" : "record crosses off");
+      } }), " ✕ on records (delete)"))));
 
   // ---- Skills & Mastery ------------------------------------------------------
   const mSkillSel = select(api.SKILL_IDS, (x) => x, (x) => x);
