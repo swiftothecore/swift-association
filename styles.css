@@ -11972,10 +11972,10 @@
   .stp-dp-box.is-blank { background: repeating-linear-gradient(135deg, transparent 0 7px, var(--dp-hatch) 7px 8px); }
   .stp-dp-n { position: absolute; left: 4px; top: 2px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2; color: var(--dp-soft); }
   .stp-dp-box.is-future .stp-dp-n { opacity: 0.45; }
-  .stp-dp-box.is-today .stp-dp-n { color: var(--dp-hot); font-weight: 700; }
-  /* today is printed, not written: a persimmon wash with a solid head rule, a tab on the day */
-  .stp-dp-box.is-today { background: linear-gradient(var(--dp-hot), var(--dp-hot)) top / 100% 2.5px no-repeat, color-mix(in srgb, var(--dp-hot) 17%, transparent); }
-  button.stp-dp-box.is-today:is(:hover, :focus-visible) { background: linear-gradient(var(--dp-hot), var(--dp-hot)) top / 100% 2.5px no-repeat, color-mix(in srgb, var(--dp-hot) 25%, transparent); }
+  .stp-dp-box.is-today .stp-dp-n { left: 2px; top: 2px; padding: 0 3px; border-radius: 1.5px; background: var(--dp-hot); color: var(--dp-stock); font-weight: 700; }
+  /* today is printed, not written: a persimmon wash, the date reversed out of a chip the way a pass prints its valid day */
+  .stp-dp-box.is-today { background: color-mix(in srgb, var(--dp-hot) 17%, transparent); }
+  button.stp-dp-box.is-today:is(:hover, :focus-visible) { background: color-mix(in srgb, var(--dp-hot) 25%, transparent); }
   .stp-dp-hole { position: absolute; left: 50%; top: 54%; width: 27px; height: 27px; margin: -13.5px 0 0 -13.5px; overflow: visible; }
   .stp-dp-hole .sh { fill: rgba(28, 40, 38, 0.44); }
   .stp-dp-hole .pg { fill: var(--paper); }
