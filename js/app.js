@@ -2958,12 +2958,12 @@ function statsDailyPassHTML(streak) {
     const isToday = key === today, done = score != null;
     const cls = "stp-dp-box" + (key > today ? " is-future" : "") + (isToday ? " is-today" : "") + (done ? " is-done" : "");
     const inner = `<span class="stp-dp-n">${day}</span>` +
-      (done ? dailyPunchSVG(score === TOTAL_ROUNDS, key) : isToday ? `<span class="stp-dp-aim" aria-hidden="true"></span>` : "") +
-      (isToday ? `<span class="stp-dp-today">today</span>` : "");
+      (done ? dailyPunchSVG(score === TOTAL_ROUNDS, key) : isToday ? `<span class="stp-dp-aim" aria-hidden="true"></span>` : "");
+    const current = isToday ? ` aria-current="date"` : "";
     boxes += done
-      ? `<button type="button" class="${cls}" data-daily-date="${key}" aria-label="${MONTH_NAMES[mm - 1]} ${day}, ${score} of ${TOTAL_ROUNDS}, reopen" ` +
+      ? `<button type="button" class="${cls}"${current} data-daily-date="${key}" aria-label="${MONTH_NAMES[mm - 1]} ${day}, ${score} of ${TOTAL_ROUNDS}, reopen" ` +
         `data-tip="${score}/${TOTAL_ROUNDS}${score === TOTAL_ROUNDS ? " · star punch" : ""} · tap to reopen" data-tip-delay="200">${inner}</button>`
-      : `<div class="${cls}">${inner}</div>`;
+      : `<div class="${cls}"${current}>${inner}</div>`;
   }
   // the printed grid closes as a rectangle, the way a pass is printed
   boxes += blank.repeat(rows * 7 - firstDow - daysInMonth);

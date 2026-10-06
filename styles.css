@@ -11973,12 +11973,14 @@
   .stp-dp-n { position: absolute; left: 4px; top: 2px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2; color: var(--dp-soft); }
   .stp-dp-box.is-future .stp-dp-n { opacity: 0.45; }
   .stp-dp-box.is-today .stp-dp-n { color: var(--dp-hot); font-weight: 700; }
+  /* today is printed, not written: a persimmon wash with a solid head rule, a tab on the day */
+  .stp-dp-box.is-today { background: linear-gradient(var(--dp-hot), var(--dp-hot)) top / 100% 2.5px no-repeat, color-mix(in srgb, var(--dp-hot) 17%, transparent); }
+  button.stp-dp-box.is-today:is(:hover, :focus-visible) { background: linear-gradient(var(--dp-hot), var(--dp-hot)) top / 100% 2.5px no-repeat, color-mix(in srgb, var(--dp-hot) 25%, transparent); }
   .stp-dp-hole { position: absolute; left: 50%; top: 54%; width: 27px; height: 27px; margin: -13.5px 0 0 -13.5px; overflow: visible; }
   .stp-dp-hole .sh { fill: rgba(28, 40, 38, 0.44); }
   .stp-dp-hole .pg { fill: var(--paper); }
   .stp-dp-hole .cut { fill: none; stroke: rgba(31, 61, 61, 0.5); stroke-width: 0.7; stroke-linejoin: round; }
   .stp-dp-aim { position: absolute; left: 50%; top: 53%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 1.4px dashed var(--dp-hot); }
-  .stp-dp-today { position: absolute; left: 0; right: 0; bottom: 1px; text-align: center; font-family: var(--type); font-weight: 700; font-size: calc(7.5px + var(--text-size-adjust)); letter-spacing: 1.3px; text-transform: uppercase; color: var(--dp-hot); }
   .stp-dp-terms { margin: 7px 2px 0; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 0.9px; text-transform: uppercase; color: var(--dp-soft); }
   /* the stub, printed over a guilloche in its own ink a shade up, the security print a real pass carries */
   .stp-dp-stub {
