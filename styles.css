@@ -5415,7 +5415,9 @@
     height: 100%; width: 100%; border-radius: 6px; background: var(--bead);
     transition: background 0.3s;
   }
-  .bg-timer-fill.low { background: var(--margin); }
+  /* Red pen, not --margin, for the same reason as the round clock's .low below. */
+  .bg-timer-fill.low { background: var(--red-pen); }
+  .bg-timer:has(.bg-timer-fill.low) .bg-timer-label { color: var(--red-pen); font-weight: 700; }
   /* Same readout the round screen keeps under its clock, so a bonus page tells you how long
      is left in words as well as in bar length. */
   .bg-timer-label {
@@ -9323,7 +9325,12 @@
     background: var(--bead);
     transition: width 0.1s linear, background 0.3s;
   }
-  .timer-fill.low { background: var(--margin); }
+  /* The editor's red pen, not --margin: the margin token is the printed rule, a 45% wash meant
+     to sit under text, and across a whole bar it read as dusty pink at the one moment the page
+     most needs to sound urgent. The seconds go red with it, so the signal is carried by the
+     numerals too and survives the red era, whose bead is already nearly the same red. */
+  .timer-fill.low { background: var(--red-pen); }
+  .timer-wrap:has(.timer-fill.low) .timer-label { color: var(--red-pen); font-weight: 700; }
   .timer-label {
     text-align: center; margin-top: 7px;
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
