@@ -15844,7 +15844,16 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     for (const a of albums) (albumWordMap[a] = albumWordMap[a] || []).push(w);
     if (easyN >= cfg.easy) easy.push(w);
     if (hardN >= cfg.hard[0] && hardN <= cfg.hard[1]) hard.push(w);
-    if (ultraN >= cfg.ultra[0] && ultraN <= cfg.ultra[1]) ultra.push(w);
+    // Ultra's pool is counted on the EXACT word, but Ultra plays stem-lenient (MODES.ultra has
+    // strict: false since ed69bfa, so "cheat" accepts a song that only sings "cheats"). That
+    // gap is deliberate, not an oversight: a word counted at three songs may play as four or
+    // five, and counting the way Ultra plays would cut the pool by about a quarter (312 to 245
+    // in October 2026) and bring the repeats back. Do not "fix" it by counting leniently.
+    // What is NOT accepted is a word that plays as genuinely common ("star" counts three exact
+    // songs and plays as twenty-six, through "stars"), so a word whose live count, which is
+    // hardN, runs past Hard's ceiling is kept out of Ultra. Ultra never deals a word commoner
+    // than the commonest word Hard deals.
+    if (ultraN >= cfg.ultra[0] && ultraN <= cfg.ultra[1] && hardN <= cfg.hard[1]) ultra.push(w);
   }
   const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
   wordBuckets = { easy: safe(easy), all: playableWords, hard: safe(hard), ultra: safe(ultra) };

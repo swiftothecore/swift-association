@@ -113,7 +113,7 @@ test('reusing lyric membership keeps rarity buckets and album word order identic
     for (const album of held) (albums[album] ??= []).push(w);
     if (easy >= TAYLOR_BUCKETS.easy) expected.easy.push(w);
     if (hard >= TAYLOR_BUCKETS.hard[0] && hard <= TAYLOR_BUCKETS.hard[1]) expected.hard.push(w);
-    if (ultra >= TAYLOR_BUCKETS.ultra[0] && ultra <= TAYLOR_BUCKETS.ultra[1]) expected.ultra.push(w);
+    if (ultra >= TAYLOR_BUCKETS.ultra[0] && ultra <= TAYLOR_BUCKETS.ultra[1] && hard <= TAYLOR_BUCKETS.hard[1]) expected.ultra.push(w);
   }
   for (const key of ['easy', 'hard', 'ultra']) if (expected[key].length < RECENT_WINDOW + 8) expected[key] = expected.all;
   Object.assign(h.context, { TAYLOR_BUCKETS, RECENT_WINDOW });

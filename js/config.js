@@ -281,6 +281,8 @@ export const MODES = {
   hard:   { id: "hard",   label: "Hard",   seconds: 7,  dropdown: "late", pool: "hard",  strict: false, noTitle: true,  examples: 3, hint: false, blurb: "7s · late suggestions · rarer words · not in the title" },
   // Missed pages show up to three answers, as in the other modes. Ultra's difficulty lives
   // in the timed page; the reveal afterwards lets the player learn from the miss.
+  // strict: false is deliberate even though the "rarest words" pool is counted on the exact
+  // word: see the note on the ultra line in indexPlayableWords before changing either side.
   ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 3, hint: false, moreExamples: true, blurb: "5s · no suggestions · rarest words · not in the title" },
   // Lyric-only: no title input (lyricOnly), longer clock. You answer by typing a lyric
   // line (a few words around the prompt word are enough — the matcher is fuzzy).
