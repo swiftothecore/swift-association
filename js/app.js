@@ -17,7 +17,7 @@ import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineup
 import { judge, WON, DEAD } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
-  TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
+  TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, NORMAL_TAIL_CHANCE, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
   GRAVEYARD,
   CREDITS,
@@ -229,7 +229,7 @@ const JOIN_MIN_TOKEN = 5;
 const JOIN_MIN_PART = 2;
 
 let currentMode = MODES.medium;
-let wordBuckets = { easy: [], all: [], hard: [], ultra: [] };
+let wordBuckets = { easy: [], all: [], normal: [], normalTail: [], hard: [], ultra: [] };
 let recentEras = [];
 
 let allSongs = [];
@@ -15630,7 +15630,7 @@ function poolRank(pool) {
 // The hardest pool the kept hand can be played on, or null when nothing in it is restricted.
 // Asking only the cards that CARRY a restriction is the load-bearing part: poolForHand returns
 // the hardest pool every card allows, which for an unrestricted hand is "ultra" — obeying that
-// blindly would deal Normal's every-word pool as the rarest words in the blend, on a hand that
+// blindly would deal Normal's wide pool as the rarest words in the blend, on a hand that
 // never asked for it.
 function handPoolCeiling() {
   const cards = lineupKept.map((id) => goalById[id]);
@@ -15822,7 +15822,7 @@ function endLineup() {
 
 function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
   const MIN = RECENT_WINDOW + 8;
-  const easy = [], hard = [], ultra = [];
+  const easy = [], hard = [], ultra = [], normal = [], normalTail = [];
   albumWordMap = {};
   for (const w of playableWords) {
     const lenient = wordRegex(w, false);
@@ -15844,6 +15844,11 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     for (const a of albums) (albumWordMap[a] = albumWordMap[a] || []).push(w);
     if (easyN >= cfg.easy) easy.push(w);
     if (hardN >= cfg.hard[0] && hardN <= cfg.hard[1]) hard.push(w);
+    // Normal: Hard's floor and up. hardN is the count a Normal page plays with (stem-lenient,
+    // title songs barred). Below the floor goes to the tail Normal draws from only rarely
+    // (NORMAL_TAIL_CHANCE); a word no page could answer at all goes to neither.
+    if (hardN >= cfg.hard[0]) normal.push(w);
+    else if (hardN >= 1) normalTail.push(w);
     // Ultra's pool is counted on the EXACT word, but Ultra plays stem-lenient (MODES.ultra has
     // strict: false since ed69bfa, so "cheat" accepts a song that only sings "cheats"). That
     // gap is deliberate, not an oversight: a word counted at three songs may play as four or
@@ -15856,7 +15861,7 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     if (ultraN >= cfg.ultra[0] && ultraN <= cfg.ultra[1] && hardN <= cfg.hard[1]) ultra.push(w);
   }
   const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
-  wordBuckets = { easy: safe(easy), all: playableWords, hard: safe(hard), ultra: safe(ultra) };
+  wordBuckets = { easy: safe(easy), all: playableWords, normal: safe(normal), normalTail, hard: safe(hard), ultra: safe(ultra) };
 }
 
 /* ---------- Difficulty ---------- */
@@ -20961,11 +20966,10 @@ function albumWordScore(word, album) {
 // live one, but a preview for another date must pass daily's own bucket rather than inherit
 // whatever mode happens to be loaded. null when there's no album or nothing survives.
 //
-// Worth knowing before tuning this: for daily the bucket intersection is a no-op. Daily is always
-// Normal, MODES.medium.pool is "all", and indexPlayableWords sets wordBuckets.all to playableWords
-// itself — the unfiltered list every album word already comes from. So "all" is not a rarity
-// tier, and the pool below is shaped by the hapax filter alone. The intersection stays because
-// the pool name is the honest input; it just isn't a constraint at Normal.
+// Worth knowing before tuning this: daily is always Normal, and MODES.medium.pool is "normal",
+// so the intersection drops the album's one- and two-song words (Normal's rare tail) before the
+// hapax filter below runs. An anniversary daily never deals its rare tail page either: the album
+// skew is 1.0, so every page comes off the album pool.
 function scoreDailyAlbumPool(album, poolName = effectivePool()) {
   if (!album || !albumWordMap[album]) return null;
   const bucketSet = new Set(wordBuckets[poolName] || playableWords);
@@ -21026,8 +21030,13 @@ function previewDailyAlbum(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
     const genChoices = gen.length ? gen : bucket;
     const albumChoices = built.pool.filter((s) => !used.includes(s.w));
     const fromAlbum = albumChoices.length > 0 && rng() < DAILY_ALBUM_SKEW;
+    let from = genChoices;
+    if (!fromAlbum && normalTailOpen(MODES.medium.pool, "daily", used) && rng() < NORMAL_TAIL_CHANCE) {
+      const tail = wordBuckets.normalTail.filter((w) => !used.includes(w));
+      if (tail.length) from = tail;
+    }
     const word = fromAlbum ? weightedAlbumWord(albumChoices, rng, exp)
-                           : genChoices[Math.floor(rng() * genChoices.length)];
+                           : from[Math.floor(rng() * from.length)];
     used.push(word);
     words.push({ word, fromAlbum, ...(byWord.get(word) || {}) });
   }
@@ -21196,11 +21205,29 @@ function pickWord() {
   // Normal-mode coverage bias: favour words the notebook hasn't shown yet so the catalogue fills
   // in over time. noveltySeen is set only for a Normal (classic · medium) run; every other mode
   // leaves it null and draws uniformly. Reverts to a plain uniform draw once every word is seen.
+  // Normal's one rare page a run (NORMAL_TAIL_CHANCE). Rolled only while the run can still
+  // have it, so a run that cannot draw it spends no rng, and it is rolled AFTER the album skew,
+  // which previewDailyAlbum mirrors call for call.
+  let from = choices;
+  if (normalTailOpen(effectivePool(), gameType, usedWords) && rng() < NORMAL_TAIL_CHANCE) {
+    const tail = wordBuckets.normalTail.filter((w) => !usedWords.includes(w));
+    if (tail.length) from = tail;
+  }
   const word = noveltySeen
-    ? pickNovel(choices, rng, noveltySeen)
-    : choices[Math.floor(rng() * choices.length)];
+    ? pickNovel(from, rng, noveltySeen)
+    : from[Math.floor(rng() * from.length)];
   usedWords.push(word);
   return word;
+}
+// Whether a draw on `pool` may still be dealt Normal's rare tail page: only on the Normal pool,
+// never in a challenge (each one's word draw is tuned to its own rule) or the lineup (its pools
+// are measured on the blend), and only until the run has dealt one tail word.
+function normalTailOpen(pool, kind, used) {
+  if (pool !== "normal" || kind === "challenge" || kind === "lineup") return false;
+  const tail = wordBuckets.normalTail || [];
+  if (!tail.length) return false;
+  const held = new Set(tail);
+  return !used.some((w) => held.has(w));
 }
 
 // Album Focus: a word whose chosen-album valid set is non-empty under the active difficulty's
@@ -30848,6 +30875,11 @@ function buildDevApi() {
       })),
     }),
     words: () => playableWords.slice(),
+    // Size of every rarity bucket for the live corpus, and whether this run can still be dealt
+    // Normal's rare tail page. `tail` lists the words that page draws from.
+    pools: () => ({ ...Object.fromEntries(Object.entries(wordBuckets).map(([k, v]) => [k, v.length])),
+      tailOpen: normalTailOpen(effectivePool(), gameType, usedWords) }),
+    tail: () => (wordBuckets.normalTail || []).slice(),
     // Every pressing the corpus counts as another song's version, so a new song or guest that
     // folds something it shouldn't shows up here (tests/version-families pins Taylor's list).
     versions: () => allSongs.filter((s) => s._family && s._family !== s)

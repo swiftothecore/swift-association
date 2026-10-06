@@ -50,8 +50,16 @@ export const RECENT_WINDOW = 5;
 // likelier an un-encountered word is than an already-seen one, per word. A soft nudge, not a
 // forced march: early on nearly everything is unseen so it plays like uniform random, and once
 // every word has been encountered all weights equalise and it reverts to plain random. Only the
-// Normal pool ("all") reads this; the rarity-tiered modes draw uniformly. See pickWord / pickNovel.
+// Normal pool ("normal") reads this; the rarity-tiered modes draw uniformly. See pickWord / pickNovel.
 export const NOVELTY_BOOST = 6;
+// Normal deals what Hard deals and everything commoner (words a page can answer with at least
+// Hard's floor of songs, three on Taylor's catalogue). The rarer tail, one- and two-song words,
+// is not cut from Normal but held back: each page has this chance of being dealt from it, and a
+// run gets at most one such page, so a perfect Normal run is never decided by drawing two or
+// three words almost nobody knows. 0.05 is about one tail page every other run, close to the
+// rate Normal dealt them at before October 2026's rare-word batch tripled the tail. The
+// description still says "all words" and that stays true: every word can still come up.
+export const NORMAL_TAIL_CHANCE = 0.05;
 // On an album's anniversary, the daily challenge draws its prompt words from the words that
 // recur across that album's songs. Per round this is the chance of drawing from that album's
 // pool, and at 1.0 that is every round: the run already wears the album's colours on all thirteen
@@ -265,7 +273,7 @@ export const MODES = {
   // spot. What it gives up is the hint ladder — that is Relaxed's alone now, the one place the
   // page will answer for you, which is also what stops Relaxed reading as Easy with the clock off.
   easy:   { id: "easy",   label: "Easy",   seconds: 15, dropdown: true,  pool: "easy",  strict: false, noTitle: false, examples: 3, hint: false, blurb: "15s · suggestions · common words" },
-  medium: { id: "medium", label: "Normal", seconds: 10, dropdown: true,  pool: "all",   strict: false, noTitle: true,  examples: 3, hint: false, blurb: "10s · suggestions · all words · not in the title" },
+  medium: { id: "medium", label: "Normal", seconds: 10, dropdown: true,  pool: "normal",   strict: false, noTitle: true,  examples: 3, hint: false, blurb: "10s · suggestions · all words · not in the title" },
   // Hard's suggestions are LATE (`dropdown: "late"`, see DROPDOWN_LATE_MIN), and that is a
   // deliberate softening of the Normal→Hard step. Three levers move at once on that step —
   // the clock drops 10s→7s, the pool goes rare, and the list used to vanish outright — and the

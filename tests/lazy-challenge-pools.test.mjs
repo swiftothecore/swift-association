@@ -98,7 +98,7 @@ test('word caches survive corpus restores and rebuild for added songs and revise
 test('reusing lyric membership keeps rarity buckets and album word order identical', () => {
   const h = harness();
   h.install(grouped, words, { aliases: true });
-  const expected = { easy: [], all: h.context.playableWords, hard: [], ultra: [] }, albums = {};
+  const expected = { easy: [], all: h.context.playableWords, normal: [], normalTail: [], hard: [], ultra: [] }, albums = {};
   for (const w of h.context.playableWords) {
     const lenient = wordRegex(w, false), strict = wordRegex(w, true), held = new Set();
     // Counted in songs, a second pressing as the song it presses (versionFamilies).
@@ -113,9 +113,11 @@ test('reusing lyric membership keeps rarity buckets and album word order identic
     for (const album of held) (albums[album] ??= []).push(w);
     if (easy >= TAYLOR_BUCKETS.easy) expected.easy.push(w);
     if (hard >= TAYLOR_BUCKETS.hard[0] && hard <= TAYLOR_BUCKETS.hard[1]) expected.hard.push(w);
+    if (hard >= TAYLOR_BUCKETS.hard[0]) expected.normal.push(w);
+    else if (hard >= 1) expected.normalTail.push(w);
     if (ultra >= TAYLOR_BUCKETS.ultra[0] && ultra <= TAYLOR_BUCKETS.ultra[1] && hard <= TAYLOR_BUCKETS.hard[1]) expected.ultra.push(w);
   }
-  for (const key of ['easy', 'hard', 'ultra']) if (expected[key].length < RECENT_WINDOW + 8) expected[key] = expected.all;
+  for (const key of ['easy', 'normal', 'hard', 'ultra']) if (expected[key].length < RECENT_WINDOW + 8) expected[key] = expected.all;
   Object.assign(h.context, { TAYLOR_BUCKETS, RECENT_WINDOW });
   vm.runInContext(section('function indexPlayableWords(', '/* ---------- Difficulty'), h.context);
   h.context.indexPlayableWords();
