@@ -7150,6 +7150,14 @@
     letter-spacing: .04em; color: var(--ink-soft); opacity: .62;
     margin: 0; padding-top: clamp(5px, 1vh, 9px); border-top: 1px solid var(--rule);
     max-width: 64ch; line-height: 1.5;
+    display: flex; align-items: center; gap: 7px;
+  }
+  /* The tip's bulb is the hints rule mark's own drawing, borrowed rather than redrawn, so the
+     notebook keeps one lightbulb. It sits in the footnote's ink, never at rule-row weight. */
+  .rl-tip {
+    flex: none; width: 1.75em; height: 1.75em; margin: -.2em 0; overflow: visible;
+    fill: none; stroke: currentColor; stroke-width: 1.5;
+    stroke-linecap: round; stroke-linejoin: round;
   }
 
   /* On a window too short for the whole sheet, the footnote goes before the document does: it is

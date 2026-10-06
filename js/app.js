@@ -12580,8 +12580,8 @@ function renderRuthlessPage() {
     `<p class="rl-sub"><span>ten pages · the clock is the score · low wins</span>` +
       `<span class="rl-count">played ${played}/${lenses.length}</span></p>` +
     `<div class="rl-doc">${secs}</div>` +
-    `<p class="rl-foot">a wrong guess costs nothing but the seconds it took. ` +
-      `each section is as long as its pages usually run.</p>`;
+    `<p class="rl-foot"><svg class="rl-tip" aria-hidden="true" focusable="false"><use href="#rule-hint"/></svg>` +
+      `<span>A wrong guess costs nothing but the seconds it took.</span></p>`;
   rlDocEl = el.querySelector(".rl-doc");
   el.querySelectorAll(".rl-sec").forEach((b) =>
     b.addEventListener("click", () => startRuthlessMode(b.dataset.lens)));
