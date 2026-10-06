@@ -134,7 +134,7 @@ export function initDev(api) {
   };
   const num = (val, w = 46) => mk("input", { type: "number", class: "dv-num", value: String(val), style: `width:${w}px` });
   const row = (...kids) => mk("div", { class: "dv-row" }, ...kids);
-  const section = (title, ...kids) => mk("div", { class: "dv-sec" }, mk("div", { class: "dv-sec-t" }, title), ...kids);
+  const section = (title, ...kids) => mk("div", { class: "dv-sec", "data-sec": title }, mk("div", { class: "dv-sec-t" }, title), ...kids);
 
   // ---- panel shell -----------------------------------------------------------
   const body = mk("div", { class: "dv-body" });
@@ -295,11 +295,6 @@ export function initDev(api) {
         btn("era pen", () => api.pace.preview("pen")), btn("gold", () => api.pace.preview("gold"))),
     row(btn("this mode's rung", () => { readout.textContent = JSON.stringify(api.pace.tier()); }),
         btn("real", () => { api.pace.clear(); toast("pace follows the record again"); }, "warn"))));
-
-  // ---- Small charming features, Batch 1 -------------------------------------
-  // The fast-answer control uses the real page stopwatch and verdict.
-  body.append(section("charm batch 1",
-    row(btn("fast ✓ underline", () => toast(api.batch1.firstThought() ? "0.5s verdict" : "start a live answerable round")))));
 
   // ---- Run-story stamp -------------------------------------------------------
   // A story is rare by design, so the panel presses one rather than waiting for one. The
@@ -1157,59 +1152,6 @@ export function initDev(api) {
         btn("south", () => toast("seasons: " + api.date.hemisphere("south"))),
         btn("by zone", () => toast("seasons: " + api.date.hemisphere("auto"))))));
 
-  // ---- Desk cassette ---------------------------------------------------------
-  // The tape on the desk carries a song the DATE picks, weighted so Clean comes up
-  // on roughly a third of days, and labelled a re-recording only when it is Clean.
-  // Two things are hard to check by playing: which titles the card was too small to
-  // hold, and whether the weighting is actually what it claims. "play" writes any
-  // song onto the card without moving the date (a date scrub or "today" puts the
-  // real draw back, and the dropped titles are playable here so you can see how far
-  // they overrun), "cut titles" lists what the measuring pass dropped, and "sample"
-  // counts a year of draws to the console. The desk prop is desktop-only and the
-  // module may not have run, so every button checks for it first.
-  const cassSel = select(window.deskCassette
-    ? [...window.deskCassette.songs(), ...window.deskCassette.cut()] : [],
-    (s2) => s2.title, (s2) => s2.title);
-  const cassDays = num(365);
-  body.append(section("desk cassette",
-    row(cassSel, btn("play", () => {
-      const s2 = window.deskCassette?.play(cassSel.value);
-      toast(s2 ? "cassette → " + s2.title : "no desk cassette here");
-    })),
-    row(btn("today", () => {
-      if (!window.deskCassette) return toast("no desk cassette here");
-      window.deskCassette.refresh();
-      toast("cassette → today's draw");
-    }),
-    btn("cut titles", () => {
-      const gone = window.deskCassette?.cut();
-      if (!gone) return toast("no desk cassette here");
-      console.table(gone.slice().sort((a, b) => b.title.length - a.title.length)
-        .map((s2) => ({ title: s2.title, album: s2.album, track: s2.track, chars: s2.title.length })));
-      toast(`${gone.length} titles too wide for the card → console`);
-    })),
-    row("sample", cassDays, "days", btn("sample", () => {
-      const dc = window.deskCassette;
-      if (!dc) return toast("no desk cassette here");
-      const counts = new Map();
-      const d = new Date();
-      for (let i = 0; i < Math.max(1, +cassDays.value); i++) {
-        const day = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
-        const p2 = (n) => String(n).padStart(2, "0");
-        const d2 = dc.draw(`${day.getFullYear()}-${p2(day.getMonth() + 1)}-${p2(day.getDate())}`);
-        const label = d2.song && d2.song.title + (d2.tv ? " (Taylor\u2019s Version)" : "");
-        if (label) counts.set(label, (counts.get(label) || 0) + 1);
-      }
-      const n = Math.max(1, +cassDays.value);
-      console.table([...counts].sort((a, b) => b[1] - a[1]).slice(0, 20)
-        .map(([title, c]) => ({ title, days: c, share: (c / n * 100).toFixed(1) + "%" })));
-      const plain = counts.get("Clean") || 0;
-      const tv = counts.get("Clean (Taylor\u2019s Version)") || 0;
-      const clean = plain + tv;
-      toast(`Clean ${(clean / n * 100).toFixed(1)}% of ${n} days, `
-        + `${clean ? (tv / clean * 100).toFixed(0) : 0}% of those (Taylor\u2019s Version) → console`);
-    }))));
-
   // ---- Daily -----------------------------------------------------------------
   // "preview album pool" dumps an anniversary daily to the console without playing it: the
   // pool behind the words and the 13 the seed really draws. It follows the date override,
@@ -1291,18 +1233,6 @@ export function initDev(api) {
       toast("page armed");
     })),
     catOut));
-
-  /* ---- The Stats blotter ------------------------------------------------------
-     Its drops bleed in once per opening of Stats, so replay is the way to watch it again.
-     Finishing an album fills it in the lifetime tally, which is what turns that drop's
-     crumbs into sparkles. */
-  const blotSel = select(api.blotter.albums(), (a) => a, (a) => a);
-  body.append(section("stats blotter",
-    row(btn("replay the bleed", () => api.blotter.replay())),
-    row(blotSel, btn("finish album", () => {
-      const n = api.blotter.finish(blotSel.value);
-      toast(n ? `${n} songs found on ${blotSel.value}` : "no such album");
-    }, "warn"))));
 
   /* ---- The Stats stamps ------------------------------------------------------
      The quickest answer on the stopwatch stamp is a lifetime minimum, so a single bad reading
@@ -1557,14 +1487,6 @@ export function initDev(api) {
         btn("bottle right", () => api.eggs.bottle("right"))),
     row(snowBtn, leafBtn),
     row(penSel, btn("set pen", () => api.eggs.pen(penSel.value)))));
-
-  // ---- Guest stamp ink ---------------------------------------------------------
-  // The plate is rolled once per page load, so without this you would be reloading to
-  // see the other eight. The select is the whole palette in order.
-  const inkSel = select(api.stamp.inks(), (h) => h, (h) => h);
-  body.append(section("stamp",
-    row(inkSel, btn("ink", () => toast(api.stamp.ink(inkSel.value))),
-        btn("reroll", () => { const hex = api.stamp.reroll(); inkSel.value = hex; toast(hex); }))));
 
   // ---- Charm icon gallery ------------------------------------------------------
   // Every achievement charm at real render size on real paper, grouped like the
@@ -1892,6 +1814,71 @@ export function initDev(api) {
     row(mk("label", { class: "dv-check" }, noLog, " don't log runs"),
         btn("→ start", () => api.goStart()), btn("reload", () => api.reload()))));
 
+  // ---- Groups + filter ---------------------------------------------------------
+  // The sections above are built in the order they were written; this table alone decides
+  // where each one shows. A new feature's controls join an existing group here. A preview
+  // that only forces one rare visual goes in "previews", and comes out once the feature has
+  // shipped and been looked at. A title missing from the table lands in "unsorted" with a
+  // console warning, so nothing new can quietly push the play controls down again.
+  const DEV_GROUPS = [
+    ["play", true, ["start game", "round", "simulate full game", "inspect", "timer", "era / mode", "date", "reset"]],
+    ["modes", true, ["daily", "challenges", "album focus", "ruthless runs", "bonus / random", "custom / breadth"]],
+    ["progress", true, ["seed data", "mastery", "collections / shelves"]],
+    ["notebook", true, ["appearance", "sound", "routes", "onboarding", "service worker"]],
+    ["audits", false, ["achievement ids", "challenge shelf", "icons", "page turn", "flip profiler", "final tally"]],
+    ["previews", false, ["run-story stamp", "revenge note", "streak mark", "best-line pace", "answer reveal",
+      "typed answers", "rule marks", "typing hint", "marginalia / share", "ruthless board",
+      "catalogue charms", "stats stamps", "eggs"]],
+  ];
+  const FOLD_KEY = "swiftSongAssociation.devFolded";
+  let folded = {};
+  try { folded = JSON.parse(localStorage.getItem(FOLD_KEY)) || {}; } catch (e) { folded = {}; }
+  const secs = new Map([...body.querySelectorAll(":scope > .dv-sec")].map((el) => [el.dataset.sec, el]));
+  const quick = secs.get("");
+  const placed = new Set([""]);
+  const groupEls = [];
+  const buildGroup = (name, openByDefault, titles) => {
+    const kids = titles.map((t) => secs.get(t)).filter(Boolean);
+    titles.forEach((t) => placed.add(t));
+    if (!kids.length) return;
+    const grp = mk("div", { class: "dv-grp" });
+    const isFolded = () => (name in folded ? folded[name] : !openByDefault);
+    grp.classList.toggle("dv-folded", isFolded());
+    grp.append(mk("button", { class: "dv-grp-t", onclick: () => {
+      folded[name] = !isFolded();
+      grp.classList.toggle("dv-folded", folded[name]);
+      try { localStorage.setItem(FOLD_KEY, JSON.stringify(folded)); } catch (e) { /* ignore */ }
+    } }, mk("span", { class: "dv-grp-arrow" }, "▾"), ` ${name} `, mk("span", { class: "dv-grp-n" }, String(kids.length))),
+    mk("div", { class: "dv-grp-body" }, ...kids));
+    groupEls.push(grp);
+  };
+  DEV_GROUPS.forEach(([name, open, titles]) => buildGroup(name, open, titles));
+  const stray = [...secs.keys()].filter((t) => !placed.has(t));
+  if (stray.length) {
+    console.warn("[dev] sections missing from DEV_GROUPS:", stray);
+    buildGroup("unsorted", true, stray);
+  }
+  // Matches a section's title and its button labels, not its selects, whose option lists
+  // (every song, every charm) would match almost anything.
+  const filter = mk("input", { type: "search", class: "dv-filter", placeholder: "filter sections + buttons" });
+  const applyFilter = () => {
+    const q = filter.value.trim().toLowerCase();
+    body.classList.toggle("dv-filtering", !!q);
+    for (const grp of groupEls) {
+      let hits = 0;
+      for (const sec of grp.querySelectorAll(".dv-sec")) {
+        const hay = [sec.dataset.sec, ...[...sec.querySelectorAll("button")].map((b) => b.textContent)].join(" ").toLowerCase();
+        const hit = !q || hay.includes(q);
+        sec.classList.toggle("dv-miss", !hit);
+        if (hit) hits++;
+      }
+      grp.classList.toggle("dv-miss", !hits);
+    }
+  };
+  filter.addEventListener("input", applyFilter);
+  filter.addEventListener("keydown", (e) => { if (e.key === "Escape") { filter.value = ""; applyFilter(); } });
+  body.replaceChildren(filter, ...(quick ? [quick] : []), ...groupEls);
+
   // ---- live readout + toast --------------------------------------------------
   function tick() {
     const s = api.getState();
@@ -1944,6 +1931,19 @@ function injectStyles() {
   .dv-sec:first-child { border-top: none; margin-top: 0; }
   .dv-sec-t { color: #5f6b7d; text-transform: uppercase; letter-spacing: .06em; font-size: 9px; margin-bottom: 5px; }
   .dv-sec-t:empty { display: none; }
+  .dv-filter { box-sizing: border-box; width: 100%; margin: 4px 0 2px; padding: 4px 7px; background: #0e1014;
+    color: #cdd3dc; border: 1px solid #2c313c; border-radius: 4px; font: inherit; }
+  .dv-grp { border-top: 1px solid #2c313c; margin-top: 6px; }
+  .dv-grp-t { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; padding: 6px 0 3px;
+    color: #9fb0c6; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
+  .dv-grp-t:hover { color: #dde6f2; }
+  .dv-grp-arrow { display: inline-block; transition: transform .12s; }
+  .dv-grp-n { color: #4f5a6a; }
+  .dv-grp-body > .dv-sec:first-child { border-top: none; margin-top: 0; }
+  .dv-grp.dv-folded .dv-grp-body { display: none; }
+  .dv-grp.dv-folded .dv-grp-arrow { transform: rotate(-90deg); }
+  .dv-filtering .dv-grp.dv-folded .dv-grp-body { display: block; }
+  .dv-filtering .dv-miss { display: none; }
   .dv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 4px; }
   .dv-btn { background: #262c38; color: #d6dce6; border: 1px solid #38404f; border-radius: 5px;
     padding: 3px 7px; cursor: pointer; font: inherit; }
