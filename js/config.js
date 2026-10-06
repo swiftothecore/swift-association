@@ -53,12 +53,13 @@ export const RECENT_WINDOW = 5;
 // Normal pool ("normal") reads this; the rarity-tiered modes draw uniformly. See pickWord / pickNovel.
 export const NOVELTY_BOOST = 6;
 // Normal deals what Hard deals and everything commoner (words a page can answer with at least
-// Hard's floor of songs, three on Taylor's catalogue). The rarer tail, one- and two-song words,
-// is not cut from Normal but held back: each page has this chance of being dealt from it, and a
-// run gets at most one such page, so a perfect Normal run is never decided by drawing two or
-// three words almost nobody knows. 0.05 is about one tail page every other run, close to the
-// rate Normal dealt them at before October 2026's rare-word batch tripled the tail. The
-// description still says "all words" and that stays true: every word can still come up.
+// Hard's floor of songs, three on Taylor's catalogue). Lyricist shares the pool, as it always
+// has. The rarer tail, one- and two-song words, is not cut but held back: each page has this
+// chance of being dealt from it, and a run gets at most one such page, so a perfect run is
+// never decided by drawing two or three words almost nobody knows. 0.05 is about one tail page
+// every other run, close to the rate Normal dealt them at before October 2026's rare-word batch
+// tripled the tail. Normal's description still says "all words" and that stays true: every
+// word can still come up.
 export const NORMAL_TAIL_CHANCE = 0.05;
 // On an album's anniversary, the daily challenge draws its prompt words from the words that
 // recur across that album's songs. Per round this is the chance of drawing from that album's
@@ -294,7 +295,7 @@ export const MODES = {
   ultra:  { id: "ultra",  label: "Ultra",  seconds: 5,  dropdown: false, pool: "ultra", strict: false, noTitle: true,  examples: 3, hint: false, moreExamples: true, blurb: "5s · no suggestions · rarest words · not in the title" },
   // Lyric-only: no title input (lyricOnly), longer clock. You answer by typing a lyric
   // line (a few words around the prompt word are enough — the matcher is fuzzy).
-  lyricist: { id: "lyricist", label: "Lyricist", seconds: 20, dropdown: false, pool: "all", strict: false, noTitle: false, examples: 3, hint: false, lyricOnly: true, blurb: "20s · type a lyric line, not the title" },
+  lyricist: { id: "lyricist", label: "Lyricist", seconds: 20, dropdown: false, pool: "normal", strict: false, noTitle: false, examples: 3, hint: false, lyricOnly: true, blurb: "20s · type a lyric line, not the title" },
   // No-timer practice mode (seconds: 0 → startTimer takes the no-timer path). Normal's word
   // pool and suggestions, with two things neither Normal nor Easy has: no clock at all, and
   // the hint ladder, which lives here and nowhere else on the difficulty ladder.
