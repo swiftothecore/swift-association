@@ -1735,10 +1735,9 @@ export function initDev(api) {
   // you want to judge it in. Nothing is granted and nothing is written: the state is faked per
   // render, so black film and a half-cleared veil can both be looked at without earning a
   // keepsake or sitting out its thirteen minutes.
-  // The audit is duplicate SVG ids. The set paints into ONE document, so two photos sharing a
-  // gradient id means the second silently wears the first's fill — the trap sealMarkup exists
-  // to answer for the seals, except a polaroid's art is hand-written and cannot be re-scoped
-  // from here. Anything flagged has to be renamed in js/polaroids.js.
+  // The audit is duplicate SVG ids across the hand-written art. Every render is re-scoped by
+  // polaroidArt, so a shared id no longer bleeds one photo's fill into another, but two photos
+  // naming the same gradient is still a slip worth renaming in js/polaroids.js.
   const POL_VIEWS = [
     { label: "developed", state: "developed", frac: 1 },
     { label: "developing · fresh", state: "developing", frac: 0 },

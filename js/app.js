@@ -3864,7 +3864,7 @@ function foundRecapHTML(items) {
       ? stickerMarkup(f.sticker, false)
       : f.kind === "tumblr"
       ? `<span class="tn-chip">${tumblrNoteMarkup(f.post)}</span>`
-      : `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${f.art || ""}` +
+      : `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${polaroidArt(f.art)}` +
         (f.state === "developed" ? "" : `<span class="pol-thumb-veil"></span>`) + `</span></span>`;
     const tip = f.how ? ` data-tip="${escapeHtml(f.how)}" data-tip-delay="120"` : "";
     const label = f.kind === "tumblr" ? `a message from ${f.post.blog}` : `${f.name} · ${f.kind}`;
@@ -5386,6 +5386,21 @@ const POL_CAMERA_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 // wobbly; it used to be the email-attachment glyph, a loop no paperclip on a desk has.
 const POL_CLIP_SVG = `<svg class="pol-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.1 6.6 C10 9.8 10 13 10.1 16 C10.2 18.3 13.9 18.4 14 16.1 C14.1 12.4 14.1 8.6 14 4.9 C13.9 1.9 7.7 1.8 7.6 4.9 C7.5 9.4 7.5 13.8 7.7 18.2 C7.9 21.7 16.3 21.8 16.4 18.1 C16.5 14.9 16.5 11.7 16.3 8.6"/></svg>`;
 
+// A keepsake photo's art carries its own SVG ids (gradients, symbols), which are only unique
+// while ONE copy of that photo is in the document, and several surfaces print the same photo:
+// the drawer, the results recap, the unlock toast, the dev gallery. A copy left behind in a
+// hidden screen keeps its ids, every later url(#…)/href="#…" resolves to it instead of its own
+// defs, and the visible photo paints its gradients black. The wax seals hit the same trap
+// (see sealMarkup). So every render gets its own id scope: print polaroid art through here.
+let polaroidScopeSeq = 0;
+function polaroidArt(art) {
+  if (!art) return "";
+  const ids = new Set([...art.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
+  if (!ids.size) return art;
+  const n = ++polaroidScopeSeq;
+  return art.replace(/(\bid="|url\(#|href="#)([^")]+)/g, (m, pre, id) => ids.has(id) ? `${pre}${id}--${n}` : m);
+}
+
 // One polaroid — a photo (data-URL) clipped to the page, or the empty
 // "add a photo" slot when `photo` is "". `caption` rides the white lip;
 // `tilt`/`small` tune the look. The washi tape colour is era-tinted in CSS.
@@ -5418,7 +5433,7 @@ function polaroidHTML(photo, caption, opts = {}) {
     const frac = Math.max(0, Math.min(1, 1 - elapsed / total));
     const veil = `<span class="pol-veil" style="opacity:${frac.toFixed(3)};` +
       `animation-duration:${Math.round(total / 1000)}s;animation-delay:-${Math.round(elapsed / 1000)}s"></span>`;
-    const well = `<span class="pol-photo pol-art">${opts.art || ""}${veil}</span>`;
+    const well = `<span class="pol-photo pol-art">${polaroidArt(opts.art)}${veil}</span>`;
     const lines = `<span class="pol-lip-main">${escapeHtml(cap)}</span>` +
       (state === "developed" && opts.sub ? `<span class="pol-lip-sub">${escapeHtml(opts.sub)}</span>` : "");
     return `<span class="${cls}" style="--tilt:${tilt}deg">` +
@@ -5514,7 +5529,7 @@ function showKeepsakeToast(p) {
   const t = document.createElement("div");
   t.className = "toast toast-keepsake";
   if (p.how) { t.setAttribute("data-tip", p.how); t.setAttribute("data-tip-delay", "500"); }
-  const thumb = `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${p.art || ""}` +
+  const thumb = `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${polaroidArt(p.art)}` +
     `<span class="pol-thumb-veil"></span></span></span>`;
   t.innerHTML = thumb +
     `<div><div class="t-label">new keepsake</div>` +
