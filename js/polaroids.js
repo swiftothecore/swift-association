@@ -646,7 +646,7 @@ export const POLAROIDS = [
     name: "yes, whale!",
     sub: "- taylor alison swift",
     how: "Catch the whale when its tail breaks the page",
-    art: `<svg viewBox="0 0 200 200" role="img"><title>Whale tail rising from the sea with a sailboat on the horizon</title>
+    art: `<svg viewBox="0 0 200 200" role="img"><title>A whale's tail flukes rising from the sea with a sailboat on the horizon</title>
   <defs><linearGradient id="pol-yes-whale-sky" x2="0" y2="1"><stop stop-color="#adc9d7"/><stop offset="1" stop-color="#e5e9df"/></linearGradient></defs>
   <rect width="200" height="108" fill="url(#pol-yes-whale-sky)"/>
   <circle cx="40" cy="30" r="11" fill="#eae7d6"/>
@@ -661,23 +661,25 @@ export const POLAROIDS = [
   <rect y="134" width="200" height="30" fill="#5f8aa0"/>
   <rect y="164" width="200" height="36" fill="#567d92"/>
   <g stroke="#dbe7ec" stroke-width="1.6" stroke-linecap="round" opacity=".7"><path d="M16 114 h10 M34 118 h7 M130 112 h9 M148 118 h6"/></g>
-  <path d="M94 128 C93 106 88 90 72 70 C87 74 95 82 98 91 C99 85 103 78 107 74 C114 67 121 64 130 62 C114 86 109 104 108 128 Z" fill="#27384a"/>
-  <path d="M77 75 Q93 84 98 100 M124 69 Q108 83 104 117" fill="none" stroke="#6f8797" stroke-width="2" opacity="0.8" stroke-linecap="round" stroke-linejoin="round"/>
-  <g fill="#dfe7ec"><circle cx="114" cy="76" r="1"/><circle cx="119" cy="71" r="0.8"/><circle cx="110" cy="86" r="1.1"/><circle cx="80" cy="76" r="0.9"/><circle cx="87" cy="83" r="0.8"/><circle cx="104" cy="98" r="0.9"/></g>
-  <ellipse cx="100" cy="128" rx="30" ry="6" fill="none" stroke="#dbe7ec" stroke-width="2.5"/>
-  <g stroke="#dbe7ec" stroke-width="2" fill="none" stroke-linecap="round">
-    <path d="M74 124 q12 -8 26 -5 M102 120 q14 -4 26 5"/>
-    <path d="M64 132 q8 6 18 5 M120 137 q10 1 18 -5"/>
+  <g transform="translate(72 48) scale(.82)">
+    <path d="M10 100 C14 88 22 76 31 66 C33.5 63 35 60.5 35.5 58 C31 49 30.5 38 34.5 28 C37.5 19.5 42 11 47.5 3 C52.5 10.5 56 20 56.3 30 C56.5 36 56 41 55 45 C61 41.5 69 41.5 77 44.5 C84 47 90 49.5 96.5 50 C91.5 57 84 64.5 73 66.5 C64 68 55.5 65.5 49 62 C43 73 39 86 37 100 Z" fill="#27384a"/>
+    <path d="M19 95 C23 83 30 72 39.5 62 M40.5 46 C38.5 36 40.5 24 46 13 M60 53.5 C69 51.5 79 52.5 89 54" fill="none" stroke="#6f8797" stroke-width="2.6" opacity="0.8" stroke-linecap="round"/>
+    <g fill="#dfe7ec"><circle cx="46" cy="22" r="1.3"/><circle cx="50" cy="31" r="1.1"/><circle cx="45" cy="38" r="1.2"/><circle cx="66" cy="50" r="1.2"/><circle cx="75" cy="56" r="1.1"/><circle cx="85" cy="53" r="1.3"/><circle cx="71" cy="47" r="0.9"/></g>
   </g>
-  <g stroke="#cfe0e8" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M70 112 q-3 -8 2 -14 M132 108 q4 -8 0 -14 M96 58 q1 -5 4 -8"/></g>
-  <g fill="#d7e4ea"><circle cx="66" cy="102" r="2"/><circle cx="60" cy="116" r="1.5"/><circle cx="138" cy="98" r="2.2"/><circle cx="144" cy="112" r="1.5"/><circle cx="101" cy="52" r="1.4"/><circle cx="122" cy="52" r="1.1"/><circle cx="82" cy="60" r="1"/><circle cx="90" cy="48" r="0.9"/></g>
+  <ellipse cx="91" cy="128" rx="30" ry="6" fill="none" stroke="#dbe7ec" stroke-width="2.5"/>
+  <g stroke="#dbe7ec" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M65 124 q12 -8 26 -5 M93 120 q14 -4 26 5"/>
+    <path d="M55 132 q8 6 18 5 M111 137 q10 1 18 -5"/>
+  </g>
+  <g stroke="#cfe0e8" stroke-width="1.6" fill="none" stroke-linecap="round"><path d="M66 114 q-3 -8 2 -14 M112 44 q2 -5 5 -7"/></g>
+  <g fill="#d7e4ea"><circle cx="62" cy="102" r="2"/><circle cx="56" cy="116" r="1.5"/><circle cx="146" cy="78" r="2"/><circle cx="156" cy="82" r="1.4"/><circle cx="100" cy="44" r="1.4"/><circle cx="124" cy="42" r="1.1"/><circle cx="84" cy="58" r="1"/><circle cx="92" cy="48" r="0.9"/></g>
   <g stroke="#4e7890" stroke-width="1.5" fill="none" stroke-linecap="round">
     <path d="M14 148 q10 -5 20 0 q10 5 20 0"/>
     <path d="M136 152 q10 -5 20 0 q10 5 20 0"/>
     <path d="M36 176 q10 -5 20 0 q10 5 20 0 q10 -5 20 0"/>
     <path d="M20 190 q10 -5 20 0 M148 188 q10 -5 20 0"/>
   </g>
-  <ellipse cx="100" cy="140" rx="44" ry="7" fill="none" stroke="#4e7890" stroke-width="1.2" opacity=".6"/>
+  <ellipse cx="92" cy="140" rx="44" ry="7" fill="none" stroke="#4e7890" stroke-width="1.2" opacity=".6"/>
   <rect width="200" height="200" fill="#9fb8c4" opacity=".07"/>
   <rect x="0.5" y="0.5" width="199" height="199" fill="none" stroke="#3f3a2e" opacity=".12"/>
 </svg>`,

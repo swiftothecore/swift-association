@@ -27271,10 +27271,10 @@ function clearBlueWash() {
   });
 }
 
-// Yes, whale! — the famous whale tail that looks like a pair of legs surfaces from
-// behind the top edge of the notebook, treads water for 13 seconds, and dives back
-// down. Catch it with a click before it goes for the "yes, whale!" keepsake
-// (earnPolaroid is idempotent, so it keeps visiting once earned). The wrapper is an
+// Yes, whale! — a whale's tail surfaces from behind the top edge of the notebook,
+// treads water for 13 seconds, and dives back down. Catch it with a click before it
+// goes for the "yes, whale!" keepsake (earnPolaroid is idempotent, so it keeps
+// visiting once earned). The wrapper is an
 // overflow-hidden window sitting flush above the card's top edge, so the tail rises
 // into view already clipped at the paper line — as if the desk behind the notebook
 // were open water. Deliberately outside the margin-note layer and clearEggs: the visit

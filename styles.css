@@ -12113,7 +12113,7 @@
     max-width: 44px; line-height: 1.05;
   }
 
-  /* Yes, whale! — the leg-like tail surfacing from behind the top edge of the
+  /* Yes, whale! — the whale's tail surfacing from behind the top edge of the
      notebook. The wrapper is an overflow-hidden window flush with the paper line,
      so the tail is clipped at the card edge while it rises, sells "behind the
      page", and needs no z-index games with the card itself. */

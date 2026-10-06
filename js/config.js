@@ -5155,17 +5155,18 @@ export const PEN_SVG = {
 export const STAR_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 export const SPARKLE_SVG = `<svg viewBox="0 0 24 24"><path d="M12 1 C13 8 16 11 23 12 C16 13 13 16 12 23 C11 16 8 13 1 12 C8 11 11 8 12 1 Z" fill="currentColor"/></svg>`;
 
-// Yes, whale! — the famous whale tail that looks for all the world like a pair of
-// legs, surfacing from behind the top edge of the notebook (see surfaceWhale in
-// app.js). Same slate-and-spray palette as the "yes, whale!" polaroid so the
-// keepsake reads as a photo of this exact visitor. How long it treads water is
+// Yes, whale! — a whale's tail surfacing from behind the top edge of the notebook
+// (see surfaceWhale in app.js): a thick stalk leaning out of the water and two long
+// pointed flukes in a lopsided Y, one sweeping up and one reaching out sideways.
+// Same slate-and-spray palette as the "yes, whale!" polaroid so the keepsake reads
+// as a photo of this exact visitor. How long it treads water is
 // WHALE_SURFACE_MS — 13 seconds, of course.
 export const WHALE_SURFACE_MS = 13000;
-export const WHALE_TAIL_SVG = `<svg viewBox="0 0 100 100" role="img"><title>A whale tail that looks like a pair of legs, sticking up from behind the page</title>
-  <path d="M28 100 C26 76 27 46 32 20 Q32 10 26 4 Q33 8 35 16 C39 36 42 60 46 82 Q48 87 50 83 C55 62 59 38 62 16 Q63 7 72 1 Q69 9 68.5 18 C73 44 74 74 72 100 Z" fill="#27384a"/>
-  <path d="M28.5 82 C27.5 62 28 44 30.5 26 M72.5 80 C73.5 60 73 42 70 22" stroke="#3d5166" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".7"/>
-  <g fill="#dfe7ec"><circle cx="33" cy="72" r="1"/><circle cx="34" cy="52" r="0.85"/><circle cx="36" cy="32" r="0.8"/><circle cx="67" cy="68" r="1"/><circle cx="66" cy="48" r="0.85"/><circle cx="64" cy="28" r="0.8"/></g>
-  <g fill="#6d94a8"><path d="M18 12 q1.7 2.8 0 4.3 q-1.7 -1.5 0 -4.3 z"/><path d="M80 8 q1.6 2.6 0 4 q-1.6 -1.4 0 -4 z"/><path d="M49 50 q1.4 2.3 0 3.6 q-1.4 -1.3 0 -3.6 z"/><circle cx="16" cy="24" r="1.2"/><circle cx="84" cy="18" r="1.1"/></g>
+export const WHALE_TAIL_SVG = `<svg viewBox="0 0 100 100" role="img"><title>A whale's tail flukes rising from behind the page</title>
+  <path d="M10 100 C14 88 22 76 31 66 C33.5 63 35 60.5 35.5 58 C31 49 30.5 38 34.5 28 C37.5 19.5 42 11 47.5 3 C52.5 10.5 56 20 56.3 30 C56.5 36 56 41 55 45 C61 41.5 69 41.5 77 44.5 C84 47 90 49.5 96.5 50 C91.5 57 84 64.5 73 66.5 C64 68 55.5 65.5 49 62 C43 73 39 86 37 100 Z" fill="#27384a"/>
+  <path d="M19 95 C23 83 30 72 39.5 62 M40.5 46 C38.5 36 40.5 24 46 13 M60 53.5 C69 51.5 79 52.5 89 54" stroke="#3d5166" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>
+  <g fill="#dfe7ec"><circle cx="46" cy="22" r=".9"/><circle cx="50" cy="31" r=".75"/><circle cx="45" cy="38" r=".8"/><circle cx="52" cy="17" r=".55"/><circle cx="66" cy="50" r=".85"/><circle cx="75" cy="56" r=".7"/><circle cx="85" cy="53" r=".9"/><circle cx="71" cy="47" r=".6"/><circle cx="80" cy="59" r=".55"/></g>
+  <g fill="#6d94a8"><path d="M30 10 q1.7 2.8 0 4.3 q-1.7 -1.5 0 -4.3 z"/><path d="M86 32 q1.6 2.6 0 4 q-1.6 -1.4 0 -4 z"/><path d="M64 26 q1.4 2.3 0 3.6 q-1.4 -1.3 0 -3.6 z"/><circle cx="24" cy="24" r="1.2"/><circle cx="94" cy="40" r="1.1"/></g>
 </svg>`;
 export const WHALE_SPLASH_SVG = `<svg viewBox="0 0 120 60" aria-hidden="true">
   <g fill="#6d94a8"><circle cx="18" cy="28" r="3"/><circle cx="38" cy="13" r="2.4"/><circle cx="60" cy="7" r="3.2"/><circle cx="82" cy="13" r="2.4"/><circle cx="102" cy="28" r="3"/><circle cx="28" cy="42" r="2"/><circle cx="92" cy="42" r="2"/></g>
