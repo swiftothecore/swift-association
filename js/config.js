@@ -2974,10 +2974,58 @@ export const TITLE_ALIASES = {
     "all ten well", "all 10 well",
     "all too well 10", "all too well ten",
   ],
-  // Remix features people know by the bare title (the "(remix)" form still
-  // matches via normalizeTitle); the alias makes the plain name work too.
-  "Gasoline (Remix)": ["gasoline"],
-  "The Joker And The Queen (Remix)": ["the joker and the queen"],
+  // Featured artists. The catalogue stores a bare title, but a streaming service prints
+  // "(feat. ...)", so that form resolves on Enter, the name without the "feat." does too,
+  // and the dropdown finds the song from the artist alone ("lana", "kendrick", "bon iver").
+  "Breathe": ["breathe feat colbie caillat", "breathe colbie caillat"],
+  "You All Over Me": ["you all over me feat maren morris", "you all over me maren morris"],
+  "That's When": ["that's when feat keith urban", "that's when keith urban"],
+  "Electric Touch": ["electric touch feat fall out boy", "electric touch fall out boy"],
+  "Castles Crumbling": ["castles crumbling feat hayley williams", "castles crumbling hayley williams"],
+  "The Last Time": [
+    "the last time feat gary lightbody", "the last time gary lightbody",
+    "the last time feat gary lightbody of snow patrol", "the last time snow patrol",
+  ],
+  "Everything Has Changed": ["everything has changed feat ed sheeran", "everything has changed ed sheeran"],
+  "Nothing New": ["nothing new feat phoebe bridgers", "nothing new phoebe bridgers"],
+  "I Bet You Think About Me": ["i bet you think about me feat chris stapleton", "i bet you think about me chris stapleton"],
+  "Run": ["run feat ed sheeran", "run ed sheeran"],
+  "Bad Blood (Remix)": ["bad blood feat kendrick lamar", "bad blood kendrick lamar"],
+  "End Game": ["end game feat ed sheeran and future", "end game ed sheeran and future", "end game ed sheeran", "end game future"],
+  "ME!": [
+    "me feat brendon urie", "me brendon urie",
+    "me feat brendon urie of panic at the disco", "me panic at the disco",
+  ],
+  "exile": ["exile feat bon iver", "exile bon iver"],
+  "no body, no crime": ["no body no crime feat haim", "no body no crime haim"],
+  "coney island": ["coney island feat the national", "coney island the national"],
+  "evermore": ["evermore feat bon iver", "evermore bon iver"],
+  // The album cut is the one billed "feat. Lana Del Rey"; the remix is the "More Lana" one,
+  // and fans call it every way round, so "lana" in the dropdown lists both.
+  "Snow On The Beach": ["snow on the beach feat lana del rey", "snow on the beach lana del rey"],
+  "Snow On The Beach (Remix)": [
+    "snow on the beach feat more lana del rey", "snow on the beach more lana del rey",
+    "snow on the beach more lana", "snow on the beach more lana version",
+  ],
+  "Karma (Remix)": ["karma feat ice spice", "karma ice spice"],
+  "Fortnight": ["fortnight feat post malone", "fortnight post malone"],
+  "Florida!!!": ["florida feat florence and the machine", "florida florence and the machine", "florida florence"],
+  "Safe & Sound": ["safe and sound feat the civil wars", "safe and sound the civil wars"],
+  // Her features on other artists' songs: the credit a streaming service prints, and the lead
+  // artist's name, which is the one a player is likelier to reach for.
+  "Highway Don't Care": ["highway don't care feat taylor swift and keith urban", "highway don't care tim mcgraw"],
+  "Both of Us": ["both of us feat taylor swift", "both of us bob"],
+  "Half of My Heart": ["half of my heart feat taylor swift", "half of my heart john mayer"],
+  "Two Is Better Than One": ["two is better than one feat taylor swift", "two is better than one boys like girls"],
+  "The Alcott": ["the alcott feat taylor swift", "the alcott the national"],
+  "us.": ["us feat taylor swift", "us gracie abrams"],
+  // These two remixes are also known by the bare title (the "(remix)" form still matches via
+  // normalizeTitle); the first alias makes the plain name work too.
+  "Gasoline (Remix)": ["gasoline", "gasoline feat taylor swift", "gasoline haim"],
+  "The Joker And The Queen (Remix)": [
+    "the joker and the queen", "the joker and the queen feat taylor swift",
+    "the joker and the queen ed sheeran",
+  ],
   // "I Heart ?" reads aloud as "I Heart Question Mark".
   "I Heart ?": ["i heart question mark"],
 };

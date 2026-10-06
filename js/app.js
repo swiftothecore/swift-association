@@ -8811,11 +8811,11 @@ function bonusAllMatches(query) {
   for (const song of bonusSongs()) {
     // The final title judge already forgives missing or misplaced spaces. Mirror that
     // leniency here so "illicita" can suggest "illicit affairs" as the player types.
-    const match = titleMatchScore(song._norm, q);
+    const match = songMatchScore(song, q);
     if (!match) continue;
     scored.push({ song, ...match });
   }
-  scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
+  scored.sort((a, b) => a.rank - b.rank || !!a.alias - !!b.alias || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
   return scored.map((s) => s.song);
 }
 
@@ -14907,6 +14907,7 @@ function installCorpus(grouped, words, opts = {}) {
   const spelledPlain = new Set();      // the same flattened token, seen somewhere WITHOUT one
   for (const s of allSongs) {
     s._norm = normalizeTitle(s.title);
+    s._aliasNorms = [];   // the accepted aliases, normalized, so the dropdown can find a song by them
     s._normLyrics = normalizeLyric(s.lyrics);   // flat blob for lyric-line matching
     // The title in LYRIC normalization (not normalizeTitle's), so isTitleFragment can
     // compare it against typed text on the same footing as a lyric fragment. A per-song
@@ -14936,6 +14937,7 @@ function installCorpus(grouped, words, opts = {}) {
         continue;
       }
       titleIndex.set(key, s);
+      s._aliasNorms.push(key);
     }
   }
   // A token the catalogue also sings WITHOUT an apostrophe — "angels" beside "angel's" — says
@@ -14953,6 +14955,7 @@ function installCorpus(grouped, words, opts = {}) {
         continue;
       }
       titleIndex.set(key, song);
+      song._aliasNorms.push(key);
     }
   }
   // Spaceless fallback: forgive misplaced spaces ("all to owell" -> "all too well") by
@@ -23193,6 +23196,21 @@ function titleMatchScore(title, query) {
   if (compactIdx > 0) return { rank: 5, idx: compactIdx };
   return null;
 }
+/* A song's best match across its own title and its aliases, so "lana" finds Snow On The Beach
+   (Remix) and "kendrick" finds Bad Blood (Remix). The card still prints the real title, so an
+   alias only ever changes what can be found, never what is shown. A tie goes to the title,
+   and the sort lists title hits first at each rank, so "taylor" leads with Elizabeth Taylor.
+   Mid-alias hits must start a word: every featured credit spells "feat", and without that
+   "eat" or "at" would drag in thirty songs whose titles hold neither. */
+function songMatchScore(song, query) {
+  let best = titleMatchScore(song._norm, query);
+  for (const alias of song._aliasNorms || []) {
+    const m = titleMatchScore(alias, query);
+    if (m && m.rank >= 4 && (m.rank === 5 || alias[m.idx - 1] !== " ")) continue;
+    if (m && (!best || m.rank < best.rank || (m.rank === best.rank && best.alias && m.idx < best.idx))) best = { ...m, alias: true };
+  }
+  return best;
+}
 
 /* How much of a title a LATE dropdown (Hard) wants written before it will finish it. Five
    normalized characters is the bar because it is roughly where a title stops being guessable
@@ -23222,7 +23240,7 @@ function allMatches(query) {
   if (late && q.length < DROPDOWN_LATE_MIN) return [];
   const scored = [];
   for (const song of allSongs) {
-    const match = titleMatchScore(song._norm, q);
+    const match = songMatchScore(song, q);
     if (!match) continue;
     // Late completions start at the beginning of a title and nowhere else: ranks 0-3 are the
     // exact and prefix hits, 4-5 are the ones found mid-title. Finishing a title you have
@@ -23233,7 +23251,7 @@ function allMatches(query) {
     if (isGiveawayPick(song)) continue;      // ...and answers the prompt word alone would hand over
     scored.push({ song, ...match });
   }
-  scored.sort((a, b) => a.rank - b.rank || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
+  scored.sort((a, b) => a.rank - b.rank || !!a.alias - !!b.alias || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
   return scored.map((s) => s.song);
 }
 
