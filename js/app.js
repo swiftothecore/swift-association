@@ -21,7 +21,7 @@ import {
   LAUNCH_DATE, SERIAL_DIGITS,
   GRAVEYARD,
   CREDITS,
-  MODES, MODE_ORDER, MODE_COLORS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
+  MODES, MODE_ORDER, MODE_COLORS, PACE_TIERS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D, TREE_D, TREE_TRUNK_D, TREE_TRUNK,
   ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
@@ -5024,6 +5024,37 @@ function modeLabel(token) {
 }
 const isInfiniteToken = (token) => !!token && token.startsWith("inf-");
 const isRuthlessToken = (token) => !!token && token.startsWith("rl-");
+// The pace a perfect run was written at, as a PACE_TIERS rung, or null when it earns no ink:
+// not a 13/13, no clock, or a mode without a row (infinite, daily, custom, relaxed).
+// devPace forces a rung on every best line so the four inks can be judged without the run.
+let devPace = null;
+const PACE_RUNGS = ["gold", "pen", "graphite"];
+const PACE_NAMES = { gold: "gold", pen: "era pen", graphite: "graphite", pencil: "pencil" };
+function paceTier(mode, rec) {
+  if (devPace) return devPace;
+  const tiers = PACE_TIERS[mode];
+  if (!tiers || !rec || rec.time == null || rec.score !== TOTAL_ROUNDS) return null;
+  const perPage = rec.time / TOTAL_ROUNDS;
+  return PACE_RUNGS.find((r) => perPage < tiers[r]) || "pencil";
+}
+// The time on a best line, inked at its pace. Gold also carries the masthead's leaf twinkle,
+// the same mark the star gets when an album is perfected, so the top rung reads as gilded
+// rather than as one more colour. The title names the rung and its bar, since a colour only
+// means something to a player who can find out there is a ladder behind it.
+function paceTimeHTML(mode, rec) {
+  const time = fmtTime(rec.time);
+  const tier = paceTier(mode, rec);
+  if (!tier) return time;
+  const tiers = PACE_TIERS[mode] || PACE_TIERS.medium;
+  const next = PACE_RUNGS[PACE_RUNGS.indexOf(tier) - 1];
+  const bar = tier === "pencil"
+    ? `graphite under ${tiers.graphite}s a page`
+    : `under ${tiers[tier]}s a page` + (next ? ` · ${PACE_NAMES[next]} under ${tiers[next]}s` : "");
+  const leaf = tier === "gold"
+    ? `<svg class="pace-leaf" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.2 1.4 Q13.1 9.4 22.4 12.1 Q13.4 14.6 11.3 22.5 Q10.2 14.8 1.7 11.7 Q10.6 9.7 12.2 1.4 Z"/></svg>`
+    : "";
+  return `<span class="pace-time" data-pace="${tier}" title="${PACE_NAMES[tier]} pace · ${bar}">${leaf}${time}</span>`;
+}
 // Compact "your best" line for a single mode (start screen + results). Shows the
 // mode's top personal record, or a target line if you've never finished a run in it.
 function renderBestLine(el, mode, opts = {}) {
@@ -5037,7 +5068,7 @@ function renderBestLine(el, mode, opts = {}) {
     return;
   }
   const unit = isInfiniteToken(mode) ? " rounds" : " / " + TOTAL_ROUNDS;
-  const timePart = rec.time != null ? " · " + fmtTime(rec.time) : "";
+  const timePart = rec.time != null ? " · " + paceTimeHTML(mode, rec) : "";
   const hintPart = rec.hints ? " · " + hintCountLabel(rec.hints) : "";
   // The start screen sets this line beside its own "Your best" heading, so the "best"
   // badge would only say the heading again; the stacked results line keeps it.
@@ -31194,6 +31225,13 @@ function buildDevApi() {
         return devRuleTerms;
       },
       clear: () => { devRuleTerms = null; renderRuleTerms(); },
+    },
+    // Best-line pace ink: preview() forces a rung on every best line, clear() hands it back.
+    pace: {
+      tiers: () => PACE_TIERS,
+      tier: (mode = boardMode()) => { const r = loadRecords(mode)[0]; return { rec: r || null, tier: paceTier(mode, r) }; },
+      preview: (tier) => { devPace = tier; refreshStartBoard(); return tier; },
+      clear: () => { devPace = null; refreshStartBoard(); },
     },
     typingHint: {
       ids: () => TYPE_HINT_IDS.slice(),

@@ -355,6 +355,24 @@ export const MODE_COLORS = {
   ultra:    "#5a5a66",   // graphite
   lyricist: "#8a78b0",   // lavender
 };
+// The pace a perfect run's time is inked in on the "your best" line. Average seconds a page,
+// ceilings, fastest first; a time slower than the last rung stays in pencil. Only a 13/13
+// earns a colour, because a fast run with misses in it was fast partly by giving up pages.
+// The ladder is the streak mark's pencil case (STREAK_TIERS above), so "you did well" is one
+// colour language across the notebook, and gold is the only rung with a mark of its own.
+// Normal's gold IS Perfect Storm (average under 3s), so the charm and the ink agree on fast;
+// every other mode is moved off Normal by how much help its pages give, not by its clock.
+// Easy sits stricter than Normal (common words, suggestions), Hard looser (rarer words, late
+// suggestions), Ultra's rungs are tight because a 5s clock means any perfect run averages
+// under 5s already, and Lyricist is long because the answer is a typed line, not a title.
+// Relaxed has no clock and Custom is a workshop, so neither has a row and neither is inked.
+export const PACE_TIERS = {
+  easy:     { gold: 2.5, pen: 3.5,  graphite: 5 },
+  medium:   { gold: 3,   pen: 4.25, graphite: 6 },
+  hard:     { gold: 3.5, pen: 4.5,  graphite: 5.5 },
+  ultra:    { gold: 2.5, pen: 3,    graphite: 3.75 },
+  lyricist: { gold: 7,   pen: 9.5,  graphite: 12 },
+};
 
 /* ---------- Album Focus mode ----------
    "Quiz me on one album": every prompt word and valid answer come from a single studio

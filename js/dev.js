@@ -287,6 +287,15 @@ export function initDev(api) {
         btn("13 · era pen", () => { api.streak.set(13); api.streak.burst(); }),
         btn("31 · gold", () => { api.streak.set(31); api.streak.burst(); }))));
 
+  // ---- Best-line pace ---------------------------------------------------------
+  // The ink a perfect run's time is written in. Gold on Normal is a 39s run, so the rungs are
+  // forced here onto the start screen's best line to judge them; "real" reads the record back.
+  body.append(section("best-line pace",
+    row(btn("pencil", () => api.pace.preview("pencil")), btn("graphite", () => api.pace.preview("graphite")),
+        btn("era pen", () => api.pace.preview("pen")), btn("gold", () => api.pace.preview("gold"))),
+    row(btn("this mode's rung", () => { readout.textContent = JSON.stringify(api.pace.tier()); }),
+        btn("real", () => { api.pace.clear(); toast("pace follows the record again"); }, "warn"))));
+
   // ---- Small charming features, Batch 1 -------------------------------------
   // The fast-answer control uses the real page stopwatch and verdict.
   body.append(section("charm batch 1",

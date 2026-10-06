@@ -3217,6 +3217,19 @@
   .best-num { font-family: var(--hand); font-weight: 700; font-size: calc(40px + var(--text-size-adjust)); line-height: 1; color: var(--ink-accent); }
   .best-unit { font-size: calc(21px + var(--text-size-adjust)); color: var(--ink-soft); }
   .best-meta { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); }
+  /* A perfect run's time, inked at its pace (PACE_TIERS in config.js). The streak mark's pencil
+     case: pencil is the meta's own grey, then graphite, the era's pen, and gold. Gold alone gets
+     a mark, the masthead's leaf twinkle, flat like the star's, so it reads as gilded rather than
+     as a fourth colour. Bold from graphite up, because 11px typewriter in a colour is too thin
+     to tell from the grey beside it. */
+  .pace-time { white-space: nowrap; }
+  .pace-time[data-pace="graphite"] { color: var(--ink); font-weight: 700; }
+  .pace-time[data-pace="pen"] { color: var(--ink-accent); font-weight: 700; }
+  .pace-time[data-pace="gold"] { color: var(--brand-gold); font-weight: 700; }
+  .pace-leaf {
+    display: inline-block; width: 0.95em; height: 0.95em; margin-right: 3px;
+    vertical-align: -0.1em; fill: var(--leaf); transform: rotate(6deg);
+  }
   .best-empty { font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.85; padding: 4px 0 8px; }
   /* ---------- Records page (personal bests + history) ---------- */
   .rec-sig { display: flex; align-items: center; gap: 18px; margin: 2px 0 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(43,39,34,0.16); }
