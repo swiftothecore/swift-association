@@ -29,7 +29,7 @@ text, and the copyright notices the OFL requires be distributed with the fonts, 
 | `fonts/caveat-latin.woff2` | Caveat | Copyright 2014 The Caveat Project Authors |
 | `fonts/courierprime-400-latin.woff2`, `fonts/courierprime-700-latin.woff2`, `fonts/courierprime-italic-latin.woff2` | Courier Prime | Copyright 2015 The Courier Prime Project Authors |
 | `fonts/unifrakturcook-700-latin.woff2` | UnifrakturCook | Copyright (c) 2010 j. 'mach' wust, with Reserved Font Name UnifrakturCook; Copyright (c) 2009 Peter Wiegel |
-| `fonts/playfairdisplay-900-latin.woff2` | Playfair Display | Copyright 2017 The Playfair Display Project Authors, with Reserved Font Name "Playfair Display" |
+| `fonts/playfairdisplay-700-latin.woff2` | Playfair Display | Copyright 2017 The Playfair Display Project Authors, with Reserved Font Name "Playfair Display" |
 
 All have been subsetted to Latin and converted to WOFF2. None has been renamed, which
 the OFL requires of any Modified Version distributed under the Reserved Font Name.

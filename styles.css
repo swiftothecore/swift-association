@@ -43,7 +43,7 @@
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
 
-  /* The Stats nemesis clipping's two printed faces: a blackletter masthead and a black
+  /* The Stats nemesis clipping's two printed faces: a blackletter masthead and a bold
      headline serif. Only that one cutting uses them (see .stp-clip). */
   @font-face {
     font-family: "UnifrakturCook";
@@ -56,9 +56,9 @@
   @font-face {
     font-family: "Playfair Display";
     font-style: normal;
-    font-weight: 900;
+    font-weight: 700;
     font-display: swap;
-    src: url("fonts/playfairdisplay-900-latin.woff2") format("woff2");
+    src: url("fonts/playfairdisplay-700-latin.woff2") format("woff2");
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
   }
 
@@ -11805,7 +11805,11 @@
     border-top: 1.5px solid #211f1c; border-bottom: .75px solid #211f1c;
     font: 700 5.4cqi/1.2 Georgia, "Times New Roman", serif; letter-spacing: .08em; text-transform: uppercase;
   }
-  .stp-head { font: 900 12.6cqi/.98 "Playfair Display", Georgia, "Times New Roman", serif; text-transform: uppercase; letter-spacing: -.005em; overflow-wrap: anywhere; }
+  /* Bold and title case, as a broadsheet sets it: in Black capitals the counters closed up and the
+     headline came out darker than the masthead it sits under. "Strikes Again" never splits, so the
+     line breaks after the word and never strands "Again" on its own. */
+  .stp-head { font: 700 11.4cqi/1.02 "Playfair Display", Georgia, "Times New Roman", serif; overflow-wrap: anywhere; }
+  .stp-head span { white-space: nowrap; }
   .stp-deck { margin: 5px 0 6px; font: italic 7.2cqi/1.15 Georgia, "Times New Roman", serif; color: #57524a; }
   .stp-cols {
     height: 4.15em; overflow: hidden; columns: 2; column-gap: 7px; column-rule: .75px solid rgba(33, 31, 28, .4);

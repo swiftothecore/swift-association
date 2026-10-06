@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v410";
+const CACHE = "stta-v411";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -74,7 +74,7 @@ const ASSETS = [
   "fonts/courierprime-italic-latin.woff2",
   // The Stats nemesis clipping's masthead and headline faces.
   "fonts/unifrakturcook-700-latin.woff2",
-  "fonts/playfairdisplay-900-latin.woff2",
+  "fonts/playfairdisplay-700-latin.woff2",
   "js/app.js",
   "js/offline.js",
   "js/cta.js",   // Shared start-button contents and decorative finish layers.
