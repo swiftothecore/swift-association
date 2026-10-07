@@ -12024,8 +12024,9 @@
      printed on it is the monthly pass's rule above; this only adds what a week needs: the date
      range where the month goes, the one-off overprint on the stub, and the punch landing. The
      pass is the panel's heading, so the handwritten title over the podium stands down while it
-     is there. */
-  #screen-results .podium-title:has(+ #resultPodium > .rp-pass) { display: none; }
+     is there. The second selector is the page-turn clone, whose ids are renamed (renameFlipIds). */
+  #screen-results .podium-title:has(+ #resultPodium > .rp-pass),
+  #screen-results .podium-title:has(+ [data-flip-id="resultPodium"] > .rp-pass) { display: none; }
   .rp-pass { margin: 22px 0 6px; }
   .rp-pass .stp-dp-lift { transform: rotate(-0.35deg); }
   .rp-pass .stp-dp { --dp-stubw: 140px; }
