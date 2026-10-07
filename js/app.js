@@ -6,7 +6,6 @@ import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
 import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, christmasFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
 import { seasonOn, SEASONS, southernSeasons } from "./season.js";
-import { launchFlock } from "./messengers.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
    js/lineuphand.js for what a hand of them costs and what cannot sit beside what, and
    js/lineupcards.js draws the face. All three are imported rather than reimplemented so
@@ -13989,7 +13988,7 @@ function renderBraceletDetails(results, albums, opts) {
 }
 
 function renderFinishedBracelet(results, albums, opts = {}) {
-  if (gameType !== "daily") $("shareStub")?.remove();
+  if (gameType !== "daily") removeTradeTag();
   const resolved = braceletRenderOptions(results, opts);
   const el = $("resultBracelet");
   if (el) {
@@ -20890,9 +20889,9 @@ function applyAgainBtnLabel() {
   paintPostmark(label);
 }
 
-/* The three pieces of the shared summary, derived once and used twice: they are what
-   the stub PRINTS and what the tear COPIES, so a stub that shows one thing while
-   pasting another is impossible by construction. */
+/* The pieces of the shared summary. The tag on the strand prints none of them: the tally and
+   the bracelet directly above it already say all of this, and the tag only has to say what it
+   does. They exist for the clipboard. */
 const shareDateLabel = (dateStr) =>
   new Date(dateStr + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 const shareGrid = () => roundResults.map((r) => (r ? "⭐" : "⬜")).join("");
@@ -20908,118 +20907,189 @@ const shareScoreLine = () => {
 // NOT in here: the searcher's share sheet carries it as the `url` field (which platforms
 // render as a link preview), and the daily's clipboard path appends it as a last line.
 function buildShareString(dateStr) {
-  return `Swift Song Association 🎵\nDaily Challenge · ${shareDateLabel(dateStr)}\n${shareGrid()}\n${shareScoreLine()}`;
+  return `Swift to the Song Association 🎵\nDaily Challenge · ${shareDateLabel(dateStr)}\n${shareGrid()}\n${shareScoreLine()}`;
 }
 
-// The ragged edge left behind once the stub has been torn off. Jittered from the day's
-// own seed, so re-opening a finished daily shows the same tear rather than a new one,
-// and drawn as a fibre line rather than a silhouette: page and stub are both paper, so
-// the tear reads by its roughness, not by a change of colour.
-function tornEdgePath(seed) {
-  let s = seed % 9973 || 7;
-  const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-  let d = "M0 6";
-  for (let x = 4; x <= 100; x += 4) d += ` L${x} ${(2 + rnd() * 6).toFixed(1)}`;
-  return d;
+/* The trade tag: the daily's copy button, a manila swing tag tied to the finished strand's loose
+   end on a thread of era ink. Friendship bracelets are made to be traded, so the one you just
+   made carries a tag, and pressing it copies the day's result to paste wherever your friends
+   are. One press, one clipboard write, deliberately not the OS share sheet: a sheet turns one
+   deliberate gesture into a modal to dismiss.
+
+   The tag has two sides and the copy turns it over: COPY / to trade on the front, copied and a
+   tick on the back, then it turns back. A sealed Daily (hideDailyScore) prints OPEN / & copy,
+   and the same press opens the result before it copies, because a tag that showed anything of
+   the day would spoil what the seal is holding back.
+
+   Its words are set by hand. Each one is placed by its measured ink, not its advance box, so it
+   sits on the tag's centre line: Caveat leans, which leaves a box-centred word visibly right of
+   centre, and tracked caps trail a letter space that drags them left. The x values below were
+   measured with canvas measureText against the self-hosted faces; re-measure them if a word,
+   its size or its tracking changes. The tag hangs upright at rest, so the type is never drawn
+   on a slant; it only moves when it swings or turns. */
+const TAG_W = 50, TAG_H = 70;
+const TAG_WORDS = {
+  copy:   { big: `<text class="tag-type" x="7.12" y="38.6">COPY</text>`, small: `<text class="tag-hand" x="4.43" y="57.6">to trade</text>` },
+  open:   { big: `<text class="tag-type" x="7.21" y="38.6">OPEN</text>`, small: `<text class="tag-hand" x="8.38" y="56.4">&amp; copy</text>` },
+  copied: { big: `<text class="tag-hand tag-hand--big" x="5.59" y="40.6">copied</text>`, small: `<path class="tag-tick" d="M19.4 50.4 L23.3 54.4 L31.0 46.2"/>` },
+  failed: { big: `<text class="tag-hand tag-hand--big" x="11.17" y="38.8">oops</text>`, small: `<text class="tag-type tag-type--small" x="8.66" y="57.2">RETRY</text>` },
+};
+// The two sides are cut separately, so the back is not the front mirrored: no edge of either
+// is quite square, and they are not the same not-square.
+const TAG_STOCK = {
+  front: "M10.2 1.3 L39.4 1.0 L48.9 10.4 L48.7 67.4 Q48.7 68.9 47.2 69 L2.8 68.8 Q1.2 68.7 1.2 67.2 L1.3 10.3 Z",
+  back:  "M10.5 1.1 L39.7 1.2 L48.8 10.2 L48.8 67.2 Q48.8 68.8 47.3 68.9 L2.9 69 Q1.3 68.9 1.3 67.4 L1.2 10.5 Z",
+};
+function tagFace(side, words) {
+  const w = TAG_WORDS[words];
+  return `<svg class="tag-face tag-face--${side}" viewBox="0 0 ${TAG_W} ${TAG_H}" aria-hidden="true" focusable="false">` +
+    `<path class="tag-stock" d="${TAG_STOCK[side]}"/>` +
+    `<circle class="tag-ring" cx="25" cy="12" r="6"/><circle class="tag-hole" cx="25" cy="12" r="2.5"/>` +
+    w.big + (words === "copy" || words === "open" ? `<path class="tag-rule" d="M12.2 44.1 Q25 43.5 37.9 44.3"/>` : "") + w.small +
+    `</svg>`;
+}
+// The thread: tied once round the cord's loose end, then two strands down into the eyelet. Drawn
+// to length, since a phone hangs the tag on a shorter one. The left strand hangs a touch looser.
+function tagThread(len) {
+  const hy = len + 12, f = (v) => v.toFixed(1);
+  const at = (t) => 3.4 + (hy - 3.4) * t;
+  return `<svg class="tag-thread" viewBox="0 -1 ${TAG_W} ${f(hy + 1)}" width="${TAG_W}" height="${f(hy + 1)}" aria-hidden="true" focusable="false">` +
+    `<path d="M22.6 1.9 C22.2 -0.3 27.6 -0.9 27.9 1.4 C28.1 3.5 23.4 4.2 22.6 1.9 Z"/>` +
+    `<path d="M23.6 3.5 C21.8 ${f(at(0.28))} 21.5 ${f(at(0.64))} 23.4 ${f(hy - 0.2)}"/>` +
+    `<path d="M26.6 3.6 C28.2 ${f(at(0.3))} 28.1 ${f(at(0.66))} 26.5 ${f(hy - 0.3)}"/>` +
+    `</svg>`;
 }
 
-/* The share stub — the daily result printed as a perforated ticket at the foot of the
-   page, with the emoji grid and the score right there on it. Tearing it off IS the
-   share: the button shows exactly what lands in the paste, and the flock of messengers
-   (js/messengers.js) carries it away.
+// Where the strand's loose right-hand end is, in the tag's own layer. The tail is whichever cord
+// runs furthest right, read off the drawing the game just made (centreStrand's shift included),
+// so the tag follows the knot wherever the strand puts it. Layout offsets, not client rects: the
+// results screen may still be easing in when this runs, and a scaled rect would misplace it.
+function tradeTagAnchor(host) {
+  const svg = host && host.querySelector("svg");
+  if (!svg || !host.offsetWidth) return null;
+  let best = null;
+  try {
+    const toSvg = svg.getScreenCTM().inverse();
+    for (const cord of svg.querySelectorAll("path.b-cord")) {
+      const end = cord.getPointAtLength(cord.getTotalLength());
+      const p = new DOMPoint(end.x, end.y).matrixTransform(toSvg.multiply(cord.getScreenCTM()));
+      if (!best || p.x > best.x) best = p;
+    }
+  } catch { return null; }
+  if (!best) return null;
+  // The drawing is the strand's full width at its own aspect, under the .bracelet padding.
+  const k = host.clientWidth / svg.viewBox.baseVal.width;
+  const pad = parseFloat(getComputedStyle(host).paddingTop) || 0;
+  return { x: host.offsetLeft + best.x * k, y: host.offsetTop + pad + best.y * k };
+}
 
-   One tear, one clipboard write. Deliberately NOT the OS share sheet: a sheet turns a
-   single deliberate gesture into a modal to dismiss, and the stub already says what it
-   is doing. `hidden` is the held-back-score variant — the stub prints no grid and no
-   score until it is torn, because a stub that showed them would spoil the very thing
-   the setting exists to hide. Spent on the first tear: a score reveals once.
+let tradeTagWatch = null;   // the ResizeObserver keeping the tag on the knot
 
-   The tear and the flock come after the copy, and only once it actually succeeded. */
+// Take the tag down, and give the keepsake chips back any room they made for it. Every results
+// path that is not a Daily goes through here, so a tag never hangs off another mode's strand.
+function removeTradeTag() {
+  $("tradeTag")?.remove();
+  tradeTagWatch?.disconnect();
+  tradeTagWatch = null;
+  const row = document.querySelector("#screen-results .bracelet-keepsake");
+  if (row) row.style.marginTop = "";
+}
+
 function renderShareButton(dateStr, hidden) {
-  const existing = $("shareStub");
-  if (existing) existing.remove();
+  removeTradeTag();
 
+  const strand = $("resultBracelet");
+  if (!strand) return;
   let held = hidden;
-  let torn = false;
+  let back = null;   // the timer that turns the tag face-up again
 
-  const wrap = document.createElement("div");
-  wrap.id = "shareStub";
-  wrap.className = "share-stub";
-
-  const perf = document.createElement("div");
-  perf.className = "stub-perf";
-  perf.setAttribute("aria-hidden", "true");
-
+  const tag = document.createElement("div");
+  tag.id = "tradeTag";
+  tag.className = "trade-tag";
+  tag.dataset.side = "front";
   const btn = document.createElement("button");
   btn.id = "shareBtn";
   btn.type = "button";
-  btn.className = "stub-body";
+  btn.className = "trade-tag-card";
+  tag.append(btn);
 
-  const cta = () => {
-    if (held) return "tear to reveal & copy";
-    if (torn) return "tear again to copy";
-    return "tear here to copy";
-  };
-  const paint = (ctaText) => {
-    btn.innerHTML =
-      `<span class="stub-head">daily challenge</span>` +
-      `<span class="stub-date">${escapeHtml(shareDateLabel(dateStr))}</span>` +
-      (held ? `<span class="stub-sealed">score sealed</span>`
-            : `<span class="stub-grid">${shareGrid()}</span>` +
-              `<span class="stub-score">${escapeHtml(shareScoreLine())}</span>`) +
-      `<span class="stub-cta">${escapeHtml(ctaText || cta())}</span>`;
+  const paint = (backWords = "copied") => {
+    btn.innerHTML = tagFace("front", held ? "open" : "copy") + tagFace("back", backWords);
     btn.setAttribute("aria-label", held
-      ? `${cta()}. Your score is hidden until you do.`
-      : `${cta()}. ${shareScoreLine()}.`);
+      ? "Open today's result and copy it to paste anywhere"
+      : `Copy today's result, ${shareScoreLine()}, to paste anywhere`);
+    btn.setAttribute("data-tip", held ? "Open today's result and copy it" : "Copy today's result to paste anywhere");
   };
   paint();
 
-  const settle = (now) => {
-    paint(now);
-    setTimeout(() => paint(), 2200);
+  // The turn: the card narrows to its edge, swaps sides and opens out again. A flat squash, not
+  // a 3D flip, so the resting tag is never on a compositor layer that softens its type. `swap`
+  // runs at the edge-on moment, so a side is only ever repainted while nobody can read it.
+  const still = () => document.body.dataset.reduceMotion === "on" || document.body.dataset.animSpeed === "instant";
+  const turn = (side, swap) => {
+    const flip = () => { swap?.(); tag.dataset.side = side; btn.classList.remove("is-turning"); };
+    if (still()) { flip(); return; }
+    btn.classList.add("is-turning");
+    setTimeout(flip, 150);
   };
 
-  btn.addEventListener("click", async () => {
-    if (btn.disabled) return;
-    const ok = await copyToClipboard(`${buildShareString(dateStr)}\n${SITE_URL}`);
-    if (!ok) { settle("copy failed"); return; }
+  // Hung from the knot. A phone gets a shorter thread, and the keepsake chips under the strand
+  // step down only as far as it takes to clear the tag, measured rather than guessed, because
+  // the chips fill the column there and the tag would otherwise sit on Download.
+  const place = () => {
+    if (!tag.isConnected) return;   // a late call from a tag already taken down
+    const at = tradeTagAnchor(strand);
+    if (!at) return;
+    const len = window.matchMedia("(max-width: 560px)").matches ? 9 : 20;
+    if (tag.dataset.thread !== String(len)) {
+      tag.querySelector(".tag-thread")?.remove();
+      tag.insertAdjacentHTML("afterbegin", tagThread(len));
+      tag.dataset.thread = String(len);
+    }
+    // The knot's centre sits on the cord's end: 25 across the tag and 2.4 down its thread.
+    tag.style.left = `${Math.round(at.x - 25)}px`;
+    tag.style.top = `${Math.round(at.y - 2.4)}px`;
+    const row = strand.parentNode.querySelector(".bracelet-keepsake");
+    if (!row) return;
+    row.style.marginTop = "";
+    const scale = parseFloat(getComputedStyle(tag).scale) || 1;
+    const left = tag.offsetLeft + (TAG_W / 2) * (1 - scale), right = left + TAG_W * scale;
+    const bottom = tag.offsetTop + (len + 1 + TAG_H) * scale + 6;
+    const under = [...row.querySelectorAll("button")].some((b) => {
+      const bl = b.offsetLeft + (b.offsetParent === row.offsetParent ? 0 : row.offsetLeft);
+      return b.offsetWidth && bl < right && bl + b.offsetWidth > left;
+    });
+    if (under && bottom > row.offsetTop) row.style.marginTop = `${Math.ceil(bottom - row.offsetTop + 4)}px`;
+  };
 
-    if (held) {
+  // One small swing on its thread when the pointer arrives, left to finish on its own. Nothing
+  // moves at rest.
+  tag.addEventListener("pointerenter", (e) => {
+    if (e.pointerType !== "mouse" || still()) return;
+    tag.classList.remove("is-swinging");
+    void tag.offsetWidth;
+    tag.classList.add("is-swinging");
+  });
+  tag.addEventListener("animationend", () => tag.classList.remove("is-swinging"));
+
+  btn.addEventListener("click", async () => {
+    const ok = await copyToClipboard(`${buildShareString(dateStr)}\n${SITE_URL}`);
+    if (ok && held) {
       revealDailyResult(dateStr);
       held = false;
+      place();   // the opened strand is centred on its own ink, so its knot may have moved
     }
-    btn.disabled = true;
-    await tearOff(wrap, perf, btn, dateStr);
-    torn = true;
-    settle("copied ✓");
-    btn.disabled = false;
+    clearTimeout(back);
+    turn("back", () => paint(ok ? "copied" : "failed"));
+    back = setTimeout(() => turn("front"), ok ? 2600 : 2200);
   });
 
-  wrap.append(perf, btn);
-  const braceletEl = $("resultBracelet");
-  braceletEl.parentNode.insertBefore(wrap, braceletEl.nextSibling);
-}
-
-/* Tear the stub off, fly the flock, and bring the stub back with a torn top edge so it
-   can be sent again. Purely presentational: the payload is already gone by the time this
-   runs, so the reduced-motion path just swaps the edge and returns. */
-async function tearOff(wrap, perf, btn, dateStr) {
-  const reduced = document.body.dataset.reduceMotion === "on";
-  if (!reduced) {
-    wrap.classList.add("tearing");
-    await launchFlock(btn, { reduced });
-    wrap.classList.remove("tearing");
-  }
-  if (!perf.classList.contains("stub-perf--torn")) {
-    perf.classList.add("stub-perf--torn");
-    perf.innerHTML =
-      `<svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">` +
-      `<path d="${tornEdgePath(dailySeed(dateStr))}" fill="none" stroke="rgba(43,39,34,0.42)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>` +
-      `</svg>`;
-  }
-  if (!reduced) {
-    wrap.classList.add("returning");
-    setTimeout(() => wrap.classList.remove("returning"), 520);
+  strand.after(tag);
+  place();
+  document.fonts?.ready.then(place);
+  if (typeof ResizeObserver === "function") {
+    tradeTagWatch = new ResizeObserver(() => place());
+    tradeTagWatch.observe(strand);
   }
 }
 
@@ -26776,8 +26846,7 @@ function endGame() {
 
   // Reset any daily-only chrome left over from a previous daily results view.
   document.querySelector("#screen-results .podium-title").textContent = "Your best";
-  const staleShare = $("shareStub");
-  if (staleShare) staleShare.remove();
+  removeTradeTag();
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
 
@@ -28490,7 +28559,7 @@ function renderSettingsBody() {
         setCheckHTML("highContrast", "High contrast", "stronger ink, bolder accents"),
         setCheckHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette"),
         setCheckHTML("seasonalEffects", "Seasonal effects", "December snow and autumn leaves"),
-        setCheckHTML("hideDailyScore", "Seal Daily results until reveal", "keeps the tally, bracelet, and recap covered until you tear the result slip to copy it"),
+        setCheckHTML("hideDailyScore", "Seal Daily results until reveal", "keeps the tally, bracelet, and recap covered until you open them with the tag on the bracelet"),
       ]));
   panels.sound =
     setSection("",
@@ -31420,12 +31489,12 @@ function buildDevApi() {
     // clipboard.
     share: {
       payload: () => ({ text: buildShareString(dailyRunDate || todayKey()), url: SITE_URL }),   // needs a daily result on screen
-      // Fly the flock without sending anything. Off the stub when one is on screen,
-      // otherwise from the middle of the page, so the drawings can be judged in place
-      // without winning a daily first.
-      flock: () => {
-        const from = $("shareBtn") || $("screen-results") || document.body;
-        return launchFlock(from, { reduced: false });
+      // Turn the tag over and back without writing the clipboard, so its back can be read.
+      turn: () => {
+        const tag = $("tradeTag");
+        if (!tag) return "no tag: finish or reopen a daily first";
+        tag.dataset.side = tag.dataset.side === "back" ? "front" : "back";
+        return tag.dataset.side;
       },
     },
     /* The strand itself, strung by hand. Every finish and every earned override at once, on

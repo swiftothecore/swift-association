@@ -15414,80 +15414,62 @@
   .daily-streak-note { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
 
 
-  /* ---------- The share stub (daily results) ----------
-     The result prints as a perforated ticket at the foot of the page: the emoji
-     grid and the score are ON the button, so pressing it sends the thing you can
-     already read. Above it sits the perforation — punched holes with a dashed
-     rule through them — which becomes a torn fibre edge once the stub has been
-     off the page. Nothing here idles; the flock only flies on a press. */
-  /* Ticket-width, not page-width: at full measure the perforation reads as the page
-     itself tearing in half, and the score floats in a banner. */
-  .share-stub { max-width: 340px; margin: 18px auto 14px; }
-  .stub-perf {
-    height: 11px; margin: 0 6px -1px;
-    border-top: 1px dashed rgba(43, 39, 34, 0.34);
-    background-image: radial-gradient(circle at center,
-      var(--paper-edge) 0 2.4px, rgba(43, 39, 34, 0.20) 2.4px 3.2px, transparent 3.3px);
-    background-size: 17px 11px; background-position: center top;
+  /* ---------- The trade tag (daily results) ----------
+     The daily's copy button: a manila swing tag tied to the finished strand's loose end on a
+     thread of era ink (renderShareButton in js/app.js hangs it and keeps it on the knot).
+     Outlined in the page's ink, the way the strand's own letter beads are. It hangs upright at
+     rest, so its type is never set on a slant; it swings once when a mouse arrives, and turns
+     over when it copies. The turn is a flat squash rather than a 3D flip, which would leave
+     the resting tag on a compositor layer and soften the very words it is there to show. */
+  .trade-tag {
+    --tag-stock: #e7cf9b; --tag-back: #ecdbb0; --tag-ring: #d3b878;
+    /* the hand in era ink, taken toward the page's ink so it holds on kraft in every era */
+    --tag-hand: color-mix(in srgb, var(--ink-accent) 68%, var(--ink));
+    position: absolute; z-index: 2; width: 50px; transform-origin: 25px 2.4px;
   }
-  .stub-perf--torn { border-top: none; background-image: none; height: 9px; }
-  .stub-perf--torn svg { display: block; width: 100%; height: 9px; }
-
-  .stub-body {
-    display: block; width: 100%; padding: 11px 14px 12px;
-    background: var(--paper); color: var(--ink);
-    border: 1px solid rgba(43, 39, 34, 0.32); border-top-color: rgba(43, 39, 34, 0.16);
-    border-radius: 0 0 3px 3px; cursor: pointer; text-align: center;
-    box-shadow: 0 4px 10px rgba(40, 32, 22, 0.14);
-    transform-origin: 12% 0;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+  :root[data-theme="dark"] .trade-tag { --tag-stock: #57482c; --tag-back: #4f4128; --tag-ring: #6d5a37; --tag-hand: var(--ink-accent); }
+  /* A manila or parchment page is nearly the tag's own colour, so the tag goes a shade deeper. */
+  body:is([data-paper="manila"], [data-paper="parchment"]) .trade-tag { --tag-stock: #dbc184; --tag-back: #e2ca92; --tag-ring: #c8a963; }
+  /* The tag is a fixed object with set type, so a larger text setting grows the whole tag. */
+  body[data-text-size="large"] .trade-tag { scale: 1.12; }
+  body[data-text-size="small"] .trade-tag { scale: 0.94; }
+  .trade-tag.is-swinging { animation: tag-swing 1.3s cubic-bezier(0.25, 0.6, 0.4, 1); }
+  @keyframes tag-swing {
+    0%   { rotate: 0deg; }
+    14%  { rotate: 7.5deg; }
+    36%  { rotate: -4.5deg; }
+    58%  { rotate: 2.6deg; }
+    79%  { rotate: -1deg; }
+    100% { rotate: 0deg; }
   }
-  .stub-body:hover, .stub-body:focus-visible {
-    /* a corner lifting off the page, not a colour change */
-    transform: rotate(-1.1deg) translateY(2px);
-    box-shadow: 0 9px 18px rgba(40, 32, 22, 0.2);
-    background: var(--paper-edge);
+  .tag-thread { position: relative; z-index: 1; display: block; overflow: visible; pointer-events: none; }
+  .tag-thread path { fill: none; stroke: var(--ink-accent); stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; }
+  .trade-tag-card {
+    position: relative; display: block; width: 50px; height: 70px; margin: -12px 0 0;
+    padding: 0; border: 0; border-radius: 3px; background: none; color: inherit; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    transition: transform 0.17s cubic-bezier(0.2, 0.8, 0.35, 1);
   }
-  .stub-body[disabled] { cursor: default; }
-  /* Two lines, not one: at phone width "daily challenge · August 11, 2026" wraps
-     mid-date and the ticket loses its head. */
-  .stub-head { display: block; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-soft); }
-  .stub-date { display: block; margin-top: 2px; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink); }
-  .stub-grid { display: block; margin-top: 7px; font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 2px; line-height: 1.1; word-break: break-all; }
-  .stub-score { display: block; margin-top: 4px; font-family: var(--hand); font-weight: 700; font-size: calc(26px + var(--text-size-adjust)); line-height: 1.1; }
-  .stub-sealed { display: block; margin: 9px 0 3px; font-family: var(--hand); font-size: calc(23px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .stub-cta { display: block; margin-top: 7px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2px; text-transform: uppercase; color: var(--ink-accent); }
-
-  /* The tear. The stub leaves up and to the right, taking the flock's direction with
-     it; the perforation stays behind on the page. */
-  .share-stub.tearing .stub-body { animation: stub-away 0.62s cubic-bezier(0.4, 0, 0.75, 0.4) forwards; }
-  @keyframes stub-away {
-    0%   { transform: rotate(0) translate(0, 0) scale(1); opacity: 1; }
-    22%  { transform: rotate(-3deg) translate(-4px, 5px) scale(1.02); opacity: 1; }
-    100% { transform: rotate(16deg) translate(90px, -120px) scale(0.72); opacity: 0; }
-  }
-  .share-stub.returning .stub-body { animation: stub-back 0.5s ease-out; }
-  @keyframes stub-back {
-    0%   { transform: translateY(-9px) scale(0.97); opacity: 0; }
-    100% { transform: none; opacity: 1; }
-  }
-
-  /* The messenger flock (js/messengers.js). One layer, above everything, alive for
-     under two seconds and removed by its own launcher. */
-  .flock-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
-  .flock-obj {
-    position: absolute; transform-origin: 50% 50%;
-    animation: flock-away var(--fdur, 1.2s) cubic-bezier(0.35, 0, 0.6, 0.35) var(--fdel, 0s) both;
-    filter: drop-shadow(0 3px 5px rgba(40, 32, 22, 0.22));
-  }
-  .flock-obj svg { display: block; }
-  @keyframes flock-away {
-    0%   { transform: translate(-50%, -50%) scale(0.5) rotate(0); opacity: 0; }
-    18%  { transform: translate(-50%, -50%) scale(1) rotate(calc(var(--frot) * 0.2)); opacity: 1; }
-    100% { transform: translate(calc(-50% + var(--fdx)), calc(-50% + var(--fdy))) scale(0.86) rotate(var(--frot)); opacity: 0; }
-  }
-  body[data-reduce-motion="on"] .share-stub .stub-body { transition: none; }
-  body[data-reduce-motion="on"] .stub-body:hover { transform: none; }
+  .trade-tag-card.is-turning { transform: scaleX(0.03); transition: transform 0.15s cubic-bezier(0.6, 0, 0.85, 0.45); }
+  .trade-tag-card:active { translate: 0 1px; }
+  .trade-tag-card:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+  .tag-face { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
+  .trade-tag[data-side="front"] .tag-face--back,
+  .trade-tag[data-side="back"] .tag-face--front { visibility: hidden; }
+  .tag-stock { fill: var(--tag-stock); stroke: var(--ink); stroke-width: 1.05; stroke-linejoin: round; }
+  .tag-face--back .tag-stock { fill: var(--tag-back); }
+  .tag-ring { fill: var(--tag-ring); stroke: var(--ink); stroke-width: 0.85; }
+  .tag-hole { fill: var(--paper); stroke: var(--ink); stroke-width: 0.8; }
+  /* Sizes and tracking are fixed, not tied to --text-size-adjust: every word is placed by its
+     measured ink (TAG_WORDS), and that only holds at the size it was measured at. */
+  .tag-type { font-family: var(--type); font-weight: 700; font-size: 12px; letter-spacing: 2.2px; fill: var(--ink); }
+  .tag-type--small { font-size: 9px; letter-spacing: 1.4px; fill: var(--ink-soft); }
+  .tag-hand { font-family: var(--hand); font-weight: 400; font-size: 14px; fill: var(--tag-hand); }
+  .tag-hand--big { font-weight: 700; font-size: 17px; }
+  .tag-rule { fill: none; stroke: var(--ink-soft); stroke-width: 0.8; stroke-linecap: round; opacity: 0.7; }
+  .tag-tick { fill: none; stroke: var(--tag-hand); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  body:is([data-reduce-motion="on"], [data-anim-speed="instant"]) .trade-tag.is-swinging { animation: none; }
+  body:is([data-reduce-motion="on"], [data-anim-speed="instant"]) .trade-tag-card { transition: none; }
 
   /* Reduced motion is attribute-driven so the in-app "reduce motion" setting can
      OVERRIDE the OS preference (force ON beats a media query; force OFF restores

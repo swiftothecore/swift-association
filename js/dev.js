@@ -1204,10 +1204,10 @@ export function initDev(api) {
         btn("christmas button", () => { const r = api.milestone.christmasButton(); showDate(r.date); toast(`${r.date}: ${r.finish}`); })),
     row(btn("share payload", () => {
           const p = api.share.payload();
-          console.log("[dev] the tear would copy:\n" + [p.text, p.url].filter(Boolean).join("\n"));
+          console.log("[dev] the tag would copy:\n" + [p.text, p.url].filter(Boolean).join("\n"));
           toast("share payload in console");
         }),
-        btn("fly the flock", () => { api.share.flock(); toast("messengers away"); })),
+        btn("turn the tag", () => toast(api.share.turn()))),
     row(btn("card meta", () => { console.log("[dev] bracelet card", api.card.meta()); toast("card meta in console"); }),
         btn("open card SVG", () => api.card.open())),
     // The strand's own gallery: a bead's finish carries meaning now (matte for a hint, pearl

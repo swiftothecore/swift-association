@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v414";
+const CACHE = "stta-v415";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -137,9 +137,6 @@ const ASSETS = [
   "js/sound.js",
   // Share/copy plumbing — imported by both the game and the searcher.
   "js/share.js",
-  // The messenger flock that flies the daily result off the page when the share
-  // stub is torn (see js/messengers.js). app.js imports it at load.
-  "js/messengers.js",
   // The desk calendar draws every date itself; index.html only holds its blank
   // card. Precached so a fresh offline install can't render a dateless pad.
   "js/calendar.js",

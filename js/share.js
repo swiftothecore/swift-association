@@ -1,6 +1,6 @@
 // Sharing — the one place that knows how to get something out of the notebook and into
 // someone else's hands. The searcher's deep link goes through shareOrCopy; the game's
-// daily stub deliberately calls copyToClipboard alone, because tearing the stub is a
+// daily tag deliberately calls copyToClipboard alone, because pressing the tag is a
 // single deliberate gesture and an OS sheet on top of it is just a modal to dismiss.
 //
 // Two paths, in order of preference:
