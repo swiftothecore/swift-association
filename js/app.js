@@ -20711,6 +20711,7 @@ function revealDailyResult(dateStr, { refreshShare = false } = {}) {
   }
   renderResultRecap();
   renderSkillsRecap();
+  renderDailyResultPanel();   // a 13/13 held back behind the seal takes its star punch now
   if (refreshShare) renderShareButton(dateStr, false);
 }
 
@@ -20740,8 +20741,6 @@ function showDailyResult(data, dateStr) {
   setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
-  document.querySelector("#screen-results .podium-title").textContent =
-    archivedDailyDate ? shareDateLabel(dateStr) : "Today's Result";
   renderDailyResultPanel();
   renderVerseAnthology();
   renderResultRecap();
@@ -20749,24 +20748,94 @@ function showDailyResult(data, dateStr) {
   renderShareButton(dateStr, dailyResultIsSealed());
 }
 
-// The daily results panel: streak summary in place of a leaderboard (daily is one
-// play per day, so there's nothing to rank — your streak is the throughline). Flipped
-// back to an old page from the Stats calendar, the "played today" / "come back
-// tomorrow" framing would be talking about the wrong day, so it's swapped for a note
-// naming the page actually on screen; the streak numbers themselves stay put; they're
-// always today's real numbers, and mean the same thing on any page you're viewing.
-function renderDailyResultPanel() {
-  const d = effectiveDailyStreak(todayKey());
-  const note = archivedDailyDate
-    ? `<p class="daily-streak-note">flipped back to ${shareDateLabel(archivedDailyDate)}</p>`
-    : d.playedToday
-      ? `<p class="daily-streak-note">✓ played today's challenge</p>`
-      : `<p class="daily-streak-note">come back tomorrow to keep the streak</p>`;
-  $("resultPodium").innerHTML =
-    `<div class="streak-row">` +
-    `<div class="streak-cell"><span class="stat-val">${d.current}</span><span class="stat-lbl">day streak</span></div>` +
-    `<div class="streak-cell"><span class="stat-val">${d.best}</span><span class="stat-lbl">best streak</span></div>` +
-    `</div>` + note;
+/* ---------- The daily's results panel: a 7-day pass ----------
+   Daily is one play a day, so there is nothing to rank; the streak is the throughline, and it is
+   printed on the same pass the Stats page keeps for the month (statsDailyPassHTML), cut down to a
+   week: five days back, the day on screen, and the day after. It is built from that pass's own
+   classes, so the stock, the punch, the star punch, the reversed date chip and the aim ring are
+   one object on both pages. The pass is the panel's heading, so the handwritten title above it
+   stands down while it is there (the :has rule in styles.css).
+
+   The window rolls with the day, the way a real 7-day pass runs from first use rather than from
+   Sunday, and the dashed aim ring sits on the first unpunched day from today on: where the next
+   punch goes, which is all "come back tomorrow" ever said. Reopened from the calendar, the pass
+   is that day's pass: the window and the run end on the day on screen. The run is the stored
+   streak when it ends there, so it agrees with the front page's ticket, and is counted back
+   through the saved days otherwise.
+
+   Just finished (`fresh`), today's box is punched in front of the player: the aim ring closes,
+   the hole is cut, the chad drops out and the stub counts on from yesterday's number. The pass
+   sits below the fold on most screens, so all of that waits, paused, until it is on screen. */
+const dayShift = (key, n) => {
+  const d = new Date(key + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const passDate = (key) => `${+key.slice(8)} ${MONTH_NAMES[+key.slice(5, 7) - 1].slice(0, 3).toUpperCase()}`;
+let passWatch = null;   // the IntersectionObserver holding a fresh punch until the pass is seen
+
+function renderDailyResultPanel({ fresh = false } = {}) {
+  const host = $("resultPodium");
+  if (!host) return;
+  passWatch?.disconnect();
+  passWatch = null;
+  const today = todayKey();
+  const anchor = dailyRunDate || today;
+  const played = dailyPlayedDates();
+  const stored = loadDailyStreak();
+  let current = 0;
+  if (stored.lastPlayed === anchor) current = stored.current;
+  else for (let k = anchor; played[k] != null; k = yesterdayOf(k)) current++;
+  current = Math.max(current, played[anchor] != null ? 1 : 0);
+  const best = Math.max(stored.best, current);
+  // A star punch says 13/13, so a result still sealed behind the reveal takes the round one.
+  const sealed = (key) => key === anchor ? dailyResultIsSealed()
+    : settings.hideDailyScore && loadDailyResult(key)?.revealed !== true;
+
+  const keys = Array.from({ length: 7 }, (_, i) => dayShift(anchor, i - 5));
+  const next = keys.find((k) => k >= today && played[k] == null);
+  const live = fresh && played[anchor] != null;
+  const boxes = keys.map((k) => {
+    const score = played[k], done = score != null, star = done && score === TOTAL_ROUNDS && !sealed(k);
+    const here = k === anchor && live;
+    const cls = "stp-dp-box" + (k > today ? " is-future" : "") + (k === anchor ? " is-today" : "") +
+      (done ? " is-done" : "") + (here ? " rp-pass-live" : "");
+    const inner = `<span class="stp-dp-n">${+k.slice(8)}</span>` +
+      (done ? dailyPunchSVG(star, `rp-${k}`) +
+          (here ? `<span class="stp-dp-aim rp-pass-aim"></span><svg class="rp-pass-chad" viewBox="0 0 26 26"><path d="${star ? DP_STAR : DP_ROUND}"/></svg>` : "")
+        : k === next ? `<span class="stp-dp-aim"></span>` : "");
+    return `<div class="${cls}">${inner}</div>`;
+  }).join("");
+  const dows = keys.map((k) => `<span>${"SMTWTFS"[new Date(k + "T00:00:00Z").getUTCDay()]}</span>`).join("");
+  const [from, to] = [passDate(keys[0]).split(" "), passDate(keys[6]).split(" ")];
+  const range = from[1] === to[1] ? `${from[0]}–${to[0]} <b>${to[1]}</b>` : `${from[0]} <b>${from[1]}</b> – ${to[0]} <b>${to[1]}</b>`;
+
+  // One overprint at most: the very first punch the notebook has, or the longest run yet.
+  const earliest = Object.keys(played).sort()[0];
+  const flag = current === 1 && anchor === earliest ? "first punch" : current > 1 && current >= best ? "longest yet" : "";
+  const was = live && current > 1 ? `<i aria-hidden="true">${current - 1}</i>` : "";
+  const stub =
+    `<div class="stp-dp-big"><b class="rp-pass-num">${was}<em>${current}</em></b><span>${current === 1 ? "day" : "days"}<br>running</span></div>` +
+    `<dl class="stp-dp-fields"><div><dt>since</dt><dd>${passDate(dayShift(anchor, 1 - current))}</dd></div>` +
+    (flag ? "" : `<div><dt>longest</dt><dd>${best}</dd></div>`) + `</dl>` +
+    (flag ? `<p class="rp-pass-flag">${flag}</p>` : "");
+
+  host.innerHTML =
+    `<div class="rp-pass${live ? " is-fresh is-waiting" : ""}" role="group" aria-label="Daily challenge streak">` +
+    `<div class="stp-dp-lift"><div class="stp-dp"><div class="stp-dp-main">` +
+    `<div class="stp-dp-head"><span class="stp-dp-title">DAILY CHALLENGE</span><span class="stp-dp-kind">7-day pass</span>` +
+    `<span class="stp-dp-month rp-pass-range">${range}</span></div>` +
+    `<div class="stp-dp-grid stp-dp-dows" aria-hidden="true">${dows}</div>` +
+    `<div class="stp-dp-grid stp-dp-boxes" aria-hidden="true">${boxes}</div>` +
+    `<p class="stp-dp-terms">one punch per daily finished · star punch for 13/13</p></div>` +
+    `<div class="stp-dp-stub">${stub}</div></div></div></div>`;
+
+  if (!live) return;
+  const pass = host.firstElementChild;
+  const go = () => { pass.classList.remove("is-waiting"); passWatch?.disconnect(); passWatch = null; };
+  if (!("IntersectionObserver" in window)) { go(); return; }
+  passWatch = new IntersectionObserver((seen) => { if (seen.some((e) => e.isIntersecting)) go(); }, { threshold: 0.6 });
+  passWatch.observe(pass);
 }
 
 // Reopen a past Daily from the Stats calendar — the "look back through old bracelets"
@@ -20781,8 +20850,6 @@ function openArchivedDaily(dateStr) {
   showDailyResult(data, dateStr);
   archivedDailyDate = dateStr;
   applyAgainBtnLabel();
-  document.querySelector("#screen-results .podium-title").textContent = shareDateLabel(dateStr);
-  renderDailyResultPanel();
 }
 
 /* The way home is struck as a postmark (js/postmark.js): a ring with the game's name round it
@@ -26835,8 +26902,7 @@ function endGame() {
     dailyAlbum = null; // and back to a shuffled era wash with it
     $("namePrompt").style.display = "none";
     hideNewBestBanner();
-    document.querySelector("#screen-results .podium-title").textContent = "Today's Result";
-    renderDailyResultPanel();
+    renderDailyResultPanel({ fresh: true });
     renderShareButton(dateStr, dailyResultIsSealed());
     return;
   }
@@ -31853,6 +31919,13 @@ function buildDevApi() {
         if (!loadDailyResult(d)) return `no saved daily for ${d}`;
         openArchivedDaily(d);
         return `reopened ${d}`;
+      },
+      // Lands the punch on the open daily result's pass again, the way finishing the daily does,
+      // so the landing can be watched without playing a whole daily for it.
+      punch: () => {
+        if (gameType !== "daily" || !$("screen-results")?.classList.contains("active")) return "open a daily result first";
+        renderDailyResultPanel({ fresh: true });
+        return "punched: scroll to the pass";
       },
     },
     // Milestones (anniversary / birthday marginalia). `preview` jumps the date to a

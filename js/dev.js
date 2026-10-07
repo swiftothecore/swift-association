@@ -1168,10 +1168,12 @@ export function initDev(api) {
     // Backfills n real saved days (fakeStrand), then jumps straight to one of them —
     // the fast path for checking the Stats calendar's archive view and its ‹ › month nav,
     // and Stats' raffle strip: 45 runs past its ticket cap ("+n more") and every sixth day
-    // is a 13, so the gold perfect-day tickets show too.
+    // is a 13, so the gold perfect-day tickets show too. "punch again" replays the landing on
+    // the open result's 7-day pass.
     row(btn("fake 45-day strand", () => { api.daily.fakeStrand(45); toast("45 fake days saved: open Stats → All for the raffle strip and calendar"); }),
         "reopen", reopenDate,
-        btn("reopen", () => toast(api.daily.reopen(reopenDate.value)))),
+        btn("reopen", () => toast(api.daily.reopen(reopenDate.value))),
+        btn("punch again", () => toast(api.daily.punch()))),
     // The daily ticket's strand at the three counts that decide the drawing: one bead, a
     // full cord at the seven-bead cap, and one past it. setStreak alone cannot show any
     // of them, because a bead is a saved day and not a number.

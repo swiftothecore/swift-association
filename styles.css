@@ -11984,12 +11984,15 @@
   .stp-dp-terms { margin: 7px 2px 0; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 0.9px; text-transform: uppercase; color: var(--dp-soft); }
   /* the stub, printed over a guilloche in its own ink a shade up, the security print a real pass carries */
   .stp-dp-stub {
-    flex: 0 0 var(--dp-stubw); display: flex; flex-direction: column; justify-content: center; gap: 22px;
+    flex: 0 0 var(--dp-stubw); min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 22px;
     padding: 18px 14px 16px 16px; color: var(--dp-stub-ink); background-color: var(--dp-stub);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='18'%3E%3Cg fill='none' stroke='%23e8eedf' stroke-opacity='.09' stroke-width='.8'%3E%3Cpath d='M0 9 C11 1 11 1 22 9 S33 17 44 9'/%3E%3Cpath d='M0 9 C11 17 11 17 22 9 S33 1 44 9'/%3E%3Cpath d='M0 4 C11 -2 11 -2 22 4 S33 10 44 4'/%3E%3Cpath d='M0 14 C11 20 11 20 22 14 S33 8 44 14'/%3E%3C/g%3E%3C/svg%3E");
     box-shadow: inset 0 0 0 5px var(--dp-stub), inset 0 0 0 6px var(--dp-stub-rule);
   }
-  .stp-dp-big { display: flex; align-items: flex-end; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--dp-stub-rule); }
+  /* The stub is held to exactly the width the bite is cut at (min-width above). A run long enough
+     that its numeral cannot share a line with the label puts the label under it, rather than
+     widening the stub off its perforation, which a two-digit streak used to do by eight pixels. */
+  .stp-dp-big { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 6px; padding-bottom: 10px; border-bottom: 1px solid var(--dp-stub-rule); }
   .stp-dp-big b { font-family: var(--type); font-weight: 700; font-size: calc(46px + var(--text-size-adjust)); line-height: 0.8; }
   .stp-dp-big span { padding-bottom: 1px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.25; }
   .stp-dp-big.is-none { border: 0; padding: 0; }
@@ -12008,7 +12011,7 @@
     .stp-dp-box { height: 40px; }
     .stp-dp-hole { width: 23px; height: 23px; margin: -11.5px 0 0 -11.5px; }
     .stp-dp-stub { flex: none; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
-    .stp-dp-big { padding: 0 12px 0 0; border-bottom: 0; border-right: 1px solid var(--dp-stub-rule); }
+    .stp-dp-big { flex-wrap: nowrap; padding: 0 12px 0 0; border-bottom: 0; border-right: 1px solid var(--dp-stub-rule); }
     .stp-dp-big.is-none { border: 0; }
     .stp-dp-big b { font-size: calc(38px + var(--text-size-adjust)); }
     .stp-dp-fields { grid-auto-flow: column; gap: 12px; }
@@ -12017,22 +12020,64 @@
 
   .stp-empty { margin: 0 0 4px; font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); line-height: 1.3; color: var(--ink-soft); }
   .stp-empty + .empty-cta { margin-left: 0; }
-  .streak-row {
-    display: flex; gap: 0; border: 1.5px solid rgba(43,39,34,0.12);
-    border-radius: 2px; margin-bottom: 22px;
+  /* The daily's results panel: the same pass, a week of it (renderDailyResultPanel). Everything
+     printed on it is the monthly pass's rule above; this only adds what a week needs: the date
+     range where the month goes, the one-off overprint on the stub, and the punch landing. The
+     pass is the panel's heading, so the handwritten title over the podium stands down while it
+     is there. */
+  #screen-results .podium-title:has(+ #resultPodium > .rp-pass) { display: none; }
+  .rp-pass { margin: 22px 0 6px; }
+  .rp-pass .stp-dp-lift { transform: rotate(-0.35deg); }
+  .rp-pass .stp-dp { --dp-stubw: 140px; }
+  .rp-pass .stp-dp-head { flex-wrap: nowrap; }
+  .rp-pass .stp-dp-kind { white-space: nowrap; }
+  .rp-pass .stp-dp-stub { gap: 14px; }
+  .rp-pass-range { font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.4px; color: var(--dp-soft); white-space: nowrap; }
+  .rp-pass-range b { margin-left: 5px; }
+  .rp-pass-num { position: relative; display: inline-block; }
+  .rp-pass-num > :is(i, em) { font-style: normal; }
+  .rp-pass-num > em { display: inline-block; }
+  .rp-pass-num > i { position: absolute; left: 0; bottom: 0; opacity: 0; }
+  .rp-pass-flag {
+    margin: 0; align-self: flex-start; padding: 3px 6px 2px; border-radius: 1.5px;
+    background: var(--dp-hot); color: var(--dp-stub-ink);
+    font-family: var(--type); font-weight: 700; font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: uppercase; line-height: 1.2;
   }
-  .streak-cell {
-    flex: 1; padding: 12px 8px 10px; text-align: center;
-    border-right: 1.5px solid rgba(43,39,34,0.12);
+  /* phone: the stub is a band under the grid, and the overprint takes a second line of it only
+     when the run's numeral leaves it no room on the first */
+  @container stp-dp (max-width: 520px) {
+    .rp-pass .stp-dp-head { flex-wrap: wrap; }
+    .rp-pass .stp-dp-stub { flex-wrap: wrap; justify-content: center; gap: 10px 14px; }
+    .rp-pass .stp-dp-fields dd, .rp-pass-flag { white-space: nowrap; }
+    .rp-pass-flag { align-self: center; }
   }
-  .streak-cell:last-child { border-right: none; }
-  /* No mark stands beside these numerals. The label under each already says what
-     it counts, and the daily calendar sits directly beneath the row with every
-     kept day struck off in red pencil, which is the same fact drawn properly. A
-     third telling in the cell could only ever repeat it, and would have to lie
-     once the streak passed whatever the little drawing could hold. */
-  .streak-cell .stat-val { font-family: var(--hand); font-size: calc(42px + var(--text-size-adjust)); font-weight: 700; color: var(--ink-accent); line-height: 1; display: block; }
-  .streak-cell .stat-lbl { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); display: block; margin-top: 4px; text-transform: uppercase; }
+  /* the smallest phones: the fields always drop under the numeral, so its divider has nothing to divide */
+  @container stp-dp (max-width: 300px) {
+    .rp-pass .stp-dp-big { padding-right: 0; border-right: 0; }
+  }
+  /* The punch landing. The aim ring is laid over the punched box and closes as the hole is cut,
+     the chad (in the pass's own stock) drops out of it, and the stub's numeral counts on from
+     yesterday's. Every piece rests in its finished state, so with motion off nothing is missing. */
+  .rp-pass-aim.stp-dp-aim { opacity: 0; }
+  .rp-pass-chad { position: absolute; left: 50%; top: 54%; width: 27px; height: 27px; margin: -13.5px 0 0 -13.5px; overflow: visible; opacity: 0; pointer-events: none; z-index: 2; }
+  .rp-pass-chad path { fill: var(--dp-stock); stroke: var(--dp-rule); stroke-width: 0.8; }
+  .rp-pass.is-fresh .rp-pass-aim { animation: rp-pass-aim 0.62s ease both; }
+  .rp-pass.is-fresh .rp-pass-live .stp-dp-hole { animation: rp-pass-punch 0.28s cubic-bezier(0.3, 1.7, 0.5, 1) 0.58s both; }
+  .rp-pass.is-fresh .rp-pass-live .rp-pass-chad { animation: rp-pass-chad 0.7s cubic-bezier(0.45, 0, 0.85, 0.6) 0.6s both; }
+  .rp-pass.is-fresh .rp-pass-live { animation: rp-pass-thud 0.24s ease-out 0.58s both; }
+  .rp-pass.is-fresh .rp-pass-num > i { animation: rp-pass-was 0.32s ease-in 0.66s both; }
+  .rp-pass.is-fresh .rp-pass-num > em { animation: rp-pass-now 0.36s cubic-bezier(0.2, 1.5, 0.4, 1) 0.72s both; }
+  .rp-pass.is-fresh .rp-pass-flag { animation: rp-pass-now 0.36s cubic-bezier(0.2, 1.5, 0.4, 1) 0.95s both; }
+  /* held at its first frame until the pass is on screen, which on most screens is a scroll away */
+  .rp-pass.is-waiting * { animation-play-state: paused; }
+  body[data-reduce-motion="on"] .rp-pass *,
+  body[data-anim-speed="instant"] .rp-pass * { animation: none !important; }
+  @keyframes rp-pass-aim { 0%, 70% { opacity: 1; transform: none; } 100% { opacity: 0; transform: scale(0.82); } }
+  @keyframes rp-pass-punch { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: none; } }
+  @keyframes rp-pass-chad { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translate(7px, 46px) rotate(140deg) scale(0.92); } }
+  @keyframes rp-pass-thud { 0% { transform: none; } 35% { transform: translateY(1.2px); } 100% { transform: none; } }
+  @keyframes rp-pass-was { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-9px); } }
+  @keyframes rp-pass-now { 0% { opacity: 0; transform: translateY(9px); } 100% { opacity: 1; transform: none; } }
   .histogram-label {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink-soft); text-transform: uppercase; margin-bottom: 10px;
@@ -15409,9 +15454,6 @@
     .stamp--ruthless { width: 33px; margin-left: -2px; }
     .stamp--guest { width: 43px; margin-left: -3px; }
   }
-
-  /* Daily-streak status line under the streak numbers on the Stats page. */
-  .daily-streak-note { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); text-align: center; margin-top: 8px; }
 
 
   /* ---------- The trade tag (daily results) ----------
