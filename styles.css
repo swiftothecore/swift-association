@@ -12201,15 +12201,7 @@
   }
 
   /* ---------- Easter eggs (Phase 8) ---------- */
-  /* The midnight thought, handwritten in the margin. */
   .margin-note-layer { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-  @keyframes marginNoteIn { to { opacity: 0.5; } }
-  .margin-note {
-    position: absolute; left: 4px; z-index: 1; pointer-events: none;
-    font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft);
-    opacity: 0; transform: rotate(-6deg); animation: marginNoteIn 0.8s ease forwards;
-    max-width: 44px; line-height: 1.05;
-  }
 
   /* Yes, whale! — the whale's tail surfacing from behind the top edge of the
      notebook. The wrapper is an overflow-hidden window flush with the paper line,
@@ -15542,7 +15534,6 @@
   body[data-reduce-motion="on"] .timer-fill,
   body[data-reduce-motion="on"] .word::before { transition: none; }
   /* easter eggs: show statically, no motion */
-  body[data-reduce-motion="on"] .margin-note { animation: none; opacity: 0.5; }
   body[data-reduce-motion="on"] .secret-13 { animation: none; opacity: 1; }
   body[data-reduce-motion="on"] .blue-wash { animation: none; opacity: 0.16; }
   body[data-reduce-motion="on"] .sparkle,

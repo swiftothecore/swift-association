@@ -27463,16 +27463,6 @@ function wirePageTitles() {
   });
 }
 
-function addMarginNote(text) {
-  const layer = $("marginNoteLayer");
-  if (!layer) return;
-  const n = document.createElement("div");
-  n.className = "margin-note";
-  n.style.top = "42%";
-  n.textContent = text;
-  layer.appendChild(n);
-}
-
 function setPen(pen) {
   activePen = pen;
   const area = document.querySelector(".input-area");
@@ -27493,11 +27483,6 @@ function runRoundEggs() {
   setPen(null);
   blueUsedThisRound = false;
   lyricEggMatched = false;
-
-  const now = new Date();
-  const midnightHour = now.getHours() === 0 && now.getMinutes() <= 13;
-
-  if (midnightHour) addMarginNote("meet me at midnight");
 
   // Yes, whale! — a rare visitor behind the top edge of the notebook.
   // One visitor at a time; the click-to-catch keepsake trigger lives in surfaceWhale.
