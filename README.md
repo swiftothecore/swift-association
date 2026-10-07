@@ -8,8 +8,6 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 
 *pretty sure that's Taylor Swift*
 
-It’s still a work in progress, but it’s already extensive and very playable.
-
 ## Standout features
 
 **Ways to play**
@@ -20,17 +18,16 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - Daily challenge
 - The ability to make your own **custom modes**
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
-- The lineup: thirteen pages dealt from every catalogue at once, played under goal cards you commit to before page one
+- The lineup: thirteen pages from every catalogue at once, played under goal cards you pick before page one
 - A shelf of bonus mini-games, each a little hand-bound zine, most with an endless side where one miss ends it
 - Ruthless Game, where the song writes itself out a word a second and your time is the score
-- A randomiser that deals one run from anywhere in the notebook, leaning toward what you haven't played yet
 
 **The long game**
 
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself
-- Seventeen stickers, mostly earned by noticing things rather than scoring, plus a souvenir for every guest catalogue you clear. Pick up to fifteen for the notebook cover
+- Stickers, mostly earned by noticing things rather than scoring, to stick on the notebook cover
 - Her real Tumblr posts, blacked out until something you do in the game answers one
 - An ink for every album you beat in Album Focus, worn by the game's own title and gilded for a perfect run
 
@@ -39,19 +36,13 @@ It’s still a work in progress, but it’s already extensive and very playable.
 - Every era, plus holiday, movie, collaboration and some unreleased songs
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
-- Five marks in the corner of every page saying what it will take, so you don't learn the rules by breaking them
-- A streak in the margin that climbs from pencil to your era's own pen to gold
-- A start button that turns with the seasons where you live, southern hemisphere included
-- On each album's release day, Taylor's Versions included, the start button dresses up in that album's own finish, on her birthday it becomes a cake with her age in candles, on Christmas Day it is a netted tree off her family's farm, and on the 13th of every month it counts to thirteen in chalk
-- A rubber stamp on your results when a run has a story worth one
-- Stats kept as a scrapbook: your best score on a ticket stub, your last twelve games as notes on staff paper, the word that keeps beating you in a tabloid headline, every album as a drop of ink bled into blotting paper
+- A start button that changes with the seasons, album release days, her birthday, Christmas and the 13th of every month
+- Stats kept as a scrapbook, down to a tabloid headline about the word that keeps beating you
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
-- Every verdict draws the songs as little waveforms, one bar per lyric line, with the lines that sing the word lit
 - A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
 - A graveyard of everything the notebook used to have, each plot carrying the argument that ended it
 - A night version of the whole desk, and a high-contrast setting that works in either light
 - Installable as a phone or desktop app, with offline readiness in Settings; guest catalogues download when opened
-- On a phone, runs pause when you switch away; Classic and Infinite keep progress from finished pages
 
 More mini-games, easter eggs, sound design and achievements are on the way.
 
