@@ -1579,7 +1579,7 @@ if (mastheadEl) {
    that restores the player's real picked difficulty. Skipping it leaves the launchpad wearing a
    finished run's levers — e.g. challenge results → ← challenges → back → Infinite handed you
    Revolving Door's 20s clock on a Normal board. Always route back-to-start through here. */
-function backToScreen(prev) {
+function backToScreen(prev, onDone) {
   // A panel that put its own URL in the bar closes through the history stack, so the ← back
   // button and the browser's back button leave the same trail behind them. popstate does the
   // actual page turn a tick later. (Only when we own the entry — see openBootRoute.)
@@ -1587,7 +1587,7 @@ function backToScreen(prev) {
   // Strictly `prev === "start"`, because that is the only return the history stack describes:
   // panel -> panel replaced the bar rather than pushing it, so the pop is saved for the last
   // step, out of the routed chain and onto the front page.
-  if (!routing && routeOwned && prev === "start" && currentRouteSlug()) { history.back(); return; }
+  if (!routing && routeOwned && prev === "start" && currentRouteSlug()) { history.back(); if (onDone) onDone(); return; }
   // Stepping back to the panel underneath (Mastery from the charms it opened, the charms from
   // the Songbook) puts that panel's slug back in the bar, so the URL keeps naming the screen on
   // show and the next ← back pops to a front page rather than reopening the panel we left.
@@ -1596,7 +1596,7 @@ function backToScreen(prev) {
     $("startContent").style.display = "";
     renderStartPickers();
   }
-  flipInToScreen(prev);
+  flipInToScreen(prev, onDone);
 }
 
 /* ---------- Address-bar routes ----------
@@ -35427,10 +35427,13 @@ async function init() {
   $("againBtn").addEventListener("click", () => {
     // A Daily reopened from the Stats calendar turns back to the calendar, not the
     // front page — this button relabels itself for that visit (see applyAgainBtnLabel).
+    // The relabel waits for the turn to land: the page being turned away is a clone of this
+    // one, so doing it first would show "Turn back to the front page" all the way through it.
     if (archivedDailyDate) {
-      archivedDailyDate = null;
-      applyAgainBtnLabel();
-      backToScreen("stats");
+      backToScreen("stats", () => {
+        archivedDailyDate = null;
+        applyAgainBtnLabel();
+      });
       return;
     }
     applyEra("gold");
