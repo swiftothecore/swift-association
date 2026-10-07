@@ -29226,11 +29226,16 @@ function trapDialogTab(e, modal, container) {
 function pauseAutoAdvanceForReading() {
   if (countdownId) { clearInterval(countdownId); countdownId = null; }
   stopBonusCountdown();
-  const cd = document.querySelector("#feedback .countdown, #bonusFeedback .countdown");
+  /* Asked of the screen that is showing, never of both hosts at once. #feedback keeps its last
+     verdict after a run ends, and it comes first in the document, so a query across both found
+     that dead countdown on the hidden round screen: the teacup went there, and the bonus page in
+     front of the player kept its frozen numeral and its hold button. */
+  const host = screens.bonusplay.classList.contains("active") ? $("bonusFeedback") : $("feedback");
+  const cd = host.querySelector(".countdown");
   if (cd) cd.innerHTML = `take your time<span class="cd-held">${HELD_TEACUP}</span>`;
   // Held is held: the button has done its one job, so it goes rather than sitting there inert.
   // Focus moves to skip if it was on hold, so a keyboard player is left on the way forward.
-  const hold = document.querySelector("#feedback .countdown-hold, #bonusFeedback .countdown-hold");
+  const hold = host.querySelector(".countdown-hold");
   if (hold) {
     const skip = hold.parentElement.querySelector(".countdown-skip");
     const hadFocus = document.activeElement === hold;
