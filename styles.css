@@ -11475,7 +11475,7 @@
      cannot reach, so a `.page-mark path {}` rule would silently do nothing. Every
      one of these properties (fill, stroke, stroke-width, the two line styles) is
      an inherited SVG property, which is why the indirection works at all. */
-  .stats-nav .title-group { display: flex; align-items: baseline; gap: 10px; }
+  .stats-nav .title-group, .settings-nav .title-group { display: flex; align-items: baseline; gap: 10px; }
   .page-mark {
     position: relative; isolation: isolate;
     display: inline-flex; flex: none;
@@ -11542,10 +11542,14 @@
   /* Blue-black, the ink a signature goes down in. The credits page is signed rather than
      read, and none of the nearby pages (How to play's red, the graveyard's slate) wears it. */
   .page-mark.mark-credits    { --mark-tint: #2f5d8a; }
+  /* Coral, a paper-star colour. The keepsakes button is plain ink and the phone's divider for
+     the drawer is teal, which is the bonus shelf's mark already. Lighter and pinker than the
+     Ruthless brick so the two never sit together as one hue. */
+  .page-mark.mark-keepsakes  { --mark-tint: #d0705a; }
   /* The one thing on an inside page you can prod. Nothing advertises it — no pointer
      cursor, no hover state, no title — but a press makes the drawing kick off the paper
      and its highlighter swipe puff out behind it, so a stray click gets an answer. Poking
-     all ten distinct marks is a secret charm; see wirePageMarks in js/app.js.
+     every distinct mark in PAGE_MARK_KINDS is a secret charm; see wirePageMarks in js/app.js.
      The element's own transform IS the mark's resting tilt, so the kick has to go on the
      inner <svg> and the puff on ::before — animating .page-mark itself would straighten
      the mark up for the duration and then drop it back, which reads as a glitch. */
@@ -11591,7 +11595,7 @@
      ("Achievements") comes within a few pixels of the link, so give the width back
      there. Do not simply widen the gap budget instead: the row has no wrap. */
   @media (max-width: 480px) {
-    .stats-nav .title-group { gap: 7px; }
+    .stats-nav .title-group, .settings-nav .title-group { gap: 7px; }
     .page-mark { width: 30px; height: 20px; }
   }
   .btn-link {

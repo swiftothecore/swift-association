@@ -445,6 +445,17 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M28.9 9.3 C28.9 7.8 28.7 6.3 28.5 4.8"/>
     </g>
   </symbol>
+  <!-- the keepsakes jar of paper stars (the desk button's drawing), with one star tumbling
+       out of it so the mark has something to trail. The loose stars are larger than the one
+       inside on purpose: outlined at 39px, a star the jar's size is just a knot. -->
+  <symbol id="mark-keepsakes" viewBox="0 0 36 24">
+    <path d="M6.6 3.6 C10 3.3 14 3.3 17.4 3.5 L17.5 6 C14 6.2 10 6.2 6.5 6.1 Z"/>
+    <path d="M7.4 6.1 C7.2 7.2 5.2 7.6 5 9.4 L4.9 18.6 C4.9 20 5.7 20.7 7 20.7 L16.9 20.6 C18.2 20.6 19 19.9 19 18.5 L18.9 9.3 C18.7 7.5 16.8 7.2 16.6 6.1"/>
+    <path d="M7.4 10 C7.3 11 7.3 12 7.4 13"/>
+    <path d="M11.2 12.2 L12.5 13.8 L14.4 13.5 L13.4 15.3 L14.5 17.2 L12.3 16.7 L10.8 18.1 L10.5 16.0 L8.9 15.1 L10.8 14.2 Z"/>
+    <path d="M28.9 3.9 L29.6 7.6 L33.3 8.9 L29.7 10.7 L29.7 14.3 L27.1 12.0 L23.8 13.0 L25.1 9.8 L22.8 6.5 L26.5 6.9 Z"/>
+    <path d="M30.6 17.1 L31.9 18.3 L33.4 17.7 L32.7 19.3 L33.7 20.6 L32.1 20.5 L31.1 21.7 L30.8 20.2 L29.2 19.7 L30.6 18.8 Z"/>
+  </symbol>
 </svg>
 <!-- THEME MARKS — one per charm theme, used twice on the charm page: in the at-a-glance
      panel's rows, and again on the section heading of the theme each row points at. Same pen as the
@@ -2763,7 +2774,10 @@ if (location.pathname.endsWith('/index.html')) {
   <div class="settings-scrim" id="keepsakesModalScrim"></div>
   <div class="settings-card card" role="dialog" aria-modal="true" aria-label="Keepsakes">
     <div class="settings-nav">
-      <span class="settings-title">Keepsakes</span>
+      <span class="title-group">
+        <span class="page-mark mark-keepsakes" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-keepsakes"/></svg></span>
+        <span class="settings-title">Keepsakes</span>
+      </span>
       <button id="keepsakesCloseBtn" class="btn-link" aria-label="Close keepsakes">✕ close</button>
     </div>
     <div id="keepsakesBody"></div>
