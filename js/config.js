@@ -5440,11 +5440,26 @@ export const GLOSSARY = [
    Each row is the same four beats, and the order matters: `was` is what the player had, in the
    present tense they had it in, and `why` is the argument that ended it. `took` names anything
    that went into the ground alongside it, which is nearly always a charm, and is the line a
-   collector reads first. `born`/`died` are display strings, never parsed.
+   collector reads first. `born`/`died` are display strings, never parsed, which is why the
+   ORDER is kept by hand: plots run in burial order, oldest death first, and a new grave goes
+   at the end. Two deaths on one day keep the order they were dug in.
 
    `coda` is the one row with no strike through its name: the mechanic that outlived its mode.
+   It sits directly after the mode it outlived, wherever that falls in the burial order.
    A page of nothing but failures reads as an apology, and this one genuinely does not want to. */
 export const GRAVEYARD = [
+  {
+    id: "sacrifice",
+    name: "Sacrificing charms",
+    born: "22 June 2026", died: "13 July 2026",
+    icon: "sacrifice",
+    was: `You could give up a charm you had earned, permanently, and mint challenge tokens out of it.`,
+    why: `It was a door for anyone stuck without the tokens to open the next challenge. But a ` +
+      `currency you can print by burning the collection is not scarce, and a collection you can ` +
+      `spend is not a collection. The door got bricked up. Tokens stayed exactly where they were; ` +
+      `you just have to win them now.`,
+    took: `Castles Crumbling went with it. Its only unlock was the sacrifice.`,
+  },
   {
     id: "study",
     name: "Study mode",
@@ -5458,16 +5473,56 @@ export const GRAVEYARD = [
     took: `Back To December, Stay Beautiful and The Best Day went into the ground with it.`,
   },
   {
-    id: "sacrifice",
-    name: "Sacrificing charms",
-    born: "22 June 2026", died: "13 July 2026",
-    icon: "sacrifice",
-    was: `You could give up a charm you had earned, permanently, and mint challenge tokens out of it.`,
-    why: `It was a door for anyone stuck without the tokens to open the next challenge. But a ` +
-      `currency you can print by burning the collection is not scarce, and a collection you can ` +
-      `spend is not a collection. The door got bricked up. Tokens stayed exactly where they were; ` +
-      `you just have to win them now.`,
-    took: `Castles Crumbling went with it. Its only unlock was the sacrifice.`,
+    id: "doubleup",
+    name: "Double Or Nothing",
+    born: "22 July 2026", died: "28 July 2026",
+    icon: "doubleup",
+    was: `A risk card. Bank what the chain had earned, or double it and risk losing the lot.`,
+    why: `Shelved twice inside a week. The first version was broken and the fix was real, which made ` +
+      `the second look worse: it rode the same beads, the same offer between pages, the same run ` +
+      `length and the same target as Press Your Luck, and differed only in whether the pot added or ` +
+      `doubled. That is a tuning parameter, not a challenge, and a player meets it as one rule wearing ` +
+      `two seals. Two cards that ask the same question earn less than one card that asks it well. It ` +
+      `can come back when it has an axis of its own.`,
+  },
+  {
+    id: "string",
+    name: "Invisible String",
+    born: "1 August 2026", died: "4 August 2026",
+    icon: "string",
+    was: `A bonus game. Five lines, five songs, thread each one to where it came from.`,
+    why: `It lasted three days. It was Name That Song with the feedback taken away and the answers ` +
+      `handed over. Holding five pairs back pushes the reveal past the point where you still remember ` +
+      `which one you were unsure about; by the fourth pair the board has solved itself, so you stop ` +
+      `working exactly when you should be feeling clever; and a list of four choices turns "oh, that ` +
+      `is Cornelia Street" into "well, it cannot be the other three". Same skill, same songs, worse game.`,
+  },
+  {
+    id: "adaptive",
+    name: "Adaptive mode",
+    born: "25 June 2026", died: "13 August 2026",
+    icon: "adaptive",
+    was: `A third kind of run, where the words got rarer the better you did and easier again when ` +
+      `you slipped.`,
+    why: `It was never really a game type. Classic, Infinite and Custom each describe a shape of run: ` +
+      `a fixed thirteen, play until the lives run out, write your own rules. Adaptive was a fixed ` +
+      `thirteen with one knob turning itself, which is a difficulty setting sitting in the row where ` +
+      `the formats live. Two things never came good either. Its score only had four values, because a ` +
+      `run was ranked on the highest tier it reached, so the day you could reliably touch Rarest was ` +
+      `the day every run scored the same and there was nothing left to chase. And the climb was over ` +
+      `in three or four pages, which left eight or nine pages of ordinary hard Classic behind it, on ` +
+      `a card promising the words would keep moving.`,
+    took: `Both of its charms were deleted rather than rehoused.`,
+  },
+  {
+    id: "floating",
+    name: "The bit that lived",
+    born: "", died: "Still here",
+    icon: "floating",
+    coda: true,
+    why: `Rarity that answers to how you are playing was always a good idea. It just wanted to be a ` +
+      `lever rather than a mode, so it is the fifth stop on Custom's rarity picker now, called ` +
+      `Floating, riding the same ladder over the same four buckets behind the same gauge.`,
   },
   {
     id: "tickets",
@@ -5484,21 +5539,6 @@ export const GRAVEYARD = [
       `rather than to pile something up.`,
   },
   {
-    id: "atoz",
-    name: "From A to Z",
-    born: "22 June 2026", died: "4 September 2026",
-    icon: "atoz",
-    was: `Name a song holding the word, but every title had to start further up the alphabet than ` +
-      `the last one.`,
-    why: `It asked the wrong question. Every other card on the shelf tests what you know about the ` +
-      `catalogue or what you are willing to risk. This one tested whether you could cross-reference ` +
-      `the catalogue against the alphabet in ten seconds. And its real decision, how far up to jump, ` +
-      `was invisible, because nothing on the page tells you how much catalogue is left above each ` +
-      `letter. By the end it needed three separate guard rails to stop you ruining your own run. A ` +
-      `rule that has to be protected from its own central choice is not a rule anyone can play well.`,
-    took: `Tied Together With A Smile hung off it and went too.`,
-  },
-  {
     id: "snake",
     name: "The slithering snake",
     born: "14 June 2026", died: "24 August 2026",
@@ -5513,29 +5553,19 @@ export const GRAVEYARD = [
     took: `Look What You Made Me Do is no longer earnable.`,
   },
   {
-    id: "string",
-    name: "Invisible String",
-    born: "1 August 2026", died: "4 August 2026",
-    icon: "string",
-    was: `A bonus game. Five lines, five songs, thread each one to where it came from.`,
-    why: `It lasted three days. It was Name That Song with the feedback taken away and the answers ` +
-      `handed over. Holding five pairs back pushes the reveal past the point where you still remember ` +
-      `which one you were unsure about; by the fourth pair the board has solved itself, so you stop ` +
-      `working exactly when you should be feeling clever; and a list of four choices turns "oh, that ` +
-      `is Cornelia Street" into "well, it cannot be the other three". Same skill, same songs, worse game.`,
-  },
-  {
-    id: "doubleup",
-    name: "Double Or Nothing",
-    born: "22 July 2026", died: "28 July 2026",
-    icon: "doubleup",
-    was: `A risk card. Bank what the chain had earned, or double it and risk losing the lot.`,
-    why: `Shelved twice inside a week. The first version was broken and the fix was real, which made ` +
-      `the second look worse: it rode the same beads, the same offer between pages, the same run ` +
-      `length and the same target as Press Your Luck, and differed only in whether the pot added or ` +
-      `doubled. That is a tuning parameter, not a challenge, and a player meets it as one rule wearing ` +
-      `two seals. Two cards that ask the same question earn less than one card that asks it well. It ` +
-      `can come back when it has an axis of its own.`,
+    id: "atoz",
+    name: "From A to Z",
+    born: "22 June 2026", died: "4 September 2026",
+    icon: "atoz",
+    was: `Name a song holding the word, but every title had to start further up the alphabet than ` +
+      `the last one.`,
+    why: `It asked the wrong question. Every other card on the shelf tests what you know about the ` +
+      `catalogue or what you are willing to risk. This one tested whether you could cross-reference ` +
+      `the catalogue against the alphabet in ten seconds. And its real decision, how far up to jump, ` +
+      `was invisible, because nothing on the page tells you how much catalogue is left above each ` +
+      `letter. By the end it needed three separate guard rails to stop you ruining your own run. A ` +
+      `rule that has to be protected from its own central choice is not a rule anyone can play well.`,
+    took: `Tied Together With A Smile hung off it and went too.`,
   },
   {
     id: "goldroll",
@@ -5582,33 +5612,6 @@ export const GRAVEYARD = [
       `beside the polaroids it read like a placeholder. It can come back when it has a reason to ` +
       `be here that comes before the way you unlock it.`,
     took: `The secret backwards run in Track by Track went too. Its only reward was a post.`,
-  },
-  {
-    id: "adaptive",
-    name: "Adaptive mode",
-    born: "25 June 2026", died: "13 August 2026",
-    icon: "adaptive",
-    was: `A third kind of run, where the words got rarer the better you did and easier again when ` +
-      `you slipped.`,
-    why: `It was never really a game type. Classic, Infinite and Custom each describe a shape of run: ` +
-      `a fixed thirteen, play until the lives run out, write your own rules. Adaptive was a fixed ` +
-      `thirteen with one knob turning itself, which is a difficulty setting sitting in the row where ` +
-      `the formats live. Two things never came good either. Its score only had four values, because a ` +
-      `run was ranked on the highest tier it reached, so the day you could reliably touch Rarest was ` +
-      `the day every run scored the same and there was nothing left to chase. And the climb was over ` +
-      `in three or four pages, which left eight or nine pages of ordinary hard Classic behind it, on ` +
-      `a card promising the words would keep moving.`,
-    took: `Both of its charms were deleted rather than rehoused.`,
-  },
-  {
-    id: "floating",
-    name: "The bit that lived",
-    born: "", died: "Still here",
-    icon: "floating",
-    coda: true,
-    why: `Rarity that answers to how you are playing was always a good idea. It just wanted to be a ` +
-      `lever rather than a mode, so it is the fifth stop on Custom's rarity picker now, called ` +
-      `Floating, riding the same ladder over the same four buckets behind the same gauge.`,
   },
 ];
 
