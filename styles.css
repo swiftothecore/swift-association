@@ -16092,6 +16092,9 @@
     margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px dashed rgba(43, 39, 34, 0.2);
   }
   .settings-title { font-family: var(--hand); font-weight: 700; font-size: calc(28px + var(--text-size-adjust)); color: var(--ink); transform: rotate(-0.8deg); }
+  /* Waves on a click like an inside page's title (wirePageTitles), so it gets the same
+     unselectable, plain-arrow treatment as .stats-nav .stats-title. */
+  #keepsakesModal .settings-title { cursor: default; -webkit-user-select: none; user-select: none; }
   .btn-link {
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft);
     background: transparent; border: none; cursor: pointer; padding: 4px 6px;

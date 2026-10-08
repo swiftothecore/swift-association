@@ -27467,7 +27467,9 @@ function wirePageTitles() {
   document.addEventListener("click", (event) => {
     const cover = event.target.closest(".bonus-cover-play");
     if (cover) { danceBonusCover(cover); return; }
-    const title = event.target.closest(".stats-nav .stats-title");
+    // The keepsakes drawer is a modal, so its title sits in the settings chrome's header
+    // rather than a stats-nav, but it is an inside page with a page mark all the same.
+    const title = event.target.closest(".stats-nav .stats-title, #keepsakesModal .settings-title");
     if (title) wavePageTitle(title.querySelector(".bonus-title-label") || title);
   });
 }
