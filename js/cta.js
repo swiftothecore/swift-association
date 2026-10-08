@@ -411,14 +411,24 @@ const IVY_VINES = {
   right: { w: 96, h: 70, root: [92, 64],
     stem: "M92 64C68 59 87 40 67 27S38 23 13 10M71 33Q55 37 49 50M57 24Q50 12 33 12",
     leaves: [[86,55,40,1.05],[77,44,-20,.9],[81,31,55,1],[66,24,-15,1.1],[51,20,30,.95],[36,17,-30,.9],[21,12,20,.85],[53,41,-25,1],[47,49,15,.8],[35,11,-45,.9]] },
+  // The Mastery button card's pair (styles.css shows them only inside .bc-btn). There the label
+  // fills the button nearly edge to edge, so these grow UP the side instead of in from the
+  // corner: rooted below the bottom, over the top corner, spilling outward, the gold stitch
+  // pinning each one at the middle. One unit is one pixel of the unscaled button.
+  "card-left": { w: 36, h: 76, root: [13, 75],
+    stem: "M13 75C6 66 16 58 10 49S5 33 12 25S8 11 15 6C20 2 26 2 33 5M10 49Q3 46 1 39M12 25Q20 22 22 15",
+    leaves: [[13,69,38,.62],[5,61,-62,.6],[16,55,48,.56],[3,46,-78,.6],[13,41,28,.52],[2,37,-95,.5],[4,31,-52,.6],[15,28,62,.52],[22,15,18,.5],[6,19,-38,.58],[11,8,-18,.56],[23,5,72,.5],[32,6,96,.44]] },
+  "card-right": { w: 36, h: 76, root: [22, 75],
+    stem: "M22 75C29 68 20 61 26 53S31 39 24 31S28 16 21 9C17 4 11 2 4 4M26 53Q33 50 35 43M24 31Q15 28 13 21",
+    leaves: [[22,70,-30,.6],[30,63,58,.6],[20,57,-44,.54],[33,48,82,.58],[25,42,-22,.52],[34,40,96,.48],[30,30,64,.58],[14,22,-48,.5],[22,13,30,.58],[13,5,-60,.52],[4,5,-92,.46]] },
 };
 const IVY_GREENS = ["#45643d", "#63834c", "#78905a"];
 const ivyVine = (side) => {
   const { w, h, root, stem, leaves } = IVY_VINES[side];
-  const shade = side === "left" ? 0 : 1;
+  const shade = side.endsWith("left") ? 0 : 1;
   return `<svg class="cta-ivy cta-ivy--${side}" viewBox="0 0 ${w} ${h}" style="aspect-ratio:${w}/${h}"><g class="cta-ivy-stem" style="transform-origin:${root[0]}px ${root[1]}px"><path d="${stem}" fill="none" stroke="#425332" stroke-width="2"/>${leaves.map(([x, y, r, s], i) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><g class="cta-ivy-leaf" style="--ivy-delay:${(i * .037).toFixed(3)}s;--ivy-turn:${-7 - (i + shade) % 3 * 4}deg"><path d="M0 10C-3 5 -10 4 -9 -2L-5 -1L-3 -9L1 -6L6 -10L7 -3L12 -1C10 6 4 5 0 10Z" fill="${IVY_GREENS[(i + shade) % 3]}" stroke="#344d31" stroke-width=".65"/><path d="M0 9L1 -5M0 4L-5 0M0 3L7 -1" fill="none" stroke="#b5c38a" stroke-width=".6" opacity=".7"/></g></g>`).join("")}</g></svg>`;
 };
-const ivy = ivyVine("left") + ivyVine("right");
+const ivy = ivyVine("left") + ivyVine("right") + ivyVine("card-left") + ivyVine("card-right");
 // Pride's hover is the flag waving (styles.css, under Pride): the stripes cut into thin
 // upright slices that rise and fall in turn, with the swing growing from the hoist (--a, in px)
 // out to the fly, and the button's sheen laid back over the top. 64 slices keeps the wave a

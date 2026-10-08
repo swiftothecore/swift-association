@@ -1878,6 +1878,12 @@
      button gets a smaller vine still growing from the corner rather than one floating mid-face. */
   .cta-ivy { top: auto; bottom: -6px; left: -9px; width: clamp(54px, 29%, 110px); height: auto; overflow: visible; filter: drop-shadow(1px 2px 1px #24361b44); }
   .cta-ivy--right { left: auto; right: -8px; bottom: -5px; width: clamp(46px, 25%, 96px); }
+  /* On the Mastery button card the label fills the half-size button nearly edge to edge, so the
+     corner pair would sit on the words. It wears its own pair there, drawn to climb the sides. */
+  .cta-ivy--card-left, .cta-ivy--card-right, .bc-btn .cta-ivy--left, .bc-btn .cta-ivy--right { display: none; }
+  .bc-btn .cta-ivy--card-left, .bc-btn .cta-ivy--card-right { display: block; top: -9px; bottom: auto; width: 36px; }
+  .bc-btn .cta-ivy--card-left { left: -17px; }
+  .bc-btn .cta-ivy--card-right { left: auto; right: -17px; }
   /* Ivy clings, so the stem barely stirs; the breeze is in the leaves, turning one after
      another and settling part of the way back. */
   .cta-ivy-stem { transition: transform .7s cubic-bezier(.22,.75,.3,1); }
