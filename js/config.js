@@ -5460,7 +5460,7 @@ export const GRAVEYARD = [
   {
     id: "sacrifice",
     name: "Sacrificing charms",
-    born: "", died: "13 July 2026",
+    born: "22 June 2026", died: "13 July 2026",
     icon: "sacrifice",
     was: `You could give up a charm you had earned, permanently, and mint challenge tokens out of it.`,
     why: `It was a door for anyone stuck without the tokens to open the next challenge. But a ` +
