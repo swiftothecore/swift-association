@@ -11546,6 +11546,9 @@
      the drawer is teal, which is the bonus shelf's mark already. Lighter and pinker than the
      Ruthless brick so the two never sit together as one hue. */
   .page-mark.mark-keepsakes  { --mark-tint: #d0705a; }
+  /* Khaki, a deeper cut of the Notebook divider's manila, which is the first tab settings
+     opens on. Kept greener and lower than Records' gold so the two never read as one ink. */
+  .page-mark.mark-settings   { --mark-tint: #8f8446; --mark-tone: 60%; }
   /* The one thing on an inside page you can prod. Nothing advertises it — no pointer
      cursor, no hover state, no title — but a press makes the drawing kick off the paper
      and its highlighter swipe puff out behind it, so a stray click gets an answer. Poking
@@ -16092,9 +16095,9 @@
     margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px dashed rgba(43, 39, 34, 0.2);
   }
   .settings-title { font-family: var(--hand); font-weight: 700; font-size: calc(28px + var(--text-size-adjust)); color: var(--ink); transform: rotate(-0.8deg); }
-  /* Waves on a click like an inside page's title (wirePageTitles), so it gets the same
+  /* These two wave on a click like an inside page's title (wirePageTitles), so they get the same
      unselectable, plain-arrow treatment as .stats-nav .stats-title. */
-  #keepsakesModal .settings-title { cursor: default; -webkit-user-select: none; user-select: none; }
+  :is(#keepsakesModal, #settingsModal) .settings-title { cursor: default; -webkit-user-select: none; user-select: none; }
   .btn-link {
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft);
     background: transparent; border: none; cursor: pointer; padding: 4px 6px;
