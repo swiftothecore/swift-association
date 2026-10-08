@@ -16100,6 +16100,15 @@ function rankTabs(row) {
   const foot = (t) => t.offsetTop + t.offsetHeight;
   const last = foot(tabs[tabs.length - 1]);
   tabs.forEach((t) => t.classList.toggle("is-back", foot(t) < last - 8));
+  // The picked difficulty tab is the top of its page's sheet, so the sheet's field of 13s has to
+  // run up into it unbroken: the tab's grid is started where the page's is (styles.css).
+  const page = row.id === "modeTabs" && row.parentElement?.querySelector(".mode-blurb");
+  const picked = page && row.querySelector(".mode-tab.active");
+  if (picked) {
+    const a = page.getBoundingClientRect(), b = picked.getBoundingClientRect();
+    picked.style.setProperty("--sheet-x", `${a.left - b.left}px`);
+    picked.style.setProperty("--sheet-y", `${a.top - b.top}px`);
+  }
 }
 function standTabs(row) {
   rankTabs(row);
