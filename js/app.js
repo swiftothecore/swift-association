@@ -7175,6 +7175,40 @@ const ENDLESS_LOOP =
     ` C8.0 2.3 2.0 1.9 1.7 5.9 C1.4 9.8 7.7 10.2 10.2 6.1 Z"/>` +
   `</svg>`;
 
+/* THE TAPE DECK: every side mode's end-of-run row, drawn once. The row is a cassette deck's
+   transport bar, one housing with a key per action and each key's function printed on the
+   panel above it, and the mapping is the reason it is a deck: EJECT takes the tape out and
+   puts you back where you came from, REWIND winds this one back to the top and plays it
+   again, and on the bonus back cover a third key plays the OTHER side of the same game,
+   REPEAT for endless and PLAY for a ten-page run. Those two carry the shelf stickers' own
+   marks (the loop and the pencil), so the key is visibly the sticker it stands in for.
+
+   It replaced a family of half-width buttons in which every mode had its own pair of colours
+   and its own textile (cross-hatch, scallops, gingham, rings...), which by the ninth mode read
+   as random. So colour here is ONE RULE, stated in styles.css under TAPE DECK: the rewind key
+   wears the colour of the door eject goes back through, and there are five doors in the whole
+   game. Eject and the other-side key are always plain ink. A new mode never picks a colour: it
+   joins the family of the door its eject returns to. The words on the keys are the only thing
+   that is the mode's own.
+
+   keys: [{ id, role: "back" | "again" | "other", label, kind?: "endless" | "ten", tip? }].
+   The ids are the ones every ending already wires its clicks to. */
+const DECK_GLYPHS = {
+  back: `<svg class="deck-glyph" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">` +
+    `<path d="M12.3 4.4 L19.6 12.9 L4.7 13.2 Z"/><path d="M4.9 16.1 L19.3 15.8 L19.4 19.0 L5.0 19.3 Z"/></svg>`,
+  again: `<svg class="deck-glyph" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">` +
+    `<path d="M11.6 6.0 L3.4 12.1 L11.7 18.2 Z"/><path d="M20.6 5.7 L12.4 11.9 L20.3 18.3 Z"/></svg>`,
+};
+const DECK_LEGENDS = { back: "eject", again: "rewind", endless: "repeat", ten: "play" };
+function tapeDeck(family, keys) {
+  return `<div class="tape-deck" data-family="${family}"><div class="tape-deck-bar">` + keys.map((k) => {
+    const glyph = k.kind === "endless" ? ENDLESS_LOOP : k.kind === "ten" ? PLAY_NIB : DECK_GLYPHS[k.role];
+    return `<div class="deck-slot"><span class="deck-legend" aria-hidden="true">${DECK_LEGENDS[k.kind || k.role]}</span>` +
+      `<button type="button" id="${k.id}" class="deck-key is-${k.role}"${k.tip ? ` data-tip="${escapeHtml(k.tip)}"` : ""}>` +
+      `${glyph}<span class="deck-lab">${escapeHtml(k.label)}</span></button></div>`;
+  }).join("") + `</div></div>`;
+}
+
 function renderBonusPage() {
   const g = bonusPicked();
   bonusPick = g.id;
@@ -10238,17 +10272,17 @@ function endBonusRun() {
          — and without this the trip is back to the shelf, find the zine, open it, find the right
          sticker. It carries the mark the shelf uses for what it is starting, the pencil for a
          ten-page run and the loop for an endless one, so the button and the sticker it stands in
-         for are recognisably the same act. */
+         for are recognisably the same act (the deck's REPEAT and PLAY keys, see tapeDeck). */
       `<div class="bg-end-actions">` +
-        `<button type="button" id="bonusShelfBtn" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">the shelf</span></button>` +
-        `<button type="button" id="bonusAgainBtn" class="btn-primary">replay ↺</button>` +
-        (bonusHasEndless(bonusGame)
-          ? `<button type="button" id="bonusOtherBtn"` +
-            ` class="btn-primary btn-other ${endless ? "is-ten" : "is-endless"}"` +
-            ` data-tip="${endless ? `Play the same game as a ${BONUS_ROUNDS}-page run`
-                                  : "Play the same game with no last page"}">` +
-            (endless ? PLAY_NIB : ENDLESS_LOOP) +
-            `<span>${endless ? `${BONUS_ROUNDS} pages` : "endless"}</span></button>` : "") +
+        tapeDeck("bonus", [
+          { id: "bonusShelfBtn", role: "back", label: "the shelf" },
+          { id: "bonusAgainBtn", role: "again", label: "replay" },
+          ...(bonusHasEndless(bonusGame) ? [endless
+            ? { id: "bonusOtherBtn", role: "other", kind: "ten", label: `${BONUS_ROUNDS} pages`,
+                tip: `Play the same game as a ${BONUS_ROUNDS}-page run` }
+            : { id: "bonusOtherBtn", role: "other", kind: "endless", label: "endless",
+                tip: "Play the same game with no last page" }] : []),
+        ]) +
       `</div>` +
     `</div>`;
   // Replay puts you back on the SIDE you were playing. `bonusEndless` is still standing when
@@ -10465,8 +10499,10 @@ function endRuthlessRun() {
           `<span class="sr-only">Copy the bracelet</span></button></div>` +
       `</div>` +
       `<div class="bg-end-actions">` +
-        `<button id="backToRuthless" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">ruthless game</span></button>` +
-        `<button id="replayRuthless" class="btn-primary">replay ↺</button>` +
+        tapeDeck("ruthless", [
+          { id: "backToRuthless", role: "back", label: "ruthless game" },
+          { id: "replayRuthless", role: "again", label: "replay" },
+        ]) +
       `</div>` +
     `</div>`;
   /* The strand host is BORROWED into the card, and handed back to the bracelet block the
@@ -12117,18 +12153,19 @@ function renderTrackEnd(rec, secs) {
     // The same row the back cover gets, for the same reason: this game's ending is the filled-in
     // sleeve rather than a card, but a charm earned writing out a record was just as invisible.
     bonusCharmRow() +
-    /* THE BACK COVER'S PAIR, not a sticker of this game's own. A run ends on the same two
+    /* THE BACK COVER'S DECK, not a sticker of this game's own. A run ends on the same two
        wants here as on every other zine — go back to where the run was picked, or go round
-       again — so it ends on the same two buttons, in the same row, wearing the same washes:
-       the slate cross-hatch for the way back and the berry scallops for the replay. What it
+       again — so it ends on the same tape deck in the bonus shelf's green (tapeDeck). What it
        replaced was one gold `.chall-go`, which is the sticker that STARTS a challenge, and it
        said "Another record", which names neither destination: another record could as easily
        be another time on this one. The destinations are still this game's own — back is the
        PICKER rather than the shelf (the board with the new time on it and eleven more
        waiting), and replay writes THIS album out again rather than dealing a new page. */
     `<div class="bg-end-actions">` +
-      `<button type="button" id="tbtPickBtn" class="btn-primary">\u2190 the albums</button>` +
-      `<button type="button" id="tbtAgainBtn" class="btn-primary">write it again \u21ba</button>` +
+      tapeDeck("bonus", [
+        { id: "tbtPickBtn", role: "back", label: "the albums" },
+        { id: "tbtAgainBtn", role: "again", label: "write it again" },
+      ]) +
     `</div>`;
   body.insertBefore(card, body.firstChild);
   wireBonusCharmRow(card);
@@ -15629,12 +15666,17 @@ function endLineup() {
     `<div class="chall-result-meta">${covered.length} of ${SHELF} on one strand · ${names}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="replayLineup" class="btn-primary">replay ↺</button>` +
+      tapeDeck("guests", [
+        { id: "lineupShelfBtn", role: "back", label: "guest shelf" },
+        { id: "replayLineup", role: "again", label: "replay" },
+      ]) +
     `</div>`;
   // A replay deals a FRESH five rather than handing back the same hand: the deal is half of
   // what the mode is, and replaying into an identical table would be the picking this mode
   // deliberately does not do.
   $("replayLineup").addEventListener("click", () => startLineupRun(lineupDiff));
+  // The lineup is dealt from the guest shelf, so that is where its eject goes, as the guests' does.
+  $("lineupShelfBtn").addEventListener("click", () => openGuestShelf("start"));
 
   // Hand the globals back now the run's own numbers are on screen, exactly as endGuest does:
   // everything above reads the run's arrays, and every screen the player can now reach is
@@ -20111,8 +20153,10 @@ function endChallenge() {
   // are on every challenge and the offer sits directly above the front-page button.
   $("resultPodium").innerHTML = status + tokenLine + returnLine + verseLine + inkLine + impostorLine + newSongLine + riskResultLine() + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToChallenges" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">challenges</span></button>` +
-      `<button id="replayChallenge" class="btn-primary">replay ↺</button>` +
+      tapeDeck("challenges", [
+        { id: "backToChallenges", role: "back", label: "challenges" },
+        { id: "replayChallenge", role: "again", label: "replay" },
+      ]) +
     `</div>` + darkInvite + lightInvite;
   $("backToChallenges").addEventListener("click", () => openChallenges("start"));
   // Replay means replay THIS run — `c` is the resolved challenge, so a dark run's replay has
@@ -20224,8 +20268,10 @@ function endAlbumFocus() {
   // same album at the same difficulty on the right.
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToAlbumFocus" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">album focus</span></button>` +
-      `<button id="replayAlbumFocus" class="btn-primary">replay ↺</button>` +
+      tapeDeck("notebook", [
+        { id: "backToAlbumFocus", role: "back", label: "album focus" },
+        { id: "replayAlbumFocus", role: "again", label: "replay" },
+      ]) +
     `</div>`;
   $("backToAlbumFocus").addEventListener("click", () => openAlbumFocus("start"));
   $("replayAlbumFocus").addEventListener("click", () => startAlbumFocus(album, diff));
@@ -20300,8 +20346,10 @@ function endGuest() {
     ` · admitted ${admittedCount}/${GUESTS.length}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToGuests" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">guest shelf</span></button>` +
-      `<button id="replayGuest" class="btn-primary">replay ↺</button>` +
+      tapeDeck("guests", [
+        { id: "backToGuests", role: "back", label: "guest shelf" },
+        { id: "replayGuest", role: "again", label: "replay" },
+      ]) +
     `</div>`;
   $("backToGuests").addEventListener("click", () => openGuestShelf("start"));
   $("replayGuest").addEventListener("click", () => startGuestRun(id, diff));
@@ -20381,8 +20429,10 @@ function endCustom() {
   const meta = `<div class="chall-result-meta">${escapeHtml(customLeverSummary(currentMode))}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
-      `<button id="backToCustom" class="btn-primary">${BACK_ARROW}<span class="ctl-lab">modes</span></button>` +
-      `<button id="replayCustom" class="btn-primary">replay ↺</button>` +
+      tapeDeck("notebook", [
+        { id: "backToCustom", role: "back", label: "modes" },
+        { id: "replayCustom", role: "again", label: "replay" },
+      ]) +
     `</div>`;
   // Back to the launchpad with Custom still selected (gameType stays "custom" through
   // renderStartPickers since it's a real game type now).
