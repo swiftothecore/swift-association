@@ -2209,7 +2209,8 @@ export const DARK_IMPOSTOR_WORDS = [
    app.js for the per-mode contribution mask. Internal ids stay neutral; the visible names
    are notebook-flavoured and tunable here. No RPG "XP bar / Lvl" chrome in the UI. */
 // `tint` is the skill's own ink (an "r, g, b" triplet, drawn from the era palette): the stamp
-// card, the linocut mark (js/skillmarks.js) and the postmark wave all take it, maxed or not.
+// card, the linocut mark (js/skillmarks.js) and the postmark wave all take it. A maxed card
+// is dyed stock mixed from it (styles.css, .msc.maxed).
 export const SKILLS = [
   { id: "resolve",   name: "Instinct",      tint: "61, 79, 134",   blurb: "Grows with every word you match to the right song." },
   { id: "tempo",     name: "Quick Pen",     tint: "178, 58, 63",   blurb: "Grows when you beat the clock to your answer." },

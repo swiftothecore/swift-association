@@ -14430,6 +14430,16 @@
   .msc-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
   .msc-next { font-family: var(--type); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); white-space: nowrap; color: var(--ink); }
   .msc.maxed .msc-lv { display: flex; align-items: center; }
+  /* A full card comes out of the packet dyed: card stock in a deep shade of the skill's colour
+     (dusk blue, brick, dusty plum, moss, slate violet) with everything printed on it in a
+     near-black of the same ink. Stock is a material, so both are mixed from the DAY ink (--td)
+     and hold at night. Gold would sink into the stock, so its MASTERED stamp is dark umber. */
+  .msc.maxed { --stock: color-mix(in srgb, var(--td) 42%, #c7b899); --dink: color-mix(in srgb, var(--td) 36%, #110c09);
+    --card: var(--stock); --skm-ink: var(--dink); --skm-cut: var(--stock); color: var(--dink); border-color: var(--dink); }
+  .msc.maxed .msc-name { color: var(--dink); }
+  .msc.maxed .msc-blurb { color: color-mix(in srgb, var(--dink) 82%, var(--stock)); }
+  .msc.maxed .msc-s.on { background: var(--dink); color: var(--stock); }
+  .msc.maxed .msc-mastered { color: #3a2a08; mix-blend-mode: multiply; }
   .msc-mastered { display: block; width: 112px; height: auto; margin: -8px -6px -8px 0; transform: rotate(var(--r));
     color: var(--mpp-gold); mix-blend-mode: var(--mpp-blend); pointer-events: none; overflow: visible; }
   .msc-mastered text, .msc-post text { font-family: var(--type); font-weight: 700; }

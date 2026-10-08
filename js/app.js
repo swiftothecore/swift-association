@@ -6456,7 +6456,7 @@ function renderMasteryPage() {
   // custom property with the config.js triplet as its FALLBACK, not as the triplet itself, for
   // the same reason modeAccent does it: an inline custom property cannot be overridden by any
   // stylesheet rule, and the night column lives in the --skill-* block in styles.css. A maxed
-  // skill keeps its own ink; the MASTERED stamp in its level-count corner is what says it is done.
+  // skill's card turns to dyed stock mixed from the plain day triplet, which is why that goes too.
   const skillData = SKILLS.map((sk) => {
     const xp = m.skills[sk.id] || 0;
     const lvl = skillLevelFromXp(xp);
@@ -6465,7 +6465,7 @@ function renderMasteryPage() {
     return {
       id: sk.id, name: escapeHtml(sk.name), blurb: escapeHtml(sk.blurb), lvl, maxed,
       frac: maxed ? 0 : Math.max(0, Math.min(1, (xp - lo) / (hi - lo))), toNext: maxed ? 0 : hi - xp,
-      ink: `rgb(var(--skill-${sk.id}, ${sk.tint}))`,
+      ink: `rgb(var(--skill-${sk.id}, ${sk.tint}))`, inkDay: `rgb(${sk.tint})`,
     };
   });
   const skills = stampCardsHTML({ skills: skillData, total, gate: MASTERY_GATE, max: SKILLS.length * SKILL_MAX_LEVEL, maxLevel: SKILL_MAX_LEVEL });

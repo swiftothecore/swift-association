@@ -11,7 +11,8 @@
 
    THE STAMP CARDS. One loyalty card per skill in its own ink: ten slots, one stamp a level,
    the next slot ringed as it fills. A full card is stamped MASTERED where its level count would
-   be, and the rest of it is left exactly as it is: the full row of slots is the trophy.
+   be, and comes out of the packet dyed: the pale wash turns to card stock in a deep shade of
+   the skill's colour, with everything printed on it in a near-black of the same ink.
    The sixth cell is a postmark: the count in the ring, one cancellation wave per skill running
    as long as that card is full.
 
@@ -355,8 +356,10 @@ function postmark(d) {
     `<g filter="url(#stampInk2)" class="msc-post-waves">${waves}</g></svg></div>`;
 }
 
-/* d: { skills: [{ id, name, blurb, lvl, frac, maxed, toNext, ink }], total, gate, max, maxLevel }
-   `ink` is the skill's colour as a CSS value; it reaches every part of the card as --t. */
+/* d: { skills: [{ id, name, blurb, lvl, frac, maxed, toNext, ink, inkDay }], total, gate, max, maxLevel }
+   `ink` is the skill's colour as a CSS value; it reaches every part of the card as --t. `inkDay`
+   is the same colour pinned to its day column (--td): a full card is dyed stock, a material that
+   keeps its colour at night, so it is mixed from the day ink whatever the page is wearing. */
 export function stampCardsHTML(d) {
   const cards = d.skills.map((s, i) => {
     let slots = "";
@@ -364,7 +367,7 @@ export function stampCardsHTML(d) {
       if (k <= s.lvl) slots += `<span class="msc-s on" style="--r:${(settle(k * 7 + i) * 24 - 12).toFixed(0)}deg">${stampedNumeral(k)}</span>`;
       else slots += `<span class="msc-s off">${pencilSlot(k, k === s.lvl + 1 ? s.frac : 0, k * 5 + i)}</span>`;
     }
-    return `<div class="msc${s.maxed ? " maxed" : ""}" style="--t:${s.ink}" data-tip="${s.blurb}" data-tip-delay="400">` +
+    return `<div class="msc${s.maxed ? " maxed" : ""}" style="--t:${s.ink};--td:${s.inkDay}" data-tip="${s.blurb}" data-tip-delay="400">` +
       `<div class="msc-top"><span class="msc-mark">${skillMarkHTML(s.id)}</span><span class="msc-name">${s.name}</span>` +
       (s.maxed ? `<span class="msc-lv" role="img" aria-label="Mastered, ${s.lvl} of ${d.maxLevel}">${masteredStamp(i)}</span>`
         : `<span class="msc-lv">${s.lvl}<small>/${d.maxLevel}</small></span>`) + `</div><div class="msc-slots">${slots}</div>` +
