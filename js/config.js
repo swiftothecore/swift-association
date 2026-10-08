@@ -4400,6 +4400,9 @@ export const ACHIEVEMENTS = [
   { id: "recall-100-lyric-lines-word-perfect",    name: "You Don't Even Know Where I Start", desc: "Recall 100 lyric lines word-perfect", tier: 2, secret: false, icon: "spiral" },
   { id: "recall-1000-lyric-lines-word-perfect",    name: "…Clearly You Were Ready For It?", desc: "Recall 1,000 lyric lines word-perfect", tier: 3, secret: false, icon: "trophy" },
   { id: "recall-whole-verse-word-perfect",     name: "Overachiever",     desc: "Recall a whole verse (four lines word-perfect)", tier: 2, secret: false, icon: "aplus", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
+  // The top of the verse ladder: Overachiever on every page of one thirteen-page game. Any mode
+  // that deals the thirteen counts, so it is not filed under Lyricist's earn shelf.
+  { id: "recall-whole-verse-every-page",    name: "Memorized For So Long", desc: "Recall a whole verse on all 13 pages of one game", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-3-rounds-same-song",         name: "Someone Has A Favourite Song", desc: "Answer three rounds with lyrics from the same song", secret: true, icon: "repeat" },
   { id: "make-10-fuzzy-matches-one-lyricist-game",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: false, icon: "eyeclosed", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "answer-paris-for-somewhere",            name: "We Were Somewhere Else", desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
@@ -5084,7 +5087,7 @@ export const ACH_GROUP_OF = {
   "finish-lyricist-game": "lyricist", "recall-5-lyric-lines-one-game": "lyricist", "recall-lyric-line-word-perfect": "lyricist",
   "win-fuzzy-lyric-match": "lyricist", "make-10-fuzzy-matches-one-lyricist-game": "lyricist",
   "recall-10-lyric-lines-word-perfect": "lyricist", "recall-50-lyric-lines-word-perfect": "lyricist", "recall-100-lyric-lines-word-perfect": "lyricist",
-  "recall-1000-lyric-lines-word-perfect": "lyricist", "recall-whole-verse-word-perfect": "lyricist", "answer-3-rounds-same-song": "lyricist",
+  "recall-1000-lyric-lines-word-perfect": "lyricist", "recall-whole-verse-word-perfect": "lyricist", "recall-whole-verse-every-page": "lyricist", "answer-3-rounds-same-song": "lyricist",
   "streak-3-same-album": "catalogue", "score-nearly-every-studio-album-one-game": "catalogue", "answer-cardigan-betty-august-one-game": "catalogue",
   "streak-3-b-titles": "catalogue", "miss-1000-rounds-lifetime": "catalogue", "answer-if-this-was-a-movie": "catalogue",
   "streak-3-rare-words-no-ultra": "catalogue", "answer-paris-for-somewhere": "catalogue", "answer-every-catalogue-song": "catalogue",

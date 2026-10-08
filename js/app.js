@@ -26545,6 +26545,9 @@ function endGame() {
         && roundResults.slice(1, -1).every(Boolean)) unlock("miss-only-first-and-last-round");
     // Took The Money — the top line of the dropdown taken on all thirteen pages, right or wrong.
     if (fullRun && roundFirstPick.length === TOTAL_ROUNDS && roundFirstPick.every(Boolean)) unlock("take-first-suggestion-all-13-rounds");
+    // Memorized For So Long — a whole verse (the top recall tier) on every one of the thirteen.
+    // gameWholeVerses counts at most one per page, and a whole verse is always a correct page.
+    if (fullRun && gameWholeVerses === TOTAL_ROUNDS) unlock("recall-whole-verse-every-page");
 
     /* ---- The free batch, end-of-run half: this run measured against the ones before it ---- */
     const perfect = score === TOTAL_ROUNDS && fullRun;
