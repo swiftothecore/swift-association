@@ -8658,14 +8658,14 @@
      one, does not need to be told it is the bracelet you made — and the line cost a whole
      block of paper to say it. Sealed is different: the strand is drawn as blank beads,
      and without the caption it reads as broken rather than as deliberately covered.
-     Hidden rather than dropped, so the 14px it held under the tally rule survives on
+     Hidden rather than dropped, so a little of the gap it held under the tally rule survives on
      .bracelet-finished below. */
   .bracelet-caption {
     text-align: center; font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust));
     color: var(--ink-soft); margin: 14px 0 0;
   }
   .bracelet-caption[hidden] { display: none; }
-  .bracelet-caption[hidden] + .bracelet-finished { margin-top: 14px; }
+  .bracelet-caption[hidden] + .bracelet-finished { margin-top: 6px; }
 
   /* Two ordinary, worded keepsake actions make copy and download independently
      discoverable on touch. Their labels are also the live state targets in JS, so the
@@ -10612,7 +10612,7 @@
   /* The tally centres on the same axis as the finished bracelet below it (both are a
      fixed width auto-margined inside .card's padded box), so the two share edges and
      read as one column. */
-  .final-score { text-align: center; margin-bottom: 18px; }
+  .final-score { text-align: center; margin-bottom: 10px; }
   /* .card's content box is asymmetric — 58px of left padding for the margin rule against
      30px on the right — so anything auto-centred in it sits 14px right of the visible page
      centre. Full-width blocks get away with that because the red rule explains their left
