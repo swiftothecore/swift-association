@@ -5437,10 +5437,10 @@ export const GLOSSARY = [
    (still on the roadmap) and why nothing secret is, since an easter egg written down on a public
    page has been spent rather than retired.
 
-   Each row is the same four beats, and the order matters: `was` is what the player had, in the
-   present tense they had it in, and `why` is the argument that ended it. `took` names anything
-   that went into the ground alongside it, which is nearly always a charm, and is the line a
-   collector reads first. `born`/`died` are display strings, never parsed, which is why the
+   Each row is two beats, and the order matters: `was` is what the player had, in the present
+   tense they had it in, and `why` is the argument that ended it. There is deliberately no line
+   for the charms that went into the ground alongside a plot: the reader arrives fresh, and a
+   charm they never earned is a lyric naming a prize they never saw. `born`/`died` are display strings, never parsed, which is why the
    ORDER is kept by hand: plots run in burial order, oldest death first, and a new grave goes
    at the end. Two deaths on one day keep the order they were dug in.
 
@@ -5458,7 +5458,6 @@ export const GRAVEYARD = [
       `currency you can print by burning the collection is not scarce, and a collection you can ` +
       `spend is not a collection. The door got bricked up. Tokens stayed exactly where they were; ` +
       `you just have to win them now.`,
-    took: `Castles Crumbling went with it. Its only unlock was the sacrifice.`,
   },
   {
     id: "study",
@@ -5470,7 +5469,6 @@ export const GRAVEYARD = [
     why: `It worked, and that was the problem. It was the most eat-your-vegetables thing in the ` +
       `notebook, a productivity app that had wandered into a game, and nobody ever opened it ` +
       `because they wanted to. You came here to play, not to revise.`,
-    took: `Back To December, Stay Beautiful and The Best Day went into the ground with it.`,
   },
   {
     id: "doubleup",
@@ -5512,7 +5510,6 @@ export const GRAVEYARD = [
       `the day every run scored the same and there was nothing left to chase. And the climb was over ` +
       `in three or four pages, which left eight or nine pages of ordinary hard Classic behind it, on ` +
       `a card promising the words would keep moving.`,
-    took: `Both of its charms were deleted rather than rehoused.`,
   },
   {
     id: "floating",
@@ -5550,7 +5547,6 @@ export const GRAVEYARD = [
       `amber slit eyes, and next to the fence and the cat and the scarf it read as clip art somebody ` +
       `had dropped on the page. No amount of tuning the crawl fixes a paint job that belongs to a ` +
       `different game. The era still gets its say: the ink goes near-black on a reputation page.`,
-    took: `Look What You Made Me Do is no longer earnable.`,
   },
   {
     id: "atoz",
@@ -5565,7 +5561,6 @@ export const GRAVEYARD = [
       `was invisible, because nothing on the page tells you how much catalogue is left above each ` +
       `letter. By the end it needed three separate guard rails to stop you ruining your own run. A ` +
       `rule that has to be protected from its own central choice is not a rule anyone can play well.`,
-    took: `Tied Together With A Smile hung off it and went too.`,
   },
   {
     id: "goldroll",
@@ -5593,7 +5588,6 @@ export const GRAVEYARD = [
       `of fast grey dashes laid over the top of the page, which read less like weather than like ` +
       `something wrong with the screen. Cutting it from an hour to a minute made it rarer without ` +
       `making it look any better.`,
-    took: `Midnights Like This went with it.`,
   },
   {
     id: "doodles",
@@ -5606,7 +5600,6 @@ export const GRAVEYARD = [
     why: `They never looked right. Every one was redrawn, most of them more than once, and at the ` +
       `size a margin allows each came out either too bare to tell what it was or too busy to read. ` +
       `On a phone, where the margin is a sliver, they all but vanished.`,
-    took: `You Keep My Old Scarf went with them. Its only way in was tapping the scarf.`,
   },
   {
     id: "tumblr",
@@ -5624,7 +5617,6 @@ export const GRAVEYARD = [
       `in a phone's typeface was the one thing in the drawer that did not come off the desk, and ` +
       `beside the polaroids it read like a placeholder. It can come back when it has a reason to ` +
       `be here that comes before the way you unlock it.`,
-    took: `The secret backwards run in Track by Track went too. Its only reward was a post.`,
   },
 ];
 

@@ -12912,12 +12912,6 @@
     font-family: var(--type); font-size: calc(13px + var(--text-size-adjust));
     color: var(--ink); line-height: 1.55; margin: 0;
   }
-  /* What went into the ground alongside it, in the editor's red: the line a collector reads
-     first, and the only place on the page where the pen speaks rather than describes. */
-  .grave-took {
-    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust));
-    color: var(--red-pen); line-height: 1.3; margin: 12px 0 0;
-  }
   .grave-card .ach-latest-nav { opacity: 1; transform: none; }
   .grave-card .ach-latest-nav:disabled { opacity: 0; cursor: default; }
   .grave-return {

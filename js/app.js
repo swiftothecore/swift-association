@@ -29741,7 +29741,6 @@ function graveyardCardMarkup() {
           `<div class="grave-head">${graveIcon(g.icon)}${graveName(g, "div")}</div>` +
           (g.was ? `<p class="grave-was">${escapeHtml(g.was)}</p>` : "") +
           `<p class="grave-why">${escapeHtml(g.why)}</p>` +
-          (g.took ? `<p class="grave-took">${escapeHtml(g.took)}</p>` : "") +
         `</div>` +
       `</div>` +
       `<button type="button" class="ach-latest-nav ach-latest-prev" data-grave-prev` +
