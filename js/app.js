@@ -80,7 +80,6 @@ import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { albumDots, hasTone } from "./albumdots.js";
 import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
-import { TUMBLR_POSTS, TUMBLR_BY_ID, redactionRows } from "./tumblr.js";
 import { showCover, placeCoverStickers } from "./stickercover.js";
 import { coverStickerSlots, toggleCoverSticker } from "./stickerselection.js";
 import {
@@ -128,7 +127,6 @@ import {
   loadAchievements, saveAchievements,
   loadKeepsakes, saveKeepsakes, resetKeepsakes,
   loadStickers, saveStickers, resetStickers,
-  loadTumblr, saveTumblr, resetTumblr,
   loadKeepsakesSeen, saveKeepsakesSeen, resetKeepsakesSeen,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
@@ -647,8 +645,6 @@ function paintSoundGear() {
 // Turning it on auditions the chime, which is also the gesture that wakes the AudioContext
 // (see the autoplay note in js/sound.js), so the very first sound is the one they asked for.
 function setSound(on) {
-  // The block feature: switched off mid-run rather than between runs.
-  if (settings.sound && !on && settingsOverRun()) earnTumblrPost("the-block-feature");
   settings.sound = !!on;
   saveSettings(settings);
   applySettings();
@@ -2665,8 +2661,7 @@ function statsGraphSVG(counts, youScore, W) {
    yours, "look it up" written in the margin.
 
    It is the one object on the page set in printed faces rather than hand and typewriter, because
-   it is a cutting from a newspaper rather than a thing from the desk (the Tumblr card is the same
-   exception for the same reason). UnifrakturCook and Playfair Display are self-hosted in fonts/
+   it is a cutting from a newspaper rather than a thing from the desk. UnifrakturCook and Playfair Display are self-hosted in fonts/
    beside the other two; the dateline, deck and columns are small enough to set in the system
    serif. The top and bottom are torn, seeded off the word so the same nemesis tears the same way. */
 const STATS_ORDINALS = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
@@ -3743,13 +3738,11 @@ function scheduleToastDismiss() {
           if (beforeTops[i] === null || !el.getClientRects().length) return;
           const dy = beforeTops[i] - el.getBoundingClientRect().top;   // <0: moved down
           if (!dy) return;
-          // The tumblr banner sits square (it is a screen, not a slip of paper), so it keeps no tilt.
-          const tilt = el.classList.contains("toast-tumblr") ? "" : " rotate(-1deg)";
           el.style.transition = "none";
-          el.style.transform = `translateY(${dy}px)${tilt}`;
+          el.style.transform = `translateY(${dy}px) rotate(-1deg)`;
           requestAnimationFrame(() => {
             el.style.transition = "transform 0.34s cubic-bezier(.34,1.1,.64,1)";
-            el.style.transform = tilt.trim() || "none";
+            el.style.transform = "rotate(-1deg)";
           });
         });
       }
@@ -3844,7 +3837,6 @@ const FOUND_RECAP_SHOWN = 3;   // objects shown before "+N" unfolds the rest in 
 function foundRecapItems() {
   const pol = loadKeepsakes();
   const sti = loadStickers();
-  const tum = loadTumblr();
   const seen = {};
   const out = [];
   for (const f of newlyFound) {
@@ -3854,9 +3846,6 @@ function foundRecapItems() {
     if (f.kind === "polaroid") {
       const p = POLAROID_BY_ID[f.id];
       if (p && pol[f.id]) out.push({ kind: "polaroid", id: f.id, name: p.name, how: p.how, art: p.art, state: polaroidState(f.id, pol) });
-    } else if (f.kind === "tumblr") {
-      const t = TUMBLR_BY_ID[f.id];
-      if (t && tum[f.id]) out.push({ kind: "tumblr", id: f.id, how: t.how, post: t });
     } else {
       const st = STICKER_BY_ID[f.id];
       if (st && sti[f.id]) out.push({ kind: "sticker", id: f.id, name: st.name, how: st.how, sticker: st });
@@ -3881,22 +3870,17 @@ function foundRecapHTML(items) {
   const chips = items.map((f, i) => {
     const art = f.kind === "sticker"
       ? stickerMarkup(f.sticker, false)
-      : f.kind === "tumblr"
-      ? `<span class="tn-chip">${tumblrNoteMarkup(f.post)}</span>`
       : `<span class="pol-thumb" aria-hidden="true"><span class="pol-thumb-art">${polaroidArt(f.art)}` +
         (f.state === "developed" ? "" : `<span class="pol-thumb-veil"></span>`) + `</span></span>`;
     const tip = f.how ? ` data-tip="${escapeHtml(f.how)}" data-tip-delay="120"` : "";
-    const label = f.kind === "tumblr" ? `a message from ${f.post.blog}` : `${f.name} · ${f.kind}`;
+    const label = `${f.name} · ${f.kind}`;
     return `<button type="button" class="found-chip found-chip--${f.kind}${i >= FOUND_RECAP_SHOWN ? " found-folded" : ""}" ` +
       `aria-label="${escapeHtml(label)}"${tip}>${art}</button>`;
   }).join("");
   const extra = items.length > FOUND_RECAP_SHOWN
     ? `<button type="button" class="found-chip--more" aria-label="${items.length - FOUND_RECAP_SHOWN} more">${foundTag(items.length - FOUND_RECAP_SHOWN)}</button>`
     : "";
-  // A tumblr post has no name of its own, only her words, and her blog name is already on the
-  // chip. So posts are left out of the names, and a run that found
-  // only posts prints no names line at all.
-  const names = items.filter((f) => f.kind !== "tumblr")
+  const names = items
     .map((f) => `<li class="found-recap-name-item"><span class="found-recap-name">${escapeHtml(f.name)}</span></li>`).join("");
   return `<div class="found-recap">` +
     `<p class="sr-lab found-recap-lab">also found · ${items.length}</p>` +
@@ -5616,18 +5600,16 @@ function keepsakeCount(earned) {
   const map = earned || loadKeepsakes();
   return POLAROIDS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
 }
-// How many earned keepsakes the player has not looked at yet — all three shelves, since the
-// drawer opens on all of them at once. Anything earned and missing from the seen store is new, so a notebook
+// How many earned keepsakes the player has not looked at yet — both shelves, since the
+// drawer opens on both at once. Anything earned and missing from the seen store is new, so a notebook
 // that has never opened the drawer counts everything, which is exactly right.
 function newKeepsakeCount() {
   const seen = loadKeepsakesSeen();
   const pol = loadKeepsakes();
   const sti = loadStickers();
-  const tum = loadTumblr();
   let n = 0;
   for (const p of POLAROIDS) if (pol[p.id] && !seen.polaroids[p.id]) n++;
   for (const s of STICKERS) if (sti[s.id] && !seen.stickers[s.id]) n++;
-  for (const t of TUMBLR_POSTS) if (tum[t.id] && !seen.tumblr[t.id]) n++;
   return n;
 }
 // Mark everything currently earned as looked at. Called when the drawer opens, which is the
@@ -5639,10 +5621,8 @@ function markKeepsakesSeen() {
   const seen = loadKeepsakesSeen();
   const pol = loadKeepsakes();
   const sti = loadStickers();
-  const tum = loadTumblr();
   for (const p of POLAROIDS) if (pol[p.id]) seen.polaroids[p.id] = true;
   for (const s of STICKERS) if (sti[s.id]) seen.stickers[s.id] = true;
-  for (const t of TUMBLR_POSTS) if (tum[t.id]) seen.tumblr[t.id] = true;
   saveKeepsakesSeen(seen);
 }
 // Drop one shelf's seen record. Only the dev resets need this: wiping a shelf's earned store
@@ -5757,7 +5737,7 @@ function renderKeepsakesPage(body = $("keepsakesBody")) {
       keepsakePolaroidHTML(p, { earned, state, tilt: j.tilt, small: true }) + `</div>`;
   }).join("");
 
-  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>` + stickerShelfHTML() + tumblrShelfHTML();
+  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>` + stickerShelfHTML();
   // "Look at the cover" (never "close the notebook" — the in-run quit button owns that phrase):
   // the drawer is a modal over the front page, so it has to get out of the way first, and focus
   // comes back to the keepsakes icon once the book reopens.
@@ -5883,17 +5863,6 @@ function devSetSticker(id, on) {
   updateKeepsakesNav();
   refreshStickers();
   return stickerEarned(id) ? "earned" : "locked";
-}
-// Dev-only: put `id` on the tumblr shelf, or take it off, writing the store directly (no toast).
-// earnTumblrPost is the real find path.
-function devSetTumblr(id, on) {
-  if (!TUMBLR_BY_ID[id]) return "unknown post: " + id;
-  const found = loadTumblr();
-  if (on) found[id] = found[id] || new Date().toISOString(); else delete found[id];
-  saveTumblr(found);
-  refreshTumblr();
-  updateKeepsakesNav();
-  return on ? "found" : "locked";
 }
 
 /* ---------- The session ledger ---------- */
@@ -6137,195 +6106,6 @@ function stickerShelfHTML() {
     `</div>`;
 
   return `<div class="stick-shelf">${intro}${counter}<div class="stick-grid">${cells}</div>${cover}</div>`;
-}
-
-/* ---------- Tumblr messages: the screenshotted post set (see js/tumblr.js) ---------- */
-// The third family, and the one that is not an object. A polaroid is a photo from the desk and
-// a sticker is vinyl off a sheet; a tumblr message is a screenshot of her actually talking, so
-// it is drawn as a post card rather than as something you could pick up. It arrives finished,
-// like a sticker, and has exactly two states.
-//
-// Locked is BLACKED OUT, not hidden: the card still shows the header, the foot and the shape of
-// the paragraph, with a bar over every line, measured off the real words by redactionRows. The
-// shelf is therefore honest about what you are missing — how long it is, where it breaks, how
-// short the last line runs — without leaking a syllable of it.
-
-function tumblrFound(id, map) { return !!(map || loadTumblr())[id]; }
-// How many posts the player has found. The denominator is TUMBLR_POSTS.length rather than a
-// written-down target — see the note beside STICKER_TOTAL in config.js.
-function tumblrCount(found) {
-  const map = found || loadTumblr();
-  return TUMBLR_POSTS.reduce((n, p) => n + (map[p.id] ? 1 : 0), 0);
-}
-function refreshTumblr() { refreshKeepsakes(); }
-
-// The blog avatar. One shared hand-inked mark rather than a photograph of anybody: a wobbly 13
-// in a rounded square, drawn twice-over so it reads as pen rather than as a font glyph. Shared
-// across the whole set on purpose — every post comes from the same blog, and a per-post avatar
-// would be inventing a detail the screenshots do not have.
-const TUMBLR_AVATAR = `<svg viewBox="0 0 32 32" aria-hidden="true">
-  <rect x="1.4" y="1.8" width="29" height="28.6" rx="7" fill="none" stroke="currentColor" stroke-width="1.7"/>
-  <path d="M9.4 14.1 q1.8 -1.9 3.4 -2.2 q-.5 5.2 -.2 9.6" fill="none" stroke="currentColor"
-        stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M16.8 11.6 q4.4 -1.1 5.2 1.4 q.6 2 -2.6 2.9 q3.6 .2 3.6 2.8 q0 2.9 -3.6 2.9 q-2.2 0 -3.2 -1.3"
-        fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-// The foot row: reply, reblog, like. Drawn as ink marks and carrying NO numbers. A real post
-// card ends in a notes count, and there is no honest one available — the screenshots the posts
-// come from are cropped above it — so the row keeps the shape of the foot and says nothing it
-// cannot back up. Never add a made-up count here.
-const TUMBLR_FOOT = `<svg viewBox="0 0 66 18" aria-hidden="true">
-  <path d="M2.6 4.2 q5.4 -1.6 10.4 0 q1.2 3.4 -.4 6.4 q-4.6 1.4 -7.2 .2 l-3 2.4 q.6 -2 .2 -3
-           q-1.4 -3 0 -6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-  <path d="M24.6 4.6 h9.2 l-2.6 -2.4 M33.8 4.6 v3.6 h-9.6 M43 12.6 h-9.2 l2.6 2.4 M33.8 12.6 v-3.4 h9.6"
-        fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M57 14.4 q-6.6 -4 -6.6 -7.4 q0 -2.8 2.6 -2.8 q2.4 0 4 2.6 q1.6 -2.6 4 -2.6 q2.6 0 2.6 2.8
-           q0 3.4 -6.6 7.4z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-</svg>`;
-
-// One post card. `found` false draws the redacted version. `small` is the shelf size. (The unlock
-// toast and the results recap chip are not cards at all; see tumblrNoteMarkup.)
-function tumblrPostMarkup(post, found, opts = {}) {
-  const body = found
-    ? String(post.text || "").split(/\n+/)
-        .map((para) => `<p class="tpost-p">${escapeHtml(para)}</p>`).join("")
-    : `<p class="tpost-p tpost-p--bars">` +
-      redactionRows(post.text).map((w) => `<span class="tpost-bar" style="--w:${(w * 100).toFixed(1)}%"></span>`).join("") +
-      `</p>`;
-  // The blog name is blacked out with the post. A locked card that still named the blog would
-  // be the only line on the shelf that is legible before you have earned it, and it would draw
-  // the eye to the one thing every card says identically.
-  const blog = found
-    ? `<span class="tpost-blog">${escapeHtml(post.blog)}</span>`
-    : `<span class="tpost-blog tpost-blog--bar"></span>`;
-  return `<div class="tpost${opts.small ? " tpost--small" : ""}" data-state="${found ? "found" : "locked"}">` +
-    `<div class="tpost-head"><span class="tpost-av">${TUMBLR_AVATAR}</span>${blog}</div>` +
-    `<div class="tpost-body">${body}</div>` +
-    `<div class="tpost-foot">${TUMBLR_FOOT}</div>` +
-    `</div>`;
-}
-
-// Find a post: stamp the date, toast it, refresh the drawer. Idempotent, so a trigger can fire
-// freely on every run. Mirrors earnSticker exactly, including the devNoLog gate and the sealed
-// daily-result silence.
-function earnTumblrPost(id) {
-  if (devNoLog) return false;
-  const post = TUMBLR_BY_ID[id];
-  if (!post) return false;
-  const found = loadTumblr();
-  if (found[id]) return false;                       // already on the shelf
-  found[id] = new Date().toISOString();
-  saveTumblr(found);
-  newlyFound.push({ kind: "tumblr", id });
-  if (!dailyResultIsSealed()) {
-    showTumblrToast(post);
-    playUnlockChime();
-  }
-  updateKeepsakesNav();
-  refreshTumblr();
-  return true;
-}
-
-/* ---------- Tumblr message triggers ----------
-   She is not rewarding you, she is replying to you. Each post fires on a moment its words read as
-   an answer to, and several of those moments are bad ones: a run of none, a line the gauge lit up
-   for and the verdict refused, a loss you were back from inside two seconds. That is what keeps the
-   family on the stickers' side of the drawer rather than the charms': nothing here is a score to
-   chase, and the `how` line says what happened rather than what to do. Same rule as every charm,
-   too: each one stays reachable on a notebook that has already done everything, so a missed
-   first time is never the only time. Taylor's own corpus only, since every post is her talking. */
-const TUMBLR_MIDWAY = Math.ceil(TOTAL_ROUNDS / 2);   // page 7 of 13: "midway through" a run
-const TUMBLR_INFINITE_PAGE = 113;                    // well past where anybody meant to stop
-const TUMBLR_REPLAY_MS = 2000;                       // "within seconds of losing one"
-let runNamedTitle = false;     // the mom croon: a title answered anywhere this run spoils it
-let runTurnedAway = false;     // beautiful mind: Both Of Us / Short n' Sweet soft-rejected you
-let runEndedAt = 0;            // keep groovin: when the results page went up, and whether it was
-let runEndedLost = false;      // a loss (read by the replay stamp, never by anything else)
-
-// Called once per settled page, after roundResults holds this page's verdict.
-function checkPageTumblr() {
-  if (!catalogueCharmsLive()) return;
-  if (gameType === "classic" && round === TUMBLR_MIDWAY) {
-    // Most first games are Relaxed, so the first Normal one arrives a while in, which is when
-    // "I'm locking myself in my room until I figure this out" lands.
-    if (currentMode.id === "medium") earnTumblrPost("figure-out-my-tumblr");
-    // Extreme adventure, going well so far: more of the pages done are right than wrong.
-    const right = roundResults.filter(Boolean).length;
-    if (currentMode.id === "ultra" && right * 2 > round) earnTumblrPost("harness-life");
-  }
-  if (gameType === "infinite" && round === TUMBLR_INFINITE_PAGE) earnTumblrPost("only-one-that-could-stop-it");
-}
-
-// Called from endGame's own path (classic / infinite / daily), which is where the replay stamp
-// and the thirteen-page reading both live. The sandboxed modes are not asked.
-function foldRunTumblr(isInfinite, won, pages) {
-  if (!catalogueCharmsLive() || isInfinite || pages < TOTAL_ROUNDS) return;
-  if (score <= 1) earnTumblrPost("normal-today");
-  // Singing is a choice here, so Lyricist, where it is the only way to answer, does not count.
-  if (won && !runNamedTitle && !currentMode.lyricOnly) earnTumblrPost("the-mom-croon");
-}
-
-// The unlock toast: a notification from her blog, not a notebook card. The complaint it answers
-// was that a card-in-a-toast looked like a mock-up, and a toast already IS a notification, so it
-// wears that shape. Two honesty rules: no timestamp, because these posts are years old and a
-// "now" would be a made-up detail, and no line clamp, because the longest post is five lines and
-// a banner that cuts her off mid-sentence loses the part worth reading. Her words and her blog
-// name are the only text on it; what you did to find it stays on the hover tip.
-// The banner's contents, shared by the toast and the results recap chip (which crops it).
-function tumblrNoteMarkup(post) {
-  return `<div class="tn-head"><span class="tn-av">${TUMBLR_AVATAR}</span>` +
-    `<span class="tn-blog">${escapeHtml(post.blog)}</span></div>` +
-    String(post.text || "").split(/\n+/)
-      .map((para) => `<p class="tn-text">${escapeHtml(para)}</p>`).join("");
-}
-
-function showTumblrToast(post) {
-  const layer = $("toastLayer");
-  if (!layer) return;
-  const t = document.createElement("div");
-  t.className = "toast toast-tumblr";
-  if (post.how) { t.setAttribute("data-tip", post.how); t.setAttribute("data-tip-delay", "500"); }
-  t.innerHTML = tumblrNoteMarkup(post);
-  layer.appendChild(t);
-  scheduleToastDismiss();
-}
-
-// The shelf: a lead, the found counter, then the posts as a column of cards. A COLUMN, not a
-// grid — a post is a block of reading and the two shelves above have already spent the drawer's
-// horizontal room on things that are looked at rather than read.
-function tumblrShelfHTML() {
-  const found = loadTumblr();
-  const n = tumblrCount(found);
-  const total = TUMBLR_POSTS.length;
-
-  const intro =
-    `<p class="chall-eyebrow">Her messages</p>` +
-    `<p class="keep-lead">Things she actually posted, screenshotted and kept. An unfound one is ` +
-    `blacked out to the shape of what she wrote, so you can see how long it is and nothing else.</p>`;
-
-  const counter =
-    `<div class="keep-counter"><span class="keep-counter-n">${n}</span>` +
-    `<span class="keep-counter-d">/ ${total}</span>` +
-    `<span class="keep-counter-l">screenshotted</span></div>`;
-
-  const cards = TUMBLR_POSTS.map((post) => {
-    const has = !!found[post.id];
-    // Found: the tip is the feat alone, the way the sticker shelf does it, and nothing at all
-    // while a post has no trigger yet — an empty `how` prints no tip rather than a fib. A
-    // locked card gets the standard unearned line, because it is meant to be the question.
-    const label = has ? (post.how || "") : "a message not yet found";
-    // A stable, tiny tilt hashed off the id, the same trick the wall and the shelf use. It is
-    // an order of magnitude smaller than theirs on purpose: a polaroid is pinned by hand and a
-    // sticker is stuck down by hand, but a screenshot was pasted in straight and only ever
-    // misses by a hair. Anything bigger and the column reads as a fan of cards.
-    const rot = ((mulberry32(fnv1a(post.id))() * 1.6) - 0.8).toFixed(2);
-    return `<div class="tpost-cell" data-id="${post.id}" data-state="${has ? "found" : "locked"}" style="--rot:${rot}deg"` +
-      (label ? ` title="${escapeHtml(label)}"` : "") + `>` +
-      tumblrPostMarkup(post, has, { small: true }) + `</div>`;
-  }).join("");
-
-  return `<div class="tpost-shelf">${intro}${counter}<div class="tpost-list">${cards}</div></div>`;
 }
 
 // Read a chosen image file, center-crop it to a square and downscale it to a
@@ -11875,13 +11655,6 @@ let trackWritten = [];          // what has been filled in so far, parallel to s
 let trackWrong = 0;             // wrong guesses, for the finished sheet to remark on
 let trackSpent = 0;             // the run's seconds, frozen when the last blank fills
 let trackFresh = -1;            // the row just written, so only that one's ink settles
-/* THE TRAIL HIKED BACKWARDS. Before the first keystroke, a tap on the last blank turns the sheet
-   round and the pen walks UP the record from there; a tap back on the first blank turns it the
-   right way again. Nothing on the sheet says so: it is there to be found, and finding it is the
-   tumblr post. A backwards run is timed and finished like any other, and then banks NOTHING — no
-   board entry, no charm — because every time on that board is a record written from track one,
-   and a board that mixed the two would compare runs that asked different questions. */
-let trackBackwards = false;
 let trackBackTarget = "bonus";
 
 function isTrackRun() { return !!bonusGame && bonusGame.id === "track-by-track"; }
@@ -12018,7 +11791,6 @@ function beginTrackSheet() {
   trackSpent = 0;
   trackAt = 0;
   trackFresh = -1;
-  trackBackwards = false;
   skipToNextBlank();
   /* Entering the play screen is nextBonusRound's own gesture and not a variation on it: lay the
      sheet out while the screen is still hidden, turn the page, and only then let the player
@@ -12054,37 +11826,10 @@ function beginTrackSheet() {
 // cuts whose honest answer is a title sitting higher up the same record, printed rather than
 // asked so the sheet never demands a duplicate of a track you already wrote.
 function skipToNextBlank() {
-  const step = trackBackwards ? -1 : 1;
-  while (trackAt >= 0 && trackAt < trackSheet.slots.length && trackWritten[trackAt] != null) trackAt += step;
+  while (trackAt < trackSheet.slots.length && trackWritten[trackAt] != null) trackAt++;
 }
 
-function trackDone() { return !!trackSheet && (trackAt < 0 || trackAt >= trackSheet.slots.length); }
-
-// Point the pen at the top of the sheet or the bottom of it, past any printed alt takes.
-function setTrackDirection(back) {
-  trackBackwards = back;
-  trackAt = back ? trackSheet.slots.length - 1 : 0;
-  skipToNextBlank();
-}
-
-// The turn-round tap. Only on an untouched sheet: once the clock is running, or a track is
-// written in, the direction is the one the player chose by starting.
-function trackListTap(e) {
-  const row = e.target.closest(".tbt-row");
-  if (!row || bonusLocked || ruthlessStart || !trackSheet || trackDone()) return;
-  if (trackWritten.some((t, i) => t != null && !trackSheet.slots[i].alt)) return;
-  const i = Number(row.dataset.i);
-  // Where each end's first blank is: the bottom one is the last row that is not a printed alt.
-  const ends = trackSheet.slots.map((s, k) => k).filter((k) => !trackSheet.slots[k].alt);
-  const first = ends[0], last = ends[ends.length - 1];
-  if (!trackBackwards && i >= last) setTrackDirection(true);
-  else if (trackBackwards && i <= first) setTrackDirection(false);
-  else return;
-  renderTrackSheet();
-  focusTrackInput();
-  const el = $("bonusPlayBody").querySelector(".tbt-row.is-now");
-  if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
-}
+function trackDone() { return !!trackSheet && trackAt >= trackSheet.slots.length; }
 
 /* THE LINE THE PEN IS ON, inked in the record's own colour. What marked the place before was
    a grey wash over the whole row under a hard-ended bar in the era colour, which read as a
@@ -12164,10 +11909,7 @@ function renderTrackSheet(finished = false, preserveInput = false) {
       aria: "Name the next track",
       hint: "part of the title is enough · Enter to write it in",
     }) + `</div>`);
-  if (!finished) {
-    wireTrackInput();
-    $("bonusPlayBody").querySelector(".tbt-list").addEventListener("click", trackListTap);
-  }
+  if (!finished) wireTrackInput();
   paintTrackProgress();
   snapTrackGrid();
 }
@@ -12265,7 +12007,7 @@ function submitTrack() {
   trackFresh = trackAt;
   noteSessionSong({ title: want, album: trackSheet.album });
   if (input) input.value = "";
-  trackAt += trackBackwards ? -1 : 1;
+  trackAt++;
   skipToNextBlank();
   sfx.play("correct");
   if (trackDone()) { endTrackRun(); return; }
@@ -12326,19 +12068,14 @@ function endTrackRun() {
   playRunFlourish();
   trackSpent = ruthlessStart ? (performance.now() - ruthlessStart) / 1000 : 0;
   const snapped = Math.round(trackSpent * 100) / 100;
-  // A backwards run is off the board (see trackBackwards), so it writes no record and folds no
-  // charm; what it gets instead is the post it was hiding.
-  const rec = trackBackwards
-    ? { backwards: true, isBest: false, best: null }
-    : recordTrackRun(trackSheet.album, snapped, todayKey());
+  const rec = recordTrackRun(trackSheet.album, snapped, todayKey());
   /* BEFORE the sleeve is drawn, and that ordering is now load-bearing: renderTrackEnd prints
      the run's charms (bonusCharmRow), so a fold that ran after it would draw the panel against
      an empty `newlyUnlocked` and the charms would appear on the NEXT run instead. The rule the
      fold was written for is untouched — it still runs after recordTrackRun, so a run that
      completes the set of twelve can count itself. endBonusRun has the same order for the same
      two reasons. */
-  if (trackBackwards) earnTumblrPost("hiked-it-backwards");
-  else foldTrackCharms(snapped, rec);
+  foldTrackCharms(snapped, rec);
   /* The clock goes with the run. Its readout is the run's TIME, and the sleeve prints that
      same number an inch below in an inch-high hand — two copies of one number, the smaller of
      which has stopped meaning anything — over a gauge sitting full against a sheet that is
@@ -12363,8 +12100,7 @@ function endTrackRun() {
 
 function renderTrackEnd(rec, secs) {
   const best = rec.isBest;
-  const remark = rec.backwards ? "The whole trail, last track to first. Walked backwards, so it stays off the board."
-    : trackWrong === 0
+  const remark = trackWrong === 0
     ? "Straight down the sleeve, not a wrong word in it."
     : trackWrong <= 3 ? "A couple of false starts, and then the whole record."
     : "You got there. The record does not care how many times you tried.";
@@ -12377,7 +12113,7 @@ function renderTrackEnd(rec, secs) {
     `<p class="tbt-end-remark">${escapeHtml(remark)}</p>` +
     `<p class="tbt-end-meta">${escapeHtml(trackSheet.album)} · ${trackSheet.total} tracks · ` +
       `${trackWrong} wrong ${trackWrong === 1 ? "guess" : "guesses"}` +
-      (best || rec.backwards ? "" : ` · best ${fmtTimeFine(rec.best)}`) + `</p>` +
+      (best ? "" : ` · best ${fmtTimeFine(rec.best)}`) + `</p>` +
     // The same row the back cover gets, for the same reason: this game's ending is the filled-in
     // sleeve rather than a card, but a charm earned writing out a record was just as invisible.
     bonusCharmRow() +
@@ -16774,9 +16510,6 @@ function resetRunState() {
   gameTimeSum = 0;
   gameHitRedZone = false;
   runSoundOn = settings.sound;    // the boombox: was the sound already on when this run began
-  runNamedTitle = false;
-  runTurnedAway = false;
-  runEndedAt = 0;
   rareStreak = 0;
   gameFuzzyMatches = 0;
   gameTimedRounds = 0;
@@ -20005,7 +19738,6 @@ function endChallenge() {
   // beaten (see noteRunOutcome). Nothing between here and its old home touches the score; the
   // risk settle, which does, has already run.
   const won = challengeWinCheck(c);
-  if (won && runTurnedAway && (c.id === "both-of-us" || c.id === "short-title")) earnTumblrPost("beautiful-mind");
   const challengeTotal = c.rule === "survive" ? surviveTarget(c) : TOTAL_ROUNDS;
   // The run written down as the bracelet keepsake's own strings, before anything downstream
   // can move the numbers it quotes (see challengeCard).
@@ -23720,7 +23452,6 @@ function rejectTitleForm() {
 }
 // Short n' Sweet: the named title is too long.
 function rejectShortTitle() {
-  runTurnedAway = true;
   softRejectFlash(maxTitleWordsNow() === 1
     ? `too long: name a <b>one-word</b> title`
     : `too long: name a <b>one- or two-word</b> title`);
@@ -23741,7 +23472,6 @@ function rejectAlbumFocus() {
 // Both Of Us: the named song sings some of the page's words but not all. Name the ones it's
 // missing rather than just refusing it, so the near miss teaches something. Doesn't burn the page.
 function rejectBoth(missing) {
-  runTurnedAway = true;
   const words = missing.map((w) => `“<b>${escapeHtml(w)}</b>”`).join(" or ");
   softRejectFlash(`that one never sings ${words}`);
 }
@@ -25119,15 +24849,10 @@ function submitAnswer(song, isTimeout) {
       const barred = triedLyric ? offLimitsLyricSong($("songInput").value) : null;
       if (barred) { noteWrongSubmission(barred); rejectOffLimitsLine(barred); return; }
       noteWrongSubmission(null);
-      // You had one job: the verse gauge was lit on the line as it was sent, and it still missed.
-      // The barred-song note borrows the gauge's place but is not the gauge lighting.
-      const gaugeLit = !$("verseMeter").hidden && !$("verseMeter").classList.contains("barred");
-      if (triedLyric && gaugeLit && catalogueCharmsLive()) earnTumblrPost("one-job-test-people");
       if (triedLyric) nudgeLyricNeedsWord($("songInput").value);
       return;
     }
   }
-  if (song && !lyricMatch && !isTimeout) runNamedTitle = true;
 
   // Impostor: you named a song for a fake word — you fell for it. Fatal. (Reaching any of the
   // scoring code below on an impostor run therefore always means a genuine, real-word page.)
@@ -25304,7 +25029,6 @@ function submitAnswer(song, isTimeout) {
     return;
   }
   roundResults[round - 1] = correct;
-  checkPageTumblr();
   // The tap grids answer with a tile rather than a typed song, so `song` is null here and the
   // bracelet used to string every page of Whose Line? and Odd One Out in the notebook's era
   // colour — thirteen beads that look picked at random because nothing about the run picked
@@ -26594,7 +26318,6 @@ function endGame() {
   // later. Infinite carries none: a run there ends when the lives run out, so there is no such
   // thing as winning one and it never qualifies either way.
   const runWon = isInfinite ? null : score >= Math.ceil(TOTAL_ROUNDS / 2);
-  if (!devNoLog) foldRunTumblr(isInfinite, runWon, roundsSurvived);
   if (!devNoLog) noteRunOutcome(gameType, isDaily ? "daily" : mode, runWon);   // before the append, or it reads this run
   if (!devNoLog) appendHistory({
     s: boardScore, c: score, n: roundsSurvived,
@@ -26856,8 +26579,6 @@ function endGame() {
   }
 
   showScreen("results");
-  runEndedAt = performance.now();
-  runEndedLost = isInfinite || !runWon;   // an Infinite run only ever ends by running out
   const keepsakeOpts = isDaily ? dailyBraceletOptions()
     : isInfinite
       ? { total: Math.max(roundsSurvived, 1), tieText: String(Math.max(roundsSurvived, 1)), colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier }
@@ -28727,7 +28448,6 @@ function wireSettingsBody() {
     }
     settings.coverStickerSlots = toggleCoverSticker(earned, settings.coverStickerSlots, button.dataset.coverSticker);
     saveSettings(settings);
-    earnTumblrPost("rethinking-the-album-cover");
     placeCoverStickers();
     renderSettingsBody();
   }));
@@ -33796,15 +33516,14 @@ function buildDevApi() {
       // Preview the results screen's "also found" line without hitting a trigger. Takes the
       // first `n` of each shelf, GRANTS any not already held (the recap only draws what the
       // store actually holds, so a fake run of it would show nothing), and puts it on the
-      // results card. Covers all three shelves at once because the line is shared.
+      // results card. Covers both shelves at once because the line is shared.
       recap: (n = 2) => {
         n = Math.max(1, n | 0);
-        const pol = loadKeepsakes(), sti = loadStickers(), tum = loadTumblr(), now = new Date().toISOString();
+        const pol = loadKeepsakes(), sti = loadStickers(), now = new Date().toISOString();
         newlyFound = [];
         for (const p of POLAROIDS.slice(0, n)) { if (!pol[p.id]) pol[p.id] = now; newlyFound.push({ kind: "polaroid", id: p.id }); }
         for (const st of STICKERS.slice(0, n)) { if (!sti[st.id]) sti[st.id] = now; newlyFound.push({ kind: "sticker", id: st.id }); }
-        for (const t of TUMBLR_POSTS.slice(0, n)) { if (!tum[t.id]) tum[t.id] = now; newlyFound.push({ kind: "tumblr", id: t.id }); }
-        saveKeepsakes(pol); saveStickers(sti); saveTumblr(tum); updateKeepsakesNav(); refreshKeepsakes();
+        saveKeepsakes(pol); saveStickers(sti); updateKeepsakesNav(); refreshKeepsakes();
         showScreen("results");
         renderResultRecap();
         return newlyFound.length + " found on the results card";
@@ -33827,26 +33546,6 @@ function buildDevApi() {
     // Stickers, the die-cut vinyl set. `earn` is the real path (toast + chime included) and the
     // rest write the store directly, for eyeballing the locked silhouette against the finished
     // sticker without having to hit the trigger.
-    // Tumblr messages, the screenshotted post set. The triggers live beside earnTumblrPost
-    // (checkPageTumblr, foldRunTumblr and a handful of one-line call sites); this is the way to
-    // look at a card without playing into the moment it replies to.
-    // `earn` is the real path, toast and chime included; the rest write the store directly.
-    tumblr: {
-      list: () => { const e = loadTumblr(); return TUMBLR_POSTS.map((t) => ({ id: t.id, blog: t.blog, found: !!e[t.id], at: e[t.id] || null, how: t.how || "(no trigger yet)" })); },
-      state: (id) => (TUMBLR_BY_ID[id] ? (tumblrFound(id) ? "found" : "locked") : "unknown post: " + id),
-      earn: (id) => (earnTumblrPost(id) ? "found" : devSetTumblr(id, true)),
-      remove: (id) => devSetTumblr(id, false),
-      all: () => {
-        const e = loadTumblr(); const now = new Date().toISOString();
-        for (const t of TUMBLR_POSTS) if (!e[t.id]) e[t.id] = now;
-        saveTumblr(e); updateKeepsakesNav(); refreshTumblr(); return TUMBLR_POSTS.length;
-      },
-      open: () => openKeepsakes(),                             // the shelf sits under the sticker sheet
-      // Which posts still have no way of being found in real play. Empty is the goal; while it
-      // is not empty this shelf is dev-only, and that is what the readout is here to keep visible.
-      untriggered: () => TUMBLR_POSTS.filter((t) => !t.how).map((t) => t.id),
-      reset: () => { resetTumblr(); devForgetSeenShelf("tumblr"); updateKeepsakesNav(); refreshTumblr(); },
-    },
     // The load failure only happens when the data files will not arrive, so it cannot be seen
     // otherwise. This shuts the notebook and ties the real tag on with a stand-in error.
     loadError: (kind) => showLoadError(
@@ -35454,7 +35153,6 @@ async function init() {
   // Replay the run just finished, same mode (and the same Infinite rules), from page one.
   $("replayBtn").addEventListener("click", () => {
     if (!replayRun) return;
-    if (runEndedAt && runEndedLost && performance.now() - runEndedAt <= TUMBLR_REPLAY_MS) earnTumblrPost("keep-groovin");
     currentMode = replayRun.mode;
     if (replayRun.type === "infinite") startInfinite(replayRun.variant);
     else startGame();

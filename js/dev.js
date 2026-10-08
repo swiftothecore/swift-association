@@ -1320,7 +1320,6 @@ export function initDev(api) {
   const foundN = num(2);
   const polaroidSel = select(api.keepsakes.list(), (p) => p.id, (p) => p.name);
   const stickerSel = select(api.stickers.list(), (s) => s.id, (s) => s.name);
-  const tumblrSel = select(api.tumblr.list(), (t) => t.id, (t) => t.name);
   const albumSel = select(api.STUDIO_ALBUMS, (x) => x, (x) => x);
   const shelfStateSel = select(["fresh", "played", "beaten", "perfect"], (x) => x, (x) => x);
   const shelfDiffSel = select(api.MODE_ORDER, (x) => x, (x) => x);
@@ -1382,18 +1381,6 @@ export function initDev(api) {
           const off = [...e.bad, ...e.partial];
           toast(off.length ? "wash rules missing: " + off.join(", ") : "every guest wash is ruled four ways");
         })),
-    // Tumblr messages, the third shelf in the drawer. No post has a real trigger yet, so these
-    // buttons are the only way onto the shelf and "untriggered" is the list of what still needs
-    // one. When that readout finally comes back empty this row stops being load-bearing.
-    row(tumblrSel, btn("find", () => { api.tumblr.earn(tumblrSel.value); toast("message: " + tumblrSel.value); }),
-        btn("black out", () => { api.tumblr.remove(tumblrSel.value); toast("redacted " + tumblrSel.value); }),
-        btn("open drawer", () => api.tumblr.open())),
-    row(btn("all messages", () => { api.tumblr.all(); toast("every message screenshotted"); }),
-        btn("clear messages", () => { api.tumblr.reset(); toast("messages cleared"); }, "warn"),
-        btn("untriggered", () => {
-          const u = api.tumblr.untriggered(); console.log("[dev] untriggered posts", u);
-          toast(u.length ? u.length + " post(s) have no trigger" : "every post is earnable");
-        }, (api.tumblr.untriggered().length ? "warn" : ""))),
     row(albumSel, shelfDiffSel, btn("play album", () => api.album.play(albumSel.value, shelfDiffSel.value)),
         btn("open albums", () => api.album.open())),
     row(shelfStateSel, btn("fill albums", () => { api.album.fill(shelfStateSel.value, shelfDiffSel.value); toast("album board filled"); }),

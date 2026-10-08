@@ -28,7 +28,6 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself
 - Stickers, mostly earned by noticing things rather than scoring, to stick on the notebook cover
-- Her real Tumblr posts, blacked out until something you do in the game answers one
 - An ink for every album you beat in Album Focus, worn by the game's own title and gilded for a perfect run
 
 **The details**

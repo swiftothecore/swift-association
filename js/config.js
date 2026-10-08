@@ -149,9 +149,8 @@ export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skill
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes: { v:2, draft, from, saved:[{id,name,mode}] } (see storage.js)
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
 export const STICKERS_KEY = "swiftSongAssociation.stickers";           // earned stickers: { [stickerId]: isoDate }, same shape as the keepsakes store
-export const TUMBLR_KEY = "swiftSongAssociation.tumblr";               // found tumblr messages: { [postId]: isoDate }, same shape again
 // What the player has actually looked at in the keepsakes drawer — { polaroids:{[id]:true},
-// stickers:{[id]:true}, tumblr:{[id]:true} }. Deliberately a set of ids rather than a count: the count can go down
+// stickers:{[id]:true} }. Deliberately a set of ids rather than a count: the count can go down
 // (dev tools remove a keepsake) and a stored number would then leave the badge stuck or silent.
 export const KEEPSAKES_SEEN_KEY = "swiftSongAssociation.keepsakesSeen";
 export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
@@ -186,15 +185,6 @@ export const POLAROID_TOTAL = 21;
 // running ahead of what exists would report "every sticker found" over a short count.
 export const STICKER_TOTAL = 24;
 export const COVER_STICKER_LIMIT = 15;
-
-// Tumblr messages, the screenshotted post set (the posts live in js/tumblr.js). A third
-// collectible, and the only one that is a picture of her rather than a thing from the desk:
-// polaroids develop, stickers are printed, a post is just there, blacked out until you find it.
-// There is deliberately no TUMBLR_TOTAL beside POLAROID_TOTAL and STICKER_TOTAL: the drawer's
-// counter divides by TUMBLR_POSTS.length instead. Those two sets were designed whole and their
-// denominators were a target the art grew toward; this shelf grows a post at a time, as each
-// one is sourced word for word, so a written-down target would print "3 / 10" over a shelf that
-// holds three posts and promise seven nobody has transcribed yet.
 
 // Every persisted key shares this namespace; export/import and "clear everything"
 // sweep all keys under it.
@@ -5571,6 +5561,24 @@ export const GRAVEYARD = [
       `something wrong with the screen. Cutting it from an hour to a minute made it rarer without ` +
       `making it look any better.`,
     took: `Midnights Like This went with it.`,
+  },
+  {
+    id: "tumblr",
+    name: "Tumblr messages",
+    born: "8 September 2026", died: "8 October 2026",
+    icon: "tumblr",
+    was: `A third shelf in the keepsakes drawer, under the polaroids and the stickers: real posts ` +
+      `from her Tumblr, screenshotted and blacked out line by line until something you did in a ` +
+      `game read as a reply to one.`,
+    why: `It went on the shelf before anybody had decided how you would find it. It shipped with ` +
+      `one post and no way to earn it, and every way in was written afterwards, a post at a time, ` +
+      `each trigger worked backwards from words that were already there. You could feel the join. ` +
+      `Muting the sound in the middle of a run found a post because the post happened to mention ` +
+      `a block button, not because finding it meant anything. It looked plain as well: a white card ` +
+      `in a phone's typeface was the one thing in the drawer that did not come off the desk, and ` +
+      `beside the polaroids it read like a placeholder. It can come back when it has a reason to ` +
+      `be here that comes before the way you unlock it.`,
+    took: `The secret backwards run in Track by Track went too. Its only reward was a post.`,
   },
   {
     id: "adaptive",
