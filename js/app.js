@@ -29760,15 +29760,9 @@ function turnGraveyard(step) {
   if (graveyardIndex === GRAVEYARD_MAP || next < 0 || next >= GRAVEYARD.length) return;
   graveyardIndex = next;
   renderGraveyard();
-  // Same focus rescue as the How to play stack: the re-render destroys the button that was
-  // focused, and focus falling to <body> puts the arrow keys out of reach of the screen handler.
-  if (!screens.graveyard.classList.contains("active")) return;
-  const el = $("graveyardBody");
-  const usable = (b) => b && !b.disabled;
-  const wanted = el.querySelector(step > 0 ? "[data-grave-next]" : "[data-grave-prev]");
-  const other = el.querySelector(step > 0 ? "[data-grave-prev]" : "[data-grave-next]");
-  const keep = usable(wanted) ? wanted : (usable(other) ? other : screens.graveyard);
-  try { keep.focus({ preventScroll: true }); } catch (_) { keep.focus(); }
+  // No focus rescue: the arrow keys listen on the document, so focus falling to <body> when the
+  // re-render destroys the pressed button costs nothing. Moving focus onto the new arrow from a
+  // keypress would make it :focus-visible and ring it, which is the box this page doesn't want.
 }
 
 // Opens on the map, not on plot one: the map is the view that says what the page IS, and a
@@ -35080,9 +35074,14 @@ async function init() {
     if (e.target.closest("[data-grave-prev]")) turnGraveyard(-1);
     else if (e.target.closest("[data-grave-next]")) turnGraveyard(1);
   });
-  $("screen-graveyard").addEventListener("keydown", (e) => {
+  // On the document, not the screen, so the arrows still turn plots after a click on the desk
+  // or anywhere else that leaves focus outside the page.
+  document.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    if (e.target.closest("input, textarea, select")) return;
+    if (!screens.graveyard.classList.contains("active")) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+    if (document.querySelector("#settingsModal.open, #customModal.open, #keepsakesModal.open")) return;
     e.preventDefault();
     turnGraveyard(e.key === "ArrowRight" ? 1 : -1);
   });
