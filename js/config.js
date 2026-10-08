@@ -5596,6 +5596,19 @@ export const GRAVEYARD = [
     took: `Midnights Like This went with it.`,
   },
   {
+    id: "doodles",
+    name: "Margin doodles",
+    born: "14 June 2026", died: "4 October 2026",
+    icon: "doodles",
+    was: `Small ink sketches in the margin beside the red rule, turning up on the odd page: a ` +
+      `scarf on a peg, a mirrorball, a paper plane. Page five of a Classic run always got the fence ` +
+      `with five holes in it, and a few dates drew their own, like a pegacorn at Halloween.`,
+    why: `They never looked right. Every one was redrawn, most of them more than once, and at the ` +
+      `size a margin allows each came out either too bare to tell what it was or too busy to read. ` +
+      `On a phone, where the margin is a sliver, they all but vanished.`,
+    took: `You Keep My Old Scarf went with them. Its only way in was tapping the scarf.`,
+  },
+  {
     id: "tumblr",
     name: "Tumblr messages",
     born: "8 September 2026", died: "8 October 2026",
