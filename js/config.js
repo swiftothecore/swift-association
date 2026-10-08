@@ -3169,7 +3169,7 @@ export const ACH_ICONS = {
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
   // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; as of
-  // 2026-09-24 nothing wears it, and a new charm borrowing it should not stay on it for long.
+  // 2026-10-08 nothing wears it, and a new charm borrowing it should not stay on it for long.
   placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
@@ -3835,6 +3835,9 @@ export const ACH_ICONS = {
   // a pair of scales hanging dead level: the books balanced to exactly nothing. Not
   // spiritlevel, which is a bubble in a tube; this is weighing, the run's own sum
   levelscale:`<svg viewBox="0 0 24 24"><path style="stroke-width:1.6" class="ink" d="M12 3.4 V20.6"/><path style="stroke-width:1.7" class="ink" d="M7.6 21.2 H16.6"/><circle cx="12" cy="3.2" r="1" fill="currentColor" stroke="none"/><path style="stroke-width:1.6" class="ink" d="M3.6 6 H20.4"/><g style="stroke-width:0.95" class="ink" fill="none"><path d="M4 6.2 L2 12.6 M4 6.2 L6.2 12.6"/><path d="M20 6.2 L17.8 12.4 M20 6.2 L22.1 12.4"/></g><path class="ink-fill" d="M1.6 12.6 H6.6 C6.4 14.6 5.4 15.6 4.1 15.6 C2.8 15.6 1.8 14.6 1.6 12.6 Z"/><path class="ink-fill" d="M17.4 12.4 H22.4 C22.2 14.4 21.2 15.5 19.9 15.5 C18.6 15.5 17.6 14.4 17.4 12.4 Z"/></svg>`,
+  // a whole verse on every page: a profile with four lines of verse kept inside it. Not
+  // brain, which is the organ; this is the words themselves, learned and carried
+  versehead:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M7.6 21.8 L7.7 17.6 C5.4 16 4.1 13.6 4.2 10.6 C4.3 6 7.7 2.9 12.2 2.9 C16.3 2.9 19.3 5.5 19.6 9.4 C19.7 10.2 20 10.8 20.4 11.6 L21.2 13.1 C21.4 13.6 21.1 13.9 20.6 13.9 L19.7 13.9 L19.8 15.8 C19.8 17 19 17.7 17.8 17.6 L15.6 17.4 L15.5 21.8"/><g class="ink" stroke-width="1.15"><path d="M7.4 7.4 Q8.22 7.82 9.04 7.47 Q9.86 7.09 10.68 7.45 Q11.5 7.79 12.32 7.3 Q13.14 7.08 13.96 7.41 Q14.78 7.74 15.6 7.39"/><path d="M6.6 10 Q7.42 10.43 8.23 9.97 Q9.05 9.69 9.87 10 Q10.68 10.33 11.5 9.92 Q12.32 9.68 13.13 9.96 Q13.95 10.29 14.77 10.05 Q15.58 9.47 16.4 9.97"/><path d="M6.8 12.6 Q7.64 13.06 8.48 12.73 Q9.32 12.32 10.16 12.49 Q11 13.09 11.84 12.7 Q12.68 12.16 13.52 12.5 Q14.36 12.98 15.2 12.71"/><path d="M8 15.2 Q8.8 15.71 9.6 15.29 Q10.4 14.88 11.2 15.31 Q12 15.57 12.8 15.26"/></g></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -4402,7 +4405,7 @@ export const ACHIEVEMENTS = [
   { id: "recall-whole-verse-word-perfect",     name: "Overachiever",     desc: "Recall a whole verse (four lines word-perfect)", tier: 2, secret: false, icon: "aplus", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   // The top of the verse ladder: Overachiever on every page of one thirteen-page game. Any mode
   // that deals the thirteen counts, so it is not filed under Lyricist's earn shelf.
-  { id: "recall-whole-verse-every-page",    name: "Memorized For So Long", desc: "Recall a whole verse on all 13 pages of one game", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "difficulty" } },
+  { id: "recall-whole-verse-every-page",    name: "Memorized For So Long", desc: "Recall a whole verse on all 13 pages of one game", tier: 3, secret: false, icon: "versehead", sitting: true, earn: { cat: "difficulty" } },
   { id: "answer-3-rounds-same-song",         name: "Someone Has A Favourite Song", desc: "Answer three rounds with lyrics from the same song", secret: true, icon: "repeat" },
   { id: "make-10-fuzzy-matches-one-lyricist-game",      name: "Eyes Closed",      desc: "10 fuzzy lyric matches in one Lyricist game", secret: false, icon: "eyeclosed", sitting: true, earn: { cat: "difficulty", diff: "lyricist" } },
   { id: "answer-paris-for-somewhere",            name: "We Were Somewhere Else", desc: "Answer “Paris” when the word is “somewhere”", secret: true, icon: "tower" },
