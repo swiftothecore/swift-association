@@ -13807,8 +13807,10 @@ const TALLY_PREVIEWS = {
   relaxed:  { score: "9",  sub: [{ v: "13", l: "pages" }] },
   daily:    { score: "?",  sub: null },
   infinite: { score: "24", sub: [{ v: "21", l: "correct" }, { v: "6:31", l: "on the clock" }, { v: "+11", l: "verse bonus" }], unit: "rounds" },
-  risk:     { score: "14", sub: [{ v: "12", l: "needed" }], unit: "beads" },
-  ink:      { score: "1184", sub: [{ v: "1100", l: "needed" }], unit: "characters" },
+  risk:     { score: "14", sub: [{ v: "12", l: "needed" }, { v: "2:08", l: "on the clock" }], unit: "beads" },
+  // A challenge a rule ended early, with the one rule figure a card can add (Insurance's).
+  challenge: { score: "6", sub: [{ v: "7/13", l: "pages" }, { v: "1:04", l: "on the clock" }, { v: "+3", l: "verse bonus" }, { v: "3", l: "shields spent" }] },
+  ink:      { score: "1184", sub: [{ v: "1100", l: "needed" }, { v: "3:51", l: "on the clock" }, { v: "+9", l: "verse bonus" }], unit: "characters" },
 };
 
 /* ---- The run-story stamp ----
@@ -13931,6 +13933,24 @@ function setFinalTally(score, sub, unit) {
   $("finalRule").style.display = (cells.length || prose) ? "" : "none";
   centreTallyHead();
   renderRunStamp();
+}
+
+// The two cells every run that plays the answering loop owes its ledger: how long it took and
+// any verse bonus earned on the way. They used to be written out on the main path alone, so a
+// challenge, an Album Focus, a guest, a lineup or a custom run ended on a bare page count with
+// the clock and the bonus simply missing. Every end path asks this now instead. The bonus cell
+// only appears once one is earned, so a run that sang no lines (or a tap grid that cannot)
+// never prints a "+0". `secs` is null for a run with no clock at all.
+function tallyTail(secs) {
+  const cells = [];
+  if (secs != null) cells.push({ v: fmtTime(secs), l: "on the clock" });
+  if (verseBonus > 0) cells.push({ v: "+" + verseBonus, l: "verse bonus" });
+  return cells;
+}
+// The time a sandboxed run shows: its answer clock where it had one, Relaxed's count-up where
+// it did not. The same reading the main path makes, minus its records bookkeeping.
+function tallyTime() {
+  return gameTimedRounds > 0 ? gameTimeSum : relaxedStopwatch();
 }
 
 // Optical centring for the headline number. A layout box is centred on the text's ADVANCE
@@ -15621,7 +15641,7 @@ function endLineup() {
   // beads must be passed explicitly because by now the blend has been handed back to Taylor.
   renderFinishedBracelet(roundResults, roundAlbums,
     { beadTints: roundBeadTints.slice(), hinted: roundHinted, verseTiers: roundVerseTier });
-  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
+  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }, ...tallyTail(tallyTime())]);
   setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -19678,6 +19698,39 @@ function challengeWinCheck(c) {
   return score >= (c.target || TOTAL_ROUNDS);
 }
 
+// The ledger under a challenge's headline. Every card gets the scale its headline is read
+// against, then the clock and any verse bonus (see tallyTail), then at most one figure the
+// rule itself turns on, where that figure is a resource the run spent and nothing else on
+// the screen already prints it. The rest of a card's story is told in the verdict lines
+// below the strand (challengeTally's goal line, the ink and impostor splits, the page One Of
+// A Kind was found on), and repeating those here would only say it twice.
+function challengeLedger(c, total) {
+  const cells = [];
+  if (c.rule === "ink") cells.push({ v: String(inkTarget()), l: "needed" });
+  else if (beadScoredRule()) cells.push({ v: String(riskTarget()), l: "needed" });
+  else {
+    // The pages actually played, against the length of the card. A run that a rule ended
+    // early (Insurance's uninsured miss, Home Invasion's empty clock, It's A Clock running
+    // dry, a caught-out Impostor, One Of A Kind's song found) used to report the card's full
+    // thirteen here, which read as a run that went the distance.
+    const played = roundResults.length;
+    const unit = c.rule === "survive" ? "rounds" : "pages";
+    cells.push(played < total ? { v: played + "/" + total, l: unit } : { v: String(total), l: unit });
+  }
+  cells.push(...tallyTail(tallyTime()));
+  // Insurance: the shields are the whole economy of the card, and Untouchable is won on
+  // spending none of them.
+  if (c.rule === "insurance") cells.push({ v: String(insuranceSpent), l: insuranceSpent === 1 ? "shield spent" : "shields spent" });
+  // Home Invasion: every wrong answer was a break-in that cut the page clock for good, and the
+  // fourth ends the run. My Walls Stood Tall is won on none.
+  if (c.rule === "spite") {
+    // Ceil, because the fourth cut is clamped at zero rather than taken below it.
+    const breakIns = Math.ceil(((c.seconds || 10) - spiteSeconds) / (c.penalty || 3));
+    cells.push({ v: String(breakIns), l: breakIns === 1 ? "break-in" : "break-ins" });
+  }
+  return cells;
+}
+
 // What the finished run measured, and the bar it was measured against — the same numbers
 // challengeWinCheck above just compared, said out loud. It has to be read off the rule the
 // way the check is: a run scored in beads, characters, word-perfect lines or rounds survived
@@ -19866,10 +19919,7 @@ function endChallenge() {
   // and putting a page score up there in 88px hand would state the opposite of the rule:
   // thirteen cheap answers reads as a flawless 13 and is a lost run.
   const inkRun = c.rule === "ink";
-  setFinalTally(inkRun ? String(gameInk) : score,
-    inkRun          ? [{ v: String(inkTarget()), l: "needed" }]
-    : beadScoredRule() ? [{ v: String(riskTarget()), l: "needed" }]
-                     : [{ v: String(challengeTotal), l: "pages" }],
+  setFinalTally(inkRun ? String(gameInk) : score, challengeLedger(c, challengeTotal),
     inkRun ? "characters" : beadScoredRule() ? "beads" : "");
   setResultStamps(false, false);
   $("namePrompt").style.display = "none";
@@ -20241,7 +20291,7 @@ function endAlbumFocus() {
   showScreen("results");
   renderFinishedBracelet(roundResults, roundAlbums,
     { colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
-  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
+  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }, ...tallyTail(tallyTime())]);
   setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -20325,7 +20375,7 @@ function endGuest() {
   // the time this draws, and the strand must still be the guest's colours.
   renderFinishedBracelet(roundResults, roundAlbums,
     { beadTints: roundBeadTints.slice(), hinted: roundHinted, verseTiers: roundVerseTier });
-  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }]);
+  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }, ...tallyTail(tallyTime())]);
   setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   $("verseAnthology").style.display = "none";
@@ -20413,7 +20463,7 @@ function endCustom() {
       : { total, tieText: String(total), colors: albumPalette(), hinted: roundHinted, verseTiers: roundVerseTier });
   setFinalTally(score, [infinite
     ? { v: String(roundsPlayed), l: roundsPlayed === 1 ? "round" : "rounds" }
-    : { v: String(total), l: "pages" }]);
+    : { v: String(total), l: "pages" }, ...tallyTail(tallyTime())]);
   setResultStamps(false, false);
   $("namePrompt").style.display = "none";
   hideNewBestBanner();
@@ -20478,10 +20528,7 @@ function customLeverSummary(m) {
 
 function renderDailyTally() {
   if (dailyResultIsSealed()) { setFinalTally("?", null); return; }
-  const cells = [{ v: String(TOTAL_ROUNDS), l: "pages" }];
-  if (dailyShareTime != null) cells.push({ v: fmtTime(dailyShareTime), l: "on the clock" });
-  if (verseBonus > 0) cells.push({ v: "+" + verseBonus, l: "verse bonus" });
-  setFinalTally(score, cells);
+  setFinalTally(score, [{ v: String(TOTAL_ROUNDS), l: "pages" }, ...tallyTail(dailyShareTime)]);
 }
 
 // Spend the optional sealed-result ritual in one place. The tally, real SVG, page recap,
@@ -26671,8 +26718,7 @@ function endGame() {
   const tallyCells = [];
   if (isInfinite) tallyCells.push({ v: String(score), l: "correct" });
   else if (!tallyHidden) tallyCells.push({ v: String(TOTAL_ROUNDS), l: "pages" });
-  if (shownTime != null && !tallyHidden) tallyCells.push({ v: fmtTime(shownTime), l: "on the clock" });
-  if (verseBonus > 0 && !tallyHidden) tallyCells.push({ v: "+" + verseBonus, l: "verse bonus" });
+  if (!tallyHidden) tallyCells.push(...tallyTail(shownTime));
   setFinalTally(tallyHidden ? "?" : boardScore, tallyCells, isInfinite ? "rounds" : "");
   // PLAY AGAIN replays this mode (a Daily is one play a day, so it has none); ENCORE rolls a finished
   // classic run on into Infinite, which an Infinite run already is.

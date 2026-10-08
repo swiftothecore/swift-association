@@ -468,7 +468,7 @@ export function initDev(api) {
         btn("start daily", () => api.startDaily()))));
 
   // ---- The final tally -------------------------------------------------------
-  // The headline's six shapes, dealt onto the results page one at a time, and the alignment
+  // The headline's shapes, dealt onto the results page one at a time, and the alignment
   // audit that goes with them. The whole results column is meant to sit on the paper's centre
   // rather than the content box's, and a pixel or two out is the sort of thing that is felt
   // long before it is seen, so the audit prints where each part's box and its actual ink land.
