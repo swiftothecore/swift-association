@@ -3184,6 +3184,22 @@
     -webkit-mask-position: var(--sheet-x, 0) var(--sheet-y, 0);
             mask-position: var(--sheet-x, 0) var(--sheet-y, 0);
   }
+  /* A field that ends on its own grid stops in the gap between two rows of 13s, never through
+     one. In the 26px tile the glyphs fill 2.9-11.2 and 15.1-22.7, so every multiple of 13px
+     falls in a gap, and the field is cut to the last of them that fits. Only where the field
+     starts its own grid at the box's top: the joined tab's foot runs on into the page instead. */
+  @supports (height: round(down, 100%, 13px)) {
+    :is(#difficultyRow, [data-flip-id="difficultyRow"]) .mode-blurb::before,
+    :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back::before {
+      bottom: auto; height: round(down, 100%, 13px);
+    }
+  }
+  /* The readout on the sheet is the picked difficulty's terms, so it is printed in full ink: in
+     the grey the other blurbs use it read as a disabled control, and sank into the 13s behind
+     it. The marks get a heavier stroke for the same reason, so they read as drawn objects over
+     the field rather than more fine line among it. */
+  :is(#difficultyRow, [data-flip-id="difficultyRow"]) .mode-blurb { color: var(--ink); }
+  :is(#difficultyRow, [data-flip-id="difficultyRow"]) .mode-terms .rule-mark { color: var(--ink); stroke-width: 1.9; }
   /* A picked difficulty wrapped onto a line above its page (a phone) cannot reach it, so it
      stands on its shelf like the rows above; it still wears the page's colour, so the two read
      as a pair across the line between them. */
