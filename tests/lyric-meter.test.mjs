@@ -176,3 +176,57 @@ test('a slip in an ing ending is still one slip after lyric normalization', () =
   assert.equal(h.context.lyricTokenTypoApart('sign', 'sin'), true); // likewise a one-letter insertion
   assert.equal(h.context.lyricTokenTypoApart('simg', 'sin'), false); // no invented g-drop bridge
 });
+
+// Typing a verse out with one slip near the start used to send every keystroke through the
+// typo fallback at full price: a title scan, then a Levenshtein per line window of the song.
+// By the eighth line of Love Story that was a third of a second per key.
+test('a long typed verse with an early slip stays cheap on every keystroke', () => {
+  const h = harness();
+  h.context.strict = false;
+  h.setWord('young');
+  const typed = ['We were both young when I first saw you', 'I close my eyes and the flashbak starts',
+    "I'm standing there", 'On a balcony in summer air', 'See the lights, see the party, the ball gowns',
+    'See you make your way through the crowd', 'And say, "Hello"', 'Little did I know'].join(' ');
+  let worst = 0, last;
+  for (let i = 1; i <= typed.length; i++) {
+    const start = performance.now();
+    last = h.context.verseProgress(typed.slice(0, i));
+    worst = Math.max(worst, performance.now() - start);
+  }
+  assert.equal(last, 'verse');
+  assert.ok(worst < 80, `slowest keystroke took ${worst.toFixed(1)}ms`);
+});
+
+// The line recovery skips windows whose length alone rules them out. Held against the
+// unpruned original over real songs, so the skip can never change which lines are shown.
+test('pruned fuzzy line recovery picks the same span as the full search', () => {
+  const h = harness();
+  const full = (song, normPhrase) => {
+    const rawLines = song.lyrics.split('\n').map((l) => l.trim()).filter(Boolean);
+    let best = null;
+    for (let i = 0; i < rawLines.length; i++) {
+      const windowRaw = [];
+      let windowNorm = '';
+      for (let j = i; j < rawLines.length; j++) {
+        const norm = h.context.normalizeLyric(rawLines[j]);
+        if (!norm) continue;
+        windowRaw.push(rawLines[j]);
+        windowNorm = windowNorm ? windowNorm + ' ' + norm : norm;
+        const sim = 1 - util.levenshtein(normPhrase, windowNorm) / Math.max(normPhrase.length, windowNorm.length);
+        if (!best || sim > best.sim) best = { sim, text: windowRaw.join('\n'), lines: windowRaw.length };
+        if (windowNorm.length > normPhrase.length * 2) break;
+      }
+    }
+    return best ? { text: best.text, lines: best.lines } : { text: rawLines[0] || '', lines: 1 };
+  };
+  const rng = util.mulberry32(13);
+  const songs = h.context.allSongs.filter((_, i) => i % 9 === 0);
+  for (const song of songs) {
+    const words = song._normLyrics.split(' ');
+    for (let n = 0; n < 4; n++) {
+      const at = Math.floor(rng() * words.length), len = 3 + Math.floor(rng() * 40);
+      const phrase = words.slice(at, at + len).map((w) => (rng() < 0.15 ? w.slice(1) || w : w)).join(' ');
+      assert.equal(JSON.stringify(h.context.recoverFuzzyLine(song, phrase)), JSON.stringify(full(song, phrase)), `${song.title}: ${phrase}`);
+    }
+  }
+});

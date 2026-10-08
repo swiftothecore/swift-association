@@ -24068,9 +24068,12 @@ function matchLyricLine(phrase, pool = currentSongs) {
   // what lets a player type a multi-line chunk and have it "just work" even when it's
   // not verbatim. fuzzySubstringRatio aligns the typed phrase to its best window and
   // leaves trailing lyric free, so longer songs aren't penalised.
+  // Once a song has scored, the rest only need comparing for as long as they could still beat
+  // it, so the bar rises to the best ratio so far. A tie still has to be scored in full, since
+  // the tie-break below decides it, and fuzzySubstringRatio only bails BELOW its minimum.
   let best = null;
   for (const s of pool) {
-    const ratio = fuzzySubstringRatio(normPhrase, s._normLyrics, FUZZY_THRESHOLD);
+    const ratio = fuzzySubstringRatio(normPhrase, s._normLyrics, best ? best.ratio : FUZZY_THRESHOLD);
     if (ratio < FUZZY_THRESHOLD) continue;
     if (!best || ratio > best.ratio ||
         (ratio === best.ratio && (s.lyrics.length < best.song.lyrics.length ||
@@ -24153,6 +24156,16 @@ function recoverFuzzyLine(song, normPhrase) {
       if (!norm) continue;
       windowRaw.push(rawLines[j]);
       windowNorm = windowNorm ? windowNorm + " " + norm : norm;
+      // Two strings are at least their difference in length apart, so a window whose length
+      // alone keeps it from beating the best so far is not worth a full edit distance. That
+      // is the whole cost here: it was a Levenshtein per window, and on a typed verse that
+      // ran to a tenth of a second on every keystroke of the live gauge. Past the phrase's
+      // length a window only grows further from it, so the rest of this start is done too.
+      const longest = Math.max(normPhrase.length, windowNorm.length);
+      if (best && 1 - Math.abs(normPhrase.length - windowNorm.length) / longest <= best.sim) {
+        if (windowNorm.length >= normPhrase.length) break;
+        continue;
+      }
       // Use a SYMMETRIC similarity (penalises the window being longer OR shorter than
       // the phrase) so we recover the span the player actually typed — not just any
       // window that happens to contain it (fuzzySubstringRatio leaves trailing lyric
@@ -24275,6 +24288,11 @@ function* typoLyricFragments(np, lyrics) {
   const words = np.split(" ");
   for (let i = 0; i < words.length; i++) {
     const word = words[i];
+    // The pattern below needs the rest of the phrase verbatim on both sides of the slip, so
+    // a song missing either side cannot match it, and no pattern is built. On a long line
+    // that is nearly every word, which is what keeps this cheap enough to run per keystroke.
+    if (i && !lyrics.includes(words.slice(0, i).join(" ") + " ")) continue;
+    if (i < words.length - 1 && !lyrics.includes(" " + words.slice(i + 1).join(" "))) continue;
     const before = i ? escapeRegExp(words.slice(0, i).join(" ") + " ") : "";
     const after = i < words.length - 1 ? escapeRegExp(" " + words.slice(i + 1).join(" ")) : "";
     for (const length of [word.length, word.length - 1, word.length + 1, word.length - 2]) {
@@ -24298,7 +24316,11 @@ function verseTypoProgress(np, raw) {
       !(count >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) return null;
   // A misspelled title must be as uninformative as a correctly spelled one. This reads
   // ALL titles, including songs that cannot answer the page, just like isTitleFragment.
-  if (allSongs.some((s) => !typoLyricFragments(np, s._normTitleLyric).next().done)) return null;
+  // A slip changes a token's length by two letters at most, so a title more than two letters
+  // shorter than the phrase cannot hold it, and is skipped before any pattern is built. Once
+  // a line is longer than every title, that is all of them.
+  if (allSongs.some((s) => s._normTitleLyric.length >= np.length - 2 &&
+      !typoLyricFragments(np, s._normTitleLyric).next().done)) return null;
   for (const s of currentSongs) {
     for (const hit of typoLyricFragments(np, s._normLyrics)) {
       if (isTitleFragment(hit.phrase) || !nearPromptWord(s, hit.at, hit.phrase)) continue;
@@ -24309,7 +24331,11 @@ function verseTypoProgress(np, raw) {
       }
       // Submit the ORIGINAL spelling through the ordinary judge. Never grade a repaired
       // line more generously than the answer will earn, or widen prompt-word tolerance.
-      const verdict = matchLyricLine(raw);
+      // This song is put first so its near-perfect ratio sets the fuzzy path's bar at once
+      // and the rest bail early. The order cannot change the verdict here: this phrase is
+      // past the short-line floor and matched no song verbatim, so only the fuzzy path,
+      // whose tie-break ignores order, can answer it.
+      const verdict = matchLyricLine(raw, [s, ...currentSongs.filter((x) => x !== s)]);
       if (!verdict) return null;
       const earned = RECALL_RANK[tier] < RECALL_RANK[verdict.tier] ? tier : verdict.tier;
       return earned === "base" ? "fragment" : earned;
@@ -24362,7 +24388,8 @@ function nearPromptWord(song, at, np) {
 // song title), and returns a QUANTIZED tier — never a word count, a line length, or any
 // un-typed text. Returns null when the text isn't yet a real fragment (so the meter stays
 // hidden until the player is genuinely on the line they were asked for). The exact path
-// stays cheap; one-slip recovery only runs when it fails, behind the input debounce.
+// stays cheap; one-slip recovery only runs when it fails. There is no debounce: every
+// keystroke runs this, so anything added below has to stay cheap on a typed-out verse.
 function verseProgress(text) {
   const np = normalizeSungPhrase(text);
   if (!np || np.split(" ").length < 2) return null;
