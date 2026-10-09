@@ -14342,6 +14342,30 @@
     0%, 22% { transform: translateX(-115%); }
     66%, 100% { transform: translateX(115%); }
   }
+  /* The rest of the finale is the same leaf, and only at the edges: the band between the outer
+     ink rule and the inner one is laid in it (a masked ring, so the stamps keep the plain paper
+     they sit on at every other level), "Level 13" is pressed in it, and the foot dates the book.
+     The security rings stay ink: gold across the whole page tinted every stamp under it. */
+  .mpp.complete { --leaf: linear-gradient(100deg, #b7841c 0%, #e6c471 16%, #c8951f 32%, #f4e0a6 50%, #bf891b 66%, #e3c072 84%, #b7841c 100%);
+    --leaf-edge: rgba(150, 105, 20, 0.9); box-shadow: none; }
+  :root[data-theme="dark"] .mpp.complete { --leaf-edge: rgba(232, 182, 76, 0.75); }
+  .mpp.complete::before { content: ""; position: absolute; inset: 2px; border-radius: 9.5px; padding: 4.5px; pointer-events: none;
+    background-color: #c8951f; background-image:
+      radial-gradient(circle at 18% 30%, rgba(255, 248, 222, 0.95) 0 0.7px, transparent 1px),
+      radial-gradient(circle at 62% 72%, rgba(255, 248, 222, 0.75) 0 0.6px, transparent 0.9px),
+      radial-gradient(circle at 85% 24%, rgba(110, 74, 10, 0.45) 0 0.6px, transparent 0.9px),
+      var(--leaf);
+    background-size: 37px 37px, 53px 41px, 29px 31px, 100% 100%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+  .mpp.complete::after { content: ""; position: absolute; inset: 7px; border-radius: 6px; pointer-events: none;
+    box-shadow: inset 0 0 0 1px var(--leaf-edge); }
+  /* background-clip: text only gilds what falls inside the span's box, and Caveat's figures
+     overhang it (the 3's top-right corner was cut off square), so the box is padded out on
+     every side and the padding handed back with a matching negative margin. */
+  .mpp-foil { background: var(--leaf); -webkit-background-clip: text; background-clip: text; color: transparent;
+    -webkit-text-stroke: 0.5px var(--leaf-edge); padding: 0.2em 0.18em; margin: -0.2em -0.18em; }
+  .mpp.complete .mpp-foot b { color: var(--mpp-gold); letter-spacing: 0.08em; }
   /* Five a row, not seven: at seven a stamp was 78px and its lettering 5px, which no type size
      could rescue. Thirteen stamps and a capstone three wide fill three rows exactly. */
   .mpp-grid { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 6px; margin-top: 12px; }

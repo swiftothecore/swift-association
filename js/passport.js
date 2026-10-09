@@ -283,9 +283,10 @@ export function passportHTML(d) {
       `<div class="mpp-ink">${bar(Math.min(100, d.total / d.gate * 100))}<p><b>${d.total} / ${d.gate}</b> skill levels to issue</p></div>`;
     foot = `Collect ${d.gate} stamps across the five skill cards below and the passport is issued.`;
   } else if (d.complete) {
-    head = `<div><div class="mpp-kick">Mastery · passport</div><div class="mpp-lv">Level ${d.level} <small>every page stamped</small></div></div>` +
-      `<div class="mpp-ink">${bar(100, true)}<p><b>${d.level} / ${d.level}</b> stamps · the whole climb, dated</p></div>`;
-    foot = `Every stamp carries the day you earned it.`;
+    head = `<div><div class="mpp-kick">Mastery · passport</div><div class="mpp-lv"><span class="mpp-foil">Level ${d.level}</span> <small>every page stamped</small></div></div>` +
+      `<div class="mpp-ink">${bar(100, true)}<p><b>${d.level} / ${d.level}</b> stamps</p></div>`;
+    const done = d.dates[PASSPORT_LEVELS];
+    foot = done ? `Issued in full · <b>${done}</b>` : `Every stamp carries the day you earned it.`;
   } else {
     head = `<div><div class="mpp-kick">Mastery · passport</div><div class="mpp-lv">${d.level ? `Level ${d.level} <small>of ${PASSPORT_LEVELS}</small>` : `Freshly issued`}</div></div>` +
       `<div class="mpp-ink">${bar(d.frac * 100)}<p><b>${fmt(d.inCur)} / ${fmt(d.span)}</b> ink to the next stamp</p></div>`;
@@ -295,7 +296,7 @@ export function passportHTML(d) {
     `<svg class="mpp-void" viewBox="-110 -30 220 60" aria-hidden="true" focusable="false"><g filter="url(#stampInk2)"><rect x="-104" y="-25" width="208" height="50" rx="6" fill="none" stroke="currentColor" stroke-width="3.4"/>` +
     `<text x="0" y="-2" text-anchor="middle" font-size="17" letter-spacing="3" fill="currentColor">NOT YET ISSUED</text>` +
     `<text x="0" y="15" text-anchor="middle" font-size="8.4" letter-spacing="1.6" fill="currentColor">${d.total} OF ${d.gate} SKILL LEVELS</text></g></svg>`;
-  return `<div class="mpp${d.issued ? "" : " unissued"}"><div class="mpp-head">${head}</div><div class="mpp-grid">${slots}${notIssued}</div><div class="mpp-foot">${foot}</div></div>`;
+  return `<div class="mpp${d.issued ? "" : " unissued"}${d.complete ? " complete" : ""}"><div class="mpp-head">${head}</div><div class="mpp-grid">${slots}${notIssued}</div><div class="mpp-foot">${foot}</div></div>`;
 }
 
 /* A level not yet stamped, pencilled in the way the passport traces its owed stamps: the ring the
