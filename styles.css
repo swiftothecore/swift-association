@@ -13920,8 +13920,7 @@
   .see-also:not(.see-also--row) > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
   /* ===== Shared washi-tape surface ==============================================
      One look, reused everywhere the site shows sticky tape: the nav keepsake cards
-     (.nav-tape, injected by app.js), the Stats page's taped-in pieces (.stp-tape), the Mastery
-     bead box's label (.tb-tape), the Records
+     (.nav-tape, injected by app.js), the Stats page's taped-in pieces (.stp-tape), the Records
      page personal-best tiles
      (.pb-tile::before), the bonus-run sleeve (.bg-back::before), the pause card, the
      polaroids, the milestone sticky and the two corner strips holding the suggestion card
@@ -13949,7 +13948,6 @@
   .ms-tape,
   .run-pause-tape,
   .stp-tape,
-  .tb-tape,
   .pb-tile::before,
   .bg-back::before,
   .dropdown::before,
@@ -13984,7 +13982,7 @@
      is what keeps a strip recognisable as the same piece of tape it was by day. The edge goes
      quieter still than by day, for the same reason: any bright hairline on a dark strip is
      just a bright line. */
-  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape, .stp-tape, .tb-tape,
+  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape, .stp-tape,
                                .pb-tile::before, .bg-back::before, .dropdown::before, .dropdown::after) {
     background:
       linear-gradient(102deg,
@@ -14519,6 +14517,9 @@
   .rw-nm { margin: 0; font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); line-height: 1; color: var(--oi); }
   .rw-what { margin: 5px 0 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
 
+  /* what an object still owes, said once under it in the hand: every object's line wears this, and
+     its own class adds only where the line sits */
+  .rw-owe { margin: 8px 0 0; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
   /* the stamp that opened it, pressed on the object */
   .rw-stamp { position: absolute; z-index: 6; width: 76px; height: 76px; pointer-events: none; }
   .rw-stamp .mpp-stamp { width: 100%; height: 100%; }
@@ -14667,35 +14668,52 @@
   .pf-band i { font-style: normal; font-family: var(--type); font-size: 8.5px; letter-spacing: .04em; color: var(--ink-soft); }
   .pf-stamp { right: 0; bottom: 6px; width: 86px; height: 86px; }
 
-  /* ================= TRINKETS: the bead box ================= */
-  .tb { position: relative; }
-  .tb-lid { position: relative; display: flex; align-items: center; justify-content: flex-start; gap: 14px; height: 50px; padding: 0 10px 5px 12px;
-    border: 2px solid var(--ink); border-bottom: 0; border-radius: 10px 10px 0 0; background: var(--ow2); }
-  /* knuckle hinges on the seam between lid and box, three knuckles each */
-  .tb-lid::before, .tb-lid::after { content: ""; position: absolute; bottom: -6px; width: 34px; height: 10px; border: 1.6px solid var(--ink); border-radius: 3px; z-index: 2;
-    background: linear-gradient(90deg, var(--ow) 0 32%, var(--ink) 32% calc(32% + 1.4px), var(--ow) 0 66%, var(--ink) 66% calc(66% + 1.4px), var(--ow) 0); }
-  .tb-lid::before { left: 46%; } .tb-lid::after { right: 9%; }
-  /* the label is the shared washi tape (its surface, night treatment and tear live in that block) */
-  .tb-tape { display: inline-block; padding: 1px 18px 2px; font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1;
-    color: var(--ink); transform: rotate(-2.4deg); --tape-color: #c9b27a; }
-  .tb-box { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 9px 8px 8px; border: 2px solid var(--ink); border-radius: 0 0 10px 10px; background: var(--ow); }
-  .tb-cell { position: relative; display: block; height: 78px; border: 1.4px solid var(--ink) !important; border-radius: 8px; background: var(--mpp-card) !important; }
-  /* the moulded rim inside each compartment wall */
-  .tb-cell::before { content: ""; position: absolute; inset: 3px; border-radius: 5px; border: 1px solid color-mix(in srgb, var(--o) 24%, transparent); pointer-events: none; }
-  .tb-cell.empty { border: 1.3px dashed color-mix(in srgb, var(--ink) 35%, transparent) !important; background: transparent !important; }
-  .tb-bit { position: absolute; width: 27px; height: 27px; transform: translate(-50%, -50%) rotate(var(--r)) scale(var(--s)); pointer-events: none; }
-  .tb-bit svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .tb-nm { position: absolute; left: 8px; top: 5px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: .04em; color: var(--ink-soft); }
-  .tb-cell.worn .tb-nm { color: var(--ink); font-weight: 700; }
-  .tb-cell:not(.empty):hover { background: color-mix(in srgb, var(--o) 7%, var(--mpp-card)) !important; }
-  /* the compartment you string from is lined in the box's rose felt, stitched in at the rim */
-  .tb-cell.worn, .tb-cell.worn:hover { background: color-mix(in srgb, var(--o) 26%, var(--mpp-card)) !important;
-    background-image: repeating-linear-gradient(32deg, rgba(255, 255, 255, .09) 0 1px, transparent 1px 3px),
-      repeating-linear-gradient(-41deg, rgba(60, 20, 40, .06) 0 1px, transparent 1px 2.6px) !important; }
-  .tb-cell.worn::before { border: 1.6px dashed color-mix(in srgb, var(--o) 70%, var(--ink)); }
-  .tb.shaken .tb-cell .tb-bit { transform: translate(-50%, -50%) rotate(calc(var(--r) * -1.6)) scale(var(--s)); }
-  .tb-stamp { right: -20px; bottom: -26px; width: 76px; height: 76px; }
-  .tb-owe { margin: 8px 0 0; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
+  /* ================= TRINKETS: two safety pins ================= */
+  /* The pins are one drawing held to a pin's length, so a one-column page does not blow it up;
+     each charm is a button laid over it in percentages of that drawing, so the two scale as one.
+     Steel is a material and holds at night; its edge, the puncture and the ridge are the page's ink. */
+  .sp { position: relative; max-width: 320px; container: sp / inline-size; }
+  .sp-stage { position: relative; }
+  .sp-art { display: block; width: 100%; height: auto; overflow: visible; }
+  .sp-w-o { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; }
+  .sp-w { fill: none; stroke: #cfc8ba; stroke-linecap: round; stroke-linejoin: round; }
+  .sp-w-h { fill: none; stroke: #fbf8f1; stroke-linecap: round; opacity: .9; }
+  .sp-head { fill: #dcd5c7; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+  .sp-fold { fill: none; stroke: #8f887a; stroke-width: 1.1; stroke-linecap: round; }
+  .sp-notch { fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; }
+  .sp-hole { fill: var(--ink); opacity: .8; }
+  .sp-dent { fill: none; stroke: var(--ink); stroke-width: .8; stroke-linecap: round; opacity: .35; }
+  .sp-ridge { fill: none; stroke: var(--ink); stroke-width: 3.2; stroke-linecap: round; opacity: .07; }
+  .sp-ring-o { fill: none; stroke: var(--ink); stroke-width: 2.8; }
+  .sp-ring { fill: none; stroke: #cfc8ba; stroke-width: 1.2; }
+  /* one charm: its bead when strung, its ring and the charm in one box, the name under them */
+  .sp-ch { position: absolute; width: calc(44 / 273 * 100%); display: flex; flex-direction: column; align-items: center; }
+  .sp-ch-art { display: block; width: 100%; height: auto; overflow: visible; }
+  .sp-nm { margin-top: 0; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); line-height: 1.15; letter-spacing: .04em;
+    color: var(--ink-soft); white-space: nowrap; }
+  /* Large type in the narrowest cell runs "lightning" into its neighbours, so there, and only there,
+     the names shrink with the drawing; at ordinary sizes they clear it at any width the cell takes. */
+  body[data-text-size="large"] .sp-nm { font-size: clamp(8.5px, calc(3.3cqw + 2px), 11px); }
+  /* what you wear is the one on a bead; its name goes bold ink, never red */
+  .sp-ch.worn .sp-nm { color: var(--ink); font-weight: 700; }
+  .sp-ch.owed .sp-nm { opacity: .5; }
+  /* owed: traced in pencil, as every owed thing on the page is */
+  .sp-trace { filter: url(#pencilLine); opacity: .62; }
+  .sp-trace * { fill: none !important; stroke: var(--ink-soft); }
+  .sp-trace [stroke="var(--bead)"] { stroke: var(--paper); }
+  .sp-trace .b-gloss { display: none; }
+  .sp-sw { transform-box: view-box; }
+  .sp-foot { display: flex; justify-content: flex-end; align-items: center; min-height: 36px; margin-top: 4px; }
+  .sp-foot.owing { justify-content: flex-start; }
+  .sp-foot .rw-die { transform: rotate(-2.5deg); }
+  .sp-owe { margin: 0; }
+  /* a charm swings in when it is strung, and nudges when you reach for it */
+  @media (prefers-reduced-motion: no-preference) {
+    body:not([data-reduce-motion="on"]) .sp-ch.fresh .sp-sw { animation: spSwing 1.3s ease-out var(--d, 0s) both; }
+    body:not([data-reduce-motion="on"]) button.sp-ch:not(.fresh):hover .sp-sw { animation: spNudge .9s ease-out both; }
+  }
+  @keyframes spSwing { 0% { transform: rotate(16deg); } 30% { transform: rotate(-9deg); } 58% { transform: rotate(4deg); } 82% { transform: rotate(-1.5deg); } 100% { transform: rotate(0); } }
+  @keyframes spNudge { 0% { transform: rotate(0); } 25% { transform: rotate(7deg); } 55% { transform: rotate(-3.5deg); } 80% { transform: rotate(1.2deg); } 100% { transform: rotate(0); } }
 
   /* ================= SUPER-HARD: the fourth tape ================= */
   .cs { position: relative; }
@@ -14794,7 +14812,7 @@
     radial-gradient(circle at 10px 3px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
     radial-gradient(circle at 3px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
     radial-gradient(circle at 10px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px); }
-  .bc-owe { margin: 12px 0 0; text-align: center; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
+  .bc-owe { margin-top: 12px; text-align: center; }
   .bc-refill { position: relative; margin: -1px 22px 0; padding: 12px 12px 14px; background: color-mix(in srgb, var(--o) 9%, var(--mpp-card));
     border: 1.5px solid var(--ink); border-top: 1.5px dashed var(--ink); border-radius: 0 0 6px 6px; }
   .bc-refill-hd { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
@@ -14833,7 +14851,7 @@
   .ls-real { display: block; padding: 6px 6px 9px; }
   .ls-real .cta-prev { width: auto; height: auto; }
   .ls-real .cta-prev .play-cta { position: relative; top: auto; left: auto; min-width: 0; transform: rotate(-.6deg); zoom: .66; }
-  .ls-owe { margin: 6px 0 0; text-align: center; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
+  .ls-owe { margin-top: 6px; text-align: center; }
 
   /* ================= STICKER HINTS: the sheet ================= */
   .ss { position: relative; }
@@ -14887,7 +14905,7 @@
   .dy-ribbon { fill: none; stroke: #c45a7c; stroke-width: 2; stroke-linecap: round; }
   .dy-orn { position: absolute; left: 27px; top: 13px; right: 13px; bottom: 13px; width: calc(100% - 40px); height: calc(100% - 26px); overflow: visible; }
   .dy-orn path { fill: none; stroke: #eebccb; stroke-width: 1.4; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .85; }
-  .dy-owe { margin: 18px 0 0; font-family: var(--hand); font-weight: 600; font-size: 17px; color: var(--ink-soft); }
+  .dy-owe { margin-top: 18px; }
 
   /* ================= TITLES: the card file ================= */
   .tt-foot { display: flex; flex-direction: column; align-items: center; gap: 7px; margin-top: 18px; }

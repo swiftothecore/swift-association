@@ -11,7 +11,7 @@
    inked), and anything still owed carries the pencil tracing exactly as its passport slot does.
    What the player is wearing is marked by the object itself, never by a mark laid over it: the
    pen's pocket is satin-stitched in the roll's gold, the stock you write on keeps its place in the
-   fan and the others swing back off it on the rivet, the bead compartment is lined in felt, the button is sewn over a square of
+   fan and the others swing back off it on the rivet, the charm you wear hangs from a bead on its safety pin, the button is sewn over a square of
    gingham, and the words in use are the one real button among charcoal sketches. (It used to be the editor's red pen looped
    round each one, and a page of red rings read as corrections rather than choices.)
 
@@ -20,7 +20,7 @@
    follows the theme. The styles are the REWARD BOARD block in styles.css. */
 import { MASTERY_REWARDS, MASTERY_TILE_MARKS, MASTERY_ICONS, MASTERY_TITLES, MASTERY_TIER_ICONS, CTA_LABELS } from "./config.js";
 import { passportStamp, passportGhost, passportTracing, passportStampInk, passportBadge } from "./passport.js";
-import { trinketPreviewSVG } from "./bracelet.js";
+import { TRINKETS, beadPreviewSVG } from "./bracelet.js";
 import { stickerArt } from "./stickers.js";
 import { ctaSketch } from "./ctasketch.js";
 
@@ -182,40 +182,114 @@ function paperFan(D) {
 }
 
 /* ================================================================
-   TRINKETS: the bead box
+   TRINKETS: two safety pins
    ================================================================ */
-// A little heap of six in each compartment, settled to the bottom the way loose charms settle.
-// Seeded per compartment, so it is the same every time and never the same in two compartments.
-const HEAP = [[19, 73], [40, 77], [62, 75], [83, 71], [29, 56], [53, 59], [74, 52]];
-function loose(t, i) {
-  const skip = Math.floor(settle(i * 13 + 5) * HEAP.length);
-  return HEAP.filter((_, k) => k !== skip).map(([x0, y0], k) => {
-    const s = i * 11 + k * 3 + 1;
-    const x = x0 + jit(s, 4), y = y0 + jit(s + 1, 4), r = jit(s + 2, 48), sc = 0.66 + settle(s + 3) * 0.3;
-    return `<span class="tb-bit" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--r:${r.toFixed(0)}deg;--s:${sc.toFixed(2)};z-index:${y0 > 64 ? 2 : 1}">${trinketPreviewSVG(t)}</span>`;
-  }).join("");
+/* Two big safety pins pushed through the page, the charms hanging off their bars on jump rings.
+   The one you wear hangs from a real pony bead threaded on the bar (beadPreviewSVG, the strand's
+   own bead), because that is what the reward is: the charm on every bead you earn. Shaken, every
+   charm is on a bead of its own colour, since every one of them is in play. Each pin's point goes
+   down through the paper and comes back up, so the middle of its shaft is under the page.
+   The pins are one drawing; each charm is its own button laid over it, at the point where it hangs
+   off the tilted bar, so a charm hangs plumb whatever angle its pin lies at. Designed on
+   scripts/mastery/trinkets-board.html (option B), beside the bead board and the charm machine. */
+const PIN_W = 273, PIN_H = 222;
+// x0/x1: the coil's outer edge and the head's; yb: the bar; dive: where the point goes down
+// through the paper and where it comes back up; at: where each charm hangs, five then four. The
+// second pin spreads its four wide on purpose: the names are type and do not shrink with the
+// drawing, so "lightning" needs that room to clear its neighbours in the narrowest cell.
+const PINS = [
+  { x0: 12, x1: 260, yb: 40, tilt: -1.4, dive: [58, 206], at: [46, 91, 137, 182, 226] },
+  { x0: 22, x1: 256, yb: 152, tilt: 1.1, dive: [80, 196], at: [60, 112, 168, 222] },
+];
+// The beads a shaken set hangs from, one album apiece, in the active palette (D.albumColors).
+const PIN_ALBUMS = ["Lover", "1989", "Fearless", "Speak Now", "folklore", "Red", "Midnights", "Taylor Swift", "evermore"];
+const pf = (v) => +(+v).toFixed(2);
+// A steel wire: the page's ink round it, the steel, and a glint along its top. Steel is a material,
+// so it holds at night; only the edge follows the page.
+function pinWire(d, w) {
+  return `<path class="sp-w-o" d="${d}" style="stroke-width:${pf(w + 2.6)}"/><path class="sp-w" d="${d}" style="stroke-width:${pf(w)}"/>` +
+    `<path class="sp-w-h" d="${d}" style="stroke-width:${pf(w * 0.34)}" transform="translate(0 -${pf(w * 0.28)})"/>`;
 }
-// The bead organiser every friendship-bracelet table is built round. Nine compartments for nine
-// trinkets; until the set is earned only the star's has anything in it. Its label is a strip of the
-// notebook's shared washi tape (the "Shared washi-tape surface" block in styles.css).
-function trinketBox(D) {
+// One pin, lying flat: the coil a turn and a half (drawn as two passes so the second crosses over
+// the first), the bar from the coil to the head, the shaft in two pieces either side of where it
+// runs under the paper, and the hooded head its point snaps into.
+function pinArt(p, rings) {
+  const { x0, x1, yb } = p, yt = yb - 10;
+  const rc = 7.4, cx = x0 + rc, cy = yb - 5, k = rc * 0.5523, d2 = 1.9;
+  const turn1 = `M${pf(cx + 13)} ${pf(yb)} C${pf(cx + 6)} ${pf(yb + 0.1)} ${pf(cx + 2.6)} ${pf(cy + rc)} ${pf(cx)} ${pf(cy + rc)}` +
+    ` C${pf(cx - k)} ${pf(cy + rc)} ${pf(cx - rc)} ${pf(cy + k)} ${pf(cx - rc)} ${pf(cy)}` +
+    ` C${pf(cx - rc)} ${pf(cy - k)} ${pf(cx - k)} ${pf(cy - rc)} ${pf(cx)} ${pf(cy - rc)}` +
+    ` C${pf(cx + k)} ${pf(cy - rc)} ${pf(cx + rc)} ${pf(cy - k)} ${pf(cx + rc)} ${pf(cy)}` +
+    ` C${pf(cx + rc)} ${pf(cy + k)} ${pf(cx + d2 + k)} ${pf(cy + rc + 0.3)} ${pf(cx + d2)} ${pf(cy + rc + 0.3)}`;
+  const turn2 = `M${pf(cx + d2)} ${pf(cy + rc + 0.3)} C${pf(cx + d2 - k)} ${pf(cy + rc + 0.3)} ${pf(cx + d2 - rc)} ${pf(cy + k)} ${pf(cx + d2 - rc + 0.2)} ${pf(cy)}` +
+    ` C${pf(cx + d2 - rc + 0.4)} ${pf(cy - k)} ${pf(cx + d2 - k)} ${pf(cy - rc + 0.2)} ${pf(cx + d2 + 0.4)} ${pf(cy - rc + 0.2)}` +
+    ` C${pf(cx + d2 + 5)} ${pf(cy - rc + 0.2)} ${pf(cx + 9)} ${pf(yt + 0.1)} ${pf(cx + 15)} ${pf(yt)}`;
+  const [a, b] = p.dive;
+  const hx = x1 - 17;
+  const bar = `M${pf(cx + 12)} ${pf(yb)} C${pf(cx + 70)} ${pf(yb + 0.7)} ${pf(hx - 60)} ${pf(yb + 0.5)} ${pf(hx + 3)} ${pf(yb - 0.2)}`;
+  const shaftA = `M${pf(cx + 14)} ${pf(yt)} C${pf(cx + 24)} ${pf(yt - 0.2)} ${pf(a - 12)} ${pf(yt + 0.3)} ${pf(a)} ${pf(yt + 0.1)}`;
+  const shaftB = `M${pf(b)} ${pf(yt + 0.2)} C${pf(b + 14)} ${pf(yt)} ${pf(hx - 10)} ${pf(yt - 0.3)} ${pf(hx + 4)} ${pf(yt + 0.2)}`;
+  // under the page the wire lifts the paper a hair, so there is a ridge, barely
+  const ridge = `<path class="sp-ridge" d="M${pf(a + 3)} ${pf(yt + 0.1)} C${pf(a + 40)} ${pf(yt + 0.4)} ${pf(b - 40)} ${pf(yt)} ${pf(b - 3)} ${pf(yt + 0.2)}"/>`;
+  // the puncture, with the paper dented in round it
+  const hole = (x, s) => `<ellipse class="sp-hole" cx="${pf(x)}" cy="${pf(yt + 0.1)}" rx="1.5" ry="2.8"/>` +
+    `<path class="sp-dent" d="M${pf(x + s * 1.2)} ${pf(yt - 3.4)} q${pf(s * 1.8)} -1.2 ${pf(s * 2.6)} -2.6 M${pf(x + s * 1.4)} ${pf(yt + 3.6)} q${pf(s * 1.4)} 1 ${pf(s * 2.2)} 2.4"/>`;
+  // the head: a folded steel hood, open on the left where both wires go in
+  const ht = yt - 5.6, hb = yb + 4.4, hm = (ht + hb) / 2;
+  const head = `M${pf(hx + 1.4)} ${pf(ht)} L${pf(x1 - 5)} ${pf(ht - 0.3)} Q${pf(x1 + 0.4)} ${pf(ht - 0.3)} ${pf(x1 + 0.3)} ${pf(ht + 5)}` +
+    ` L${pf(x1 + 0.4)} ${pf(hb - 4.6)} Q${pf(x1 + 0.4)} ${pf(hb + 0.2)} ${pf(x1 - 4.8)} ${pf(hb + 0.2)} L${pf(hx + 1.2)} ${pf(hb)}` +
+    ` Q${pf(hx - 1.6)} ${pf(hb)} ${pf(hx - 1.6)} ${pf(hb - 2.8)} L${pf(hx - 1.4)} ${pf(ht + 2.8)} Q${pf(hx - 1.4)} ${pf(ht)} ${pf(hx + 1.4)} ${pf(ht)} Z`;
+  const fold = `M${pf(hx + 2.6)} ${pf(hm + 0.6)} C${pf(hx + 8)} ${pf(hm + 0.2)} ${pf(x1 - 6)} ${pf(hm - 0.2)} ${pf(x1 - 1.4)} ${pf(hm + 0.2)}`;
+  // the bare rings go down first so the bar runs over their tops, which is what loops them on
+  return `<g transform="rotate(${p.tilt} ${pf((x0 + x1) / 2)} ${yb})">${ridge}${rings}` +
+    pinWire(shaftA, 2.2) + hole(a, 1) + pinWire(shaftB, 2.2) + hole(b, -1) + pinWire(turn1, 2.3) + pinWire(bar, 2.5) + pinWire(turn2, 2.3) +
+    `<path class="sp-head" d="${head}"/><path class="sp-fold" d="${fold}"/><path class="sp-notch" d="M${pf(hx - 1.4)} ${pf(yt - 2.4)} l3.4 0"/></g>`;
+}
+const PIN_RING = (x, y) => `<ellipse class="sp-ring-o" cx="${pf(x)}" cy="${pf(y)}" rx="3" ry="4.4"/><ellipse class="sp-ring" cx="${pf(x)}" cy="${pf(y)}" rx="3" ry="4.4"/>`;
+function trinketPins(D) {
   const slots = [{ id: "", t: "star", name: "Star" }, ...ofKind("trinket").map((r) => ({ id: r.payload.trinket, t: r.payload.trinket, name: r.name.replace(/ trinket$/, ""), rid: r.id }))];
   const open = slots.length > 1 && D.has(slots[1].rid);
-  const rnd = D.wear.trinket === D.RANDOM;
+  const rnd = open && D.wear.trinket === D.RANDOM;
   const level = slots[1] ? MASTERY_REWARDS.find((r) => r.id === slots[1].rid).level : 5;
-  const cells = slots.map((p, i) => {
-    const avail = !p.rid || open;
-    const worn = avail && !rnd && D.wear.trinket === p.id;
-    if (!avail) return `<span class="tb-cell empty"></span>`;
-    const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="trinket"`;
-    return `<button type="button" class="tb-cell${worn ? " worn" : ""}" ${pick(attr, worn, p.name)}>` +
-      `${loose(p.t, i)}<span class="tb-nm">${esc(p.name.toLowerCase())}</span></button>`;
-  }).join("");
+  const palette = D.albumColors || {};
+  let k = 0, art = "", charms = "";
+  for (const p of PINS) {
+    let rings = "";
+    const rad = (p.tilt * Math.PI) / 180, mx = (p.x0 + p.x1) / 2;
+    for (const x of p.at) {
+      const i = k++, s = slots[i];
+      if (!s) continue;
+      const owed = !!s.rid && !open;
+      const worn = !owed && !rnd && D.wear.trinket === s.id;
+      const strung = worn || (rnd && !owed);
+      // where this charm hangs off the tilted bar
+      const hx = mx + (x - mx) * Math.cos(rad), hy = p.yb + (x - mx) * Math.sin(rad);
+      const col = rnd ? palette[PIN_ALBUMS[i % PIN_ALBUMS.length]] : "";
+      const tint = col ? ` style="--bead:${col}"` : "";
+      // in the charm's own box the hanging point is (22, 14): a bare charm hangs from its ring on
+      // the bar, a strung one from a ring under its bead
+      const r = 14, top = 14 + (strung ? 11.6 : 0), ringY = top + 4.3, cy = ringY + 4.6 + r * 0.92;
+      const sway = jit(i * 5 + 3, 6);
+      if (!strung) rings += PIN_RING(x, p.yb + 4.3);
+      const bead = strung ? beadPreviewSVG("gloss", col || undefined, i).replace("<svg ", `<svg x="9.5" y="0.1" width="25" height="26.6" `) : "";
+      const body = owed ? `<g class="sp-trace">${TRINKETS[s.t](22, cy, r, 1.1)}</g>` : `<g${tint}>${TRINKETS[s.t](22, cy, r, 1.35)}</g>`;
+      const svg = `<svg class="sp-ch-art" viewBox="0 0 44 67" aria-hidden="true">${bead}` +
+        `<g class="sp-sw" style="transform-origin:22px ${pf(ringY - 4)}px;--d:${pf(i * 0.05)}s">` +
+        `<g transform="rotate(${pf(sway)} 22 ${pf(ringY - 4)})">${strung ? PIN_RING(22, ringY) : ""}${body}</g></g></svg>`;
+      const at = `left:${pf(((hx - 22) / PIN_W) * 100)}%;top:${pf(((hy - 14) / PIN_H) * 100)}%`;
+      const label = `<span class="sp-nm">${esc(s.name.toLowerCase())}</span>`;
+      const cls = `sp-ch${worn ? " worn" : ""}${strung ? " strung" : ""}${owed ? " owed" : ""}`;
+      if (owed) { charms += `<span class="${cls}" style="${at}" aria-hidden="true">${svg}${label}</span>`; continue; }
+      const attr = s.rid ? `data-reward="${s.rid}"` : `data-reward-reset="trinket"`;
+      charms += `<button type="button" class="${cls}" style="${at}" ${pick(attr, worn, s.name)}>${svg}${label}</button>`;
+    }
+    art += pinArt(p, rings);
+  }
+  const foot = open ? dieControl("trinket", rnd, "Give every bead its own trinket") : `<p class="rw-owe sp-owe">eight more hang here at Mastery ${level}</p>`;
   return `<section class="rw-obj rw-trinket" style="--o:${T.trinket}">` +
-    head("Trinkets", rnd ? "every bead deals its own, out of the whole box" : "what hangs from every bead you earn", stamp(D, level)) +
-    `<div class="tb${rnd ? " shaken" : ""}"><div class="tb-lid"><span class="tb-tape">trinkets</span>${open ? dieControl("trinket", rnd, "Give every bead its own trinket") : ""}</div>` +
-    `<div class="tb-box">${cells}</div>` +
-    (open ? "" : `<p class="rw-owe">eight more compartments fill at Mastery ${level}</p>`) + `</div></section>`;
+    head("Trinkets", rnd ? "every bead deals its own, off both pins" : "what hangs from every bead you earn", stamp(D, level)) +
+    `<div class="sp"><div class="sp-stage"><svg class="sp-art" viewBox="0 0 ${PIN_W} ${PIN_H}" aria-hidden="true">${art}</svg>${charms}</div>` +
+    `<div class="sp-foot${open ? "" : " owing"}">${foot}</div></div></section>`;
 }
 
 /* ================================================================
@@ -402,7 +476,7 @@ function diary(D) {
     `<path d="M2 14 V6 Q2 2 6 2 H14 M6 9 Q6 6 9 6"/><path d="M86 2 H94 Q98 2 98 6 V14 M91 6 Q94 6 94 9"/>` +
     `<path d="M98 86 V94 Q98 98 94 98 H86 M94 91 Q94 94 91 94"/><path d="M14 98 H6 Q2 98 2 94 V86 M9 94 Q6 94 6 91"/></svg>`;
   const what = !open ? "what every secret charm wants, kept under lock" : D.secretsLeft ? "what every secret charm wants from you, written down" : "every secret charm found; nothing left to read";
-  const foot = !open ? `<p class="rw-owe">the key comes at Mastery ${D.secretLevel}</p>`
+  const foot = !open ? `<p class="rw-owe dy-owe">the key comes at Mastery ${D.secretLevel}</p>`
     : D.secretsLeft ? `<button type="button" class="rw-door" data-open-secret-charms><span class="cta-run">read the hints${D.arrow}</span></button>` : "";
   return `<section class="rw-obj rw-hint" style="--o:${T.hint}">` +
     head("Secret hints", what, stamp(D, D.secretLevel)) +
@@ -462,13 +536,13 @@ export function titleFileHTML(F) {
 /* ================================================================
    the board
    ================================================================ */
-/* D: { issued, level, dates, has(id), wear: { pen, paper, trinket, button, label }, RANDOM,
+/* D: { issued, level, dates, has(id), wear: { pen, paper, trinket, button, label }, RANDOM, albumColors,
         superHard, superHardLevel, brutal: [{ name, beaten }], stickerHints, stickerLevel,
         stickersLeft: [sticker], stickerTotal, secretHints, secretLevel, secretsLeft,
         earned, total, miniButton(finish), nowButton(), arrow } */
 export function rewardBoardHTML(D) {
   D.uid = 0;
-  const cells = [["pens", pensRoll], ["paper", paperFan], ["trinket", trinketBox], ["hard", cassette], ["button", buttonCard],
+  const cells = [["pens", pensRoll], ["paper", paperFan], ["trinket", trinketPins], ["hard", cassette], ["button", buttonCard],
     ["words", labelTape], ["stick", stickerSheet], ["hint", diary], ["title", titlesShell]]
     .map(([area, fn]) => `<div class="rw-cell" style="grid-area:${area}">${fn(D)}</div>`).join("");
   return `<div class="rw"><div class="rw-head"><span class="mpp-kick">Rewards</span><span class="msc-note">what each stamp opened <i>· ${D.earned} of ${D.total} in hand</i></span></div>` +

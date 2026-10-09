@@ -6589,6 +6589,8 @@ function buildRewardBoard(m, mLevel, unlocked) {
     wear: { pen: settings.masteryPen || "", paper: settings.masteryPaper || "", trinket: settings.masteryTrinket || "",
       button: settings.masteryButton || "", label: settings.masteryLabel || "" },
     RANDOM: COSMETIC_RANDOM,
+    // the shaken trinket pins hang every charm from a bead in an album's colour, in this palette
+    albumColors: albumPalette(),
     // The real gate, not the ledger: `mastery` on the tapes:4 challenges is what opens the tier.
     superHard: superHardTierOpen(), superHardLevel: lv("hardmode-unlock"),
     brutal: CHALLENGES.filter((c) => c.tapes === 4 && c.mastery).map((c) => ({ name: c.name, beaten: !!challengeRecord(c.id).defeated })),
@@ -6705,6 +6707,13 @@ function chooseMasteryCosmetic(rewardId, variant) {
   const owned = variant && (r.variants || []).some((v) => v.id === variant);
   applyMasteryCosmetic(r.kind, (owned ? variant : (r.payload && r.payload[cos.field])) || "");
 }
+// A new trinket swings in on its pin the way a charm does on the strand. The pick re-renders the
+// page, so the fresh charms are marked after the fact: the one now worn, or every charm when the
+// pins have just been shaken.
+function swingPins(body) {
+  if (motionReduced()) return;
+  body.querySelectorAll(".rw-trinket .sp-ch.strung").forEach((el) => el.classList.add("fresh"));
+}
 // Hand a whole cosmetic kind over to chance. "random" has no reward entry to look up (it
 // grants nothing), so the ledger guard in chooseMasteryCosmetic would refuse it forever — it
 // rides its own set's unlock instead, the same unlock that earned every member it deals from.
@@ -6741,6 +6750,7 @@ function applyMasteryCosmetic(kind, value) {
   // The signature flourish only lives on the records page — refresh it if it's showing.
   if (kind === "signature" && screens.records.classList.contains("active")) renderRecordsPage();
   renderMasteryPage();
+  if (kind === "trinket") swingPins($("masteryBody"));
   checkWardrobeCharms();
 }
 
