@@ -13618,8 +13618,6 @@ const BRACELET_FINISH_COPY = {
 // hangs on every correct bead. Only these are worth naming twice.
 const BRACELET_SPECIAL_TRINKETS = ["devil", "horseshoe", "stopwatch", "nib"];
 const BRACELET_TRINKET_COPY = {
-  star: "star", heart: "heart", moon: "moon", butterfly: "butterfly", music: "music note",
-  key: "key", crown: "crown", snake: "snake", gem: "gem", cat: "cat", bow: "bow",
   devil: "devil for catching an impostor",
   horseshoe: "horseshoe for winning at risk",
   stopwatch: "stopwatch for a snap answer",
