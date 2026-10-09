@@ -8622,11 +8622,6 @@
   .b-skull { fill: #f3ece0; stroke: var(--ink-soft); stroke-linejoin: round; }
   .b-skull-hole { fill: var(--ink-soft); }
   .b-skull-line { fill: none; stroke: var(--ink-soft); stroke-linecap: round; opacity: 0.75; }
-  .b-bead { fill: var(--bead); stroke: var(--ink); }
-  .b-gloss { fill: #fff; opacity: 0.55; }
-  /* pen-nib trinket (a page sung rather than named): a vent hole punched out + the slit */
-  .b-nib-hole { fill: var(--paper); }
-  .b-nib-slit { fill: none; stroke: var(--ink); opacity: 0.7; stroke-linecap: round; }
   .b-halo {
     fill: none; stroke: var(--bead);
     transform-box: fill-box; transform-origin: center;
@@ -14699,9 +14694,6 @@
   .sp-ch.owed .sp-nm { opacity: .5; }
   /* owed: traced in pencil, as every owed thing on the page is */
   .sp-trace { filter: url(#pencilLine); opacity: .62; }
-  .sp-trace * { fill: none !important; stroke: var(--ink-soft); }
-  .sp-trace [stroke="var(--bead)"] { stroke: var(--paper); }
-  .sp-trace .b-gloss { display: none; }
   .sp-sw { transform-box: view-box; }
   .sp-foot { display: flex; justify-content: flex-end; align-items: center; min-height: 36px; margin-top: 4px; }
   .sp-foot.owing { justify-content: flex-start; }
@@ -15010,7 +15002,7 @@
      chips are previewing something the page is not currently wearing. Showing them lit would
      be the page promising a stock it will not give you until morning. */
   :root[data-theme="dark"] .paper-chip { filter: brightness(0.6) saturate(0.92); }
-  /* Bracelet-trinket glyph in the reward ladder (reuses the global .b-bead/.b-gloss styling). */
+  /* A trinket on its own, off the strand (the History row's sung-page nib). */
   .trinket-preview { overflow: visible; }
 
   /* ---- Results-screen skills recap — a compact margin note (one inline row of skill

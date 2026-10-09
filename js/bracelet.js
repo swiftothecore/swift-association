@@ -4,6 +4,7 @@
 // same readable bead size: live play turns over to a fresh 13-page section, and
 // finished strands coil through up to three rows with an earlier-pages marker.
 import { TOTAL_ROUNDS, ALBUM_COLORS } from "./config.js";
+import { TRINKET_IDS, hangTrinket, trinketGlyph } from "./trinkets.js";
 
 export function starPath(cx, cy, rOut, rIn) {
   let d = "";
@@ -16,145 +17,43 @@ export function starPath(cx, cy, rOut, rIn) {
 }
 
 // ---- Dangling trinkets (Mastery level-5 reward) ----
-// Each draws a trinket centred at (cx,cy) with "radius" r, in the bracelet's bead
-// style (fill via .b-bead → var(--bead); the caller wraps the trinket in a group
-// carrying the album --bead tint). `sw` is the ink stroke width. "star" is the
-// default keepsake; "nib" is reserved for a page won by singing the line and "stopwatch"
-// for a Ruthless page named on sight; the rest are player-selectable via
-// settings.masteryTrinket.
-function cFill(d, sw) { return `<path d="${d}" class="b-bead" stroke-width="${sw}" stroke-linejoin="round"/>`; }
-function cEllipse(cx, cy, rx, ry, rot, sw) {
-  return `<ellipse cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" rx="${rx.toFixed(2)}" ry="${ry.toFixed(2)}" transform="rotate(${rot.toFixed(1)} ${cx.toFixed(2)} ${cy.toFixed(2)})" class="b-bead" stroke-width="${sw}"/>`;
-}
-function cCircle(cx, cy, rr, sw) { return `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${rr.toFixed(2)}" class="b-bead" stroke-width="${sw}"/>`; }
-function cGloss(cx, cy, rr) { return `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${rr.toFixed(2)}" class="b-gloss"/>`; }
+// The drawings live in trinkets.js. "star" is the default keepsake; "nib" is reserved for a page
+// won by singing the line, "stopwatch" for a Ruthless page named on sight, "devil" for a caught
+// Impostor and "horseshoe" for a page won at stake; the rest are player-selectable via
+// settings.masteryTrinket. TRINKETS[id](cx, cy, r) draws one on its own, centred and without its
+// cord (the reward board, the History nib); a strand hangs them with hangTrinket instead.
+export const TRINKETS = Object.fromEntries(TRINKET_IDS.map((id) => [id, (cx, cy, r) => trinketGlyph(id, cx, cy, r)]));
 
-export const TRINKETS = {
-  star(cx, cy, r, sw) {
-    return cFill(starPath(cx, cy, r, r * 0.419), sw) + cGloss(cx - 0.257 * r, cy - 0.392 * r, 0.162 * r);
-  },
-  heart(cx, cy, r, sw) {
-    const d = `M${cx},${cy + 0.90 * r} C${cx - 1.35 * r},${cy - 0.15 * r} ${cx - 0.70 * r},${cy - 1.05 * r} ${cx},${cy - 0.40 * r} C${cx + 0.70 * r},${cy - 1.05 * r} ${cx + 1.35 * r},${cy - 0.15 * r} ${cx},${cy + 0.90 * r} Z`;
-    return cFill(d, sw) + cGloss(cx - 0.48 * r, cy - 0.42 * r, r * 0.13);
-  },
-  moon(cx, cy, r, sw) {
-    const pt = (px, py) => `${(cx + px * r).toFixed(2)},${(cy + py * r).toFixed(2)}`;
-    const lune = `M${pt(0.26, 0.9656)} A${r} ${r} 0 1 1 ${pt(0.26, -0.9656)} A${r} ${r} 0 0 0 ${pt(0.26, 0.9656)} Z`;
-    return `<g transform="rotate(-20 ${cx} ${cy}) translate(${(0.37 * r).toFixed(2)} 0)">${cFill(lune, sw)}${cGloss(cx - 0.52 * r, cy - 0.24 * r, r * 0.12)}</g>`;
-  },
-  daisy(cx, cy, r, sw) {
-    let s = ""; const off = 0.58 * r;
-    for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (k * Math.PI) / 3; s += cEllipse(cx + off * Math.cos(a), cy + off * Math.sin(a), 0.50 * r, 0.30 * r, (a * 180) / Math.PI, sw); }
-    return s + cCircle(cx, cy, 0.34 * r, sw) + cGloss(cx, cy, r * 0.18);
-  },
-  bow(cx, cy, r, sw) {
-    const L = `M${cx},${cy} Q${cx - 0.72 * r},${cy - 0.98 * r} ${cx - 1.18 * r},${cy - 0.66 * r} Q${cx - 1.34 * r},${cy} ${cx - 1.18 * r},${cy + 0.66 * r} Q${cx - 0.72 * r},${cy + 0.98 * r} ${cx},${cy} Z`;
-    const R = `M${cx},${cy} Q${cx + 0.72 * r},${cy - 0.98 * r} ${cx + 1.18 * r},${cy - 0.66 * r} Q${cx + 1.34 * r},${cy} ${cx + 1.18 * r},${cy + 0.66 * r} Q${cx + 0.72 * r},${cy + 0.98 * r} ${cx},${cy} Z`;
-    const tails = `M${cx - 0.18 * r},${cy + 0.20 * r} L${cx - 0.62 * r},${cy + 1.22 * r} L${cx - 0.16 * r},${cy + 0.95 * r} L${cx + 0.16 * r},${cy + 0.95 * r} L${cx + 0.62 * r},${cy + 1.22 * r} L${cx + 0.18 * r},${cy + 0.20 * r} Z`;
-    return cFill(tails, sw) + cFill(L, sw) + cFill(R, sw) + cCircle(cx, cy, 0.30 * r, sw);
-  },
-  pick(cx, cy, r, sw) {
-    const d = `M${cx - 0.86 * r},${cy - 0.48 * r} C${cx - 0.86 * r},${cy - 1.02 * r} ${cx + 0.86 * r},${cy - 1.02 * r} ${cx + 0.86 * r},${cy - 0.48 * r} C${cx + 0.86 * r},${cy + 0.12 * r} ${cx + 0.34 * r},${cy + 0.74 * r} ${cx},${cy + 0.98 * r} C${cx - 0.34 * r},${cy + 0.74 * r} ${cx - 0.86 * r},${cy + 0.12 * r} ${cx - 0.86 * r},${cy - 0.48 * r} Z`;
-    return cFill(d, sw) + cGloss(cx - 0.40 * r, cy - 0.50 * r, r * 0.13);
-  },
-  note(cx, cy, r, sw) {
-    const pt = (px, py) => `${(cx + px * r).toFixed(2)},${(cy + py * r).toFixed(2)}`;
-    const SL = -0.08, SR = 0.12, TY = -0.96;
-    const stemflag = `M${pt(SL, TY)} L${pt(SL, 0.62)} L${pt(SR, 0.62)} L${pt(SR, -0.50)} C${pt(0.72, -0.34)} ${pt(0.82, -0.72)} ${pt(0.56, -0.95)} C${pt(0.38, -1.10)} ${pt(0.22, -1.03)} ${pt(SR, -0.96)} Z`;
-    const hx = cx - 0.26 * r, hy = cy + 0.60 * r;
-    const head = `<ellipse cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" rx="${(0.46 * r).toFixed(2)}" ry="${(0.34 * r).toFixed(2)}" transform="rotate(-20 ${hx.toFixed(2)} ${hy.toFixed(2)})" class="b-bead" stroke-width="${sw}"/>`;
-    return cFill(stemflag, sw) + head;
-  },
-  lightning(cx, cy, r, sw) {
-    const d = `M${cx + 0.46 * r},${cy - 1.12 * r} L${cx - 0.66 * r},${cy + 0.20 * r} L${cx - 0.07 * r},${cy + 0.14 * r} L${cx - 0.46 * r},${cy + 1.12 * r} L${cx + 0.66 * r},${cy - 0.27 * r} L${cx + 0.05 * r},${cy - 0.20 * r} Z`;
-    return cFill(d, sw) + cGloss(cx + 0.02 * r, cy - 0.46 * r, r * 0.13);
-  },
-  snake(cx, cy, r, sw) {
-    const pt = (px, py) => `${(cx + px * r).toFixed(2)},${(cy + py * r).toFixed(2)}`;
-    const cl = `M${pt(0.08, -0.56)} C${pt(0.56, -0.44)} ${pt(0.50, 0.02)} ${pt(0.02, 0.10)} C${pt(-0.42, 0.17)} ${pt(-0.46, 0.54)} ${pt(0.00, 0.62)} C${pt(0.26, 0.67)} ${pt(0.30, 0.48)} ${pt(0.13, 0.47)}`;
-    const bw = 0.30 * r, out = Number(sw);
-    const behind = `<path d="${cl}" fill="none" stroke="var(--ink)" stroke-width="${(bw + 2 * out).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    const front = `<path d="${cl}" fill="none" stroke="var(--bead)" stroke-width="${bw.toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-    const hx = cx + 0.11 * r, hy = cy - 0.58 * r;
-    const head = `<ellipse cx="${hx.toFixed(2)}" cy="${hy.toFixed(2)}" rx="${(0.30 * r).toFixed(2)}" ry="${(0.22 * r).toFixed(2)}" transform="rotate(-38 ${hx.toFixed(2)} ${hy.toFixed(2)})" class="b-bead" stroke-width="${sw}"/>`;
-    const eye = `<circle cx="${(cx + 0.19 * r).toFixed(2)}" cy="${(cy - 0.64 * r).toFixed(2)}" r="${(0.062 * r).toFixed(2)}" fill="var(--paper)"/>`;
-    const tongue = `<path d="M${pt(0.25, -0.67)} L${pt(0.45, -0.89)}" stroke="var(--ink)" stroke-width="${(out * 0.9).toFixed(2)}" fill="none" stroke-linecap="round"/><path d="M${pt(0.45, -0.89)} L${pt(0.54, -0.88)} M${pt(0.45, -0.89)} L${pt(0.46, -0.98)}" stroke="var(--ink)" stroke-width="${(out * 0.8).toFixed(2)}" fill="none" stroke-linecap="round"/>`;
-    return behind + front + head + eye + tongue;
-  },
-  // A small horned devil face — the keepsake for a caught Impostor. Not player-
-  // selectable; hung automatically on beads that flagged a fake (see impostorCaught).
-  devil(cx, cy, r, sw) {
-    const pt = (px, py) => `${(cx + px * r).toFixed(2)},${(cy + py * r).toFixed(2)}`;
-    const X = (px) => (cx + px * r).toFixed(2), Y = (py) => (cy + py * r).toFixed(2);
-    const hornL = `M${pt(-0.70, -0.44)} L${pt(-1.00, -1.12)} L${pt(-0.28, -0.66)} Z`;
-    const hornR = `M${pt(0.70, -0.44)} L${pt(1.00, -1.12)} L${pt(0.28, -0.66)} Z`;
-    const face = cCircle(cx, cy + 0.10 * r, 0.82 * r, sw);
-    const brow = Math.max(Number(sw) * 1.05, r * 0.14).toFixed(2);
-    const feat = Math.max(Number(sw) * 0.95, r * 0.11).toFixed(2);
-    const pupil = (0.09 * r).toFixed(2);
-    // angry V-shaped brows + dot eyes beneath, then a wide grin
-    const eyes =
-      `<path d="M${pt(-0.48, -0.18)} L${pt(-0.14, 0.00)}" stroke="var(--ink)" stroke-width="${brow}" fill="none" stroke-linecap="round"/>` +
-      `<path d="M${pt(0.48, -0.18)} L${pt(0.14, 0.00)}" stroke="var(--ink)" stroke-width="${brow}" fill="none" stroke-linecap="round"/>` +
-      `<circle cx="${X(-0.29)}" cy="${Y(0.16)}" r="${pupil}" fill="var(--ink)"/>` +
-      `<circle cx="${X(0.29)}" cy="${Y(0.16)}" r="${pupil}" fill="var(--ink)"/>`;
-    const mouth = `<path d="M${pt(-0.36, 0.44)} Q${pt(0, 0.72)} ${pt(0.36, 0.44)}" stroke="var(--ink)" stroke-width="${feat}" fill="none" stroke-linecap="round"/>`;
-    return cFill(hornL, sw) + cFill(hornR, sw) + face + eyes + mouth;
-  },
-  // A horseshoe, open end down, three nails punched through the band — the keepsake for a
-  // bead won at stake in the risk challenges. Not player-selectable; hung automatically on
-  // the pages where a bet actually paid (see riskWon). Built from segments rather than arcs
-  // so the band stays even at any bead scale.
-  horseshoe(cx, cy, r, sw) {
-    const Ro = 1.0 * r, Ri = 0.60 * r, Rm = (Ro + Ri) / 2;
-    const A0 = 200, A1 = -20;                 // sweeps over the top, so the shoe hangs mouth-down
-    const P = (R, deg) => {
-      const a = (deg * Math.PI) / 180;
-      return `${(cx + R * Math.cos(a)).toFixed(2)},${(cy - R * Math.sin(a)).toFixed(2)}`;
-    };
-    const N = 20;
-    let d = "M" + P(Ro, A0);
-    for (let k = 1; k <= N; k++) d += "L" + P(Ro, A0 + ((A1 - A0) * k) / N);
-    d += "L" + P(Ri, A1);
-    for (let k = 1; k <= N; k++) d += "L" + P(Ri, A1 + ((A0 - A1) * k) / N);
-    const holes = [155, 90, 25].map((deg) => {
-      const a = (deg * Math.PI) / 180;
-      return `<circle cx="${(cx + Rm * Math.cos(a)).toFixed(2)}" cy="${(cy - Rm * Math.sin(a)).toFixed(2)}" ` +
-        `r="${(0.11 * r).toFixed(2)}" fill="var(--paper)"/>`;
-    }).join("");
-    return cFill(d + "Z", sw) + holes + cGloss(cx - 0.62 * r, cy - 0.42 * r, r * 0.12);
-  },
-  // A pocket stopwatch, crown up, hands at a few seconds past twelve — the keepsake for a
-  // Ruthless page named on sight (see snapPage / ruthlessSnap). Not player-selectable: it is an
-  // earned mark like the nib and the horseshoe, which is why it is out of RANDOM_TRINKET_IDS.
-  // The case sits low in the trinket's box so the crown has room without the whole thing reading
-  // small, and the hands are drawn short and stubby, because at a bead's scale a fine minute
-  // hand is one grey pixel.
-  stopwatch(cx, cy, r, sw) {
-    const X = (p) => (cx + p * r).toFixed(2), Y = (p) => (cy + p * r).toFixed(2);
-    const crown = `M${X(-0.20)},${Y(-1.14)} L${X(0.20)},${Y(-1.14)} L${X(0.20)},${Y(-0.80)} L${X(-0.20)},${Y(-0.80)} Z`;
-    const case_ = cCircle(cx, cy + 0.14 * r, 0.86 * r, sw);
-    const hand = Math.max(Number(sw) * 1.05, r * 0.13).toFixed(2);
-    const hands =
-      `<path d="M${X(0)},${Y(0.14)} L${X(0)},${Y(-0.50)}" stroke="var(--ink)" stroke-width="${hand}" fill="none" stroke-linecap="round"/>` +
-      `<path d="M${X(0)},${Y(0.14)} L${X(0.42)},${Y(0.36)}" stroke="var(--ink)" stroke-width="${hand}" fill="none" stroke-linecap="round"/>`;
-    return cFill(crown, sw) + case_ + hands + cGloss(cx - 0.42 * r, cy - 0.22 * r, r * 0.13);
-  },
-  nib(cx, cy, r, sw) {
-    const h = 1.108 * r, w = 0.649 * r;
-    const d = `M${cx},${cy - h} L${cx + w},${cy - h * 0.15} L${cx},${cy + h} L${cx - w},${cy - h * 0.15} Z`;
-    return cFill(d, sw) +
-      `<circle cx="${cx}" cy="${(cy - h * 0.2).toFixed(2)}" r="${(0.176 * r).toFixed(2)}" class="b-nib-hole"/>` +
-      `<path d="M${cx},${(cy - h * 0.05).toFixed(2)} L${cx},${(cy + h * 0.82).toFixed(2)}" class="b-nib-slit" stroke-width="1"/>`;
-  },
+// Two of the worn set were redrawn as different subjects: the daisy became the mirrorball and the
+// bow the champagne coupe. A saved strand (a Daily's bracelet) can still name the old id.
+const TRINKET_RENAMED = { daisy: "mirrorball", bow: "coupe" };
+const trinketOf = (id) => {
+  const t = TRINKET_RENAMED[id] || id;
+  return t && TRINKETS[t] ? t : "star";
 };
+
+// Every bead's trinket hangs a few degrees off plumb, each bead its own way.
+const TRINKET_TILT = [-3.5, 2.5, -1.5, 4, -2.5, 1.5, -4, 3, -1, 2, -3, 1, 3.5];
+
+// One dangle: the bracelet's own elastic looped round the cord under the bead and run down
+// through the trinket's punched hole. (x, ry) is the loop; cy is where the trinket centres.
+function trinketDangle(id, x, ry, cy, r, i, cls, delay, tint) {
+  const c = hangTrinket(id, x, cy, r, TRINKET_TILT[i % 13]);
+  const [ex, ey] = c.end, lr = 2.1, top = n(ry + lr);
+  return `<g class="trinket-dangle${cls}"${delay}>` +
+    `<circle cx="${n(x)}" cy="${n(ry)}" r="${lr}" fill="none" stroke="#7a6743" stroke-opacity="0.5" stroke-width="1.5"/>` +
+    `<circle cx="${n(x)}" cy="${n(ry)}" r="${lr}" fill="none" stroke="#c8b28c" stroke-width="0.9"/>` +
+    `<path d="M${n(x)},${top} L${n(ex)},${n(ey)}" stroke="#7a6743" stroke-opacity="0.45" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<path d="M${n(x)},${top} L${n(ex)},${n(ey)}" stroke="#c8b28c" stroke-width="0.85" stroke-linecap="round"/>` +
+    `<g${tint}>${c.svg}</g></g>`;
+}
 
 // ---- Random strands ----
 // What a "random" strand draws from: the eight player-unlockable trinkets plus the star. The
 // star is in the pool deliberately, so it isn't the one trinket random can never hand you.
 // The automatic keepsakes (nib, devil, horseshoe, stopwatch) are NOT here and never will be:
 // those are earned marks, and a random strand must never counterfeit one.
-export const RANDOM_TRINKET_IDS = ["star", "heart", "moon", "daisy", "bow", "pick", "note", "lightning", "snake"];
+export const RANDOM_TRINKET_IDS = ["star", "heart", "moon", "mirrorball", "coupe", "pick", "note", "lightning", "snake"];
 
 // Which trinket a given bead wears on a random strand. Deterministic in (seed, index) and
 // nothing else, because the bracelet re-renders on EVERY page turn: anything reaching for
@@ -202,7 +101,7 @@ export function braceletTrinketId(i, opts = {}) {
   if ((opts.snapPage || [])[i]) return "stopwatch";
   if (NIB_TIERS.has(tier)) return "nib";
   if (opts.trinket === "random") return randomTrinketForBead(opts.trinketSeed || 0, i);
-  return opts.trinket && TRINKETS[opts.trinket] ? opts.trinket : "star";
+  return trinketOf(opts.trinket);
 }
 
 export const BRACELET_ROW_CAP = 13;
@@ -310,10 +209,8 @@ export function skullBead(cx, cy, r, sw) {
 // A standalone trinket glyph for the Mastery picker (no bead or thread). `tint` sets
 // the --bead fill; omit to inherit the current era tint.
 export function trinketPreviewSVG(id, tint) {
-  const fn = TRINKETS[id] || TRINKETS.star;
-  const r = 6.8, sw = Math.max(0.7, r * 0.15).toFixed(2);
   const style = tint ? ` style="--bead:${tint}"` : "";
-  return `<svg viewBox="0 0 24 24" class="trinket-preview" aria-hidden="true"><g${style} transform="translate(12 12.5)">${fn(0, 0, r, sw)}</g></svg>`;
+  return `<svg viewBox="0 0 24 24" class="trinket-preview" aria-hidden="true"><g${style}>${TRINKETS[trinketOf(id)](12, 12.5, 7.8)}</g></svg>`;
 }
 
 // One bead off the strand, on its own: the same ponyBead (or skull) the strand strings for page
@@ -712,7 +609,7 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
   // DEFAULT trinket: the earned overrides below (nib, devil, horseshoe, stopwatch) still win.
   const wantRandom = !!(opts && opts.trinket === "random");
   const trinketSeed = (opts && opts.trinketSeed) || 0;
-  const pickedTrinket = (opts && opts.trinket && TRINKETS[opts.trinket]) ? opts.trinket : "star";
+  const pickedTrinket = trinketOf(opts && opts.trinket);
   const defaultTrinket = wantRandom ? (i) => randomTrinketForBead(trinketSeed, i) : () => pickedTrinket;
 
   const u = "br" + (++BR_UID);
@@ -798,18 +695,14 @@ function buildSingleRowBraceletSVG(results, activeRound, freshIndex, albums, opt
       const fresh = i === freshIndex;
       const delay = fresh ? "" : ` style="animation-delay:${(-(i * 0.9) % 5.5).toFixed(2)}s"`;
       // Sung pages always hang the reserved pen-nib; otherwise the player's chosen trinket
-      // (default star), drawn by the shared TRINKETS renderer.
+      // (default star), hung on the cord by trinketDangle.
       const isNib = NIB_TIERS.has(tier);
       const id = impostorCaught[i] ? "devil" : riskWon[i] ? "horseshoe"
         : snapPage[i] ? "stopwatch" : (isNib ? "nib" : defaultTrinket(i));
       const drop = (compact ? 18 : 32) * Math.max(sc, 0.55) + (i % 2 ? 8 * sc : 0);
       const cr = Math.max(4.4, (compact ? 7 : 10.2) * Math.max(sc, 0.62));
-      const csw = Math.max(0.7, cr * 0.15).toFixed(2);
       const hy = y + 14 * sc;
-      svg += `<g class="trinket-dangle${fresh ? " fresh" : ""}"${delay}>` +
-        `<circle cx="${n(x)}" cy="${n(hy + 3.2)}" r="${n(2.5 * Math.max(sc, 0.7))}" fill="none" stroke="var(--ink)" stroke-width="1.1" opacity="0.75"/>` +
-        `<path d="M${n(x)},${n(hy + 3.2)} L${n(x)},${n(hy + drop - cr)}" stroke="var(--ink)" stroke-width="0.9" opacity="0.45"/>` +
-        `<g${tint}>${TRINKETS[id](x, hy + drop, cr, csw)}</g></g>`;
+      svg += trinketDangle(id, x, hy + 3.2, hy + drop, cr, i, fresh ? " fresh" : "", delay, tint);
     } else if (answered === false && skullMiss[i]) {
       // the page the run died on: a bone bead in place of the frosted one. Sized and nudged
       // to fill a bead's slot — skullBead hangs its jaw below the centre it is given, so a
@@ -967,12 +860,8 @@ function buildCoiledBraceletSVG(results, activeRound, freshIndex, albums, opts =
       const id = braceletTrinketId(i, opts);
       const drop = (compact ? 18 : 32) + (i % 2 ? 8 : 0);
       const cr = compact ? 7 : 10.2;
-      const csw = Math.max(0.7, cr * 0.15).toFixed(2);
       const hy = y + 14;
-      svg += `<g class="trinket-dangle${fresh ? " fresh" : ""}"${delay}>` +
-        `<circle cx="${n(x)}" cy="${n(hy + 3.2)}" r="2.5" fill="none" stroke="var(--ink)" stroke-width="1.1" opacity="0.75"/>` +
-        `<path d="M${n(x)},${n(hy + 3.2)} L${n(x)},${n(hy + drop - cr)}" stroke="var(--ink)" stroke-width="0.9" opacity="0.45"/>` +
-        `<g${tint}>${TRINKETS[id](x, hy + drop, cr, csw)}</g></g>`;
+      svg += trinketDangle(id, x, hy + 3.2, hy + drop, cr, i, fresh ? " fresh" : "", delay, tint);
     } else if (finish === "skull") {
       svg += `<g class="b-skull-bead">${skullBead(x, y - 1.8, 13.4, 1)}</g>`;
     } else if (finish === "clear" || finish === "shielded") {

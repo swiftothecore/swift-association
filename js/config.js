@@ -2406,15 +2406,17 @@ export const MASTERY_REWARDS = [
   { level: 4,  id: "paper-slate",     kind: "paper", name: "Slate pad",      desc: "Cool blue-grey engineer's stock.",   payload: { paper: "slate" } },
   { level: 4,  id: "paper-sage",      kind: "paper", name: "Sage ledger",     desc: "A cool green bookkeeper's stock.", payload: { paper: "sage" } },
   // Bracelet trinkets — a set unlocked together at level 5. Each swaps the trinket that
-  // dangles from every correct-answer bead (the TRINKETS renderer in bracelet.js); the
-  // recall pen-nib stays reserved. Selection persists in settings.masteryTrinket.
+  // dangles from every correct-answer bead (drawn in trinkets.js); the
+  // recall pen-nib stays reserved. Selection persists in settings.masteryTrinket. The order is
+  // where each hangs on the reward board's two pins (star first, then four and four): the long
+  // names are spaced so no two sit side by side, or their labels run into each other.
   { level: 5,  id: "trinket-heart",     kind: "trinket", name: "Heart trinket",     desc: "Hang a friendship heart.",       payload: { trinket: "heart" } },
   { level: 5,  id: "trinket-moon",      kind: "trinket", name: "Moon trinket",      desc: "A waxing crescent moon.",        payload: { trinket: "moon" } },
-  { level: 5,  id: "trinket-daisy",     kind: "trinket", name: "Daisy trinket",     desc: "A little pressed daisy.",        payload: { trinket: "daisy" } },
-  { level: 5,  id: "trinket-bow",       kind: "trinket", name: "Bow trinket",       desc: "A tied ribbon bow.",             payload: { trinket: "bow" } },
-  { level: 5,  id: "trinket-pick",      kind: "trinket", name: "Pick trinket",      desc: "A guitar pick, for the stage.",  payload: { trinket: "pick" } },
   { level: 5,  id: "trinket-note",      kind: "trinket", name: "Note trinket",      desc: "A single eighth note.",          payload: { trinket: "note" } },
   { level: 5,  id: "trinket-lightning", kind: "trinket", name: "Lightning trinket", desc: "A bolt of lightning.",           payload: { trinket: "lightning" } },
+  { level: 5,  id: "trinket-mirrorball", kind: "trinket", name: "Mirrorball trinket", desc: "A mirrorball, every tile catching the light.", payload: { trinket: "mirrorball" } },
+  { level: 5,  id: "trinket-pick",      kind: "trinket", name: "Pick trinket",      desc: "A guitar pick, for the stage.",  payload: { trinket: "pick" } },
+  { level: 5,  id: "trinket-coupe",     kind: "trinket", name: "Champagne trinket", desc: "A champagne coupe, for a toast.", payload: { trinket: "coupe" } },
   { level: 5,  id: "trinket-snake",     kind: "trinket", name: "Snake trinket",     desc: "A reputation serpent.",          payload: { trinket: "snake" } },
   { level: 6,  id: "hardmode-unlock", kind: "unlock", name: "Super-hard challenges", icon: "swords",  desc: "Unlocks a tier of brutal new challenges in Challenges mode." },
   // Start-writing button finishes — a set unlocked together at level 8. Each restyles the

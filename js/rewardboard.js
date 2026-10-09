@@ -20,7 +20,8 @@
    follows the theme. The styles are the REWARD BOARD block in styles.css. */
 import { MASTERY_REWARDS, MASTERY_TILE_MARKS, MASTERY_ICONS, MASTERY_TITLES, MASTERY_TIER_ICONS, CTA_LABELS } from "./config.js";
 import { passportStamp, passportGhost, passportTracing, passportStampInk, passportBadge } from "./passport.js";
-import { TRINKETS, beadPreviewSVG } from "./bracelet.js";
+import { beadPreviewSVG } from "./bracelet.js";
+import { hangTrinket, trinketHoleY } from "./trinkets.js";
 import { stickerArt } from "./stickers.js";
 import { ctaSketch } from "./ctasketch.js";
 
@@ -196,7 +197,8 @@ const PIN_W = 273, PIN_H = 222;
 // x0/x1: the coil's outer edge and the head's; yb: the bar; dive: where the point goes down
 // through the paper and where it comes back up; at: where each charm hangs, five then four. The
 // second pin spreads its four wide on purpose: the names are type and do not shrink with the
-// drawing, so "lightning" needs that room to clear its neighbours in the narrowest cell.
+// drawing, so "mirrorball" and "champagne" need that room to clear their neighbours in the narrowest
+// cell. MASTERY_REWARDS orders the set so no two long names hang side by side.
 const PINS = [
   { x0: 12, x1: 260, yb: 40, tilt: -1.4, dive: [58, 206], at: [46, 91, 137, 182, 226] },
   { x0: 22, x1: 256, yb: 152, tilt: 1.1, dive: [80, 196], at: [60, 112, 168, 222] },
@@ -268,11 +270,13 @@ function trinketPins(D) {
       const tint = col ? ` style="--bead:${col}"` : "";
       // in the charm's own box the hanging point is (22, 14): a bare charm hangs from its ring on
       // the bar, a strung one from a ring under its bead
-      const r = 14, top = 14 + (strung ? 11.6 : 0), ringY = top + 4.3, cy = ringY + 4.6 + r * 0.92;
+      const r = 14, top = 14 + (strung ? 11.6 : 0), ringY = top + 4.3;
       const sway = jit(i * 5 + 3, 6);
       if (!strung) rings += PIN_RING(x, p.yb + 4.3);
       const bead = strung ? beadPreviewSVG("gloss", col || undefined, i).replace("<svg ", `<svg x="9.5" y="0.1" width="25" height="26.6" `) : "";
-      const body = owed ? `<g class="sp-trace">${TRINKETS[s.t](22, cy, r, 1.1)}</g>` : `<g${tint}>${TRINKETS[s.t](22, cy, r, 1.35)}</g>`;
+      // the ring runs through the trinket's punched hole; one still owed is only its pencil trace
+      const hung = hangTrinket(s.t, 22, ringY + 3.2 - trinketHoleY(s.t) * r, r, 0, { noCord: true, trace: owed }).svg;
+      const body = owed ? `<g class="sp-trace">${hung}</g>` : `<g${tint}>${hung}</g>`;
       const svg = `<svg class="sp-ch-art" viewBox="0 0 44 67" aria-hidden="true">${bead}` +
         `<g class="sp-sw" style="transform-origin:22px ${pf(ringY - 4)}px;--d:${pf(i * 0.05)}s">` +
         `<g transform="rotate(${pf(sway)} 22 ${pf(ringY - 4)})">${strung ? PIN_RING(22, ringY) : ""}${body}</g></g></svg>`;

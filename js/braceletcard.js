@@ -67,7 +67,7 @@ export function fitText(str, font, maxW, letterSpacing = 0) {
 }
 
 // Build the full keepsake-card SVG string. `fontCss` is the inlined @font-face block.
-// The bracelet keeps its class-based styling (.b-bead etc.); the card re-declares
+// The bracelet keeps its class-based styling (.b-cord etc.); the card re-declares
 // those classes against the live colour tokens (passed in meta.vars) and sets the
 // same CSS custom properties the page uses, so per-bead album tints (carried on each
 // bead as an inline `--bead`) still resolve exactly as they do on screen.
@@ -293,10 +293,6 @@ export function buildCardSVG(meta, fontCss) {
       `.b-skull{fill:#f3ece0;stroke:var(--ink-soft);stroke-linejoin:round}` +
       `.b-skull-hole{fill:var(--ink-soft)}` +
       `.b-skull-line{fill:none;stroke:var(--ink-soft);stroke-linecap:round;opacity:.75}` +
-      `.b-bead{fill:var(--bead);stroke:var(--ink)}` +
-      `.b-gloss{fill:#fff;opacity:.55}` +
-      `.b-nib-hole{fill:var(--paper)}` +
-      `.b-nib-slit{fill:none;stroke:var(--ink);opacity:.7;stroke-linecap:round}` +
     `</style>` +
     // washi-tape surface bits, mirroring styles.css .nav-tape (sheen + fibre + torn-edge shadow)
     TAPE_DEFS + `</defs>` +

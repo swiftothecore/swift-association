@@ -1131,10 +1131,16 @@ export function noteSelfTitledWord(word) {
 /* The level-5 bracelet set shipped as "charm-heart", "charm-moon" and so on, and was renamed
    to "trinket-*" when the dangle stopped answering to the same word as an achievement charm.
    The ledger is keyed by reward id, so an un-migrated notebook would show all eight re-locked
-   with the level already paid for. Rewrites in place on load and leaves everything else. */
+   with the level already paid for. Rewrites in place on load and leaves everything else. Two of
+   the set were later redrawn as different subjects (the daisy as the mirrorball, the bow as the
+   champagne coupe), and the same rewrite carries those across. */
+const TRINKET_REWARD_RENAMED = { "trinket-daisy": "trinket-mirrorball", "trinket-bow": "trinket-coupe" };
 function migrateTrinketRewards(unlocked) {
   const out = {};
-  for (const [id, v] of Object.entries(unlocked)) out[id.startsWith("charm-") ? "trinket-" + id.slice(6) : id] = v;
+  for (const [id, v] of Object.entries(unlocked)) {
+    const t = id.startsWith("charm-") ? "trinket-" + id.slice(6) : id;
+    out[TRINKET_REWARD_RENAMED[t] || t] = v;
+  }
   return out;
 }
 
@@ -1603,6 +1609,9 @@ export function loadSettings() {
           if (o.masteryTrinket === undefined) o.masteryTrinket = o.masteryCharm;
           delete o.masteryCharm;
         }
+        // The daisy and the bow were redrawn as the mirrorball and the champagne coupe.
+        if (o.masteryTrinket === "daisy") o.masteryTrinket = "mirrorball";
+        if (o.masteryTrinket === "bow") o.masteryTrinket = "coupe";
         return { ...DEFAULT_SETTINGS, ...o };
       }
     }
