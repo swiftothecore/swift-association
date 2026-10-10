@@ -266,22 +266,40 @@ function singsTitle(lineKey, stems) {
     (w.length >= 4 && k.startsWith(w) && k.length - w.length <= 2)));
 }
 
+/* A line's owners, less the SECOND CUTS (the acoustic, piano and remix versions the shelf never
+   deals and the dropdown never offers). The line index reads the whole catalogue on purpose, but
+   counting a version nobody can name as a second owner made nearly every line of its original
+   look shared: State Of Grace could deal 6 of its 29 lines, Snow On The Beach none at all. The
+   original is the only song that can be the answer, so the line is the original's. */
+function liveOwners(set) {
+  return set ? [...set].filter((t) => RUTHLESS_SKIP_TITLES.get(t) !== "second cut") : [];
+}
+// The song a version is a version OF: "All Too Well (10 Minute Version)" -> "All Too Well".
+function versionFamily(title) { return String(title).replace(/\s*\([^()]*\)\s*$/, "").trim(); }
+
 /* ---------- Name That Song ----------
    Show one real lyric line; the player names the song it came from. Two fairness guards:
-     • UNIQUE      — the line must belong to exactly one song. Shared lines (repeated hooks,
-       re-recordings) would mark a correct answer wrong.
+     • UNIQUE      — the line must belong to ONE song. A line shared between two different songs
+       would mark a correct answer wrong, so it is never dealt. Two versions of one song that
+       both deal (All Too Well and its 10 Minute Version, Bad Blood and its remix) are the
+       exception: the line is dealt and EITHER title is right, carried in `also`. Hidden second
+       cuts are not owners at all (liveOwners).
      • NO GIVEAWAY — a line containing the song's own title answers itself, so those are
        skipped. This is what keeps it a recall test rather than a reading test. */
 export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120, avoid = null) {
+  const dealable = new Set(songs.map((s) => s.title));
   for (let t = 0; t < tries; t++) {
     const song = pick(songs, rng);
     if (!song) continue;
     // A Name That Song run is ten distinct songs, not ten chances to recognise the same
     // chorus. Unlike the older builders' soft rests, this is an absolute bar: the catalogue
     // comfortably supplies a full run, and a repeated song would make the answer free.
-    if (avoid && avoid.has(song.title)) continue;
+    // Two versions of one song are one song here: naming one would hand over the other.
+    if (avoid && (avoid.has(song.title) ||
+        [...avoid].some((t) => versionFamily(t) === versionFamily(song.title)))) continue;
     const titleKey = normalizeLyric(song.title);
     const titleWords = titleStems(song.title);
+    const family = versionFamily(song.title);
 
     const candidates = songLines(song).filter(({ line }) => {
       const n = line.split(/\s+/).filter(Boolean).length;
@@ -289,8 +307,12 @@ export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120
       if (contentWords(line).length < 3) return false;
       const key = normalizeLyric(line);
       if (!key) return false;
-      const owners = lineIndex.get(key);
-      if (!owners || owners.size !== 1) return false;
+      const owners = liveOwners(lineIndex.get(key));
+      if (!owners.length) return false;
+      // Every other owner must be a dealable version of this same song, or the line is shared
+      // with something the player could name and be wrongly marked down for.
+      if (owners.some((o) => o !== song.title &&
+          (versionFamily(o) !== family || !dealable.has(o)))) return false;
       if (titleKey && key.includes(titleKey)) return false;
       if (singsTitle(key, titleWords)) return false;
       return true;
@@ -298,7 +320,8 @@ export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120
     if (!candidates.length) continue;
 
     const { line, label } = pick(candidates, rng);
-    return { song, label, line };
+    const also = liveOwners(lineIndex.get(normalizeLyric(line))).filter((o) => o !== song.title);
+    return { song, label, line, also };
   }
   return null;
 }
@@ -484,7 +507,10 @@ export function buildRedactedPuzzle(songs, ctx, lineIndex, rng = Math.random, tr
       const set = key ? lineIndex.get(key) : null;
       if (!set) { bad = true; break; }
       if (titleKey && (key.includes(titleKey) || key.replace(/ /g, "").includes(titleFlat))) { bad = true; break; }
-      owners = owners === null ? new Set(set) : new Set([...owners].filter((x) => set.has(x)));
+      // A hidden second cut is not an owner here either (liveOwners): it never deals and
+      // cannot be named, and counting it barred every verse its original shares with it.
+      const live = new Set(liveOwners(set));
+      owners = owners === null ? live : new Set([...owners].filter((x) => live.has(x)));
     }
     if (bad || !owners || owners.size !== 1) continue;
 

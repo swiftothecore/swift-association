@@ -8831,7 +8831,21 @@ function judgeName(picked = null) {
     return;
   }
   hideBonusDropdown();
-  const correct = song.title === bonusPuzzle.song.title;
+  /* Two versions of one song share a line on Name That Song (`also`, see buildNamePuzzle), and
+     naming either is right. A version the player named becomes the page's song, so the heading,
+     the listing and the context peek all show the one they wrote, and the version the line was
+     dealt from moves into `also` for the reveal's note. */
+  const also = bonusPuzzle.also || [];
+  const correct = song.title === bonusPuzzle.song.title || also.includes(song.title);
+  if (correct && song.title !== bonusPuzzle.song.title) {
+    bonusPuzzle.also = [bonusPuzzle.song.title, ...also.filter((t) => t !== song.title)];
+    bonusPuzzle.song = song;
+    // The two versions do not number their sections alike (a 10 Minute Version has more
+    // verses), so the label under the heading is read off the version now being shown.
+    const key = normalizeLyric(bonusPuzzle.line);
+    const sec = (song.sections || []).find((x) => (x.lines || []).some((l) => normalizeLyric(l) === key));
+    if (sec) bonusPuzzle.label = sec.label || "";
+  }
   // The shelf writes to the session ledger too, from the one path where the answer is a SONG.
   // Sing It Back asks for a missing word and Only Here for cards, so neither names anything.
   if (correct) noteSessionSong(song);
@@ -9452,6 +9466,15 @@ function verdictMarkup(head, body, advanceUI) {
 
 function settleBonusRound(correct, detail, isTimeout = false) {
   bonusLocked = true;
+  /* A Name That Song line both versions of a song share says so, because either title was
+     right and the page should not let a player think the one it shows was the only answer.
+     Only for versions the shelf deals: a hidden acoustic or piano cut can never be named, so
+     "also on" one of those would be trivia rather than part of the answer. */
+  if (bonusGame && bonusGame.id === "name-that-song" && bonusPuzzle.also && bonusPuzzle.also.length) {
+    const alt = bonusPuzzle.also.map((t) => `<b>${escapeHtml(censor(t))}</b>`).join(" and ");
+    const note = correct ? `also on ${alt}` : `${alt} counted too`;
+    detail = detail ? `${detail} · ${note}` : note;
+  }
   stopBonusClock();
   // Frozen here, before anything else can read it: Running Order's listing row and its charm
   // are both judged on how long this page took, and they have to agree. Clamped to the budget so
