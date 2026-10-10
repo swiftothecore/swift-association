@@ -19196,27 +19196,34 @@ function multiBeadTint() {
   if (!cols.length) return null;
   return cols.every((c) => c === cols[0]) ? cols[0] : cols;
 }
-// The songs named so far this page, as the banner lists them: each title underlined in its
-// record's colour, so the player can see what a sung line was credited to.
-function multiNamedList() {
-  if (!roundNamed.length) return "";
-  return `<span class="chall-prog-named">` + roundNamed.map((t) => {
+// The page's answers as a row of ruled blanks, one per song wanted, filled in with each title
+// as it is named and underlined in its record's colour (the colour the page's bead will be
+// strung in). The blanks ARE the count: an empty one says how many are left, so the banner
+// carries no "2 / 3" beside them, and a sung line shows which song it was credited to.
+function multiSlots(need) {
+  const cells = [];
+  for (let i = 0; i < need; i++) {
+    const t = roundNamed[i];
+    if (!t) { cells.push(`<span class="multi-slot" aria-hidden="true"></span>`); continue; }
     const s = currentSongs.find((x) => x.title === t);
     const col = (s && albumColor(s.album)) || "var(--ink-soft)";
-    return `<span class="multi-named" style="--album-color:${col}">${escapeHtml(censor(t))}</span>`;
-  }).join("") + `</span>`;
+    cells.push(`<span class="multi-slot is-named" style="--album-color:${col}">${escapeHtml(censor(t))}</span>`);
+  }
+  return `<span class="chall-prog-slots"><span class="sr-only">${roundNamed.length} of ${need} named: </span>` +
+    cells.join("") + `</span>`;
 }
-// Double Trouble: how many of the two needed songs have been named this page.
+// Double Trouble / Name Three: the rule, then the blanks. The pages-cleared tally is left to the
+// margin line directly underneath, which already says it; the banner printing it too made the
+// block above the word five lines deep. Double Trouble's dark side keeps its spent count, which
+// nothing else on the page reports.
 function renderMultiBanner() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "multi") return;
   const el = ensureChallBanner();
   const need = currentChallenge.need || 2;
   el.innerHTML =
     `<span class="chall-prog-name">name ${need} different songs</span>` +
-    `<span class="chall-prog-count">${roundNamed.length} / ${need}</span>` +
-    `<span class="chall-prog-note">this page · ${score} / ${currentChallenge.target || 8} pages cleared` +
-      (multiNoRepeats() ? ` · ${runNamedSongs.size} songs spent` : "") + `</span>` +
-    multiNamedList();
+    (multiNoRepeats() ? `<span class="chall-prog-note">${runNamedSongs.size} songs spent</span>` : "") +
+    multiSlots(need);
 }
 // Devil's Path: distort the prompt word display-only (matching reads currentWord from
 // state, never the DOM), at a FIXED effect for the run — unlike Word Games' escalating tiers.

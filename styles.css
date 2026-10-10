@@ -8064,7 +8064,7 @@
      starts printing one gets the treatment without a second edit somewhere else. Keep this at
      :has() rather than :not(:has()) — the negated form outranks `.chall-banner.is-chain` on
      specificity and silently flattened the chain row. */
-  .chall-banner:has(.chall-prog-count) {
+  .chall-banner:has(.chall-prog-count), .chall-banner:has(.chall-prog-slots) {
     display: flex; align-items: baseline; justify-content: center; gap: 12px; flex-wrap: wrap;
     margin: 4px auto 9px; padding: 4px 16px 5px; max-width: 420px;
     border-top: 1.5px solid rgba(43, 39, 34, 0.14);
@@ -8146,18 +8146,20 @@
     font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust));
     letter-spacing: 0.3px; color: var(--ink-soft); opacity: 0.85;
   }
-  /* Double Trouble / Name Three: the songs named so far this page, on their own row under the
-     tally. Handwritten because they are the player's answers, each underlined in its record's
-     colour, which is the colour the page's bead will be strung in. */
-  .chall-prog-named {
-    flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 14px;
-    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.25;
+  /* Double Trouble / Name Three: one ruled blank per song the page wants, on its own row under
+     the rule. Each fills in with a title as it is named, handwritten because it is the player's
+     answer, and its rule turns the record's colour, the colour the page's bead will be strung in.
+     The empty blanks are the count, so this banner has no figure in it (see multiSlots). */
+  .chall-prog-slots {
+    flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px;
+    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.3;
     color: var(--ink);
   }
-  .multi-named {
-    text-decoration: underline; text-decoration-color: var(--album-color);
-    text-decoration-thickness: 2px; text-underline-offset: 3px;
+  .multi-slot {
+    min-width: 74px; min-height: 1.3em; padding: 0 2px; text-align: center;
+    border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 32%, transparent);
   }
+  .multi-slot.is-named { border-bottom: 2px solid var(--album-color); }
   /* ---- the margin line: where the run stands, and how much room it has left ---------------
      Under the rule banner, above the word, in two lines with a deliberate gap between them in
      weight. The score leads at reading size; the slips line sits beneath it a good 3px smaller
