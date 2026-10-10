@@ -6012,10 +6012,15 @@
     .bg-stream { font-size: calc(20px + var(--text-size-adjust)); height: 8em; }
   }
 
-  /* Name That Song — the line, quoted like a copied-out lyric. */
+  /* Name That Song — the line, quoted like a copied-out lyric. The measure is Running Order's
+     lesson again: at 30ch an ordinary line broke one word short of fitting and left a lone
+     "be" on a second line, though the page had room either side. Measured against real deals,
+     46ch puts all but the longest lines on one row, and `balance` splits those evenly rather
+     than stranding their last word. The box shrinks to its text so the red quote rule stays
+     beside the words instead of standing off in the margin of a wider box. */
   .bg-lyric {
     font-family: var(--hand); font-size: calc(27px + var(--text-size-adjust)); line-height: 1.35; color: var(--ink);
-    text-align: center; max-width: 30ch; margin: 0 auto 24px; padding: 0 10px;
+    text-align: center; width: fit-content; max-width: 46ch; margin: 0 auto 24px; padding: 0 10px; text-wrap: balance;
     border-left: 2px solid rgba(178,58,63,0.35);
   }
 
