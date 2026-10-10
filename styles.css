@@ -6018,6 +6018,21 @@
      46ch puts all but the longest lines on one row, and `balance` splits those evenly rather
      than stranding their last word. The box shrinks to its text so the red quote rule stays
      beside the words instead of standing off in the margin of a wider box. */
+  /* Name That Song's reveal sets the line back in its song: the line before it and the line
+     after, a step smaller and in the soft lyric ink, either side of the quote. They take the
+     quote's own measure so the three read as one passage, and the quote keeps its red rule,
+     which is what still says which of the three was the question. They fade in with the
+     heading rather than being there from the start, since on the play page they would be
+     clues. */
+  .bg-near {
+    font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1.4;
+    color: var(--ink-soft); text-align: center; max-width: 46ch; margin: 0 auto; padding: 0 10px;
+    text-wrap: balance; animation: bgFade 0.24s ease both;
+  }
+  .bg-near--before { margin-bottom: 8px; }
+  .bg-near--after { margin-top: -14px; margin-bottom: 22px; }
+  @media (prefers-reduced-motion: reduce) { .bg-near { animation: none; } }
+
   .bg-lyric {
     font-family: var(--hand); font-size: calc(27px + var(--text-size-adjust)); line-height: 1.35; color: var(--ink);
     text-align: center; width: fit-content; max-width: 46ch; margin: 0 auto 24px; padding: 0 10px; text-wrap: balance;
@@ -6097,6 +6112,7 @@
     margin: 0 0 14px;
   }
   .bg-feedback .lyric-card { text-align: left; }
+  .bg-context .lyric-reveal-actions { justify-content: center; }
   .bg-feedback .countdown { margin-top: 14px; }
 
   /* ---------- End of a run: the back cover ----------
@@ -6410,7 +6426,22 @@
 
   @media (max-width: 560px) {
     .bg-word, .bg-word-plain { font-size: calc(23px + var(--text-size-adjust)); }
-    .bg-lyric { font-size: calc(23px + var(--text-size-adjust)); }
+    /* Name That Song's reveal sets the line back in its song: the line before it and the line
+     after, a step smaller and in the soft lyric ink, either side of the quote. They take the
+     quote's own measure so the three read as one passage, and the quote keeps its red rule,
+     which is what still says which of the three was the question. They fade in with the
+     heading rather than being there from the start, since on the play page they would be
+     clues. */
+  .bg-near {
+    font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1.4;
+    color: var(--ink-soft); text-align: center; max-width: 46ch; margin: 0 auto; padding: 0 10px;
+    text-wrap: balance; animation: bgFade 0.24s ease both;
+  }
+  .bg-near--before { margin-bottom: 8px; }
+  .bg-near--after { margin-top: -14px; margin-bottom: 22px; }
+  @media (prefers-reduced-motion: reduce) { .bg-near { animation: none; } }
+
+  .bg-lyric { font-size: calc(23px + var(--text-size-adjust)); }
     .bg-sheet--ask .bg-sheet-title { font-size: calc(27px + var(--text-size-adjust)); }
     /* A redacted verse is several lines rather than one, and a block can't hyphenate, so it
        comes down further than the single-line games to keep the words off each other. */
@@ -10391,15 +10422,14 @@
   }
 
   /* Context opens around the existing lyric in DOM and reading order: earlier lines, the one
-     large anchor, then later lines. The anchor is never copied into the disclosure. */
+     large anchor, then later lines. The anchor is never copied into the disclosure. Once open,
+     the anchor is one line of the verse, so it drops the quote marks that said it had been
+     lifted out of one. */
   .lyric-context-before { margin: 2px 0 5px; }
   .lyric-context-after { margin: 5px 0 1px; }
   .lyric-context-before[hidden], .lyric-context-after[hidden],
-  .lyric-full-wrap[hidden], .lyric-ctx[hidden], .lyric-occurrence[hidden] { display: none; }
-  .lyric-context-meta {
-    margin-bottom: 3px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
-    letter-spacing: 1px; text-transform: uppercase; color: var(--album-color, var(--ink-soft));
-  }
+  .lyric-full-wrap[hidden] { display: none; }
+  .lyric-reveal.is-open .lq { display: none; }
   .lyric-reveal-actions {
     display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; margin-top: 2px;
   }
@@ -10446,48 +10476,20 @@
     .more-songs-toggle,
     .more-songs-next,
     .more-songs-all { min-width: 0; min-height: 0; padding: 4px 4px; }
-    .lyric-occurrence-btn { width: 26px; height: 26px; }
   }
-  .lyric-ctx { margin-top: 4px; }
-  .lyric-ctx-lines { margin-bottom: 6px; }
   .lc-line { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
   .lc-line.lc-match { color: var(--ink); }
   .lc-line.lc-match mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
-  /* The peek runs past a section edge rather than stopping dead at one, so the edge is drawn:
-     a hairline says the next line is a new verse, not the same breath continuing. */
-  .lc-line.lc-break { margin-top: 6px; padding-top: 5px; border-top: 1px dashed rgba(43,39,34,0.16); }
-  .lc-gap { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); opacity: 0.6; line-height: 1; letter-spacing: 2px; margin: 3px 0; }
-  .lc-anchor-note {
-    margin: 2px 0; font-family: var(--type); font-size: calc(8px + var(--text-size-adjust));
-    letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-soft); opacity: 0.65;
-  }
   .lyric-fullsong {
     gap: 0.5em; color: var(--album-color, var(--ink-soft));
   }
   .lyric-fullsong:hover { text-decoration: underline; }
-  .lyric-occurrence {
-    display: inline-flex; align-items: center; gap: 2px; color: var(--ink-soft);
-  }
-  .lyric-occurrence-btn {
-    display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0;
-    border: 0; background: transparent; color: var(--ink-soft); cursor: pointer;
-  }
-  /* Sized to the count's digits, not to a glyph: 9px type has digits about 6px tall, so the
-     arrow stands a little taller than them and centres on the same middle. */
-  .occ-chev { width: 6px; height: 8.5px; overflow: visible; }
-  .occ-chev path { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-  .lyric-occurrence-btn:hover:not(:disabled) { color: var(--ink); }
-  .lyric-occurrence-btn:disabled { opacity: 0.28; cursor: default; }
-  .lyric-occurrence-count {
-    min-width: 34px; text-align: center; font-family: var(--type);
-    font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.5px;
-  }
 
-  :is(.lyric-ctx-toggle, .lyric-fullsong, .lyric-occurrence-btn,
+  :is(.lyric-ctx-toggle, .lyric-fullsong,
       .more-songs-toggle, .more-songs-next, .more-songs-all):focus-visible {
     outline: 2px solid var(--ink-accent); outline-offset: 2px; border-radius: 2px;
   }
-  body[data-contrast="high"] :is(.lyric-ctx-toggle, .lyric-fullsong, .lyric-occurrence-btn,
+  body[data-contrast="high"] :is(.lyric-ctx-toggle, .lyric-fullsong,
       .more-songs-toggle, .more-songs-next, .more-songs-all):focus-visible {
     outline-color: var(--ink); outline-width: 3px;
   }
@@ -15801,6 +15803,13 @@
     color: var(--ink-soft); margin: 0 0 4px;
   }
   .song-modal-body .lc-line { font-size: calc(19px + var(--text-size-adjust)); line-height: 1.5; }
+  /* The line the sheet was opened at, marked with the page's red quote rule (the one .bg-lyric
+     wears). The sheet already landed on it, but with no word to highlight (Name That Song) it
+     then gave no sign of which line it was. */
+  .song-modal-body .lc-line.lc-anchor {
+    color: var(--ink); margin-left: -10px; padding-left: 8px;
+    border-left: 2px solid rgba(178,58,63,0.45);
+  }
   /* The full lyrics wear the page's own highlighter swipe on every hit rather than a flat
      box, so the word you were dealt reads as the same mark when you go and find it in the song.
      The mark is its own stacking context so the swipe sits under the ink, not under the card. */

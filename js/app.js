@@ -91,7 +91,7 @@ import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
 import { sfx } from "./sound.js";
 import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
-import { buildLyricReveal } from "./lyric-reveal.mjs";
+import { buildLyricReveal, revealSections } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
 import { countDots, tipOutCountDots } from "./countdots.js";
@@ -2210,16 +2210,6 @@ const CTX_LINES = `<svg class="ctx-lines" viewBox="0 0 15 12" aria-hidden="true"
 const MORE_CHEV = `<svg class="more-chev" viewBox="0 0 10 7" aria-hidden="true">` +
   `<path d="M0.9 1.5C2.3 2.9 3.5 4.3 4.9 5.9" stroke-width="1.6"/>` +
   `<path d="M4.6 5.7C6 4.4 7.3 2.8 9.1 1.1" stroke-width="1.35"/></svg>`;
-// The lyric stepper's arrows, drawn in the same two-stroke hand as MORE_CHEV and turned on
-// their side. Glyphs were tried first and sat on Caveat's baseline at three times the size of
-// the count between them; a drawn mark centres on the count's own middle and stays its size.
-// The pair is drawn separately, never mirrored, so the two hands do not match exactly.
-const OCC_CHEV_L = `<svg class="occ-chev" viewBox="0 0 7 10" aria-hidden="true">` +
-  `<path d="M5.6 0.9C4.3 2.3 2.9 3.6 1.3 5.1" stroke-width="1.6"/>` +
-  `<path d="M1.5 4.8C2.7 6.1 4.2 7.5 5.9 9.1" stroke-width="1.35"/></svg>`;
-const OCC_CHEV_R = `<svg class="occ-chev" viewBox="0 0 7 10" aria-hidden="true">` +
-  `<path d="M1.3 1.1C2.8 2.4 4.1 3.7 5.8 5" stroke-width="1.6"/>` +
-  `<path d="M5.5 4.8C4.2 6.2 2.9 7.6 1.1 8.9" stroke-width="1.35"/></svg>`;
 
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
@@ -9278,11 +9268,29 @@ function fillOnlyDots(label, c) {
   if (!motionReduced() && !animInstant()) tipOutCountDots(label.querySelector(".count-dots"), c.key);
 }
 
+/* Where a Name That Song line sits in the song on show: its section and source line (for
+   "full lyrics" to land on), and the lines either side of it across the whole song. Read off
+   the version on the page rather than the one dealt, since a named alternate (judgeName) can
+   number its verses differently. */
+function nameSongNeighbours(song, line) {
+  const key = normalizeLyric(line);
+  const flat = revealSections(song).flatMap((section) =>
+    section.lines.map((l) => ({ ...l, sectionIndex: section.sectionIndex })));
+  const i = flat.findIndex((l) => normalizeLyric(l.text) === key);
+  if (i < 0) return null;
+  return {
+    sectionIndex: flat[i].sectionIndex,
+    sourceLineIndex: flat[i].sourceLineIndex,
+    prev: i > 0 ? flat[i - 1].text : "",
+    next: i < flat.length - 1 ? flat[i + 1].text : "",
+  };
+}
+
 /* The proof of the page, using the round screen's lyric-card furniture. Spot the Slip needs the
    complete card: its page shows a DOCTORED line, so the reveal is where the line goes right
    (highlighting the real word the impostor stood in for). Name That Song already has the real
-   line on the page, so its answer card adds only the missing song and album attribution plus the
-   context control. Reprinting the line there would make the same lyric compete with itself.
+   line on the page, written up as a lyric sheet at the reveal, so its answer card is only the
+   "full lyrics" link. Reprinting the line there would make the same lyric compete with itself.
    Redacted gets no card either, and for Sing It Back's reason: its reveal peels the whole verse
    and writes the song's name and album at the top of it, so a card underneath would quote one
    of the lines already sitting in full an inch above itself — which is exactly what it did
@@ -9311,12 +9319,18 @@ function bonusAnswerCard() {
       bonusGame.id === "aaron-or-jack" || bonusGame.id === "who-held-the-pen" ||
       bonusGame.id === "the-capitals" || bonusGame.id === "nashville" ||
       bonusGame.id === "sing-it-back" || isRuthlessRun()) return "";
-  /* Name That Song keeps only the card's "in context": the reveal has already written the title,
-     record and section over the line (see settleBonusRound), so a title row here would say it a
-     second time, smaller. Seeing the line inside its song is the payoff, so the peek stays. */
+  /* Name That Song keeps only "full lyrics": the reveal has already written the title, record
+     and section over the line and set the lines either side of it round it (see
+     settleBonusRound), so a card here could only repeat the page. The link opens the song at
+     the line, which the sheet marks with the same red quote rule the page wears. */
   if (bonusGame.id === "name-that-song") {
     const color = albumColor(p.song.album) || "var(--ink-soft)";
-    return `<div class="bg-context" style="--album-color:${color}">${lyricCardContext(p.song, null, p.line)}</div>`;
+    const at = nameSongNeighbours(p.song, p.line);
+    return `<div class="bg-context" style="--album-color:${color}"><div class="lyric-reveal-actions">` +
+      `<button type="button" class="lyric-fullsong" data-song="${escapeHtml(p.song.title)}" data-word=""` +
+        (at ? ` data-section="${at.sectionIndex}" data-line="${at.sourceLineIndex}"` : "") +
+        ` aria-label="Open full lyrics for ${escapeHtml(censor(p.song.title))} at this line">` +
+        `<span class="cta-run">full lyrics${CTA_ARROW}</span></button></div></div>`;
   }
   const slip = bonusGame.id === "spot-the-slip";
   return lyricCard(p.song, slip ? p.realWord : null, false, slip ? p.realLine : p.line, true);
@@ -9676,6 +9690,18 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     if (quote) {
       quote.insertAdjacentHTML("beforebegin", bonusSongHead(bonusPuzzle.song, bonusPuzzle.label));
       if (!correct) body.querySelector(".bg-sheet-title")?.classList.add("is-answer");
+      /* And the line is set back in its song: the line before it and the line after, smaller
+         and in the soft lyric ink, either side of the quote. No toggle, because two lines are
+         cheap to read and the reveal is where the player wants them; no caption, because the
+         heading has just named the section. They run across a section edge rather than stopping
+         at it, so a line that opens a chorus still has the line that led into it. */
+      const near = nameSongNeighbours(bonusPuzzle.song, bonusPuzzle.line);
+      const nearLine = (text, side) => text
+        ? `<p class="bg-near bg-near--${side}">${escapeHtml(censor(text))}</p>` : "";
+      if (near) {
+        quote.insertAdjacentHTML("beforebegin", nearLine(near.prev, "before"));
+        quote.insertAdjacentHTML("afterend", nearLine(near.next, "after"));
+      }
     }
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
@@ -25673,35 +25699,11 @@ function albumTag(song, color) {
     `<span aria-hidden="true">${escapeHtml(song.album)}</span></span>`;
 }
 
-// The count is suppressed when a stepper is rendering it two lines below: "1 of 4 matching
-// lines" sitting directly above a "1 / 4" control is the same fact written twice.
-function lyricRevealMeta(model, word, showCount = true) {
-  const parts = [];
-  if (model.sectionLabel) parts.push(model.sectionLabel);
-  if (showCount && model.totalMatches > 1 && model.occurrence)
-    parts.push(`${model.occurrence} of ${model.totalMatches} ${word ? "matching lines" : "occurrences"}`);
-  return parts.length ? `<div class="lyric-context-meta">${parts.map(escapeHtml).join(" · ")}</div>` : "";
-}
-
-// A context line that opens a new section of the song carries a quiet rule above it, so the
-// peek can run past a section edge without the two halves reading as one continuous verse.
-function lyricContextLine(line, entry, allowBreak = true) {
+// One line of the peek, with the page's word highlighted wherever it is sung.
+function lyricContextLine(line, entry) {
   const matches = entry.word && entry.matchesLine && entry.matchesLine(line.text);
-  const broken = allowBreak && line.sectionBreak;
-  return `<div class="lc-line${matches ? " lc-match" : ""}${broken ? " lc-break" : ""}">` +
+  return `<div class="lc-line${matches ? " lc-match" : ""}">` +
     (matches ? highlightWord(line.text, entry.word, entry.strict) : escapeHtml(censor(line.text))) + `</div>`;
-}
-
-function lyricContextPart(lines, truncated, atStart, entry) {
-  let html = "";
-  // Three dots, not the ⋯ glyph: at this size the single character sets as one short dash and
-  // reads as a stray pen mark rather than as "the song carries on past here".
-  if (truncated && atStart) html += `<div class="lc-gap" aria-hidden="true">· · ·</div>`;
-  // The rule marks a section edge BETWEEN two lines. The top line of the block above the anchor
-  // has nothing over it but the ellipsis, so a rule there is just a stray underline on the meta.
-  html += lines.map((line, index) => lyricContextLine(line, entry, !(atStart && index === 0))).join("");
-  if (truncated && !atStart) html += `<div class="lc-gap" aria-hidden="true">· · ·</div>`;
-  return html;
 }
 
 function fullLyricsButton(entry, extra = false) {
@@ -25714,35 +25716,24 @@ function fullLyricsButton(entry, extra = false) {
       `<span class="cta-run">full lyrics${CTA_ARROW}</span></button></span>`;
 }
 
-// Stepping between occurrences only changes what is on screen while the context is open: the
-// repeated line itself is identical every time it comes round, so on a closed card the arrows
-// looked broken. They ride the same disclosure as the context they page through.
-function occurrenceControls(entry, extra = false) {
-  const model = entry.model;
-  // A recovered multi-line answer is one displayed span, not one numbered line. Keep it whole.
-  if (!model || entry.line.includes("\n") || model.lineStart !== model.lineEnd || model.totalMatches < 2 || !model.occurrence) return "";
-  const title = escapeHtml(censor(entry.song.title));
-  const attrs = extra ? ` data-lyric-context-extra${entry.expanded ? "" : " hidden"}` : "";
-  return `<span class="lyric-occurrence" role="group" aria-label="Matching lyrics in ${title}"${attrs}>` +
-    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="-1" aria-label="Previous matching lyric in ${title}">${OCC_CHEV_L}</button>` +
-    `<span class="lyric-occurrence-count" aria-live="polite">${model.occurrence} / ${model.totalMatches}</span>` +
-    `<button type="button" class="lyric-occurrence-btn" data-occurrence-step="1" aria-label="Next matching lyric in ${title}">${OCC_CHEV_R}</button>` +
-  `</span>`;
-}
-
+/* The card's line and, behind "in context", the lines either side of it (two each way, see
+   buildLyricReveal). Opening sets them AROUND the line, in the soft lyric ink, and the line
+   drops its quote marks because it is no longer a line lifted out of anything. That is the whole disclosure: no
+   section caption, no ellipses, no rules, and no stepper between the word's other lines (the
+   wave above the card already shows where they are, and "full lyrics" has them all lit). Every
+   one of those was reasonable alone and together they were nine kinds of thing doing one job.
+   The line holds still on screen while the verse opens round it: see the toggle's handler. */
 function lyricRevealInner(entry) {
   const model = entry.model;
   const hasContext = !!(entry.allowContext && model && (model.before.length || model.after.length));
   const hidden = entry.expanded ? "" : " hidden";
-  const stepper = occurrenceControls(entry, hasContext);
   const before = hasContext
     ? `<div class="lyric-context-before" id="${entry.beforeId}" data-lyric-context-extra${hidden}>` +
-        lyricRevealMeta(model, entry.word, !stepper) +
-        lyricContextPart(model.before, model.truncatedBefore, true, entry) + `</div>`
+        model.before.map((line) => lyricContextLine(line, entry)).join("") + `</div>`
     : "";
   const after = hasContext
     ? `<div class="lyric-context-after" id="${entry.afterId}" data-lyric-context-extra${hidden}>` +
-        lyricContextPart(model.after, model.truncatedAfter, false, entry) + `</div>`
+        model.after.map((line) => lyricContextLine(line, entry)).join("") + `</div>`
     : "";
   const line = entry.word
     ? highlightWord(entry.line, entry.word, entry.strict)
@@ -25753,10 +25744,12 @@ function lyricRevealInner(entry) {
       ` aria-label="${entry.expanded ? "Hide" : "Show"} lyric context for ${escapeHtml(censor(entry.song.title))}">` +
       `${CTX_LINES}<span class="ctl-lab">${entry.expanded ? "hide context" : "in context"}</span></button>`
     : "";
-  const actions = contextButton + stepper + (entry.allowContext ? fullLyricsButton(entry, hasContext) : "");
+  const actions = contextButton + (entry.allowContext ? fullLyricsButton(entry, hasContext) : "");
+  const quote = `<span class="lq" aria-hidden="true">"</span>`;
   // A card with nothing to offer gets no action row at all. An empty flex box still carries its
   // margin, which is where a chunk of the dead space under the smaller proofs was coming from.
-  return `${before}<div class="lyric-line">"${lyricBreaks(line)}"</div>${after}` +
+  return `${before}<div class="lyric-line">` +
+    `${quote}${lyricBreaks(line)}${quote}</div>${after}` +
     (actions ? `<div class="lyric-reveal-actions">${actions}</div>` : "");
 }
 
@@ -25775,35 +25768,6 @@ function registerLyricReveal(song, word, line, options = {}) {
   lyricRevealRegistry.set(id, entry);
   return `<div class="lyric-reveal${options.compact ? " lyric-reveal--compact" : ""}"` +
     ` data-lyric-reveal="${id}">${lyricRevealInner(entry)}</div>`;
-}
-
-function standaloneLyricContext(song, word, anchorLine) {
-  const line = anchorLine || lyricCardLine(song, word, null);
-  if (!line) return "";
-  const id = nextLyricRevealId("context");
-  const strict = effectiveStrict();
-  const matchesLine = word ? (candidate) => wordRegex(word, strict).test(candidate) : null;
-  const model = buildLyricReveal(song, line, { normalize: normalizeLyric, matchesLine });
-  if (!model) return "";
-  const hasContext = !!(model.before.length || model.after.length);
-  const entry = {
-    id, song, word, line, strict, matchesLine, model, allowContext: true, expanded: false,
-    beforeId: `${id}-before`, afterId: `${id}-after`, fullId: `${id}-full`,
-  };
-  lyricRevealRegistry.set(id, entry);
-  if (!hasContext) {
-    return `<div class="lyric-reveal lyric-reveal--standalone" data-lyric-reveal="${id}">` +
-      `<div class="lyric-reveal-actions">${fullLyricsButton(entry)}</div></div>`;
-  }
-  const rows = lyricRevealMeta(model, word) +
-    lyricContextPart(model.before, model.truncatedBefore, true, entry) +
-    `<div class="lc-anchor-note">the line shown above</div>` +
-    lyricContextPart(model.after, model.truncatedAfter, false, entry);
-  return `<div class="lyric-reveal lyric-reveal--standalone" data-lyric-reveal="${id}">` +
-    `<button type="button" class="lyric-ctx-toggle" aria-expanded="false" aria-controls="${entry.beforeId}"` +
-      ` aria-label="Show lyric context for ${escapeHtml(censor(song.title))}">${CTX_LINES}<span class="ctl-lab">in context</span></button>` +
-    `<div class="lyric-ctx" id="${entry.beforeId}" data-lyric-context-extra hidden>` +
-      `<div class="lyric-ctx-lines">${rows}</div>${fullLyricsButton(entry)}</div></div>`;
 }
 
 /* A first find: the song this page is credited with, never recorded in the lifetime tally and
@@ -25864,11 +25828,6 @@ function bothProofCard(song, isWrong) {
   return `<article class="lyric-card both-proof${isWrong ? " wrong-card" + (isNotFound(song) ? " not-found" : "") : isFirstFind(song) ? " first-find" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
     `<div class="song-title" id="${headingId}">${escapeHtml(censor(song.title))}${albumTag(song, color)}</div>` +
     `${lines}</article>`;
-}
-
-// Standalone form used where the anchor line is already written on the bonus page.
-function lyricCardContext(song, word, anchorLine) {
-  return standaloneLyricContext(song, word, anchorLine);
 }
 
 function moreSongsAllowed() {
@@ -26273,13 +26232,12 @@ function runCountdown() {
   }, 1000);
 }
 
-// The reading controls on a verdict: the context disclosure, the occurrence stepper, the
-// "more songs" fold and its batches, and the full-lyrics opener. Every one of them leaves
-// focus on itself once it has been used — a pointer press focuses the button, the stepper
-// re-focuses its replacement, and the song modal hands focus back on close — so any of them
-// would otherwise hold Enter hostage for the rest of the verdict.
+// The reading controls on a verdict: the context disclosure, the "more songs" fold and its
+// batches, and the full-lyrics opener. Every one of them leaves focus on itself once it has
+// been used — a pointer press focuses the button, and the song modal hands focus back on
+// close — so any of them would otherwise hold Enter hostage for the rest of the verdict.
 const FEEDBACK_READING_CONTROLS =
-  ".lyric-ctx-toggle, .lyric-occurrence-btn, .lyric-fullsong, .more-songs-toggle, .more-songs-next";
+  ".lyric-ctx-toggle, .lyric-fullsong, .more-songs-toggle, .more-songs-next";
 
 // A verdict's plain Enter shortcut must never steal Enter from a focused link or form
 // control. Native activation then reaches the delegated click handler exactly once.
@@ -27893,7 +27851,19 @@ function wireInput() {
       const reveal = toggle.closest("[data-lyric-reveal]");
       const extras = reveal ? Array.from(reveal.querySelectorAll("[data-lyric-context-extra]")) : [];
       const showing = extras.some((part) => part.hidden);
+      /* The verse opens AROUND the line, so the earlier lines land above it and would push it,
+         and the button under it, down the page: the thing the player clicked to read jumps away.
+         Measure the line, open, then scroll by however far it moved, so the line holds still and
+         the verse grows out from it. Instant, because a smooth scroll here is the jump again,
+         just slower. */
+      const anchor = reveal && reveal.querySelector(".lyric-line");
+      const before = anchor ? anchor.getBoundingClientRect().top : 0;
       extras.forEach((part) => { part.hidden = !showing; });
+      if (reveal) reveal.classList.toggle("is-open", showing);
+      if (anchor) {
+        const moved = anchor.getBoundingClientRect().top - before;
+        if (moved) window.scrollBy({ top: moved, behavior: "instant" });
+      }
       toggle.setAttribute("aria-expanded", String(showing));
       toggle.querySelector(".ctl-lab").textContent = showing ? "hide context" : "in context";
       toggle.setAttribute("aria-label", `${showing ? "Hide" : "Show"} lyric context for ${
@@ -27903,30 +27873,6 @@ function wireInput() {
       const entry = reveal && lyricRevealRegistry.get(reveal.dataset.lyricReveal);
       if (entry) entry.expanded = showing;
       if (showing) pauseAutoAdvanceForReading();
-      return;
-    }
-
-    const occurrence = e.target.closest(".lyric-occurrence-btn");
-    if (occurrence) {
-      const reveal = occurrence.closest("[data-lyric-reveal]");
-      const entry = reveal && lyricRevealRegistry.get(reveal.dataset.lyricReveal);
-      if (entry && entry.model && entry.model.matches.length > 1) {
-        const step = Number(occurrence.dataset.occurrenceStep || 0);
-        const targetIndex = (entry.model.occurrence - 1 + step + entry.model.matches.length) % entry.model.matches.length;
-        const target = entry.model.matches[targetIndex];
-        if (target) {
-          entry.line = target.text;
-          entry.model = buildLyricReveal(entry.song, target.text, {
-            normalize: normalizeLyric,
-            matchesLine: entry.matchesLine,
-            anchor: target,
-          });
-          reveal.innerHTML = lyricRevealInner(entry);
-          const replacement = reveal.querySelector(`[data-occurrence-step="${occurrence.dataset.occurrenceStep}"]`);
-          if (replacement) requestAnimationFrame(() => replacement.focus({ preventScroll: true }));
-          pauseAutoAdvanceForReading();
-        }
-      }
       return;
     }
 

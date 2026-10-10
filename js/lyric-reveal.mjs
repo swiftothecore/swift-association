@@ -73,23 +73,27 @@ function exactLine(sections, parts, normalize, matchesLine) {
   return null;
 }
 
+// How much of the song the peek shows: RADIUS lines either side of the line, counted across
+// the whole song, so the line always sits in the middle of at most five. Clipping at the
+// section edge made the peek lopsided (a line first in its chorus got nothing above it), and
+// showing the whole section was worse the other way: an eight-line verse opened as seven lines
+// of reading on a verdict that wants a glance, with the dealt line pushed to one end of it. So
+// the peek runs past a section edge, and runs straight on: the five lines are sung that way,
+// and a blank line or a rule marking the edge was one more thing to read in a glimpse that is
+// only about how the line sits among its neighbours (the full sheet labels its sections).
+// Nothing marks the cut at either end either: "full lyrics" sits beside the toggle.
+export const RADIUS = 2;
+
 // `anchorText` is exactly what the card displays, including a recovered multi-line answer.
 // `matchesLine` is supplied by app.js so strict and lenient rounds use the game's real matcher.
 export function buildLyricReveal(song, anchorText, options = {}) {
   const normalize = options.normalize || defaultNormalize;
   const matchesLine = typeof options.matchesLine === "function" ? options.matchesLine : null;
-  const radius = Math.max(0, Number.isFinite(options.radius) ? Math.floor(options.radius) : 2);
   const sections = revealSections(song);
   const parts = String(anchorText || "").split("\n").map((line) => line.trim()).filter(Boolean);
   if (!parts.length) return null;
 
-  const requested = options.anchor;
-  const requestedSection = requested && sections.find((section) =>
-    section.sectionIndex === Number(requested.sectionIndex));
-  const requestedLine = requestedSection && Number(requested.lineIndex);
-  let span = requestedSection && Number.isInteger(requestedLine) && requestedSection.lines[requestedLine]
-    ? { section: requestedSection, start: requestedLine, end: requestedLine }
-    : exactSpan(sections, parts, normalize) || exactLine(sections, parts, normalize, matchesLine);
+  let span = exactSpan(sections, parts, normalize) || exactLine(sections, parts, normalize, matchesLine);
   if (!span && matchesLine) {
     for (const section of sections) {
       const start = section.lines.findIndex((line) => matchesLine(line.text));
@@ -105,52 +109,18 @@ export function buildLyricReveal(song, anchorText, options = {}) {
     if (within >= 0) anchorIndex = start + within;
   }
 
-  const matching = [];
-  const collect = (test) => {
-    for (const candidate of sections) {
-      candidate.lines.forEach((line, lineIndex) => {
-        if (test(line.text)) matching.push({
-          sectionIndex: candidate.sectionIndex,
-          sectionLabel: candidate.label,
-          lineIndex,
-          sourceLineIndex: line.sourceLineIndex,
-          text: line.text,
-        });
-      });
-    }
-  };
-  if (matchesLine) collect(matchesLine);
-  else {
-    const anchorKey = normalize(section.lines[anchorIndex].text);
-    collect((text) => normalize(text) === anchorKey);
-  }
-  const occurrenceIndex = matching.findIndex((hit) =>
-    hit.sectionIndex === section.sectionIndex && hit.lineIndex === anchorIndex);
-
-  // Context is measured against the WHOLE song, not the anchor's section. Clipping at the
-  // section edge is what made the peek lopsided: a line sitting first in its chorus got nothing
-  // above it and two lines below, which reads as a bug rather than as the end of a verse. The
-  // song runs on past a section break, so the peek does too, and a line that opens a new
-  // section is flagged so the rendering can draw the break instead of pretending it isn't there.
-  const flat = [];
-  sections.forEach((candidate) => {
-    candidate.lines.forEach((line, lineIndex) => {
-      flat.push({
-        text: line.text,
-        sourceLineIndex: line.sourceLineIndex,
-        sectionIndex: candidate.sectionIndex,
-        sectionLabel: candidate.label,
-        lineIndex,
-        sectionBreak: flat.length > 0 && flat[flat.length - 1].sectionIndex !== candidate.sectionIndex,
-      });
-    });
-  });
-  const flatIndex = (lineIndex) => flat.findIndex((line) =>
+  const flat = sections.flatMap((candidate) => candidate.lines.map((line, lineIndex) => ({
+    text: line.text,
+    sourceLineIndex: line.sourceLineIndex,
+    sectionIndex: candidate.sectionIndex,
+    lineIndex,
+  })));
+  const at = (lineIndex) => flat.findIndex((line) =>
     line.sectionIndex === section.sectionIndex && line.lineIndex === lineIndex);
-  const spanStart = flatIndex(start);
-  const spanEnd = flatIndex(end);
-  const beforeStart = Math.max(0, spanStart - radius);
-  const afterEnd = Math.min(flat.length, spanEnd + 1 + radius);
+  const shown = flat.slice(Math.max(0, at(start) - RADIUS), at(end) + 1 + RADIUS);
+
+  const spanStart = shown.findIndex((line) => line.sectionIndex === section.sectionIndex && line.lineIndex === start);
+  const spanEnd = shown.findIndex((line) => line.sectionIndex === section.sectionIndex && line.lineIndex === end);
 
   return {
     sectionIndex: section.sectionIndex,
@@ -159,12 +129,7 @@ export function buildLyricReveal(song, anchorText, options = {}) {
     lineEnd: end,
     anchorLineIndex: anchorIndex,
     anchorSourceLineIndex: section.lines[anchorIndex].sourceLineIndex,
-    before: flat.slice(beforeStart, spanStart),
-    after: flat.slice(spanEnd + 1, afterEnd),
-    truncatedBefore: beforeStart > 0,
-    truncatedAfter: afterEnd < flat.length,
-    totalMatches: matching.length,
-    occurrence: occurrenceIndex >= 0 ? occurrenceIndex + 1 : 0,
-    matches: matching,
+    before: shown.slice(0, spanStart),
+    after: shown.slice(spanEnd + 1),
   };
 }
