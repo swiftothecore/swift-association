@@ -29944,18 +29944,9 @@ function turnHowTo(step) {
   if (next < 0 || next >= HOWTO_PAGES.length) return;
   howToIndex = next;
   renderHowTo();
-  // Keep focus inside the card across a turn. The re-render destroys whichever button was
-  // focused, and focus falling to <body> would strand the reader: the arrow-key handler is bound
-  // to the screen, so a body-focused keydown never reaches it and the keys go dead. Prefer the
-  // arrow they were travelling in, then the other one, then the screen itself — the last card
-  // has no next button and the first has a disabled prev, and neither can hold focus.
-  if (!screens.howto.classList.contains("active")) return;
-  const el = $("howToBody");
-  const usable = (b) => b && !b.disabled;
-  const wanted = el.querySelector(step > 0 ? "[data-howto-next]" : "[data-howto-prev]");
-  const other = el.querySelector(step > 0 ? "[data-howto-prev]" : "[data-howto-next]");
-  const keep = usable(wanted) ? wanted : (usable(other) ? other : screens.howto);
-  try { keep.focus({ preventScroll: true }); } catch (_) { keep.focus(); }
+  // No focus rescue: the arrow keys listen on the document, so focus falling to <body> when the
+  // re-render destroys the pressed button costs nothing. Moving focus onto the new arrow from a
+  // keypress would make it :focus-visible and ring it, which is the box this page doesn't want.
 }
 // Always opens on card one. Deliberately keeps no "you've read this" state: it is a reference
 // you can reopen, not a task with a completion.
@@ -35138,11 +35129,15 @@ async function init() {
       if (to === "graveyard") openGraveyard("howto"); else openGlossary("howto");
     }
   });
-  // Arrow keys turn the cards too. Scoped to the screen, and left alone when the player is
-  // in a field or on a control that wants its own arrow behaviour.
-  $("screen-howto").addEventListener("keydown", (e) => {
+  // Arrow keys turn the cards too. On the document, not the screen, so they still turn cards
+  // after a click on the desk or anywhere else that leaves focus outside the page, and left
+  // alone when the player is in a field or a dialog that wants its own arrow behaviour.
+  document.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    if (e.target.closest("input, textarea, select")) return;
+    if (!screens.howto.classList.contains("active")) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+    if (document.querySelector("#settingsModal.open, #customModal.open, #keepsakesModal.open")) return;
     e.preventDefault();
     turnHowTo(e.key === "ArrowRight" ? 1 : -1);
   });
