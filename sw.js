@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v454";
+const CACHE = "stta-v455";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -77,6 +77,7 @@ const ASSETS = [
   "fonts/playfairdisplay-700-latin.woff2",
   "js/app.js",
   "js/offline.js",
+  "js/version.js",   // The ~ version tag.
   "js/cta.js",   // Shared start-button contents and decorative finish layers.
   "js/anniversarycta.js",   // The sixteen album-anniversary start-button finishes and the 13th's.
   // Imported at module evaluation time by both app.js and search/search.js.
@@ -255,7 +256,10 @@ self.addEventListener("activate", (e) => {
 
 // Settings and dev tools ask the controlling worker about the copy actually on disk.
 self.addEventListener("message", (e) => {
-  if (e.data?.type !== "offline-status" || !e.ports?.[0]) return;
+  if (!e.ports?.[0]) return;
+  // The ~ version tag only wants the name, so it skips the walk over every asset below.
+  if (e.data?.type === "version") return e.ports[0].postMessage({ version: CACHE });
+  if (e.data?.type !== "offline-status") return;
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     const saved = await Promise.all(ASSETS.map((path) => cache.match(path)));

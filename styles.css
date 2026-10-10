@@ -17053,3 +17053,14 @@ body[data-contrast="high"] .run-pause-sheet::before { outline: 2px solid var(--i
 @media (max-width: 560px), (max-height: 560px) and (pointer: coarse) {
   .toast-layer .toast:nth-last-child(n + 3) { display: none; }
 }
+
+/* ===== VERSION TAG =====
+   The ~ key's deploy readout (js/version.js), a dev aid for checking a reload landed. */
+.version-tag {
+  position: fixed; right: 10px; bottom: 8px; z-index: 10000;
+  padding: 2px 7px; border: 1px solid var(--ink-soft); border-radius: 2px;
+  background: var(--paper); color: var(--ink-soft);
+  font: 12px/1.4 var(--type); letter-spacing: 0.02em;
+  pointer-events: none; user-select: none;
+}
+.version-tag[data-state="stale"] { color: #9b2226; border-color: #9b2226; }
