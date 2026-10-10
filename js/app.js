@@ -25827,6 +25827,76 @@ function lyricRevealInner(entry) {
     (actions ? `<div class="lyric-reveal-actions">${actions}</div>` : "");
 }
 
+/* Opening or closing "in context". The verse opens AROUND the line, so the earlier lines land
+   above it and would push it, and the button under it, down the page: the thing the player
+   clicked to read jumps away. So the line is pinned: every frame, the page scrolls by however
+   far the line has moved, and the line holds still while the verse grows out from it.
+   Pinning alone used to happen in one instant step, which kept the line still but snapped
+   everything else on screen by the height of four lines at once, and that read as the page
+   jumping. Now the lines either side unfold over a moment, so the rest of the page glides
+   instead of lurching. Reduced motion and instant animation keep the one-step version. */
+const LYRIC_UNFOLD_MS = 240;
+function unfoldLyricContext(reveal, extras, showing) {
+  const anchor = reveal && reveal.querySelector(".lyric-line");
+  const pinned = anchor ? anchor.getBoundingClientRect().top : 0;
+  const hold = () => {
+    if (!anchor) return;
+    const moved = anchor.getBoundingClientRect().top - pinned;
+    if (moved) window.scrollBy({ top: moved, behavior: "instant" });
+  };
+  const settle = () => {
+    extras.forEach((part) => { part.hidden = !showing; });
+    if (reveal) reveal.classList.toggle("is-open", showing);
+  };
+  // A second click mid-unfold drops the first one where it stands and starts from there.
+  if (reveal && reveal._unfold) {
+    reveal._unfold.forEach((anim) => anim.cancel());
+    reveal._unfold = null;
+    reveal.style.minHeight = "";
+  }
+  const blocks = extras.filter((part) => !part.classList.contains("lyric-full-wrap"));
+  if (!reveal || !blocks.length || motionReduced() || animInstant()) { settle(); hold(); return; }
+
+  // Opening shows the lines straight away and grows them; closing shrinks them, then hides.
+  // The card keeps at least its old height meanwhile: dropping the quote marks can rewrap the
+  // line a row shorter, and at the foot of the page that shrink makes the browser clamp the
+  // scroll before the verse has grown enough to give it back.
+  if (showing) {
+    reveal.style.minHeight = `${reveal.getBoundingClientRect().height}px`;
+    settle();
+  }
+  else extras.filter((part) => part.classList.contains("lyric-full-wrap")).forEach((part) => { part.hidden = true; });
+  const anims = blocks.map((part) => {
+    const cs = getComputedStyle(part);
+    const full = { height: `${part.scrollHeight}px`, marginTop: cs.marginTop, marginBottom: cs.marginBottom, opacity: 1 };
+    const shut = { height: "0px", marginTop: "0px", marginBottom: "0px", opacity: 0 };
+    part.style.overflow = "hidden";
+    return part.animate(showing ? [shut, full] : [full, shut],
+      { duration: LYRIC_UNFOLD_MS, easing: showing ? "cubic-bezier(.2,.7,.3,1)" : "cubic-bezier(.5,0,.8,.4)" });
+  });
+  reveal._unfold = anims;
+  // The browser's own scroll anchoring would pin some card further down instead, and the two
+  // corrections fight. This one knows which line was clicked, so it gets the page to itself.
+  const root = document.documentElement;
+  root.style.overflowAnchor = "none";
+  let running = true;
+  // Animations update before animation-frame callbacks, so a hold here lands in the same paint.
+  const follow = () => { if (!running) return; hold(); requestAnimationFrame(follow); };
+  requestAnimationFrame(follow);
+  Promise.all(anims.map((anim) => anim.finished)).then(() => {
+    if (!showing) settle();
+    hold();
+  }, () => {}).finally(() => {
+    running = false;
+    if (reveal._unfold === anims) {
+      reveal._unfold = null;
+      blocks.forEach((part) => { part.style.overflow = ""; });
+      reveal.style.minHeight = "";
+      root.style.overflowAnchor = "";
+    }
+  });
+}
+
 function registerLyricReveal(song, word, line, options = {}) {
   if (!line) return "";
   const id = nextLyricRevealId("reveal");
@@ -27951,19 +28021,7 @@ function wireInput() {
       const reveal = toggle.closest("[data-lyric-reveal]");
       const extras = reveal ? Array.from(reveal.querySelectorAll("[data-lyric-context-extra]")) : [];
       const showing = extras.some((part) => part.hidden);
-      /* The verse opens AROUND the line, so the earlier lines land above it and would push it,
-         and the button under it, down the page: the thing the player clicked to read jumps away.
-         Measure the line, open, then scroll by however far it moved, so the line holds still and
-         the verse grows out from it. Instant, because a smooth scroll here is the jump again,
-         just slower. */
-      const anchor = reveal && reveal.querySelector(".lyric-line");
-      const before = anchor ? anchor.getBoundingClientRect().top : 0;
-      extras.forEach((part) => { part.hidden = !showing; });
-      if (reveal) reveal.classList.toggle("is-open", showing);
-      if (anchor) {
-        const moved = anchor.getBoundingClientRect().top - before;
-        if (moved) window.scrollBy({ top: moved, behavior: "instant" });
-      }
+      unfoldLyricContext(reveal, extras, showing);
       toggle.setAttribute("aria-expanded", String(showing));
       toggle.querySelector(".ctl-lab").textContent = showing ? "hide context" : "in context";
       toggle.setAttribute("aria-label", `${showing ? "Hide" : "Show"} lyric context for ${
