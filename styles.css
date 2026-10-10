@@ -13643,18 +13643,11 @@
     font-style: normal; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust));
     letter-spacing: 1px; color: var(--day-soft); margin-left: 7px;
   }
-  /* the streak, drawn rather than captioned: one bead per day kept, on the game's own
-     waxed cord. Caps at seven beads + a written count, so a long run never overflows. */
+  /* the streak, drawn rather than captioned: one bead per day kept, strung by the
+     bracelet's own builder (streakStrandSVG), so its cord and beads carry the strand's
+     fixed colours on both cards. Caps at seven beads + a written count. */
   .day .day-strand { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-top: 5px; }
   .day-strand svg { display: block; height: 18px; width: auto; overflow: visible; }
-  /* The cord and outlines are the ticket's own inks, so the night card gets night ones:
-     daytime near-black outlines vanish into a dark card, and the empty bead used to be a
-     fixed cream disc that glowed on it. Empty now means empty, the card showing through. */
-  .day-strand .cord { stroke: var(--day-soft); }
-  .day-strand .knot { fill: var(--day-soft); }
-  .day-strand .beads { stroke: var(--day-ink); stroke-opacity: 0.85; }
-  .day-strand .empty { fill: var(--day-stock); stroke: var(--day-soft); }
-  :root[data-theme="dark"] .day-strand .beads { stroke: color-mix(in srgb, var(--day-stock) 55%, #000); stroke-opacity: 1; }
   .day-strand b {
     display: block; font-family: var(--type); font-weight: 400;
     font-size: calc(8px + var(--text-size-adjust)); letter-spacing: 1.6px; color: var(--day-soft);

@@ -918,6 +918,49 @@ export function centreStrand(host) {
   return dx;
 }
 
+// The daily ticket's streak: one bead per day kept, in the ink of the album that carried
+// it, oldest on the left. It is THIS bracelet, small, not a drawing of one. The ticket
+// used to draw its own: flat discs on a grey line that wove through their centres and
+// ended in a dot, which read as a line chart's markers, not as beads on a cord, and it
+// was a second object answering to the bracelet's name. So it takes the pony bead,
+// pearl spacers, waxed cord and tied knots from the builders above, laid in one gentle
+// sag the way the results strand lies. `inks` are already resolved colours (the caller
+// owns the palette, colour-blind included); a null is a day with nothing right in it
+// and is strung frosted, the strand's own miss. `over` means the streak is longer than
+// the beads shown: the left knot goes and the cord runs off the edge to say "more,
+// back there". Drawn at full bead scale; the caller's CSS sets the height.
+export function streakStrandSVG(inks, { over = false } = {}) {
+  const u = "ss" + (++BR_UID);
+  const P = 29;
+  const last = (inks.length - 1) * P;
+  const L = over ? -44 : -22, R = last + 22;
+  const yAt = (x) => 3 * Math.sin(Math.PI * (x - L) / Math.max(1, R - L));
+  let d = "";
+  for (let k = 0; k <= 40; k++) {
+    const x = L + ((R - L) * k) / 40;
+    d += (k ? "L" : "M") + n(x) + "," + n(yAt(x));
+  }
+  let paintDefs = "";
+  let s = cordStack(d, 3.6);
+  if (!over) s += tieKnot(L, yAt(L), -1);
+  inks.forEach((ink, i) => {
+    const x = i * P, y = yAt(x), rot = jitter(i, 1, 9);
+    if (i) s += heishi(x - P / 2, yAt(x - P / 2), 1, jitter(i, 2, 10));
+    const paint = beadPaint(ink);
+    if (paint) paintDefs += beadPaintDef(`${u}paint${i}`, paint);
+    const fill = paint ? `url(#${u}paint${i})` : ink;
+    s += fill ? ponyBead(x, y, fill, 1, rot, "gloss", u, i) : ponyBead(x, y, "none", 1, rot, "clear", u, i);
+  });
+  s += tieKnot(R, yAt(R), 1);
+  // room for the knots' tails, which fall 18 units out and 9 down
+  const x0 = over ? L : L - 26, w = R + 26 - x0, y0 = -17, h = 38;
+  return `<svg viewBox="${n(x0)} ${y0} ${n(w)} ${h}" width="${n(w / 2)}" height="${h / 2}" ` +
+    `xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">` +
+    `<defs>${beadDefs(u)}${paintDefs}<filter id="${u}drop" x="-10%" y="-30%" width="120%" height="185%">` +
+    `<feDropShadow dx="1.1" dy="2.4" stdDeviation="1.6" flood-color="${PEN}" flood-opacity="0.26"/></filter></defs>` +
+    `<g filter="url(#${u}drop)">${s}</g></svg>`;
+}
+
 export function buildBraceletSVG(results, activeRound, freshIndex, albums, opts = {}) {
   const total = Math.max(1, Math.floor(Number(opts.total) || TOTAL_ROUNDS));
   if (!opts.sealed && total <= BRACELET_ROW_CAP) {

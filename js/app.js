@@ -84,7 +84,7 @@ import { showCover, placeCoverStickers } from "./stickercover.js";
 import { coverStickerSlots, toggleCoverSticker } from "./stickerselection.js";
 import {
   BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
-  centreStrand, trinketPreviewSVG, beadPreviewSVG, randomTrinketForBead,
+  centreStrand, trinketPreviewSVG, beadPreviewSVG, randomTrinketForBead, streakStrandSVG,
 } from "./bracelet.js";
 import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from "./braceletcard.js";
 import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
@@ -16261,7 +16261,6 @@ function cakeSvg() {
 // and where breaking it shows first. Design sessions: scripts/ui/daily-ticket-*.html
 // and scripts/ui/daily-button-handoff.md (both gitignored).
 const DAY_STRAND_CAP = 7;
-const DAY_BEAD_YS = [11, 13, 12, 11, 12, 11, 12];
 
 // The daily ticket's serial: how many days the game has been public. Derived, never
 // stored, so the same date carries the same serial for everybody. null before
@@ -16286,44 +16285,18 @@ function dayChipFields(dateStr) {
   const dow = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", weekday: "short" }).format(d).toUpperCase();
   return { month, day, dow };
 }
-// The streak strand: one bead per day kept, on the game's own waxed cord, coloured by
-// each day's dominant album (albumColor(), so the colour-blind palette is honoured
-// for free). Under the cap the beads already say the number, so a numeral beside them
-// would say it twice — the caption underneath carries the count instead, and only
-// past the cap does the cord run off the left edge to say "more, back there". On a
-// phone the beads are wider than the space the torn stub leaves, so CSS drops the svg
-// and the caption stands alone — which is why the count is written text and not a
-// <title> on the drawing.
+// The streak strand: one bead per day kept, coloured by each day's dominant album
+// (albumColor(), so the colour-blind palette is honoured for free), drawn by the
+// bracelet's own builder so the ticket and the results page show one object. Under the
+// cap the beads already say the number, so a numeral beside them would say it twice —
+// the caption underneath carries the count instead, and only past the cap does the cord
+// run off the left edge to say "more, back there". On a phone the beads are wider than
+// the space the torn stub leaves, so CSS drops the svg and the caption stands alone —
+// which is why the count is written text and not a <title> on the drawing.
 function dayStrandHTML(albums, days) {
   if (!albums.length) return `<b>${days}-DAY STREAK</b>`;
-  const over = days > albums.length;
-  const pitch = 15, r = 4.8, x0 = 8;
-  const pts = albums.map((a, i) => ({ x: x0 + i * pitch, y: DAY_BEAD_YS[i % DAY_BEAD_YS.length], album: a }));
-  const lastY = pts[pts.length - 1].y;
-  const knotX = pts[pts.length - 1].x + 9;
-  const startX = over ? -3 : x0 - 7;   // over the cap the cord runs off the edge
-  let d = `M${startX} ${pts[0].y}`;
-  pts.forEach((p, i) => {
-    const prevX = i === 0 ? startX : pts[i - 1].x;
-    d += ` Q${((prevX + p.x) / 2).toFixed(1)} ${p.y + (i % 2 ? -3.4 : 3.4)} ${p.x} ${p.y}`;
-  });
-  d += ` Q${(knotX - 5).toFixed(1)} ${lastY - 3.4} ${knotX} ${lastY}`;
-  // Only the album inks are written in here. The cord, the outlines and the empty bead
-  // take their colours from the ticket's own stock in CSS (.day-strand), so they turn
-  // with the night card instead of printing daytime ink onto it.
-  const beads = pts.map((p) => {
-    const ink = p.album ? albumColor(p.album) : null;
-    return ink
-      ? `<circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${ink}"/>`
-      // nothing right that day: an unstrung bead, outline only
-      : `<circle class="empty" cx="${p.x}" cy="${p.y}" r="${r}" stroke-dasharray="2.6 2.2"/>`;
-  }).join("");
-  const w = Math.ceil(knotX + 5);
-  return `<svg viewBox="0 0 ${w} 22" width="${w}" height="22" aria-hidden="true">` +
-    `<path class="cord" d="${d}" fill="none" stroke-width="1.9" stroke-linecap="round"/>` +
-    `<g class="beads" stroke-width="1.3">${beads}` +
-      `<circle class="knot" cx="${knotX}" cy="${lastY}" r="2.4" stroke-width="0"/></g></svg>` +
-    `<b>${days}-DAY STREAK</b>`;
+  const inks = albums.map((a) => (a ? albumColor(a) : null));
+  return streakStrandSVG(inks, { over: days > albums.length }) + `<b>${days}-DAY STREAK</b>`;
 }
 // Optically centre a chip numeral on its own ink rather than its advance width — Caveat
 // is a slanted script whose ink sits well right of its metric box, by an amount that
