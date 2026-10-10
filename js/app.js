@@ -13648,6 +13648,8 @@ function braceletRenderOptions(results, opts = {}) {
     // n' Sweet", which no colour map of Taylor's has an entry for. Both are read off the same
     // slot, and they can never both be live, so the live strand asks for it under either.
     : (guestRunId || gameType === "lineup") ? roundBeadTints.slice()
+    // Double Trouble / Name Three: a cleared page strings every song named on it (multiBeadTint).
+    : multiRuleActive() ? roundBeadTints.slice()
     : null;
   return {
     ...opts,
@@ -19158,6 +19160,9 @@ function renderInkBanner() {
 // Double Trouble's dark side: a song is spent once named, for the whole run. The page
 // still wants `need` different songs, but they have to be `need` songs nobody has used yet,
 // so the catalogue thins out under the player as the run goes on.
+function multiRuleActive() {
+  return gameType === "challenge" && !!currentChallenge && currentChallenge.rule === "multi";
+}
 function multiNoRepeats() {
   return gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi"
     && !!currentChallenge.noRepeats;
@@ -19166,6 +19171,40 @@ function multiNoRepeats() {
 function multiFreshSongs(pool) {
   const songs = pool || currentSongs;
   return multiNoRepeats() ? songs.filter((s) => !runNamedSongs.has(s.title)) : songs;
+}
+// How much room a word gives a multi page: songs off the twelve albums the player could still
+// name, one per song rather than per pressing. Counted that way because the pool is what a fair
+// page is judged on, and a stray single or a second pressing of the same song is not a choice.
+function multiWordRoom(w) {
+  const fresh = multiFreshSongs(validSongs(w, effectiveStrict(), effectiveNoTitle()));
+  return songCount(fresh.filter(isAlbumAnswer));
+}
+// Name Three: the seconds a title that never sings the word costs, or 0 where a wrong song
+// still loses the page (Double Trouble).
+function multiMissCost() {
+  return gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi"
+    ? (currentChallenge.missCost || 0) : 0;
+}
+// The bead a cleared multi page strings: every song named on it, in the order they were named,
+// so a page answered from three records wears three colours. Collapses to one flat colour when
+// the songs all came off the same record.
+function multiBeadTint() {
+  const cols = roundNamed.map((t) => {
+    const s = currentSongs.find((x) => x.title === t);
+    return s ? albumColor(s.album) : null;
+  }).filter(Boolean);
+  if (!cols.length) return null;
+  return cols.every((c) => c === cols[0]) ? cols[0] : cols;
+}
+// The songs named so far this page, as the banner lists them: each title underlined in its
+// record's colour, so the player can see what a sung line was credited to.
+function multiNamedList() {
+  if (!roundNamed.length) return "";
+  return `<span class="chall-prog-named">` + roundNamed.map((t) => {
+    const s = currentSongs.find((x) => x.title === t);
+    const col = (s && albumColor(s.album)) || "var(--ink-soft)";
+    return `<span class="multi-named" style="--album-color:${col}">${escapeHtml(censor(t))}</span>`;
+  }).join("") + `</span>`;
 }
 // Double Trouble: how many of the two needed songs have been named this page.
 function renderMultiBanner() {
@@ -19176,7 +19215,8 @@ function renderMultiBanner() {
     `<span class="chall-prog-name">name ${need} different songs</span>` +
     `<span class="chall-prog-count">${roundNamed.length} / ${need}</span>` +
     `<span class="chall-prog-note">this page · ${score} / ${currentChallenge.target || 8} pages cleared` +
-      (multiNoRepeats() ? ` · ${runNamedSongs.size} songs spent` : "") + `</span>`;
+      (multiNoRepeats() ? ` · ${runNamedSongs.size} songs spent` : "") + `</span>` +
+    multiNamedList();
 }
 // Devil's Path: distort the prompt word display-only (matching reads currentWord from
 // state, never the DOM), at a FIXED effect for the run — unlike Word Games' escalating tiers.
@@ -21279,9 +21319,10 @@ function pickWord() {
   // is the winnability guard for the no-repeats rule: a word with two holders is a fine page
   // on round one and a dead one on round nine if both of them are gone.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi") {
-    const need = currentChallenge.need || 2;
-    const enough = choices.filter((w) =>
-      multiFreshSongs(validSongs(w, effectiveStrict(), effectiveNoTitle())).length >= need);
+    // Name Three asks for more than the bare minimum: `minSongs` is the room a page needs to be
+    // a fair one rather than merely a possible one (see its entry in config.js).
+    const floor = currentChallenge.minSongs || currentChallenge.need || 2;
+    const enough = choices.filter((w) => multiWordRoom(w) >= floor);
     if (enough.length) choices = enough;
   }
   // Both Of Us: the page's extra words are drawn against this one, so an anchor with fewer
@@ -25140,6 +25181,22 @@ function submitAnswer(song, isTimeout) {
     if (missing.length && missing.length < bothWords.length) { noteWrongSubmission(song); rejectBoth(missing); return; }
   }
 
+  // Name Three: a title that never sings the word costs seconds, not the page. A sung line can
+  // only land on a song that holds the word, so lines were always free to try while a title was
+  // a gamble that could throw away every song already named. The cost keeps it from being a
+  // free oracle: thirty seconds buys a handful of guesses, not a scan of the list. A miss that
+  // would take the last of the clock falls through and loses the page as it always did.
+  if (song && !isTimeout && multiMissCost() && !currentSongs.some((s) => s.title === song.title)) {
+    const cost = multiMissCost();
+    const left = clockRemaining();
+    if (left != null && left > cost) {
+      noteWrongSubmission(song);
+      startTimer(left - cost, roundClockTotal);
+      softRejectFlash(`<b>${escapeHtml(censor(song.title))}</b> never sings it · −${cost}s`);
+      return;
+    }
+  }
+
   // Double Trouble / Name Three: a page resolves only once `need` DIFFERENT valid songs are named.
   // Each accepted valid song banks toward the pair without locking the page (the clock
   // keeps running); a duplicate is soft-rejected; reaching `need` falls through to
@@ -25150,6 +25207,15 @@ function submitAnswer(song, isTimeout) {
     if (roundNamed.includes(song.title)) {
       noteWrongSubmission(song);
       softRejectFlash(`already named <b>${escapeHtml(song.title)}</b>. name a different song`);
+      return;
+    }
+    // Another pressing of a song already named ("All Too Well" and its ten-minute version) is
+    // the same song to a player, so it is not a second answer. Still accepted as right on its
+    // own, exactly as songCount counts it: one song, whichever version is named.
+    const twin = currentSongs.find((s) => roundNamed.includes(s.title) && s._family === song._family);
+    if (twin) {
+      noteWrongSubmission(song);
+      softRejectFlash(`<b>${escapeHtml(censor(song.title))}</b> is another version of <b>${escapeHtml(censor(twin.title))}</b>. name a different song`);
       return;
     }
     // Dark side: a song named on ANY earlier page is spent, and saying it again costs the
@@ -25232,6 +25298,7 @@ function submitAnswer(song, isTimeout) {
   // resolved here rather than at render time for the same reason.
   roundBeadTints[round - 1] = gameType === "lineup"
     ? lineupBeadTint(roundArtists[round - 1], song || tapAnswer || null)
+    : multiRuleActive() ? (correct ? multiBeadTint() : null)
     : guestBeadTint(song || tapAnswer || null);
   // And the room, which is the same fact painted at a bigger size. Here rather than at the top
   // of the next page because this is the only moment the answered song is still in hand, and
@@ -26040,7 +26107,7 @@ function showCorrectFeedback(song, lyricMatch) {
   // lyric at each place it earns the page.
   const both = bothRuleActive() && bothWords.length > 1;
   const banner = multi
-    ? (roundNamed.length === 2 ? "both of them" : `all ${roundNamed.length}`)
+    ? (roundNamed.length === 2 ? "you named both" : `you named all ${roundNamed.length}`)
     : both ? (bothWords.length === 2 ? "it holds both" : "it holds all three")
     : lyricMatch ? (LYRIC_BANNERS[lyricMatch.tier] || LYRIC_BANNERS.base) : "";
   // A named title on a one-word page is said as the sentence, "Florida!!! sings bury, twice",
@@ -26126,7 +26193,13 @@ function showWrongFeedback(song, isTimeout) {
   // Said as a sentence only when it is true: a title the word is really absent from. A pick
   // refused for some other rule (it holds the word, but the page wanted something else of it)
   // keeps the plain banner with the answer under it.
-  const sentence = waveVerdictActive() &&
+  // Double Trouble / Name Three, with some of the page already found: the page is lost, but the
+  // songs the player DID name were right, and saying "the page ran out" over them reads as if
+  // none of them counted. So the verdict leads with what was named, then what else would have
+  // done. Off this path entirely when nothing was named, where the ordinary miss says it best.
+  const multiPart = multiRuleActive() && roundNamed.length > 0
+    ? roundNamed.map((t) => currentSongs.find((s) => s.title === t)).filter(Boolean) : null;
+  const sentence = !multiPart && waveVerdictActive() &&
     (isTimeout || !!(song && !wordRegex(currentWord).test(song.lyrics || "")));
   const submitted = song && !isTimeout
     ? `<p class="wrong-submission"><span>your answer</span> ${escapeHtml(censor(song.title))}</p>`
@@ -26142,8 +26215,11 @@ function showWrongFeedback(song, isTimeout) {
     let pool = currentSongs;
     // Double Trouble: don't showcase a song the player already named on this page (e.g.
     // they got the first of the pair, then missed the second) — only surface fresh options.
-    if (currentChallenge && currentChallenge.rule === "multi" && roundNamed.length)
-      pool = pool.filter((s) => !roundNamed.includes(s.title));
+    if (currentChallenge && currentChallenge.rule === "multi" && roundNamed.length) {
+      // …nor another pressing of one, which the page would have turned away as the same song.
+      const fams = new Set(currentSongs.filter((s) => roundNamed.includes(s.title)).map((s) => s._family));
+      pool = pool.filter((s) => !roundNamed.includes(s.title) && !fams.has(s._family));
+    }
     // …and on the dark side, don't showcase one spent on an earlier page either: it isn't an
     // answer the player could have given, so it would be teaching them the wrong catalogue.
     if (multiNoRepeats()) { const fresh = multiFreshSongs(pool); if (fresh.length) pool = fresh; }
@@ -26191,9 +26267,26 @@ function showWrongFeedback(song, isTimeout) {
       // The expansion continues `ordered`, so the list picks up exactly where the cards left
       // off instead of re-shuffling the same songs into a different sequence.
       help = label + cards + moreSongsBlock(ordered, examples, currentWord);
+      if (multiPart) {
+        // A pool already narrowed past the named songs, so "you could also have named" only
+        // ever offers songs that would have moved the count.
+        const also = ordered.length
+          ? `<span class="red-note">you could also have named</span>` + cards + moreSongsBlock(ordered, examples, currentWord)
+          : "";
+        help = `<span class="red-note">you named</span>` +
+          multiPart.map((s) => lyricCard(s, currentWord, false, null, true)).join("") + also;
+      }
     }
   }
-  const head = !sentence
+  // With the reveals switched off there are no other songs to offer, but the named ones are
+  // the player's own answers, not a reveal, so they still show.
+  if (multiPart && !help)
+    help = `<span class="red-note">you named</span>` +
+      multiPart.map((s) => lyricCard(s, currentWord, false, null, true)).join("");
+  const need = multiPart ? (currentChallenge.need || 2) : 0;
+  const head = multiPart
+    ? `<div class="banner bad">${verdictMark("bad", "inl")}${countWord(multiPart.length)} of ${countWord(need)} wasn't enough</div>${submitted}`
+    : !sentence
     ? `<div class="banner bad">${verdictMark("bad", "inl")}${reason}</div>${submitted}`
     : isTimeout
       ? `<div class="vw vw-bad"><p class="vw-say">${verdictMark("bad")}<span class="vw-verb">the page ran out on</span> ${verdictWord()}</p></div>`

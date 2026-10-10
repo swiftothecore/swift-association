@@ -1726,23 +1726,33 @@ export const CHALLENGES = [
   { id: "name-three", name: "Name Three", rule: "multi", mode: "medium",
     tagline: "{target} pages, {need} songs each",
     free: false, cost: 1, target: 8, need: 3, seconds: 30, noTitle: false, tapes: 3,
+    minSongs: 9, missCost: 5,
     // Double Trouble's rule, taken deeper: three songs a page instead of two, and drawn from
     // the whole word pool rather than the common one. `need` already drives the banner, the
     // soft reject and the winnability filter, so this is a registry entry, not new machinery.
     // `noTitle: false` overrides Normal's usual ban: finding three songs for one word is hard
     // enough without also ruling out the ones that wear it on the cover, and the titles are
     // the rung that gets a player from two songs to three.
+    // `minSongs` is the room a word has to have, counted in songs off the twelve albums (one
+    // per song, not per pressing). The bare `need` floor was a winnability guard, not a fair
+    // page: "grass" passed it with four holders, two of them strays from outside the albums,
+    // which asks the player to name nearly every song the word is in. Three times `need`
+    // leaves a page of genuine choices: 318 of Normal's 715 words on this side, 259 on the dark.
+    // `missCost` is what a title that never sings the word costs: seconds, not the page. A
+    // sung line can only ever land on a song that holds the word, so lines were free to try
+    // and titles were a gamble that could throw away three good answers at once.
     // Dark: a fourth song on the same thirty-second clock, the titles taken back off the
     // table, and a target lowered to keep the run survivable — four different songs for one
-    // word is the wall, not the page count. The clock deliberately does NOT tighten: naming a
-    // fourth song is already the whole difficulty, and taking seconds away on top would make
+    // word is the wall, not the page count. Seven pages of it was measured in play as a wall
+    // on top of the wall, so it asks for five. The clock deliberately does NOT tighten: naming
+    // a fourth song is already the whole difficulty, and taking seconds away on top would make
     // it a typing race instead.
-    hard: { need: 4, target: 7, noTitle: true,
-      blurb: "30s · suggestions · FOUR different songs a page · never in the title",
+    hard: { need: 4, target: 5, noTitle: true, minSongs: 12,
+      blurb: "30s · suggestions · FOUR different songs a page · never in the title · a wrong song costs 5s",
       desc: "Three wasn't enough. Four different songs for the one word, every page, in the same half minute, and the titles no longer count, so every one of them has to sing it.",
-      win: "Clear 7 pages, naming four different songs each." },
-    blurb: "30s · suggestions · name THREE different songs a page",
-    desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue. Songs with the word in the title count here.",
+      win: "Clear 5 pages, naming four different songs each." },
+    blurb: "30s · suggestions · name THREE different songs a page · a wrong song costs 5s",
+    desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue. Songs with the word in the title count here, and a song that doesn't sing it costs you five seconds rather than the page.",
     win: "Clear 8 pages, naming three different songs each." },
   // ---- Risk batch. Four challenges over one shared bead economy: answering is ordinary,
   //      the difficulty is the DECISION you make around each answer. The currency is beads

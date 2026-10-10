@@ -8146,6 +8146,18 @@
     font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust));
     letter-spacing: 0.3px; color: var(--ink-soft); opacity: 0.85;
   }
+  /* Double Trouble / Name Three: the songs named so far this page, on their own row under the
+     tally. Handwritten because they are the player's answers, each underlined in its record's
+     colour, which is the colour the page's bead will be strung in. */
+  .chall-prog-named {
+    flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 14px;
+    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.25;
+    color: var(--ink);
+  }
+  .multi-named {
+    text-decoration: underline; text-decoration-color: var(--album-color);
+    text-decoration-thickness: 2px; text-underline-offset: 3px;
+  }
   /* ---- the margin line: where the run stands, and how much room it has left ---------------
      Under the rule banner, above the word, in two lines with a deliberate gap between them in
      weight. The score leads at reading size; the slips line sits beneath it a good 3px smaller
