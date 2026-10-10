@@ -245,6 +245,27 @@ function shuffled(arr, rng) {
   return a;
 }
 
+/* NO GIVEAWAY, read loosely. The exact-substring check misses a line that is the title in all
+   but spelling: an extra "ever" in the chorus of We Are Never Ever Getting Back Together, the
+   "pink cloud" of Pink Clouding, the "grown" of Never Grow Up, a backing vocal in brackets between two of the title's words.
+   So a line is also out when it sings EVERY content word of the title, stem-folded and in any
+   order. The title's own bracketed tail ("(Taylor's Version)", "(10 Minute Version)") is
+   dropped first, or no line could ever sing all of it. A title made only of function words
+   ("Mine", "Me!") has no stems and falls back on the substring check alone. */
+function titleStems(title) {
+  const bare = normalizeLyric(String(title).replace(/\s*[([][^)\]]*[)\]]/g, ""));
+  return [...new Set(bare.split(" ").filter((w) => w.length > 2 && !FUNCTION_WORDS.has(w) &&
+    !FILLER.has(w)).map(stemOf))];
+}
+function singsTitle(lineKey, stems) {
+  if (!stems.length) return false;
+  const sung = lineKey.split(" ").map(stemOf);
+  // A long stem also takes a short tail the folding cannot see, so "grown" still sings the
+  // "grow" of Never Grow Up. Four letters at least, or "man" would start finding "many".
+  return stems.every((w) => sung.some((k) => k === w ||
+    (w.length >= 4 && k.startsWith(w) && k.length - w.length <= 2)));
+}
+
 /* ---------- Name That Song ----------
    Show one real lyric line; the player names the song it came from. Two fairness guards:
      • UNIQUE      — the line must belong to exactly one song. Shared lines (repeated hooks,
@@ -260,6 +281,7 @@ export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120
     // comfortably supplies a full run, and a repeated song would make the answer free.
     if (avoid && avoid.has(song.title)) continue;
     const titleKey = normalizeLyric(song.title);
+    const titleWords = titleStems(song.title);
 
     const candidates = songLines(song).filter(({ line }) => {
       const n = line.split(/\s+/).filter(Boolean).length;
@@ -270,6 +292,7 @@ export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120
       const owners = lineIndex.get(key);
       if (!owners || owners.size !== 1) return false;
       if (titleKey && key.includes(titleKey)) return false;
+      if (singsTitle(key, titleWords)) return false;
       return true;
     });
     if (!candidates.length) continue;

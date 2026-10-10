@@ -7356,7 +7356,6 @@ function startBonusGame(g, lensId = null, opts = {}) {
      rather than leaving a retired lens run's on it. */
   if (lensId) gameType = "ruthless";
   else if (gameType === "ruthless") gameType = "classic";
-  updateTagline();   // the masthead is shared, and a lens run's is not the last difficulty's
   bonusGame = g;
   // A lens run is the Ruthless MODE, and the randomiser deals it per lens, so that is the token
   // it marks. Marking the shelf's own id instead would leave every lens permanently unplayed in
@@ -7372,6 +7371,9 @@ function startBonusGame(g, lensId = null, opts = {}) {
      loop that needs one to stop. */
   bonusEndless = !lensId && bonusHasEndless(g) && !!opts.endless;
   bonusDead = false;
+  // The masthead is shared, and a shelf run's is neither the last difficulty's nor a lens
+  // run's. Read after `bonusGame` and `bonusEndless` are set, since the line is built off both.
+  updateTagline();
   flourishThisRun = false;   // the shelf never touches resetRunState, so it re-arms its own flourish
   bonusRecentFakes = [];
   bonusRecentSongs = [];
@@ -7714,7 +7716,7 @@ function bonusWritingLine({ placeholder, aria, hint, dropdown = false }) {
    would be titled: the name in pen, the section it came from noted underneath. */
 function bonusSongHead(song, label) {
   return `<div class="bg-sheet">` +
-      `<h3 class="bg-sheet-title">${escapeHtml(song.title)}</h3>` +
+      `<h3 class="bg-sheet-title">${escapeHtml(censor(song.title))}</h3>` +
       `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
       `<div class="bg-sheet-meta">${escapeHtml(song.album)}` +
         (label ? ` · ${escapeHtml(label.toLowerCase())}` : "") + `</div>` +
@@ -8109,9 +8111,13 @@ function renderBonusRound() {
     });
     if (!bonusLocked) focusRoundInput(input);
   } else {
+    /* NO SECTION LABEL ON THE PAGE. The game promises nothing to go on but the lyric, and a
+       label is a transcriber's note rather than lyric. Worse, the rare ones narrow the field:
+       "refrain" is on twelve of the shelf's songs and "breakdown" on eleven, so on those pages
+       a player who had learned the labelling could place a line they did not know. Where the
+       line sits is worth knowing once it is answered, so the reveal writes it under the title. */
     body.innerHTML =
       `<p class="bg-ask">name the song this line is from</p>` +
-      label +
       `<blockquote class="bg-lyric">${escapeHtml(p.line)}</blockquote>` +
       bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
                          hint: "Enter accepts the top match", dropdown: true });
@@ -8848,12 +8854,17 @@ function judgeName(picked = null) {
     return;
   }
   $("bonusInput").disabled = true;
-  // The card below names the right song, so the only thing left to say is what was written —
-  // and on a hit that's the same thing twice. Redacted is the exception: a won page there has
+  // The page already names the right song (Name That Song's sheet heading, Redacted's peeled
+  // verse), so the only thing left to say is what was written — and on a hit that's the same
+  // thing twice. Redacted is the exception: a won page there has
   // a number on it, and the number is the whole brag.
+  // A wrong title off the right record is a nearer miss than a wild one, and saying so is both
+  // true and kind. Name That Song only: Redacted's verse is several lines of the record already.
+  const sameRecord = !correct && bonusGame.id === "name-that-song" &&
+    song.album === bonusPuzzle.song.album;
   const detail = correct
     ? (bonusGame.id === "redacted" ? redactDetail(bonusPageScore(true)) : "")
-    : `you wrote <b>${escapeHtml(censor(song.title))}</b>`;
+    : `you wrote <b>${escapeHtml(censor(song.title))}</b>` + (sameRecord ? " · right record" : "");
   settleBonusRound(correct, detail);
 }
 
@@ -9286,12 +9297,12 @@ function bonusAnswerCard() {
       bonusGame.id === "aaron-or-jack" || bonusGame.id === "who-held-the-pen" ||
       bonusGame.id === "the-capitals" || bonusGame.id === "nashville" ||
       bonusGame.id === "sing-it-back" || isRuthlessRun()) return "";
+  /* Name That Song keeps only the card's "in context": the reveal has already written the title,
+     record and section over the line (see settleBonusRound), so a title row here would say it a
+     second time, smaller. Seeing the line inside its song is the payoff, so the peek stays. */
   if (bonusGame.id === "name-that-song") {
     const color = albumColor(p.song.album) || "var(--ink-soft)";
-    const headingId = nextLyricRevealId("title");
-    return `<article class="lyric-card" style="--album-color:${color}" aria-labelledby="${headingId}">` +
-      `<div class="song-title" id="${headingId}">${escapeHtml(censor(p.song.title))}${albumTag(p.song, color)}</div>` +
-      `${lyricCardContext(p.song, null, p.line)}</article>`;
+    return `<div class="bg-context" style="--album-color:${color}">${lyricCardContext(p.song, null, p.line)}</div>`;
   }
   const slip = bonusGame.id === "spot-the-slip";
   return lyricCard(p.song, slip ? p.realWord : null, false, slip ? p.realLine : p.line, true);
@@ -9630,6 +9641,19 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     // see penDetail. The lines above have already been signed by the judge.
     const meta = $("bonusPenMeta");
     if (meta) meta.textContent = bonusPuzzle.album;
+  } else if (bonusGame.id === "name-that-song") {
+    /* The page finishes as a lyric sheet, the way Redacted's does: the instruction goes and the
+       title is written in pen over the line it was asked about, with the record and the section
+       under the rule. A missed title goes in the editor's red pen. Before this the answer was
+       the smallest thing on the page, typewriter inside a card under a big banner. */
+    const body = $("bonusPlayBody");
+    const ask = body.querySelector(".bg-ask");
+    if (ask) ask.remove();
+    const quote = body.querySelector(".bg-lyric");
+    if (quote) {
+      quote.insertAdjacentHTML("beforebegin", bonusSongHead(bonusPuzzle.song, bonusPuzzle.label));
+      if (!correct) body.querySelector(".bg-sheet-title")?.classList.add("is-answer");
+    }
   } else if (bonusGame.id === "sing-it-back") {
     // Whatever was in the gap — a wrong word, a half-typed one, nothing at all — the real
     // word goes in, so the line is left whole and correct on the page.
@@ -10560,6 +10584,7 @@ function leaveBonusGame(to = "bonus") {
   bonusDead = false;
   bonusGame = null;
   bonusPuzzle = null;
+  updateTagline();   // hand the masthead back to the main game's line
   renderBonusPageRegister();
   renderBonusPage();
   if (to === "start") { backToScreen("start"); return; }
@@ -12185,6 +12210,7 @@ function renderTrackEnd(rec, secs) {
   $("tbtPickBtn")?.addEventListener("click", () => {
     bonusGame = null;
     bonusEnded = false;
+    updateTagline();
     openTrackPicker(trackBackTarget);
   });
   // The one replay on the shelf that is unambiguously worth offering: the score is the clock,
@@ -15869,6 +15895,12 @@ function updateTagline() {
     // instead is the only thing worth saying: the clock is not the limit, it is the result.
     : gameType === "ruthless"
     ? `${BONUS_ROUNDS} pages · the clock is the score`
+    // A shelf game is not a gameType, so without this branch its run wore whatever the front
+    // page last picked ("13 pages · 10 seconds each · Normal difficulty") over a run of ten
+    // pages on the game's own clock. Track by Track has no pages, only the one clock.
+    : bonusGame
+    ? (bonusTimed(bonusGame) ? "one album · the clock is the score"
+       : `${bonusEndless ? "endless pages" : `${BONUS_ROUNDS} pages`} · ${bonusSeconds()} seconds each · bonus game`)
     // The one run where "name the song" means anybody's song, which the guest tagline says one
     // name at a time and this one cannot: there are eight of them.
     : gameType === "lineup"
