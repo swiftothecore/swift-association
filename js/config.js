@@ -5477,19 +5477,6 @@ export const GRAVEYARD = [
       `because they wanted to. You came here to play, not to revise.`,
   },
   {
-    id: "doubleup",
-    name: "Double Or Nothing",
-    born: "22 July 2026", died: "28 July 2026",
-    icon: "doubleup",
-    was: `A risk card. Bank what the chain had earned, or double it and risk losing the lot.`,
-    why: `Shelved twice inside a week. The first version was broken and the fix was real, which made ` +
-      `the second look worse: it rode the same beads, the same offer between pages, the same run ` +
-      `length and the same target as Press Your Luck, and differed only in whether the pot added or ` +
-      `doubled. That is a tuning parameter, not a challenge, and a player meets it as one rule wearing ` +
-      `two seals. Two cards that ask the same question earn less than one card that asks it well. It ` +
-      `can come back when it has an axis of its own.`,
-  },
-  {
     id: "string",
     name: "Invisible String",
     born: "1 August 2026", died: "4 August 2026",
