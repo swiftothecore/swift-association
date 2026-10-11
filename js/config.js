@@ -1576,7 +1576,13 @@ export const CHALLENGES = [
     // twenty to thirty-five holders, so spending two of them a page is a rule the player would
     // never once feel; off the whole word list the holder lists are short enough that a title
     // burned on page three is a title genuinely missing on page nine.
+    // `minSongs: 4` is the fair floor Name Three has, set lower on purpose. At the bare `need`
+    // the rarer words could deal a page with exactly two unspent songs, which asks the player to
+    // name every song the word is in. Four leaves two spare choices and keeps 578 of Normal's
+    // 715 words. Name Three's three-times-`need` (six here) would keep only 430 and strip out
+    // the thin pages that are the only place a spent title is ever felt.
     hard: { tagline: "{target} pages, {need} songs each, no repeats", seconds: 15, noRepeats: true, pool: null,
+      minSongs: 4,
       blurb: "15s · suggestions · rarer words · two songs a page · no repeats all run · not in the title",
       desc: "Rarer words, two songs a page, and each song you name is spent for the rest of the run.",
       win: "Clear 8 pages, naming two songs each and never repeating one." },

@@ -21344,8 +21344,13 @@ function pickWord() {
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "multi") {
     // Name Three asks for more than the bare minimum: `minSongs` is the room a page needs to be
     // a fair one rather than merely a possible one (see its entry in config.js).
-    const floor = currentChallenge.minSongs || currentChallenge.need || 2;
-    const enough = choices.filter((w) => multiWordRoom(w) >= floor);
+    // The fallback steps down to the bare `need` before giving up on the floor altogether:
+    // falling straight back to the whole bucket could deal a no-repeats page with nothing left
+    // on it, where a word that only misses the fair floor is still a page that can be cleared.
+    const need = currentChallenge.need || 2;
+    const floor = currentChallenge.minSongs || need;
+    const fair = choices.filter((w) => multiWordRoom(w) >= floor);
+    const enough = fair.length ? fair : choices.filter((w) => multiWordRoom(w) >= need);
     if (enough.length) choices = enough;
   }
   // Both Of Us: the page's extra words are drawn against this one, so an anchor with fewer
@@ -34940,6 +34945,12 @@ function buildDevApi() {
         burn: (n) => { for (const s of currentSongs.slice(0, n || currentSongs.length - 1))
             runNamedSongs.add(s.title);
           renderMultiBanner(); return [...runNamedSongs]; },
+        // How many of this pool's words a floor of `n` songs leaves (multiWordRoom, so it reads
+        // the spent titles too): for tuning `minSongs`. Defaults to the live challenge's floor.
+        room: (n) => { const floor = n || (currentChallenge && (currentChallenge.minSongs
+            || currentChallenge.need)) || 2;
+          const pool = (wordBuckets[effectivePool()] || playableWords).filter((w) => !usedWords.includes(w));
+          return { floor, words: pool.filter((w) => multiWordRoom(w) >= floor).length, of: pool.length }; },
         win: (id) => { const c = CHALLENGE_BY_ID[id || "name-three"];
           score = (c && c.target) || 8; endGame(); },
       },
