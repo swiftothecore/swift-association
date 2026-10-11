@@ -18560,8 +18560,12 @@ function onTapKnowledgeClick(index) {
 // pick. The grid IS the reveal, so the verdict card underneath stays minimal — a banner, the
 // answer named in words, and the way onward. (The normal song card can't be used here anyway:
 // there's no answered song to build it from.)
+// Odd One Out also draws every tile's song under its title (js/songwave.js): the singers with
+// their lines lit, the odd one a flat sheet, so the proof of "never sings it" is on the board.
+// Whose Line? draws only the answer, with the page's line lit, under the note naming it.
 function revealTapKnowledge(correct) {
   const grid = $("tapGrid");
+  const odd = oddOneRuleActive();
   if (grid) {
     grid.querySelectorAll(".tap-tile").forEach((b, i) => {
       b.disabled = true;
@@ -18569,10 +18573,18 @@ function revealTapKnowledge(correct) {
       if (!t) return;
       if (t.correct) b.classList.add("tap-tile--valid");
       else if (i === tapPicked) b.classList.add("tap-tile--miss");
+      const w = odd ? pageWave(t.song, true) : null;
+      if (w) b.insertAdjacentHTML("beforeend", `<span class="tap-tile-wave">${w.svg}</span>`);
     });
   }
   const answer = (tapTiles.find((t) => t.correct) || {}).song;
-  const note = oddOneRuleActive()
+  let proof = "";
+  if (!odd && answer && whosePuzzle && Array.isArray(answer.sections) && answer.sections.length) {
+    const key = (l) => String(l).trim().toLowerCase();
+    const line = key(whosePuzzle.line);
+    proof = waveProof(songWave(answer, { test: (l) => key(l) === line }, "lit"), "card-wave");
+  }
+  const note = odd
     ? `“<b>${escapeHtml(currentWord)}</b>” is nowhere in ${escapeHtml(censor(answer ? answer.title : ""))}`
     : `that line is from ${escapeHtml(censor(answer ? answer.title : ""))}`;
   const auto = settings.autoAdvance;
@@ -18585,7 +18597,7 @@ function revealTapKnowledge(correct) {
   const fb = $("feedback");
   fb.innerHTML = verdictMarkup(
     `<div class="banner ${correct ? "good" : "bad"}">${verdictMark(correct ? "good" : "bad", "inl")}${banner}</div>`,
-    `<p class="red-note">${note}</p>`,
+    `<p class="red-note">${note}</p>${proof}`,
     advanceUI);
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
@@ -18847,11 +18859,15 @@ function revealCommon(correct) {
   const advanceUI = auto
     ? countdownAdvance("next page", "cd", "skipBtn")
     : turnSlip("continueBtn");
+  // How far the thread runs: every song that sings it, the page's own songs ringed among them.
+  const rx = word ? wordRegex(word) : null;
+  const hits = rx ? oneVersionEach(allSongs.filter((s) => rx.test(s.lyrics || ""))) : [];
   fb.innerHTML = verdictMarkup(
     `<div class="banner ${correct ? "good" : "bad"}">${verdictMark(correct ? "good" : "bad", "inl")}${correct ? "that's the thread" : "not the thread"}</div>`,
     `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
-    `<div class="common-reveal">${cards}</div>`,
+    `<div class="common-reveal">${cards}</div>` + (hits.length ? countLabel(hits.length, "sing it") : ""),
     advanceUI);
+  if (hits.length) fillCountDots(fb.querySelector(".vw-count"), hits, { words: [word], named: commonPuzzle.lines.map((l) => l.song) });
   playSound(correct ? "correct" : "wrong");
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   if (correct) celebrateCorrect(correctStreak, 0);
@@ -25964,14 +25980,19 @@ function lyricCard(song, word, isWrong, lineOverride, context, wave = false, rib
 
 // Both Of Us remains ONE card per song, but each required word now has its own anchored proof
 // and context controls. The valid-song intersection and scoring are untouched.
+// Its drawing lights every line that sings any of the page's words, so the card shows where
+// each one lives in the song (one in the verse, the other in the bridge).
 function bothProofCard(song, isWrong) {
   const color = albumColor(song.album) || "var(--ink-soft)";
   const headingId = nextLyricRevealId("title");
   const lines = bothWords.map((word) =>
     registerLyricReveal(song, word, lyricCardLine(song, word, null), { context: true })).join("");
+  const rxs = bothWords.map((word) => wordRegex(word));
+  const wave = Array.isArray(song.sections) && song.sections.length
+    ? waveProof(songWave(song, { test: (line) => rxs.some((rx) => rx.test(line)) }, isWrong ? "" : "lit"), "card-wave") : "";
   return `<article class="lyric-card both-proof${isWrong ? " wrong-card" + (isNotFound(song) ? " not-found" : "") : isFirstFind(song) ? " first-find" : ""}" style="--album-color:${color}" aria-labelledby="${headingId}">` +
     `<div class="song-title" id="${headingId}">${escapeHtml(censor(song.title))}${albumTag(song, color)}</div>` +
-    `${lines}</article>`;
+    `${wave}${lines}</article>`;
 }
 
 function moreSongsAllowed() {
@@ -26125,20 +26146,25 @@ function revengeNote() {
    shows where the word lives in each song instead of only saying which songs have it. The
    board this was picked from is scripts/ui/verdict-wave.html.
 
-   It only speaks for a page with one prompt word answered by naming a song. Tap grids, Whose
-   Line?, Both Of Us, Common Thread and Title...? each ask something else, so they keep their own
-   banners, and those carry the same felt-tip marks (js/verdictmark.js). */
+   It only speaks for a page with one prompt word answered by naming a song (Sea of Songs
+   included). Odd One Out, Whose Line?, Both Of Us, Common Thread, Title...? and a page that
+   asked for several songs each ask something else, so they keep their own banners, carrying
+   the same felt-tip marks (js/verdictmark.js). Most still draw the songs and count them in
+   their own way: see bothProofCard, revealTapKnowledge and revealCommon. */
 const COUNT_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
 const countWord = (n) => COUNT_WORDS[n] || String(n);
 
 /* The count label's dots: measured against the label's own line, so a word that fits sits
    beside "twenty-one songs do" as a strip, and one that doesn't becomes the tracklist blocks,
-   beside the label while they fit and on a line of their own under it when they don't. */
-function fillCountDots(label, hits) {
+   beside the label while they fit and on a line of their own under it when they don't.
+   `words` is the page's word(s): Both Of Us counts songs holding all of them and Common Thread
+   counts its own thread, so neither is currentWord alone. `named` rings the songs the player
+   wrote (Name Three, Both Of Us) or the page showed (Common Thread). */
+function fillCountDots(label, hits, { words = [currentWord], named } = {}) {
   if (!label) return;
   const say = label.querySelector(".vw-count-say");
   const full = label.clientWidth;
-  const rx = new RegExp(wordRegex(currentWord).source, "gi");
+  const rx = new RegExp(words.map((w) => wordRegex(w).source).join("|"), "gi");
   const { svg, below } = countDots(hits, allSongs, {
     width: full - (say ? say.offsetWidth : 0) - 12,
     fallbackWidth: full,
@@ -26148,16 +26174,24 @@ function fillCountDots(label, hits) {
     colour: gameType === "lineup"
       ? ((night) => (s) => lineupInk(s.artist, night) || "var(--ink-soft)")(effectiveTheme() === "dark")
       : (s) => { const g = guestBeadTint(s); return (Array.isArray(g) ? g[0] : g) || albumColor(s.album) || "var(--ink-soft)"; },
-    title: (s, n) => escapeHtml(`${censor(s.title)} · ${s.album} · ${n} words · sings it ${(s.lyrics.match(rx) || []).length}×`),
-    seed: currentWord,
+    title: (s, n) => escapeHtml(`${censor(s.title)} · ${s.album} · ${n} words · sings ${words.length > 1 ? "them" : "it"} ${(s.lyrics.match(rx) || []).length}×`),
+    seed: words.join("+"),
+    named: named ? (s) => named.some((t) => t === s || (t._family || t) === (s._family || s)) : undefined,
   });
   if (!svg) return;
   label.classList.toggle("vw-count-below", below);
   label.insertAdjacentHTML("beforeend", svg);
-  if (!prefersReducedMotion()) tipOutCountDots(label.querySelector(".count-dots"), currentWord);
+  if (!prefersReducedMotion()) tipOutCountDots(label.querySelector(".count-dots"), words.join("+"));
 }
+// The count label the dots are drawn into: "forty-one songs sing it". Filled by fillCountDots
+// once it is on the page and can be measured.
+function countLabel(n, verb) {
+  return `<p class="vw-label vw-count"><span class="vw-count-say"><b>${countWord(n)}</b> song${n === 1 ? "" : "s"} ${verb}</span></p>`;
+}
+// Sea of Songs is a tap grid but still a one-word "name a song" page, so it keeps the sentence;
+// the knowledge grids (Odd One Out, Whose Line?) draw their songs on the grid instead.
 function waveVerdictActive() {
-  return !!currentWord && !roundIsImpostor && !tapGridActive() && !whoseLineRuleActive() &&
+  return !!currentWord && !roundIsImpostor && !tapKnowledgeActive() && !whoseLineRuleActive() &&
     !bothRuleActive() && !commonRuleActive() && !titleProofActive();
 }
 // The song drawn under the page's word. Null for a song without structured sections, which
@@ -26215,7 +26249,7 @@ function showCorrectFeedback(song, lyricMatch) {
   const card = multi
     ? roundNamed.map((t) => {
       const named = currentSongs.find((s) => s.title === t) || song;
-      return lyricCard(named, currentWord, false, null, true, false, isFirstFind(named) ? "first-find" : "");
+      return lyricCard(named, currentWord, false, null, true, true, isFirstFind(named) ? "first-find" : "");
     }).join("")
     : both
       ? bothProofCard(song, false)
@@ -26234,6 +26268,12 @@ function showCorrectFeedback(song, lyricMatch) {
     ? roundNamed.map((t) => currentSongs.find((s) => s.title === t)).filter(Boolean)
     : song ? [song] : [];
   const more = moreSongsBlock(shuffle(currentSongs.slice()), shownSongs, currentWord);
+  // Name Three / Double Trouble / Both Of Us: how many songs the page could have been answered
+  // with, the ones just named ringed among them. The whole of Name Three is "how many songs sing
+  // this", and Both Of Us is "how few hold all of them", so the count is the page's real news.
+  const countPool = (multi || both) && settings.showExamples && currentMode.examples > 0 ? oneVersionEach(currentSongs) : null;
+  const count = countPool && countPool.length
+    ? countLabel(countPool.length, both ? (bothWords.length === 2 ? "hold both" : "hold all three") : "sing it") : "";
   // Auto-advance setting on → a countdown + skip; off → a plain "next page" button.
   const auto = settings.autoAdvance;
   const advanceUI = auto
@@ -26248,9 +26288,11 @@ function showCorrectFeedback(song, lyricMatch) {
     ${inkNote}
     ${firstNote}
     ${card}
+    ${count}
     ${deepCutNote}
     ${formsNote}
     ${more}`, advanceUI);
+  if (count) fillCountDots(fb.querySelector(".vw-count"), countPool, { words: both ? bothWords : [currentWord], named: shownSongs });
   if (formsNote) markCoachmark("wordForms");   // it's on screen now — spend the one-time note
   $(auto ? "skipBtn" : "continueBtn").addEventListener("click", advanceFromFeedback);
   playSound("correct");
@@ -26325,12 +26367,15 @@ function showWrongFeedback(song, isTimeout) {
       if (picks.length) {
         const verb = bothWords.length === 2 ? "both live" : "all live";
         const where = picks.length > 1 ? "in these two" : "in this one";
-        help = `<span class="red-note">${bothWordsPhrase(true)} ${verb} ${where}</span>` +
+        // Led by how many songs held every word, which is the measure of how findable it was.
+        countHits = ordered;
+        help = countLabel(ordered.length, bothWords.length === 2 ? "hold both" : "hold all three") +
+          `<span class="red-note">${bothWordsPhrase(true)} ${verb} ${where}</span>` +
           picks.map((s) => bothProofCard(s, true)).join("");
       }
     } else {
       const examples = ordered.slice(0, n);
-      const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true, sentence, isNotFound(s) ? "not-found" : "")).join("");
+      const cards = examples.map((s) => lyricCard(s, currentWord, true, null, true, sentence || !!multiPart, isNotFound(s) ? "not-found" : "")).join("");
       // The way into the cards is a label, so it is typed rather than handwritten, and it says
       // how many songs there were before you scroll: "seven songs do".
       const one = ordered.length === 1;
@@ -26350,8 +26395,11 @@ function showWrongFeedback(song, isTimeout) {
         const also = ordered.length
           ? `<span class="red-note">you could also have named</span>` + cards + moreSongsBlock(ordered, examples, currentWord)
           : "";
-        help = `<span class="red-note">you named</span>` +
-          multiPart.map((s) => lyricCard(s, currentWord, false, null, true)).join("") + also;
+        // The count is of every song the page would take, the ones already named among them
+        // (ringed), so "two of three" sits against how many there were to find.
+        countHits = oneVersionEach(currentSongs);
+        help = countLabel(countHits.length, "sing it") + `<span class="red-note">you named</span>` +
+          multiPart.map((s) => lyricCard(s, currentWord, false, null, true, true)).join("") + also;
       }
     }
   }
@@ -26371,7 +26419,8 @@ function showWrongFeedback(song, isTimeout) {
         `<span class="sr-only">your answer, </span>${escapeHtml(censor(song.title))}</span>` +
         ` <span class="vw-verb">never sings</span> ${verdictWord()}</p>${waveProof(pageWave(song, false), "vw-proof")}</div>`;
   fb.innerHTML = verdictMarkup(head, help, turnSlip("continueBtn"));
-  if (countHits) fillCountDots(fb.querySelector(".vw-count"), countHits);
+  if (countHits) fillCountDots(fb.querySelector(".vw-count"), countHits,
+    { words: bothRuleActive() && bothWords.length > 1 ? bothWords : [currentWord], named: multiPart || [] });
   playSound("wrong");
   $("continueBtn").addEventListener("click", advanceFromFeedback);
 }
@@ -30856,7 +30905,10 @@ function devAnswer(kind) {
     if (bad) submitAnswer(bad); else submitAnswer(null, true);
     return;
   }
-  if (currentSongs.length) submitAnswer(currentSongs[0]);   // correct
+  // correct: a song not already named on this page, so a multi-answer page can be finished
+  const fams = new Set(currentSongs.filter((s) => roundNamed.includes(s.title)).map((s) => s._family || s));
+  const pick = currentSongs.find((s) => !fams.has(s._family || s)) || currentSongs[0];
+  if (pick) submitAnswer(pick);
 }
 
 /* Timer cheats — operate on the live interval (timerStart) or a frozen value. */

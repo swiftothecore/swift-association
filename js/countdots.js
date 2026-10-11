@@ -22,6 +22,7 @@ import { mulberry32, fnv1a } from "./util.js";
 
 const GAP = 2;              // between strip dots
 const R_LO = 1.8, R_HI = 5.2;
+const NAMED_PAD = 1.4;      // extra room either side of a ringed dot
 const STRIP_H = 2 * R_HI + 1;
 const TL_R = 1.7;           // a tracklist cell's dot
 const TL_P = 4.3;           // its pitch
@@ -44,9 +45,11 @@ function hand(seed) {
 }
 
 // `tip` arrives escaped for an attribute. It goes on data-tip, the game's own bubble, and not
-// on an SVG <title>, which the browser would show as its grey native tooltip.
-function circle(cx, cy, r, fill, j, tip) {
-  return `<circle cx="${(cx + j(0.6)).toFixed(2)}" cy="${(cy + j(0.8)).toFixed(2)}"` +
+// on an SVG <title>, which the browser would show as its grey native tooltip. A `named` dot is
+// one the player wrote on this page, ringed in ink on the dot itself (not a second circle), so
+// the ring travels with it when the dots are tipped out.
+function circle(cx, cy, r, fill, j, tip, named = false) {
+  return `<circle${named ? ` class="cd-named"` : ""} cx="${(cx + j(0.6)).toFixed(2)}" cy="${(cy + j(0.8)).toFixed(2)}"` +
     ` r="${(r * (1 + j(0.12))).toFixed(2)}" fill="${fill}" data-tip="${tip}"/>`;
 }
 
@@ -65,8 +68,9 @@ const tracklistWidth = (groups, rows) =>
 
 /* Lay the dots for `hits` out in `width` px, or as narrowly as they go. `fallbackWidth` is the
    room on a line of their own, for when even the tallest tracklist won't fit beside the label.
-   Returns { svg, below }: `below` says the drawing wants its own line under the label. */
-export function countDots(hits, corpus, { width, fallbackWidth, colour, title, seed }) {
+   Returns { svg, below }: `below` says the drawing wants its own line under the label.
+   `named` (optional) says which of the hits the player wrote on this page, which are ringed. */
+export function countDots(hits, corpus, { width, fallbackWidth, colour, title, seed, named = () => false }) {
   if (!hits.length || !corpus.length) return { svg: "", below: false };
   const order = new Map(corpus.map((s, i) => [s, i]));
   const sorted = hits.filter((s) => order.has(s)).sort((a, b) => order.get(a) - order.get(b));
@@ -76,14 +80,17 @@ export function countDots(hits, corpus, { width, fallbackWidth, colour, title, s
   const lo = Math.min(...lens), span = Math.max(1, Math.max(...lens) - lo);
   const radius = (s) => R_LO + (R_HI - R_LO) * Math.sqrt((words(s) - lo) / span);
   const radii = sorted.map(radius);
-  const stripW = radii.reduce((w, r) => w + 2 * r + GAP, -GAP);
+  // A ringed dot is given a little more room either side, so its ring never touches the next.
+  const pad = sorted.map((s) => (named(s) ? NAMED_PAD : 0));
+  const stripW = radii.reduce((w, r, i) => w + 2 * r + GAP + 2 * pad[i], -GAP);
 
   if (stripW <= width) {
     let x = 0, out = "";
     sorted.forEach((s, i) => {
       const r = radii[i];
-      out += circle(x + r, STRIP_H / 2, r, colour(s), j, title(s, words(s)));
-      x += 2 * r + GAP;
+      x += pad[i];
+      out += circle(x + r, STRIP_H / 2, r, colour(s), j, title(s, words(s)), named(s));
+      x += 2 * r + GAP + pad[i];
     });
     return { svg: wrap(Math.ceil(stripW + 1), STRIP_H, out), below: false };
   }
@@ -103,7 +110,7 @@ export function countDots(hits, corpus, { width, fallbackWidth, colour, title, s
       const cx = x + Math.floor(i / rows) * TL_P + TL_R + 0.5;
       const cy = (i % rows) * TL_P + TL_R + 0.5;
       out += held.has(s)
-        ? circle(cx, cy, TL_R, colour(s), j, title(s, words(s)))
+        ? circle(cx, cy, TL_R, colour(s), j, title(s, words(s)), named(s))
         : `<circle class="cd-rest" cx="${cx}" cy="${cy}" r="${TL_R - 0.4}" stroke="${colour(s)}"/>`;
     });
     x += Math.ceil(g.songs.length / rows) * TL_P + TL_ALBUM_GAP;

@@ -9869,6 +9869,10 @@
     background: color-mix(in srgb, var(--red-pen) 12%, transparent);
   }
   .tap-tile--miss .tap-tile-title { color: var(--red-pen); }
+  /* Odd One Out's reveal: each tile's song drawn under its title, the singers' lines lit. */
+  .tap-tile:has(.tap-tile-wave) { flex-direction: column; align-items: stretch; justify-content: center; gap: 5px; }
+  .tap-tile-wave { display: flex; min-width: 0; }
+  .tap-tile-wave .songwave { height: 16px; }
   @media (max-width: 560px) {
     .tap-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; }
     .tap-tile-title { font-size: calc(17px + var(--text-size-adjust)); }
@@ -10263,6 +10267,8 @@
   .count-dots { display: block; flex: none; overflow: visible; }
   .count-dots circle { transform-box: fill-box; transform-origin: center; }
   .count-dots .cd-rest { fill: none; stroke-width: 0.6; stroke-opacity: 0.45; }
+  /* a song the player named on this page (Name Three, Both Of Us) or the page showed (Common Thread) */
+  .count-dots .cd-named { stroke: var(--ink); stroke-width: 1.1; }
   @media (max-width: 560px) {
     .vw-say { font-size: calc(23px + var(--text-size-adjust)); }
     .vw-say .vmark { width: 22px; height: 22px; margin-right: 4px; }
