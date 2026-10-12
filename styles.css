@@ -5431,6 +5431,29 @@
      it hugs one on a lyric card. */
   .bg-blank:is(.is-got, .is-answer) { min-width: 0; border-bottom-color: transparent; }
   .bg-blank.is-answer { --hl: rgba(178,58,58,0.15); color: #8a2626; }
+  /* The page wears the SONG'S colour rather than the notebook's: the gap's highlighter, the
+     rule under the title, the writing line and the clock all take the album colour of the line
+     on the page (red for State Of Grace). --song-era is set per page by renderBonusRound, and
+     only for a game that names its song, so it can never print an answer's era early. Each
+     colour is mixed toward the ink so a dark album (Midnights, reputation) still lifts off the
+     night page, the same trick Track by Track's sheet uses. A miss keeps the red pen's blush and
+     a running-low clock keeps the red pen: those mean something, the era only decorates. */
+  [data-bonus-game="sing-it-back"] {
+    --era-pen: color-mix(in srgb, var(--song-era, var(--ink-accent)) 78%, var(--ink));
+    --era-hl: color-mix(in srgb, var(--song-era, var(--ink-accent)) 46%, transparent);
+  }
+  :root[data-theme="dark"] [data-bonus-game="sing-it-back"] {
+    --era-pen: color-mix(in srgb, var(--song-era, var(--ink-accent)) 62%, var(--ink));
+    --era-hl: color-mix(in srgb, color-mix(in srgb, var(--song-era, var(--ink-accent)) 62%, var(--ink)) 34%, transparent);
+  }
+  [data-bonus-game="sing-it-back"] .bg-blank:not(.is-answer) { --hl: var(--era-hl); }
+  [data-bonus-game="sing-it-back"] .bg-sheet-rule {
+    background: linear-gradient(90deg, transparent, var(--era-pen) 18%, var(--era-pen) 82%, transparent);
+    opacity: 0.85;
+  }
+  [data-bonus-game="sing-it-back"] .song-input:focus { border-bottom-color: var(--era-pen); }
+  [data-bonus-game="sing-it-back"] .song-input { caret-color: var(--era-pen); }
+  [data-bonus-game="sing-it-back"] .bg-timer-fill:not(.low) { background: var(--era-pen); }
 
   /* Then What — a verse growing down the page, and three lines under it of which one comes
      next. The sheet reads as writing on paper; the cards read as loose lines waiting to be

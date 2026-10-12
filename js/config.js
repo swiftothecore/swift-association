@@ -1045,7 +1045,11 @@ export const NASHVILLE_WRONG = -1;
    the charm for calling only what you know is ten taps on pass, which knows nothing. Six is most
    of the run, so the passes it allows are a few pages honestly declined, not a run sat out. */
 export const NASHVILLE_KNOW_BETTER = 6;
-export const BONUS_BLANK_SECONDS = 20;  // read the line, find the gap, then type — slip's budget
+/* Fifteen, Name That Song's budget, cut from twenty after a playtest. The line and the song are
+   both on the page, so a player who knows it has the word in a few seconds and twenty left the
+   clock with nothing to do. Not lower: the slack is for typing one word on a phone, and for
+   singing up to the gap from the top of the section, which is honest recall rather than stalling. */
+export const BONUS_BLANK_SECONDS = 15;
 // Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
 // the strips you peel while you think, so a tight clock would charge you twice for the same
 // hesitation. Long enough to read two or three lines, weigh the blocks and write a title;

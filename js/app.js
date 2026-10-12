@@ -7745,6 +7745,15 @@ function renderBonusRound() {
   const body = $("bonusPlayBody");
   const p = bonusPuzzle;
   const label = p.label ? `<div class="bg-section">${escapeHtml(p.label.toLowerCase())}</div>` : "";
+  /* The page's song colour, for the games that name their song on the page. Only those: on a
+     game whose answer IS the song (or its record), an album colour on the clock would print the
+     answer's era before the player had read a word. Styles opt in per game under
+     [data-bonus-game], so setting it here colours nothing by itself. */
+  screens.bonusplay.style.removeProperty("--song-era");
+  if (bonusGame.id === "sing-it-back" && p.song) {
+    const era = albumColor(p.song.album);
+    if (era) screens.bonusplay.style.setProperty("--song-era", era);
+  }
 
   if (bonusGame.id === "spot-the-slip") {
     const words = p.tokens.map((t, i) => t.tappable
