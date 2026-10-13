@@ -1051,9 +1051,10 @@ export const NASHVILLE_KNOW_BETTER = 6;
 export const BONUS_BLANK_SECONDS = 15;
 // Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
 // the strips you peel while you think, so a tight clock would charge you twice for the same
-// hesitation. Long enough to read two or three lines, weigh the blocks and write a title;
+// hesitation. Long enough to read two or three lines, weigh the blocks and write a title (cut from 30 after
+// playtesting found 30 more generous than it needed to be);
 // short enough that sitting on a page you can't place is a decision rather than a free wait.
-export const BONUS_REDACT_SECONDS = 30;
+export const BONUS_REDACT_SECONDS = 25;
 // A correct answer never scores nothing, however much of the verse was uncovered — otherwise a
 // page you have over-peeled becomes pointless to finish, which is the one thing the scoring
 // must not do. Peels past the floor are simply free.

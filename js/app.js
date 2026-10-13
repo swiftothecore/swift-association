@@ -28286,6 +28286,23 @@ function wireInput() {
     advanceFromBonusFeedback();
   });
 
+  // Redacted leaves its title line unfocused so a phone keyboard never lands over the verse
+  // before it has been read, and a peeled strip keeps focus on its button. Typing a letter
+  // anywhere on a live page is still plainly an answer, so it goes to the title line rather
+  // than nowhere: focusing during keydown lets the same keystroke land in the field. Space is
+  // left alone (it peels a focused strip, and no title starts with one).
+  document.addEventListener("keydown", (e) => {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+    if (e.key.length !== 1 || e.key === " ") return;
+    if (!screens.bonusplay.classList.contains("active") || !bonusGame || bonusGame.id !== "redacted") return;
+    if (bonusLocked || bonusEnded || settingsPauseActive) return;
+    if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+    if (document.body.classList.contains("modal-open") || $("songModal").classList.contains("open")) return;
+    const input = $("bonusInput");
+    if (!input || input.disabled) return;
+    input.focus({ preventScroll: true });
+  });
+
   // Result controls live inside rebuilt feedback blocks, so delegate from the two stable hosts.
   // Every reading action pauses auto-advance; disclosure state stays local to its unique reveal.
   [$("feedback"), $("bonusFeedback")].forEach((host) => host.addEventListener("click", (e) => {
