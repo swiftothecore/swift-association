@@ -100,7 +100,7 @@ import { zineCover, hasCover } from "./zine.js";
 // Track by Track's twelve album sleeves (pure; see js/sleeves.js).
 import { albumSleeve, commonNameSize, hasMotif, motifOf, sleeveName } from "./sleeves.js";
 import { cloudMarkup, cloudFontReady } from "./cloud.js";
-import { buildLineIndex, buildSlipContext, buildSlipPuzzle, buildNamePuzzle,
+import { buildLineIndex, buildWordFreq, buildSlipPuzzle, readSlipSwaps, slipDealCount, buildNamePuzzle,
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, onlyCuts, onlyLine, lineSingsWord, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
@@ -6817,7 +6817,7 @@ function bonusIndexes() {
     let lineIndex, ctx, wordIndex, trackIndex;
     indexes = {
       get lineIndex() { return lineIndex ??= buildLineIndex(songs); },
-      get ctx() { return ctx ??= buildSlipContext(songs); },
+      get ctx() { return ctx ??= buildWordFreq(songs); },
       get wordIndex() { return wordIndex ??= buildWordIndex(songs); },
       // Full running order, including barred titles, so later tracks never shift.
       get trackIndex() { return trackIndex ??= buildTrackIndex(songs); },
@@ -6857,6 +6857,9 @@ let bonusEnded = false;
 let bonusEndless = false;
 let bonusDead = false;
 let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a run doesn't repeat one
+// Spot the Slip: authored lines already dealt this run. A hard bar, kept apart from the song ban
+// list because an endless run hands its songs back long before it has used up their lines.
+let slipDealt = new Set();
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
 let bonusRecentAlbums = [];// Running Order: the last couple of albums dealt, so a run doesn't ask three Midnights pages in a row
 /* Running Order: how long the page took, in seconds, frozen once as it settles. Measured off
@@ -7370,6 +7373,7 @@ function startBonusGame(g, lensId = null, opts = {}) {
   flourishThisRun = false;   // the shelf never touches resetRunState, so it re-arms its own flourish
   bonusRecentFakes = [];
   bonusRecentSongs = [];
+  slipDealt = new Set();
   bonusLog = [];
   bonusBackRun = null;
   redactWorth = 0;
@@ -7471,7 +7475,8 @@ function buildBonusPuzzle() {
   const indexes = bonusIndexes();
   const songs = bonusSongs();
   if (bonusGame.id === "spot-the-slip")
-    return buildSlipPuzzle(songs, playableWords, indexes.lineIndex, indexes.ctx, Math.random, 120, new Set(bonusRecentFakes));
+    return buildSlipPuzzle(songs, slipSwaps, indexes.lineIndex, Math.random, new Set(bonusRecentSongs),
+                           new Set(bonusRecentFakes), slipDealt);
   if (bonusGame.id === "sing-it-back")
     return buildBlankPuzzle(songs, indexes.ctx, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "redacted")
@@ -7537,12 +7542,19 @@ function bonusDealCount() {
     return capitalsDealCount(songs, secretMessages);
   // Both sides, since either can be dealt on any page — and none of them is in `songs`.
   if (bonusGame && bonusGame.id === "nashville") return nashvilleDealCount(nashvillePool);
+  // Every song in the pool has authored lines today, but a song whose lines were all dropped as
+  // stale is not a page, and counting it would leave the reshuffle waiting for it forever.
+  if (bonusGame && bonusGame.id === "spot-the-slip") return slipDealCount(songs, slipSwaps);
   return songs.length;
 }
 
-/* Does this game bar a song it has already dealt? Everything whose page IS a song does, which
-   is all of them but Spot the Slip — its pages are lines rather than songs, and two lines off one
-   song are two different puzzles. Ruthless plays on this loop and bars too.
+/* Does this game bar a song it has already dealt? Every game does, Ruthless included, and the
+   question stays a function so there is one place to ask it. Spot the Slip used to be the one
+   exception, on the grounds that its pages are lines rather than songs and two lines off one song
+   are two puzzles; measured, it put the same song twice into nearly one ten-page run in five and
+   the same LINE twice into one in thirty. The second time a song comes round its line is primed,
+   so the page is cheaper than the rest, and now that every song has six authored lines there is
+   no shortage to excuse it.
 
    IT IS A FUNCTION BECAUSE THERE WERE TWO COPIES OF IT and they drifted. `nextBonusRound` had
    this list and `__dev.bonus.fill` had its own, which was written when the shelf was smaller and
@@ -7552,8 +7564,7 @@ function bonusDealCount() {
    second list of game ids is the trap this shelf keeps setting (see the shelf-wide charm walks);
    the answer is always one place to ask. */
 function bonusBansRepeats() {
-  if (!bonusGame) return false;
-  return bonusGame.id !== "spot-the-slip";
+  return !!bonusGame;
 }
 
 /* Everything an endless run has been barring, handed back at once. Only Here keeps a SECOND
@@ -7565,6 +7576,11 @@ function bonusBansRepeats() {
 function endlessReshuffle() {
   bonusRecentSongs = [];
   onlyDealt = new Set();
+  // Spot the Slip's dealt lines outlast the song list on purpose: a song handed back deals one
+  // of its other lines, and only once every line is spent can a page come round again.
+  if (bonusGame && bonusGame.id === "spot-the-slip" &&
+      !bonusSongs().some((s) => (slipSwaps.get(s.title) || []).some((r) => !slipDealt.has(r.id))))
+    slipDealt = new Set();
 }
 
 function nextBonusRound(options = {}) {
@@ -7601,7 +7617,7 @@ function nextBonusRound(options = {}) {
        failed rather than on a page the player missed, which is the one way this mode must never
        stop. The page number is given back first, so the retry is the same page rather than the
        next one. */
-    if (bonusEndless && (bonusRecentSongs.length || onlyDealt.size)) {
+    if (bonusEndless && (bonusRecentSongs.length || onlyDealt.size || slipDealt.size)) {
       endlessReshuffle();
       bonusRound--;
       nextBonusRound({ ...options, skips });
@@ -7614,6 +7630,7 @@ function nextBonusRound(options = {}) {
   if (bonusPuzzle.fakeWord) {
     bonusRecentFakes.push(bonusPuzzle.fakeWord.toLowerCase());
     if (bonusRecentFakes.length > 6) bonusRecentFakes.shift();
+    slipDealt.add(bonusPuzzle.id);
   }
   if (bonusBansRepeats()) bonusRecentSongs.push(bonusPuzzle.song.title);
   // Only the last two, and a preference rather than a bar: over ten pages and twelve albums a
@@ -14731,6 +14748,19 @@ function installProducerCredits(doc, grouped) {
   return map;
 }
 
+/* Spot the Slip's authored swaps (data/slips.json), title -> rows. `readSlipSwaps` drops any row
+   whose line or word no longer matches songs.json and the drop is warned about once, by name, for
+   the credits' reason above: a swap that silently stops dealing is a bug nobody ever sees. */
+let slipSwaps = new Map();
+let slipSwapsDoc = {};   // the file as fetched, kept so __dev.bonus.slips() can re-read what was dropped
+function installSlipSwaps(doc, grouped) {
+  slipSwapsDoc = doc;
+  const { map, stale } = readSlipSwaps(doc, grouped.flatMap((a) => a.songs));
+  if (stale.length) console.warn(`slips.json: ${stale.length} swap(s) no longer match songs.json and were dropped`, stale);
+  slipSwaps = map;
+  return map;
+}
+
 /* The songwriting credits, for Who Held The Pen. data/writers.json holds the full credited
    name list for all 259 songs on the twelve studio albums, and this flattens it to
    title -> { writers, credit, album, bucket }.
@@ -14833,13 +14863,14 @@ function installSecretMessages(byAlbum, grouped) {
 
 async function loadData() {
   // Optional shelf data must not prevent the core notebook opening after a network failure.
-  const [wordsRes, songsRes, credsRes, secretsRes, writersRes, nashRes] = await Promise.all([
+  const [wordsRes, songsRes, credsRes, secretsRes, writersRes, nashRes, slipsRes] = await Promise.all([
     fetch("data/words.json"),
     fetch("data/songs.json"),
     fetch("data/producers.json").catch(() => null),
     fetch("data/secret-messages.json").catch(() => null),
     fetch("data/writers.json").catch(() => null),
     fetch("data/nashville.json").catch(() => null),
+    fetch("data/slips.json").catch(() => null),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
@@ -14867,6 +14898,14 @@ async function loadData() {
     try { installSecretMessages(await secretsRes.json(), grouped); }
     catch (e) { console.warn("secret messages failed to load", e); }
   } else console.warn("secret messages missing: The Capitals will have nothing to deal");
+  /* Spot the Slip's authored swaps, installed beside the corpus for the credits' reason: a fact
+     about Taylor's lyrics keyed by her titles, never swapped for a guest's. Survivable on failure,
+     like the others. Rows whose line or word has changed under them are dropped here and named,
+     so a lyric correction costs a page rather than dealing a swap against the wrong word. */
+  if (slipsRes?.ok) {
+    try { installSlipSwaps(await slipsRes.json(), grouped); }
+    catch (e) { console.warn("slip swaps failed to load", e); }
+  } else console.warn("slip swaps missing: Spot the Slip will have nothing to deal");
   /* The songwriting credits, for Who Held The Pen, installed beside the corpus rather than
      inside it for the production credits' reason exactly: a fact about Taylor's sleeves keyed
      by her titles, never swapped for a guest's, and a guest run cannot reach the shelf. So
@@ -32590,8 +32629,8 @@ function buildDevApi() {
       rejects: () => roundRejects.map((list, i) => ({ round: i + 1, sent: (list || []).map((r) => r.title || r.key) })),
     },
     // Bonus games shelf. `sample` is the useful one: it dry-runs a builder N times without
-    // touching the UI, so the fairness guards and (for Spot the Slip) the quality of the
-    // generated swaps can be eyeballed in bulk before shipping a change to js/bonus.js.
+    // touching the UI, so the fairness guards can be eyeballed in bulk before shipping a change
+    // to js/bonus.js. Spot the Slip's swaps are authored, so its own check is `slips()`.
     bonus: {
       // `endless` says whether the game has a side at all, and `endlessBest` is what has been
       // done on it — two different questions, and a game with a side and no runs answers the
@@ -32673,8 +32712,8 @@ function buildDevApi() {
             out.push(p ? { gap: p.tokens.map((t) => t.pre + (t.blank ? "____" : t.core) + t.post).join(" "),
                            answer: p.answer, song: p.song.title } : null);
           } else {
-            const p = buildSlipPuzzle(songs, playableWords, lineIndex, ctx, Math.random, 120, new Set(recent));
-            if (p) { recent.push(p.fakeWord.toLowerCase()); if (recent.length > 6) recent.shift(); }
+            const p = buildSlipPuzzle(songs, slipSwaps, lineIndex, Math.random, new Set(recent));
+            if (p) recent.push(p.song.title);
             out.push(p ? { slip: p.tokens.map((t) => t.text).join(" "), real: p.realLine,
                            swap: `${p.realWord} -> ${p.fakeWord}`, song: p.song.title } : null);
           }
@@ -32712,10 +32751,33 @@ function buildDevApi() {
             : id === "running-order" ? buildTrackPuzzle(songs, bonusIndexes().trackIndex)
             : id === "the-capitals" ? buildCapitalsPuzzle(songs, secretMessages)
             : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
-            : buildSlipPuzzle(songs, playableWords, lineIndex, ctx);
+            : buildSlipPuzzle(songs, slipSwaps, lineIndex);
           if (p) ok++;
         }
         return { tried: n, built: ok, rate: `${((ok / n) * 100).toFixed(1)}%` };
+      },
+      /* Spot the Slip's authored swaps, read against the catalogue as it stands. `stale` is
+         every row the load dropped because its line or word moved (a lyric correction does
+         that, and the console warns once at load); `uncovered` is any dealable song with no
+         swap left, which would quietly never be a page; `realLyric` counts swaps whose doctored
+         line has since become a real one, which the deal skips. All three should be empty. */
+      slips: () => {
+        const songs = bonusSongs();
+        const { lineIndex } = bonusIndexes();
+        const { stale } = readSlipSwaps(slipSwapsDoc, allSongs);
+        const rows = [...slipSwaps.values()].flat();
+        const per = songs.map((s) => (slipSwaps.get(s.title) || []).length);
+        const fakes = new Map();
+        rows.forEach((r) => fakes.set(r.fake.toLowerCase(), (fakes.get(r.fake.toLowerCase()) || 0) + 1));
+        let realLyric = 0;
+        songs.forEach((song) => (slipSwaps.get(song.title) || []).forEach((r) => {
+          const one = new Map([[song.title, [r]]]);
+          if (!buildSlipPuzzle([song], one, lineIndex)) realLyric++;
+        }));
+        return { swaps: rows.length, songs: per.filter(Boolean).length, of: songs.length,
+          fewest: Math.min(...per), most: Math.max(...per), stale,
+          uncovered: songs.filter((s) => !slipSwaps.has(s.title)).map((s) => s.title), realLyric,
+          commonestFakes: [...fakes].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([w, c]) => `${w} ${c}`) };
       },
       /* Aaron or Jack. `who()` reads the live page — what was asked, what the answer really is
          and what it pays — because the player is shown a title and nothing else, so there is no
@@ -33373,6 +33435,9 @@ function buildDevApi() {
           // Only Here's hand is barred word by word, so a fabricated run has to spend the words
           // the same way a played one does or its later pages deal cards the run already used.
           if (puz.hand) puz.hand.forEach((c) => onlyDealt.add(c.key));
+          // And Spot the Slip's lines, for the same reason: a deep fabricated run is the only
+          // way to watch its dealt-lines bar reach the end and hand the lines back.
+          if (puz.fakeWord) slipDealt.add(puz.id);
           const ok = n <= want;
           // Each game's real note column, so the fabricated listing is the one a played run
           // would leave behind rather than a column of albums under every game.
