@@ -7834,8 +7834,8 @@ function renderBonusRound() {
       `<p class="bg-ask">tap the line that comes next</p>` +
       bonusSongHead(p.song, p.label) +
       `<div class="bg-chain" id="bonusChain"></div>` +
-      `<div class="bg-chain-cards" id="bonusChainCards"></div>` +
-      `<p class="bg-hint" id="bonusChainHint"></p>`;
+      `<div class="bg-chain-pips" id="bonusChainPips" role="img"></div>` +
+      `<div class="bg-chain-cards" id="bonusChainCards"></div>`;
     renderChainSheet();
     renderChainCards();
   } else if (bonusGame.id === "only-here") {
@@ -8600,12 +8600,49 @@ function renderChainSheet() {
   }).join("");
 }
 
+/* Where the page is, as four dots between the verse and the cards: the gap the eye crosses on
+   its way down to the choices, which is why it sits there and not under the cards, where a
+   typed "pick 1 of 4" went unread. One dot per pick and nothing else. What a pick pays is left
+   off on purpose: grouping the doubled picks as two dots read as uneven spacing rather than as
+   a price. Each ring is drawn by hand off its own seed, so the four are never one stamp. */
+function chainPipRing(cx, cy, r, seed) {
+  let n = seed * 7919 + 17;
+  const rnd = () => (n = (n * 16807) % 2147483647) / 2147483647;
+  const pts = [];
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2 + (rnd() - 0.5) * 0.25, rr = r * (1 + (rnd() - 0.5) * 0.14);
+    pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr]);
+  }
+  const mid = (a, b) => `${((a[0] + b[0]) / 2).toFixed(2)},${((a[1] + b[1]) / 2).toFixed(2)}`;
+  let d = `M${mid(pts[7], pts[0])}`;
+  pts.forEach((p, k) => { d += ` Q${p[0].toFixed(2)},${p[1].toFixed(2)} ${mid(p, pts[(k + 1) % 8])}`; });
+  return `${d}Z`;
+}
+
+function renderChainPips() {
+  const wrap = $("bonusChainPips");
+  if (!wrap || !bonusPuzzle) return;
+  const R = 6.2, GAP = 13, W = CHAIN_PICKS * (R * 2) + (CHAIN_PICKS - 1) * GAP + 4;
+  const dots = [];
+  for (let i = 0; i < CHAIN_PICKS; i++) {
+    const t = chainTaken[i];
+    const state = t ? (t.late ? "late" : t.right ? "right" : "wrong") : i === chainStep ? "now" : "todo";
+    const cx = 2 + R + i * (R * 2 + GAP), cy = 11, ring = chainPipRing(cx, cy, R, i + 1);
+    dots.push(`<g class="bg-pip is-${state}"><path d="${ring}"/>` +
+      (state === "wrong" ? `<path class="bg-pip-slash" d="M${cx - R - 1} ${cy + R + 1} L${cx + R + 1} ${cy - R - 1}"/>` : "") +
+      `</g>`);
+  }
+  wrap.innerHTML = `<svg width="${W}" height="24" viewBox="0 -1 ${W} 24" aria-hidden="true">${dots.join("")}</svg>`;
+  wrap.setAttribute("aria-label", chainStep < CHAIN_PICKS
+    ? `pick ${chainStep + 1} of ${CHAIN_PICKS}, worth ${CHAIN_PAY[chainStep]}` : `all ${CHAIN_PICKS} picks made`);
+}
+
 function renderChainCards() {
   const wrap = $("bonusChainCards");
-  const hint = $("bonusChainHint");
   if (!wrap || !bonusPuzzle) return;
+  renderChainPips();
   const pick = bonusPuzzle.picks[chainStep];
-  if (!pick) { wrap.innerHTML = ""; if (hint) hint.textContent = ""; return; }
+  if (!pick) { wrap.innerHTML = ""; return; }
   // Full-width lines rather than a row of columns: a lyric line wants to be read left to right,
   // and squeezing three of them into thirds of the page makes all three unreadable.
   wrap.innerHTML = pick.cards.map((c, i) =>
@@ -8613,10 +8650,6 @@ function renderChainCards() {
       `<span class="bg-chain-text">${escapeHtml(censor(c.text))}</span></button>`).join("");
   wrap.querySelectorAll(".bg-chain-card").forEach((b) =>
     b.addEventListener("click", () => judgeChain(+b.dataset.i)));
-  // What this pick is worth is said out loud. The ramp is meant to be felt rather than
-  // explained, but being paid more for a harder pick is not a secret worth keeping.
-  if (hint) hint.textContent =
-    `pick ${chainStep + 1} of ${CHAIN_PICKS} · worth ${CHAIN_PAY[chainStep]}`;
 }
 
 /* One tap, judged on the spot. `i` is -1 when the page's clock ran dry, which misses this pick
@@ -8653,6 +8686,8 @@ function judgeChain(i) {
   // Out of time: the picks still to come are missed unseen, and the page ends here.
   if (i < 0) for (; chainStep < CHAIN_PICKS; chainStep++) chainTaken.push({ picked: -1, right: false, late: true });
   renderChainSheet();
+  // The dot fills the moment the tap lands, so the beat before the next deal reads it.
+  renderChainPips();
   $("bonusScore").textContent = bonusScoreText();
 
   const on = () => {
@@ -9661,6 +9696,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     stopChainBeat();
     const cards = $("bonusChainCards");
     if (cards) cards.remove();
+    $("bonusChainPips")?.remove();
   } else if (isRuthlessRun()) {
     revealRuthless();
   } else if (bonusGame.id === "running-order") {

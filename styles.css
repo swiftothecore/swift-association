@@ -5492,6 +5492,23 @@
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: none; }
   }
+  /* Where the page is: four hand-drawn dots between the verse and the cards. Pencil for a pick
+     to come, the song's pen ringed and lifted for the one being made, filled for a right pick,
+     slashed in red for a wrong one, dashed for a pick the clock took. */
+  .bg-chain-pips { display: flex; justify-content: center; margin: 4px auto 14px; }
+  .bg-chain-pips svg { display: block; overflow: visible; }
+  .bg-pip path { fill: none; stroke: var(--ink-soft); stroke-width: 1.1; opacity: 0.5; }
+  .bg-pip { transition: transform 0.2s; }
+  .bg-pip.is-now { transform: translateY(-2.5px); }
+  .bg-pip.is-now path {
+    stroke: var(--era-pen, #b88a1c); stroke-width: 2.2; opacity: 1;
+    fill: color-mix(in srgb, var(--era-pen, #b88a1c) 22%, transparent);
+  }
+  .bg-pip.is-right path { fill: var(--era-pen, #b88a1c); stroke: var(--era-pen, #b88a1c); stroke-width: 1; opacity: 1; }
+  .bg-pip.is-wrong path { stroke: #b23a3f; stroke-width: 1.4; opacity: 0.85; }
+  .bg-pip.is-wrong .bg-pip-slash { stroke-width: 1.7; stroke-linecap: round; }
+  .bg-pip.is-late path { stroke-dasharray: 2 2; opacity: 0.45; }
+  @media (prefers-reduced-motion: reduce) { .bg-pip { transition: none; } }
   /* The three candidates, stacked FULL WIDTH rather than side by side: a lyric line wants to
      be read left to right, and thirds of the page make all three unreadable. The gap is
      generous on purpose — one tap commits with no undo, so the misclick has to be designed
