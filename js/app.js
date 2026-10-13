@@ -1089,7 +1089,9 @@ function showScreen(name, options = {}) {
   // The routes that already flip home reset this themselves before re-rendering; this is the
   // backstop for the ones that don't, like a challenge or Album Focus result heading back to
   // its own list.
-  if (name !== "game" && name !== "results") applyEra("gold");
+  // A shelf run rolls its own era a page at a time (bonusPageEra), so the play screen is
+  // spared the reset the same way a round is.
+  if (name !== "game" && name !== "results" && name !== "bonusplay") applyEra("gold");
   // A run is not a place: drop any panel URL the moment a board goes live, so the browser's
   // back button can't close a game the player is in the middle of (see clearRoute).
   if (name === "game" || name === "bonusplay") clearRoute();
@@ -7339,6 +7341,7 @@ function selectBonusGame(id) {
 // walking from a lens run onto the shelf cannot leave the last lens applied to a shelf page.
 function startBonusGame(g, lensId = null, opts = {}) {
   disarmBonusQuit();
+  paintSongEra(null);
   ruthlessLensId = lensId;
   /* A lens run is the Ruthless MODE, and it ends on the results screen the way every other
      gameType does, so the flag has to say so — the era, the keepsake card and the sandbox
@@ -7653,6 +7656,7 @@ function nextBonusRound(options = {}) {
     $("bonusScore").textContent = bonusScoreText();
     $("bonusTimer").style.display = "";
     renderBonusPageRegister();
+    applyEra(bonusPageEra());
     renderBonusRound();
     showBonusClockReady();
   };
@@ -7669,6 +7673,45 @@ function nextBonusRound(options = {}) {
   if (options.entering) { lay(); flipAwayToScreen("bonusplay", begin); return; }
   if (!pageTurnAnimated()) { lay(); begin(); return; }
   turnPageSheet($("screen-bonusplay"), lay, begin, { inert: true });
+}
+
+/* Every shelf page wears an era, shuffled the way a round's is, so the clock and the
+   highlighter are not the same gold page after page. A random era says nothing about the
+   answer, which is what lets it run on every game. Its own short memory rather than the
+   round's `recentEras`, which is saved with a paused main run and must not be stirred by a
+   bonus page. Ruthless keeps the plain desk: it is a mode with its own furniture. */
+let bonusRecentEras = [];
+function bonusPageEra() {
+  if (isRuthlessRun()) return "gold";
+  let pool = ERAS.filter((e) => !bonusRecentEras.includes(e));
+  if (!pool.length) pool = ERAS;
+  const era = pool[Math.floor(Math.random() * pool.length)];
+  bonusRecentEras.push(era);
+  if (bonusRecentEras.length > 3) bonusRecentEras.shift();
+  return era;
+}
+
+/* The SONG'S own colour, which is a different thing from the shuffled era above and can give
+   an answer away, so it is only ever put up where the page has already said it. The games that
+   name their song (or, for Running Order, its record) wear it from the first moment: the rule
+   under the title, the clock, the writing line. The rest hold the song back, so it arrives at
+   the reveal with the answer and colours the finished sheet's rule. Nashville is on neither
+   list: half its titles are somebody else's, and an unreleased song has no record. Styles
+   hang off `data-song-era` ("page" or "reveal"), so this colours nothing by itself. */
+const SONG_ERA_ON_PAGE = new Set(["sing-it-back", "then-what", "only-here", "running-order"]);
+const SONG_ERA_AT_REVEAL = new Set(["name-that-song", "redacted", "word-cloud", "the-capitals",
+                                    "spot-the-slip", "aaron-or-jack", "who-held-the-pen"]);
+function paintSongEra(when) {
+  const screen = screens.bonusplay;
+  const album = bonusPuzzle && (bonusPuzzle.album || (bonusPuzzle.song && bonusPuzzle.song.album));
+  const era = when && !isRuthlessRun() && album ? albumColor(album) : null;
+  if (era) {
+    screen.style.setProperty("--song-era", era);
+    screen.dataset.songEra = when;
+  } else {
+    screen.style.removeProperty("--song-era");
+    delete screen.dataset.songEra;
+  }
 }
 
 // Shelf games are ten-page notebook stacks. Ruthless only borrows their loop and keeps its
@@ -7745,15 +7788,7 @@ function renderBonusRound() {
   const body = $("bonusPlayBody");
   const p = bonusPuzzle;
   const label = p.label ? `<div class="bg-section">${escapeHtml(p.label.toLowerCase())}</div>` : "";
-  /* The page's song colour, for the games that name their song on the page. Only those: on a
-     game whose answer IS the song (or its record), an album colour on the clock would print the
-     answer's era before the player had read a word. Styles opt in per game under
-     [data-bonus-game], so setting it here colours nothing by itself. */
-  screens.bonusplay.style.removeProperty("--song-era");
-  if (bonusGame.id === "sing-it-back" && p.song) {
-    const era = albumColor(p.song.album);
-    if (era) screens.bonusplay.style.setProperty("--song-era", era);
-  }
+  paintSongEra(SONG_ERA_ON_PAGE.has(bonusGame.id) ? "page" : null);
 
   if (bonusGame.id === "spot-the-slip") {
     const words = p.tokens.map((t, i) => t.tappable
@@ -9610,6 +9645,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
         : bonusPuzzle.song.album,
   });
   foldBonusPageCharms(correct, isTimeout);
+  if (bonusGame && SONG_ERA_AT_REVEAL.has(bonusGame.id)) paintSongEra("reveal");
   // Reveal the answer on a timeout too, whichever game we're in.
   if (bonusGame.id === "spot-the-slip") {
     $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
@@ -10155,6 +10191,7 @@ function refreshBonusCharmRow() {
 
 function endBonusRun() {
   bonusEnded = true;
+  paintSongEra(null);
   renderBonusPageRegister();
   stopBonusClock();
   stopBonusCountdown();
