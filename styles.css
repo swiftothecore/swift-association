@@ -1207,41 +1207,6 @@
     to   { width: 20px; opacity: 1; }
   }
 
-  /* Floating-rarity level gauge (Custom's "Floating" pool): the rarity level you're riding,
-     shown as four lit pips with a promo sub-meter filling toward the next. Notebook-honest,
-     not an XP bar. */
-  .float-gauge {
-    display: none; align-items: center; justify-content: center; gap: 10px;
-    flex-wrap: wrap; margin: 2px auto 10px; padding: 5px 12px;
-    width: max-content; max-width: 90%;
-    border: 1.4px solid rgba(43,39,34,0.18); border-radius: 16px;
-    background: rgba(247,201,72,0.07);
-  }
-  .float-gauge.show { display: flex; }
-  .adapt-label {
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.4px;
-    text-transform: uppercase; color: var(--ink); font-weight: 700; white-space: nowrap;
-  }
-  .adapt-pips { display: inline-flex; gap: 5px; }
-  .adapt-pip {
-    width: 9px; height: 9px; border-radius: 50%;
-    border: 1.4px solid var(--ink-soft); background: transparent;
-    transition: background 0.3s ease, transform 0.3s ease;
-  }
-  .adapt-pip.on { background: var(--ink-soft); }
-  .adapt-pip.cur { background: var(--ink); border-color: var(--ink); transform: scale(1.35); }
-  .adapt-meter {
-    position: relative; width: 46px; height: 5px; border-radius: 3px;
-    background: rgba(43,39,34,0.14); overflow: hidden;
-  }
-  .adapt-meter i {
-    position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px;
-    background: var(--ink); transition: width 0.3s ease;
-  }
-  .adapt-meter--top { background: var(--highlighter, rgba(247,201,72,0.5)); }
-  [data-reduce-motion="on"] .adapt-pip,
-  [data-reduce-motion="on"] .adapt-meter i { transition: none; }
-
   /* Visually hidden but available to screen readers — used for live status/timer
      cues and any text alternative to a purely visual element. */
   .sr-only {
@@ -12957,25 +12922,20 @@
       color-mix(in srgb, var(--red-pen) 88%, transparent) calc(56% - 1px) calc(56% + 1px),
       transparent calc(56% + 1px));
   }
-  /* Alternating angle and height, so nine strikes down a column are nine strokes of a pen rather
+  /* Alternating angle and height, so the strikes down a column are separate strokes of a pen rather
      than a ruled table. Never a mirrored pair: the three differ in slope AND in where they cross. */
-  .grave-plot:nth-child(even) .grave-name:not(.grave-name--living) {
+  .grave-plot:nth-child(even) .grave-name {
     background-image: linear-gradient(181deg,
       transparent calc(54% - 1px),
       color-mix(in srgb, var(--red-pen) 88%, transparent) calc(54% - 1px) calc(54% + 1px),
       transparent calc(54% + 1px));
   }
-  .grave-plot:nth-child(3n) .grave-name:not(.grave-name--living) {
+  .grave-plot:nth-child(3n) .grave-name {
     background-image: linear-gradient(178.4deg,
       transparent calc(58% - 1px),
       color-mix(in srgb, var(--red-pen) 88%, transparent) calc(58% - 1px) calc(58% + 1px),
       transparent calc(58% + 1px));
   }
-  /* The coda is the one name on the page that is still in the game, and a line through it would
-     be a lie about a mechanic a player can go and use right now. The alternating rules above
-     exclude it by :not() rather than relying on order: the coda is the ninth plot, so nth-child(3n)
-     catches it, and a plain .grave-name--living loses that specificity fight silently. */
-  .grave-name--living { background-image: none; }
   .grave-dates {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
     letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft);
@@ -13000,6 +12960,8 @@
     font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust));
     font-style: italic; color: var(--ink); line-height: 1.55; margin: 0 0 10px;
   }
+  /* The line is already italic, so a title named inside it turns upright to stand apart. */
+  .grave-was em { font-style: normal; }
   .grave-why {
     font-family: var(--type); font-size: calc(13px + var(--text-size-adjust));
     color: var(--ink); line-height: 1.55; margin: 0;

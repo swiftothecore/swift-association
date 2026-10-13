@@ -400,8 +400,8 @@ export function resetGuests() {
 
 /* ---------- Purging the retired Adaptive mode ----------
    Adaptive was a third gameType (a fixed 13-round run whose word rarity floated on a visible
-   level) and it is gone: the mechanic now lives on as Custom's "Floating" rarity stop, and
-   nothing in the game reads or writes an Adaptive anything. This clears what a notebook that
+   level) and it is gone, along with the "Floating" stop on Custom's rarity picker that briefly
+   carried the mechanic on. Nothing in the game reads or writes an Adaptive anything. This clears what a notebook that
    played it still has lying around, so no surface has to keep understanding a mode that no
    longer exists — its board, its history rows, its two retired charms, and its two ledger
    tokens. Runs once (the key is the flag) and is cheap enough not to matter if it runs again.

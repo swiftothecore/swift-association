@@ -51,7 +51,6 @@ import {
   ALBUM_FOCUS_DIFFS, ALBUM_FOCUS_TARGET,
   GUEST_SHELF_SLOTS, GUESTS, GUESTS_COMING_SOON, GUEST_DIFFS, GUEST_TARGET, TAYLOR_BUCKETS,
   HOME_ARTIST, BLEND_BUCKETS, SHELF, LINEUP_INKS,
-  ADAPT_BUCKETS, ADAPT_LEVELS, ADAPT_MAX_LEVEL, ADAPT_START_LEVEL, ADAPT_PROMO_STREAK,
   CUSTOM_SECONDS_MIN, CUSTOM_SECONDS_MAX, CUSTOM_SECONDS_TYPED_MAX, CUSTOM_HINT_MAX,
   CUSTOM_HINT_TYPED_MAX, CUSTOM_HINT_UNLIMITED, CUSTOM_POOLS,
   CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
@@ -320,8 +319,6 @@ let lineupKept = [];
 let lineupNamed = [];
 let infiniteVariant = "3lives"; // "3lives" | "sudden"
 let lives = 0;                  // remaining lives in infinite mode
-let floatLevel = ADAPT_START_LEVEL; // Floating rarity pool: current level (1..4), climbs and falls with performance
-let floatPromo = 0;             // Floating rarity pool: correct-in-a-row at the current level toward promotion
 const DAILY_PROGRESS_VERSION = 2;
 const DAILY_BRACELET_VERSION = 1;
 let dailyRng = null;            // seeded PRNG, non-null only during a daily game
@@ -1952,8 +1949,6 @@ function effectiveNoTitle() {
   return currentMode.noTitle;
 }
 function effectivePool() {
-  // Custom's "Floating" stop: the level drives the rarity bucket instead of a pinned one.
-  if (floatingPoolNow()) return ADAPT_BUCKETS[floatLevel] || "normal";
   if (perkPoolOverride) return perkPoolOverride;   // Choose Your Path: Crowd Pleaser
   if (gameType === "challenge" && currentChallenge) {
     if (currentChallenge.rule === "devil" && devilPoolHard) return "hard";   // Devil's Path: Rarer Air
@@ -1975,14 +1970,6 @@ function effectiveDropdown() {
   if (lyricModeNow()) return false;
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "devil" && devilDropOff) return false;
   return currentMode.dropdown;
-}
-// Is this run riding the floating rarity ladder? Only Custom offers it, and only when the
-// player picked that stop on the rarity lever. Deliberately reads the LIVE mode rather than
-// the stored preset, so a normalised-away value can't leave the gauge showing on a run whose
-// pool is pinned. Rarity is all it touches: suggestions, hints and the clock stay exactly as
-// the preset authored them, because a stop on one lever must not silently move another.
-function floatingPoolNow() {
-  return gameType === "custom" && currentMode.pool === "float";
 }
 // Whether THIS page accepts only a sung lyric line (no title): Lyricist mode always, and
 // Switch-Up on a lyric page.
@@ -14706,52 +14693,6 @@ function renderLives() {
   el.classList.add("show");
 }
 
-/* ---------- Floating rarity level (Custom's "Floating" pool) ---------- */
-// Move the rarity level after a verdict: promote-slow (ADAPT_PROMO_STREAK correct at a
-// level climbs one), demote-fast (any miss/timeout drops one). The visible level maps
-// exactly onto the bucket in play; the promo sub-meter shows progress toward the next.
-function floatAdjust(correct) {
-  if (correct) {
-    floatPromo++;
-    if (floatPromo >= ADAPT_PROMO_STREAK && floatLevel < ADAPT_MAX_LEVEL) {
-      floatLevel++;
-      floatPromo = 0;
-    } else if (floatLevel >= ADAPT_MAX_LEVEL) {
-      floatPromo = 0;   // already at the ceiling — keep the meter empty, no overflow
-    }
-  } else {
-    floatPromo = 0;
-    if (floatLevel > 1) floatLevel--;
-  }
-  renderFloatGauge();
-}
-
-// The visible rarity gauge: four tier pips lit up to the current level, with a promo
-// sub-meter filling toward the next. Shown only on a run riding the floating pool.
-function renderFloatGauge() {
-  const el = $("floatGauge");
-  if (!el) return;
-  if (!floatingPoolNow()) { el.classList.remove("show"); el.innerHTML = ""; return; }
-  const atTop = floatLevel >= ADAPT_MAX_LEVEL;
-  const pips = [];
-  for (let lvl = 1; lvl <= ADAPT_MAX_LEVEL; lvl++) {
-    const on = lvl <= floatLevel ? " on" : "";
-    const cur = lvl === floatLevel ? " cur" : "";
-    pips.push(`<span class="adapt-pip${on}${cur}" aria-hidden="true"></span>`);
-  }
-  // Promo meter: fraction of the way to the next level (hidden at the ceiling).
-  const frac = atTop ? 1 : Math.min(1, floatPromo / ADAPT_PROMO_STREAK);
-  const meter = atTop
-    ? `<span class="adapt-meter adapt-meter--top" aria-hidden="true"></span>`
-    : `<span class="adapt-meter" aria-hidden="true"><i style="width:${Math.round(frac * 100)}%"></i></span>`;
-  const name = ADAPT_LEVELS[floatLevel] || "";
-  el.innerHTML =
-    `<span class="adapt-label">Level ${floatLevel} · ${name}</span>` +
-    `<span class="adapt-pips">${pips.join("")}</span>` +
-    meter;
-  el.classList.add("show");
-}
-
 /* ---------- Data load ---------- */
 /* ---------- the production credits (Aaron or Jack) ----------
    data/producers.json flattened into one Map, title -> { by, credit, album }, which is the only
@@ -16838,8 +16779,6 @@ function resetRunState() {
   runNemesis = topTallyEntry(loadSongTally().misses || {});
   runNemesisNoted = false;
   flourishThisRun = false;   // the closing flourish is once per run, and this is every run's start
-  floatLevel = ADAPT_START_LEVEL;   // only read on a run riding Custom's floating rarity pool
-  floatPromo = 0;
   braceletSeed = (Math.random() * 0x100000000) >>> 0;   // a fresh shuffle for a random trinket strand
   noveltySeen = null;
   dailyRng = null;
@@ -17804,7 +17743,6 @@ function startCustom(presetId) {
   if (infinite) lives = currentMode.lives;           // infinite custom counts down lives like Infinite mode
   applyInputHints();
   renderLives();
-  renderFloatGauge();   // shows itself only if this preset's rarity lever is on "float"
   updateTagline();
   $("pageTotalWrap").style.display = infinite ? "none" : "";
   if (!infinite) $("pageTotal").textContent = customSessionLen;
@@ -20808,7 +20746,7 @@ function customLeverSummary(m) {
     : m.lyricOnly ? "lyric lines only"
     : (m.dropdown ? "suggestions" : "title or line");
   parts.push(answerLabel);
-  const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words", float: "floating rarity" };
+  const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words" };
   parts.push(poolLabel[m.pool] || "all words");
   if (m.noTitle) parts.push("not in the title");
   // Lyric-only runs have no hint lever at all (see hintsAllowed), so listing it would read as
@@ -23098,7 +23036,6 @@ function advanceRound(options = {}) {
   renderBracelet();
   renderLives();
   renderChallengeMargin();   // hides itself on anything that isn't a challenge with a countable target
-  renderFloatGauge();
   const input = $("songInput");
   input.value = "";
   input.disabled = false;
@@ -25696,7 +25633,6 @@ function submitAnswer(song, isTimeout) {
     spiteSeconds = Math.max(0, spiteSeconds - (currentChallenge.penalty || 3));
     renderSpiteBanner();
   }
-  if (floatingPoolNow()) floatAdjust(correct);
   // Any graded recall earns a pen-nib bead, because the nib says the page was SUNG rather than
   // named — the fact the strand would otherwise forget, since a "good" line reads on the finished
   // bracelet exactly like a title typed straight in. The narrower word-perfect mark is the pearl
@@ -29652,7 +29588,7 @@ const HR_SAY = {
   rounds: (m) => m.rounds === 0 ? "page after page" : m.rounds === 1 ? "one page" : `${m.rounds} pages`,
   lives: (m) => m.lives === 1 ? "my only life" : `${m.lives} lives`,
   seconds: (m) => m.seconds === 0 ? "all the time I need" : m.seconds === 1 ? "one second" : `${m.seconds} seconds`,
-  pool: { normal: "most words, rare sprinkled in", all: "any word at all", easy: "only common words", hard: "rare words", ultra: "the rarest words", float: "words that rise and fall with how I'm doing" },
+  pool: { normal: "most words, rare sprinkled in", all: "any word at all", easy: "only common words", hard: "rare words", ultra: "the rarest words" },
   answer: { either: "a title or a sung line", title: "the song's title", lyric: "a line I sing back" },
   dropdown: (on) => on ? "Suggest titles" : "Don't suggest titles",
   hintBudget: (m) => m.hintUnlimited ? "as many hints as I like" : m.hintBudget === 0 ? "no hints" : m.hintBudget === 1 ? "one hint" : `${m.hintBudget} hints`,
@@ -29694,8 +29630,7 @@ const HR_WORDS = {
     ["all", HR_SAY.pool.all, `e.g. “${hrExample("all")}”`],
     ["easy", HR_SAY.pool.easy, `e.g. “${hrExample("easy")}”`],
     ["hard", HR_SAY.pool.hard, `e.g. “${hrExample("hard")}”`],
-    ["ultra", HR_SAY.pool.ultra, `e.g. “${hrExample("ultra")}”`],
-    ["float", "words that rise and fall", `starts common · rarer after ${ADAPT_PROMO_STREAK} right · back down on a miss`]] },
+    ["ultra", HR_SAY.pool.ultra, `e.g. “${hrExample("ultra")}”`]] },
   answer: { cap: "how a page can be answered", opts: () => [
     ["either", HR_SAY.answer.either, "name it, or sing a line with the word in it"],
     ["title", HR_SAY.answer.title, "titles only"],
@@ -30171,18 +30106,19 @@ const graveIcon = (id) =>
 // The dates as one line. A grave with no birth date on record says only when it went: a made-up
 // "from" would be the one dishonest thing on a page whose whole subject is what really happened.
 function graveLife(g) {
-  if (g.coda) return escapeHtml(g.died);
   return g.born ? `${escapeHtml(g.born)} &ndash; ${escapeHtml(g.died)}` : `Buried ${escapeHtml(g.died)}`;
 }
-// The name, struck through in the margin's red — except the coda, which is the one thing on this
-// page that is still in the game and would be libelled by a line through it.
+// The name, struck through in the margin's red.
 // Two elements, not one, and the nesting is load-bearing: the strike is a background painted per
 // line fragment, which only happens on an INLINE box, and both places this sits are flex
 // containers that would blockify it. The outer span takes the blockifying; the inner one stays
 // inline and keeps its pen.
 const graveName = (g, tag) =>
-  `<${tag} class="grave-line"><span class="grave-name${g.coda ? " grave-name--living" : ""}">` +
+  `<${tag} class="grave-line"><span class="grave-name">` +
     `${escapeHtml(g.name)}</span></${tag}>`;
+// The prose itself: escaped, then *asterisks* become italics, which is how an album or a game
+// gets named in a sentence.
+const graveProse = (s) => escapeHtml(s).replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
 function renderGraveyard() {
   const el = $("graveyardBody");
@@ -30194,7 +30130,7 @@ function renderGraveyard() {
 
 function graveyardMapMarkup() {
   const rows = GRAVEYARD.map((g, i) =>
-    `<button type="button" class="grave-plot${g.coda ? " grave-plot--living" : ""}" data-grave-open="${i}">` +
+    `<button type="button" class="grave-plot" data-grave-open="${i}">` +
       graveIcon(g.icon) +
       `<span class="grave-plot-text">${graveName(g, "span")}` +
         `<span class="grave-dates">${graveLife(g)}</span></span>` +
@@ -30216,8 +30152,8 @@ function graveyardCardMarkup() {
           `<div class="ach-latest-label"><span>${graveLife(g)}</span>` +
             `<span class="ach-latest-position">${graveyardIndex + 1} / ${total}</span></div>` +
           `<div class="grave-head">${graveIcon(g.icon)}${graveName(g, "div")}</div>` +
-          (g.was ? `<p class="grave-was">${escapeHtml(g.was)}</p>` : "") +
-          `<p class="grave-why">${escapeHtml(g.why)}</p>` +
+          (g.was ? `<p class="grave-was">${graveProse(g.was)}</p>` : "") +
+          `<p class="grave-why">${graveProse(g.why)}</p>` +
         `</div>` +
       `</div>` +
       `<button type="button" class="ach-latest-nav ach-latest-prev" data-grave-prev` +
@@ -30243,7 +30179,7 @@ function turnGraveyard(step) {
 }
 
 // Opens on the map, not on plot one: the map is the view that says what the page IS, and a
-// reader dropped straight into Study mode's card has no way of knowing there are eight more.
+// reader dropped straight into Study mode's card has no way of knowing how many more there are.
 function openGraveyard(from, index = GRAVEYARD_MAP) {
   graveyardBackTarget = from;
   routeTo("graveyard", from);
@@ -32527,17 +32463,6 @@ function buildDevApi() {
         return np;
       },
       hintsLeft: () => hintBudgetLeft,                         // live hint budget remaining during a run
-      // The floating rarity level mid-run. Reading it is the only way to see where the ladder
-      // actually is; setting it saves answering a streak by hand to reach the top tier. Clamped
-      // to 1..ADAPT_MAX_LEVEL and it re-renders the gauge, so a set is what the run really uses.
-      level: (n) => {
-        if (n != null) {
-          floatLevel = Math.max(1, Math.min(ADAPT_MAX_LEVEL, Math.round(Number(n)) || 1));
-          floatPromo = 0;
-          renderFloatGauge();
-        }
-        return { level: floatLevel, promo: floatPromo, pool: effectivePool(), floating: floatingPoolNow() };
-      },
       // Start a run: on the working copy, or on a filed mode by id, which is what the randomiser
       // and the pinned goal do (custom.presets() prints the ids).
       play: (presetId) => startCustom(presetId),

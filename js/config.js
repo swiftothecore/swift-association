@@ -589,19 +589,6 @@ export const GUEST_TARGET = TOTAL_ROUNDS;
 // 42 songs `easy >= 18` matches nine words and `ultra` swallows most of the vocabulary.
 export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3] };
 
-/* ---------- Floating rarity (Custom's "Floating" pool) ----------
-   Not a mode: a stop on Custom's rarity picker. Instead of pinning one bucket for the whole
-   run, the pool rides a visible 1..4 level that climbs on a correct streak and drops a rung
-   on any miss. The level maps straight onto the four rarity buckets; every other lever is
-   whatever the player authored, untouched. Deliberately affects RARITY ONLY — it never
-   overrides the suggestions or hints levers, because a preset that quietly disabled the
-   controls you set would be lying about what it does. */
-export const ADAPT_BUCKETS = [null, "easy", "normal", "hard", "ultra"];   // level 1..4 -> wordBuckets key (index 0 unused)
-export const ADAPT_LEVELS = [null, "Common", "Deeper", "Rare", "Rarest"]; // level 1..4 -> readable tier name
-export const ADAPT_MAX_LEVEL = 4;       // top level (ultra bucket)
-export const ADAPT_START_LEVEL = 2;     // start in the middle (Normal's bucket)
-export const ADAPT_PROMO_STREAK = 2;    // correct answers at a level needed to climb one (a single miss demotes)
-
 /* ---------- Custom mode (player-authored "workshop" modes) ----------
    A sandboxed gameType. The player fills in a MODES-shaped lever object on the Change modal's
    working copy, can file it as a named, locked mode (CUSTOM_KEY), and plays the working copy. It folds skill XP
@@ -619,11 +606,9 @@ export const CUSTOM_SECONDS_TYPED_MAX = 600;
 export const CUSTOM_HINT_MAX = 13;       // slider's finite top (0 = no hints); one stop past = unlimited (-1)
 export const CUSTOM_HINT_TYPED_MAX = 99; // typed finite hint budgets can climb this high
 export const CUSTOM_HINT_UNLIMITED = -1; // sentinel: hints never run out this run
-// Word-rarity stops the picker offers. The first five pin one bucket for the whole run;
-// "float" rides the level ladder above instead (see ADAPT_BUCKETS). "float" is never
-// "at least Ultra" for customAtLeastUltra — it opens at Common, and the lever comparison
-// there (m.pool === MODES.ultra.pool) rules it out on its own.
-export const CUSTOM_POOLS = ["normal", "easy", "all", "hard", "ultra", "float"];
+// Word-rarity stops the picker offers, each pinning one bucket for the whole run. A preset
+// filed while the retired "float" stop existed normalises back to the default on use.
+export const CUSTOM_POOLS = ["normal", "easy", "all", "hard", "ultra"];
 export const CUSTOM_EXAMPLES_MAX = 3;    // example songs shown after a miss (0..3)
 export const CUSTOM_MAX_PRESETS = 12;    // keep the saved list manageable
 export const MEAN_GRUDGE = 5;            // times a word must have beaten you before answering it right earns "Mean"
@@ -5470,110 +5455,97 @@ export const GLOSSARY = [
    ORDER is kept by hand: plots run in burial order, oldest death first, and a new grave goes
    at the end. Two deaths on one day keep the order they were dug in.
 
-   `coda` is the one row with no strike through its name: the mechanic that outlived its mode.
-   It sits directly after the mode it outlived, wherever that falls in the burial order.
-   A page of nothing but failures reads as an apology, and this one genuinely does not want to. */
+   Words wrapped in *asterisks* print in italics (album and game names, the odd stressed word);
+   everything else is escaped as plain text. */
 export const GRAVEYARD = [
   {
     id: "sacrifice",
     name: "Sacrificing charms",
     born: "22 June 2026", died: "13 July 2026",
     icon: "sacrifice",
-    was: `You could give up a charm you had earned, permanently, and mint challenge tokens out of it.`,
-    why: `It was a door for anyone stuck without the tokens to open the next challenge. But a ` +
-      `currency you can print by burning the collection is not scarce, and a collection you can ` +
-      `spend is not a collection. The door got bricked up. Tokens stayed exactly where they were; ` +
-      `you just have to win them now.`,
+    was: `You could permanently give up a charm you had earned and receive a challenge token in ` +
+      `return.`,
+    why: `It was designed to help players who had run out of tokens keep unlocking challenges. But it ` +
+      `made challenge tokens abundant all of a sudden, especially with so many charms in the game. ` +
+      `At that point, why have tokens at all? Why not just have every challenge unlocked from the ` +
+      `start? Also, a collection you can *spend* is REALLY weird, because then it stops being a ` +
+      `collection. The challenge tokens stayed, but now you only get them by winning a challenge or ` +
+      `by playing one seven times without beating it and handing it back.`,
   },
   {
     id: "study",
     name: "Study mode",
     born: "4 July 2026", died: "24 July 2026",
     icon: "study",
-    was: `A review deck. It sorted the songs you kept missing into boxes and fed them back to ` +
-      `you on a schedule until they stuck.`,
-    why: `It worked, and that was the problem. It was the most eat-your-vegetables thing in the ` +
-      `notebook, a productivity app that had wandered into a game, and nobody ever opened it ` +
-      `because they wanted to. You came here to play, not to revise.`,
+    was: `It was a review deck. It would put the songs you kept missing into boxes and feed them back ` +
+      `to you on a schedule until they stuck.`,
+    why: `It worked, but it was like stepping away from your game to do homework. No one wants that. ` +
+      `It is NOT coming back.`,
   },
   {
     id: "string",
     name: "Invisible String",
     born: "1 August 2026", died: "4 August 2026",
     icon: "string",
-    was: `A bonus game. Five lines, five songs, thread each one to where it came from.`,
-    why: `It lasted three days. It was Name That Song with the feedback taken away and the answers ` +
-      `handed over. Holding five pairs back pushes the reveal past the point where you still remember ` +
-      `which one you were unsure about; by the fourth pair the board has solved itself, so you stop ` +
-      `working exactly when you should be feeling clever; and a list of four choices turns "oh, that ` +
-      `is Cornelia Street" into "well, it cannot be the other three". Same skill, same songs, worse game.`,
+    was: `It was a bonus game with five lyric lines on the left and five songs on the right, and you ` +
+      `had to thread each line to its song.`,
+    why: `It was BORING. End of story. Alright, to be fair, that's not the full truth. It was a little ` +
+      `interesting, but a few problems plagued it, and in the end they got it removed altogether. ` +
+      `It was basically *Name That Song* with no feedback and the answers handed to you. Holding ` +
+      `back the reveal until you had answered all five meant that by the end you had forgotten ` +
+      `which ones you weren't sure about. But revealing any earlier would make the rest easier and ` +
+      `ruin the game. Also, by the fourth pair, it solved itself, which made it way less ` +
+      `satisfying. It had to go.`,
   },
   {
     id: "adaptive",
     name: "Adaptive mode",
     born: "25 June 2026", died: "13 August 2026",
     icon: "adaptive",
-    was: `A third kind of run, where the words got rarer the better you did and easier again when ` +
-      `you slipped.`,
-    why: `It was never really a game type. Classic, Infinite and Custom each describe a shape of run: ` +
-      `a fixed thirteen, play until the lives run out, write your own rules. Adaptive was a fixed ` +
-      `thirteen with one knob turning itself, which is a difficulty setting sitting in the row where ` +
-      `the formats live. Two things never came good either. Its score only had four values, because a ` +
-      `run was ranked on the highest tier it reached, so the day you could reliably touch Rarest was ` +
-      `the day every run scored the same and there was nothing left to chase. And the climb was over ` +
-      `in three or four pages, which left eight or nine pages of ordinary hard Classic behind it, on ` +
-      `a card promising the words would keep moving.`,
-  },
-  {
-    id: "floating",
-    name: "The bit that lived",
-    born: "", died: "Still here",
-    icon: "floating",
-    coda: true,
-    why: `Rarity that answers to how you are playing was always a good idea. It just wanted to be a ` +
-      `lever rather than a mode, so it is the fifth stop on Custom's rarity picker now, called ` +
-      `Floating, riding the same ladder over the same four buckets behind the same gauge.`,
+    was: `It was a run type where the words got rarer if you did well and easier again when you ` +
+      `started slipping.`,
+    why: `It really wasn't a game type. Classic, Infinite, and Custom are run shapes. Adaptive was ` +
+      `just Classic with a difficulty knob turning by itself. The worst part was that the score ` +
+      `only had four possible values, so once you could reliably reach the highest tier, every run ` +
+      `scored the same. And if you were good, the climb was over in three or four pages, and the ` +
+      `rest was simply Classic on Hard.`,
   },
   {
     id: "tickets",
     name: "Persistence tickets",
     born: "31 July 2026", died: "14 August 2026",
     icon: "tickets",
-    was: `A consolation prize. Finish a challenge enough times without ever beating it and the ` +
-      `notebook handed you a ticket, and tickets bought your way into a challenge you had not unlocked.`,
-    why: `It lasted two weeks. Nothing was wrong with paying you for persistence. The problem was ` +
-      `that it paid you in a second currency, which every challenge then had to account for, and ` +
-      `which had to be earned, held and explained alongside the first one. Challenge returns do the ` +
-      `same job with nothing new to count: hand back a challenge you are finished with and take ` +
-      `another in its place. Easier to hold in your head, and it asks you to give something up ` +
-      `rather than to pile something up.`,
+    was: `It was a consolation prize. If you finished a challenge enough times without beating it, you ` +
+      `would get a ticket. Tickets could be redeemed to unlock more challenges.`,
+    why: `Rewarding persistence was fine. If a player genuinely can't beat a challenge, they shouldn't ` +
+      `be stuck on it forever. But having a second currency to earn and hold was confusing. The new ` +
+      `(better!) feature that replaced it is called challenge returns, and it does the same job. ` +
+      `Now, you hand a challenge back if you can't beat it and get your token back to spend on ` +
+      `another. It's simpler, and it asks you to give something up rather than pile something up.`,
   },
   {
     id: "snake",
     name: "The slithering snake",
     born: "14 June 2026", died: "24 August 2026",
     icon: "snake",
-    was: `A reputation easter egg. It crossed the desk on the right sort of page, and catching it ` +
-      `earned a secret charm.`,
-    why: `Nothing was wrong with it except how it looked. This notebook is ink on paper. The snake ` +
-      `was a shaded thing with a green gradient down its body, scales, a sheen along its back and ` +
-      `amber slit eyes, and next to the fence and the cat and the scarf it read as clip art somebody ` +
-      `had dropped on the page. No amount of tuning the crawl fixes a paint job that belongs to a ` +
-      `different game. The era still gets its say: the ink goes near-black on a reputation page.`,
+    was: `It was a *reputation* easter egg. A snake would occasionally slither over the desk on the ` +
+      `right sort of page.`,
+    why: `It looked REALLY BAD, even after a number of revisions, and I just couldn't make it work. It ` +
+      `was added very early on in development and turned out to be one of those ideas that you move ` +
+      `on from. But *reputation* pages still get a little nod. The ink goes near-black on them.`,
   },
   {
     id: "atoz",
     name: "From A to Z",
     born: "22 June 2026", died: "4 September 2026",
     icon: "atoz",
-    was: `Name a song holding the word, but every title had to start further up the alphabet than ` +
-      `the last one.`,
-    why: `It asked the wrong question. Every other card on the shelf tests what you know about the ` +
-      `catalogue or what you are willing to risk. This one tested whether you could cross-reference ` +
-      `the catalogue against the alphabet in ten seconds. And its real decision, how far up to jump, ` +
-      `was invisible, because nothing on the page tells you how much catalogue is left above each ` +
-      `letter. By the end it needed three separate guard rails to stop you ruining your own run. A ` +
-      `rule that has to be protected from its own central choice is not a rule anyone can play well.`,
+    was: `It was a challenge: name a song with the word, but each title had to start later in the ` +
+      `alphabet than the last.`,
+    why: `Every other challenge tests what you know or what you're willing to risk. But this one ` +
+      `tested whether you could cross-reference the alphabet in ten seconds… I can't even believe I ` +
+      `ever thought that would be fun. The real decision, how far along the alphabet to jump, was ` +
+      `hidden, because nothing showed how much of the catalogue was left after each letter. Trust ` +
+      `me, you didn't miss anything.`,
   },
   {
     id: "goldroll",
@@ -5595,41 +5567,39 @@ export const GRAVEYARD = [
     name: "Midnight Rain",
     born: "11 July 2026", died: "24 September 2026",
     icon: "rain",
-    was: `For one minute a night, from midnight to a minute past, rain fell across the whole ` +
-      `screen: thin slate streaks leaning into a light wind, over the notebook and everything on it.`,
-    why: `It looked bad. Everything else here is ink on paper, and the rain was neither: a sheet ` +
-      `of fast grey dashes laid over the top of the page, which read less like weather than like ` +
-      `something wrong with the screen. Cutting it from an hour to a minute made it rarer without ` +
-      `making it look any better.`,
+    was: `It was a rain effect that would fall across the entire screen from midnight to 12:01 each ` +
+      `night.`,
+    why: `It started out running from midnight to 1am, which was far too long, but even cut down to a ` +
+      `single minute, it was still wildly annoying. At that point, I knew it had to go. It was grey ` +
+      `dashes over the page, and honestly it looked more like a mistake than something intentional. ` +
+      `Realistically, it was just ugly.`,
   },
   {
     id: "doodles",
     name: "Margin doodles",
     born: "14 June 2026", died: "4 October 2026",
     icon: "doodles",
-    was: `Small ink sketches in the margin beside the red rule, turning up on the odd page: a ` +
-      `scarf on a peg, a mirrorball, a paper plane. Page five of a Classic run always got the fence ` +
-      `with five holes in it, and a few dates drew their own, like a pegacorn at Halloween.`,
-    why: `They never looked right. Every one was redrawn, most of them more than once, and at the ` +
-      `size a margin allows each came out either too bare to tell what it was or too busy to read. ` +
-      `On a phone, where the margin is a sliver, they all but vanished.`,
+    was: `They were small ink sketches by the margin rule on some pages, things like a scarf, a ` +
+      `mirrorball, and a paper plane. Page five of a Classic run always got a fence with five holes ` +
+      `in it, and on Halloween there was a pegacorn.`,
+    why: `They never looked right, even after every single one was redrawn, some more than once. At ` +
+      `margin size they came out either too bare to read or too busy, and often they just looked ` +
+      `messy. On a phone, the margin is a sliver, and they all but disappeared. They were around ` +
+      `for AGES, but ultimately they had to go.`,
   },
   {
     id: "tumblr",
     name: "Tumblr messages",
     born: "8 September 2026", died: "8 October 2026",
     icon: "tumblr",
-    was: `A third shelf in the keepsakes drawer, under the polaroids and the stickers: real posts ` +
-      `from her Tumblr, screenshotted and blacked out line by line until something you did in a ` +
-      `game read as a reply to one.`,
-    why: `It went on the shelf before anybody had decided how you would find it. It shipped with ` +
-      `one post and no way to earn it, and every way in was written afterwards, a post at a time, ` +
-      `each trigger worked backwards from words that were already there. You could feel the join. ` +
-      `Muting the sound in the middle of a run found a post because the post happened to mention ` +
-      `a block button, not because finding it meant anything. It looked plain as well: a white card ` +
-      `in a phone's typeface was the one thing in the drawer that did not come off the desk, and ` +
-      `beside the polaroids it read like a placeholder. It can come back when it has a reason to ` +
-      `be here that comes before the way you unlock it.`,
+    was: `It was a third keepsakes shelf, under polaroids and stickers. It held real posts from her ` +
+      `Tumblr, blacked out line by line until something you did in a game unlocked one, almost like ` +
+      `a reply to what you'd just done.`,
+    why: `They were added for no real reason, just because I felt like it. The issue was that the ` +
+      `unlocks had to be invented around them, so they felt very shoehorned in. Also, it looked ` +
+      `plain and basic: just a white card in a phone font, which, unlike everything else in the ` +
+      `keepsakes drawer, didn't feel like it came off the desk. Maybe the messages will come back ` +
+      `one day, but they'll need a proper reason to exist this time.`,
   },
 ];
 
