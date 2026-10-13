@@ -794,14 +794,26 @@ export function blankExact(typed, puzzle) {
    by a real song rather than by whatever four lines could be argued into. Nothing leaks either,
    since the question was never which song.
 
-   The picks get harder as the page goes on, and the whole ramp lives in WHERE THE DECOYS COME
-   FROM, so the rules never change and the crescendo is felt rather than announced:
-     • pick 1  — other songs, other albums. A warm-up, often placeable on tone alone.
-     • pick 2  — other songs, same album. The era stops helping.
-     • picks 3 and 4 — THIS SAME SONG, lines the page hasn't shown. Vocabulary, voice, era and
-       mood all match, so vibe-matching stops working and only knowing the order gets you there.
-   A song too thin to supply its own decoys falls back to the album, and `fallbacks` counts how
-   often that happened so an audit can say how much of the ramp is quietly not ramping.
+   EVERY DECOY IS FROM THIS SAME SONG, on every pick. The page used to open on decoys from other
+   songs (pick 1 off another album, pick 2 off the same one) and that was a joke to anyone who
+   knows the catalogue: the song is named at the top, so a line from any other song is ruled out
+   by recognising it, without remembering a thing about what comes next. Half of every page's
+   decoys asked the wrong question. A song too thin to supply its own is not dealt at all, rather
+   than quietly falling back to other songs and reopening the same hole.
+
+   And they are not just any line of the song. Each pick's decoys are chosen for being the line
+   you could actually confuse with the answer (`chainDecoyRank`), best first:
+     • PARALLEL — the line in the same slot of another section of the same kind: verse 2's third
+       line when the answer is verse 1's, the bridge's other half, a chorus that changes on its
+       last time round. "Is this the first verse or the second?" is the real mistake people make
+       singing along, and it is the one thing only knowing the order can settle.
+     • ECHO — a line that follows somewhere else a line that sounds like the anchor (they share
+       an opening), so the decoy is the right answer to a question that was nearly asked.
+     • LOOKALIKE — opens on the answer's first word, or ends on its rhyme.
+     • LENGTH — about as long as the answer, so it doesn't stand out as a card.
+     • any other line of the song.
+   The rank is shuffled within a tier, and no decoy is used twice on one page (a card you have
+   already seen proven wrong is a card you can rule out without singing).
 
    The bars a page must clear:
      1. READABLE     — every line on the page is short enough to sit on a card and has real
@@ -815,6 +827,7 @@ export function blankExact(typed, puzzle) {
                        already sitting directly above it.
      5. NO SECOND WAY — a decoy is barred if it legitimately follows its anchor anywhere in the
                        song, which is bar 3 read from the other end.
+     6. NOT A QUIBBLE — a decoy differs from the answer by two words or more (`wordEdits`).
    Across a run the caller asks for a chain kept inside one section for the early pages and lets
    the later ones cross a section boundary (`opts.cross`), which is a harder and more interesting
    question: does the verse hand off to the chorus, the pre-chorus, the bridge? The section is
@@ -822,10 +835,11 @@ export function blankExact(typed, puzzle) {
    Returns null if nothing cleared the bars in `tries` attempts (the caller re-rolls). */
 export const CHAIN_PICKS = 4;
 export const CHAIN_CARDS = 3;
-/* What each pick pays. It escalates because the picks genuinely get harder, and a ramp the
-   player is asked to survive but never paid for reads as the game turning mean. The sum is the
-   page's worth and is what the roster entry's `points` has to say. */
-export const CHAIN_PAY = [1, 1, 2, 2];
+/* What each pick pays. Flat, because the picks are: every one is dealt same-song decoys, so
+   none is a warm-up for a later one. It used to run 1, 1, 2, 2 to pay for a ramp in where the
+   decoys came from, and paying double for the back half of a page with no ramp under it would
+   only be noise. The sum is the page's worth and is what the roster entry's `points` has to say. */
+export const CHAIN_PAY = [1, 1, 1, 1];
 export const CHAIN_PAGE = CHAIN_PAY.reduce((a, b) => a + b, 0);
 const CHAIN_MIN_WORDS = 3;
 const CHAIN_MAX_WORDS = 11;
@@ -841,9 +855,59 @@ function chainLineOk(line) {                                            // bar 1
 function chainFlat(song) {
   const out = [];
   (Array.isArray(song.sections) ? song.sections : []).forEach((sec, si) => {
-    (sec.lines || []).forEach((line) => out.push({ line, label: sec.label || "", si }));
+    (sec.lines || []).forEach((line, li) => out.push({ line, label: sec.label || "", si, li }));
   });
   return out;
+}
+
+/* "Verse 2" and "Verse 1" are the same KIND of section, which is what makes their third lines
+   parallel. The number is dropped and nothing else, so a pre-chorus is never a chorus. */
+const sectionKind = (label) => String(label).toLowerCase().replace(/\d+/g, "").trim();
+const openingOf = (key, n) => key.split(" ").slice(0, n).join(" ");
+
+/* Every other line of the song, ranked by how easily it could be mistaken for the line at `ai`
+   (see the tiers in the comment above). Ties are shuffled so the same song does not deal the
+   same trap every time. `from` names the tier, for the dev tools. */
+const CHAIN_TIERS = ["parallel", "echo", "lookalike", "length", "song"];
+const rhymeOf = (key) => key.slice(key.lastIndexOf(" ") + 1).slice(-3);
+function chainDecoyRank(flat, keys, ai, rng) {
+  const ans = flat[ai];
+  const kind = sectionKind(ans.label);
+  const ancKey = keys[ai - 1];
+  const ancOpen = openingOf(ancKey, 2);
+  const echo = ancOpen.includes(" ");
+  const ansFirst = openingOf(keys[ai], 1);
+  const ansRhyme = rhymeOf(keys[ai]);
+  const ansLen = keys[ai].split(" ").length;
+  const ranked = [];
+  flat.forEach((f, m) => {
+    if (m === ai || !keys[m]) return;
+    let t = 4;
+    if (f.si !== ans.si && f.li === ans.li && sectionKind(f.label) === kind) t = 0;
+    else if (echo && m > 0 && keys[m - 1] !== ancKey && openingOf(keys[m - 1], 2) === ancOpen) t = 1;
+    else if (openingOf(keys[m], 1) === ansFirst || rhymeOf(keys[m]) === ansRhyme) t = 2;
+    else if (Math.abs(keys[m].split(" ").length - ansLen) <= 1) t = 3;
+    ranked.push({ line: f.line, key: keys[m], t, r: rng() });
+  });
+  return ranked.sort((a, b) => a.t - b.t || a.r - b.r);
+}
+
+/* Bar 6, NOT A QUIBBLE: a decoy has to differ from the answer by at least two words. "I almost
+   do" against "And I almost do" is the same line to anyone singing it, and a page that marks a
+   fan wrong over a conjunction has failed at the one thing this game must never do (Sing It
+   Back's rule: telling someone they are wrong about a lyric they know). Counted in words, so a
+   comma or an apostrophe never makes two lines different. */
+function wordEdits(a, b) {
+  const x = a.split(" "), y = b.split(" ");
+  let prev = y.map((_, j) => j + 1);
+  prev.unshift(0);
+  for (let i = 1; i <= x.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= y.length; j++)
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (x[i - 1] === y[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[y.length];
 }
 
 /* Bar 3, precomputed for the whole song: what follows each line EVERY time it is sung. A line
@@ -860,19 +924,21 @@ function chainSuccessors(keys) {
   return succ;
 }
 
-/* One pick's three cards. `from` travels with each decoy so the dev tools can see whether the
-   ramp actually ramped — the difference between a page's easy pick and its hard one is invisible
-   on screen by design, which means it is also invisible to anyone checking the design. */
-function chainCards(answer, taken, pool, rng) {
+/* One pick's three cards: the answer and the two best-ranked lines of the song that are still
+   allowed. `used` is the whole page's ledger (the chain itself and every decoy already dealt),
+   so a decoy is never a line the page shows, and never a card the player has already seen
+   proven wrong. `from` travels with each decoy so the dev tools can see which trap it is, since
+   on screen three lines of one song look the same whatever made them a decoy. */
+function chainCards(answer, ranked, used, succNext, rng) {
   const cards = [{ text: answer.line, right: true, from: "answer" }];
-  const seen = new Set(taken);
-  for (let guard = 0; guard < 200 && cards.length < CHAIN_CARDS; guard++) {
-    const cand = pool();
-    if (!cand || !chainLineOk(cand.line)) continue;
-    const k = normalizeLyric(cand.line);
-    if (!k || seen.has(k)) continue;
-    seen.add(k);
-    cards.push({ text: cand.line, right: false, from: cand.from });
+  const ansKey = normalizeLyric(answer.line);
+  for (const c of ranked) {
+    if (cards.length === CHAIN_CARDS) break;
+    if (used.has(c.key) || !chainLineOk(c.line)) continue;
+    if (succNext && succNext.has(c.key)) continue;                       // bar 5
+    if (wordEdits(c.key, ansKey) < 2) continue;                          // bar 6
+    used.add(c.key);
+    cards.push({ text: c.line, right: false, from: CHAIN_TIERS[c.t] });
   }
   return cards.length === CHAIN_CARDS ? shuffled(cards, rng) : null;
 }
@@ -913,50 +979,13 @@ export function buildChainPuzzle(songs, rng = Math.random, tries = 120, avoid = 
     if (opts.cross && !crossed && t < tries * 0.7) continue;
     if (!opts.cross && crossed) continue;
 
-    // The three decoy pools. Same-song lines are the hard ones and must be lines the page has
-    // not shown and will not show — a decoy that turns up later as the true answer teaches the
-    // player something false — and bar 5 keeps out anything that really does follow the anchor.
-    const inChain = new Set(wk);
-    const mine = flat.filter((f, i) => !inChain.has(keys[i]) && chainLineOk(f.line));
-    const sameAlbum = songs.filter((s) => s !== song && s.album === song.album);
-    const farAlbum = songs.filter((s) => s.album !== song.album);
-    const fromSong = (anchorKey) => {
-      const f = mine.length ? pick(mine, rng) : null;
-      if (!f) return null;
-      const s = succ.get(anchorKey);
-      if (s && s.has(normalizeLyric(f.line))) return null;               // bar 5
-      return { line: f.line, from: "song" };
-    };
-    const fromSongs = (pool, tag) => () => {
-      const other = pool.length ? pick(pool, rng) : null;
-      if (!other) return null;
-      const lines = chainFlat(other);
-      if (!lines.length) return null;
-      return { line: pick(lines, rng).line, from: tag };
-    };
-    const fromAlbum = fromSongs(sameAlbum, "album");
-    const fromFar = fromSongs(farAlbum, "far");
-
-    // `hard` deals same-song decoys from pick 1, which is the shape a dev tool wants and no
-    // page ever opens on.
-    const wants = opts.hard ? ["song", "song", "song", "song"] : ["far", "album", "song", "song"];
+    // Every decoy off this song. One that can't find two for every pick is not dealt: falling
+    // back to other songs would put the easy question back on the page.
+    const used = new Set(wk);
     const picks = [];
-    let fallbacks = 0;
     for (let j = 0; j < CHAIN_PICKS; j++) {
-      const anchorKey = wk[j];
-      const want = wants[j];
-      let cards = null;
-      if (want === "song") {
-        cards = chainCards(win[j + 1], [anchorKey], () => fromSong(anchorKey), rng);
-        // A song with too few spare lines can't supply its own decoys. The album stands in, and
-        // the page says so in the only place it can: the count an audit reads.
-        if (!cards) { cards = chainCards(win[j + 1], [anchorKey], fromAlbum, rng); if (cards) fallbacks++; }
-      } else if (want === "album") {
-        cards = chainCards(win[j + 1], [anchorKey], fromAlbum, rng);
-        if (!cards) { cards = chainCards(win[j + 1], [anchorKey], fromFar, rng); if (cards) fallbacks++; }
-      } else {
-        cards = chainCards(win[j + 1], [anchorKey], fromFar, rng);
-      }
+      const ai = at + j + 1;
+      const cards = chainCards(flat[ai], chainDecoyRank(flat, keys, ai, rng), used, succ.get(wk[j]), rng);
       if (!cards) break;
       picks.push({ answer: { text: win[j + 1].line, label: win[j + 1].label, si: win[j + 1].si }, cards });
     }
@@ -965,7 +994,7 @@ export function buildChainPuzzle(songs, rng = Math.random, tries = 120, avoid = 
     return {
       song, label: win[0].label,
       anchor: { text: win[0].line, label: win[0].label, si: win[0].si },
-      picks, crossed, fallbacks,
+      picks, crossed,
     };
   }
   return null;

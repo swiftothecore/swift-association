@@ -8743,10 +8743,9 @@ function chainDetail(got) {
   return `<b>${got}</b> of ${CHAIN_PICKS} lines · <b>${chainPage}</b> point${chainPage === 1 ? "" : "s"}`;
 }
 
-/* Dev only: the page's whole chain written out, with each pick's true successor and where its
-   two decoys were mined from. The ramp is invisible on screen by design — three lines look the
-   same whatever song they came off — which means it is also invisible to anyone checking that
-   the ramp happened, so it has to be printable. Kept beside the game rather than in the dev
+/* Dev only: the page's whole chain written out, with each pick's true successor and which trap
+   each of its two decoys is. Three lines of one song look alike on screen by design, which means
+   which kind of decoy each one is can't be seen by anyone checking, so it has to be printable. Kept beside the game rather than in the dev
    block because the builder's comment points at it. */
 function devChainLines(p) {
   return [`0. ${p.anchor.text}   [${p.anchor.label}]`].concat(
@@ -9458,8 +9457,7 @@ function bonusPageScore(correct) {
   // Only Here pays for the card that was picked, whatever it was worth — the page is never
   // failed, only answered cheaply or not at all.
   if (bonusGame && bonusGame.id === "only-here") return onlyPlayed ? onlyPlayed.points : 0;
-  // Then What pays per PICK, and the picks are not worth the same: 1, 1, 2, 2 up the page, so
-  // what the page banked is already added up in chainPage.
+  // Then What pays per PICK, so what the page banked is already added up in chainPage.
   if (bonusGame && bonusGame.id === "then-what") return chainPage;
   /* Aaron or Jack pays a flat one for a page placed, and three for a joint production named as
      one. The premium is not a difficulty bonus — a "both" page is no harder to READ than any
@@ -10418,7 +10416,7 @@ function endBonusRun() {
             `<h3 class="bg-back-name">${escapeHtml(bonusGame.name)}</h3>` +
             `<div class="bg-back-remark">${escapeHtml(bonusBackRun.remark)}</div>` +
             // Then What's other number. It costs nothing and is scored by nothing, but it is
-            // the one thing about a run that a total out of sixty can't say.
+            // the one thing about a run that a total out of forty can't say.
             (aside ? `<div class="bg-back-chain">${escapeHtml(aside)}</div>` : "") +
           `</div>` +
           // A time stands alone: there is no total for a run of seconds to be out of, and the
@@ -33285,15 +33283,13 @@ function buildDevApi() {
         $("bonusBody").prepend(strip);
         return [...BONUS_GAMES, RUTHLESS_GAME].map((g) => `${g.id}: ${hasCover(g.id) ? "drawn" : "NO COVER: blank kraft"}`);
       },
-      /* Then What. `chainClock(s)` trials the shared page clock's length. The ramp is the whole design and NONE of it is visible on screen — three
-         lines look the same whether they came from another album or from this very song — so
-         `chain()` is the only way to see whether a page ramped at all: it prints each pick's
-         true successor and where every decoy was mined from.
+      /* Then What. `chainClock(s)` trials the shared page clock's length. Every decoy is off the
+         page's own song, so on screen three lines look alike by design, and `chain()` is the
+         only way to see which TRAP each one is: it prints each pick's true successor and the
+         tier every decoy was ranked in (parallel, echo, lookalike, length, song).
          `pick(n)` plays the page out with the first n picks right, which is the only sane way
-         to reach the settle. `hard()` re-deals the page with same-song decoys from pick 1, the
-         shape no page ever opens on. `chainAudit` reports how often a song was too thin to
-         supply its own decoys and the album had to stand in, since that fallback silently makes
-         the hardest picks easier than designed. */
+         to reach the settle. `chainAudit` reports the build rate and the tier mix, since a mix
+         sliding toward "length" and "song" is the decoys quietly getting easier. */
       chain: () => {
         if (!bonusGame || bonusGame.id !== "then-what" || !bonusPuzzle) return "not on a then what page";
         return { song: bonusPuzzle.song.title, album: bonusPuzzle.song.album,
@@ -33325,17 +33321,6 @@ function buildDevApi() {
         step();
         return { right: chainTaken.filter((t) => t.right).length, banked: chainPage, of: CHAIN_PAGE };
       },
-      hard: () => {
-        if (!bonusGame || bonusGame.id !== "then-what") return "not on a then what page";
-        const p = buildChainPuzzle(allSongs, Math.random, 200, null, { hard: true });
-        if (!p) return "no page could be built with same-song decoys throughout";
-        bonusPuzzle = p;
-        chainStep = 0; chainTaken = []; chainPage = 0; chainBusy = false;
-        stopChainBeat();
-        renderBonusRound();
-        startBonusClock();
-        return { song: p.song.title, chain: devChainLines(p) };
-      },
       // Then What's shared page clock on trial: chainClock(18) deals every page from here on
       // eighteen seconds, chainClock(0) puts the real BONUS_CHAIN_SECONDS back. Session only,
       // never stored. It takes effect on the next page.
@@ -33346,18 +33331,16 @@ function buildDevApi() {
                    ? +((bonusClockDeadline - performance.now()) / 1000).toFixed(2) : null };
       },
       chainAudit: (n = 200) => {
-        let built = 0, crossed = 0, fell = 0, picks = 0;
+        let built = 0, crossed = 0;
+        const tiers = {};
         for (let i = 0; i < n; i++) {
           const p = buildChainPuzzle(allSongs, Math.random, 120, null, { cross: i % 2 === 1 });
           if (!p) continue;
           built++;
           if (p.crossed) crossed++;
-          fell += p.fallbacks;
-          picks += CHAIN_PICKS;
+          for (const pk of p.picks) for (const c of pk.cards) if (!c.right) tiers[c.from] = (tiers[c.from] || 0) + 1;
         }
-        return { tried: n, built, crossed,
-                 fellBack: fell, ofPicks: picks,
-                 fallbackRate: picks ? `${((fell / picks) * 100).toFixed(1)}%` : "n/a" };
+        return { tried: n, built, crossed, tiers };
       },
       end: () => endBonusRun(),
       // The back-cover-as-PNG keepsake, mirroring __dev.card for the bracelet. Needs a finished

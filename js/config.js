@@ -741,11 +741,10 @@ export const BONUS_GAMES = [
     kicker: "find the wrong word", tint: "#bf5340",
     line: "One word in the lyric is an impostor. Catch it.",
     blurb: "One word in the lyric has been swapped for an impostor. Catch it before the ink dries, and trust the ear that says a line is wrong." },
-  // Four picks down one song, worth 1, 1, 2 and 2 — the payout escalates because the decoys
-  // move closer to home as the page goes on (see buildChainPuzzle), and a ramp the player is
-  // asked to survive but never paid for reads as the game turning mean rather than exciting.
-  // The six is CHAIN_PAGE written out; the two must stay in step.
-  { id: "then-what", name: "Then What", ready: true, points: 6, endless: true,
+  // Four picks down one song, a point each: every decoy is off the same song (see
+  // buildChainPuzzle), so no pick is easier than another and none is paid more.
+  // The four is CHAIN_PAGE written out; the two must stay in step.
+  { id: "then-what", name: "Then What", ready: true, points: 4, endless: true,
     kicker: "what comes next?", tint: "#4c3f8a",
     line: "Three lines. Pick the one that comes next.",
     blurb: "One line of the song, and three lines that might follow it. Pick the right one and it locks into the page in pen, four times over." },
