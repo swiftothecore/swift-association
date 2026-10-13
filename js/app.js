@@ -476,6 +476,10 @@ let roundStart = 0;
 let roundLocked = false;
 let roundClockPending = false;
 let pendingRoundSubmission = null;
+// Enter's tie hold (enterTieOf): the line a tie was last held on, so a second Enter on the same
+// line goes through, and whether an arrow key has picked a card since the line last changed.
+let enterHeldFor = "";
+let ddSteered = false;
 let statsBackTarget = "start";
 let settings = { ...{} };       // populated from loadSettings() in init
 let pausedClockState = null;    // actual main clock state captured while Settings is open
@@ -678,14 +682,17 @@ function focusRoundInput(input, preventScroll = false) {
 /* The suggestion card (styles.css, .dropdown): a header carrying the page's own suggestions
    mark, then the list of titles. Shared by the round screen and the bonus shelf. The header
    says "6 of 27" only when the card is holding back titles, so you know to keep typing; the
-   mark is the late one on a Hard page, the same broken strokes the page's rule marks wear. */
-function fillSuggestionCard(dd, songs, { total, active, idPrefix, late = false, offLimits = () => false, choose }) {
+   mark is the late one on a Hard page, the same broken strokes the page's rule marks wear.
+   `ask` is Enter's tie hold (enterTieOf): the header asks which one instead, on the card itself
+   because the card is where the eye already is, and the answer is the list under it. */
+function fillSuggestionCard(dd, songs, { total, active, idPrefix, late = false, ask = false, offLimits = () => false, choose }) {
   dd.innerHTML = "";
   const head = document.createElement("div");
-  head.className = "dd-head";
+  head.className = "dd-head" + (ask ? " dd-ask" : "");
   head.setAttribute("aria-hidden", "true");
   head.innerHTML = `<svg viewBox="0 0 24 24"><use href="#${late ? "rule-suggest-late" : "rule-suggest"}"/></svg>` +
-    `<span>suggestions</span><span class="dd-count">${total > songs.length ? `${songs.length} of ${total}` : ""}</span>`;
+    (ask ? `<span>which one? keep typing</span><span class="dd-count">or enter again</span>`
+      : `<span>suggestions</span><span class="dd-count">${total > songs.length ? `${songs.length} of ${total}` : ""}</span>`);
   const list = document.createElement("div");
   list.className = "dd-list";
   list.setAttribute("role", "none");
@@ -8829,6 +8836,8 @@ function redactDetail(points) {
 let bonusDdItems = [];
 let bonusDdTotal = 0;
 let bonusDdIndex = -1;
+let bonusDdSteered = false;   // an arrow key has picked a card since the line last changed
+let bonusEnterHeldFor = "";   // the line Enter's tie hold last held on (see enterTieOf)
 
 function bonusRankMatches(query) {
   return bonusAllMatches(query).slice(0, 6);
@@ -8849,6 +8858,7 @@ function bonusAllMatches(query) {
 }
 
 function updateBonusDropdown() {
+  bonusDdSteered = false; bonusEnterHeldFor = "";
   const all = bonusLocked ? [] : bonusAllMatches($("bonusInput").value);
   bonusDdTotal = all.length;
   bonusDdItems = all.slice(0, 6);
@@ -8856,13 +8866,13 @@ function updateBonusDropdown() {
   renderBonusDropdown();
 }
 
-function renderBonusDropdown() {
+function renderBonusDropdown(ask = false) {
   const dd = $("bonusDropdown");
   const input = $("bonusInput");
   if (!dd || !input) return;
   if (!bonusDdItems.length) { hideBonusDropdown(); return; }
   fillSuggestionCard(dd, bonusDdItems, {
-    total: bonusDdTotal, active: bonusDdIndex, idPrefix: "bg-dd-opt-",
+    total: bonusDdTotal, active: bonusDdIndex, idPrefix: "bg-dd-opt-", ask,
     choose: (song) => judgeName(song),
   });
   dd.classList.add("show");
@@ -8891,12 +8901,14 @@ function bonusDropdownKey(e) {
   if (e.key === "ArrowDown") {
     e.preventDefault();
     bonusDdIndex = (bonusDdIndex + 1) % bonusDdItems.length;
+    bonusDdSteered = true;
     renderBonusDropdown();
     return true;
   }
   if (e.key === "ArrowUp") {
     e.preventDefault();
     bonusDdIndex = (bonusDdIndex - 1 + bonusDdItems.length) % bonusDdItems.length;
+    bonusDdSteered = true;
     renderBonusDropdown();
     return true;
   }
@@ -8912,6 +8924,16 @@ function judgeName(picked = null) {
   // Same forgiving title resolution the main game uses, so aliases, misplaced spaces and a
   // single typo all work — Ruthless is racing the same clock the typing has to beat.
   const typed = resolveTypedTitle(raw);
+  // The same tie hold as the round screen (enterTieOf), and on Ruthless the clock runs on
+  // through it exactly as it does there.
+  const tie = !picked && !bonusDdSteered && bonusDdIndex === 0 && enterTieOf(bonusDdItems, key);
+  if (tie && bonusEnterHeldFor !== key) {
+    bonusEnterHeldFor = key;
+    bonusDdIndex = 0;
+    renderBonusDropdown(true);
+    return;
+  }
+  bonusEnterHeldFor = "";
   const song = picked || bonusDdItems[bonusDdIndex] || typed;
   if (!song) {
     if (!key) return;
@@ -23658,19 +23680,51 @@ function allMatches(query) {
   return scored.map((s) => s.song);
 }
 
+/* Enter's tie guard. Enter takes the top suggestion, and when two different songs are still
+   level on what has been typed ("super": Superman and Superstar, "the al": The Albatross and
+   The Alchemy) the top one is only first alphabetically, which is no reason at all to hand it
+   in. So Enter holds instead of guessing: the first press names the tie and leaves the list
+   open, one more letter usually settles it, and a second press on the same line takes the
+   highlighted card. Returns the two songs to name, or null when Enter can go straight through.
+   - An exact title is never a tie. "invisible" means Invisible, and making everyone who wants
+     it press twice to rescue the ones who meant invisible string is the wrong trade.
+   - Two versions of one song are not a tie either: whichever is on top is the song they meant.
+   - It reads only what was typed, never the page's word. Breaking the tie toward the song
+     that fits would let "t" and Enter win every page, so it must never learn which one does.
+   - The clock keeps running while it holds. A held Enter that stopped it would let one letter
+     and Enter read the whole list for free. */
+function enterTieOf(items, query) {
+  if (items.length < 2) return null;
+  const q = normalizeTitle(query);
+  const top = songMatchScore(items[0], q);
+  if (!top || top.rank < 2) return null;
+  const base = (s) => normalizeTitle(baseTitleOf(s.title));
+  const rival = items.slice(1).find((s) => {
+    const m = songMatchScore(s, q);
+    return m && m.rank === top.rank && m.idx === top.idx && !!m.alias === !!top.alias
+      && base(s) !== base(items[0]);
+  });
+  return rival ? [items[0], rival] : null;
+}
+// Read aloud only: the card's header asks the same question on screen.
+function enterTieText(tie) {
+  return `${censor(tie[0].title)} or ${censor(tie[1].title)}? Keep typing, or press Enter again for the first.`;
+}
+
 function updateDropdown() {
+  ddSteered = false; enterHeldFor = "";
   const all = allMatches($("songInput").value);
   dropdownTotal = all.length;
   dropdownItems = all.slice(0, 6);
   activeIndex = dropdownItems.length ? 0 : -1;
   renderDropdown();
 }
-function renderDropdown() {
+function renderDropdown(ask = false) {
   const dd = $("dropdown");
   const input = $("songInput");
   if (!dropdownItems.length) { hideDropdown(); return; }
   fillSuggestionCard(dd, dropdownItems, {
-    total: dropdownTotal, active: activeIndex, idPrefix: "dd-opt-", late: dropdownLate(),
+    total: dropdownTotal, active: activeIndex, idPrefix: "dd-opt-", late: dropdownLate(), ask,
     offLimits: isOffLimitsPick,
     choose: (song, i) => {
       // Took The Money reads which rung of the list was taken. Set around the call and cleared
@@ -25222,6 +25276,19 @@ function submitAnswer(song, isTimeout) {
       if (activeIndex >= dropdownItems.length) activeIndex = -1;
       if (dropdownItems.length) {
         suggestionIndex = activeIndex >= 0 ? activeIndex : 0;
+        // A tie holds the first Enter (see enterTieOf). Not once an arrow key has chosen a card:
+        // that is the player settling the tie themselves.
+        const line = normalizeTitle($("songInput").value);
+        const tie = !ddSteered && suggestionIndex === 0 && enterTieOf(dropdownItems, line);
+        if (tie && enterHeldFor !== line) {
+          enterHeldFor = line;
+          suggestionIndex = -1;
+          activeIndex = 0;
+          renderDropdown(true);
+          $("srStatus").textContent = enterTieText(tie);
+          return;
+        }
+        enterHeldFor = "";
         song = dropdownItems[suggestionIndex];
       } else {
         const raw = $("songInput").value;
@@ -28126,10 +28193,10 @@ function wireInput() {
       submitAnswer(null, false);
     } else if (e.key === "ArrowDown" && dropdownItems.length && $("dropdown").classList.contains("show")) {
       e.preventDefault();
-      if (dropdownItems.length) { activeIndex = (activeIndex + 1) % dropdownItems.length; renderDropdown(); }
+      if (dropdownItems.length) { activeIndex = (activeIndex + 1) % dropdownItems.length; ddSteered = true; renderDropdown(); }
     } else if (e.key === "ArrowUp" && dropdownItems.length && $("dropdown").classList.contains("show")) {
       e.preventDefault();
-      if (dropdownItems.length) { activeIndex = (activeIndex - 1 + dropdownItems.length) % dropdownItems.length; renderDropdown(); }
+      if (dropdownItems.length) { activeIndex = (activeIndex - 1 + dropdownItems.length) % dropdownItems.length; ddSteered = true; renderDropdown(); }
     } else if (e.key === "Escape") {
       hideDropdown();
     } else if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "i" || e.key === "I")) {

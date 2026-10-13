@@ -9321,6 +9321,11 @@
     fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round;
   }
   .dropdown .dd-count { margin-left: auto; letter-spacing: 1px; }
+  /* Enter's tie hold: the header asks which one. Ink rather than soft ink, and one small nod,
+     because nothing went wrong but the next keystroke is theirs. */
+  .dropdown .dd-head.dd-ask { color: var(--ink); animation: dd-ask-nod 0.45s ease; }
+  @keyframes dd-ask-nod { 0%, 100% { transform: none; } 35% { transform: translateX(3px); } 70% { transform: translateX(-2px); } }
+  body[data-reduce-motion="on"] .dropdown .dd-head.dd-ask { animation: none; }
   /* The ruling lives on the list, not the card, so it scrolls with the titles. */
   .dropdown .dd-list {
     flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
