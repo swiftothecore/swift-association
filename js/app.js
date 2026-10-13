@@ -15703,6 +15703,7 @@ function beginLineupRun() {
   $("pageTotalWrap").style.display = "";
   $("pageTotal").textContent = TOTAL_ROUNDS;
   journalRunStart("lineup");   // the one start path that never calls notePlayed
+  countRun("lineup", lineupDiff);
   showScreen("game");
   renderLineupGoals();
   nextRound();
@@ -17314,7 +17315,23 @@ function randomToken(cat, key) { return key == null ? cat : cat + ":" + key; }
 // Marked at run START, from every start path, however the run was entered. See the ledger's
 // note in storage.js for why this isn't derived from the boards at draw time.
 // It is also the one call every run start already shares, so the dev run journal rides on it.
-function notePlayed(cat, key) { journalRunStart(randomToken(cat, key)); markRandomSeen(randomToken(cat, key)); }
+function notePlayed(cat, key, counted = true) {
+  journalRunStart(randomToken(cat, key));
+  markRandomSeen(randomToken(cat, key));
+  if (counted) countRun(cat, key);
+}
+
+// One Umami event per run started, so the dashboard can say what people play and not just that
+// they came. A single property ("album:Midnights", "bonus:tracks") because Umami bills every
+// stored property as an event of its own. Nothing the player typed or earned is ever sent. Dev
+// notebooks and no-log runs stay out of the numbers, and a blocked script is simply silent.
+function countRun(cat, key) {
+  if (devNoLog) return;
+  try {
+    if (localStorage.getItem(DEV_FLAG) === "1") return;
+    window.umami?.track("run", { mode: key ? `${cat}:${key}` : cat });
+  } catch (e) { /* storage or the counter unavailable: count nothing */ }
+}
 
 // One-time backfill of the ledger from the boards, at startup. Without it a notebook with
 // months of play behind it starts with an empty ledger, reads as "nothing has ever been
@@ -17662,9 +17679,9 @@ function maybeStartFromWordParam() {
 function startInfinite(variant, opts) {
   infiniteVariant = variant === "sudden" ? "sudden" : "3lives";
   gameType = "infinite";
-  notePlayed("infinite", infiniteVariant);
-  lives = startingLives();
   const carry = !!(opts && opts.carry);
+  notePlayed("infinite", infiniteVariant, !carry);   // "keep going" continues a run, it doesn't start one
+  lives = startingLives();
   if (!carry) resetRunState();
   applyInputHints();
   updateTagline();

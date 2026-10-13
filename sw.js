@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v462";
+const CACHE = "stta-v463";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -294,6 +294,9 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  // The visitor counter's script goes straight to the network, never into the cache: a cached
+  // copy would outlive Umami's own updates, and offline there is nothing for it to count.
+  if (url.origin === "https://cloud.umami.is") return;
   // Anything on the ASSETS list, same-origin. Navigations are NOT excluded: the searcher and the
   // 404 page are on the list under their own paths and are answered from the cache like
   // everything else, so a page and the modules it loads always come from one version. Fonts land
