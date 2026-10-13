@@ -8493,6 +8493,12 @@ function revealRuthless() {
 
 function bonusTimeout() {
   if (bonusLocked) return;
+  // A held tie hands in the top match when the clock runs out, as on the round screen (see
+  // submitAnswer). Never on a timed game, where a wrong name is a soft reject that would leave
+  // the page open after its clock had gone.
+  const input = $("bonusInput");
+  if (bonusEnterHeldFor && !bonusTimed(bonusGame) && input
+      && normalizeTitle(input.value) === bonusEnterHeldFor) { judgeName(); return; }
   // Then What's clock is the page's, so running it dry misses every pick still to come. The
   // verse still writes itself out in full, so the page ends reading as the song.
   if (bonusGame && bonusGame.id === "then-what") { judgeChain(-1); return; }
@@ -25207,6 +25213,11 @@ function submitAnswer(song, isTimeout) {
     }
     return;
   }
+
+  // A clock that runs out on a held tie (enterTieOf) hands in the top match, exactly what that
+  // Enter did before ties were held. A last-second Enter must never do worse than it used to,
+  // and since a second Enter takes the same card, waiting out the clock gains nothing either.
+  if (isTimeout && !song && enterHeldFor && normalizeTitle($("songInput").value) === enterHeldFor) isTimeout = false;
 
   // Impostor: a fake page can only be cleared by flagging it. Letting the clock run out means
   // you failed to flag it in time — fatal. (A real page's timeout is a normal miss below.)
