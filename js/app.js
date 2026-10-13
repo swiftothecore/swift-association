@@ -7697,17 +7697,15 @@ function nextBonusRound(options = {}) {
    answer, which is what lets it run on every game. Its own short memory rather than the
    round's `recentEras`, which is saved with a paused main run and must not be stirred by a
    bonus page. Ruthless keeps the plain desk: it is a mode with its own furniture.
-   Then What is the exception: its song is named at the top from the first moment, so a
-   shuffled era only clashed with the song's own colour on the rule beside it. It wears the
-   song's era instead, and the whole page matches. Shuffled is the fallback for a song with
-   no era of its own. */
-const SONG_ERA_PAGES = new Set(["then-what"]);
+   The games that name their song (or, for Running Order, its record) from the first moment are
+   the exception (SONG_ERA_ON_PAGE, below): a shuffled era only clashed with the song's own
+   colour on the rule beside it, so they wear the song's era instead and the whole page
+   matches. Shuffled is the fallback for an album with no era of its own. */
 let bonusRecentEras = [];
 function bonusPageEra() {
   if (isRuthlessRun()) return "gold";
-  const song = bonusPuzzle && bonusPuzzle.song;
-  if (SONG_ERA_PAGES.has(bonusGame && bonusGame.id) && song && ALBUM_ERA[song.album])
-    return ALBUM_ERA[song.album];
+  const album = bonusPuzzle && (bonusPuzzle.album || (bonusPuzzle.song && bonusPuzzle.song.album));
+  if (SONG_ERA_ON_PAGE.has(bonusGame && bonusGame.id) && ALBUM_ERA[album]) return ALBUM_ERA[album];
   let pool = ERAS.filter((e) => !bonusRecentEras.includes(e));
   if (!pool.length) pool = ERAS;
   const era = pool[Math.floor(Math.random() * pool.length)];
