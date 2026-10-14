@@ -1355,6 +1355,7 @@ function beginPageTurn(anchor) {
   app.style.overflowClipMargin = "58px";
 
   const held = [];
+  const after = [];
   let callback = null;
   let finished = false;
   const holdAttribute = (el, name, value = "") => {
@@ -1373,6 +1374,8 @@ function beginPageTurn(anchor) {
       window.scrollTo(scrollX, scrollY);
     },
     setCompletion(fn) { callback = fn; },
+    // Work that has to wait for the paper to stop moving, after the turn's own completion.
+    whenDone(fn) { if (finished) fn(); else after.push(fn); },
     /* settleHeight used to live here. It grew the lock into a taller destination over 0.42s so
        the page unfurled in step with the sheet instead of snapping to length when finish()
        released it. It was removed because height is a layout property: every frame of that
@@ -1407,6 +1410,7 @@ function beginPageTurn(anchor) {
       const done = callback;
       callback = null;
       if (done) done();
+      after.splice(0).forEach((fn) => fn());
     },
   };
   activePageTurn = turn;
@@ -11229,7 +11233,14 @@ function revealAfterFlip(find, opts) {
   // you came from was scrolled to, so it has to be reset before anything is measured. A door
   // into a MODAL is not: the drawer opens over the page you were on, and that page has to be
   // handed back untouched when the drawer closes. `keepWindow` is that second case.
-  if (!o.keepWindow) window.scrollTo({ top: 0, behavior: "instant" });
+  // The window can't move while a page turn is in the air: the turn pins the scroll position
+  // for its half second, so every placement made under it is snapped straight back, and the
+  // page beneath the turning sheet flickers between the two. Wait for the paper to land.
+  // An inner scroller is free to be placed now, under the sheet; only the window waits.
+  if (!o.keepWindow && activePageTurn) {
+    if (!o.within) { activePageTurn.whenDone(() => revealAfterFlip(find, { ...o, keepWindow: true })); return; }
+    activePageTurn.whenDone(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  } else if (!o.keepWindow) window.scrollTo({ top: 0, behavior: "instant" });
   let tries = 40, settled = null;
   const step = () => {
     const el = find();
@@ -30051,7 +30062,7 @@ function glossTip(slug, inner) {
   return `<span class="gloss-term" data-gloss="${g.slug}" title="${escapeHtml(g.term)}: ${escapeHtml(g.defn)}">${inner}</span>`;
 }
 let glossaryBackTarget = "start";
-function renderGlossary(focus = "") {
+function renderGlossary() {
   const el = $("glossaryBody");
   if (!el) return;
   const met = GLOSSARY.filter(glossaryMet);
@@ -30075,16 +30086,16 @@ function renderGlossary(focus = "") {
     html += `<p class="gloss-rest">${hidden} more ${hidden === 1 ? "word" : "words"} you haven't met yet.</p>`;
   }
   el.innerHTML = html;
-  if (focus) {
-    const row = el.querySelector(`[data-gloss-row="${focus}"]`);
-    if (row) revealAfterFlip(() => row, { pad: 18 });
-  }
 }
 function openGlossary(from, focus = "") {
   glossaryBackTarget = from;
   routeTo("glossary", from);
-  renderGlossary(focus);
+  renderGlossary();
   flipAwayToScreen("glossary");
+  // After the turn has begun, so the reveal is claimed for the glossary rather than the page
+  // being left, and the arrival at the top doesn't overrule it.
+  const row = focus && $("glossaryBody").querySelector(`[data-gloss-row="${focus}"]`);
+  if (row) revealAfterFlip(() => row, { pad: 18 });
 }
 
 /* ---------- The graveyard ----------
