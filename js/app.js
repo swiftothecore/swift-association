@@ -20918,7 +20918,8 @@ function renderDailyResultPanel({ fresh = false } = {}) {
     `<div class="stp-dp-big"><b class="rp-pass-num">${was}<em>${current}</em></b><span>${current === 1 ? "day" : "days"}<br>running</span></div>` +
     `<dl class="stp-dp-fields"><div><dt>since</dt><dd>${passDate(dayShift(anchor, 1 - current))}</dd></div>` +
     (flag ? "" : `<div><dt>longest</dt><dd>${best}</dd></div>`) + `</dl>` +
-    (flag ? `<p class="rp-pass-flag">${flag}</p>` : "");
+    (flag ? `<p class="rp-pass-flag">${flag}</p>` : "") +
+    `<button type="button" class="rp-pass-stats">stats<b aria-hidden="true">›</b></button>`;
 
   host.innerHTML =
     `<div class="rp-pass${live ? " is-fresh is-waiting" : ""}" role="group" aria-label="Daily challenge streak">` +
@@ -35544,6 +35545,12 @@ async function init() {
   $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; statsCalendarMonth = null; statsBleedSeq++; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
   $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; statsCalendarMonth = null; statsBleedSeq++; renderStats(score); flipAwayToScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => backToScreen(statsBackTarget));
+  // The daily pass's stub is a way into Stats. A day reopened from the Stats calendar already
+  // came from there, so it turns back to that calendar the way the page's own way home does.
+  $("resultPodium").addEventListener("click", (e) => {
+    if (!e.target.closest(".rp-pass-stats")) return;
+    $(archivedDailyDate ? "againBtn" : "resultsStatsBtn").click();
+  });
   // Empty-state "start writing →" affordance: wherever a zero-data screen renders one, send the
   // player straight to the start screen's launchpad (same page-flip as a back tap). Delegated once
   // since the buttons live inside re-rendered bodies.

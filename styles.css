@@ -11813,6 +11813,15 @@
   .rp-pass-num > :is(i, em) { font-style: normal; }
   .rp-pass-num > em { display: inline-block; }
   .rp-pass-num > i { position: absolute; left: 0; bottom: 0; opacity: 0; }
+  /* the stub's way into Stats: one dotted rule under the word and its arrow together, which a
+     text underline would break at the gap between them */
+  .rp-pass-stats {
+    align-self: flex-end; margin: auto 0 0; padding: 2px 1px 3px; border: 0; border-bottom: 1px dotted currentColor; border-radius: 0;
+    background: none; cursor: pointer; white-space: nowrap; color: var(--dp-stub-ink);
+    font-family: var(--type); font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase;
+  }
+  .rp-pass-stats b { margin-left: 3px; }
+  .rp-pass-stats:is(:hover, :focus-visible) { border-bottom-style: solid; outline: none; }
   .rp-pass-flag {
     margin: 0; align-self: flex-start; padding: 3px 6px 2px; border-radius: 1.5px;
     background: var(--dp-hot); color: var(--dp-stub-ink);
@@ -11825,6 +11834,7 @@
     .rp-pass .stp-dp-stub { flex-wrap: wrap; justify-content: center; gap: 10px 14px; }
     .rp-pass .stp-dp-fields dd, .rp-pass-flag { white-space: nowrap; }
     .rp-pass-flag { align-self: center; }
+    .rp-pass-stats { align-self: center; margin: 0; }
   }
   /* the smallest phones: the fields always drop under the numeral, so its divider has nothing to divide */
   @container stp-dp (max-width: 300px) {
