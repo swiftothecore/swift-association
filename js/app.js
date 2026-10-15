@@ -28099,11 +28099,13 @@ function celebratePerfect() {
   if (!card) return;
   const layer = document.createElement("div");
   layer.className = "star-shower"; layer.setAttribute("aria-hidden", "true");
-  for (let i = 0; i < 378; i++) {
+  // About a hundred and twenty stars, each a moving layer of its own: it was 378, and
+  // building that many SVGs at once stalled the page as it landed, on a phone especially.
+  for (let i = 0; i < 120; i++) {
     const st = document.createElement("span");
     st.className = "ss";
     st.style.left = (Math.random() * 100) + "%";
-    st.style.width = st.style.height = (10 + Math.random() * 12) + "px";
+    st.style.width = st.style.height = (11 + Math.random() * 13) + "px";
     // 3x the fall distance (and matching duration) so the shower lasts ~3x longer;
     // the long fall carries every star off the card's clipped bottom edge while
     // still bright, so none linger resting in a faded state.
@@ -28120,7 +28122,13 @@ function celebratePerfect() {
   // glow on the card, a soft sheen that sweeps across the paper, and a field of
   // twinkling sparkles scattered over it. Cleared by clearPerfectFX on the next
   // showScreen (so a later non-perfect result doesn't inherit it).
+  // Every one of them loops for as long as the page is open, so each only ever moves or
+  // fades a layer of its own. Anything that animates a shadow, a position, a blend or a
+  // background repaints the whole tall card every frame, which is what made it crawl.
   card.classList.add("perfect");
+  const glow = document.createElement("div");
+  glow.className = "perfect-glow"; glow.setAttribute("aria-hidden", "true");
+  card.appendChild(glow);
   const twinkle = document.createElement("div");
   twinkle.className = "twinkle-layer"; twinkle.setAttribute("aria-hidden", "true");
   for (let i = 0; i < 46; i++) {
@@ -28147,7 +28155,7 @@ function clearPerfectFX() {
   const card = $("screen-results");
   if (!card) return;
   card.classList.remove("perfect");
-  card.querySelectorAll(".twinkle-layer, .shine-sweep").forEach((el) => el.remove());
+  card.querySelectorAll(".perfect-glow, .twinkle-layer, .shine-sweep").forEach((el) => el.remove());
 }
 
 /* ---------- Input wiring ---------- */

@@ -12173,17 +12173,22 @@
 
   /* perfect 13/13 — gold star shower on the results page */
   .star-shower { position: absolute; inset: 0; z-index: 30; pointer-events: none; overflow: hidden; }
-  .star-shower .ss { position: absolute; top: -28px; color: var(--bead); animation: starFall linear forwards; }
+  .star-shower .ss { position: absolute; top: -28px; color: var(--bead); will-change: transform; animation: starFall linear forwards; }
   .star-shower .ss svg { width: 100%; height: 100%; }
   @keyframes starFall { to { transform: translateY(var(--fall, 480px)) rotate(220deg); opacity: 0.9; } }
 
   /* ---- Perfect-game shimmer (13/13): the whole notepad turns sparkly ---- */
-  /* slow gold aura breathing around the card */
-  .card.perfect { animation: perfectGlow 3.4s ease-in-out infinite; }
-  @keyframes perfectGlow {
-    0%, 100% { box-shadow: 0 1px 0 #fff inset, 0 18px 40px rgba(60,50,35,.28), 0 2px 6px rgba(60,50,35,.18), 0 0 0 rgba(224,163,47,0); }
-    50%      { box-shadow: 0 1px 0 #fff inset, 0 18px 44px rgba(60,50,35,.30), 0 2px 6px rgba(60,50,35,.18), 0 0 36px rgba(224,163,47,.45); }
+  /* These loop for as long as the results stay open, so every one only moves or fades a
+     layer of its own. Animating a shadow, a position, a blend or a background instead
+     repaints the whole tall card on every frame, and that made the page crawl. */
+  /* slow gold aura breathing around the card: the shadow is painted once on an empty
+     layer the size of the card, and only its opacity breathes */
+  .perfect-glow {
+    position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    box-shadow: 0 0 36px rgba(224,163,47,.45);
+    opacity: 0; will-change: opacity; animation: perfectGlow 3.4s ease-in-out infinite;
   }
+  @keyframes perfectGlow { 50% { opacity: 1; } }
   /* gold-foil shimmer running through the big score */
   .card.perfect .final-score .big {
     background: linear-gradient(100deg, #b8841f 0%, #e9c25a 26%, #fff4cf 46%, #e9c25a 62%, #b8841f 86%);
@@ -12192,6 +12197,8 @@
     -webkit-text-fill-color: transparent; color: transparent;
     text-shadow: 0 0 16px rgba(224,163,47,.35);
     animation: foilShift 2.8s linear infinite;
+    /* its own layer, so the foil's repaint stays inside the score instead of the card */
+    will-change: transform;
     /* Caveat's glyph ink overhangs its advance width; background-clip:text clips the
        gold to the content box, so pad the box out to stop the right edge slicing the 3. */
     padding: 0.06em 0.2em;
@@ -12199,18 +12206,27 @@
   @keyframes foilShift { to { background-position: -240% 0; } }
   /* a soft warm sheen that sweeps across the paper, like light catching the page */
   .shine-sweep { position: absolute; inset: 0; border-radius: 3px; pointer-events: none; z-index: 6; overflow: hidden; }
+  /* The band slides on transform alone. Its old soft-light blend and blur are baked into
+     the gradient: a blend forces everything under it to repaint as it passes. The steps
+     in translateX are the old -60% and 140% of the card, over a band 42% wide. */
   .shine-sweep::before {
-    content: ""; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 42%;
-    background: linear-gradient(105deg, transparent, rgba(255,250,230,.5) 44%, rgba(255,255,255,.72) 50%, rgba(255,250,230,.5) 56%, transparent);
-    transform: skewX(-18deg); filter: blur(2px); mix-blend-mode: soft-light;
+    content: ""; position: absolute; top: -20%; bottom: -20%; left: 0; width: 42%;
+    background: linear-gradient(105deg, transparent 18%, rgba(255,250,232,.16) 38%, rgba(255,253,244,.3) 50%, rgba(255,250,232,.16) 62%, transparent 82%);
+    transform: translateX(-143%) skewX(-18deg); will-change: transform;
     animation: shineSweep 4.4s ease-in-out infinite;
   }
-  @keyframes shineSweep { 0% { left: -60%; } 55%, 100% { left: 140%; } }
+  @keyframes shineSweep {
+    0% { transform: translateX(-143%) skewX(-18deg); }
+    55%, 100% { transform: translateX(333%) skewX(-18deg); }
+  }
   /* a field of twinkling sparkles scattered over the page */
   .twinkle-layer { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
   .twinkle-layer .tw {
     position: absolute; color: var(--bead, #e0a32f); opacity: 0; transform: scale(.3);
-    filter: drop-shadow(0 0 3px rgba(224,163,47,.55)); animation: twinkle ease-in-out infinite;
+    /* the halo is a gradient behind the star, not a drop-shadow filter: forty-six filters
+       re-run every frame, a gradient is painted once and only scaled */
+    background: radial-gradient(closest-side, rgba(224,163,47,.4), rgba(224,163,47,.12) 60%, transparent);
+    will-change: transform, opacity; animation: twinkle ease-in-out infinite;
   }
   .twinkle-layer .tw svg { width: 100%; height: 100%; display: block; }
   @keyframes twinkle {
@@ -15342,8 +15358,8 @@
   body[data-reduce-motion="on"] .sparkle,
   body[data-reduce-motion="on"] .star-shower,
   body[data-reduce-motion="on"] .twinkle-layer,
-  body[data-reduce-motion="on"] .shine-sweep { display: none; }
-  body[data-reduce-motion="on"] .card.perfect { animation: none; }
+  body[data-reduce-motion="on"] .shine-sweep,
+  body[data-reduce-motion="on"] .perfect-glow { display: none; }
   body[data-reduce-motion="on"] .card.perfect .final-score .big { animation: none; -webkit-text-fill-color: var(--ink); color: var(--ink); }
   body[data-reduce-motion="on"] .toast,
   body[data-reduce-motion="on"] .toast.leaving,
