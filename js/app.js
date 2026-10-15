@@ -18628,8 +18628,12 @@ function pickWhoseLine(song, hard) {
   return lines[0] || null;
 }
 // Whose Line?: draw a source song + a line from it, then offer WHOSE_TILES songs with the source
-// hidden among decoys. Decoys never include a song whose lyrics also carry that exact line, so a
-// re-recording sharing the line with its original can't make two tiles correct at once.
+// hidden among decoys. Two tiles must never both be right, so a decoy is refused when it is
+// another version of the source (State Of Grace beside its Acoustic Version, a remix beside its
+// original) or when its lyrics carry the line at all. Both checks are loose: the line is matched
+// on the hookLines normalisation, because versions of one song differ in commas and bracketed
+// ad-libs and an exact match let 19 such pairs through. One version per song across the decoys
+// too, so the grid never wastes two tiles on the same track.
 // The twelve studio albums, or everything if the corpus in play has none of them by name (a
 // guest shelf). Whose Line? draws its line AND its decoys from here rather than from the whole
 // sixteen-group catalogue: a deep cut off a deluxe or Taylor's Version tail is a line nobody
@@ -18658,10 +18662,19 @@ function buildWhosePuzzle() {
     if (source) break;
   }
   if (!source) return false;
-  const low = line.toLowerCase();
-  const decoys = shuffle(catalogue.filter((s) =>
-    s.title !== source.title && !String(s.lyrics || "").toLowerCase().includes(low)))
-    .slice(0, WHOSE_TILES - 1);
+  const loose = (t) => String(t || "").toLowerCase().replace(/[^a-z0-9 ]+/g, "")
+    .replace(/\s+/g, " ").trim();
+  const stem = (s) => loose(String(s.title || "").replace(/\s*\(.*?\)\s*/g, " "));
+  const key = loose(line);
+  const taken = new Set([stem(source)]);
+  const decoys = [];
+  for (const s of shuffle(catalogue.filter((s) => s.title !== source.title))) {
+    if (decoys.length >= WHOSE_TILES - 1) break;
+    const st = stem(s);
+    if (taken.has(st) || loose(String(s.lyrics || "").replace(/\n/g, " ")).includes(key)) continue;
+    taken.add(st);
+    decoys.push(s);
+  }
   if (!decoys.length) return false;
   whosePuzzle = { song: source, line };
   tapTiles = shuffle(decoys.map((s) => ({ song: s, correct: false }))
