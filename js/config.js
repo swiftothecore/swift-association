@@ -4650,12 +4650,18 @@ export const ACHIEVEMENTS = [
   // a stopwatch the player never sees. That is the Ruthless roster's lesson, and it survived
   // the page's rebuild even though the number it used to be priced in did not.
   { id: "name-running-order-page-with-half-the-clock-left", name: "By Heart", desc: "Name a Running Order track with half the clock still on it", tier: 2, secret: false, icon: "heartdial", sitting: true, earn: { cat: "bonus" } },
-  /* Track by Track's three. None of them is a sweep, because the game has no pages to sweep:
+  /* Track by Track's four. None of them is a sweep, because the game has no pages to sweep:
      a run is a whole record or it is nothing, so what is left to ask for is how CLEANLY, how
-     LONG a record, and how MANY of them. All three stay winnable on a notebook that has done
-     anything at all — every album can be written out again, so none of these can be walked
-     past. */
+     FAST, how LONG a record, and how MANY of them. All four stay winnable on a notebook that has
+     done anything at all — every album can be written out again, so none of these can be walked
+     past.
+
+     The fast one is priced PER TRACK rather than as a flat time, so it is the same test on the
+     debut and on the Anthology; a flat line would only ever be won on the shortest record. Two
+     seconds a track is set against the player's own folklore best of 18.44 (about 1.15 a
+     track), so it asks for a record known that well, not for the fastest run ever written. */
   { id: "write-out-an-album-with-no-wrong-guesses", name: "Every Word", desc: "Write out a record in Track by Track without a single wrong guess", tier: 2, secret: false, icon: "cleaneraser", sitting: true, earn: { cat: "bonus" } },
+  { id: "write-out-an-album-at-under-two-seconds-a-track", name: "Fast-Forward", desc: "Write out a record in Track by Track at under two seconds a track", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   { id: "write-out-the-longest-album", name: "Straight Through", desc: "Write out the longest record on the shelf, top to bottom", tier: 2, secret: false, icon: "longscroll", sitting: true, earn: { cat: "bonus" } },
   { id: "write-out-all-twelve-albums", name: "Remember It All", desc: "Write out all twelve records in Track by Track", tier: 3, secret: false, icon: "twelvering" },
   { id: "sweep-word-cloud", name: "All The Words", desc: "Sweep Word Cloud", tier: 2, secret: false, icon: "wordcloud", sitting: true, earn: { cat: "bonus" } },
@@ -5133,7 +5139,7 @@ export const ACH_GROUP_OF = {
   "sweep-name-that-song-one-line-each": "bonus", "sweep-sing-it-back-all-words-exact": "bonus", "name-redacted-song-no-strips-removed": "bonus",
   "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus", "name-a-joint-production": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",
-  "write-out-an-album-with-no-wrong-guesses": "bonus", "write-out-the-longest-album": "bonus", "write-out-all-twelve-albums": "bonus",
+  "write-out-an-album-with-no-wrong-guesses": "bonus", "write-out-an-album-at-under-two-seconds-a-track": "bonus", "write-out-the-longest-album": "bonus", "write-out-all-twelve-albums": "bonus",
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
   "sweep-the-capitals": "bonus", "name-a-one-word-capitals-message": "bonus",

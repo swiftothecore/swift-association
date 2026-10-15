@@ -10210,10 +10210,17 @@ function foldShelfLedgerCharms() {
 
 /* Track by Track's own charms, folded after the board has been written so a run that completes
    the set counts itself — foldBonusRunCharms's rule, for the same reason. */
+// Fast-Forward's pace, in seconds a written track. Read the note on its row in config.js
+// before moving it.
+const TRACK_PACE_SECONDS = 2;
 function foldTrackCharms(secs, rec) {
   if (!trackSheet) return;
   unlock("finish-first-bonus-run");
   if (!trackWrong) unlock("write-out-an-album-with-no-wrong-guesses");
+  // Per track the player WROTE (`asked`), not per slot: a printed alt take is filled in for
+  // them, and counting it would hand Red a free ten seconds of pace.
+  if (trackSheet.asked && secs < trackSheet.asked * TRACK_PACE_SECONDS)
+    unlock("write-out-an-album-at-under-two-seconds-a-track");
   // The longest record on the shelf, worked out rather than named: ALBUM_TRACKS is the one
   // pressing each album is counted at, and hard-coding "the Anthology" here would go quietly
   // wrong the day a cap moves.
