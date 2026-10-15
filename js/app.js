@@ -1227,14 +1227,6 @@ function copyFlipRuntimeState(src, flip) {
         copy.getContext("2d").drawImage(node, 0, 0);
       } catch (_) {}
     }
-    // A live scroller is painted on a layer of its own, and that layer turns with the sheet but
-    // ignores the sheet's hidden back: past edge-on the paper vanishes and the challenge list
-    // carried on, mirrored, across the desk. A clone never scrolls, so clipping it instead keeps
-    // its contents painted with the page and the offset below still holds.
-    if (node.scrollHeight > node.clientHeight || node.scrollWidth > node.clientWidth) {
-      const cs = getComputedStyle(node);
-      if (/auto|scroll/.test(cs.overflowX + " " + cs.overflowY)) copy.style.overflow = "hidden";
-    }
     copy.scrollTop = node.scrollTop;
     copy.scrollLeft = node.scrollLeft;
     syncFlipAnimations(node, copy);

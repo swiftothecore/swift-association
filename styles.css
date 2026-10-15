@@ -1245,9 +1245,24 @@
     display: block; position: absolute; z-index: 1; pointer-events: none;
     transform-origin: top center; backface-visibility: hidden;
     box-shadow: 0 22px 44px rgba(60, 50, 35, 0.34);
-    animation: pageFlip 0.5s cubic-bezier(.42,.04,.34,1) forwards;
+    animation: pageFlip 0.5s cubic-bezier(.42,.04,.34,1) forwards, flipGoneUp 0.5s linear forwards;
     will-change: transform;
   }
+  /* THE TURN HIDES ITS OWN BACK WITH OPACITY, NOT ONLY backface-visibility. The sheet is a clone
+     of a whole page, and anything in it the browser paints on a layer of its own (a scrolling
+     list, a running transform animation, a will-change) turns WITH the sheet but does not obey
+     the sheet's hidden back, nor a backface-visibility of its own. Past edge-on the paper
+     vanished and those layers stayed, mirrored, hanging over the desk: the challenge list, then
+     the Track by Track picker. Opacity on the sheet does reach every layer inside it, so each
+     turn carries a second, linear animation that drops the sheet to 0 at the instant it passes
+     90deg (and, for a page turning IN, holds it at 0 until it does).
+     Each cut is where the turn's cubic-bezier(.42,.04,.34,1) crosses 90deg, solved numerically:
+     pageFlip 90/108 of the way at 60.9% of the time, pageFlipSide 90/104 at 64.1%, pageFlipIn
+     14/104 at 21.4%. Change a turn's angle or easing and re-solve its cut, or the page either
+     leaks for a few frames or blinks out before it is edge-on. A new turn needs a cut of its own. */
+  @keyframes flipGoneUp   { 0%, 60.8% { opacity: 1; } 60.9%, 100% { opacity: 0; } }
+  @keyframes flipGoneSide { 0%, 64.0% { opacity: 1; } 64.1%, 100% { opacity: 0; } }
+  @keyframes flipHereIn   { 0%, 21.3% { opacity: 0; } 21.4%, 100% { opacity: 1; } }
   .page-flip-sheet .flip-shade {
     position: absolute; inset: 0; border-radius: 3px; pointer-events: none; z-index: 12;
     background: linear-gradient(to top, rgba(38,24,10,0.42), rgba(38,24,10,0.06) 48%, rgba(255,255,255,0.10) 100%);
@@ -1267,8 +1282,8 @@
   .page-flip-sheet.page-flip-sheet--in {
     transform-origin: center left;
   }
-  .page-flip-sheet.page-flip-sheet--side { animation-name: pageFlipSide; }
-  .page-flip-sheet.page-flip-sheet--in   { animation-name: pageFlipIn; }
+  .page-flip-sheet.page-flip-sheet--side { animation-name: pageFlipSide, flipGoneSide; }
+  .page-flip-sheet.page-flip-sheet--in   { animation-name: pageFlipIn, flipHereIn; }
   .flip-shade.flip-shade--side,
   .flip-shade.flip-shade--in {
     background: linear-gradient(to left, rgba(38,24,10,0.42), rgba(38,24,10,0.06) 48%, rgba(255,255,255,0.10) 100%);
@@ -15142,7 +15157,8 @@
     background-color: var(--lvu-card);
     background-image: repeating-radial-gradient(circle at 0 100%, transparent 0 9px, color-mix(in srgb, var(--ink) 3%, transparent) 9px 10px); }
   .lvu-pg.l { border-radius: 7px 1px 1px 7px; }
-  .lvu-pg.r { border-radius: 1px 7px 7px 1px; transform-origin: 0 50%; backface-visibility: hidden; animation: lvu-open .6s cubic-bezier(.3,.6,.3,1) .12s both;
+  .lvu-pg.r { border-radius: 1px 7px 7px 1px; transform-origin: 0 50%; backface-visibility: hidden;
+    animation: lvu-open .6s cubic-bezier(.3,.6,.3,1) .12s both, lvu-face .6s linear .12s both;
     background-image: repeating-radial-gradient(circle at 100% 0, transparent 0 9px, color-mix(in srgb, var(--ink) 3%, transparent) 9px 10px); }
   .lvu-no { position: absolute; top: 7px; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .16em; color: var(--ink-soft); }
   .lvu-pg.l .lvu-no { left: 10px; } .lvu-pg.r .lvu-no { right: 10px; }
@@ -15192,6 +15208,10 @@
   .lvu-go .cta-arrow { width: 19px; height: 10px; }
   @keyframes lvu-in { from { opacity: 0; transform: translateX(-6px); } }
   @keyframes lvu-open { from { transform: rotateY(-175deg); } }
+  /* The page's back is hidden by opacity as well, because the stamp and count on it run their own
+     animations and those layers ignore backface-visibility (see the page turn's note on
+     flipGoneUp). It shows the instant lvu-open's easing carries it under 90deg, at 21.8%. */
+  @keyframes lvu-face { 0%, 21.7% { opacity: 0; } 21.8%, 100% { opacity: 1; } }
   @keyframes lvu-unfade { from { opacity: 1; } }
   @keyframes lvu-strike { 0% { transform: scale(1.75) rotate(7deg); opacity: 0; } 55% { opacity: 1; } 70% { transform: scale(.95) rotate(-.8deg); } 86% { transform: scale(1.015); } 100% { transform: none; } }
   @keyframes lvu-pop { from { transform: scale(.3); opacity: 0; } }
