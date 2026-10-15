@@ -10210,7 +10210,7 @@ function foldShelfLedgerCharms() {
 
 /* Track by Track's own charms, folded after the board has been written so a run that completes
    the set counts itself — foldBonusRunCharms's rule, for the same reason. */
-// Fast-Forward's pace, in seconds a written track. Read the note on its row in config.js
+// Fast Forward's pace, in seconds a written track. Read the note on its row in config.js
 // before moving it.
 const TRACK_PACE_SECONDS = 2;
 function foldTrackCharms(secs, rec) {
