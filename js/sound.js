@@ -1,6 +1,6 @@
 "use strict";
 
-/* Swift to the Song Association - sound design (phase 2: real recordings).
+/* Swift to the Song Association - sound design.
  *
  * The palette is short recordings, auditioned and picked by ear from many
  * candidates, trimmed and level-matched offline. They live in sounds/:
@@ -10,7 +10,7 @@
  *   unlock.mp3  - a glockenspiel flourish for the rare achievement/mastery
  *                 unlock (freesound #456965, CC0), peak-matched to correct.
  *   hint.mp3    - that same glockenspiel's first note alone, trimmed dry and
- *                 mixed quietest in the palette (-13 dBFS): a small pip when a
+ *                 mixed well under the verdicts (-13 dBFS): a small pip when a
  *                 hint tier reveals, reading as a cousin of the unlock.
  *   tick.mp3    - a real clock escapement, one tick (freesound #534094, CC0),
  *                 trimmed to the strike and mixed to -12 dBFS. Played three

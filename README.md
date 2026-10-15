@@ -44,7 +44,7 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - A night version of the whole desk, and a high-contrast setting that works in either light
 - Installable as a phone or desktop app, with offline readiness in Settings; guest catalogues download when opened
 
-More mini-games, easter eggs, sound design and achievements are on the way.
+More mini-games, easter eggs and achievements are on the way.
 
 I want this game to have extensive replay value, to be challenging, and to work for as many people as possible, so accessibility is part of the work and all feedback is welcome, via the feedback button on the site or at https://swiftassociation.com/feedback. Above all, **I want it to be fun.**
 
@@ -56,4 +56,4 @@ The source code in this repository is © Corey Shurdington, all rights reserved.
 
 This covers my code only. The lyrics and liner-note messages in `data/songs.json`, `data/guests/` and `data/secret-messages.json` belong to their respective writers and publishers. They are not mine, and nothing above grants any rights to them. The fonts and sound effects carry their own licences, which are set out in [NOTICE.md](NOTICE.md).
 
-Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn and the glockenspiel (heard whole on an unlock, and as a single note when a hint reveals) are CC0 recordings from freesound.
+Verdict sounds from [Google’s Material Design sound kit](https://archive.org/details/material-design-sound-resources) (CC-BY 4.0); the page turn, the glockenspiel (heard whole on an unlock, and as a single note when a hint reveals), the clock tick, the pencil stroke and the book closing are CC0 recordings from freesound.

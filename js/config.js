@@ -236,7 +236,7 @@ export const DEFAULT_SETTINGS = {
   seenCoachmarks: {},       // { [coachmarkId]: true } — just-in-time tips already shown, so each fires once
   typingHintsSeen: {},      // { [segmentId]: pages shown } — the typing hint under the answer line fades per segment (see applyInputHints)
   // meta
-  sound: false,             // opt-in; the synthesized palette lives in js/sound.js
+  sound: false,             // opt-in; the recorded palette lives in js/sound.js
   soundFeedback: true,      // correct, wrong and hint sounds
   soundPaper: true,         // page turns, pencil strikes and the closing book
   soundTimer: true,         // final-seconds clock ticks
@@ -5623,7 +5623,7 @@ export const CREDITS = [
   { role: "Lyrics", who: "Taylor Swift and her co-writers", icon: "cassette",
     what: "And the guest shelf\u2019s artists and theirs. Quoted for a fan-made word game. They belong to the people who wrote them, not to me." },
   { role: "Sounds", who: "Google\u2019s Material Design kit, and freesound", icon: "glockenspiel",
-    what: "The verdict sounds are from Google\u2019s Material Design sound kit (CC-BY 4.0). The page turn and the glockenspiel are CC0 recordings from freesound." },
+    what: "The verdict sounds are from Google\u2019s Material Design sound kit (CC-BY 4.0). The page turn, the glockenspiel, the clock tick, the pencil stroke and the book closing are CC0 recordings from freesound." },
   { role: "Type", who: "Caveat and Courier Prime", icon: "specimen",
     what: "Caveat for the hand, Courier Prime for the typewriter, and for the one newspaper cutting in the notebook, UnifrakturCook and Playfair Display. All four under the SIL Open Font License." },
   { role: "Small print", who: "Made by a fan", icon: "star",
