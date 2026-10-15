@@ -11440,10 +11440,16 @@ function renderChallengesPage() {
     // so the bottom edge lands mid-row and that row's top half peeks through.
     const fitPeek = () => {
       if (!listEl.clientHeight) return;  // hidden — nothing to measure yet
-      const budget = Math.round(window.innerHeight * 0.58);  // mirrors CSS max-height: 58vh
+      // The budget is the stylesheet's own cap on .chall-list, read back with the last snap's
+      // inline height lifted off, so the page's height is set in one place (styles.css).
+      listEl.style.maxHeight = "";
+      const budget = Math.round(parseFloat(getComputedStyle(listEl).maxHeight)) || Math.round(window.innerHeight * 0.58);
       const listTop = listEl.getBoundingClientRect().top;
       let target = budget;
-      for (const it of listEl.querySelectorAll(".chall-item")) {
+      // A tier heading is a stop as well as a row: snapping to rows alone fell back past a
+      // whole heading plus half a row whenever a tier break sat near the edge, which is what
+      // left the page standing short of the desk's bottom.
+      for (const it of listEl.querySelectorAll(".chall-item, .chall-group + .chall-group > .chall-group-head")) {
         const r = it.getBoundingClientRect();
         const mid = (r.top - listTop + listEl.scrollTop) + r.height / 2;  // row midpoint in content
         if (mid <= budget - 2) target = mid; else break;

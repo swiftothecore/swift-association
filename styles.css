@@ -3723,7 +3723,11 @@
 
   /* ---- left: the contents list ---- */
   /* The column holds the divider + tally still; only .chall-list scrolls, so the
-     notebook page never grows and you browse challenges within a fixed frame. */
+     notebook page never grows and you browse challenges within a fixed frame. The list's
+     cap is what sets how tall the page stands (fitPeek in app.js reads it back as its
+     budget, then snaps down to a half-row peek), and 350px is the masthead, page head and
+     tally with about 25px of desk left under the page, so a screen shows as many
+     challenges as it can hold rather than stopping short with a band of empty desk below. */
   .chall-col {
     display: flex; flex-direction: column; min-height: 0;
     padding-left: 2px; padding-right: 16px;
@@ -3734,7 +3738,7 @@
      by JS (wired in renderChallengesPage) so a fade only shows where it's true;
      the bottom starts faded as a sensible pre-JS default for the full list. */
   .chall-list {
-    overflow-y: auto; max-height: calc(100vh - 340px); padding-right: 2px; margin-right: -14px; scrollbar-gutter: stable;
+    overflow-y: auto; max-height: calc(100vh - 350px); padding-right: 2px; margin-right: -14px; scrollbar-gutter: stable;
     /* The list is pulled left and padded back by the same amount: content lands where
        .chall-col puts it while the scroll surface reaches into the unused left gutter. */
     padding-left: 14px; margin-left: -14px;
