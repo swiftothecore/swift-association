@@ -144,26 +144,39 @@ function fits(board, boxes, sp, x, y) {
   return true;
 }
 
-function pack(items, rng) {
+/* THE SPIRAL IS FENCED TO THE BOX'S WIDTH. The board is far wider than any page, and a spiral
+   stretched on x will happily park a word out past where the page ends; the fit then has to
+   shrink the whole cloud to bring it back. A word is only ever placed where it lies inside the
+   width the type was sized for, so the block comes out page-shaped and the fit stays the small
+   correction it is meant to be. A word the fenced spiral cannot house (a long one, late, on a
+   crowded page) still goes down unfenced rather than vanishing from the puzzle, and the fit
+   pulls the whole block in to make room for it. */
+function pack(items, rng, fence) {
   const board = new Uint8Array(BOARD_W * BOARD_H), boxes = [], out = [];
   const cx = BOARD_W / 2, cy = BOARD_H / 2;
-  for (const it of items) {
-    const rot = (rng() * 2 - 1) * MAX_TILT;
-    const sp = sprite(it.word, it.pt, rot);
+  const left = Math.max(1, Math.floor(cx - fence / 2)), right = Math.min(BOARD_W - 1, Math.ceil(cx + fence / 2));
+  const spot = (sp, lo, hi) => {
     for (let i = 0; i < SPIRAL_STEPS; i++) {
       const a = i * STEP, r = GROWTH * STEP * i;
       const x = Math.round(cx + Math.cos(a) * r * ASPECT - sp.w / 2);
       const y = Math.round(cy + Math.sin(a) * r - sp.h / 2);
-      if (x < 1 || y < 1 || x + sp.w >= BOARD_W || y + sp.h >= BOARD_H) continue;
-      if (!fits(board, boxes, sp, x, y)) continue;
-      for (let dy = 0; dy < sp.h; dy++) {
-        const row = (y + dy) * BOARD_W + x, mrow = dy * sp.w;
-        for (let dx = 0; dx < sp.w; dx++) if (sp.mask[mrow + dx]) board[row + dx] = 1;
-      }
-      boxes.push([x, y, x + sp.w, y + sp.h]);
-      out.push({ ...it, rot, cx: x + sp.w / 2, cy: y + sp.h / 2, sw: sp.w, sh: sp.h });
-      break;
+      if (x < lo || y < 1 || x + sp.w >= hi || y + sp.h >= BOARD_H) continue;
+      if (fits(board, boxes, sp, x, y)) return [x, y];
     }
+    return null;
+  };
+  for (const it of items) {
+    const rot = (rng() * 2 - 1) * MAX_TILT;
+    const sp = sprite(it.word, it.pt, rot);
+    const at = spot(sp, left, right) || spot(sp, 1, BOARD_W);
+    if (!at) continue;
+    const [x, y] = at;
+    for (let dy = 0; dy < sp.h; dy++) {
+      const row = (y + dy) * BOARD_W + x, mrow = dy * sp.w;
+      for (let dx = 0; dx < sp.w; dx++) if (sp.mask[mrow + dx]) board[row + dx] = 1;
+    }
+    boxes.push([x, y, x + sp.w, y + sp.h]);
+    out.push({ ...it, rot, cx: x + sp.w / 2, cy: y + sp.h / 2, sw: sp.w, sh: sp.h });
   }
   return out;
 }
@@ -199,7 +212,7 @@ export function cloudMarkup(words, opts = {}) {
   const width = Math.max(240, opts.width || DESIGN_W);
   const rng = opts.rng || Math.random;
   if (!words || !words.length) return { html: "", height: 0 };
-  const placed = pack(sizes(words, width), rng);
+  const placed = pack(sizes(words, width), rng, width);
   if (!placed.length) return { html: "", height: 0 };
 
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -210,7 +223,10 @@ export function cloudMarkup(words, opts = {}) {
   const cw = x1 - x0, ch = y1 - y0;
   // A small correction only, now that the type is sized off the box: the packing cannot know
   // in advance how a particular set of words will tessellate, and this takes up the slack.
-  const scale = Math.max(0.55, Math.min(1.15, width / cw));
+  // NO FLOOR. The block must never come out wider than the box, because the box clips and a
+  // clipped word is a word the player cannot read; a floor on the shrink is exactly what let
+  // "impossible" and "marvelous" run off both sides of the page.
+  const scale = Math.min(1.15, width / cw);
 
   const html = placed.map((p) => {
     const off = inkOffset(p.word, p.pt);
