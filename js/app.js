@@ -14397,6 +14397,8 @@ function keepsakeLabel(btn) {
   return label ? label.textContent : btn.textContent;
 }
 function setKeepsakeLabel(btn, text, state) {
+  // A button that draws its own tick when kept doesn't also need one in its words.
+  if (state === "kept" && btn.querySelector(".keepsake-ic--kept")) text = text.replace(/\s*✓$/, "");
   const label = btn.querySelector("[data-keepsake-label]") || btn.querySelector(".sr-only");
   if (!label) { btn.textContent = text; return; }
   label.textContent = text;
