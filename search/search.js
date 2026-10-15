@@ -1,5 +1,5 @@
 "use strict";
-// Swift To The Lyric — the lyrics searcher. Reuses the game's matching core
+// Swift to the Lyric — the lyrics searcher. Reuses the game's matching core
 // (../js/match.js), helpers (../js/util.js), and album data (../js/config.js) so a
 // search returns exactly the lines the game would count as a match. Loads songs.json
 // itself and works off the structured `sections` (label + lines) so every hit knows
@@ -848,7 +848,7 @@ function init() {
     // The clipboard gets the bare URL, not the blurb: a pasted link should be a link.
     const url = buildShareURL();
     const outcome = await shareOrCopy({
-      title: "Swift To The Lyric",
+      title: "Swift to the Lyric",
       text: shareBlurb(),
       url,
       copyText: url,

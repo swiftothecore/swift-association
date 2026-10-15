@@ -101,7 +101,7 @@ export function faviconSVG(ink, gild) {
   // a leaf twinkle beside it would be gold on gold and say nothing.
   const twinkle = ink && gild;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <title>Swift To The Song Association</title>
+  <title>Swift to the Song Association</title>
   <clipPath id="tile"><rect x="2" y="2" width="60" height="60" rx="14"/></clipPath>
   <rect x="2" y="2" width="60" height="60" rx="14" fill="#f5efe1" stroke="#e0d6bf" stroke-width="1"/>
   <line x1="20" y1="12" x2="46" y2="12" stroke="#2b2722" stroke-opacity="0.10" stroke-width="1"/>

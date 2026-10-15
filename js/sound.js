@@ -1,6 +1,6 @@
 "use strict";
 
-/* Swift To The Song Association - sound design (phase 2: real recordings).
+/* Swift to the Song Association - sound design (phase 2: real recordings).
  *
  * The palette is short recordings, auditioned and picked by ear from many
  * candidates, trimmed and level-matched offline. They live in sounds/:

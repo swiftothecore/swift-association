@@ -1,6 +1,6 @@
 # Third-party notices
 
-Swift To The Song Association ships a handful of things that other people made. This
+Swift to the Song Association ships a handful of things that other people made. This
 file records what they are and what their terms require. My own source code is not
 covered here: see the licence section of [README.md](README.md) for that.
 

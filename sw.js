@@ -1,4 +1,4 @@
-/* Service worker for Swift To The Song Association (static, GitHub Pages).
+/* Service worker for Swift to the Song Association (static, GitHub Pages).
  *
  * Strategy:
  *  - EVERYTHING PRECACHED → CACHE-FIRST, the page included, served straight from the versioned
@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v472";
+const CACHE = "stta-v473";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -178,7 +178,7 @@ const ASSETS = [
   // Taylor's liner-note secret messages — lazy-loaded when a message-in-a-bottle egg
   // is first caught (see loadSecretMessages in js/app.js).
   "data/secret-messages.json",
-  // Swift To The Lyric searcher — precached (incl. the "search/" navigate path) so it
+  // Swift to the Lyric searcher — precached (incl. the "search/" navigate path) so it
   // works offline on a fresh install, not just after a runtime-cached visit.
   "search/",
   "search/index.html",
@@ -191,7 +191,7 @@ const ASSETS = [
   "icons/icon-512.png",
   "icons/icon-512-maskable.png",
   "icons/apple-touch-icon.png",
-  // Swift To The Lyric PWA / Apple-touch assets.
+  // Swift to the Lyric PWA / Apple-touch assets.
   "icons/favicon-search.svg",
   "icons/icon-search-192.png",
   "icons/icon-search-512.png",

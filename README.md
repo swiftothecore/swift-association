@@ -39,7 +39,7 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - A start button that changes with the seasons, album release days, her birthday, Christmas and the 13th of every month
 - Stats kept as a scrapbook, down to a tabloid headline about the word that keeps beating you
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
-- A companion lyric searcher, [Swift To The Lyric](https://swiftassociation.com/search), for searching every line of every song
+- A companion lyric searcher, [Swift to the Lyric](https://swiftassociation.com/search), for searching every line of every song
 - A graveyard of everything the notebook used to have, each plot carrying the argument that ended it
 - A night version of the whole desk, and a high-contrast setting that works in either light
 - Installable as a phone or desktop app, with offline readiness in Settings; guest catalogues download when opened

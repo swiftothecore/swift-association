@@ -26257,13 +26257,13 @@ function moreSongsBlock(pool, shown, word) {
     ? `<button type="button" class="more-songs-next" data-batch="${MORE_EXAMPLES_BATCH}">` +
       `<span class="ctl-lab">show ${Math.min(MORE_EXAMPLES_BATCH, remaining)} more · ${remaining} remaining</span>${MORE_CHEV}</button>`
     : "";
-  // Swift To The Lyric is Taylor-only. It is a secondary whole-catalogue exploration, never a
+  // Swift to the Lyric is Taylor-only. It is a secondary whole-catalogue exploration, never a
   // substitute for completing this scoped list, and therefore stays out of guest/title pages.
   let searcher = "";
   if (activeCorpus === "taylor" && word && !titleProofActive()) {
     const hash = new URLSearchParams({ q: word, mode: effectiveStrict() ? "exact" : "stem", view: "grouped" });
     searcher = `<a class="more-songs-all" href="search/#${hash.toString()}" target="_blank" rel="noopener"` +
-      ` aria-label="Explore ${escapeHtml(word)} across Taylor Swift's full catalogue in Swift To The Lyric">` +
+      ` aria-label="Explore ${escapeHtml(word)} across Taylor Swift's full catalogue in Swift to the Lyric">` +
       `<span class="cta-run">explore “${escapeHtml(word)}” across Taylor's full catalogue${CTA_ARROW}</span></a>`;
   }
   return `<button type="button" class="more-songs-toggle" aria-expanded="false" aria-controls="${id}"` +

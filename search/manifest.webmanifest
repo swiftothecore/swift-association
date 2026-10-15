@@ -1,5 +1,5 @@
 {
-  "name": "Swift To The Lyric",
+  "name": "Swift to the Lyric",
   "short_name": "The Lyric",
   "description": "Search every line of Taylor Swift's lyrics. Type a word to see every song it appears in, with the section and line number. Works offline, no tracking.",
   "id": "./",
