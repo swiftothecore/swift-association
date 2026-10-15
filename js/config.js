@@ -1556,25 +1556,22 @@ export const CHALLENGES = [
   { id: "double-trouble", name: "Double Trouble", rule: "multi", mode: "medium",
     tagline: "{target} pages, {need} songs each",
     free: false, cost: 1, target: 8, need: 2, pool: "easy", seconds: 18, tapes: 2,
-    // Dark: still TWO songs a page, on a tighter clock, but every song named is spent for
-    // the rest of the run. Deliberately not `need: 3`, which lands on Name Three's headline.
-    // `multi` is the only rule the roster runs twice, so the two cards have to differ by axis
-    // and not just by number. Here the wall is the catalogue draining under you: the early
-    // pages are ordinary Double Trouble and the late ones are played on what is left.
-    // `pool: null` is load-bearing, not flavour. On the base entry's common words a page has
-    // twenty to thirty-five holders, so spending two of them a page is a rule the player would
-    // never once feel; off the whole word list the holder lists are short enough that a title
-    // burned on page three is a title genuinely missing on page nine.
+    // Dark: still TWO songs a page, on rarer words and a tighter clock, with a higher bar.
+    // Deliberately not `need: 3`, which lands on Name Three's headline. `multi` is the only
+    // rule the roster runs twice, so the two cards have to differ by axis and not just by
+    // number: Name Three owns "more songs a page", this one owns "harder words to find them on".
+    // It used to spend every song named for the rest of the run (`noRepeats`), and the
+    // 2026-10-15 playtest found it never bit: two titles a page is about twenty-six of 250+ by page thirteen, so
+    // the catalogue never thinned enough to matter. The goal went from 8 to 9 instead.
     // `minSongs: 4` is the fair floor Name Three has, set lower on purpose. At the bare `need`
-    // the rarer words could deal a page with exactly two unspent songs, which asks the player to
-    // name every song the word is in. Four leaves two spare choices and keeps 578 of Normal's
-    // 715 words. Name Three's three-times-`need` (six here) would keep only 430 and strip out
-    // the thin pages that are the only place a spent title is ever felt.
-    hard: { tagline: "{target} pages, {need} songs each, no repeats", seconds: 15, noRepeats: true, pool: null,
-      minSongs: 4,
-      blurb: "15s · suggestions · rarer words · two songs a page · no repeats all run · not in the title",
-      desc: "Rarer words, two songs a page, and each song you name is spent for the rest of the run.",
-      win: "Clear 8 pages, naming two songs each and never repeating one." },
+    // the rarer words could deal a page with exactly two songs, which asks the player to name
+    // every song the word is in. Four leaves two spare choices and keeps 578 of Normal's 715
+    // words; three is the next lever to pull if 9 still plays soft.
+    hard: { tagline: "{target} pages, {need} songs each, rarer words", seconds: 15, pool: null,
+      target: 9, minSongs: 4,
+      blurb: "15s · suggestions · rarer words · name TWO different songs each page · not in the title",
+      desc: "Rarer words, a tighter clock, and still two songs a page.",
+      win: "Clear 9 pages, naming two different songs each." },
     blurb: "18s · suggestions · name TWO different songs each page · not in the title",
     desc: "One song isn't enough! Answer two songs per word or fail the round.",
     win: "Clear 8 pages, naming two different songs each." },
