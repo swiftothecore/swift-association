@@ -363,9 +363,9 @@ const COVERS = {
      a record's running order — by ground and by silhouette, and both gaps are deliberately
      enormous. This is the shelf's only marigold and the only bright cover after Ruthless; that
      one is near-black. This disc sits off-centre with a hard diagonal across it, so its
-     outline is a circle with a bar through it; that one is a centred spiral and nothing else.
-     Both survive 24px, where the arm is still a diagonal and the spiral is still a spiral long
-     after either has stopped resolving as a record.
+     outline is a circle with a bar through it; that one is a row of upright spines. Both
+     survive 24px, where the arm is still a diagonal and the spines are still stripes long
+     after either has stopped resolving as an object.
 
      The pair used to be a brown sleeve and a brown sheet, which is how they got here. */
   "running-order": (r) => {
@@ -386,48 +386,37 @@ const COVERS = {
     return s;
   },
 
-  /* TRACK BY TRACK — one unbroken groove from the outer edge to the middle.
+  /* TRACK BY TRACK — the record rack, one record leaning out.
 
-     The game is a whole side played through in order against a clock, and a record's groove is
-     a single continuous line that does exactly that: it starts at the rim, it ends at the
-     centre, and there is no way to be at track nine without having been through track eight.
-     That is the rule this game enforces, drawn, with no numbers and nothing to read.
+     A row of album spines standing on a shelf in the dark, every one a different colour, and
+     one of them tipped forward out of the line. The game is a single record pulled from the
+     collection and played through from track one, so the cover draws exactly that moment: the
+     whole run of records, and the one you are about to take down. The spines are the twelve
+     eras said in colour only, which is how the notebook says an era everywhere else.
 
-     Drawn as a BAND rather than a stroke, because everything on this shelf is torn paper and a
-     stroked path is the one mark that would give that away: the outline is sampled twice along
-     the same spiral, once at the groove's outer radius and once at its inner, and the second
-     pass is walked backwards so the two close into a polygon `torn` can chew. The turns are
-     deliberately few and the groove deliberately fat — an accurate record has a hundred turns
-     and at 24px a hundred turns is a grey disc. See the note on Running Order for why these
-     two look nothing alike.
+     It replaced a purple spiral groove on bone. That was a groove because a groove runs rim to
+     centre without skipping, which was the rule drawn as a diagram; in practice it read as a
+     hypnotist's swirl rather than as anything about a tracklist, and it was ugly. A rack is the
+     object a player actually reaches into when they think of a whole album in order.
 
-     THE RECORD IS THE COLOUR HERE, NOT THE STOCK, which is the opposite of every other cover on
-     the shelf and the reason this one is worth the exception. The first pass pressed it in black
-     on charcoal and it was a correct, dull drawing: the whole field went one dark value and the
-     picture stopped carrying any further than its own silhouette. A coloured pressing on bone
-     inverts the value as well as the hue — light paper, one saturated object on it — so it is
-     the brightest card on a shelf whose other bright card, Redacted's manila, is a page of black
-     bars and shares nothing with a disc. It is also simply what these records ARE: a coloured
-     variant is the format this catalogue actually comes in, so the cover is the object rather
-     than a diagram of one. See the ground in GROUNDS: the bone is the cover's own paper, so
-     nothing is pasted full bleed and the grain lands on the stock itself. */
+     Told apart from RUNNING ORDER — the pair most at risk of collapsing — by everything: that
+     one is a single disc on marigold with a diagonal arm, this is a row of vertical bars on
+     near-black. At 24px the arm is still a diagonal and these are still stripes. */
   "track-by-track": (r) => {
-    const cx = 60, cy = 80;
-    let s = sheet(circlePts(cx, cy, 57, r, 44, 1.4), "#4a2660", r, { amp: 1.2, step: 6 });
-    const N = 300, turns = 3.4, r0 = 51, r1 = 11, hw = 1.8;
-    const outer = [], inner = [];
-    for (let i = 0; i <= N; i++) {
-      const t = i / N, a = t * turns * Math.PI * 2 - Math.PI / 2, rad = r0 + (r1 - r0) * t;
-      outer.push([cx + Math.cos(a) * (rad + hw), cy + Math.sin(a) * (rad + hw)]);
-      inner.push([cx + Math.cos(a) * (rad - hw), cy + Math.sin(a) * (rad - hw)]);
-    }
-    /* No fibre on the groove. It is a hairline, and the pale core along a shape that thin stops
-       being fluff and becomes a second, brighter groove beside the one that is meant to be
-       there — which on a spiral reads as a printing error rather than as paper. */
-    s += sheet(outer.concat(inner.reverse()), "#ecdfbe", r,
-      { amp: 0.3, step: 7, sx: 0.8, sy: 1.0, fibre: false });
-    // where it runs out: the last track, and the end of the clock
-    s += sheet(circlePts(cx, cy, 8, r, 18, 0.4), "#c4452f", r, { amp: 0.6, step: 3.5 });
+    let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#282a2c", r, { shadow: false, crisp: true });
+    const cols = ["#b8442f", "#c9862a", "#2f6f78", "#7a4f9b", "#3f6b3a", "#c05a7d", "#2f4f86", "#d8c06a"];
+    let x = 6;
+    cols.forEach((c, i) => {
+      const w = 10 + (i % 3);
+      const top = 46 + (i % 2 ? 2 : 0);
+      const spine = sheet([[x, top], [x + w, top - 1], [x + w, 142], [x, 144]], c, r, { amp: 0.8, step: 5 });
+      // the one pulled out of the line, tipped forward on its bottom corner
+      const lean = i === 4 ? -11 : 0;
+      s += lean ? `<g transform="rotate(${lean} ${x + w / 2} 142)">${spine}</g>` : spine;
+      x += w + 2.6;
+    });
+    // the shelf they stand on
+    s += sheet([[-6, 140], [126, 136], [126, 170], [-6, 170]], "#3a2f26", r, { amp: 1.1 });
     return s;
   },
 
@@ -494,10 +483,9 @@ const COVERS = {
      the lens comes apart into a pair of crescents with the discs showing through between them.
      Do not replace this with an ellipse dropped between the discs — same bug, slower to spot.
 
-     TWO ADJACENCIES IT HAS TO SURVIVE, and neither is the one you would guess. It is the shelf's
-     third round cover, but it never sits next to either of the other two: the roster's ramp puts
-     it fourth, at the end of the tap family, so Running Order's pressing and Track by Track's
-     spiral are both on the row below. Its actual neighbours are ONLY HERE on its left and SING
+     TWO ADJACENCIES IT HAS TO SURVIVE, and neither is the one you would guess. It is not the
+     shelf's only round cover, but it never sits next to the other: the roster's ramp puts it
+     fourth, at the end of the tap family, so Running Order's pressing is on the row below. Its actual neighbours are ONLY HERE on its left and SING
      IT BACK on its right.
 
      Only Here is the one that matters, because it is dark teal with a vermillion pin and this is
@@ -649,7 +637,7 @@ const LABELS = {
   "then-what":      { x: 14, y: 16,  w: 92, h: 23, rot: 1.6 },
   "running-order":  { x: 12, y: 128, w: 96, h: 22, rot: -1.5 },
   "word-cloud":     { x: 12, y: 126, w: 96, h: 21, rot: -1.3 },
-  "track-by-track": { x: 14, y: 130, w: 92, h: 21, rot: -1.1 },
+  "track-by-track": { x: 14, y: 14,  w: 92, h: 21, rot: -1.1 },
   "aaron-or-jack":  { x: 14, y: 14,  w: 94, h: 23, rot: 1.6 },
   "nashville":      { x: 13, y: 126, w: 94, h: 22, rot: -1.4 },
   // The bottom band. The spill is centred high and its longest drip stops at y=136, so the
@@ -681,7 +669,7 @@ export function seedOf(id) {
 /* Aaron or Jack is printed rather than pasted — two inks on pale stock — so its ground is a
    shade warmer than the shelf's default bone, which is the paper showing round the discs
    rather than a field they sit on. */
-const GROUNDS = { "redacted": "#cbb794", "track-by-track": "#e6dbc0", "aaron-or-jack": "#ece0c6",
+const GROUNDS = { "redacted": "#cbb794", "aaron-or-jack": "#ece0c6",
                   "nashville": "#9c4a22" };
 
 let uid = 0;
