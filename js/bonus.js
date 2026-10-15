@@ -1325,9 +1325,54 @@ export function buildRuthlessPuzzle(songs, rng = Math.random, tries = 120, avoid
     const stream = ruthlessStream(song, lens);
     if (stream.length < RUTHLESS_MIN_WORDS) continue;
     const { at, outside } = ruthlessHandout(song, lens);
-    return { song, stream, lens: lens ? lens.id : null, titleAt: at, titleOutside: outside };
+    /* Other versions of this song that also deal (All Too Well and its 10 Minute Version). They
+       open word for word alike, so for as long as the page has only written words both of them
+       sing, naming either is right: the player knows the song, and which pressing it is cannot
+       be told from the page yet. Once the stream has run into words only one of them has, the
+       page HAS told you, and the other title is a miss like any other. The judge compares
+       against ruthlessShared, so each twin carries its own stream and its own handout. */
+    const family = versionFamily(song.title);
+    const twins = songs
+      .filter((s) => s.title !== song.title && versionFamily(s.title) === family && !ruthlessBar(s))
+      .map((s) => {
+        const h = ruthlessHandout(s, lens);
+        return { song: s, stream: ruthlessStream(s, lens), titleAt: h.at, titleOutside: h.outside };
+      })
+      .filter((tw) => tw.stream.length);
+    return { song, stream, lens: lens ? lens.id : null, titleAt: at, titleOutside: outside, twins };
   }
   return null;
+}
+
+/* How many of stream A's opening words B sings too, in order: the point where the page would
+   start telling the two versions apart. A word or two of difference is NOT that point, because
+   versions re-sung years apart pick up small edits (All Too Well's bridge opens "And maybe",
+   the 10 Minute Version's "Well, maybe") that nobody reading along could call. So a mismatch
+   is forgiven when both streams line back up within RESYNC words on a run of ANCHOR shared
+   ones; the split is where they can't, which is where one version runs into a verse, or a
+   running order, the other doesn't have. Compared the way lyrics are matched everywhere else. */
+const RUTHLESS_RESYNC = 3, RUTHLESS_ANCHOR = 3;
+export function ruthlessShared(a, b) {
+  const norm = (s) => s.map((w) => normalizeLyric(w.text));
+  const A = norm(a), B = norm(b);
+  const runs = (i, j) => {
+    for (let k = 0; k < RUTHLESS_ANCHOR; k++) {
+      if (i + k >= A.length) return true;   // A ends inside the anchor: nothing left to tell them apart
+      if (A[i + k] !== B[j + k]) return false;
+    }
+    return true;
+  };
+  let i = 0, j = 0;
+  while (i < A.length) {
+    if (A[i] === B[j]) { i++; j++; continue; }
+    let next = null;
+    for (let x = 0; x <= RUTHLESS_RESYNC && !next; x++)
+      for (let y = 0; y <= RUTHLESS_RESYNC && !next; y++)
+        if ((x || y) && j + y < B.length && runs(i + x, j + y)) next = [i + x, j + y];
+    if (!next) return i;
+    [i, j] = next;
+  }
+  return A.length;
 }
 
 

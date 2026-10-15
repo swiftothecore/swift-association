@@ -103,7 +103,7 @@ import { buildLineIndex, buildWordFreq, buildSlipPuzzle, readSlipSwaps, slipDeal
          buildBlankPuzzle, buildRedactedPuzzle,
          buildWordIndex, buildOnlyHerePuzzle, onlyHerePoints, onlyCuts, onlyLine, lineSingsWord, ONLY_HAND,
          buildChainPuzzle, CHAIN_PICKS, CHAIN_CARDS, CHAIN_PAY, CHAIN_PAGE,
-         buildRuthlessPuzzle, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
+         buildRuthlessPuzzle, ruthlessShared, ruthlessPool, ruthlessLens, ruthlessLensAudit, ruthlessGiveUp, ruthlessSnap,
          ruthlessBar, RUTHLESS_LENSES, RUTHLESS_HANDOUT_WORDS,
          buildTrackIndex, buildTrackPuzzle,
          buildCapitalsPuzzle, capitalsDealCount,
@@ -6986,6 +6986,7 @@ let ruthlessStreak = 0;
    not page-level on purpose: the charm asks for a whole run with nothing wrong in it, and a
    per-page counter would have to be summed back up anyway. */
 let ruthlessWrong = 0;
+let devRuthlessNext = null;   // dev only: the song the next Ruthless page deals
 /* When the RUN started, as a performance.now() baseline, for the games keeping a clean-sweep
    time (bonusSweeps). Wall clock across the whole run rather than the sum of the page clocks:
    the page turns and the verdict beats are part of what a sweep costs, and a total that skips
@@ -7536,8 +7537,15 @@ function buildBonusPuzzle() {
     return buildNashvillePuzzle(nashvillePool, Math.random, new Set(bonusRecentSongs));
   if (bonusGame.id === "the-capitals")
     return buildCapitalsPuzzle(songs, secretMessages, Math.random, 120, new Set(bonusRecentSongs));
-  if (isRuthlessRun())
+  if (isRuthlessRun()) {
+    // __dev.ruthless.next(title) deals one chosen song on the next page, so a page that needs a
+    // particular song (a version twin, a song that never sings its title) can be played on demand.
+    const forced = devRuthlessNext ? songs.findIndex((s) => s.title === devRuthlessNext) : -1;
+    devRuthlessNext = null;
+    if (forced >= 0)
+      return buildRuthlessPuzzle(songs, () => (forced + 0.5) / songs.length, 1, null, activeLens());
     return buildRuthlessPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs), activeLens());
+  }
   return buildNamePuzzle(songs, indexes.lineIndex, Math.random, 120, new Set(bonusRecentSongs));
 }
 
@@ -8992,6 +9000,29 @@ function judgeName(picked = null) {
      and often is the intended play, and it self-regulates because every guess is paid for in
      the seconds it took to type. */
   if (bonusTimed(bonusGame)) {
+    // Another version of the dealt song, named while every word on the page is still one both
+    // versions sing, is right (see buildRuthlessPuzzle's twins). It becomes the page's song, so
+    // the verdict and the listing carry the title the player wrote.
+    const twin = !correct && isRuthlessRun() &&
+      (bonusPuzzle.twins || []).find((tw) => tw.song.title === song.title);
+    if (twin && ruthlessShared(bonusPuzzle.stream, twin.stream) >= ruthlessShown) {
+      Object.assign(bonusPuzzle, { song: twin.song, stream: twin.stream,
+        titleAt: twin.titleAt, titleOutside: twin.titleOutside });
+      noteSessionSong(twin.song);
+      $("bonusInput").disabled = true;
+      settleRuthless(true);
+      return;
+    }
+    if (twin) {
+      // Past the split the page has said which version it is, so this is a miss, but a near one
+      // worth naming as such rather than a flat "not All Too Well" on a song the player knows.
+      ruthlessWrong++;
+      const r = $("bonusReject");
+      r.textContent = `not ${censor(song.title)}: the other version`;
+      r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
+      $("bonusInput").value = "";
+      return;
+    }
     if (!correct) {
       ruthlessWrong++;
       const r = $("bonusReject");
@@ -33692,6 +33723,12 @@ function buildDevApi() {
       board: () => RUTHLESS_LENSES.map((l) => ({ lens: l.id, ...ruthlessRecord(l.id) })),
       // Start a lens run without going through the picker. Everything else here was tested by
       // clicking the sheet, which is fine until the thing under test is the sheet itself.
+      // Deal this song on the next Ruthless page: next("All Too Well"), then play() or turn a page.
+      next: (title) => {
+        if (!bonusSongs().some((s) => s.title === title)) return `${title} doesn't deal`;
+        devRuthlessNext = title;
+        return `next page deals ${title}`;
+      },
       play: (lensId = "chorus") => {
         const lens = ruthlessLens(lensId);
         if (!lens) return `no such lens: ${RUTHLESS_LENSES.map((l) => l.id).join(", ")}`;
