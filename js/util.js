@@ -41,6 +41,25 @@ export function normalizeTitle(s) {
     .trim();
 }
 
+// The fewest words a title needs before its initials stand in for it. Three is where the
+// typing starts to cost something ("Sweeter Than Fiction"); two-word titles would answer to
+// two letters, which is a guess, not a name.
+export const ACRONYM_MIN_WORDS = 3;
+
+// A title's initials as the fandom writes them: "We Are Never Ever Getting Back Together" ->
+// "wanegbt". Pass the BASE title (no trailing qualifier), so every version of a song shares
+// one. Words are split on spaces, dashes and slashes, and a token with no letter or digit in it
+// ("&") is not a word. Run through normalizeTitle so it compares with a typed key on the same
+// footing. Empty when the title is too short to have one.
+export function titleAcronym(title) {
+  const words = String(title || "").toLowerCase().split(/[\s\-–—/]+/)
+    .map((w) => (w.match(/[\p{L}\p{N}]/u) || [""])[0])
+    .filter(Boolean);
+  if (words.length < ACRONYM_MIN_WORDS) return "";
+  const key = normalizeTitle(words.join(""));
+  return key.includes(" ") ? "" : key;
+}
+
 // Comparison key for a typed lyric line vs stored lyrics. Like normalizeTitle for
 // casing / apostrophes / & / $ / punctuation / dashes / whitespace, but WITHOUT the
 // title-only numeral folds (those would corrupt ordinary lyric text, e.g. "the ONE

@@ -35,6 +35,7 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - Every era, plus holiday, movie, collaboration and some unreleased songs
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
+- Titles of three words or more answer to their initials, the way fans write them (wanegbt)
 - A start button that changes with the seasons, album release days, her birthday, Christmas and the 13th of every month
 - Stats kept as a scrapbook, down to a tabloid headline about the word that keeps beating you
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG

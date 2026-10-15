@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies } from "./util.js";
 import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
@@ -8944,7 +8944,7 @@ function judgeName(picked = null) {
     if (!key) return;
     // Not a song we know: don't burn the round, just say so and let them keep typing.
     const r = $("bonusReject");
-    r.textContent = "not a song I know";
+    r.innerHTML = acronymSongs(key).length > 1 ? acronymClashText(key) : "not a song I know";
     r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
     return;
   }
@@ -15074,6 +15074,13 @@ function installCorpus(grouped, words, opts = {}) {
     spacelessIndex.set(sp, song);
   }
   for (const sp of spaceClash) spacelessIndex.delete(sp);
+  // Each song's initials (see acronymSongs). A per-song field, like _normTitleLyric, so a guest
+  // swap carries it with allSongs. Initials that spell a real title, or one with its spaces
+  // squeezed out, are dropped: the title as written always means the title.
+  for (const s of allSongs) {
+    const a = titleAcronym(baseTitleOf(s.title));
+    s._acronym = a && !titleIndex.has(a) && !spacelessIndex.has(a) ? a : "";
+  }
   // Lenient playability (Easy/Medium/Hard use derived forms).
   playableWords = words.filter((w) => songsContainingWord(w, false).length >= 1);
   if (!playableWords.length) throw new Error("No playable words found in data");
@@ -17096,7 +17103,7 @@ function typeHintSegments(input) {
   } else {
     input.placeholder = currentMode.titleOnly ? "the full title…" : "the full title… or the line with the word";
     segs.push({ id: "no-suggestions",
-      full: `No suggestions here. Type the full title, <span class="nowrap">then ${keycap("Enter")}.</span>`,
+      full: `No suggestions here. Type the title, or its initials if it's three words or more, <span class="nowrap">then ${keycap("Enter")}.</span>`,
       short: `${keycap("Enter")} the full title` });
   }
   // Title-only custom preset: a sung line is never accepted, so don't invite one. Everywhere
@@ -23562,8 +23569,35 @@ function resolveTypedTitle(raw) {
   const key = normalizeTitle(raw || "");
   if (!key) return null;
   return titleIndex.get(key)
+    || acronymSong(key)
     || spacelessIndex.get(key.replace(/ /g, ""))
     || typoTitleSong(key);
+}
+
+/* A title of ACRONYM_MIN_WORDS or more answers to its initials, the way fans already write
+   them ("wanegbt", "lwymmd"). Knowing the initials is knowing the song, so this spares the
+   typing and never the recall. The whole set of initials or nothing: "wane" is not a start
+   on anything. Track by Track resolves against its own album and never comes through here,
+   on purpose, because there the typing IS the score and its times predate this.
+   The distinct songs a key is the initials of, one per version family, each as the song its
+   base title resolves to (so "atw" means exactly what "All Too Well" means). Two entries is
+   a shared set of initials (The Best Day / The Black Dog): no guess is made between them. */
+function acronymSongs(key) {
+  if (!key || key.includes(" ")) return [];
+  const byFamily = new Map();
+  for (const s of allSongs) {
+    if (s._acronym !== key || byFamily.has(s._family)) continue;
+    byFamily.set(s._family, titleIndex.get(normalizeTitle(baseTitleOf(s.title))) || s);
+  }
+  return [...byFamily.values()];
+}
+function acronymSong(key) {
+  const hits = acronymSongs(key);
+  return hits.length === 1 ? hits[0] : null;
+}
+// The line for initials that belong to two songs, so a no-list page explains the silence.
+function acronymClashText(key) {
+  return `two songs go by <b>${escapeHtml(key.toUpperCase())}</b>: write the title out`;
 }
 
 /* ---------- Dropdown (searches whole catalog) ---------- */
@@ -23596,6 +23630,9 @@ function songMatchScore(song, query) {
     if (m && m.rank >= 4 && (m.rank === 5 || alias[m.idx - 1] !== " ")) continue;
     if (m && (!best || m.rank < best.rank || (m.rank === best.rank && best.alias && m.idx < best.idx))) best = { ...m, alias: true };
   }
+  // The full initials list the song as an alias would at a prefix's rank: below an exact
+  // title, and level with the other song when two share them, so Enter's tie hold asks.
+  if (!best && song._acronym && song._acronym === query) best = { rank: 2, idx: 0, alias: true };
   return best;
 }
 
@@ -25140,7 +25177,7 @@ function checkCatalogueEggs(raw, song, correct) {
   if (said) {
     if (w === "karma" && said === normalizeTitle("The Man")) unlock("submit-the-man-for-karma");
     if (w === "wedding" && said === normalizeTitle("Speak Now")) unlock("submit-speak-now-for-wedding");
-    if (w === "grave" && said === normalizeTitle("Look What You Made Me Do")) unlock("submit-lwymmd-for-grave");
+    if (w === "grave" && (said === normalizeTitle("Look What You Made Me Do") || said === titleAcronym("Look What You Made Me Do"))) unlock("submit-lwymmd-for-grave");
   }
   if (!correct && song) {
     const titled = songsTitledExactly(currentWord);
@@ -25280,6 +25317,8 @@ function submitAnswer(song, isTimeout) {
       const barred = triedLyric ? offLimitsLyricSong($("songInput").value) : null;
       if (barred) { noteWrongSubmission(barred); rejectOffLimitsLine(barred); return; }
       noteWrongSubmission(null);
+      const said = normalizeTitle($("songInput").value || "");
+      if (!lyricModeNow() && acronymSongs(said).length > 1) { softRejectFlash(acronymClashText(said)); return; }
       if (triedLyric) nudgeLyricNeedsWord($("songInput").value);
       return;
     }
@@ -31516,12 +31555,13 @@ function buildDevApi() {
       try: (text) => {
         const key = normalizeTitle(text || "");
         const exact = key ? titleIndex.get(key) || null : null;
-        const spaced = !exact && key ? spacelessIndex.get(key.replace(/ /g, "")) || null : null;
-        const typo = !exact && !spaced ? typoTitleSong(key) : null;
-        const song = exact || spaced || typo;
+        const initials = !exact ? acronymSong(key) : null;
+        const spaced = !exact && !initials && key ? spacelessIndex.get(key.replace(/ /g, "")) || null : null;
+        const typo = !exact && !initials && !spaced ? typoTitleSong(key) : null;
+        const song = exact || initials || spaced || typo;
         return {
           key, song: song ? song.title : null,
-          via: exact ? "exact" : spaced ? "spaces" : typo ? "typo" : null,
+          via: exact ? "exact" : initials ? "initials" : spaced ? "spaces" : typo ? "typo" : null,
           forgiving: typosForgiven,
         };
       },
