@@ -5285,7 +5285,7 @@
      that actually took the record, so it can be as loud as a stamp is. */
   .tbt-stamp {
     position: absolute; top: 8px; right: 10px; transform: rotate(-7deg);
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
+    font-family: var(--type); font-weight: 700; font-size: calc(11px + var(--text-size-adjust));
     letter-spacing: 1.4px; text-transform: uppercase;
     color: #b0402f; border: 2px solid #b0402f; border-radius: 3px;
     padding: 2px 7px; opacity: 0.8;
