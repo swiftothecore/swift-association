@@ -3141,9 +3141,11 @@
     bottom: 0;
     background: linear-gradient(to right, var(--tab-shelf, var(--tab-pencil)) 3.5px, transparent 3.5px calc(100% - 3.5px), var(--tab-shelf, var(--tab-pencil)) calc(100% - 3.5px));
   }
-  /* The page. Opaque, because it is a sheet laid over the notebook rather than ink on it. */
+  /* The page. Opaque, because it is a sheet laid over the notebook rather than ink on it. Its
+     padding is set so one line of terms stands 39px inside the rim, room for exactly three rows of 13s:
+     at 35px the field was cut back to two rows and left a bare strip along the foot. */
   :is(#difficultyRow, [data-flip-id="difficultyRow"]) .mode-blurb {
-    margin: 0; padding: 9px 12px 10px;
+    margin: 0; padding: 11px 12px 12px;
     border: 1.5px solid var(--tab-rim); border-radius: 3px 7px 6px 5px;
     background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
   }
