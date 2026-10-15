@@ -1128,7 +1128,7 @@ export function initDev(api) {
 
   // ---- Date ------------------------------------------------------------------
   // Pretend it's another day. One override behind every dated surface at once — the
-  // daily gate and seed, the anniversary slip, the milestone sticky and the desk
+  // daily gate and seed, the anniversary slip, the game's day tape and the desk
   // calendar — so they can never disagree. Session-only: reload and it's really today
   // again. "jump" lists every day the calendar marks (releases, her birthday, the
   // lyric days), which is the fast way to check a mark landed on the right square.

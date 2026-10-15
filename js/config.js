@@ -2554,13 +2554,13 @@ export const FINALE_ERAS = ["gold", "midnight", "reputation"];           // roun
    is the front page's second handwritten line, so it stays short enough to sit beside the
    best line (about thirty-five characters). `day` names the date for screen readers. A
    songday may also carry `headline` (a line to show instead of the song title) and
-   `icon`/`mark` (a sticky mark, and the outline the desk calendar draws round the date,
+   `icon`/`mark` (the day tape's mark, and the outline the desk calendar draws round the date,
    other than the era heart).
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 // The Christmas tree for 25 December, in the same 32x32 box as the heart, the shaker and the
 // crown, centred on (16, 16). Three tiers cut to different depths with the tips at different
 // heights, so it reads as drawn rather than stamped. TREE_TRUNK_D is separate so each surface
-// can colour it. The sticky and the margin note dress it (star, baubles) in app.js. The desk
+// can colour it. The day tape and the margin note dress it (star, baubles) in app.js. The desk
 // calendar does not stamp it: it draws its own tree outline round the date (FRAMES in
 // js/calendar.js), with the 25 standing in the bottom tier.
 export const SWIFTMAS_GREEN = "#3f6b4a";
@@ -2593,7 +2593,7 @@ export const TS_MILESTONES = [
   // The one songday whose note is the whole joke: no line, just the words fans say to each
   // other the moment the month turns. `headline` overrides the song title in the margin so the
   // dev milestone list still reads "August"; `icon`/`mark` swap the era heart for a salt
-  // shaker, on the sticky and in the desk calendar's square. `calKey` is its name in the
+  // shaker, on the day tape and in the desk calendar's square. `calKey` is its name in the
   // calendar's small print, where `day` would only say the date back ("1 August 1st").
   { md: "08-01", kind: "songday", title: "August",          album: "folklore",   day: "August 1st",
     headline: "get in the car it's august", icon: "salt", mark: "salt", caption: "it's august",
@@ -2615,12 +2615,12 @@ export const TS_MILESTONES = [
 ];
 
 // The salt shaker silhouette for the August 1st mark, in the same 32x32 box as the milestone
-// sticky's heart and centred on (16, 16). The sticky (js/app.js) stamps it; the desk calendar
+// day tape's heart and centred on (16, 16). The day tape (js/app.js) stamps it; the desk calendar
 // used to, and now draws its own open shaker round the 1 of August (FRAMES in js/calendar.js),
 // which follows the same profile rules below.
 //
 // The outline was drawn to survive the calendar's old 10px stamp, with no room for the
-// perforation dots the sticky can afford. Two shapes failed there and both failures are
+// perforation dots the day tape can afford. Two shapes failed there and both failures are
 // instructive. A flat lid sitting flush with the body
 // is a JAR, which is what the first attempt read as. A semicircular dome over a squat body
 // is a PADLOCK, which is what the second one read as — the crown and the seam together make
@@ -2643,7 +2643,7 @@ export const SALT_SHAKER_D =
 export const SALT_CAP_D = "M11.6 9.2H20.4";
 
 // The guest-day crown, in the same 32x32 box as the heart and the shaker and centred on
-// (16, 16). The milestone sticky (js/app.js) stamps it; the desk calendar used to, and now
+// (16, 16). The day tape (js/app.js) stamps it; the desk calendar used to, and now
 // draws its own open crown round the date (FRAMES in js/calendar.js), keeping the rules below:
 // centre peak tallest, notches deep, a bead on each point.
 //
@@ -2670,7 +2670,7 @@ export const CROWN_BAND_D = "M6.1 20.9 Q16 23.2 25.2 20.9";
 /* ---------- Lyric days (desk-calendar marginalia only) ----------
    Days the songs themselves put a date on. Deliberately kept OUT of
    TS_MILESTONES: that table is real release history, and it drives the
-   start-screen slip, the milestone sticky and the daily's album skew — none of
+   start-screen slip, the game's day tape and the daily's album skew — none of
    which should fire just because a lyric names a date. These only ever mark up
    the desk calendar (js/calendar.js). `album` keys into ALBUM_COLORS the same
    way, so each mark wears its song's era.
@@ -2693,7 +2693,7 @@ export const TS_LORE_DAYS = [
    and shouts the day a coming-soon name goes playable with `soon` still on it. Deliberately kept OUT of
    TS_MILESTONES for the same reason TS_LORE_DAYS is: that table is her release history and
    it skews the daily challenge's album, which somebody else's birthday has no business
-   doing. These only ever reach the start-page margin note, the in-game sticky and the desk
+   doing. These only ever reach the start-page margin note, the in-game day tape and the desk
    calendar, and they always yield to a real Taylor milestone on the same square.
 
    `guest` keys into GUESTS, which is where the colour comes from: nothing here carries a
@@ -2724,7 +2724,7 @@ export const GUEST_DAYS = [
 
 // The pass hardware for one guest id, or null. The single-source lookup behind every guest
 // colour outside the shelf itself: the birthday slip tints its name with `deep` and the
-// crown on the sticky and the calendar fills with `accent`. An announced-but-not-playable
+// crown on the day tape and the calendar fills with `accent`. An announced-but-not-playable
 // name has none by design (see GUESTS_COMING_SOON) and gets null here, which is what the
 // hollow crown is drawn from.
 export function guestInk(id) {

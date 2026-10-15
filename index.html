@@ -3197,7 +3197,6 @@ if (location.pathname.endsWith('/index.html')) {
     <div id="streakMark" class="streak-mark" aria-hidden="true"></div>
     <div id="streakGlitter" class="streak-glitter" aria-hidden="true"></div>
     <div id="marginNoteLayer" class="margin-note-layer" aria-hidden="true"></div>
-    <div id="milestoneSticky" class="milestone-sticky" role="img" hidden></div>
     <div class="bracelet-wrap">
       <div class="bracelet-meta">
         <!-- The page count says where you are. On a run with no fixed length it also says how
@@ -3205,7 +3204,7 @@ if (location.pathname.endsWith('/index.html')) {
              pages away and nothing else on the page keeps the total. On a fixed run the strand
              is short enough to count at a glance, so the number would only repeat the beads
              and stays hidden (renderBracelet decides). -->
-        <span class="bracelet-meta-left">page <b id="pageNum">1</b><span id="pageTotalWrap"> of <b id="pageTotal">13</b></span><span id="namedWrap" hidden> · <b id="trinketCount">0</b> named</span></span>
+        <span class="bracelet-meta-left">page <b id="pageNum">1</b><span id="pageTotalWrap"> of <b id="pageTotal">13</b></span><span id="namedWrap" hidden> · <b id="trinketCount">0</b> named</span><span id="dayTape" class="day-tape" role="img" hidden></span></span>
         <!-- #ruleTerms says what the page will TAKE, filled by renderRuleTerms. It sits in the
              right-hand span so the marks land in the dead space space-between was already
              leaving, costing the row no height. -->

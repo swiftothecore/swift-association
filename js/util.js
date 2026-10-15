@@ -291,7 +291,7 @@ function yearsTodayPhrase(n) {
 // Anniversary marginalia for a "YYYY-MM-DD" date key, matched against a TS_MILESTONES
 // table (month-day, so it recurs every year). Pure: no DOM, no globals — the milestones
 // table is passed in, the year drives the count. Returns null on a quiet day, else a
-// structured object the UI turns into a margin note (home) and a corner sticky (gameplay):
+// structured object the UI turns into a margin note (home) and a strip of tape in the game header:
 //   { icon, album, headline, line, caption, aria }
 // The margin note is two short handwritten lines, `headline` then `line`, and both stay short
 // on purpose: it shares a row with the best line and must not be taller than it. Say a thing
@@ -385,7 +385,7 @@ export function anniversaryNote(dateKey, milestones) {
 // Guest-shelf marginalia for a "YYYY-MM-DD" key, matched against a GUEST_DAYS table the same
 // month-day way anniversaryNote() matches milestones. Pure: the table is passed in, the year
 // drives the count, no DOM and no globals. Returns null on a quiet day, else the SAME note
-// shape the milestone renderers already consume, so the slip, the sticky and the calendar need
+// shape the milestone renderers already consume, so the slip, the day tape and the calendar need
 // no new plumbing — plus `guest`, the id the caller resolves the pass ink from (this file
 // knows nothing about colour).
 //
@@ -395,7 +395,7 @@ export function anniversaryNote(dateKey, milestones) {
 //
 // Both surfaces carry the Long Live line, because a guest day is the notebook being generous
 // about somebody else rather than a fact about a record: the slip says it in the note, the
-// sticky in its caption, and neither ever shows the other's copy.
+// day tape in its caption, and neither ever shows the other's copy.
 //
 // A row flagged `soon` is a name the shelf has announced without a catalogue yet. It gets the
 // same birthday wish, since the player can read that name on the shelf, but a different eyebrow

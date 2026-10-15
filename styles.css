@@ -9466,7 +9466,7 @@
     color: var(--ink); text-wrap: balance;
   }
   /* The day's mark, drawn at a handwriting size in front of the name. The builders' own
-     width/height attributes are sized for the game sticky; CSS outranks them. */
+     width/height attributes are sized for the day tape; CSS outranks them. */
   .an-mark svg { width: 21px; height: 21px; vertical-align: -4px; margin-right: 6px; }
   /* Era ink straight on the page. By day that's the album colour as-is. At night the page
      is dark, so the colour is mixed toward the ink: navy Midnights or oxblood reputation
@@ -9494,29 +9494,33 @@
     .anniversary-note { display: block; height: auto; max-width: none; margin: 10px 0 0; }
   }
 
-  /* ---------- Milestone sticky (game screen, milestone days only) ----------
-     A tiny taped corner note: an era-coloured heart on an album/re-record day, a "13"
-     birthday cake on Dec 13. Decorative and non-interactive; sits above the tension
-     vignette so it stays legible as the timer dims the room. */
-  .milestone-sticky[hidden] { display: none; }
-  .milestone-sticky {
-    position: absolute; right: 16px; bottom: 16px; z-index: 6;
-    display: flex; flex-direction: column; align-items: center;
-    pointer-events: none; user-select: none;
+  /* ---------- Day tape (game screen header, dated days only) ----------
+     A strip of the notebook's washi tape stuck across the header beside the page count, the
+     day's mark and caption written on it in pen. It replaced a taped slip in the page's
+     bottom-right corner, which sat on whatever the foot of the page held. The strip takes the
+     day's ink (--day-ink, set by renderDayTape) and falls back to the plain tape colour.
+     The negative block margins keep it from taking any height: the row, the strand and the
+     page sit on the same pixels on a dated day as on a quiet one. */
+  .day-tape[hidden] { display: none; }
+  .day-tape {
+    position: relative; display: inline-flex; align-items: center; gap: 5px;
+    margin: -7px 0 -7px 16px; padding: 4px 15px 4px 12px; vertical-align: middle;
+    font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1;
+    color: var(--ink); letter-spacing: 0; white-space: nowrap;
+    transform: translateY(-3px) rotate(-1.6deg); pointer-events: none; user-select: none;
   }
-  .ms-slip {
-    position: relative; width: 64px; height: 64px;
-    background: #fbf6e9; border: 1px solid var(--paper-edge); border-radius: 2px;
-    box-shadow: 2px 4px 9px rgba(60, 50, 35, 0.2);
-    display: flex; align-items: center; justify-content: center; transform: rotate(-3deg);
+  .day-tape-strip {
+    position: absolute; inset: 0; z-index: 0; --tape-color: var(--day-ink, #c9b27a);
+    --tape-clip: polygon(2.4% 0%, 98% 0%, 99.6% 22%, 97.8% 41%, 99.1% 63%, 97.6% 81%, 98.8% 100%, 3.1% 100%, 0.6% 78%, 2.2% 57%, 0.4% 38%, 2% 19%);
   }
-  .ms-tape {
-    position: absolute; left: 50%; top: -8px; z-index: 3; width: 34px; height: 13px;
-    transform: translateX(-50%) rotate(5deg); pointer-events: none; --tape-color: #c9b27a;
-  }
-  .ms-cap {
-    font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft);
-    margin-top: 4px; transform: rotate(-3deg); white-space: nowrap;
+  .day-tape > :not(.day-tape-strip) { position: relative; z-index: 1; }
+  .day-tape svg { flex: none; width: 19px; height: 19px; }
+  /* A phone's header has room for the page count, the rule marks and a mark, not a caption:
+     written out, the strip wraps the row onto a second line and pushes the strand down. So
+     the tape carries the mark alone there, and the caption is still read out by its label. */
+  @media (max-width: 520px) {
+    .day-tape { margin-left: 12px; padding: 4px 10px 4px 9px; }
+    .day-tape-cap { display: none; }
   }
 
   /* ---------- Challenge tab (the active challenge, hung off the fore-edge) ----------
@@ -9679,16 +9683,11 @@
   body.no-ctab-ribbon .ctab-ribbon { display: none; }
 
   /* ---------- Sacred-13 days (the 13th / dates that add up to 13) ----------
-     A quieter cousin of the album marginalia: smaller, muted ink (and softer paper on the
-     game sticky), so an ordinary lucky day never competes with an album release or her
-     birthday. */
+     A quieter cousin of the album marginalia: smaller and in muted ink, so an ordinary lucky
+     day never competes with an album release or her birthday. */
   .anniversary-note--minor .an-head { font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); }
   .anniversary-note--minor .an-name { font-weight: 400; }
   .anniversary-note--minor .an-line { font-size: calc(14px + var(--text-size-adjust)); opacity: 0.85; }
-  .ms-slip--minor {
-    width: 54px; height: 54px; background: #f7f2e6;
-    box-shadow: 1px 3px 7px rgba(60, 50, 35, 0.15); transform: rotate(-2deg);
-  }
 
   /* ---------- Live verse-bonus gauge (climbs as you write more of the line) ---------- */
   .verse-meter[hidden] { display: none; }
@@ -14001,7 +14000,7 @@
      scripts/ui/washi-tape.html and baked, so a page never re-tears itself between visits. */
   .nav-tape,
   .pol-tape,
-  .ms-tape,
+  .day-tape-strip,
   .run-pause-tape,
   .stp-tape,
   .pb-tile::before,
@@ -14038,7 +14037,7 @@
      is what keeps a strip recognisable as the same piece of tape it was by day. The edge goes
      quieter still than by day, for the same reason: any bright hairline on a dark strip is
      just a bright line. */
-  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .ms-tape, .run-pause-tape, .stp-tape,
+  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .day-tape-strip, .run-pause-tape, .stp-tape,
                                .pb-tile::before, .bg-back::before, .dropdown::before, .dropdown::after) {
     background:
       linear-gradient(102deg,
@@ -16967,7 +16966,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 }
 .run-pause-overlay[hidden] { display: none; }
 #screen-game.is-put-away > :not(.quit-btn, .page-register, .margin-tally, .lives-tally, .streak-mark,
-  .streak-glitter, .margin-note-layer, .milestone-sticky, .bracelet-wrap),
+  .streak-glitter, .margin-note-layer, .bracelet-wrap),
 #screen-bonusplay.is-put-away > :is(#bonusPlayBody, #bonusFeedback) { visibility: hidden; }
 .run-pause-sheet {
   --card: #fdfbf4; --card-rule: rgba(84, 130, 170, 0.28); --card-head: rgba(192, 64, 58, 0.55);

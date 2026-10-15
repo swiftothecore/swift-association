@@ -1120,7 +1120,7 @@ function showScreen(name, options = {}) {
   if (name === "game") {
     const qb = $("quitBtn");
     if (qb) { clearTimeout(quitTimer); qb.classList.remove("armed"); qb.textContent = qb.dataset.label; }
-    renderMilestoneSticky();   // milestone-day corner sticky (silent on ordinary days)
+    renderDayTape();   // the dated day's strip of tape in the header (silent on ordinary days)
   }
   // Re-scatter the keepsake-card tape each time its screen is shown, so the pinning
   // feels hand-done rather than templated.
@@ -16194,7 +16194,7 @@ function renderStartPickers() {
   renderAnniversaryNote();
 }
 // The era ink for a milestone's album, honouring the colour-blind setting (null album →
-// plain ink, used by the birthday note and as a safe fallback for the sticky heart).
+// plain ink, used by the birthday note and as a safe fallback for the day tape's heart).
 function milestoneColor(album) {
   const colors = settings.colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS;
   return (album && colors[album]) || "";
@@ -16206,7 +16206,7 @@ function milestoneColor(album) {
 function noteInk(note) {
   return note?.guest ? guestInk(note.guest) : null;
 }
-// Today's dated note for the margin and the game sticky: a real Taylor milestone always wins;
+// Today's dated note for the margin and the game's day tape: a real Taylor milestone always wins;
 // then a guest-shelf birthday, because it is a thing that happened; and on a quiet day we fall
 // back to the game's sacred 13 (the 13th, or a date that adds up to 13), which is arithmetic
 // and yields to both. Album-only paths (daily theming) keep calling anniversaryNote directly,
@@ -16227,7 +16227,7 @@ let shownDayKey = null;
 function refreshDateSurfaces() {
   shownDayKey = todayKey();   // whatever moved the date, the page is now showing THIS day
   renderAnniversaryNote();
-  renderMilestoneSticky();
+  renderDayTape();
   window.deskCalendar?.refresh();
   window.deskCassette?.refresh();
   // Moving the date moves what "today" means to the daily gate, so the button's
@@ -16337,7 +16337,7 @@ function fitAnniversaryNote() {
     if (ink <= budget) return;
   }
 }
-// The day's mark, shared by the margin note and the game sticky so the two surfaces always
+// The day's mark, shared by the margin note and the game's day tape so the two surfaces always
 // draw the same thing: the era heart, the cake, the 13, the guest's crown or the salt shaker.
 function dayNoteIcon(note) {
   const ink = noteInk(note);
@@ -16348,22 +16348,28 @@ function dayNoteIcon(note) {
     : note.icon === "tree" ? treeSvg(note.ink || milestoneColor(note.album) || "var(--bead)")
     : heartSvg(milestoneColor(note.album) || "var(--bead)");
 }
-// The game-screen counterpart: a tiny taped corner sticky on a milestone day. An era-
-// coloured heart for an album/re-record, the "13" birthday cake on Dec 13, with a short
-// handwritten caption. Re-rendered on every show of the game screen (and by dev tools).
-function renderMilestoneSticky() {
-  const el = $("milestoneSticky");
+// The game-screen counterpart: a strip of washi tape stuck across the header beside the page
+// count, with the day's mark and caption written on it in pen. It lives in the header rather
+// than on the page because it used to be a taped slip in the page's bottom-right corner, where
+// it sat on whatever the foot of the page held (the next-page button, the countdown). The strip
+// takes the day's ink, so a folklore day is grey tape and Swiftmas is green; a 13 day and an
+// announced guest have no ink and take the plain tape colour. Re-rendered on every show of the
+// game screen (and by dev tools).
+function renderDayTape() {
+  const el = $("dayTape");
   if (!el) return;
   const note = dayNote(todayKey());
   if (!note) { el.hidden = true; el.innerHTML = ""; el.removeAttribute("aria-label"); return; }
-  const icon = dayNoteIcon(note);
+  const ink = note.soon ? null : (noteInk(note)?.accent || note.ink || milestoneColor(note.album));
+  el.style.setProperty("--day-ink", ink || "");
+  if (!ink) el.style.removeProperty("--day-ink");
   el.innerHTML =
-    `<div class="ms-slip${note.tone === "minor" ? " ms-slip--minor" : ""}"><span class="ms-tape"></span>${icon}</div>` +
-    `<div class="ms-cap">${escapeHtml(note.caption)}</div>`;
+    `<span class="day-tape-strip" aria-hidden="true"></span>${dayNoteIcon(note)}` +
+    `<span class="day-tape-cap">${escapeHtml(note.caption)}</span>`;
   el.setAttribute("aria-label", note.aria || note.caption);
   el.hidden = false;
 }
-// Hand-built notebook SVGs for the milestone sticky (no album art, no emoji). The heart
+// Hand-built notebook SVGs for the day's marks (no album art, no emoji). The heart
 // takes the era ink as its fill, with a translucent dark edge so any era reads on cream.
 function heartSvg(fill) {
   return `<svg viewBox="0 0 32 32" width="38" height="38" aria-hidden="true">` +
@@ -16372,14 +16378,14 @@ function heartSvg(fill) {
     `</svg>`;
 }
 // The guest-day mark: a paper crown in the guest's own pass ink, drawn the same way as the
-// heart (fill, translucent dark edge, one white highlight) so the sticky keeps one hand. The
+// heart (fill, translucent dark edge, one white highlight) so the day tape keeps one hand. The
 // silhouette and its band seam live in config.js.
 // `edge` is the pass's deep ink for the jewels, which keeps them legible on an accent as pale
 // as Hannah's yellow; it falls back to plain dark when there is no pass.
 //
 // `hollow` is the announced-but-not-playable state (Beyoncé, Miley): an outline in plain ink,
 // no fill, no jewels and no highlight, because the whole point is that there is no pass to be
-// coloured by yet. It is the sticky's form of the desk calendar's rule for the same state,
+// coloured by yet. It is the day tape's form of the desk calendar's rule for the same state,
 // where an announced name is pencilled in (graphite outline, no colour) — "named, but not
 // arrived". The stroke is heavier than the filled crown's separating edge for the same reason
 // it is on the hollow heart: with no fill the stroke IS the drawing.
@@ -16399,7 +16405,7 @@ function crownSvg(fill, edge, hollow) {
     `</svg>`;
 }
 // The August 1st mark: a salt shaker, drawn the same way as the heart (era ink, translucent
-// dark edge, one white highlight) so the sticky's icon language stays one hand. The desk
+// dark edge, one white highlight) so the day tape's icon language stays one hand. The desk
 // calendar draws its own open shaker round the 1 of August rather than stamping this one.
 function saltSvg(fill) {
   return `<svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">` +
@@ -16424,14 +16430,17 @@ function treeSvg(fill) {
     bauble(11.2, 22.2, 1.05, "#fbf6e9") + bauble(18.6, 12.8, 0.9, "#fbf6e9") +
     `</svg>`;
 }
-// The sacred-13 mark for the minor 13-day sticky: a hand-inked "13" over a soft ring, in
+// The sacred-13 mark for a 13 day: a hand-drawn "13" in a soft ring, in
 // plain ink so it reads as a quieter cousin of the album heart rather than an era colour.
 function thirteenSvg() {
+  // Drawn rather than typeset: Caveat's 1 carries its flag on the left and its figures sit on
+  // a baseline, so a text "13" centred in the ring always landed right of centre and low.
   return `<svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">` +
-    `<circle cx="16" cy="16" r="12" fill="none" stroke="var(--ink-soft)" stroke-width="1.1" opacity="0.55"/>` +
-    `<text x="16" y="16" text-anchor="middle" dominant-baseline="central" ` +
-      `font-family="var(--hand), cursive" font-size="15" font-weight="700" fill="var(--ink)">13</text>` +
-    `</svg>`;
+    `<path d="M16.6 4.4C9.6 4 4.3 8.9 4.2 15.6 4.1 22.6 9.4 27.9 16.3 27.8 23 27.7 27.9 22.8 27.8 16 27.7 9.2 22.6 4.3 15.6 4.5 13.4 4.6 11.6 5.3 10.2 6.3" fill="none" stroke="var(--ink-soft)" stroke-width="1.1" stroke-linecap="round" opacity="0.6"/>` +
+    `<g transform="translate(-1.7 0.1)" fill="none" stroke="var(--ink)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M12.3 11.5 14.7 9.5 14.5 22.4"/>` +
+    `<path d="M17.6 11C18.8 9.3 21.9 9 22.4 11.2 22.8 13.1 21 14.6 19.1 15.3 21.7 15.3 23.3 16.9 22.9 19.3 22.4 22.3 18.7 22.9 17 21.2"/>` +
+    `</g></svg>`;
 }
 // A "13" birthday cake: gold number candles (darker edge + lighter face + sheen) with lit
 // flames, a scalloped pink frosting layer, a sponge body with sprinkles, and a plate.
@@ -22398,7 +22407,8 @@ function flashBeadDelta(n) {
   const el = document.createElement("span");
   el.className = "bead-delta" + (n < 0 ? " is-loss" : "");
   el.textContent = (n > 0 ? "+" : "") + n;
-  meta.appendChild(el);
+  // Straight after the page count, ahead of a dated day's tape.
+  meta.insertBefore(el, $("dayTape"));
   setTimeout(() => el.remove(), 1500);
 }
 
@@ -32069,7 +32079,7 @@ function buildDevApi() {
       },
     },
     // The date itself. One override (window.__devDate) behind every dated surface: the
-    // daily gate and seed, the anniversary slip, the milestone sticky and the desk
+    // daily gate and seed, the anniversary slip, the game's day tape and the desk
     // calendar. Session-only by design — it lives on window, never in storage, so a
     // reload always returns to the real date and no cheat can strand the daily.
     date: {
@@ -32266,7 +32276,7 @@ function buildDevApi() {
     // lists this year's keys with the pass ink each crown will wear (the one thing that can
     // silently go wrong — a guest id that no longer matches a GUESTS entry draws a fallback
     // taupe crown and looks merely dull rather than broken, so it is printed here);
-    // `preview` jumps the date and re-renders the slip, the sticky and the calendar.
+    // `preview` jumps the date and re-renders the slip, the day tape and the calendar.
     guestday: {
       dates: () => {
         const yr = (window.__devDate || todayKey()).slice(0, 4);
