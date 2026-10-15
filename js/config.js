@@ -5545,21 +5545,6 @@ export const GRAVEYARD = [
       `me, you didn't miss anything.`,
   },
   {
-    id: "goldroll",
-    name: "The gold that moved",
-    born: "10 August 2026", died: "24 September 2026",
-    icon: "goldroll",
-    was: `The start button was a slightly different gold on every visit. Nothing ever said so: the ` +
-      `shade was quietly rolled each time the page loaded, a few degrees warmer or cooler than the ` +
-      `last, and the idea was that nobody would ever catch it happening.`,
-    why: `It seemed like it would be a little funny, a joke told with a straight face. But it never ` +
-      `made much sense. It only worked if nobody noticed, which meant nobody ever got it, and anyone ` +
-      `who did notice would have taken it for a bug, a button sitting a shade off the gold Classic ` +
-      `tab right above it. It was not the notebook's kind of joke either. The easter eggs here are ` +
-      `things you find on the desk, and the jokes are ones you are in on. A colour that quietly ` +
-      `changes and never lets you in on it is neither.`,
-  },
-  {
     id: "rain",
     name: "Midnight Rain",
     born: "11 July 2026", died: "24 September 2026",
