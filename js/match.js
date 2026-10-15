@@ -178,6 +178,68 @@ export function addedLettersRegex(word) {
   return rx;
 }
 
+// A miss's consolation: the form of the page's word a song DOES sing when the matcher can't
+// reach it. The lenient tail only ever adds to the word, so a page for "works" refuses
+// "worked", "knowing" refuses "know" and "hands" refuses "hand", and a player who named a song
+// built on that very verb deserves to be told it was close for a reason. Measured on the
+// catalogue: 58 playable words, about a thousand wrong songs, sing a sibling form.
+//
+// A sibling is a strict inflection of a shared root (plural, past, -ing, g-dropped -in), so
+// "greed" never finds "green" and "lately" never finds "late". Two kinds of near-twin are
+// refused by name: the false friends above in both directions ("scared" is not a form of
+// "scar", and "scar" is not a form of "scared"), and a few prompt words whose apparent root is
+// another word ("news" is not new things, "clothes" are not cloths, "tired" is not tires).
+const FALSE_FRIEND_BASES = ["bare", "care", "carry", "plane", "scare", "spine", "stare"];
+const FALSE_FRIEND_FORMS = new Set([...Object.values(FALSE_FRIENDS).flat(), ...FALSE_FRIEND_BASES]);
+const NO_SIBLINGS = new Set(["news", "clothes", "tired"]);
+function inflections(r) {
+  const f = new Set([r, r + "s"]);
+  const add = (stem, tails) => tails.forEach((t) => f.add(stem + t));
+  if (r.endsWith("e")) {
+    add(r, ["d"]);
+    add(r.slice(0, -1), ["ing", "in"]);
+  } else if (/[^aeiou]y$/.test(r)) {
+    add(r.slice(0, -1), ["ies", "ied"]);
+    add(r, ["ing", "in"]);
+  } else {
+    add(r, ["es", "ed", "ing", "in"]);
+    if (/[^aeiou][aeiou][^aeiouwxy]$/.test(r)) add(r + r.slice(-1), ["ed", "ing", "in"]);
+  }
+  return f;
+}
+// Every root the word could be an inflection of, the word itself included.
+function siblingRoots(w) {
+  const out = new Set([w]);
+  for (const s of ["s", "es", "ed", "d", "ing", "ies", "ied"]) {
+    if (!w.endsWith(s) || w.length - s.length < 3) continue;
+    const r = w.slice(0, -s.length);
+    out.add(r); out.add(r + "e");
+    if (s[0] === "i") out.add(r + "y");
+    // Undo a doubled consonant, but not one English doubles anyway: "filled" is fill + ed,
+    // and undoubling it to "fil" would offer "files".
+    if (/([^aeioulsfz])\1$/.test(r)) out.add(r.slice(0, -1));
+  }
+  return [...out].filter((r) => inflections(r).has(w));
+}
+// `own` is the regex the page is judged by, so a form it already accepts is never offered as a
+// near miss (and strict matching, which accepts less, is offered more). Returns the sibling
+// sung most often in `text`, or "" when there is none.
+export function siblingForm(word, text, own) {
+  const w = canonicalMatchText(word).toLowerCase();
+  if (NO_SIBLINGS.has(w) || FALSE_FRIEND_FORMS.has(w)) return "";
+  const tally = new Map();
+  for (const t of canonicalMatchText(text).toLowerCase().match(/\p{L}+/gu) || []) tally.set(t, (tally.get(t) || 0) + 1);
+  let best = "", most = 0;
+  for (const r of siblingRoots(w)) {
+    for (const t of inflections(r)) {
+      if (t === w || FALSE_FRIEND_FORMS.has(t) || !tally.has(t) || own.test(t)) continue;
+      // A g-dropped form is printed the way the booklet spells it: "screamin'".
+      if (tally.get(t) > most) { best = t.endsWith("in") && !r.endsWith("in") ? t + "'" : t; most = tally.get(t); }
+    }
+  }
+  return best;
+}
+
 // The first lyric line bearing the word (trimmed). Prioritise a line with the *exact*
 // prompt word over a looser stem variant (e.g. "babe" shouldn't surface a line whose
 // only match is "baby"). Only the lenient path falls back; a strict caller already

@@ -89,7 +89,7 @@ import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from 
 import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
 import { sfx } from "./sound.js";
 import { faviconBlobUrl, faviconSVG } from "./favicon.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex, siblingForm } from "./match.js";
 import { buildLyricReveal, revealSections } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
@@ -26471,6 +26471,16 @@ function waveProof(w, cls) {
   return w ? `<div class="${cls}">${w.svg}<span class="wave-count"><b>${w.hits}</b> / ${w.lines} lines</span></div>` : "";
 }
 const verdictWord = () => `<mark class="vw-word">${escapeHtml(currentWord)}</mark>`;
+// A miss that sang another form of the word says so: "illicit affairs never sings works, but
+// it does sing worked". Judged against the page's own regex, so a form the page would have
+// taken is never offered, and the rules for what counts as a form live with siblingForm.
+function siblingClause(song, word) {
+  const form = song && song.lyrics ? siblingForm(currentWord, song.lyrics, wordRegex(currentWord)) : "";
+  // The comma rides with the word so a wrapped row never opens on it.
+  return form
+    ? `<span class="vw-tie">${word},</span> <span class="vw-but">but it does sing</span> <span class="vw-sib">${escapeHtml(form)}</span>`
+    : word;
+}
 
 function showCorrectFeedback(song, lyricMatch) {
   resetLyricReveals();
@@ -26684,7 +26694,7 @@ function showWrongFeedback(song, isTimeout) {
       ? `<div class="vw vw-bad"><p class="vw-say">${verdictMark("bad")}<span class="vw-verb">the page ran out on</span> ${verdictWord()}</p></div>`
       : `<div class="vw vw-bad"><p class="vw-say">${verdictMark("bad")}<span class="vw-title">` +
         `<span class="sr-only">your answer, </span>${escapeHtml(censor(song.title))}</span>` +
-        ` <span class="vw-verb">never sings</span> ${verdictWord()}</p>${waveProof(pageWave(song, false), "vw-proof")}</div>`;
+        ` <span class="vw-verb">never sings</span> ${siblingClause(song, verdictWord())}</p>${waveProof(pageWave(song, false), "vw-proof")}</div>`;
   fb.innerHTML = verdictMarkup(head, help, turnSlip("continueBtn"));
   if (countHits) fillCountDots(fb.querySelector(".vw-count"), countHits,
     { words: bothRuleActive() && bothWords.length > 1 ? bothWords : [currentWord], named: multiPart || [] });

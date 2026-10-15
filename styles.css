@@ -10257,6 +10257,10 @@
   .vw-say .vmark-good { width: 30px; height: 30px; }
   .vw-verb { font-weight: 700; color: var(--red-pen); }
   .vw-say.good .vw-verb { color: var(--ink-accent); }
+  /* "…never sings works, but it does sing worked": the consolation is in ink, not red pen, and
+     its comma is held to the highlighted word so a wrapped row never opens on it. */
+  .vw-tie { white-space: nowrap; }
+  .vw-sib { font-weight: 700; }
   /* the song under the sentence, lined up with the title rather than the mark */
   .vw-proof { display: flex; align-items: center; gap: 12px; margin: 6px 0 0 38px; }
   .vw-good .vw-proof { margin-left: 42px; }
