@@ -96,6 +96,14 @@ export function normalizeLyric(s, { keepApostrophes = false } = {}) {
     .trim();
 }
 
+// The same lyrics with every bracketed aside taken out: the ad-libs and backing vocals
+// songs.json keeps in parentheses ("I'm sorry (Mmm), I'm sorry", "(Why) Would you wanna
+// break it?"). A player singing the line sings the lead, so the sung-line path checks this
+// reading beside the full one. Line by line, so a bracket never swallows a line break.
+export function stripLyricBrackets(s) {
+  return String(s).replace(/[ \t]*[([][^()[\]\n]*[)\]]/g, " ");
+}
+
 // Second pressings of one song: "State Of Grace (Acoustic Version)" beside "State Of Grace",
 // "Karma (Remix)" beside "Karma". Returns a Map from each song object to the song its family
 // is counted as (itself, when it is nobody's version), so "how many songs sing this word"

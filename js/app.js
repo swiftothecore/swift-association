@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets } from "./util.js";
 import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
@@ -15012,6 +15012,11 @@ function installCorpus(grouped, words, opts = {}) {
     s._family = families.get(s);
     s._aliasNorms = [];   // the accepted aliases, normalized, so the dropdown can find a song by them
     s._normLyrics = normalizeLyric(s.lyrics);   // flat blob for lyric-line matching
+    // The same blob with the bracketed ad-libs taken out, so a line sung without its backing
+    // vocals still matches (and grades) as the whole line. Identical to _normLyrics, the same
+    // string, when the song has no brackets, which is how callers skip the second look.
+    const bare = normalizeLyric(stripLyricBrackets(s.lyrics));
+    s._normLyricsBare = bare === s._normLyrics ? s._normLyrics : bare;
     // The title in LYRIC normalization (not normalizeTitle's), so isTitleFragment can
     // compare it against typed text on the same footing as a lyric fragment. A per-song
     // field rather than a corpus-level index on purpose: it rides on allSongs, so a guest
@@ -24013,7 +24018,9 @@ function rejectNewSong() {
 // be left pointing at the wrong catalogue's lines.
 function normLineSet(song) {
   if (!song._normLineSet) {
-    song._normLineSet = new Set(song.lyrics.split("\n").map(normalizeLyric).filter(Boolean));
+    const rows = song.lyrics.split("\n");
+    song._normLineSet = new Set([...rows.map((l) => normalizeLyric(l)),
+      ...rows.map((l) => normalizeLyric(stripLyricBrackets(l)))].filter(Boolean));
   }
   return song._normLineSet;
 }
@@ -24477,9 +24484,10 @@ function matchLyricLine(phrase, pool = currentSongs) {
   // that was typed, not in one particular line of it. The bare-word / word+filler cheat
   // stays shut by MIN_LYRIC_WORDS plus a real-line match, as it always was.
 
-  // Fast path: a verbatim contiguous run anywhere in the lyrics (incl. across lines).
+  // Fast path: a verbatim contiguous run anywhere in the lyrics (incl. across lines), read
+  // with its bracketed ad-libs or without them, since a player sings the lead line.
   for (const s of pool) {
-    if (s._normLyrics.includes(normPhrase)) {
+    if (s._normLyrics.includes(normPhrase) || s._normLyricsBare.includes(normPhrase)) {
       const { text: line, lines } = recoverLyricLine(s, normPhrase);
       return { song: s, line, fuzzy: false, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
     }
@@ -24494,18 +24502,24 @@ function matchLyricLine(phrase, pool = currentSongs) {
   // Once a song has scored, the rest only need comparing for as long as they could still beat
   // it, so the bar rises to the best ratio so far. A tie still has to be scored in full, since
   // the tie-break below decides it, and fuzzySubstringRatio only bails BELOW its minimum.
+  // Each song is read both ways (with and without its bracketed ad-libs) and scores its better.
   let best = null;
   for (const s of pool) {
-    const ratio = fuzzySubstringRatio(normPhrase, s._normLyrics, best ? best.ratio : FUZZY_THRESHOLD);
+    let ratio = fuzzySubstringRatio(normPhrase, s._normLyrics, best ? best.ratio : FUZZY_THRESHOLD);
+    let bare = false;
+    if (s._normLyricsBare !== s._normLyrics) {
+      const r = fuzzySubstringRatio(normPhrase, s._normLyricsBare, Math.max(ratio, best ? best.ratio : FUZZY_THRESHOLD));
+      if (r > ratio) { ratio = r; bare = true; }
+    }
     if (ratio < FUZZY_THRESHOLD) continue;
     if (!best || ratio > best.ratio ||
         (ratio === best.ratio && (s.lyrics.length < best.song.lyrics.length ||
           (s.lyrics.length === best.song.lyrics.length && s.title < best.song.title)))) {
-      best = { song: s, ratio };
+      best = { song: s, ratio, bare };
     }
   }
   if (!best) return null;
-  const { text: line, lines } = recoverFuzzyLine(best.song, normPhrase);
+  const { text: line, lines } = recoverFuzzyLine(best.song, normPhrase, best.bare);
   return { song: best.song, line, fuzzy: true, ink: lyricInk(normPhrase, line), ...gradeLyricRecall(normPhrase, line, lines) };
 }
 
@@ -24547,7 +24561,7 @@ function barredLyricProgress(text) {
   if (count < MIN_LYRIC_WORDS &&
       !(count >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) return null;
   if (isTitleFragment(np)) return null;
-  if (currentSongs.some((s) => s._normLyrics.includes(np))) return null;
+  if (currentSongs.some((s) => s._normLyrics.includes(np) || s._normLyricsBare.includes(np))) return null;
   for (const s of barredLyricSongs()) {
     const at = s._normLyrics.indexOf(np);
     if (at >= 0 && nearPromptWord(s, at, np)) return s;
@@ -24568,14 +24582,15 @@ function rejectOffLimitsLine(song) {
 // line windows for the one whose normalized text best matches the typed phrase, and
 // return that raw span. Mirrors recoverLyricLine's job for the inexact case, so the
 // feedback card shows the actual lines the player was recalling (incl. cross-line).
-function recoverFuzzyLine(song, normPhrase) {
+// `bare` reads each line without its bracketed ad-libs, for a phrase that matched that way.
+function recoverFuzzyLine(song, normPhrase, bare = false) {
   const rawLines = song.lyrics.split("\n").map((l) => l.trim()).filter(Boolean);
   let best = null;
   for (let i = 0; i < rawLines.length; i++) {
     const windowRaw = [];
     let windowNorm = "";
     for (let j = i; j < rawLines.length; j++) {
-      const norm = normalizeLyric(rawLines[j]);
+      const norm = normalizeLyric(bare ? stripLyricBrackets(rawLines[j]) : rawLines[j]);
       if (!norm) continue;
       windowRaw.push(rawLines[j]);
       windowNorm = windowNorm ? windowNorm + " " + norm : norm;
@@ -24606,22 +24621,32 @@ function recoverFuzzyLine(song, normPhrase) {
 // spaces), so it can straddle several lines. Map the blob hit back to the span of
 // source lines it covers, rather than assuming one line holds the whole phrase
 // (which would mis-fall-back to the song's first line for a cross-line phrase).
+// A phrase that only matches with the bracketed ad-libs taken out is mapped back the same way
+// on the bare reading, and the lines handed back are still the raw ones, brackets and all, so
+// the feedback card shows the whole line. A line that was nothing BUT an aside is not counted.
 function recoverLyricLine(song, normPhrase) {
+  if (!song._normLyrics.includes(normPhrase) && song._normLyricsBare.includes(normPhrase)) {
+    return recoverLyricSpan(song, normPhrase, true);
+  }
+  return recoverLyricSpan(song, normPhrase, false);
+}
+function recoverLyricSpan(song, normPhrase, bare) {
+  const normLine = (l) => normalizeLyric(bare ? stripLyricBrackets(l) : l);
   const rawLines = song.lyrics.split("\n");
   // Single-line hit — the common case.
-  const single = rawLines.find((l) => normalizeLyric(l).includes(normPhrase));
+  const single = rawLines.find((l) => normLine(l).includes(normPhrase));
   if (single) return { text: single.trim(), lines: 1 };
   // Cross-line phrase: rebuild each non-empty line's char span within the blob
   // (lines join with one space, matching how _normLyrics was normalized).
   const segs = [];
   let pos = 0;
   for (let i = 0; i < rawLines.length; i++) {
-    const norm = normalizeLyric(rawLines[i]);
+    const norm = normLine(rawLines[i]);
     if (!norm) continue;
     segs.push({ i, start: pos, end: pos + norm.length });   // end exclusive
     pos += norm.length + 1;                                  // + joining space
   }
-  const at = song._normLyrics.indexOf(normPhrase);
+  const at = (bare ? song._normLyricsBare : song._normLyrics).indexOf(normPhrase);
   if (at < 0) return { text: (rawLines.find(Boolean) || "").trim(), lines: 1 };
   const endAt = at + normPhrase.length - 1;
   const startSeg = segs.find((s) => at >= s.start && at < s.end);
@@ -24629,7 +24654,7 @@ function recoverLyricLine(song, normPhrase) {
   if (!startSeg || !endSeg) return { text: (rawLines.find(Boolean) || "").trim(), lines: 1 };
   const spanLines = rawLines.slice(startSeg.i, endSeg.i + 1)
     .map((l) => l.trim()).filter(Boolean);
-  return { text: spanLines.join("\n"), lines: spanLines.length };
+  return { text: spanLines.join("\n"), lines: spanLines.filter((l) => normLine(l)).length };
 }
 
 // Grade how much of the matched real line the player actually typed. Typing the
@@ -24661,8 +24686,19 @@ function gradeLyricRecall(normPhrase, line, lines = 1) {
   const head = gradeLyricRecall(typed.slice(0, -k).join(" "), rows.slice(0, -1).join("\n"), lines - 1);
   return RECALL_RANK[head.tier] > RECALL_RANK[whole.tier] ? head : whole;
 }
+// Graded against the line both with and without its bracketed ad-libs, the better standing:
+// singing the lead line and leaving out the backing vocals is singing the whole line.
 function gradeSpan(normPhrase, line, lines) {
-  const normLine = normalizeLyric(line);
+  const full = normalizeLyric(line);
+  const whole = gradeSpanOn(normPhrase, full, lines);
+  const rows = String(line).split("\n");
+  const bareRows = rows.map((l) => normalizeLyric(stripLyricBrackets(l))).filter(Boolean);
+  const bare = bareRows.join(" ");
+  if (!bare || bare === full) return whole;
+  const lead = gradeSpanOn(normPhrase, bare, Math.min(lines, bareRows.length));
+  return RECALL_RANK[lead.tier] > RECALL_RANK[whole.tier] ? lead : whole;
+}
+function gradeSpanOn(normPhrase, normLine, lines) {
   const total = normLine ? normLine.split(" ").length : 0;
   const typed = normPhrase ? normPhrase.split(" ").length : 0;
   const verbatim = normPhrase === normLine;
@@ -24744,9 +24780,12 @@ function verseTypoProgress(np, raw) {
   // a line is longer than every title, that is all of them.
   if (allSongs.some((s) => s._normTitleLyric.length >= np.length - 2 &&
       !typoLyricFragments(np, s._normTitleLyric).next().done)) return null;
-  for (const s of currentSongs) {
-    for (const hit of typoLyricFragments(np, s._normLyrics)) {
-      if (isTitleFragment(hit.phrase) || !nearPromptWord(s, hit.at, hit.phrase)) continue;
+  // Each song is read with its bracketed ad-libs and, when it has any, without them.
+  const reads = currentSongs.flatMap((s) => s._normLyricsBare === s._normLyrics
+    ? [{ s, bare: false }] : [{ s, bare: false }, { s, bare: true }]);
+  for (const { s, bare } of reads) {
+    for (const hit of typoLyricFragments(np, bare ? s._normLyricsBare : s._normLyrics)) {
+      if (isTitleFragment(hit.phrase) || !nearPromptWord(s, hit.at, hit.phrase, bare)) continue;
       const { text: line, lines } = recoverLyricLine(s, hit.phrase);
       const { tier } = gradeLyricRecall(np, line, lines);
       if (!phraseSingsPromptWord(np, raw)) {
@@ -24771,21 +24810,23 @@ function verseTypoProgress(np, raw) {
 // Built once per song per page and cached, since the answer can't change while the page is
 // up and rebuilding it on every keystroke would mean a regex per token per valid song.
 let wordSpotCache = new Map();
-function wordSpots(song) {
-  if (wordSpotCache.has(song.title)) return wordSpotCache.get(song.title);
+function wordSpots(song, bare = false) {
+  const key = bare ? song.title + "\u0000bare" : song.title;
+  if (wordSpotCache.has(key)) return wordSpotCache.get(key);
   // Judged on a window the length of the word, not on the single token at that index, since a
   // prompt word can be two words ("New York") and would otherwise be sung nowhere at all.
   const needs = lyricRequiredWords().map((w) => ({ rx: promptWordRegex(w), span: normalizeLyric(w).split(" ").length }));
-  const toks = song._normLyrics.split(" ");
+  const toks = (bare ? song._normLyricsBare : song._normLyrics).split(" ");
   // The two keys have identical word offsets. Retaining the source apostrophes
   // locates possessives without treating a plural elsewhere in the song as a hit.
-  const spelled = normalizeLyric(song.lyrics, { keepApostrophes: true }).split(" ");
+  const source = bare ? stripLyricBrackets(song.lyrics) : song.lyrics;
+  const spelled = normalizeLyric(source, { keepApostrophes: true }).split(" ");
   const spots = [];
   toks.forEach((t, i) => {
     if (needs.some((n) => n.rx.test(n.span > 1 ? toks.slice(i, i + n.span).join(" ") : t) ||
         n.rx.test(n.span > 1 ? spelled.slice(i, i + n.span).join(" ") : spelled[i]))) spots.push(i);
   });
-  wordSpotCache.set(song.title, spots);
+  wordSpotCache.set(key, spots);
   return spots;
 }
 
@@ -24795,11 +24836,13 @@ function wordSpots(song) {
 // to the whole catalogue entry. Measured in WORDS rather than lines because a line break
 // in songs.json is an editorial artifact — the same phrase is one line in one song and two
 // in another — so a rule built on lines would fire differently for no reason a player could see.
-function nearPromptWord(song, at, np) {
-  const spots = wordSpots(song);
+// `bare` says `at` is an offset into the blob read without its bracketed ad-libs.
+function nearPromptWord(song, at, np, bare = false) {
+  const spots = wordSpots(song, bare);
   if (!spots.length) return true;              // nothing to be near (impostor page, guest oddity)
+  const blob = bare ? song._normLyricsBare : song._normLyrics;
   let start = 0;
-  for (let i = 0; i < at; i++) if (song._normLyrics.charCodeAt(i) === 32) start++;
+  for (let i = 0; i < at; i++) if (blob.charCodeAt(i) === 32) start++;
   const end = start + np.split(" ").length - 1;
   return spots.some((i) => (i < start ? start - i : i > end ? i - end : 0) <= LYRIC_PROXIMITY);
 }
@@ -24818,9 +24861,12 @@ function verseProgress(text) {
   if (!np || np.split(" ").length < 2) return null;
   if (isTitleFragment(np)) return null;
   for (const s of currentSongs) {
-    const at = s._normLyrics.indexOf(np);
-    if (at < 0) continue;
-    if (!nearPromptWord(s, at, np)) continue;
+    // Read with its bracketed ad-libs first, then without them, as the verdict does.
+    let at = s._normLyrics.indexOf(np);
+    if (at < 0 || !nearPromptWord(s, at, np)) {
+      at = s._normLyricsBare === s._normLyrics ? -1 : s._normLyricsBare.indexOf(np);
+      if (at < 0 || !nearPromptWord(s, at, np, true)) continue;
+    }
     // Graded by the verdict's own grader, so the meter can never promise a rung the verdict
     // won't pay out (the tiny-line cap included) and climbs the same way it does.
     const { text: line, lines } = recoverLyricLine(s, np);

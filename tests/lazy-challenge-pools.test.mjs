@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { wordRegex } from '../js/match.js';
-import { normalizeTitle, normalizeLyric, versionFamilies } from '../js/util.js';
+import { normalizeTitle, normalizeLyric, versionFamilies, stripLyricBrackets, titleAcronym } from '../js/util.js';
 import { TITLE_ALIASES, TAYLOR_BUCKETS, RECENT_WINDOW } from '../js/config.js';
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -11,7 +11,7 @@ const grouped = read('../data/songs.json'), words = read('../data/words.json');
 const guest = read('../data/guests/olivia-rodrigo.json');
 const section = (a, b) => app.slice(app.indexOf(a), app.indexOf(b, app.indexOf(a)));
 function harness() {
-  const context = vm.createContext({ console, normalizeTitle, normalizeLyric, versionFamilies, TITLE_ALIASES,
+  const context = vm.createContext({ console, normalizeTitle, normalizeLyric, versionFamilies, stripLyricBrackets, titleAcronym, TITLE_ALIASES,
     wordRegexCore: wordRegex, effectiveStrict: () => { throw Error('Pool used live difficulty'); },
     indexPlayableWords() {}, allSongs: [], titleIndex: new Map(), spacelessIndex: new Map(),
     playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {},
@@ -19,6 +19,7 @@ function harness() {
   });
   const code = section('function wordRegex(', '// Marginalia warning:') +
     section('function snapshotCorpus()', '// Put Taylor') +
+    section('function baseTitleOf(', '// The song a variant is') +
     section('function installCorpus(', '// These builders run synchronously') +
     section('function titleChallengeWords()', '// Bucket words') +
     app.match(/function titleWordCount\(title\) \{[\s\S]*?\n\}/)[0];

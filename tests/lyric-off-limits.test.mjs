@@ -33,6 +33,7 @@ function harness() {
   vm.runInContext(section('const MIN_LYRIC_WORDS =', 'let currentMode =') +
     section('function wordRegex(', '// Marginalia warning:') +
     section('function snapshotCorpus()', '// Put Taylor') +
+    section('function baseTitleOf(', '// The song a variant is') +
     section('function installCorpus(', '// These builders run synchronously') +
     section('function normLineSet(', 'const VERSE_METER ='), context);
   context.installCorpus(grouped, words);
