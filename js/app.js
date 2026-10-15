@@ -5385,8 +5385,9 @@ function renderHeatBody() {
 // month-label strip is pinned to the grid's actual width either way so labels stay aligned.
 // Retries on rAF while the width reads 0 (the records screen is hidden during the initial
 // render, so the first measurement after showScreen can still be mid-layout).
+// The calendar never scrolls sideways: a whole year on a phone shrinks its cells and closes up
+// the gaps rather than running off the page.
 const HEAT_CELL_MAX = 30;   // sparse ranges cap here (left-aligned)
-const HEAT_CELL_MIN = 6;    // dense ranges on a narrow screen floor here (row scrolls)
 function fitHeatGrid(retries = 10) {
   const grid = $("heatGrid"); if (!grid || grid.dataset.view === "wk") return;
   const w = grid.clientWidth;
@@ -5394,21 +5395,48 @@ function fitHeatGrid(retries = 10) {
   if (grid.dataset.strip) {                                            // 30-day strip: square the single row to the 1fr column width
     const days = +grid.dataset.days || 30;
     grid.style.gridTemplateRows = `${(w - (days - 1) * HEAT_GAP) / days}px`;
+    fitHeatMonths(grid.parentElement.querySelector(".heat-months"));
     return;
   }
   const weeks = +grid.dataset.weeks || 1;
-  const full = (w - (weeks - 1) * HEAT_GAP) / weeks;
-  // Three regimes: cap big (sparse → left-aligned), floor small (dense+narrow → fixed px, the
-  // row scrolls), else fill the width exactly with 1fr columns. Fixed-width keeps cells square.
-  let cell, fixed;
-  if (full > HEAT_CELL_MAX) { cell = HEAT_CELL_MAX; fixed = true; }
-  else if (full < HEAT_CELL_MIN) { cell = HEAT_CELL_MIN; fixed = true; }
-  else { cell = full; fixed = false; }
+  // A narrow screen thins the gap before the squares get too small to read: below a 12px pitch
+  // the gap is a fifth of it (never under 1px), so a cell keeps most of what little room there is.
+  const pitch = (w + HEAT_GAP) / weeks;
+  const gap = pitch >= 12 ? HEAT_GAP : Math.max(1, Math.round(pitch / 5));
+  const full = (w - (weeks - 1) * gap) / weeks;
+  // Sparse ranges cap big and sit left-aligned; everything else fills the width exactly with
+  // 1fr columns. Fixed-width keeps capped cells square.
+  const fixed = full > HEAT_CELL_MAX;
+  const cell = fixed ? HEAT_CELL_MAX : full;
+  grid.style.gap = `${gap}px`;
   grid.style.gridTemplateColumns = fixed ? `repeat(${weeks},${cell}px)` : `repeat(${weeks},1fr)`;
   grid.style.gridTemplateRows = `repeat(7,${cell}px)`;
-  const days = $("heatDays"); if (days) days.style.gridTemplateRows = `repeat(7,${cell}px)`;
+  const days = $("heatDays");
+  if (days) { days.style.gridTemplateRows = `repeat(7,${cell}px)`; days.style.gap = `${gap}px`; }
   const months = grid.parentElement.querySelector(".heat-months");
-  if (months) months.style.width = fixed ? `${weeks * cell + (weeks - 1) * HEAT_GAP}px` : "";
+  if (months) months.style.width = fixed ? `${weeks * cell + (weeks - 1) * gap}px` : "";
+  fitHeatMonths(months);
+}
+// A month label sits where its first column starts, so a month that began in the last week or
+// two runs its word past the right edge of the grid. Pull that one back inside the edge, and
+// drop whichever label it then lands on: the partial month at the far left goes first, since the
+// month just begun is the one the player is living in.
+function fitHeatMonths(row) {
+  if (!row) return;
+  const spans = [...row.children], W = row.clientWidth;
+  if (!W) return;
+  for (const s of spans) { s.style.display = ""; s.style.left = s.dataset.left || (s.dataset.left = s.style.left); }
+  const last = spans[spans.length - 1];
+  if (last && last.offsetLeft + last.offsetWidth > W) last.style.left = `${W - last.offsetWidth}px`;
+  let prev = null;
+  spans.forEach((s, i) => {
+    if (prev && prev.offsetLeft + prev.offsetWidth + 4 > s.offsetLeft) {
+      const dropPrev = prev === spans[0] || s === last;
+      (dropPrev ? prev : s).style.display = "none";
+      if (!dropPrev) return;
+    }
+    prev = s;
+  });
 }
 
 /* ---------- Profile polaroid (a photo tucked into the notebook) ---------- */
