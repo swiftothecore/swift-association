@@ -8112,7 +8112,7 @@ function renderBonusRound() {
     body.innerHTML =
       `<p class="bg-ask">name this track</p>` +
       `<div class="bg-sheet bg-sheet--ask">` +
-        `<h3 class="bg-sheet-title" id="bonusSlot">track ${p.track} from ${escapeHtml(pressingName(p.album))}</h3>` +
+        `<h3 class="bg-sheet-title" id="bonusSlot">track ${p.track} from ${escapeHtml(pressingName(p.album, p.track))}</h3>` +
         `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
         `<div class="bg-sheet-meta" id="bonusTrackMeta"></div>` +
       `</div>` +
@@ -9780,7 +9780,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
       if (!correct) slot.classList.add("is-answer");
     }
     const meta = $("bonusTrackMeta");
-    if (meta) meta.textContent = `${pressingName(bonusPuzzle.album)} · track ${bonusPuzzle.track}`;
+    if (meta) meta.textContent = `${pressingName(bonusPuzzle.album, bonusPuzzle.track)} · track ${bonusPuzzle.track}`;
 
   } else if (bonusGame.id === "the-capitals") {
     /* The sheet finishes itself, the same way Running Order's does — but with one more move,
@@ -32864,7 +32864,7 @@ function buildDevApi() {
           } else if (id === "running-order") {
             const p = buildTrackPuzzle(songs, bonusIndexes().trackIndex, Math.random, 120, new Set(recent));
             if (p) recent.push(p.song.title);
-            out.push(p ? { ask: `track ${p.track} from ${pressingName(p.album)}`,
+            out.push(p ? { ask: `track ${p.track} from ${pressingName(p.album, p.track)}`,
                            answer: p.song.title, of: p.total } : null);
           } else if (id === "who-held-the-pen") {
             // Dealt with the run's own avoid list, which is the only way a sample shows the
@@ -33100,7 +33100,7 @@ function buildDevApi() {
          TRACK_ALT_TAKES still agree with songs.json. */
       track: () => {
         if (!bonusGame || bonusGame.id !== "running-order" || !bonusPuzzle) return "no Running Order page live";
-        return { ask: `track ${bonusPuzzle.track} from ${pressingName(bonusPuzzle.album)}`,
+        return { ask: `track ${bonusPuzzle.track} from ${pressingName(bonusPuzzle.album, bonusPuzzle.track)}`,
                  answer: bonusPuzzle.song.title, of: bonusPuzzle.total,
                  spent: +((performance.now() - bonusPageStart) / 1000).toFixed(2),
                  byHeartUnder: BONUS_TRACK_SECONDS / 2 };

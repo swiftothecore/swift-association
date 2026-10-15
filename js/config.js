@@ -2815,11 +2815,14 @@ export const ALBUM_TRACKS = {
    the twentieth exists only because the count runs up the Taylor's Version. Naming the pressing
    turns an unanswerable line into a fair one.
 
-   THE NAME IS PRINTED ON EVERY PAGE OF AN ALBUM LISTED HERE, not only on the numbers that need
-   it. A qualifier that appeared at track 20 and vanished at track 3 would be telling the player
-   how far up the record they are before they had thought about it, and a question should not
-   leak its own answer's neighbourhood. An album not listed here is asked about by its own name,
-   because the pressing the count runs to is the one that name means on streaming today. */
+   THE NAME IS ONLY PRINTED PAST THE STANDARD EDITION. Every pressing here keeps the original
+   record's running order as its first stretch, so "track 4 from Red" and "track 4 from Red
+   (Taylor's Version)" are the same question, and the long name on a low number was clutter that
+   made the player read a qualifier for nothing. The cost is a tell: the qualifier appearing says
+   the number is past the standard record. It was weighed and judged smaller than the noise, since
+   the number itself already says that to anyone who knows how long the record is. An album not
+   listed here is asked about by its own name, because the pressing the count runs to is the one
+   that name means on streaming today. */
 export const TRACK_PRESSINGS = {
   "Taylor Swift": "Taylor Swift (Deluxe Edition)",
   "Fearless": "Fearless (Taylor's Version)",
@@ -2833,10 +2836,19 @@ export const TRACK_PRESSINGS = {
   "The Life of a Showgirl": "The Life of a Showgirl: The Encore",
 };
 
+/* How long the standard edition of each listed pressing runs, which is the stretch of the
+   running order the extended pressing shares with it track for track. */
+export const STANDARD_TRACKS = {
+  "Taylor Swift": 11, "Fearless": 13, "Speak Now": 14, "Red": 16, "1989": 13,
+  "folklore": 16, "evermore": 15, "Midnights": 13,
+  "The Tortured Poets Department": 16, "The Life of a Showgirl": 12,
+};
+
 /* The name to print for an album whose track numbers are being asked about. Everything that
    words a Running Order page goes through here, so the question, the reveal under the rule and
    the dev panel's read of the live page can never disagree about which record is being counted. */
-export function pressingName(album) {
+export function pressingName(album, track) {
+  if (track && track <= (STANDARD_TRACKS[album] || 0)) return album;
   return TRACK_PRESSINGS[album] || album;
 }
 
