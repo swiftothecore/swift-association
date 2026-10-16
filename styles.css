@@ -12847,6 +12847,10 @@
     margin: 3px 0 0; font-family: var(--type); font-size: calc(12px + var(--text-size-adjust));
     color: var(--ink); line-height: 1.5; max-width: 66ch;
   }
+  /* Two meanings, numbered the way a dictionary numbers senses. */
+  .gloss-senses { margin: 0; padding-left: 2.2ch; }
+  .gloss-senses li { padding-left: 0.4ch; }
+  .gloss-senses li + li { margin-top: 3px; }
   .gloss-also { margin: 5px 0 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); }
   /* Deliberately understated. A row of loud buttons under every definition would turn a page you
      read into a page you navigate, and most readers want the next term, not a detour. */

@@ -30201,10 +30201,6 @@ const GLOSSARY_GATES = {
   ruthlessPlayed: () => RUTHLESS_LENSES.some((l) => ruthlessRecord(l.id).plays > 0),
   polaroidFound: () => Object.keys(loadKeepsakes()).length > 0,
   stickerEarned: () => Object.keys(loadStickers()).length > 0,
-  masteryReached: () => isMasteryUnlocked(),
-  // Attempted, not defeated: the beads ARE the score in these rules, so one page of one run is
-  // enough to have met the word and to want it explained.
-  riskPlayed: () => CHALLENGES.some((c) => RISK_RULES.has(c.rule) && challengeRecord(c.id).attempts > 0),
 };
 function glossaryMet(entry) {
   const gate = GLOSSARY_GATES[entry.seen];
@@ -30216,13 +30212,16 @@ const GLOSSARY_BY_SLUG = Object.fromEntries(GLOSSARY.map((g) => [g.slug, g]));
 /* The borrow point for every other surface. A tape glyph, a token wallet or a seal asks for its
    own definition here rather than restating one, which is what keeps this page a source instead
    of a second description. Returns "" for an unknown slug so a caller can fall back quietly. */
-function glossaryDefn(slug) { return (GLOSSARY_BY_SLUG[slug] || {}).defn || ""; }
+function glossaryDefn(slug) {
+  const d = (GLOSSARY_BY_SLUG[slug] || {}).defn || "";
+  return Array.isArray(d) ? d.join(" ") : d;
+}
 /* A term rendered as its own tooltip: same text as the glossary row, attached to the thing the
    word is about. `data-gloss` also makes it a door — clicking one opens the page at that term. */
 function glossTip(slug, inner) {
   const g = GLOSSARY_BY_SLUG[slug];
   if (!g) return inner;
-  return `<span class="gloss-term" data-gloss="${g.slug}" title="${escapeHtml(g.term)}: ${escapeHtml(g.defn)}">${inner}</span>`;
+  return `<span class="gloss-term" data-gloss="${g.slug}" title="${escapeHtml(g.term)}: ${escapeHtml(glossaryDefn(g.slug))}">${inner}</span>`;
 }
 let glossaryBackTarget = "start";
 function renderGlossary() {
@@ -30230,8 +30229,8 @@ function renderGlossary() {
   if (!el) return;
   const met = GLOSSARY.filter(glossaryMet);
   const hidden = GLOSSARY.length - met.length;
-  let html = `<p class="gloss-intro">The notebook's own words, defined once each. Terms appear here ` +
-    `as you meet them, so nothing on this page gets ahead of your notebook.</p>`;
+  let html = `<p class="gloss-intro">The words this notebook made up, and what each one means. A word ` +
+    `turns up here once you've met it, so the page never gets ahead of you.</p>`;
   html += `<dl class="gloss-list">` + met.map((g) => {
     // Cross-links only point at terms the reader can currently see. A "see also: dark side" on a
     // notebook that has not earned dark side would leak the word this page just withheld.
@@ -30242,7 +30241,9 @@ function renderGlossary() {
       : "";
     return `<div class="gloss-row" id="gloss-${g.slug}" data-gloss-row="${g.slug}">` +
       `<dt class="gloss-term-name">${escapeHtml(g.term)}</dt>` +
-      `<dd class="gloss-defn">${escapeHtml(g.defn)}${seeAlso}</dd></div>`;
+      `<dd class="gloss-defn">${Array.isArray(g.defn)
+        ? `<ol class="gloss-senses">${g.defn.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ol>`
+        : escapeHtml(g.defn)}${seeAlso}</dd></div>`;
   }).join("") + `</dl>`;
   // The count without the words: honest that there is more, and it names none of it.
   if (hidden) {
