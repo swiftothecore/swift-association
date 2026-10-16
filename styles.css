@@ -3043,7 +3043,7 @@
      They are stated as tokens on the ROW, not as a background on the tab, because on the front
      page the picked difficulty's colour has to reach past its tab: the rule-terms strip under
      it is that tab's page and wears the same ink (see "The front page's pickers" below). */
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); --tab-grad: linear-gradient(var(--tab-sheet), var(--tab-sheet)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(250,208,64,0.46), rgba(248,170,70,0.34)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="classic"])  { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(100,175,240,0.42), rgba(50,105,190,0.34)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(185,205,100,0.32), rgba(90,145,95,0.30)); }
@@ -3056,15 +3056,9 @@
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: color-mix(in srgb, #0c0907 80%, var(--paper)); }
   /* Each difficulty also carries a pair of neighbouring inks, the treatment the game types wear
      above it, as --tab-grad: sky into denim, lime into leaf, coral into brick, orchid into indigo,
-     rose into plum. Normal is the home base like Classic, so it blends the era's highlighter into
-     itself turned a step round the wheel and follows the era. Picked side by side on
+     rose into plum, and Normal honey into apricot like Classic above it. Picked side by side on
      scripts/ui/difficulty-tab-gradients.html, where a ladder that handed each rung the colour of
      the one below was turned down: only one rung is ever picked, so it just read as two rungs. */
-  @supports (color: oklch(from red l c h)) {
-    :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"]) {
-      --tab-grad: linear-gradient(160deg, oklch(from var(--highlighter) l c h / calc(alpha * 0.78)), oklch(from var(--highlighter) calc(l - 0.05) calc(c + 0.03) calc(h - 28) / calc(alpha * 0.6)));
-    }
-  }
   .mode-tab.active:is([data-mode], .mode-tab--modality) { background: var(--tab-grain), var(--tab-grad); }
   /* The stats page's "All" view sums every mode, so it wears every mode's wash at once: the
      ladder's colours laid side by side, relaxed denim through ultra violet. */
@@ -3074,16 +3068,13 @@
   }
   /* The three game types are each a pair of neighbouring inks worked together on the diagonal,
      under a faint paper grain so the blend reads as ink soaked into stock, not a screen fill:
-     Infinite sea glass into ink blue, Custom rose into plum. Classic stays the era's home base:
-     its highlighter worked into the same highlighter turned a step round the wheel (gold into
-     apricot, lavender into periwinkle), so it still follows the era. Mixing toward --ink-accent
-     instead was tried and printed khaki, because the accents are dark. Set on the
+     Classic honey into apricot, Infinite sea glass into ink blue, Custom rose into plum. Classic
+     and Normal are fixed rather than built from --highlighter: these tabs only ever stand on
+     the gold front page (showScreen resets the era there), so an era-following blend was
+     machinery for a colour no one sees. Set on the
      tab, not as --tab-wash, because that token is mixed into a solid sheet colour elsewhere and
      a gradient cannot be. Picked side by side on scripts/ui/mode-tab-gradients.html. */
-  .mode-tab.active[data-type="classic"]  {
-    background: var(--tab-grain), var(--highlighter);
-    background: var(--tab-grain), linear-gradient(118deg, var(--highlighter) 10%, oklch(from var(--highlighter) calc(l - 0.05) calc(c + 0.03) calc(h - 28) / calc(alpha * 0.85)) 100%);
-  }
+  .mode-tab.active[data-type="classic"]  { background: var(--tab-grain), linear-gradient(118deg, rgba(250,208,64,0.58) 10%, rgba(248,170,70,0.44) 100%); }
   .mode-tab.active[data-type="infinite"] { background: var(--tab-grain), linear-gradient(118deg, rgba(110,186,160,0.40) 5%, rgba(52,110,150,0.40) 100%); }
   .mode-tab.active[data-type="custom"]   { background: var(--tab-grain), linear-gradient(118deg, rgba(222,140,150,0.38) 5%, rgba(130,84,150,0.40) 100%); }
   /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
