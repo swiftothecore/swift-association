@@ -34,41 +34,37 @@ export function revealSections(song) {
   }));
 }
 
-function exactSpan(sections, parts, normalize) {
-  for (const section of sections) {
-    for (let start = 0; start <= section.lines.length - parts.length; start++) {
-      if (parts.every((part, offset) => section.lines[start + offset].text === part)) {
-        return { section, start, end: start + parts.length - 1 };
-      }
+// A recovered answer can be sung across a section break (the last line of a pre-chorus and the
+// first of the chorus), so the span is looked for in the song read straight through, not inside
+// one section. Searching section by section missed those, fell back to one line, and the lines
+// "after" it then repeated the rest of the card's own answer.
+function exactSpan(flat, parts, normalize) {
+  for (let start = 0; start <= flat.length - parts.length; start++) {
+    if (parts.every((part, offset) => flat[start + offset].text === part)) {
+      return { start, end: start + parts.length - 1 };
     }
   }
   const keys = parts.map(normalize);
-  for (const section of sections) {
-    for (let start = 0; start <= section.lines.length - keys.length; start++) {
-      if (keys.every((key, offset) => normalize(section.lines[start + offset].text) === key)) {
-        return { section, start, end: start + keys.length - 1 };
-      }
+  for (let start = 0; start <= flat.length - keys.length; start++) {
+    if (keys.every((key, offset) => normalize(flat[start + offset].text) === key)) {
+      return { start, end: start + keys.length - 1 };
     }
   }
   return null;
 }
 
-function exactLine(sections, parts, normalize, matchesLine) {
+function exactLine(flat, parts, normalize, matchesLine) {
   const preferred = matchesLine
     ? [...parts.filter((line) => matchesLine(line)), ...parts.filter((line) => !matchesLine(line))]
     : parts;
   for (const part of preferred) {
-    for (const section of sections) {
-      const start = section.lines.findIndex((line) => line.text === part);
-      if (start >= 0) return { section, start, end: start };
-    }
+    const start = flat.findIndex((line) => line.text === part);
+    if (start >= 0) return { start, end: start };
   }
   for (const part of preferred) {
     const key = normalize(part);
-    for (const section of sections) {
-      const start = section.lines.findIndex((line) => normalize(line.text) === key);
-      if (start >= 0) return { section, start, end: start };
-    }
+    const start = flat.findIndex((line) => normalize(line.text) === key);
+    if (start >= 0) return { start, end: start };
   }
   return null;
 }
@@ -93,43 +89,37 @@ export function buildLyricReveal(song, anchorText, options = {}) {
   const parts = String(anchorText || "").split("\n").map((line) => line.trim()).filter(Boolean);
   if (!parts.length) return null;
 
-  let span = exactSpan(sections, parts, normalize) || exactLine(sections, parts, normalize, matchesLine);
-  if (!span && matchesLine) {
-    for (const section of sections) {
-      const start = section.lines.findIndex((line) => matchesLine(line.text));
-      if (start >= 0) { span = { section, start, end: start }; break; }
-    }
-  }
-  if (!span) return null;
-
-  const { section, start, end } = span;
-  let anchorIndex = start;
-  if (matchesLine) {
-    const within = section.lines.slice(start, end + 1).findIndex((line) => matchesLine(line.text));
-    if (within >= 0) anchorIndex = start + within;
-  }
-
   const flat = sections.flatMap((candidate) => candidate.lines.map((line, lineIndex) => ({
     text: line.text,
     sourceLineIndex: line.sourceLineIndex,
     sectionIndex: candidate.sectionIndex,
     lineIndex,
   })));
-  const at = (lineIndex) => flat.findIndex((line) =>
-    line.sectionIndex === section.sectionIndex && line.lineIndex === lineIndex);
-  const shown = flat.slice(Math.max(0, at(start) - RADIUS), at(end) + 1 + RADIUS);
 
-  const spanStart = shown.findIndex((line) => line.sectionIndex === section.sectionIndex && line.lineIndex === start);
-  const spanEnd = shown.findIndex((line) => line.sectionIndex === section.sectionIndex && line.lineIndex === end);
+  let span = exactSpan(flat, parts, normalize) || exactLine(flat, parts, normalize, matchesLine);
+  if (!span && matchesLine) {
+    const start = flat.findIndex((line) => matchesLine(line.text));
+    if (start >= 0) span = { start, end: start };
+  }
+  if (!span) return null;
+
+  const { start, end } = span;
+  let anchor = start;
+  if (matchesLine) {
+    const within = flat.slice(start, end + 1).findIndex((line) => matchesLine(line.text));
+    if (within >= 0) anchor = start + within;
+  }
+  const anchorLine = flat[anchor];
+  const from = Math.max(0, start - RADIUS);
 
   return {
-    sectionIndex: section.sectionIndex,
-    sectionLabel: section.label,
-    lineStart: start,
-    lineEnd: end,
-    anchorLineIndex: anchorIndex,
-    anchorSourceLineIndex: section.lines[anchorIndex].sourceLineIndex,
-    before: shown.slice(0, spanStart),
-    after: shown.slice(spanEnd + 1),
+    sectionIndex: anchorLine.sectionIndex,
+    sectionLabel: sections[anchorLine.sectionIndex].label,
+    lineStart: flat[start].lineIndex,
+    lineEnd: flat[end].lineIndex,
+    anchorLineIndex: anchorLine.lineIndex,
+    anchorSourceLineIndex: anchorLine.sourceLineIndex,
+    before: flat.slice(from, start),
+    after: flat.slice(end + 1, end + 1 + RADIUS),
   };
 }
