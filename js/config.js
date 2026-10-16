@@ -2757,23 +2757,26 @@ export function guestShelfState(id) {
 }
 
 /* ---------- Guest-shelf stamp inks ---------- */
-// The corner guest stamp is franked in a different colour every page load, the way a
-// post office works through whatever plate is on the press that morning. A two-item
-// array prints a split plate; the rose/emerald pair gives Wicked a turn on the press.
-// Every ink is dark enough to carry the cream silhouette printed over it, which is the
-// only real constraint: a pale yellow would swallow the figure whole, so the yellow
-// here is a deep ochre. Keep them printing inks, not screen colours.
+// The corner guest stamp is franked in a different plate every page load, the way a
+// post office works through whatever plate is on the press that morning. Every plate is
+// two inks, laid along the stamp's diagonal: a lighter neighbour at the top left sliding
+// into a deeper one at the bottom right, each a near cousin of the plate's own colour, so
+// a red plate is a red plate and only drifts within itself. Wicked is the one plate whose
+// inks are NOT neighbours, rose against emerald, because that pair is the whole show.
+// The cream silhouette is printed over the ink, so the light end of every pair holds at
+// least 3:1 against it, which is why ochre gets deeper rather than lighter. Keep them
+// printing inks, not screen colours. Board: scripts/guests/stamp-gradients.html.
 export const STAMP_INKS = [
-  "#b8392f",  // pillar-box red
-  "#c9536f",  // rose
-  ["#c5799b", "#4f8b63"], // Wicked rose / emerald split plate
-  "#96345f",  // plum
-  "#6a4d92",  // violet
-  "#35618f",  // royal blue
-  "#2f7f80",  // teal
-  "#4f7f4a",  // leaf green
-  "#a8862a",  // ochre
-  "#cc6a24",  // orange
+  ["#ca4f26", "#9c1f2b"],  // pillar-box red: vermilion into oxblood
+  ["#d7646f", "#ab3c67"],  // rose: coral pink into raspberry
+  ["#c5799b", "#4f8b63"],  // Wicked: rose against emerald
+  ["#a74576", "#71295d"],  // plum: berry into damson
+  ["#7661a9", "#453d81"],  // violet: lavender into indigo
+  ["#40769e", "#284576"],  // royal blue: cornflower into navy
+  ["#409086", "#1a616d"],  // teal: sea glass into petrol
+  ["#6b8e4d", "#2a613c"],  // leaf green: new leaf into bottle green
+  ["#a88f2c", "#956211"],  // ochre: mustard into bronze
+  ["#d1770f", "#b4481e"],  // orange: tangerine into rust
 ];
 
 /* ---------- Album colours (left-rule tint + tag on lyric cards) ---------- */
