@@ -615,6 +615,9 @@ export const MEAN_GRUDGE = 5;            // times a word must have beaten you be
 export const CUSTOM_PRESET_SHELF = 5;    // presets kept at once to earn "Mine" (well short of the cap, so it rewards tuning rather than hoarding)
 export const CUSTOM_ENDLESS_MILESTONE = 50;  // rounds into an endless custom run for "Forever & Always"
 export const CUSTOM_NAME_MAX = 24;       // preset name length cap
+// Form 13's carbonless stock: each filed copy is printed on one of these, in the order a real pad
+// runs, and keeps it (CUSTOM_KEY stores the index), so voiding a copy never recolours the rest.
+export const CUSTOM_STOCKS = ["canary", "pink", "blue", "green", "goldenrod", "lilac"];
 export const CUSTOM_ROUNDS_MIN = 1;      // shortest finite run
 export const CUSTOM_ROUNDS_MAX = 30;     // slider's finite top (one tick past this = infinite, stored as rounds:0)
 export const CUSTOM_ROUNDS_TYPED_MAX = 500; // typed finite run lengths can climb this high

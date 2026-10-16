@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v500";
+const CACHE = "stta-v501";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -99,6 +99,10 @@ const ASSETS = [
   // The four rule marks (pure; see js/rulemarks.js). app.js imports it at load, so an
   // uncached copy breaks a cold offline start rather than only the marks.
   "js/rulemarks.js",
+  // Form 13, the Custom Change page: its drawings and the hand that fills in its bubbles and
+  // hearts (pure; app.js imports both at load).
+  "js/form13.js",
+  "js/penfill.js",
   // The Mastery passport and stamp cards, and the five linocut skill marks (pure; app.js
   // imports both at load).
   "js/passport.js",

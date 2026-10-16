@@ -13,7 +13,7 @@ import {
   ADAPTIVE_LEGACY_KEY,
   GUEST_KEY, GUEST_TARGET, LINEUP_KEY,
   BONUS_KEY, RUTHLESS_KEY, TRACKS_KEY,
-  CUSTOM_KEY, CUSTOM_DEFAULT_MODE,
+  CUSTOM_KEY, CUSTOM_DEFAULT_MODE, CUSTOM_STOCKS,
   KEEPSAKES_KEY,
   STICKERS_KEY,
   KEEPSAKES_SEEN_KEY,
@@ -681,29 +681,53 @@ export function resetTracks() {
    Older notebooks kept { presets, activeId } and edited every preset in place. Each of those
    presets is kept as a filed copy with its id intact (the randomiser's ledger and a pinned goal
    key off it) and the active one becomes the draft. Purely saved configurations: nothing here
-   feeds stats or records. */
+   feeds stats or records.
+   Each filed copy also keeps `stock`, the index into CUSTOM_STOCKS of the paper it was filed on.
+   It is chosen once, at filing (the colour least in use on the pad), so voiding a copy never
+   recolours the others; a copy from before stock existed is given one, in pad order, on read.
+   `hand` seeds the hand that fills in the form's bubbles and hearts (js/penfill.js): one per
+   notebook, made the first time the store is read and kept from then on, so a player's marks
+   always look like the same person's. */
 export const CUSTOM_DRAFT_ID = "draft";
+// The stock a newly filed copy gets: the one fewest copies are on, the earliest in pad order on a tie.
+export function pickCustomStock(saved) {
+  const n = CUSTOM_STOCKS.map((_, i) => saved.filter((p) => p.stock === i).length);
+  return n.indexOf(Math.min(...n));
+}
 export function newCustomId() {
   return "cp" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
 }
 export function loadCustom() {
   let o = null;
   try { const raw = localStorage.getItem(CUSTOM_KEY); if (raw) o = JSON.parse(raw); } catch (e) { /* ignore */ }
-  const clean = (list) => list.filter((p) => p && typeof p.id === "string" && p.id && p.id !== CUSTOM_DRAFT_ID && p.mode && typeof p.mode === "object")
-    .map((p) => ({ id: p.id, name: String(p.name || "Custom"), mode: { ...p.mode } }));
+  const clean = (list) => {
+    const out = list.filter((p) => p && typeof p.id === "string" && p.id && p.id !== CUSTOM_DRAFT_ID && p.mode && typeof p.mode === "object")
+      .map((p) => ({ id: p.id, name: String(p.name || "Custom"), mode: { ...p.mode },
+        stock: Number.isInteger(p.stock) && p.stock >= 0 && p.stock < CUSTOM_STOCKS.length ? p.stock : null }));
+    out.forEach((p) => { if (p.stock === null) p.stock = pickCustomStock(out); });
+    return out;
+  };
+  const hand = o && typeof o.hand === "string" && o.hand ? o.hand : null;
+  // a notebook without a hand yet gets one now, written straight back so it never changes
+  const withHand = (st) => {
+    if (hand) return { ...st, hand };
+    const made = { ...st, hand: Math.random().toString(36).slice(2, 10) };
+    saveCustom(made);
+    return made;
+  };
   if (o && Array.isArray(o.presets) && !Array.isArray(o.saved)) {
     const saved = clean(o.presets);
     const active = saved.find((p) => p.id === o.activeId) || saved[0];
-    return { v: 2, draft: { ...(active ? active.mode : CUSTOM_DEFAULT_MODE) }, from: active ? active.id : null, saved };
+    return withHand({ v: 2, draft: { ...(active ? active.mode : CUSTOM_DEFAULT_MODE) }, from: active ? active.id : null, saved });
   }
   if (o && Array.isArray(o.saved) && o.draft && typeof o.draft === "object") {
     const saved = clean(o.saved);
-    return { v: 2, draft: { ...o.draft }, from: saved.some((p) => p.id === o.from) ? o.from : null, saved };
+    return withHand({ v: 2, draft: { ...o.draft }, from: saved.some((p) => p.id === o.from) ? o.from : null, saved });
   }
-  return { v: 2, draft: { ...CUSTOM_DEFAULT_MODE }, from: null, saved: [] };
+  return withHand({ v: 2, draft: { ...CUSTOM_DEFAULT_MODE }, from: null, saved: [] });
 }
 export function saveCustom(o) {
-  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify({ v: 2, draft: o.draft, from: o.from || null, saved: o.saved })); } catch (e) { /* ignore */ }
+  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify({ v: 2, draft: o.draft, from: o.from || null, saved: o.saved, hand: o.hand || undefined })); } catch (e) { /* ignore */ }
 }
 export function resetCustom() {
   try { localStorage.removeItem(CUSTOM_KEY); } catch (e) { /* ignore */ }

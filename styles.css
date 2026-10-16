@@ -7697,176 +7697,239 @@
   .custom-change-btn .type-glyph--levers circle { fill: none; }
   .custom-active-levers { font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.5; color: var(--ink-soft); }
 
-  /* ---------- Custom "Change" modal: HOUSE RULES (reuses the settings-modal chrome) ----------
-     The working copy written out as seven numbered rules on the card's own rulings, every
-     changeable phrase in the game's chisel-highlighter mark. Filed modes are page flags along
-     the head of the sheet, locked once filed (see renderCustomModalBody). */
-  .cm-foot { display: flex; justify-content: flex-end; margin-top: 8px; padding-top: 13px; border-top: 1px solid rgba(43,39,34,0.1); }
-  /* the rulings scroll with the writing so the rules stay on their lines; the lamp stays put */
-  #customModal .settings-card { background-attachment: scroll, local, local; }
+  /* ---------- Custom "Change" modal: FORM 13 (reuses the settings-modal chrome) ----------
+     The working copy as a printed form filled in by hand (renderCustomModalBody; drawings in
+     js/form13.js, fills in js/penfill.js). One rule for the whole sheet: PRINT is exact and in
+     Custom's brick rust (--fm-print) with its screen tints; PEN is blue ballpoint (--fm-pen) and
+     uneven. Boxes share their borders because the grid's 1px gap IS the rule: no two hairlines
+     ever overlap, so no join darkens. Every colour that sits on the sheet is pre-mixed onto the
+     sheet (--fm-c) rather than given an alpha, for the same reason. */
+  .custom-modal {
+    --fm-print: #a8483a; --fm-pen: #24476b; --fm-sheet: #fcfaf3;
+    --fm-c: var(--fm-sheet);
+    --fm-rule: color-mix(in srgb, var(--fm-print) 52%, var(--fm-c));
+    --fm-tint: color-mix(in srgb, var(--fm-print) 9%, var(--fm-c));
+    --fm-tint-2: color-mix(in srgb, var(--fm-print) 16%, var(--fm-c));
+    --fm-print-fade: color-mix(in srgb, var(--fm-print) 62%, var(--fm-c));
+    --fm-pen-hatch: color-mix(in srgb, var(--fm-pen) 58%, var(--fm-c));
+  }
+  :root[data-theme="dark"] .custom-modal { --fm-print: #e09580; --fm-pen: #a9c8ea; --fm-sheet: #302920; }
   #customModal .settings-nav { margin-bottom: 10px; }
 
-  /* filed modes: page flags stuck along the head of the sheet */
-  .hr-flags { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 5px; margin: 0 0 14px; }
-  .hr-flag {
-    --f: rgba(247, 201, 72, 0.62); --fe: #b8902a;
-    position: relative; min-height: 30px; max-width: 19ch; padding: 6px 10px 5px 11px; cursor: pointer;
-    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); line-height: 1.15; letter-spacing: 0.3px; color: var(--ink);
-    text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    background: color-mix(in srgb, var(--f) 72%, var(--paper)); border: 0; border-left: 4px solid var(--fe); border-radius: 1px 3px 3px 1px;
-    box-shadow: 1.5px 2px 0 rgba(43, 39, 34, 0.14);
-    transform: translateY(3px) rotate(var(--tilt, -0.8deg)); transition: transform 0.14s ease, box-shadow 0.14s ease;
+  /* the pad: each filed copy is a coloured sheet behind the top copy, on the stock it was filed on */
+  .fm-stock-0 { --tc: #f4e7a4; } .fm-stock-1 { --tc: #f3d2d5; } .fm-stock-2 { --tc: #d3e2ee; }
+  .fm-stock-3 { --tc: #dbe8cf; } .fm-stock-4 { --tc: #eed59a; } .fm-stock-5 { --tc: #e2d6ec; }
+  :root[data-theme="dark"] .fm-stock-0 { --tc: #463c22; } :root[data-theme="dark"] .fm-stock-1 { --tc: #46302f; }
+  :root[data-theme="dark"] .fm-stock-2 { --tc: #2c3a44; } :root[data-theme="dark"] .fm-stock-3 { --tc: #33402c; }
+  :root[data-theme="dark"] .fm-stock-4 { --tc: #47391f; } :root[data-theme="dark"] .fm-stock-5 { --tc: #3c3346; }
+  .fm-pad { display: flex; flex-wrap: wrap; align-items: flex-end; margin: 4px 0 0 6px; padding-right: 28px; }
+  .fm-tab {
+    position: relative; margin: 5px -5px 0 0; padding: 4px 15px 7px 11px; cursor: pointer; max-width: 19ch;
+    background: var(--tc); color: #2b2722; text-align: left;
+    border: 1px solid color-mix(in srgb, #2b2722 24%, var(--tc)); border-bottom: 0; border-radius: 3px 3px 0 0;
+    transform: translateY(5px); transition: transform .14s ease;
   }
-  .hr-flag--0 { --f: rgba(247, 201, 72, 0.62); --fe: #b8902a; --tilt: -1deg; }
-  .hr-flag--1 { --f: rgba(232, 128, 150, 0.52); --fe: #b54c66; --tilt: 0.7deg; }
-  .hr-flag--2 { --f: rgba(110, 170, 210, 0.5); --fe: #3f78a0; --tilt: -0.4deg; }
-  .hr-flag--3 { --f: rgba(140, 196, 120, 0.52); --fe: #4f8a3c; --tilt: 1.1deg; }
-  .hr-flag--4 { --f: rgba(240, 150, 80, 0.55); --fe: #b8642a; --tilt: -1.3deg; }
-  :root[data-theme="dark"] .hr-flag { background: color-mix(in srgb, var(--fe) 40%, var(--paper)); box-shadow: 1.5px 2px 0 rgba(0, 0, 0, 0.35); }
-  .hr-flag:is(:hover, :focus-visible) { transform: translateY(0) rotate(var(--tilt)); }
-  .hr-flag:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
-  /* the flag this page is a faithful copy of; a dashed one once the page has moved away from it */
-  .hr-flag.is-on {
-    transform: translateY(-3px) rotate(0deg); font-weight: 700; background: color-mix(in srgb, var(--f) 100%, var(--paper));
-    box-shadow: 2px 3px 0 rgba(43, 39, 34, 0.22), inset 0 -2px 0 color-mix(in srgb, var(--fe) 60%, transparent);
-  }
-  :root[data-theme="dark"] .hr-flag.is-on { background: color-mix(in srgb, var(--fe) 62%, var(--paper)); }
-  .hr-flag.is-src { outline: 1.5px dashed var(--fe); outline-offset: 2px; }
-  .hr-flag--fresh { --fe: rgba(43, 39, 34, 0.3); background: transparent; color: var(--ink-soft); border: 1.5px dashed rgba(43, 39, 34, 0.3); box-shadow: none; transform: translateY(3px); }
-  :root[data-theme="dark"] .hr-flag--fresh { background: transparent; border-color: rgba(236, 229, 214, 0.3); }
-  .hr-flag--fresh:hover { color: var(--ink); border-color: var(--ink); }
-  .hr-flags-empty { align-self: center; margin: 0 6px 0 2px; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); }
+  :root[data-theme="dark"] .fm-tab { color: var(--ink); border-color: color-mix(in srgb, #000 40%, var(--tc)); }
+  .fm-tab small { display: block; font: calc(8.5px + var(--text-size-adjust))/1.25 var(--type); letter-spacing: 1.5px; text-transform: uppercase; opacity: .62; }
+  /* the copy's name is the player's own writing, so it is pen */
+  .fm-tab span { display: block; font: 700 calc(17px + var(--text-size-adjust))/1.05 var(--hand); color: var(--fm-pen); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fm-tab:hover { transform: translateY(2px); }
+  .fm-tab.is-on { z-index: 2; transform: translateY(1px); }
+  /* copied then changed: half raised; the office box says what changed */
+  .fm-tab.is-src { z-index: 2; transform: translateY(3px); }
+  .fm-tab:focus-visible { outline: 2px dashed var(--fm-pen); outline-offset: 2px; }
+  .fm-tab--blank { --tc: transparent; border-style: dashed; border-color: var(--ink-soft); color: var(--ink-soft); margin-left: 10px; }
+  .fm-tab--blank span { color: var(--ink-soft); font: calc(12px + var(--text-size-adjust))/1.5 var(--type); letter-spacing: .3px; }
+  .fm-pad-empty { align-self: center; margin: 6px 4px 0 2px; font: calc(10.5px + var(--text-size-adjust)) var(--type); color: var(--ink-soft); letter-spacing: .4px; }
 
-  /* the rules themselves, ON the card's rulings: line-height is the page's --line */
-  .hr-deal { position: relative; top: 7px; margin-bottom: 7px; }
-  .hr-head, .hr-rules li { font-family: var(--hand); font-size: calc(23px + var(--text-size-adjust)); line-height: var(--line); color: var(--ink); }
-  .hr-head { margin: 0; }
-  .hr-head b { font-weight: 700; }
-  .hr-rules { list-style: none; margin: 0; padding: 0; counter-reset: hr-rule; }
-  .hr-rules li { position: relative; counter-increment: hr-rule; }
-  /* rule numbers live in the margin, outside the red line, the way you'd actually number them */
-  .hr-rules li::before {
-    content: counter(hr-rule) "."; position: absolute; left: -38px; width: 22px; text-align: right;
-    font-weight: 700; color: color-mix(in srgb, var(--red-pen) 75%, var(--ink)); opacity: 0.8;
+  /* the sheet and its grid */
+  .fm-sheet {
+    position: relative; z-index: 1; padding: 11px 11px 4px; background: var(--fm-c); color: var(--fm-print);
+    border: 1px solid color-mix(in srgb, #2b2722 26%, var(--fm-c)); border-radius: 0 2px 2px 2px;
+    box-shadow: 1px 2px 0 color-mix(in srgb, #2b2722 13%, transparent);
   }
-  @media (max-width: 520px) { .hr-rules li::before { left: -29px; width: 12px; font-size: 0.8em; } }
+  :root[data-theme="dark"] .fm-sheet { border-color: color-mix(in srgb, #000 55%, var(--fm-c)); box-shadow: 1px 2px 0 #0006; }
+  /* dense packing lets the lives box sit under the pages box while the clock spans both */
+  .fm-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 1px; background: var(--fm-rule); border: 1.5px solid var(--fm-print); }
+  .fm-box { position: relative; background: var(--fm-c); padding: 6px 9px 8px; min-width: 0; }
+  .fm-no { grid-column: 1 / 2; display: grid; place-items: center; background: var(--fm-print); color: var(--fm-c); padding: 6px 4px; text-align: center; }
+  .fm-no small { display: block; font: 700 calc(8px + var(--text-size-adjust))/1 var(--type); letter-spacing: 2.4px; }
+  .fm-no b { display: block; font: 700 calc(30px + var(--text-size-adjust))/.95 var(--type); letter-spacing: -1px; margin-top: 2px; }
+  .fm-title { grid-column: 2 / 5; padding: 8px 11px; }
+  .fm-title b { display: block; font: 700 calc(17px + var(--text-size-adjust))/1.1 var(--type); letter-spacing: 3.2px; text-transform: uppercase; }
+  .fm-title p { margin: 4px 0 0; font: calc(10.5px + var(--text-size-adjust))/1.4 var(--type); letter-spacing: .2px; }
+  .fm-office { grid-column: 5 / 7; background: var(--fm-tint); padding-bottom: 6px; }
+  .fm-office .fm-cap { margin-bottom: 4px; }
+  .fm-unfiled { margin: 6px 0 0; font: calc(10px + var(--text-size-adjust)) var(--type); letter-spacing: 2px; text-transform: uppercase; color: var(--fm-print-fade); }
+  .fm-note { margin: 5px 0 0; font: 700 calc(14px + var(--text-size-adjust))/1.05 var(--hand); color: var(--fm-pen); }
+  /* a part band, reversed out of a solid strip of the print */
+  .fm-part { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; background: var(--fm-print); color: var(--fm-c); padding: 3px 9px 2px; }
+  .fm-part b { font: 700 calc(10px + var(--text-size-adjust))/1.35 var(--type); letter-spacing: 2.4px; text-transform: uppercase; }
+  .fm-part span { font: calc(9.5px + var(--text-size-adjust))/1.35 var(--type); letter-spacing: .5px; opacity: .88; }
+  .fm-cap { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 6px; font: 700 calc(9.5px + var(--text-size-adjust))/1.3 var(--type); letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 7px; }
+  .fm-cap i { font-style: normal; display: inline-grid; place-items: center; min-width: 15px; height: 14px; padding: 0 2px; align-self: center; background: var(--fm-print); color: var(--fm-c); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0; }
+  .fm-cap em { font-style: normal; font-weight: 400; letter-spacing: .3px; text-transform: none; font-size: calc(10px + var(--text-size-adjust)); }
+  .fm-pages, .fm-lives, .fm-answer { grid-column: 1 / 4; }
+  .fm-clock { grid-column: 4 / 7; grid-row: span 2; }
+  .fm-words { grid-column: 1 / -1; }
+  .fm-titles, .fm-suggest, .fm-misses { grid-column: 4 / 7; }
+  .fm-hints { grid-column: 1 / 4; grid-row: span 2; }
+  .fm-fine { display: flex; justify-content: space-between; gap: 6px 18px; flex-wrap: wrap; margin-top: 5px; font: calc(9px + var(--text-size-adjust))/1.45 var(--type); letter-spacing: .3px; }
+  .fm-fine b { letter-spacing: 1.6px; }
+  .fm-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 3px; }
+  .fm-head .fm-cap { margin-bottom: 0; padding-top: 1px; }
+  .fm-fig { display: flex; align-items: flex-end; gap: 5px; flex: none; margin-top: -2px; }
+  .fm-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .fm-row + .fm-row { margin-top: 9px; }
+  .fm-unit { font: calc(10px + var(--text-size-adjust)) var(--type); letter-spacing: .6px; text-transform: uppercase; padding-bottom: 3px; }
+  .fm-eg { margin-top: 6px; font: calc(9.5px + var(--text-size-adjust)) var(--type); letter-spacing: .3px; }
+  :is(.fm-o, .fm-eg) q { quotes: "\201C" "\201D"; }
 
-  /* a phrase you can change: the game's chisel-highlighter mark, ink bolder than the rule */
-  .hr-b {
-    --hl: var(--highlighter);
-    font-weight: 700; color: var(--ink); cursor: pointer;
-    padding: 0 3px; margin: 0 -2px 0 -1px; border-radius: 1px;
-    -webkit-box-decoration-break: clone; box-decoration-break: clone;
-    background:
-      linear-gradient(104deg, transparent 0 3px, var(--hl) 3px 8px, transparent 11px calc(100% - 11px),
-        var(--hl) calc(100% - 8px) calc(100% - 3px), transparent calc(100% - 3px)) 0 76% / 100% 58% no-repeat,
-      linear-gradient(104deg, transparent 0 3px, var(--hl) 3px calc(100% - 3px), transparent calc(100% - 3px)) 0 76% / 100% 58% no-repeat;
-    transition: filter 0.15s;
-  }
-  .hr-b:hover, .hr-b[aria-expanded="true"] { filter: saturate(1.6) brightness(0.95); }
-  .hr-b:focus-visible { outline: 2px dashed var(--ink); outline-offset: 2px; }
-  .hr-b.num { touch-action: pan-y; cursor: ew-resize; }
-  .hr-b.num.is-scrub { cursor: grabbing; filter: saturate(1.9); }
-  .hr-b.ink-in { animation: hr-ink 0.32s ease-out; }
-  @keyframes hr-ink { from { opacity: 0.15; filter: blur(1.2px); } to { opacity: 1; filter: none; } }
+  /* comb: the printed baseline and its teeth; a transparent input over it takes typing */
+  .fm-comb { position: relative; display: inline-block; flex: none; height: 30px; width: calc(var(--n) * 21px); cursor: text; }
+  .fm-teeth { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .fm-teeth path { fill: none; stroke: var(--fm-print); stroke-width: 1.2; }
+  .fm-dg { position: absolute; bottom: 1px; width: 21px; text-align: center; font: 700 calc(26px + var(--text-size-adjust))/1 var(--hand); color: var(--fm-pen); pointer-events: none; }
+  .fm-dg--inf { width: 100%; left: 0; bottom: 5px; display: flex; justify-content: center; }
+  .fm-dg--inf svg { overflow: visible; }
+  .fm-dg--inf path { fill: none; stroke: var(--fm-pen); stroke-linecap: round; }
+  .fm-comb input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; cursor: text; font-size: 16px; }
+  .fm-comb:focus-within { background: var(--fm-tint-2); outline: 2px dashed var(--fm-pen); outline-offset: 3px; }
 
-  /* a rule the answering lever has switched off: struck through in pencil, value still legible */
-  .hr-rules li.struck .hr-txt {
-    color: var(--ink-soft);
-    -webkit-box-decoration-break: clone; box-decoration-break: clone;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='8'%3E%3Cpath d='M0 4.6 C10 3.4 18 5.2 30 4.1 S50 3.2 64 4.4' fill='none' stroke='%232b2722' stroke-opacity='.62' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E") 0 60% / 64px 8px repeat-x;
-  }
-  :root[data-theme="dark"] .hr-rules li.struck .hr-txt {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='8'%3E%3Cpath d='M0 4.6 C10 3.4 18 5.2 30 4.1 S50 3.2 64 4.4' fill='none' stroke='%23ece5d6' stroke-opacity='.6' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
-  }
-  .hr-rules li.struck .hr-b { cursor: default; background: none; font-weight: 400; color: inherit; padding: 0 1px; filter: none; }
-  .hr-why {
-    display: block; margin-left: 14px; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); line-height: var(--line);
-    color: var(--red-pen); transform: rotate(-0.6deg); transform-origin: left;
-  }
-  .hr-why::before { content: "↳ "; }
+  /* tally strip: printed cells of five, numbered at their ends */
+  .fm-tally { display: block; cursor: crosshair; touch-action: pan-y; flex: none; }
+  .fm-tally svg { display: block; overflow: visible; }
+  .fm-cell { fill: none; stroke: var(--fm-rule); stroke-width: 1; }
+  .fm-tnum { font: 700 7.5px var(--type); fill: var(--fm-print); text-anchor: middle; letter-spacing: .3px; }
+  .fm-pen { fill: none; stroke: var(--fm-pen); stroke-linecap: round; }
+  .fm-over { font: 700 17px var(--hand); fill: var(--fm-pen); }
+  .fm-tally:focus-visible { outline: 2px dashed var(--fm-pen); outline-offset: 3px; }
+  .fm-tally.off .fm-pen:not(.fm-void-line) { opacity: .22; }
 
-  /* the foot: tear out the filed mode the page came from, or file the page as a new one */
-  .hr-foot { margin-top: 14px; }
-  .hr-acts { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .hr-tear {
-    display: inline-flex; align-items: center; gap: 7px; min-width: 0; padding: 6px 2px; cursor: pointer; background: none; border: 0;
-    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.6px; color: var(--red-pen); text-align: left;
-  }
-  .hr-tear span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .hr-tear svg { flex: none; width: 22px; height: 12px; }
-  .hr-tear path { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-  .hr-tear:is(:hover, :focus-visible) span { text-decoration: underline; text-underline-offset: 3px; }
-  .hr-file {
-    flex: none; padding: 8px 14px; cursor: pointer; color: var(--ink);
-    --btn-wash: var(--highlighter);
-    background-color: color-mix(in srgb, var(--paper) 40%, transparent);
-    background-image: linear-gradient(var(--btn-wash), var(--btn-wash));
-    border: 1.5px solid var(--ink); border-radius: 2px; box-shadow: 2px 2px 0 rgba(43, 39, 34, 0.16); transform: rotate(0.6deg);
-    font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
-  }
-  .hr-file:not(:disabled):is(:hover, :focus-visible) { background: var(--ink); color: var(--paper); }
-  .hr-file:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
-  .hr-small, .hr-note { margin: 8px 0 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.4; color: var(--ink-soft); text-align: right; }
-  .hr-note { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--red-pen); animation: hr-ink 0.4s ease-out; }
-  .hr-slip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
-  .hr-slip-lab { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase; color: var(--ink-soft); }
-  .hr-slip-input {
-    flex: 1 1 150px; min-width: 0; padding: 0 2px 2px; background: transparent; border: 0; border-bottom: 2px dotted color-mix(in srgb, var(--ink) 45%, transparent);
-    font-family: var(--hand); font-weight: 700; font-size: calc(25px + var(--text-size-adjust)); color: var(--ink);
-  }
-  .hr-slip-input:focus { outline: none; border-bottom-style: solid; border-bottom-color: var(--ink); }
-  .hr-slip-input.is-empty { animation: hr-nudge 0.3s ease; }
-  @keyframes hr-nudge { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-  .hr-slip .hr-small { flex-basis: 100%; margin: 0; text-align: left; }
+  /* tick boxes, for the on-off switches */
+  .fm-tick { display: inline-flex; align-items: center; gap: 7px; padding: 4px 2px 4px 0; cursor: pointer; background: none; border: 0; color: var(--fm-print); font: 700 calc(10.5px + var(--text-size-adjust))/1.2 var(--type); letter-spacing: 1.1px; text-transform: uppercase; text-align: left; }
+  .fm-tick .bx { position: relative; width: 15px; height: 15px; flex: none; border: 1.4px solid var(--fm-print); background: var(--fm-c); }
+  .fm-tick .bx svg { position: absolute; left: -2px; top: -9px; width: 24px; height: 24px; overflow: visible; }
+  .fm-tick .bx path { fill: none; stroke: var(--fm-pen); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 44; animation: fm-draw .22s ease-out both; }
+  .fm-tick:hover .bx { background: var(--fm-tint-2); }
+  .fm-tick:focus-visible { outline: 2px dashed var(--fm-pen); outline-offset: 2px; }
+  @keyframes fm-draw { from { stroke-dashoffset: 44; } to { stroke-dashoffset: 0; } }
 
-  /* the scrap: card stock torn off a pad, pinned under the phrase it changes */
-  .hr-scrap {
-    position: absolute; z-index: 20; width: max-content; max-width: min(330px, calc(100% - 16px));
-    padding: 12px 14px; background: #fbf6e9; color: #2b2722;
-    border: 1px solid rgba(43, 39, 34, 0.22); border-radius: 2px; box-shadow: 3px 4px 0 rgba(43, 39, 34, 0.18);
-    transform: rotate(-0.7deg); animation: hr-pop 0.16s ease-out;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 92% 99%, 84% 100%, 73% 98.6%, 61% 100%, 47% 98.8%, 33% 100%, 20% 98.7%, 9% 100%, 0 99%);
-    --scrap-soft: #6f675a;
-  }
-  :root[data-theme="dark"] .hr-scrap { background: #3a3226; color: #ece5d6; border-color: rgba(236, 229, 214, 0.2); box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.4); --scrap-soft: #a39a86; }
-  @keyframes hr-pop { from { opacity: 0; transform: translateY(-4px) rotate(-0.7deg); } }
-  .hr-cap { margin: 0 0 8px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.3; letter-spacing: 1.4px; text-transform: uppercase; color: var(--scrap-soft); }
-  .hr-opts { position: relative; display: flex; flex-direction: column; gap: 2px; }
-  .hr-opt { position: relative; display: flex; flex-direction: column; align-items: flex-start; padding: 4px 10px 5px; cursor: pointer; text-align: left; color: inherit; background: none; border: 0; }
-  .hr-opt .w { font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); line-height: 1.15; }
-  .hr-opt .e { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.35; color: var(--scrap-soft); }
-  .hr-opt:is(:hover, :focus-visible) .w { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
-  .hr-opt:focus-visible { outline: none; }
-  .hr-opt[aria-pressed="true"] .w { font-weight: 700; }
-  .hr-loop { position: absolute; overflow: visible; pointer-events: none; }
-  .hr-loop path { fill: none; stroke: var(--red-pen); stroke-width: 1.7; stroke-linecap: round; stroke-dasharray: 400; animation: hr-draw 0.38s ease-out both; }
-  @keyframes hr-draw { from { stroke-dashoffset: 400; } to { stroke-dashoffset: 0; } }
-  .hr-num { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .hr-step { flex: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: inherit; background: transparent; border: 1.5px solid currentColor;
-    font-family: var(--type); font-weight: 700; font-size: 18px; line-height: 1; }
-  .hr-step:not(:disabled):is(:hover, :focus-visible) { background: #2b2722; color: #fbf6e9; }
-  :root[data-theme="dark"] .hr-step:not(:disabled):is(:hover, :focus-visible) { background: #ece5d6; color: #3a3226; }
-  .hr-step:disabled { opacity: 0.3; cursor: default; }
-  .hr-numin {
-    width: 3.4ch; padding: 0; text-align: center; color: inherit; background: transparent; border: 0; border-bottom: 2px dotted currentColor;
-    font-family: var(--hand); font-weight: 700; font-size: calc(38px + var(--text-size-adjust)); line-height: 1;
-    -moz-appearance: textfield; appearance: textfield;
-  }
-  .hr-numin::-webkit-inner-spin-button, .hr-numin::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  .hr-numin:focus { outline: none; border-bottom-style: solid; }
-  .hr-unit { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); }
-  .hr-stops { display: flex; flex-wrap: wrap; gap: 4px; }
-  .hr-stop { min-width: 34px; padding: 4px 8px; cursor: pointer; color: inherit; background: transparent; border: 1px solid rgba(127, 117, 100, 0.45); border-radius: 2px;
-    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); }
-  .hr-stop:hover { border-color: currentColor; }
-  .hr-stop[aria-pressed="true"] { background: var(--highlighter); border-color: currentColor; font-weight: 700; }
-  .hr-tip { margin: 9px 0 0; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.4; color: var(--scrap-soft); }
+  /* the choices: a printed strip of cells sharing their rules, a bubble beside each word */
+  .fm-strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 1px; background: var(--fm-rule); border: 1px solid var(--fm-rule); }
+  .fm-strip--pair { max-width: 190px; }
+  .fm-o { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; padding: 9px 4px 7px; cursor: pointer; background: var(--fm-c); border: 0; color: var(--fm-print); text-align: center; }
+  .fm-strip--tight .fm-o { padding: 8px 2px 7px; }
+  .fm-ol { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+  .fm-o b { font: 700 calc(11.5px + var(--text-size-adjust))/1.15 var(--type); letter-spacing: 1.1px; text-transform: uppercase; white-space: nowrap; }
+  .fm-o small { font: calc(9.5px + var(--text-size-adjust))/1.25 var(--type); letter-spacing: .1px; opacity: .92; }
+  .fm-o small q { display: inline-block; margin-top: 2px; letter-spacing: .3px; }
+  .fm-o:hover { background: var(--fm-tint); }
+  .fm-o:focus-visible { outline: 2px dashed var(--fm-pen); outline-offset: -4px; }
+  .fm-mk { display: inline-block; flex: none; }
+  .fm-mk svg { display: block; width: 17px; height: 9.5px; overflow: visible; }
+  .fm-lz, .fm-hz { fill: var(--fm-c); stroke: var(--fm-print); stroke-width: 1.2; }
+  .fm-o:hover .fm-lz, .fm-heart:hover:not(:disabled) .fm-hz { fill: var(--fm-tint-2); }
+  /* a fill draws on at the pen's pace: pathLength 100 makes every scribble one length to the
+     animation, and the flick only leaves the paper once the scribble is done */
+  .custom-modal .fill { fill: none; stroke: var(--fm-pen); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; animation: fm-fill .5s cubic-bezier(.35, .1, .6, 1) both; }
+  .custom-modal .fill-tail { animation: fm-fill .08s linear .5s both; }
+  @keyframes fm-fill { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+  /* only the lever that just changed draws on; everything else is already on the paper */
+  .custom-modal .is-still :is(path, .fill) { animation: none; }
 
+  /* stopwatch */
+  .fm-watch-wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .fm-dial { width: 110px; height: 121px; flex: none; cursor: grab; touch-action: none; }
+  .fm-dial:active { cursor: grabbing; }
+  .fm-dial:focus-visible { outline: 2px dashed var(--fm-pen); outline-offset: 2px; border-radius: 40%; }
+  .fm-dial svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .fm-dial .pr { fill: none; stroke: var(--fm-print); }
+  .fm-dial .pr-fill { fill: var(--fm-print); }
+  .fm-dial .face { fill: var(--fm-c); }
+  .fm-dial .num { font: 700 8px var(--type); fill: var(--fm-print); text-anchor: middle; }
+  .fm-dial .lbl { font: 700 5.6px var(--type); fill: var(--fm-print); text-anchor: middle; letter-spacing: 1.2px; }
+  .fm-dial .pen { fill: none; stroke: var(--fm-pen); stroke-linecap: round; stroke-linejoin: round; }
+  .fm-dial .pen.hatch { stroke: var(--fm-pen-hatch); }
+  .fm-side { display: flex; flex-direction: column; gap: 8px; }
+
+  /* hearts for lives */
+  .fm-hearts { display: flex; gap: 2px; align-items: center; }
+  .fm-heart { width: 25px; height: 23px; padding: 0; background: none; border: 0; cursor: pointer; }
+  .fm-heart svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .fm-heart .fm-hz { stroke-width: 1.3; }
+  .fm-heart:focus-visible { outline: 2px dashed var(--fm-pen); outline-offset: 1px; }
+  .fm-heart:disabled { cursor: default; }
+  .fm-lives.idle .fm-hearts { opacity: .4; }
+  .fm-lives .fm-row { align-items: center; gap: 10px; flex-wrap: nowrap; }
+
+  /* n/a: a box the answering lever switches off, Z'd through the way a clerk voids one. Print
+     never fades, so the caption stays as printed; only what was written goes quiet under the Z */
+  .fm-box.na > :not(.fm-cap):not(.fm-head):not(.fm-z), .fm-box.na .fm-fig { opacity: .45; pointer-events: none; }
+  .fm-z { position: absolute; inset: 24px 8px 6px; pointer-events: none; }
+  .fm-z svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .fm-z path { fill: none; stroke: var(--fm-pen); stroke-linecap: round; stroke-linejoin: round; }
+  .fm-z span { position: absolute; right: 2px; bottom: 0; padding: 0 4px; background: var(--fm-c); font: 700 calc(16px + var(--text-size-adjust))/1 var(--hand); color: var(--fm-pen); transform: rotate(-2.5deg); white-space: nowrap; }
+
+  /* stamps: the game's rubber-stamp recipe (2px border plus a 1px inset ring for the double
+     ring, as on .rarity-stamp and the VOID ledger) in the passport's #stampType ink */
+  .fm-stamp {
+    display: inline-block; font: 700 calc(15px + var(--text-size-adjust))/1 var(--type); letter-spacing: 3.5px; text-transform: uppercase;
+    color: var(--red-pen); padding: 4px 9px 3px 12px; border: 2px solid currentColor; border-radius: 3px;
+    box-shadow: inset 0 0 0 1px currentColor; filter: url(#stampType);
+  }
+  /* the office's FILED stamp: the rubber takes the uneven ink, the name written on its blank stays clean */
+  .fm-rec { position: relative; display: flex; flex-direction: column; gap: 1px; width: calc(100% - 4px); padding: 3px 8px 4px; color: var(--red-pen); font: 700 calc(10px + var(--text-size-adjust))/1 var(--type); letter-spacing: 3.4px; text-transform: uppercase; text-align: center; transform: rotate(-3.5deg); transform-origin: left center; }
+  .fm-rec::before { content: ""; position: absolute; inset: 0; border: 2px solid currentColor; border-radius: 3px; box-shadow: inset 0 0 0 1px currentColor; filter: url(#stampType); }
+  .fm-rec b { filter: url(#stampType); }
+  .fm-rec i { min-width: 0; font: 700 calc(17px + var(--text-size-adjust))/1 var(--hand); font-style: normal; letter-spacing: 0; text-transform: none; color: var(--fm-pen); border-bottom: 1px solid var(--red-pen); padding: 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fm-rec.fresh { animation: fm-thunk .42s cubic-bezier(.2, 1.4, .4, 1) both; }
+  @keyframes fm-thunk { 0% { opacity: 0; transform: rotate(-3.5deg) scale(1.5); } 60% { opacity: 1; transform: rotate(-3.5deg) scale(.95); } 100% { opacity: 1; transform: rotate(-3.5deg) scale(1); } }
+  /* VOID, pressed across the whole sheet before the copy goes */
+  .fm-stamp--void { position: absolute; left: 50%; top: 44%; z-index: 6; font-size: 52px; letter-spacing: 10px; padding: 6px 18px 4px 28px; border-width: 5px; box-shadow: inset 0 0 0 2px currentColor; pointer-events: none; animation: fm-void .45s cubic-bezier(.2, 1.4, .4, 1) both; }
+  @keyframes fm-void { 0% { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(1.7); } 60% { opacity: .95; transform: translate(-50%, -50%) rotate(-14deg) scale(.95); } 100% { opacity: .88; transform: translate(-50%, -50%) rotate(-14deg) scale(1); } }
+
+  /* the foot: VOID, file a copy, ok */
+  .fm-foot { display: flex; align-items: center; gap: 12px 16px; margin-top: 5px; flex-wrap: wrap; }
+  .fm-grow { flex: 1; }
+  .fm-act { cursor: pointer; background: none; border: 0; padding: 0; }
+  .fm-act .fm-stamp { transition: transform .12s ease; }
+  .fm-act:hover:not(:disabled) .fm-stamp { transform: rotate(var(--r, -3deg)) translateY(1px); }
+  .fm-act:focus-visible { outline: 2px dashed var(--fm-pen); outline-offset: 4px; }
+  .fm-act:disabled { cursor: default; opacity: .32; }
+  .fm-void .fm-stamp { --r: -4deg; transform: rotate(-4deg); }
+  .fm-void small { display: block; margin-top: 4px; font: calc(9.5px + var(--text-size-adjust)) var(--type); color: var(--red-pen); letter-spacing: .3px; max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fm-file .fm-stamp { --r: 2deg; transform: rotate(2deg); color: var(--fm-pen); font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 2.6px; }
+  .fm-file-wrap { display: inline-flex; flex-direction: column; align-items: center; }
+  .fm-file-wrap small { margin-top: 4px; font: calc(9.5px + var(--text-size-adjust)) var(--type); color: var(--ink-soft); letter-spacing: .3px; white-space: nowrap; }
+  .fm-foot #customModalOkBtn { width: auto; margin: 0 0 0 auto; }
+  /* the name slip: a strip torn off the pad, written on, then filed */
+  .fm-slip { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; width: 100%; padding: 10px 12px 8px; background: var(--fm-sheet); border: 1px solid var(--fm-rule); color: var(--fm-print); transform: rotate(-.4deg); }
+  .fm-slip label { font: 700 calc(9.5px + var(--text-size-adjust)) var(--type); letter-spacing: 1.4px; text-transform: uppercase; padding-bottom: 5px; }
+  .fm-slip input { flex: 1; min-width: 150px; border: 0; border-bottom: 1px solid var(--fm-print); background: transparent; font: 700 calc(22px + var(--text-size-adjust))/1.1 var(--hand); color: var(--fm-pen); padding: 0 2px 1px; }
+  .fm-slip input:focus { outline: none; border-bottom-width: 2px; }
+  .fm-slip input::placeholder { color: var(--fm-print-fade); font-weight: 400; }
+  .fm-slip input.is-empty { animation: fm-nudge .3s ease; }
+  @keyframes fm-nudge { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+  .fm-slip .btn-link { padding-bottom: 5px; }
+  .fm-slip p { width: 100%; margin: 2px 0 0; font: calc(9.5px + var(--text-size-adjust)) var(--type); letter-spacing: .3px; }
+
+  /* phone: every box runs the full width; five rarity stops go three then two, never a blank cell */
+  @media (max-width: 560px) {
+    .fm-sheet { padding: 10px 9px 8px; }
+    .fm-grid { grid-template-columns: 76px minmax(0, 1fr); }
+    .fm-grid > * { grid-column: 1 / -1; grid-row: auto; }
+    .fm-grid > .fm-no { grid-column: 1 / 2; }
+    .fm-grid > .fm-title { grid-column: 2 / 3; }
+    .fm-strip--words { grid-auto-flow: row; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .fm-strip--words .fm-o { grid-column: span 2; }
+    .fm-strip--words .fm-o:nth-child(n + 4) { grid-column: span 3; }
+    .fm-o small { font-size: calc(9px + var(--text-size-adjust)); }
+  }
   @media (prefers-reduced-motion: reduce) {
-    .hr-flag, .hr-b, .hr-b.ink-in, .hr-note, .hr-scrap, .hr-loop path, .hr-slip-input.is-empty { transition: none; animation: none; }
+    .custom-modal :is(.fm-tab, .fm-act .fm-stamp, .fm-rec, .fm-stamp--void, .fill, .fm-tick .bx path, .fm-slip input) { transition: none; animation: none; }
   }
-  body[data-reduce-motion="on"] :is(.hr-flag, .hr-b, .hr-b.ink-in, .hr-note, .hr-scrap, .hr-loop path, .hr-slip-input.is-empty) { transition: none; animation: none; }
+  body[data-reduce-motion="on"] .custom-modal :is(.fm-tab, .fm-act .fm-stamp, .fm-rec, .fm-stamp--void, .fill, .fm-tick .bx path, .fm-slip input) { transition: none; animation: none; }
 
   /* the working copy's name on the start row, when it isn't a filed mode yet */
   .custom-active-name.is-unfiled { color: var(--ink-soft); }

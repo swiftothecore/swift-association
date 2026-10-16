@@ -56,7 +56,7 @@ import {
   CUSTOM_EXAMPLES_MAX, CUSTOM_MAX_PRESETS, CUSTOM_NAME_MAX, CUSTOM_DEFAULT_MODE,
   CUSTOM_PRESET_SHELF, CUSTOM_ENDLESS_MILESTONE, MEAN_GRUDGE,
   CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_ROUNDS_TYPED_MAX,
-  CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES,
+  CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES, CUSTOM_STOCKS,
   PEN_SVG, STAR_SVG, SPARKLE_SVG,
   WHALE_SURFACE_MS, WHALE_TAIL_SVG, WHALE_SPLASH_SVG,
   BOTTLE_SURFACE_MS, BOTTLE_SVG, BOTTLE_WAVE_SVG,
@@ -94,6 +94,8 @@ import { buildLyricReveal, revealSections } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
 import { countDots, tipOutCountDots } from "./countdots.js";
+import { handFrom } from "./penfill.js";
+import * as F13 from "./form13.js";
 import { postmarkSVG, postmarkDate } from "./postmark.js";
 import { zineCover, hasCover } from "./zine.js";
 // Track by Track's twelve album sleeves (pure; see js/sleeves.js).
@@ -141,7 +143,7 @@ import {
   loadGoal, saveGoal, clearGoal,
   loadCharmFolds, setCharmFold, saveCharmFolds,
   loadSongTally, saveSongTally, recordGameTally,
-  loadCustom, saveCustom, resetCustom, newCustomId, CUSTOM_DRAFT_ID,
+  loadCustom, saveCustom, resetCustom, newCustomId, pickCustomStock, CUSTOM_DRAFT_ID,
   loadMetrics, saveMetrics, recordGameMetrics, bumpCorrectRunStreak, bumpMugSips, tapPageMark, pageMarksTapped,
   noteSelfTitledWord,
   loadSettings, saveSettings,
@@ -29759,105 +29761,55 @@ function closeSettings() {
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
-/* ---------- Custom mode: the "Change" modal, House rules ----------
-   The mode is written down as seven numbered house rules in the player's own hand, sitting on
-   the card's own rulings, and every highlighted phrase is a lever. Words open a scrap with the
-   alternatives written out and the current one circled in red pen; numbers open one too and
-   can also be dragged sideways. Reuses the settings-modal chrome; the stock is in styles.css
-   under HOUSE RULES (`hr-` prefix).
+/* ---------- Custom mode: the "Change" modal, Form 13 ----------
+   The working copy is a printed form, filled in by hand: Custom's brick rust for everything
+   printed, blue ballpoint for everything written. Its drawings are in js/form13.js and the fill
+   in a bubble or a heart in js/penfill.js; its stock is in styles.css under FORM 13 (`fm-`).
+   The sheet is a real form's grid (boxes share their borders, captions sit inside the top of
+   their box) in three printed parts, and each lever takes the gesture it wants: tally the pages
+   and the hint budget, wind the stopwatch, fill in one bubble per choice, fill in a heart per
+   life, tick a box for an on-off switch. Numbers are written into combs, which is also where a
+   value past the drawn range is typed.
 
-   The page is ALWAYS the working copy (loadCustom().draft). Nothing here writes to a filed
-   mode. Filing appends a new mode under a name chosen at that moment, and from then on it is
-   locked: picking its flag copies its levers back onto the page, where they can be changed
-   and filed again as another mode, never over the old one. Tearing out deletes a filed mode.
-   Every lever edit persists the draft immediately (it is what Start plays). */
-let hrNaming = false;       // the "name these rules" slip is open in the foot
-let hrNote = "";            // one-render confirmation in red pen ("filed as …", "torn out")
-let hrChanged = null;       // the lever that just changed, so only its blank inks in
-let hrScrap = null;         // { el, anchor, key, draw } while a choice scrap is open
+   The form is ALWAYS the working copy (loadCustom().draft). Nothing here writes to a filed
+   mode. Filing appends a new copy under a name chosen at that moment, on the stock least in
+   use on the pad (kept on the copy, so voiding one never recolours the rest), and from then on
+   it is locked: picking its tab copies its levers back onto the form, where they can be changed
+   and filed again as another copy, never over the old one. VOID deletes the filed copy the form
+   came from; the form keeps its levers. Every lever edit persists the draft immediately (it is
+   what Start plays). The marks are drawn by the notebook's own hand (loadCustom().hand). */
+let fmNaming = false;       // the "name this copy" slip is open in the foot
+let fmStampNext = false;    // the office's FILED stamp presses on the next render
+let fmVoiding = false;      // a VOID stamp is coming down; ignore a second press
+let fmChanged = null;       // the lever that just changed, so only its marks draw on
+let fmPrevLives = Infinity; // hearts already filled stay put; only a new one draws on
 
-// What each blank says. Every phrase has to finish its sentence, whatever the value.
-const HR_SAY = {
-  rounds: (m) => m.rounds === 0 ? "page after page" : m.rounds === 1 ? "one page" : `${m.rounds} pages`,
-  lives: (m) => m.lives === 1 ? "my only life" : `${m.lives} lives`,
-  seconds: (m) => m.seconds === 0 ? "all the time I need" : m.seconds === 1 ? "one second" : `${m.seconds} seconds`,
-  pool: { normal: "most words, rare sprinkled in", all: "any word at all", easy: "only common words", hard: "rare words", ultra: "the rarest words" },
-  answer: { either: "a title or a sung line", title: "the song's title", lyric: "a line I sing back" },
-  dropdown: (on) => on ? "Suggest titles" : "Don't suggest titles",
-  hintBudget: (m) => m.hintUnlimited ? "as many hints as I like" : m.hintBudget === 0 ? "no hints" : m.hintBudget === 1 ? "one hint" : `${m.hintBudget} hints`,
-  examples: ["nothing", "one song it's in", "two songs it's in", "three songs it's in"],
-  noTitle: (on) => on ? "Keep the word out of the song's title" : "Let the word be in the song's title",
-};
-// The number levers. The drag runs one stop past the comfortable max, which means endless (rounds)
-// or unlimited (hints), exactly as the old slider's top stop did.
-const HR_NUM = {
-  rounds: { min: CUSTOM_ROUNDS_MIN, max: CUSTOM_ROUNDS_MAX, typed: CUSTOM_ROUNDS_TYPED_MAX, inf: 0, cap: "how many pages",
-    stops: [5, 10, 13, 20, 30, 0], label: (v) => v === 0 ? "∞ endless" : String(v), unit: (v) => v === 1 ? "page" : "pages",
-    tip: `drag the blank sideways, or type up to ${CUSTOM_ROUNDS_TYPED_MAX}. Past ${CUSTOM_ROUNDS_MAX} on the drag, the run never ends and lives take over.` },
-  lives: { min: CUSTOM_LIVES_MIN, max: CUSTOM_LIVES_MAX, typed: CUSTOM_LIVES_TYPED_MAX, cap: "lives in an endless run",
-    stops: [1, 2, 3, 4, 5], label: (v) => v === 1 ? "1 · sudden death" : String(v), unit: (v) => v === 1 ? "life" : "lives",
-    tip: `type up to ${CUSTOM_LIVES_TYPED_MAX}.` },
-  seconds: { min: CUSTOM_SECONDS_MIN, max: CUSTOM_SECONDS_MAX, typed: CUSTOM_SECONDS_TYPED_MAX, cap: "seconds on the clock, per page",
-    stops: [0, 5, 7, 10, 12, 15, 20, 30, 60], label: (v) => v === 0 ? "no clock" : v + "s", unit: (v) => v === 0 ? "no clock" : "seconds",
-    tip: `0 takes the clock away. Type up to ${CUSTOM_SECONDS_TYPED_MAX}.` },
-  hintBudget: { min: 0, max: CUSTOM_HINT_MAX, typed: CUSTOM_HINT_TYPED_MAX, inf: CUSTOM_HINT_UNLIMITED, cap: "hints for the whole run",
-    stops: [0, 1, 3, 5, 13, CUSTOM_HINT_UNLIMITED], label: (v) => v < 0 ? "∞ as many as I like" : v === 0 ? "none" : String(v), unit: (v) => v === 1 ? "hint" : "hints",
-    tip: `each reveal spends one. Type up to ${CUSTOM_HINT_TYPED_MAX}.` },
-};
-const hrIsInf = (k, v) => k === "rounds" ? v === 0 : k === "hintBudget" ? v < 0 : false;
-const hrToPos = (k, v) => hrIsInf(k, v) ? HR_NUM[k].max + 1 : v;
-const hrFromPos = (k, p) => {
-  const c = HR_NUM[k], hasInf = c.inf !== undefined;
-  p = Math.max(c.min, Math.min(hasInf ? c.max + 1 : c.max, p));
-  return hasInf && p > c.max ? c.inf : p;
-};
-// A real word from the bucket each rarity deals from, picked by a fixed hash so it doesn't
-// change every time the scrap opens.
-function hrExample(pool) {
-  const b = wordBuckets[pool] || [];
-  return b.length ? b[fnv1a("eg:" + pool) % b.length] : "";
-}
-const HR_WORDS = {
-  pool: { cap: "which words you'll be asked", opts: () => [
-    ["normal", HR_SAY.pool.normal, `e.g. “${hrExample("normal")}”`],
-    ["all", HR_SAY.pool.all, `e.g. “${hrExample("all")}”`],
-    ["easy", HR_SAY.pool.easy, `e.g. “${hrExample("easy")}”`],
-    ["hard", HR_SAY.pool.hard, `e.g. “${hrExample("hard")}”`],
-    ["ultra", HR_SAY.pool.ultra, `e.g. “${hrExample("ultra")}”`]] },
-  answer: { cap: "how a page can be answered", opts: () => [
-    ["either", HR_SAY.answer.either, "name it, or sing a line with the word in it"],
-    ["title", HR_SAY.answer.title, "titles only"],
-    ["lyric", HR_SAY.answer.lyric, "lines only · no suggestions, no hints"]] },
-  examples: { cap: "after a miss, songs revealed", opts: () => [3, 2, 1, 0].map((n) =>
-    [n, HR_SAY.examples[n], n ? `${["", "one", "two", "three"][n]} title${n > 1 ? "s" : ""} on the answer card` : "just the verdict"]) },
-};
-// A loose red-pen loop around a w×h word: two passes that never quite close, never an oval.
-function hrLoop(w, h, seed) {
-  const r = mulberry32(fnv1a(String(seed)));
-  const cx = w / 2, cy = h / 2, rx = w / 2 + 5, ry = h / 2 + 4;
-  const start = -2.6 + r() * 0.5, sweep = Math.PI * 2 + 0.55 + r() * 0.35;
-  const pts = [];
-  for (let i = 0; i <= 28; i++) {
-    const t = start + (sweep * i) / 28, wob = 1 + (r() - 0.5) * 0.05 + (i / 28) * 0.06;
-    pts.push([cx + Math.cos(t) * rx * wob, cy + Math.sin(t) * ry * wob - (i / 28) * 2.2]);
-  }
-  let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
-  for (let i = 1; i < pts.length - 1; i += 2) d += ` Q${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)} ${pts[i + 1][0].toFixed(1)} ${pts[i + 1][1].toFixed(1)}`;
-  return d;
+// A real word from each rarity stop, so the five stops read as five different things. Normal's is
+// one Normal deals that Common and Rare don't, which is what Normal adds; All shows both ends.
+let fmExampleCache = null;
+function fmExamples() {
+  if (fmExampleCache && fmExampleCache.src === wordBuckets) return fmExampleCache.eg;
+  const pick = (list, salt) => (list.length ? list[fnv1a("fm-eg:" + salt) % list.length] : "");
+  const easy = new Set(wordBuckets.easy || []), hard = new Set(wordBuckets.hard || []);
+  const normalOnly = (wordBuckets.normal || []).filter((w) => !easy.has(w) && !hard.has(w));
+  const eg = {
+    easy: [pick(wordBuckets.easy || [], "easy")],
+    normal: [pick(normalOnly.length ? normalOnly : wordBuckets.normal || [], "normal")],
+    all: [pick(wordBuckets.easy || [], "all-a"), pick(wordBuckets.ultra || [], "all-b")],
+    hard: [pick(wordBuckets.hard || [], "hard")],
+    ultra: [pick(wordBuckets.ultra || [], "ultra")],
+  };
+  fmExampleCache = { src: wordBuckets, eg };
+  return eg;
 }
 
-// Every edit lands on the working copy and nowhere else.
-function hrSet(k, v) {
+function fmSet(k, v) {
   const s = loadCustom();
   s.draft = normalizeCustomMode({ ...normalizeCustomMode(s.draft), [k]: v });
   saveCustom(s);
-  hrChanged = k;
+  fmChanged = k;
   renderCustomModalBody();
 }
-
-const hrBlank = (k, text, num = false) =>
-  `<span role="button" tabindex="0" class="hr-b${num ? " num" : ""}${hrScrubbing === k ? " is-scrub" : hrChanged === k ? " ink-in" : ""}" data-hr="${k}" ` +
-  `aria-haspopup="dialog" aria-expanded="false"${num ? ` title="tap to choose, or drag sideways"` : ""}>${escapeHtml(text)}</span>`;
 
 function renderCustomModalBody() {
   const body = $("customModalBody");
@@ -29865,301 +29817,284 @@ function renderCustomModalBody() {
   const focusKey = (() => {
     const a = document.activeElement;
     if (!a || !body.contains(a)) return null;
-    const own = a.closest("[data-hr-focus]");
-    return own ? own.dataset.hrFocus : null;
+    const own = a.closest("[data-fm-focus]");
+    return own ? own.dataset.fmFocus : null;
   })();
   const store = loadCustom();
+  const hand = handFrom(store.hand);
   const draft = customDraftPreset(store);
   const m = normalizeCustomMode(store.draft);
-  // "A Drawer Of My Things": checked on every render, so it catches a shelf that filled up on any
+  // "A Drawer Of My Things": checked on every render, so it catches a pad that filled up on any
   // visit, not only the filing that crossed the line.
   if (store.saved.length >= CUSTOM_PRESET_SHELF) unlock("keep-5-custom-presets");
   const atCap = store.saved.length >= CUSTOM_MAX_PRESETS;
-  const line = m.lyricOnly;
+  const endless = m.rounds === 0, line = m.lyricOnly;
+  const from = draft.src;
 
-  // Filed modes are page flags stuck along the head of the sheet. Pressed = the page is a
-  // faithful copy of that flag; dashed = it was copied from it and has been changed since.
-  const flags =
-    `<div class="hr-flags" role="group" aria-label="Filed modes">` +
+  // The pad: every filed copy is a coloured sheet behind the top copy, named in pen.
+  const pad =
+    `<div class="fm-pad" role="group" aria-label="Filed modes">` +
       store.saved.map((p) =>
-        `<button type="button" class="hr-flag hr-flag--${fnv1a("flag:" + p.id) % 5}${p.id === store.from ? (draft.filed ? " is-on" : " is-src") : ""}" ` +
-          `data-hr-flag="${escapeHtml(p.id)}" data-hr-focus="flag:${escapeHtml(p.id)}" title="copy “${escapeHtml(p.name)}” onto the page">${escapeHtml(p.name)}</button>`).join("") +
-      (store.saved.length ? "" : `<span class="hr-flags-empty">nothing filed yet</span>`) +
-      `<button type="button" class="hr-flag hr-flag--fresh" data-hr-act="fresh" data-hr-focus="fresh">+ fresh page</button>` +
+        `<button type="button" class="fm-tab fm-stock-${p.stock}${p.id === store.from ? (draft.filed ? " is-on" : " is-src") : ""}" data-fm-copy="${escapeHtml(p.id)}" data-fm-focus="copy:${escapeHtml(p.id)}" ` +
+          `title="copy “${escapeHtml(p.name)}” onto the form"><small>${CUSTOM_STOCKS[p.stock]} copy</small><span>${escapeHtml(p.name)}</span></button>`).join("") +
+      (store.saved.length ? "" : `<span class="fm-pad-empty">nothing filed yet</span>`) +
+      `<button type="button" class="fm-tab fm-tab--blank" data-fm-act="blank" data-fm-focus="blank"><small>pad</small><span>fresh form</span></button>` +
     `</div>`;
 
-  const head = draft.filed ? `These are the rules of <b>${escapeHtml(draft.src.name)}</b>:`
-    : draft.src ? `Copied from <b>${escapeHtml(draft.src.name)}</b>, then changed:`
-    : `My house rules, not filed yet:`;
-  const hintsWhy = m.hintBudget !== 0
-    ? `not while you sing lines back: the last hint is the line. Your ${HR_SAY.hintBudget(m).replace(/^as many hints as I like$/, "unlimited hints")} ${m.hintBudget === 1 ? "is" : "are"} kept for later`
-    : "not while you sing lines back: the last hint is the line";
-  const rules = [
-    `Give me ${hrBlank("rounds", HR_SAY.rounds(m), true)}${m.rounds === 0 ? ` until I lose ${hrBlank("lives", HR_SAY.lives(m), true)}` : ""}, and ${hrBlank("seconds", HR_SAY.seconds(m), true)} to answer each.`,
-    `Ask me ${hrBlank("pool", HR_SAY.pool[m.pool])}.`,
-    `I'll answer with ${hrBlank("answer", HR_SAY.answer[m.answer])}.`,
-    { struck: line, html: `${hrBlank("dropdown", HR_SAY.dropdown(m.dropdown))} as I type.`, why: "not while you sing lines back: the dropdown would hand you the title" },
-    { struck: line, html: `Allow me ${hrBlank("hintBudget", HR_SAY.hintBudget(m), true)} across the run.`, why: hintsWhy },
-    `When I miss, show me ${hrBlank("examples", HR_SAY.examples[m.examples])}.`,
-    `${hrBlank("noTitle", HR_SAY.noTitle(m.noTitle))}.`,
-  ];
-  const deal =
-    `<div class="hr-deal"><p class="hr-head">${head}</p><ol class="hr-rules">` +
-      rules.map((r) => typeof r === "string"
-        ? `<li><span class="hr-txt">${r}</span></li>`
-        : `<li${r.struck ? ` class="struck"` : ""}><span class="hr-txt">${r.html}</span>${r.struck ? `<span class="hr-why">${r.why}</span>` : ""}</li>`).join("") +
-    `</ol></div>`;
+  const office = `<div class="fm-box fm-office">${F13.cap("", "for office use")}` +
+    (draft.filed
+      // the office's FILED stamp has a blank line in it, and the clerk writes the name on it
+      ? `<span class="fm-rec${fmStampNext ? " fresh" : ""}"><b>filed</b><i>${escapeHtml(from.name)}</i></span>`
+      : `<p class="fm-unfiled">not filed</p>` + (from ? `<p class="fm-note">from “${escapeHtml(from.name)}”, changed</p>` : "")) +
+    `</div>`;
 
-  const fileNote = draft.filed ? `already filed as “${escapeHtml(draft.src.name)}”. Change a rule to file new ones.`
-    : atCap ? `there's room for ${CUSTOM_MAX_PRESETS}. Tear one out to file another.` : "";
-  const foot = hrNaming
-    ? `<div class="hr-slip"><label class="hr-slip-lab" for="hrNameInput">name these rules</label>` +
-        `<input type="text" id="hrNameInput" class="hr-slip-input" maxlength="${CUSTOM_NAME_MAX}" placeholder="e.g. Sudden death" autocomplete="off" spellcheck="false" ` +
+  const rN = endless ? 0 : Math.min(m.rounds, CUSTOM_ROUNDS_MAX);
+  const hN = m.hintUnlimited ? 0 : Math.min(m.hintBudget, CUSTOM_HINT_MAX);
+  const eg = fmExamples();
+  const B = TAYLOR_BUCKETS;
+  const pools = [
+    ["easy", "common", `in ${B.easy}+ songs`],
+    ["normal", "normal", `in ${B.hard[0]}+ songs*`],
+    ["all", "all", "any word"],
+    ["hard", "rare", `in ${B.hard[0]} to ${B.hard[1]}`],
+    ["ultra", "rarest", `in ${B.ultra[0]} to ${B.ultra[1]}`],
+  ].map(([v, l, fine]) => [v, l, `${fine}<br>${eg[v].filter(Boolean).map((w) => `<q>${escapeHtml(w)}</q>`).join(" ")}`]);
+  const hearts = Array.from({ length: CUSTOM_LIVES_MAX }, (_, i) =>
+    `<button type="button" class="fm-heart" data-fm-life="${i + 1}" data-fm-focus="life:${i + 1}" aria-label="${i + 1} ${i ? "lives" : "life, sudden death"}" aria-pressed="${endless && m.lives === i + 1}"${endless ? "" : " disabled"}>` +
+      `${F13.heart(endless && i < m.lives, hand, "heart" + i)}</button>`).join("");
+
+  const grid =
+    `<div class="fm-grid">` +
+      `<div class="fm-no" aria-hidden="true"><div><small>FORM</small><b>13</b></div></div>` +
+      `<div class="fm-box fm-title"><b>Custom mode</b><p>Fill in one bubble per box. Start plays this copy.</p></div>` +
+      office +
+      `<div class="fm-part"><b>Part 1</b><span>the run</span></div>` +
+      `<div class="fm-box fm-pages"><div class="fm-head">${F13.cap(1, "pages in the run")}` +
+        `<div class="fm-fig">${F13.comb("rounds", endless ? "" : m.rounds, 3, { min: CUSTOM_ROUNDS_MIN, max: CUSTOM_ROUNDS_TYPED_MAX, label: "Pages in the run", inf: endless, seed: "rc" })}</div></div>` +
+        `<div class="fm-row">${F13.tally("rounds", rN, CUSTOM_ROUNDS_MAX, { min: CUSTOM_ROUNDS_MIN, label: "Pages in the run", off: endless, over: endless ? 0 : m.rounds - rN, seed: "rt", text: endless ? "endless" : m.rounds + " pages" })}</div></div>` +
+      `<div class="fm-box fm-lives${endless ? "" : " idle"}"><div class="fm-head">${F13.cap("1a", "endless run", "with lives")}` +
+        (endless ? `<div class="fm-fig">${F13.comb("lives", m.lives, 2, { min: CUSTOM_LIVES_MIN, max: CUSTOM_LIVES_TYPED_MAX, label: "Lives", seed: "lc" })}</div>` : "") + `</div>` +
+        `<div class="fm-row">${F13.tickBox("endless", "endless", endless)}<div class="fm-hearts" role="group" aria-label="Lives">${hearts}</div></div></div>` +
+      `<div class="fm-box fm-clock">${F13.cap(2, "time per page", "wind the hand")}` +
+        `<div class="fm-watch-wrap"><div class="fm-dial" data-fm-dial data-fm-focus="dial" role="slider" tabindex="0" aria-label="Seconds per page" aria-valuemin="0" aria-valuemax="${CUSTOM_SECONDS_MAX}" ` +
+          `aria-valuenow="${Math.min(m.seconds, CUSTOM_SECONDS_MAX)}" aria-valuetext="${m.seconds ? m.seconds + " seconds" : "no clock"}">${F13.watch(m.seconds, "w")}</div>` +
+        `<div class="fm-side"><div class="fm-row">${F13.comb("seconds", m.seconds || "", 3, { min: 0, max: CUSTOM_SECONDS_TYPED_MAX, label: "Seconds per page", seed: "sc" })}<span class="fm-unit">sec</span></div>` +
+          `${F13.tickBox("noclock", "no clock", m.seconds === 0)}</div></div></div>` +
+
+      `<div class="fm-part"><b>Part 2</b><span>the page</span></div>` +
+      `<div class="fm-box fm-words">${F13.cap(3, "which words", "how many songs carry it")}${F13.strip("pool", pools, m.pool, hand, "fm-strip--words")}</div>` +
+      `<div class="fm-box fm-answer">${F13.cap(4, "answer with")}` +
+        F13.strip("answer", [["title", "title", "name it"], ["lyric", "a line", "sing it"], ["either", "either", "both work"]], m.answer, hand, "fm-strip--tight") + `</div>` +
+      `<div class="fm-box fm-titles">${F13.cap(5, "the word in the title")}` +
+        F13.strip("noTitle", [["false", "allowed"], ["true", "never"]], String(m.noTitle), hand, "fm-strip--tight fm-strip--pair") +
+        `<div class="fm-eg">never: <q>Red</q> can't answer <q>red</q></div></div>` +
+
+      `<div class="fm-part"><b>Part 3</b><span>help on the page</span></div>` +
+      `<div class="fm-box fm-hints${line ? " na" : ""}"><div class="fm-head">${F13.cap(6, "hints for the run")}` +
+        `<div class="fm-fig">${F13.comb("hintBudget", m.hintUnlimited ? "" : m.hintBudget, 2, { min: 0, max: CUSTOM_HINT_TYPED_MAX, label: "Hints for the run", inf: m.hintUnlimited, seed: "hc" })}</div></div>` +
+        `<div class="fm-row">${F13.tally("hintBudget", hN, CUSTOM_HINT_MAX, { min: 0, label: "Hints for the run", off: m.hintUnlimited, over: m.hintUnlimited ? 0 : m.hintBudget - hN, seed: "ht", text: m.hintUnlimited ? "unlimited" : m.hintBudget + " hints" })}</div>` +
+        `<div class="fm-row">${F13.tickBox("unlimited", "unlimited", m.hintUnlimited)}</div>` +
+        // stored is what they authored, live is what the round allows: the value stays legible under the Z
+        (line ? F13.zOut("n/a when singing", "zh") : "") + `</div>` +
+      `<div class="fm-box fm-suggest${line ? " na" : ""}">${F13.cap(7, "suggest titles as I type")}` +
+        F13.strip("dropdown", [["true", "yes"], ["false", "no"]], String(m.dropdown), hand, "fm-strip--tight fm-strip--pair") +
+        (line ? F13.zOut("n/a", "zs") : "") + `</div>` +
+      `<div class="fm-box fm-misses">${F13.cap(8, "songs shown after a miss")}` +
+        F13.strip("examples", [[0, "none"], [1, "1"], [2, "2"], [3, "3"]], m.examples, hand, "fm-strip--tight") + `</div>` +
+    `</div>`;
+
+  const fine = `<div class="fm-fine"><span><b>FORM 13</b> · custom mode</span><span>* and now and then a rarer one</span></div>`;
+  const fileNote = draft.filed ? "already filed · change it first" : atCap ? `the pad holds ${CUSTOM_MAX_PRESETS}` : "&nbsp;";
+  const foot = fmNaming
+    ? `<div class="fm-slip"><label for="fmNameInput">name this copy</label>` +
+        `<input type="text" id="fmNameInput" maxlength="${CUSTOM_NAME_MAX}" placeholder="e.g. Sudden death" autocomplete="off" spellcheck="false" ` +
           `data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other">` +
-        `<button type="button" class="hr-file" data-hr-act="file-it" data-hr-focus="file-it">file them</button>` +
-        `<button type="button" class="btn-link" data-hr-act="file-cancel" data-hr-focus="file-cancel">cancel</button>` +
-        `<p class="hr-small">filed rules can't be changed afterwards</p></div>`
-    : `<div class="hr-acts">` +
-        (draft.src
-          ? `<button type="button" class="hr-tear" data-hr-act="tear" data-hr-focus="tear" title="delete the filed mode “${escapeHtml(draft.src.name)}”">` +
-              `<svg viewBox="0 0 22 12" aria-hidden="true"><path d="M1 6.4 L3.6 3.2 L6.1 6.9 L8.9 3.6 L11.2 7.2 L14 3.4 L16.4 6.6 L19.1 3.9 L21 6.1"/></svg><span>tear out “${escapeHtml(draft.src.name)}”</span></button>`
-          : `<span></span>`) +
-        `<button type="button" class="hr-file" data-hr-act="file" data-hr-focus="file"${draft.filed || atCap ? " disabled" : ""}>file these rules</button>` +
-      `</div>` +
-      (hrNote ? `<p class="hr-note">${hrNote}</p>` : fileNote ? `<p class="hr-small">${fileNote}</p>` : "");
+        `<button type="button" class="fm-act fm-file" data-fm-act="file-it" data-fm-focus="file-it"><span class="fm-stamp">file it</span></button>` +
+        `<button type="button" class="btn-link" data-fm-act="file-cancel" data-fm-focus="file-cancel">cancel</button>` +
+        `<p>A filed copy can't be changed afterwards.</p></div>`
+    : `<button type="button" class="fm-act fm-void" data-fm-act="void" data-fm-focus="void"${from ? "" : " disabled"} title="${from ? `void “${escapeHtml(from.name)}”` : "nothing filed to void"}">` +
+        `<span class="fm-stamp">void</span><small>${from ? `“${escapeHtml(from.name)}”` : "&nbsp;"}</small></button>` +
+      `<span class="fm-grow"></span>` +
+      `<span class="fm-file-wrap"><button type="button" class="fm-act fm-file" data-fm-act="file" data-fm-focus="file"${draft.filed || atCap ? " disabled" : ""}><span class="fm-stamp">file a copy</span></button><small>${fileNote}</small></span>` +
+      `<button type="button" id="customModalOkBtn" class="btn-primary" data-fm-focus="ok">ok</button>`;
 
-  body.innerHTML = flags + deal + `<div class="hr-foot">${foot}</div>`;
-  hrNote = "";
+  body.innerHTML = pad + `<div class="fm-sheet">${grid}${fine}</div><div class="fm-foot">${foot}</div>`;
+
+  // Only the marks of the lever that just changed draw on; everything else is already on paper.
+  const leverOf = { endless: "rounds", noclock: "seconds", unlimited: "hintBudget" };
+  body.querySelectorAll(".fm-o").forEach((o) => { if (fmChanged !== o.dataset.fmCircle) o.classList.add("is-still"); });
+  body.querySelectorAll(".fm-tick").forEach((b) => { if (fmChanged !== (leverOf[b.dataset.fmTick] || b.dataset.fmTick)) b.classList.add("is-still"); });
+  const livesNow = endless ? m.lives : 0;
+  body.querySelectorAll(".fm-heart").forEach((b, i) => { if (!(i >= fmPrevLives && i < livesNow)) b.classList.add("is-still"); });
+  fmPrevLives = livesNow;
+  fmStampNext = false;
+  fmChanged = null;
   wireCustomModalBody();
-  hrSnapToRules();
-  // a scrap left open over the sentence follows its blank into the new render
-  if (hrScrap) {
-    const a = body.querySelector(`.hr-b[data-hr="${hrScrap.key}"]`);
-    if (!a || a.closest("li.struck")) hrCloseScrap(false);
-    else { hrScrap.anchor = a; a.setAttribute("aria-expanded", "true"); hrScrap.draw(); }
-  }
-  hrChanged = null;
-  if (hrNaming) { const n = $("hrNameInput"); if (n) n.focus({ preventScroll: true }); }
-  else if (focusKey && !hrScrap) {
-    const t = body.querySelector(`[data-hr-focus="${CSS.escape(focusKey)}"]`);
+  if (fmNaming) { const n = $("fmNameInput"); if (n) n.focus({ preventScroll: true }); }
+  else if (focusKey) {
+    const t = body.querySelector(`[data-fm-focus="${CSS.escape(focusKey)}"]`);
     if (t && !t.disabled) t.focus({ preventScroll: true });
   }
 }
 
-// Land the rules on the card's rulings: the deal's first line box has to start on a multiple of
-// --line, whatever the flags above it wrapped to. The 7px drop on .hr-deal then sits each
-// baseline just on its ruled line instead of floating between two. The card's rulings scroll
-// with its writing (background-attachment: local on #customModal .settings-card), which is
-// what keeps them together once the card scrolls.
-function hrSnapToRules() {
-  const card = document.querySelector("#customModal .settings-card"), deal = card && card.querySelector(".hr-deal");
-  if (!deal) return;
-  const line = parseFloat(getComputedStyle(card).getPropertyValue("--line")) || 32;
-  deal.style.marginTop = "0px";
-  const off = deal.getBoundingClientRect().top - card.getBoundingClientRect().top + card.scrollTop - 7;
-  deal.style.marginTop = (((line - (off % line)) % line) + line) % line + "px";
-}
-
-// ---- the scrap: card stock torn off a pad, opened under the blank it belongs to ----
-function hrCloseScrap(refocus = true) {
-  if (!hrScrap) return;
-  const { el, anchor } = hrScrap;
-  hrScrap = null;
-  el.remove();
-  anchor.setAttribute("aria-expanded", "false");
-  if (refocus && document.contains(anchor)) anchor.focus({ preventScroll: true });
-}
-function hrOpenScrap(anchor) {
-  const k = anchor.dataset.hr;
-  const reopen = hrScrap && hrScrap.key === k;
-  hrCloseScrap(false);
-  if (reopen) return;   // a second tap on the same blank closes it
-  const card = document.querySelector("#customModal .settings-card");
-  const el = document.createElement("div");
-  el.className = "hr-scrap";
-  el.setAttribute("role", "dialog");
-  el.setAttribute("aria-label", HR_NUM[k] ? HR_NUM[k].cap : HR_WORDS[k].cap);
-  card.appendChild(el);
-  const draw = () => (HR_NUM[k] ? hrDrawNumber : hrDrawWords)(el, k);
-  hrScrap = { el, anchor, key: k, draw };
-  draw();
-  // under the blank by default; over it when the card has no room below but has above
-  const h = card.getBoundingClientRect(), a = anchor.getBoundingClientRect();
-  const w = el.offsetWidth, tall = el.offsetHeight;
-  el.style.left = Math.max(8, Math.min(a.left - 10 - h.left, card.clientWidth - w - 8)) + "px";
-  const below = h.bottom - a.bottom - 12, above = a.top - h.top - 12;
-  const up = tall > below && above > tall;
-  el.style.top = (up ? a.top - h.top + card.scrollTop - tall - 8 : a.bottom - h.top + card.scrollTop + 8) + "px";
-  anchor.setAttribute("aria-expanded", "true");
-  const sr = el.getBoundingClientRect();
-  if (sr.bottom > h.bottom - 8) card.scrollBy({ top: sr.bottom - h.bottom + 16, behavior: "smooth" });
-  const first = el.querySelector('[aria-pressed="true"], .hr-numin');
-  if (first) first.focus({ preventScroll: true });
-}
-function hrDrawNumber(el, k) {
-  const c = HR_NUM[k], v = normalizeCustomMode(loadCustom().draft)[k], inf = hrIsInf(k, v);
-  const keep = document.activeElement && el.contains(document.activeElement) ? document.activeElement.dataset.hrIn : null;
-  el.innerHTML =
-    `<p class="hr-cap">${c.cap}</p>` +
-    `<div class="hr-num"><button type="button" class="hr-step" data-d="-1" data-hr-in="minus" aria-label="fewer"${!inf && v <= c.min ? " disabled" : ""}>−</button>` +
-    `<input class="hr-numin" type="number" inputmode="numeric" data-hr-in="num" min="${c.min}" max="${c.typed}" value="${inf ? "" : v}" placeholder="∞" aria-label="${c.cap}">` +
-    `<button type="button" class="hr-step" data-d="1" data-hr-in="plus" aria-label="more"${inf || (c.inf === undefined && v >= c.typed) ? " disabled" : ""}>+</button>` +
-    `<span class="hr-unit">${inf ? (k === "rounds" ? "endless" : "unlimited") : c.unit(v)}</span></div>` +
-    `<div class="hr-stops">${c.stops.map((s) => `<button type="button" class="hr-stop" data-v="${s}" data-hr-in="stop:${s}" aria-pressed="${s === v || (hrIsInf(k, s) && inf)}">${c.label(s)}</button>`).join("")}</div>` +
-    `<p class="hr-tip">${c.tip}</p>`;
-  el.querySelectorAll(".hr-step").forEach((b) => b.addEventListener("click", () => {
-    const cur = normalizeCustomMode(loadCustom().draft)[k];
-    hrSet(k, hrFromPos(k, hrToPos(k, cur) + Number(b.dataset.d)));
-  }));
-  el.querySelectorAll(".hr-stop").forEach((b) => b.addEventListener("click", () => hrSet(k, Number(b.dataset.v))));
-  const inp = el.querySelector(".hr-numin");
-  inp.addEventListener("change", () => { if (inp.value.trim() !== "") hrSet(k, Number(inp.value)); });
-  inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); inp.blur(); hrCloseScrap(); } });
-  if (keep) { const t = el.querySelector(`[data-hr-in="${CSS.escape(keep)}"]`); if (t && !t.disabled) t.focus({ preventScroll: true }); }
-}
-function hrDrawWords(el, k) {
-  const w = HR_WORDS[k], cur = normalizeCustomMode(loadCustom().draft)[k];
-  el.innerHTML = `<p class="hr-cap">${w.cap}</p><div class="hr-opts">` +
-    w.opts().map(([v, word, eg]) => `<button type="button" class="hr-opt" data-v="${v}" aria-pressed="${String(v) === String(cur)}">` +
-      `<span class="w">${escapeHtml(word)}</span><span class="e">${escapeHtml(eg)}</span></button>`).join("") + `</div>`;
-  const on = el.querySelector('.hr-opt[aria-pressed="true"] .w');
-  if (on) {
-    const r = on.getBoundingClientRect(), o = on.parentElement.getBoundingClientRect();
-    on.parentElement.insertAdjacentHTML("afterbegin",
-      `<svg class="hr-loop" width="${(r.width + 12).toFixed(0)}" height="${(r.height + 10).toFixed(0)}" style="left:${(r.left - o.left - 6).toFixed(1)}px;top:${(r.top - o.top - 5).toFixed(1)}px" aria-hidden="true">` +
-      `<path d="${hrLoop(r.width + 2, r.height, k + cur)}" transform="translate(5 5)"/></svg>`);
-  }
-  el.querySelectorAll(".hr-opt").forEach((b) => b.addEventListener("click", () => {
-    hrSet(k, k === "examples" ? Number(b.dataset.v) : b.dataset.v);
-    setTimeout(() => hrCloseScrap(), 260);
-  }));
-}
-// A scrap closes on a press anywhere else, and Escape closes the scrap before it closes the
-// modal: this runs in the capture phase, ahead of the document's own Escape handler.
-document.addEventListener("pointerdown", (e) => {
-  if (hrScrap && !hrScrap.el.contains(e.target) && !hrScrap.anchor.contains(e.target)) hrCloseScrap(false);
-}, true);
-window.addEventListener("keydown", (e) => {
-  if (hrScrap && e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); hrCloseScrap(); }
-}, true);
-
-// Numbers drag sideways. The drag is tracked on the window rather than captured on the blank,
-// because the sentence re-renders on every step and the blank under the finger is replaced.
-let hrScrubbing = null;
-function hrScrubbable(el, k, onTap) {
-  el.addEventListener("pointerdown", (e) => {
+// A drag tracked on the window rather than captured on the element, because the form re-renders
+// on every step and the element under the finger is replaced as you drag.
+function fmDrag(onMove) {
+  return (e) => {
     if (e.button !== 0) return;
-    const x0 = e.clientX, v0 = hrToPos(k, normalizeCustomMode(loadCustom().draft)[k]), px = k === "seconds" ? 6 : 10;
-    let moved = false;
-    const move = (ev) => {
-      const dx = ev.clientX - x0;
-      if (!moved && Math.abs(dx) < 5) return;
-      if (!moved) { moved = true; hrScrubbing = k; hrCloseScrap(false); }
-      ev.preventDefault();
-      const v = hrFromPos(k, v0 + Math.round(dx / px));
-      if (v !== normalizeCustomMode(loadCustom().draft)[k]) hrSet(k, v);
-    };
-    const end = (ev) => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", end);
-      window.removeEventListener("pointercancel", end);
-      const was = hrScrubbing;
-      hrScrubbing = null;
-      if (was) { const b = $("customModalBody").querySelector(`.hr-b[data-hr="${k}"]`); if (b) b.classList.remove("is-scrub"); }
-      if (!moved && ev.type === "pointerup") onTap();
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", end);
-    window.addEventListener("pointercancel", end);
-  });
+    e.preventDefault();
+    onMove(e);
+    const up = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+  };
 }
 
 function wireCustomModalBody() {
   const body = $("customModalBody");
   if (!body) return;
-  body.querySelectorAll(".hr-b").forEach((b) => {
-    const k = b.dataset.hr;
-    if (b.closest("li.struck")) { b.tabIndex = -1; b.setAttribute("aria-disabled", "true"); b.removeAttribute("aria-haspopup"); return; }
-    const key = (fn) => b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
-    if (k === "dropdown" || k === "noTitle") {
-      // two-way rules are simply rewritten on a tap
-      const flip = () => hrSet(k, !normalizeCustomMode(loadCustom().draft)[k]);
-      b.removeAttribute("aria-haspopup");
-      b.setAttribute("aria-pressed", String(normalizeCustomMode(loadCustom().draft)[k]));
-      b.addEventListener("click", flip);
-      key(flip);
-      return;
-    }
-    const pick = () => hrOpenScrap(b);
-    if (HR_NUM[k]) { hrScrubbable(b, k, pick); key(pick); }
-    else { b.addEventListener("click", pick); key(pick); }
-  });
+  const draftNow = () => normalizeCustomMode(loadCustom().draft);
+  const arrow = (e) => ({ ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 })[e.key] || 0;
 
-  // Picking a flag copies that filed mode onto the page. The mode itself is never touched.
-  body.querySelectorAll("[data-hr-flag]").forEach((b) => b.addEventListener("click", () => {
+  // Picking a tab copies that filed mode onto the form. The mode itself is never touched.
+  body.querySelectorAll("[data-fm-copy]").forEach((b) => b.addEventListener("click", () => {
     const s = loadCustom();
-    const p = s.saved.find((x) => x.id === b.dataset.hrFlag);
+    const p = s.saved.find((x) => x.id === b.dataset.fmCopy);
     if (!p) return;
     s.draft = normalizeCustomMode(p.mode);
     s.from = p.id;
     saveCustom(s);
-    hrNaming = false;
-    hrCloseScrap(false);
+    fmNaming = false;
     renderCustomModalBody();
   }));
-  const act = (name, fn) => { const b = body.querySelector(`[data-hr-act="${name}"]`); if (b) b.addEventListener("click", fn); };
-  act("fresh", () => {
+  body.querySelectorAll("[data-fm-circle]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.dataset.fmCircle, v = b.dataset.val;
+    fmSet(k, k === "examples" ? Number(v) : k === "dropdown" || k === "noTitle" ? v === "true" : v);
+  }));
+  body.querySelectorAll("[data-fm-tick]").forEach((b) => b.addEventListener("click", () => {
+    const m = draftNow(), k = b.dataset.fmTick;
+    if (k === "endless") fmSet("rounds", m.rounds === 0 ? CUSTOM_DEFAULT_MODE.rounds : 0);
+    else if (k === "noclock") fmSet("seconds", m.seconds === 0 ? CUSTOM_DEFAULT_MODE.seconds : 0);
+    else if (k === "unlimited") fmSet("hintBudget", m.hintUnlimited ? CUSTOM_DEFAULT_MODE.hintBudget : CUSTOM_HINT_UNLIMITED);
+  }));
+  body.querySelectorAll("[data-fm-life]").forEach((b) => b.addEventListener("click", () => fmSet("lives", Number(b.dataset.fmLife))));
+
+  // Combs: the digits redraw as you type; the number lands on Enter or on leaving the box.
+  body.querySelectorAll("input[data-fm-num]").forEach((inp) => {
+    const k = inp.dataset.fmNum, wrap = inp.closest(".fm-comb"), cells = Number(inp.dataset.cells);
+    inp.addEventListener("focus", () => inp.select());
+    inp.addEventListener("input", () => {
+      inp.value = inp.value.replace(/\D/g, "");
+      wrap.querySelectorAll(".fm-dg").forEach((d) => d.remove());
+      wrap.insertAdjacentHTML("beforeend", F13.combDigits(inp.value, cells, inp.dataset.seed));
+    });
+    inp.addEventListener("change", () => {
+      if (inp.value === "") { renderCustomModalBody(); return; }
+      fmSet(k, Math.max(Number(inp.dataset.min), Math.min(Number(inp.dataset.max), Number(inp.value))));
+    });
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); inp.blur(); }
+      else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); renderCustomModalBody(); }
+    });
+  });
+
+  // Tallies: the stroke nearest the pointer is where the count ends. Arrow keys step it.
+  body.querySelectorAll("[data-fm-tally]").forEach((t) => {
+    const k = t.dataset.fmTally;
+    const now = () => { const m = draftNow(); return k === "rounds" ? m.rounds : (m.hintUnlimited ? CUSTOM_HINT_UNLIMITED : m.hintBudget); };
+    t.addEventListener("pointerdown", fmDrag((ev) => {
+      const el = body.querySelector(`[data-fm-tally="${k}"]`);
+      if (!el) return;
+      const v = F13.tallyCountAt(el, ev.clientX);
+      if (v !== now()) fmSet(k, v);
+    }));
+    t.addEventListener("keydown", (e) => {
+      const d = arrow(e);
+      if (!d) return;
+      e.preventDefault();
+      const capN = Number(t.dataset.cap), min = Number(t.dataset.min), cur = now();
+      const from = k === "rounds" ? (cur || capN) : (cur < 0 ? capN : cur);
+      fmSet(k, Math.max(min, Math.min(capN, Math.min(from, capN) + d)));
+    });
+  });
+
+  // The stopwatch: drag the hand round, or arrow keys a second at a time.
+  const dial = body.querySelector("[data-fm-dial]");
+  if (dial) {
+    dial.addEventListener("pointerdown", fmDrag((ev) => {
+      const el = body.querySelector("[data-fm-dial]");
+      if (!el) return;
+      const cur = draftNow().seconds, v = F13.watchSecondsAt(el, ev.clientX, ev.clientY, cur);
+      if (v !== Math.min(cur, CUSTOM_SECONDS_MAX)) fmSet("seconds", v);
+    }));
+    dial.addEventListener("keydown", (e) => {
+      const d = arrow(e);
+      if (!d) return;
+      e.preventDefault();
+      fmSet("seconds", Math.max(0, Math.min(CUSTOM_SECONDS_MAX, Math.min(draftNow().seconds, CUSTOM_SECONDS_MAX) + d)));
+    });
+  }
+
+  const act = (name, fn) => { const b = body.querySelector(`[data-fm-act="${name}"]`); if (b) b.addEventListener("click", fn); };
+  act("blank", () => {
     const s = loadCustom();
     s.draft = normalizeCustomMode(CUSTOM_DEFAULT_MODE);
     s.from = null;
     saveCustom(s);
-    hrNaming = false;
-    hrCloseScrap(false);
+    fmNaming = false;
     renderCustomModalBody();
   });
-  act("file", () => { hrNaming = true; hrCloseScrap(false); renderCustomModalBody(); });
+  act("file", () => { fmNaming = true; renderCustomModalBody(); });
   act("file-cancel", () => {
-    hrNaming = false;
+    fmNaming = false;
     renderCustomModalBody();
-    const f = body.querySelector('[data-hr-act="file"]');
+    const f = body.querySelector('[data-fm-act="file"]');
     if (f) f.focus({ preventScroll: true });
   });
   const fileIt = () => {
-    const input = $("hrNameInput");
+    const input = $("fmNameInput");
     const name = (input ? input.value : "").trim().slice(0, CUSTOM_NAME_MAX);
     if (!name) { if (input) { input.classList.remove("is-empty"); void input.offsetWidth; input.classList.add("is-empty"); input.focus(); } return; }
     const s = loadCustom();
     if (s.saved.length >= CUSTOM_MAX_PRESETS) return;
-    const filed = { id: newCustomId(), name: uniqueCustomName(name, s.saved), mode: normalizeCustomMode(s.draft) };
+    const filed = { id: newCustomId(), name: uniqueCustomName(name, s.saved), mode: normalizeCustomMode(s.draft), stock: pickCustomStock(s.saved) };
     s.saved.push(filed);
     s.from = filed.id;
     saveCustom(s);
-    hrNaming = false;
-    hrNote = `✓ filed as “${escapeHtml(filed.name)}”`;
+    fmNaming = false;
+    fmStampNext = true;
     renderCustomModalBody();
-    const f = body.querySelector(`[data-hr-flag="${CSS.escape(filed.id)}"]`);
+    const f = body.querySelector(`[data-fm-copy="${CSS.escape(filed.id)}"]`);
     if (f) f.focus({ preventScroll: true });
   };
   act("file-it", fileIt);
-  const nameInput = $("hrNameInput");
+  const nameInput = $("fmNameInput");
   if (nameInput) nameInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") { e.preventDefault(); fileIt(); }
-    else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); hrNaming = false; renderCustomModalBody(); }
+    else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fmNaming = false; renderCustomModalBody(); }
   });
-  // Tearing out deletes the filed mode the page came from. The page keeps its rules: what you
-  // were looking at is still there to play, it just isn't filed any more.
-  act("tear", () => {
+  // VOID deletes the filed copy the form came from. A rubber VOID comes down across the sheet
+  // first; the form keeps its levers, so what you were looking at is still there to play.
+  act("void", () => {
     const s = loadCustom();
-    const gone = s.saved.find((p) => p.id === s.from);
-    if (!gone) return;
-    s.saved = s.saved.filter((p) => p.id !== s.from);
-    s.from = null;
-    saveCustom(s);
-    hrNote = `“${escapeHtml(gone.name)}” torn out`;
-    renderCustomModalBody();
-    const f = body.querySelector('[data-hr-act="file"]');
-    if (f) f.focus({ preventScroll: true });
+    if (fmVoiding || !s.saved.some((p) => p.id === s.from)) return;
+    fmVoiding = true;
+    const sheet = body.querySelector(".fm-sheet");
+    if (sheet) sheet.insertAdjacentHTML("beforeend", `<span class="fm-stamp fm-stamp--void" aria-hidden="true">void</span>`);
+    setTimeout(() => {
+      const t = loadCustom();
+      t.saved = t.saved.filter((p) => p.id !== t.from);
+      t.from = null;
+      saveCustom(t);
+      fmVoiding = false;
+      renderCustomModalBody();
+      const f = body.querySelector('[data-fm-act="file"]');
+      if (f) f.focus({ preventScroll: true });
+    }, motionReduced() ? 0 : 650);
   });
+  const ok = $("customModalOkBtn");
+  if (ok) ok.addEventListener("click", closeCustomModal);
 }
 
 // A name not already filed (Sudden death, Sudden death 2, …).
@@ -30175,9 +30110,9 @@ function openCustomModal() {
   const m = $("customModal");
   if (m.classList.contains("open")) return;
   lastFocusedBeforeCustomModal = document.activeElement;
-  hrNaming = false;
-  // Open first, render second: snapping the rules onto the rulings and circling a scrap's
-  // answer both measure the page, and a closed modal measures everything at zero.
+  fmNaming = false;
+  fmPrevLives = Infinity;
+  // Open first, render second: a bubble's fill is measured for coverage as it is drawn.
   m.classList.add("open");
   renderCustomModalBody();
   m.setAttribute("aria-hidden", "false");
@@ -30189,7 +30124,7 @@ function openCustomModal() {
 function closeCustomModal() {
   const m = $("customModal");
   if (!m.classList.contains("open")) return;
-  hrCloseScrap(false);
+  fmNaming = false;
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
@@ -30862,7 +30797,6 @@ function openFirstRun() {
 function closeFirstRun() {
   const m = $("firstRun");
   if (!m.classList.contains("open")) return;
-  hrCloseScrap(false);
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   if (!$("settingsModal").classList.contains("open")) document.body.classList.remove("modal-open");
@@ -32651,7 +32585,7 @@ function buildDevApi() {
       seed: (name, mode) => {
         const s = loadCustom();
         if (s.saved.length >= CUSTOM_MAX_PRESETS) return "the pad is full";
-        const np = { id: newCustomId(), name: uniqueCustomName(name || "Dev mode", s.saved), mode: normalizeCustomMode({ ...CUSTOM_DEFAULT_MODE, ...(mode || {}) }) };
+        const np = { id: newCustomId(), name: uniqueCustomName(name || "Dev mode", s.saved), mode: normalizeCustomMode({ ...CUSTOM_DEFAULT_MODE, ...(mode || {}) }), stock: pickCustomStock(s.saved) };
         s.saved.push(np); s.draft = { ...np.mode }; s.from = np.id;
         saveCustom(s);
         syncCustomUI();
@@ -35865,7 +35799,6 @@ async function init() {
   // Custom-mode "Change" modal — closed by ✕, scrim, ok, or ESC.
   $("customModalCloseBtn").addEventListener("click", closeCustomModal);
   $("customModalScrim").addEventListener("click", closeCustomModal);
-  $("customModalOkBtn").addEventListener("click", closeCustomModal);
   $("settingsModal").addEventListener("wheel", routeSettingsWheel, { passive: false });
   document.addEventListener("keydown", handleSettingsPageArrow, true);
   // Focus traps keep Tab and Shift+Tab cycling through every control owned by each dialog.
