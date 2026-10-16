@@ -3053,7 +3053,7 @@
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="infinite"]) { --tab-wash: rgba(64,150,146,0.34);  --tab-edge: color-mix(in srgb, #287874 52%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="custom"])   { --tab-wash: rgba(176,104,150,0.32); --tab-edge: color-mix(in srgb, #964a7c 52%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="3lives"]) { --tab-edge: color-mix(in srgb, #786e46 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: color-mix(in srgb, #0c0907 80%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: #8a2416; }
   /* Each difficulty also carries a pair of neighbouring inks, the treatment the game types wear
      above it, as --tab-grad: sky into denim, lime into leaf, coral into brick, orchid into indigo,
      rose into plum, and Normal honey into apricot like Classic above it. Picked side by side on
@@ -3078,15 +3078,19 @@
   .mode-tab.active[data-type="infinite"] { background: var(--tab-grain), linear-gradient(118deg, rgba(110,186,160,0.40) 5%, rgba(52,110,150,0.40) 100%); }
   .mode-tab.active[data-type="custom"]   { background: var(--tab-grain), linear-gradient(118deg, rgba(222,140,150,0.38) 5%, rgba(130,84,150,0.40) 100%); }
   /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
-     wash — a health meter draining from safe to danger. "Sudden death" takes the same wash +
-     inked-border treatment as the rest, in a smoky near-black: dark and ominous, one slip and
-     it's over. */
+     wash — a health meter draining from safe to danger. "Sudden death" is the one tab inked
+     in rather than washed: black at the top, oxblood through the body and a live ember line
+     along its foot where it meets the shelf, the fire and what it left. The colour goes deep
+     enough that its lettering is knocked out in paper, fixed rather than var(--paper) so it
+     stays light on the night page too, and the shelf it stands on is the ember's red.
+     Picked on scripts/ui/sudden-death-further.html. */
   .mode-tab.active[data-variant="3lives"] {
     background: linear-gradient(100deg, rgba(133,173,96,0.42) 0%, rgba(247,201,72,0.5) 50%, rgba(202,92,74,0.4) 100%);
     border-color: rgba(120,110,70,0.5);
   }
   .mode-tab.active[data-variant="sudden"] {
-    background: rgba(28,22,18,0.34); border-color: rgba(12,9,7,0.8);
+    color: #f1e7d3; border-color: #8a2416;
+    background: var(--tab-grain), linear-gradient(to top, rgba(240,96,36,0.80) 0%, rgba(150,30,26,0.86) 9%, rgba(96,16,24,0.86) 40%, rgba(14,10,10,0.88) 100%);
   }
   .mode-blurb {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
