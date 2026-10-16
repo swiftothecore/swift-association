@@ -11059,6 +11059,9 @@ const HINT_STUB = `<svg viewBox="0 0 20 20" class="hint-mark-svg" aria-hidden="t
   `<path d="M10.0 15.9 L12.0 15.7 L10.9 17.3 Z" fill="currentColor" stroke="none"/>` +
   `<path d="M8.15 6.9 L12.4 6.5" opacity="0.55"/></g></svg>`;
 const CHALL_ECLIPSE = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.1" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.5"/><circle cx="10" cy="10" r="5.6" fill="currentColor"/></svg>`;
+// The card's margin-note microphone (a challenge's `aside`): capsule a touch narrower at the top,
+// the cradle not quite symmetric, the stand leaning a hair. Ink only, currentColor.
+const CHALL_MIC = `<svg viewBox="0 0 24 24" class="chall-aside-mic" aria-hidden="true"><path d="M9.3 6.2c0-2 1.2-3.3 2.8-3.3s2.6 1.2 2.6 3.2v5.1c0 1.9-1.1 3.1-2.7 3.1s-2.8-1.2-2.7-3.1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M6.2 10.6c.1 3.7 2.5 6.1 5.9 6.1 3.3 0 5.6-2.5 5.8-5.9M12 16.9l.15 3.6M8.9 20.8c2-.25 4.2-.3 6.3-.05" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
 
 // The same eclipse at invitation size, with its corona drawn out in uneven hand-ruled rays:
 // the results-screen offer is a bigger object than the shelf button, so it gets the fuller
@@ -11772,6 +11775,13 @@ function renderChallengeDetail(id) {
           escapeHtml(c.blurb || mode.blurb),
         dk && (ruleTermsMarkup(challengeRuleTerms({ ...c, ...dk }, dkMode), { labelled: false, cls: "chall-terms" }) +
           escapeHtml(dk.blurb || dkMode.blurb))) +
+      // A pencilled aside in the era's ink, beside the goal it helps with. Outside the swap
+      // cells on purpose: it is advice about playing, true on both sides, so the flip leaves it be.
+      (c.aside
+        ? `<div class="chall-aside">${CHALL_MIC}<span>` +
+            escapeHtml(c.aside).replace(/\*([^*]+)\*/g, `<span class="chall-aside-hl">$1</span>`) +
+          `</span></div>`
+        : "") +
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${swap("span", "chall-meta-in", meta, darkMeta)}</span>` +

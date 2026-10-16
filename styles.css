@@ -4104,6 +4104,20 @@
      intent, and stranded in the light palette. Both this and .chall-need below now read the
      token, which is a no-op by day and the difference between 1.95:1 and legible at night. */
   .chall-mods { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
+  /* a challenge's `aside`: playing advice pencilled beside the goal in the era's ink, a degree and
+     a half off square, with its key phrase swiped in the era highlighter. Hand, not typewriter,
+     because it is a note in the margin, not one of the rules. */
+  .chall-aside {
+    display: flex; gap: 6px; align-items: flex-start; max-width: 360px; margin-top: 12px;
+    font-family: var(--hand); font-size: calc(23px + var(--text-size-adjust)); line-height: 1.0;
+    color: var(--ink-accent); transform: rotate(-1.6deg); transform-origin: left;
+  }
+  .chall-aside-mic { width: 24px; height: 24px; flex: none; }
+  /* a band through the lower two thirds of the line, ragged at the ends; kept on one line */
+  .chall-aside-hl {
+    background: linear-gradient(97deg, transparent 0 0.6%, var(--highlighter) 1.4% 98%, transparent 99.4%) 0 70% / 100% 62% no-repeat;
+    white-space: nowrap; padding: 0 3px; margin: 0 -2px;
+  }
   /* wraps: with two actions the row can outgrow the detail panel, so the meta line drops
      above them rather than being squeezed to a two-word column */
   .chall-act { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; margin-top: 16px; flex-wrap: wrap; }

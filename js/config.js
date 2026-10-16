@@ -1474,6 +1474,13 @@ export const CHALLENGES = [
       desc: "The same page, a third as much again to fill, and not a second more to do it in. A title banked here is a page thrown away: on this side only the lines will do, and the long ones at that.",
       win: "Write 1500 characters across 13 pages." },
     blurb: "18s · suggestions · all words · title words allowed",
+    // Pencilled beside the goal on the card (renderChallengeDetail; *stars* mark the highlighter
+    // swipe). The paragraph above is why: past recall, this run is a typing test, and a player
+    // who knows the passage but types slowly loses it to the clock rather than to the lyric.
+    // Dictation takes the fingers out and leaves the memory. Nothing here needs mic code: the
+    // phone keyboard's mic and the OS's own dictation already type into the answer box, and the
+    // ink count runs on normalized text, so dictation's stray capitals and commas cost nothing.
+    aside: "Can't type that fast? Tap the mic on your keyboard and *say the line* instead.",
     desc: "Every page is scored by how much you WRITE. Sing the line around the word and keep going as far as you can: every character of it counts. Naming the song banks its title instead, quick and small. Submit before the clock dies, or the page banks nothing.",
     win: "Write 1100 characters across 13 pages." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
