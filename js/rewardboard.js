@@ -494,8 +494,12 @@ function diary(D) {
 const TIER_NAMES = ["Poet", "Bridge", "Chairman", "Showgirl"];
 const TIER_ROMAN = ["I", "II", "III", "IV"];
 const TIER_LEVELS = [...new Set(MASTERY_TITLES.map((t) => t.level))];
-const ARW_L = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 5.2 C12.6 7.4 10.4 9.6 8.3 12.1 C10.4 14.3 12.7 16.6 15.1 18.9"/></svg>`;
-const ARW_R = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.1 5 C11.4 7.2 13.6 9.5 15.8 11.9 C13.5 14.2 11.3 16.6 9 18.8"/></svg>`;
+// The worn title's drawing pin: a flat red head in ink, pushed in at a lean. It pins the card you
+// wear to the file and sits small on that card's label holder, so what is worn is marked by an
+// object, never a pen mark laid over it.
+const TITLE_PIN = `<svg class="tf-pin" viewBox="0 0 20 24" aria-hidden="true"><path d="M10.6 13.4 L9.4 22.6" class="tf-pin-n"/>` +
+  `<path d="M4.2 8.6 C3.6 4.4 6.6 1.8 10.4 2 C14.2 2.2 16.6 5 15.8 8.8 C15.2 11.6 12.8 13.6 10 13.5 C7 13.4 4.6 11.4 4.2 8.6 Z" class="tf-pin-h"/>` +
+  `<path d="M7.4 6.4 C8 5 9.2 4.4 10.4 4.5" class="tf-pin-g"/></svg>`;
 
 // The section shell; app.js's renderTitleStepper fills #titleStepper with titleFileHTML, so
 // browsing redraws only the file and never the rest of the page.
@@ -505,36 +509,56 @@ function titlesShell() {
     `<div id="titleStepper" class="tt tf"></div></section>`;
 }
 
-/* Fourteen title cards in a box, filed behind four dividers, one a rank. The divider tabs stand up
-   behind the card in view, each carrying its stamp's outline and level; every rank is cut from a
-   finer stock than the one before: plain card, deckle edge, gilt edge, black card with gold.
-   T: { view, worn, picked, has(id), level, issued }. Wired by data-title-view / data-title-wear. */
+/* Fourteen title cards in a drawer, filed behind four dividers, one a rank. Designed on
+   scripts/mastery/title-file-board.html (option A) after the first file read as a puzzle: it
+   never said what you wore or what level you were, its locked ranks wore the richest stock and
+   so shouted loudest, and tabs plus arrows were two ways round one box.
+   - The signature line on top answers "where am I": the worn title, your level, and whether it
+     was picked or follows your newest rank. Nothing else on the file states your level.
+   - A tab says reached or not and nothing more. Locked, it drops its stock (a dashed outline on
+     the page) and reads "at 11" where the numeral was, so a prize rank can never outshout the
+     one you hold. The open tab is the top of its card, one piece with it.
+   - The drawer front carries a brass label holder per card in the rank, which is how a real
+     card drawer says what is inside. They replace the old arrows and "card 1 of 4" plate; never
+     put stepping arrows back beside them.
+   Every rank is cut from a finer stock than the one before: plain card, deckle edge, gilt edge,
+   black card with gold, and that stock lives on the card and on reached tabs only.
+   F: { view, worn, picked, has(id), level, issued }. Wired by data-title-view / data-title-wear. */
 export function titleFileHTML(F) {
   const reachedL = (L) => F.issued && F.level >= L;
   const v = F.view, t = MASTERY_TITLES[v];
   const open = F.has(t.id), isWorn = t.payload.title === F.worn, k = TIER_LEVELS.indexOf(t.level);
-  const inTier = MASTERY_TITLES.filter((x) => x.level === t.level), pos = inTier.indexOf(t) + 1;
+  const inTier = MASTERY_TITLES.filter((x) => x.level === t.level);
+  const wornT = MASTERY_TITLES.find((x) => x.payload.title === F.worn);
+  const you = F.issued ? `you're Mastery ${F.level}` : "";
+  const sig = wornT
+    ? `<div class="tf-sig"><span class="tf-sig-k">engraved on your records</span><span class="tf-sig-nm">${esc(wornT.name)}</span>` +
+      `<span class="tf-sig-cap">${you} · ${F.picked ? "your pick" : "follows your newest rank"}</span></div>`
+    : `<div class="tf-sig none"><span class="tf-sig-cap">${you ? `${you} · ` : ""}your first title comes at Mastery ${TIER_LEVELS[0]}</span></div>`;
   const tabs = TIER_LEVELS.map((L, i) => {
     const on = reachedL(L), here = i === k;
     const first = MASTERY_TITLES.findIndex((x) => x.level === L);
-    return `<button type="button" class="tf-tab tier${i}${on ? " on" : ""}${here ? " here" : ""}" style="--i:${i}" data-title-view="${first}" aria-label="Rank ${TIER_ROMAN[i]}, ${TIER_NAMES[i]}">` +
-      `${tag(F, L, "tf-tag")}<span class="tf-tab-tx"><i>${TIER_ROMAN[i]}</i><b>${TIER_NAMES[i]}</b></span></button>`;
+    return `<button type="button" class="tf-tab tier${i}${on ? " on" : ""}${here ? " here" : ""}" style="--i:${i}" data-title-view="${first}"` +
+      ` aria-label="Rank ${TIER_ROMAN[i]}, ${TIER_NAMES[i]}${on ? "" : `, opens at Mastery ${L}`}"${here ? ` aria-current="true"` : ""}>` +
+      `${tag(F, L, "tf-tag")}<span class="tf-tab-tx"><i>${on ? TIER_ROMAN[i] : `at ${L}`}</i><b>${TIER_NAMES[i]}</b></span></button>`;
   }).join("");
-  const card = `<div class="tf-card tier${k}${open ? "" : " lk"}"><span class="tf-corner"><span class="rw-mk">${MASTERY_ICONS[MASTERY_TIER_ICONS[k]] || ""}</span></span>` +
-    `<span class="tc-kick">${t.isDefault ? "the default" : "an alternate"} · rank ${TIER_ROMAN[k]}</span>` +
-    `<span class="tc-title">${esc(t.name)}</span><span class="tc-desc">${esc(t.desc)}</span></div>`;
-  const last = MASTERY_TITLES.length - 1;
-  const box = `<div class="tf-box"><button type="button" class="tf-arw" data-title-view="${v - 1}"${v === 0 ? " disabled" : ""} aria-label="previous title">${ARW_L}</button>` +
-    `<span class="tf-plate"><b>titles</b><i>card ${pos} of ${inTier.length} · Mastery ${t.level}</i></span>` +
-    `<button type="button" class="tf-arw" data-title-view="${v + 1}"${v === last ? " disabled" : ""} aria-label="next title">${ARW_R}</button></div>`;
+  const kick = !open ? `opens at Mastery ${t.level}`
+    : t.isDefault ? `comes with rank ${TIER_ROMAN[k]}` : `one of rank ${TIER_ROMAN[k]}'s ${inTier.length === 2 ? "two" : "four"}`;
+  const card = `<div class="tf-card tier${k}${open ? "" : " lk"}">${isWorn ? TITLE_PIN : ""}<span class="tf-corner"><span class="rw-mk">${MASTERY_ICONS[MASTERY_TIER_ICONS[k]] || ""}</span></span>` +
+    `<span class="tc-kick">${kick}</span><span class="tc-title">${esc(t.name)}</span><span class="tc-desc">${esc(t.desc)}</span></div>`;
+  const holders = inTier.map((x) => {
+    const here = x === t, w = x.payload.title === F.worn;
+    return `<button type="button" class="tf-hold${here ? " here" : ""}${w ? " worn" : ""}" data-title-view="${MASTERY_TITLES.indexOf(x)}"` +
+      ` aria-label="${esc(x.name)}${w ? ", worn" : ""}"${here ? ` aria-current="true"` : ""}><span class="tf-lab">${esc(x.name)}</span>${w ? TITLE_PIN : ""}</button>`;
+  }).join("");
   let act;
   if (!reachedL(TIER_LEVELS[0])) act = `<span class="tt-act lock">your first title comes at Mastery ${TIER_LEVELS[0]}</span>`;
   else if (!open) { const n = Math.max(1, t.level - F.level); act = `<span class="tt-act lock">${n} level${n === 1 ? "" : "s"} to go</span>`; }
   else if (isWorn) act = `<span class="tt-act worn">engraved on your signature</span>`;
   else act = `<button type="button" class="tt-act wear" data-title-wear="${t.payload.title}">wear this title</button>`;
-  const reset = F.picked ? `<button type="button" class="tt-reset" data-title-wear="">back to following your mastery</button>`
-    : reachedL(TIER_LEVELS[0]) ? `<span class="tt-reset muted">following your mastery</span>` : "";
-  return `<div class="tf-file"><div class="tf-tabs">${tabs}</div>${card}${box}</div><div class="tt-foot">${act}${reset}</div>`;
+  const reset = F.picked ? `<button type="button" class="tt-reset" data-title-wear="">always wear my newest rank's title</button>`
+    : reachedL(TIER_LEVELS[0]) ? `<span class="tt-reset muted">wearing your newest rank's title</span>` : "";
+  return `${sig}<div class="tf-file"><div class="tf-tabs">${tabs}</div>${card}<div class="tf-box">${holders}</div></div><div class="tt-foot">${act}${reset}</div>`;
 }
 
 /* ================================================================

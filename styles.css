@@ -15014,34 +15014,50 @@
   .tc-title { margin: 4px 0 3px; font-family: var(--hand); font-weight: 700; font-size: calc(35px + var(--text-size-adjust)); line-height: 1; color: var(--type-ink); }
   .tc-desc { font-family: var(--type); font-style: italic; font-size: 11px; color: color-mix(in srgb, var(--type-ink) 65%, transparent); }
 
-  .tf-file { position: relative; max-width: 440px; margin: 0 auto; padding-top: 46px; }
+  /* the signature line: the worn title written over a rule, your level under it */
+  .tf-sig { display: flex; flex-direction: column; align-items: center; max-width: 380px; margin: 0 auto 16px; }
+  .tf-sig-k { font-family: var(--type); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-soft); }
+  .tf-sig-nm { align-self: stretch; padding: 0 8px 1px; text-align: center; font-family: var(--hand); font-weight: 700; font-size: calc(27px + var(--text-size-adjust)); line-height: 1.15;
+    color: var(--ink); border-bottom: 1.4px solid var(--ink); }
+  .tf-sig-cap { margin-top: 4px; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: .06em; color: var(--ink-soft); text-align: center; }
+  .tf-sig.none .tf-sig-cap { font-size: calc(12px + var(--text-size-adjust)); }
+  .tf-file { position: relative; max-width: 600px; margin: 0 auto; padding-top: 52px; }
   /* the dividers are cards the width of the title cards, so their tabs sit within the card's own
      edges; only the tab shows, standing up behind the card in front */
   .tf-tabs { position: absolute; left: 10px; right: 10px; top: 0; height: 60px; }
-  .tf-tab { position: absolute !important; top: 7px; left: calc(var(--i) * 25.2%); width: 24.4%; height: 60px; display: flex !important; align-items: flex-start; gap: 3px;
-    padding: 5px 5px 0 5px !important; border: 1.5px solid var(--ink) !important; border-radius: 9px 9px 0 0; background: var(--stock, #fbf8ef) !important; transition: top .2s; }
-  .tf-tab.here { top: 0; z-index: 1; }
-  .tf-tab.here::after { content: ""; position: absolute; left: 8px; right: 8px; top: 3px; border-top: 2px solid var(--red-pen); border-radius: 2px; opacity: .85; }
-  .tf-tab:not(.on) { background: color-mix(in srgb, var(--stock, #fbf8ef) 55%, var(--paper)) !important; border-style: dashed !important; }
-  .tf-tab:not(.on) .tf-tab-tx { opacity: .55; }
-  .tf-tab:hover { top: 2px; } .tf-tab.here:hover { top: 0; }
+  .tf-tab { position: absolute !important; top: 8px; left: calc(var(--i) * 25.2%); width: 24.4%; height: 58px; display: flex !important; align-items: flex-start; gap: 4px;
+    padding: 6px 6px 0 7px !important; border: 1.5px solid var(--ink) !important; border-radius: 9px 9px 0 0; transition: top .2s;
+    background: color-mix(in srgb, var(--stock, #fbf8ef) 90%, #2b2722) !important; }
+  .tf-tab.tier2 { box-shadow: inset 0 3px 0 #c8951f; }
+  /* locked: no stock at all, so a prize rank can never shout louder than the one you hold */
+  .tf-tab:not(.on) { background: color-mix(in srgb, var(--paper) 70%, transparent) !important; box-shadow: none; border-style: dashed !important;
+    border-color: color-mix(in srgb, var(--ink) 55%, transparent) !important; --tf-ink: var(--ink); --tf-sub: var(--ink-soft); }
+  .tf-tab:not(.on) .tf-tab-tx, .tf-tab:not(.on) .tf-tag { opacity: .5; }
+  /* the open tab is the top of its card, one piece with it: the tab drops its bottom edge and a
+     strip of its own stock runs down over the card's top border */
+  .tf-tab.here { top: 0; z-index: 3; height: 60px; background: var(--stock) !important; border-bottom: 0 !important; border-style: solid !important; border-color: var(--ink) !important; }
+  .tf-tab.tier3.here { border-color: #c8951f !important; }
+  .tf-tab.here::after { content: ""; position: absolute; left: 0; right: 0; bottom: -8px; height: 9px; background: var(--stock); }
+  .tf-tab.here:not(.on) .tf-tab-tx, .tf-tab.here:not(.on) .tf-tag { opacity: .7; }
+  .tf-tab.here:not(.on) { --tf-ink: initial; --tf-sub: initial; }
+  .tf-tab.tier3.here:not(.on) { --tf-ink: #e8c46a; --tf-sub: #bfa264; }
+  .tf-tab:not(.here):hover { top: 4px; }
   .tf-tag { width: 26px; height: 26px; flex: none; }
   .tf-tag.wide { width: 36px !important; height: 18px !important; margin-top: 5px; }
   .tf-tag.wide .mpp-ghost-n { font-size: 44px; transform: translateY(9px); }
-  .tf-tab-tx { display: flex; flex-direction: column; line-height: 1.02; padding-top: 2px; min-width: 0; }
-  .tf-tab-tx i { font-style: normal; font-family: var(--type); font-size: 9px; letter-spacing: .14em; color: var(--tf-sub, var(--ink-soft)); }
-  .tf-tab-tx b { font-family: var(--hand); font-size: 15px; color: var(--tf-ink, var(--ink)); white-space: nowrap; }
+  .tf-tab-tx { display: flex; flex-direction: column; line-height: 1.02; padding-top: 1px; min-width: 0; }
+  .tf-tab-tx i { font-style: normal; font-family: var(--type); font-size: 9px; letter-spacing: .14em; color: var(--tf-sub, var(--ink-soft)); white-space: nowrap; }
+  .tf-tab-tx b { font-family: var(--hand); font-size: 16px; color: var(--tf-ink, var(--ink)); white-space: nowrap; }
   .tf-tab.tier0, .tf-card.tier0 { --stock: #fbf8ef; }
   .tf-tab.tier1, .tf-card.tier1 { --stock: #efe9da; }
   .tf-tab.tier2, .tf-card.tier2 { --stock: #fbf3df; }
   .tf-tab.tier3, .tf-card.tier3 { --stock: #1f1b17; --tf-ink: #e8c46a; --tf-sub: #bfa264; }
-  .tf-tab.tier2 { box-shadow: inset 0 3px 0 #c8951f; }
   :root[data-theme="dark"] .tf-tab.tier0, :root[data-theme="dark"] .tf-card.tier0 { --stock: #3a3227; }
   :root[data-theme="dark"] .tf-tab.tier1, :root[data-theme="dark"] .tf-card.tier1 { --stock: #443a2d; }
   :root[data-theme="dark"] .tf-tab.tier2, :root[data-theme="dark"] .tf-card.tier2 { --stock: #42382a; }
   :root[data-theme="dark"] .tf-tab.tier3, :root[data-theme="dark"] .tf-card.tier3 { --stock: #14110d; }
   .tf-card { --type-ink: var(--tf-ink, #2b2722); --tc-acc: var(--oi); position: relative; z-index: 2; height: 176px; margin: 0 10px; display: flex; flex-direction: column; align-items: center;
-    gap: 2px; padding: 22px 26px 0; text-align: center; background: var(--stock); border: 1.5px solid var(--ink); border-radius: 5px;
+    gap: 2px; padding: 24px 26px 0; text-align: center; background: var(--stock); border: 1.5px solid var(--ink); border-radius: 5px;
     box-shadow: inset 0 0 0 6px var(--stock), inset 0 0 0 7px color-mix(in srgb, var(--tc-acc) 40%, transparent); }
   :root[data-theme="dark"] .tf-card { --type-ink: var(--tf-ink, #ece5d6); }
   .tf-card.tier1 { background: transparent; border: 0; box-shadow: none; isolation: isolate; }
@@ -15052,17 +15068,34 @@
   .tf-corner { position: absolute; top: 12px; right: 14px; width: 22px; height: 22px; color: var(--tc-acc); }
   .tf-card.lk > * { opacity: .45; }
   .tf-card.lk .tc-title { opacity: .32; }
-  .tf-box { position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 66px; margin-top: -58px; padding: 0 12px;
+  /* the worn card's drawing pin: an object, so its colours hold at night */
+  .tf-pin { position: absolute; z-index: 4; width: 20px; height: 24px; transform: rotate(-12deg); pointer-events: none; }
+  .tf-card > .tf-pin { top: -10px; right: 52px; opacity: 1; }
+  /* the open tab stands over the card's top edge, so the pin goes to the side the tab is not on */
+  .tf-card.tier2 > .tf-pin, .tf-card.tier3 > .tf-pin { right: auto; left: 30px; }
+  .tf-pin-n { stroke: #8a8378; stroke-width: 1.6; stroke-linecap: round; }
+  .tf-pin-h { fill: #c2453a; stroke: #2b2722; stroke-width: 1.5; }
+  .tf-pin-g { fill: none; stroke: #f1d8cf; stroke-width: 1.3; stroke-linecap: round; }
+  /* the drawer front, with a brass label holder for each card in the rank */
+  .tf-box { position: relative; z-index: 3; display: flex; justify-content: center; gap: 8px; margin-top: -40px; padding: 11px 12px 12px;
     background-color: var(--ow2); border: 2px solid var(--ink); border-radius: 3px 3px 9px 9px;
     background-image: repeating-linear-gradient(90deg, color-mix(in srgb, var(--o) 9%, transparent) 0 1px, transparent 1px 4px); }
-  .tf-box::before { content: ""; position: absolute; left: 6px; right: 6px; top: 5px; border-top: 1.2px solid color-mix(in srgb, var(--ink) 40%, transparent); }
-  .tf-plate { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 14px 5px; background: var(--mpp-card); border: 1.5px solid var(--ink); border-radius: 3px; }
-  .tf-plate b { font-family: var(--hand); font-size: 18px; line-height: 1; color: var(--oi); }
-  .tf-plate i { font-style: normal; font-family: var(--type); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
-  .tf-arw { flex: none; width: 34px; height: 34px; display: flex !important; align-items: center; justify-content: center; border: 1.5px solid var(--ink) !important; border-radius: 50%; background: var(--mpp-card) !important; }
-  .tf-arw svg { width: 18px; height: 18px; } .tf-arw path { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .tf-arw:disabled { opacity: .3; cursor: default; }
-  @container rw (max-width: 440px) { .tf-tab-tx b { display: none; } .tf-tab-tx i { font-size: 11px; padding-top: 7px; } .tf-tag { width: 26px; height: 26px; flex: none; } }
+  .tf-hold { position: relative; flex: 1 1 0; min-width: 0; max-width: 132px; min-height: 46px; display: flex !important; padding: 3px !important;
+    border: 2px solid #9a7a3a !important; border-radius: 3px; background: #c9a85a !important; transition: transform .15s; }
+  .tf-hold::before, .tf-hold::after { content: ""; position: absolute; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: #6e5524; }
+  .tf-hold::before { left: -1px; } .tf-hold::after { right: -1px; }
+  .tf-lab { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 3px 6px; background: #fbf8ef; border: 1px solid #8a6d32;
+    font-family: var(--hand); font-size: calc(14px + var(--text-size-adjust)); line-height: 1.05; color: #6b6357; text-align: center; overflow-wrap: break-word; }
+  .tf-hold.here { border-color: var(--ink) !important; transform: translateY(-3px); box-shadow: 0 3px 0 var(--ink); }
+  .tf-hold.here .tf-lab { font-weight: 700; color: #2b2722; }
+  .tf-hold:not(.here):hover { transform: translateY(-2px); }
+  .tf-hold > .tf-pin { top: -9px; right: -6px; width: 14px; height: 17px; }
+  .rw-title .tt-foot { margin-top: 20px; }
+  @container rw (max-width: 440px) {
+    .tf-tab-tx b { display: none; } .tf-tab-tx i { font-size: 11px; padding-top: 7px; }
+    .tf-tab:not(.on) .tf-tab-tx { display: none; }   /* too narrow for "at 11": the stamp carries the level */
+    .tf-box { gap: 5px; padding-inline: 8px; } .tf-lab { padding: 3px 3px; font-size: calc(12.5px + var(--text-size-adjust)); }
+  }
   /* Shared with the ink swatches in settings: the padlock primitive the old reward tiles drew. */
   .rb-lock { display: inline-flex; width: 15px; height: 15px; color: var(--ink-soft); }
   .rb-lock svg { width: 100%; height: 100%; overflow: visible; }
@@ -16979,7 +17012,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 /* Keep the drawn marks small while their touch area is comfortable. */
 @media (pointer: coarse) {
   .btn-link, .countdown-skip, .countdown-hold, .tt-reset, .bc-refill-hd button { min-height: 44px; padding-block: 10px; }
-  .tf-arw { width: 44px; height: 44px; }
   .rw-die { min-height: 44px; }   /* the matchbox stays its own size, centred in the taller hit */
   .see-also--row .nav-card-title {
     position: static; display: block; width: auto; height: auto; margin: 7px 0 0; padding: 0;

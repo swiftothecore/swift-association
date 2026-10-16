@@ -6795,9 +6795,10 @@ function setMasteryTitle(value) {
 
 let _titleView = null;   // index into MASTERY_TITLES the card file is currently showing
 
-// The title picker is the card file (titleFileHTML in js/rewardboard.js): a divider tab per rank,
-// one title card in view, arrows on the box, and a context action (wear / engraved / N levels to
-// go). It redraws only itself on each step, so browsing never re-renders the page; "wear" commits.
+// The title picker is the card file (titleFileHTML in js/rewardboard.js): the worn title on a
+// signature line, a divider tab per rank, one title card in view, a label holder per card on the
+// drawer front, and a context action (wear / engraved / N levels to go). It redraws only itself on
+// each step, so browsing never re-renders the page; "wear" commits.
 function renderTitleStepper() {
   const host = $("titleStepper");
   if (!host) return;
