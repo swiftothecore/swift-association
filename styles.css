@@ -3060,6 +3060,23 @@
   .mode-tab.active[data-type="all"] {
     background: linear-gradient(100deg, rgba(103,150,190,0.36) 0%, rgba(133,173,96,0.40) 25%, rgba(247,201,72,0.5) 50%, rgba(202,92,74,0.34) 75%, rgba(122,98,182,0.34) 100%);
   }
+  /* The three game types are each a pair of neighbouring inks worked together on the diagonal,
+     under a faint paper grain so the blend reads as ink soaked into stock, not a screen fill:
+     Infinite sea glass into ink blue, Custom rose into plum. Classic stays the era's home base:
+     its highlighter worked into the same highlighter turned a step round the wheel (gold into
+     apricot, lavender into periwinkle), so it still follows the era. Mixing toward --ink-accent
+     instead was tried and printed khaki, because the accents are dark. Set on the
+     tab, not as --tab-wash, because that token is mixed into a solid sheet colour elsewhere and
+     a gradient cannot be. Picked side by side on scripts/ui/mode-tab-gradients.html. */
+  .mode-tab.active:is([data-type="classic"], [data-type="infinite"], [data-type="custom"]) {
+    --tab-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .mode-tab.active[data-type="classic"]  {
+    background: var(--tab-grain), var(--highlighter);
+    background: var(--tab-grain), linear-gradient(118deg, var(--highlighter) 10%, oklch(from var(--highlighter) calc(l - 0.05) calc(c + 0.03) calc(h - 28) / calc(alpha * 0.85)) 100%);
+  }
+  .mode-tab.active[data-type="infinite"] { background: var(--tab-grain), linear-gradient(118deg, rgba(110,186,160,0.40) 5%, rgba(52,110,150,0.40) 100%); }
+  .mode-tab.active[data-type="custom"]   { background: var(--tab-grain), linear-gradient(118deg, rgba(222,140,150,0.38) 5%, rgba(130,84,150,0.40) 100%); }
   /* The two Infinite variants read as the stakes they set. "3 lives" wears a green→gold→coral
      wash — a health meter draining from safe to danger. "Sudden death" takes the same wash +
      inked-border treatment as the rest, in a smoky near-black: dark and ominous, one slip and
