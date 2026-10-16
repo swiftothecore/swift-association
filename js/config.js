@@ -2497,6 +2497,7 @@ export const MASTERY_REWARDS = [
   { level: 11, id: "title-poet-laureate",     kind: "title", name: "Poet Laureate",                               icon: "feather", desc: "Laurelled for the words.",       payload: { title: "poet-laureate" } },
   { level: 13, id: "title-ultimate-showgirl", kind: "title", isDefault: true, name: "Ultimate Showgirl",          icon: "mic",     desc: "The capstone. Take a bow.",      payload: { title: "ultimate-showgirl" } },
   { level: 13, id: "title-ultimate-swiftie",  kind: "title", name: "Ultimate Swiftie",                            icon: "braceletring", desc: "You know all the words.",   payload: { title: "ultimate-swiftie" } },
+  { level: 13, id: "title-ultimate-poet",     kind: "title", name: "Ultimate Poet",                               icon: "feather", desc: "Every word was yours.",          payload: { title: "ultimate-poet" } },
 ];
 export const MASTERY_REWARD_BY_ID = Object.fromEntries(MASTERY_REWARDS.map((r) => [r.id, r]));
 

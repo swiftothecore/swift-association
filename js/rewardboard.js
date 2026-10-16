@@ -505,11 +505,11 @@ const TITLE_PIN = `<svg class="tf-pin" viewBox="0 0 20 24" aria-hidden="true"><p
 // browsing redraws only the file and never the rest of the page.
 function titlesShell() {
   return `<section class="rw-obj rw-title" style="--o:${T.title}">` +
-    head("Prestige titles", "four ranks, fourteen titles, one engraved on your records signature") +
+    head("Prestige titles", "four ranks, fifteen titles, one engraved on your records signature") +
     `<div id="titleStepper" class="tt tf"></div></section>`;
 }
 
-/* Fourteen title cards in a drawer, filed behind four dividers, one a rank. Designed on
+/* Fifteen title cards in a drawer, filed behind four dividers, one a rank. Designed on
    scripts/mastery/title-file-board.html (option A) after the first file read as a puzzle: it
    never said what you wore or what level you were, its locked ranks wore the richest stock and
    so shouted loudest, and tabs plus arrows were two ways round one box.
@@ -543,7 +543,7 @@ export function titleFileHTML(F) {
       `${tag(F, L, "tf-tag")}<span class="tf-tab-tx"><i>${on ? TIER_ROMAN[i] : `at ${L}`}</i><b>${TIER_NAMES[i]}</b></span></button>`;
   }).join("");
   const kick = !open ? `opens at Mastery ${t.level}`
-    : t.isDefault ? `comes with rank ${TIER_ROMAN[k]}` : `one of rank ${TIER_ROMAN[k]}'s ${inTier.length === 2 ? "two" : "four"}`;
+    : t.isDefault ? `comes with rank ${TIER_ROMAN[k]}` : `one of rank ${TIER_ROMAN[k]}'s ${["two", "three", "four"][inTier.length - 2] || inTier.length}`;
   const card = `<div class="tf-card tier${k}${open ? "" : " lk"}">${isWorn ? TITLE_PIN : ""}<span class="tf-corner"><span class="rw-mk">${MASTERY_ICONS[MASTERY_TIER_ICONS[k]] || ""}</span></span>` +
     `<span class="tc-kick">${kick}</span><span class="tc-title">${esc(t.name)}</span><span class="tc-desc">${esc(t.desc)}</span></div>`;
   const holders = inTier.map((x) => {
