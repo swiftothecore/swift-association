@@ -169,7 +169,9 @@ export function resetKeepsakesSeen() {
 /* ---------- Challenges mode (progress + tokens) ---------- */
 // Per-challenge progress, keyed by challenge id:
 //   { unlocked, defeated, attempts, best, darkDefeated, darkAttempts, darkBest,
-//     returnRuns, runs, pinned }
+//     clean, darkClean, returnRuns, runs, pinned }
+// `clean`/`darkClean` are set once a side is WON without missing a page, and never cleared.
+// The jet seal reads whichever of them belongs to the card's top side (see perfectedChallenge).
 // The dark* fields track the challenge's dark side as a separate line of progress against the
 // same id, so beating the base and beating the dark side stay independently recorded. Records
 // written before dark sides existed simply lack them and default cleanly — no migration.
@@ -192,6 +194,7 @@ export function challengeRecord(id, state = loadChallengeState()) {
   return {
     unlocked: !!e.unlocked, defeated: !!e.defeated, attempts: e.attempts || 0, best: e.best || 0,
     darkDefeated: !!e.darkDefeated, darkAttempts: e.darkAttempts || 0, darkBest: e.darkBest || 0,
+    clean: !!e.clean, darkClean: !!e.darkClean,
     // `earnest` was the completed-run counter under the retired persistence-ticket system.
     // Carry it forward so an already-earned seven-run return is never erased by the rename.
     returnRuns: e.returnRuns || e.earnest || 0, runs: e.runs || 0, pinned: !!e.pinned,

@@ -552,9 +552,9 @@ export function initDev(api) {
         btn("to the brink", () => { readout.textContent = JSON.stringify(api.challenge.margin.brink()); }),
         btn("doom the run", () => { readout.textContent = JSON.stringify(api.challenge.margin.doom()); }, "warn")),
     row(btn("unlock all dark sides", () => { const n = api.challenge.dark.unlockAll(); readout.textContent = `${n} dark sides unlocked: open Challenges`; }),
-        btn("defeat all dark sides", () => { const n = api.challenge.dark.defeat(); readout.textContent = `${n} dark sides marked defeated: tap a black-violet seal`; }),
-        btn("char all seals", () => { const n = api.challenge.dark.char(); readout.textContent = `${n} seals burnt: compare the burnt art across the roster`; }),
-        btn("un-char seals", () => { api.challenge.dark.char(false); readout.textContent = "violet wax back on every seal"; }),
+        btn("defeat all dark sides", () => { const n = api.challenge.dark.defeat(); readout.textContent = `${n} dark sides marked defeated`; }),
+        btn("perfect all", () => { const n = api.challenge.dark.perfect(); readout.textContent = `${n} challenges perfected: jet seals and ticks across the roster`; }),
+        btn("unperfect all", () => { api.challenge.dark.perfect(null, false); readout.textContent = "jet taken off every card"; }),
         btn("relock dark progress", () => { api.challenge.dark.reset(); readout.textContent = "dark progress cleared"; }, "warn")),
     row(returnSel, btn("ready return", () => {
           api.challenge.returns.ready(returnSel.value);

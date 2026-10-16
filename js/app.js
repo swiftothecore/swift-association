@@ -3537,11 +3537,14 @@ function returnChallenge(id) {
 // rather than a tally: One Of A Kind ends on the answer, so finding the song on page four beats
 // finding it on page nine. A stored 0 means "no record yet" on both readings, which is why the
 // low comparison has to check it rather than lean on Math.min.
-function markChallengeDefeated(id, score, dark, lower) {
+// `clean` is a win with every page cleared. It marks that side for good (clean/darkClean), and
+// the top side's mark is what perfects the card and pours its seal in jet.
+function markChallengeDefeated(id, score, dark, lower, clean) {
   const st = loadChallengeState();
   const rec = { ...challengeRecord(id) };
   const firstTime = dark ? !rec.darkDefeated : !rec.defeated;
   const beats = (next, held) => lower ? (!held || next < held) : next > held;
+  if (clean) rec[dark ? "darkClean" : "clean"] = true;
   if (dark) {
     rec.darkDefeated = true;
     if (beats(score, rec.darkBest)) rec.darkBest = score;
@@ -3551,9 +3554,10 @@ function markChallengeDefeated(id, score, dark, lower) {
   }
   st[id] = rec;
   saveChallengeState(st);
-  // Dark-side milestones. No per-challenge charm — the black seal and violet tick are that
-  // reward. The "every dark side" charm counts DARK_SIDE_IDS rather than a fixed total, so
-  // it re-targets itself as more dark sides get authored.
+  // Dark-side milestones. No per-challenge charm — the black-violet seal and violet tick are
+  // that reward, and the jet seal and tick past them reward winning the top side clean. The
+  // "every dark side" charm counts DARK_SIDE_IDS rather than a fixed total, so it re-targets
+  // itself as more dark sides get authored.
   if (firstTime && dark) {
     const beaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
     unlock("beat-first-dark-side");
@@ -10856,22 +10860,24 @@ let challDetailPeek = false;         // ...and whether its "what changes on the 
 let challDetailHover = false;        // ...and whether the Dark Side button is being hovered/focused right now
 let challReturnConfirmId = null;      // first tap arms a return; the explicit second tap confirms it
 let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
-// A defeated dark seal can be burned down to char as a small, page-local reward. These
-// maps deliberately never touch storage: the violet wax returns on the next page load.
-// The burn map holds the START TIME rather than a bare flag, because the detail panel can be
-// rebuilt mid-burn (the dark-side peek toggle and the return ticket both re-render it) and a
-// fresh seal has to resume the flame where the old one left off instead of replaying it from
-// cold against a clock that never reset. The timer map exists so that stale re-render is
-// cancelled rather than left to fire against a node that is no longer in the document.
-const CHALL_SEAL_BURN_MS = 1000;
-const challBurningSeals = new Map();   // id -> timestamp the burn started
-const challBurnTimers = new Map();     // id -> the setTimeout that settles it to char
-const challCharredSeals = new Set();
 
 // Status marks for the contents list (gold tick = defeated, violet tick = dark side also
-// defeated, hollow ring = open, lock = locked).
+// defeated, jet tick = the top side won without missing a page, hollow ring = open,
+// lock = locked).
 const CHALL_TICK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#d8a32f" stroke-width="1.6"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" stroke="#d8a32f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const CHALL_TICK_DARK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#7a4bb0" stroke-width="1.6"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" stroke="#7a4bb0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+// The jet tick is the one mark filled rather than outlined, inked in the page's own --ink so it
+// is black on paper and paper-white on the night sheet, where a black disc would vanish. The
+// check is cut through in --paper. Both have to be style declarations: a var() in an SVG
+// presentation attribute is not resolved.
+const CHALL_TICK_JET = `<svg viewBox="0 0 20 20" class="chall-mark-svg chall-mark-jet" aria-hidden="true"><circle cx="10" cy="10" r="8.6" style="fill:var(--ink)"/><path d="M5.5 10.2 L8.7 13.4 L14.5 6.4" fill="none" style="stroke:var(--paper)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+// A card is PERFECTED once its top side has been won without missing a page: the dark side
+// where it has one, otherwise the card itself. Only the top side counts, so a clean base run on
+// a card that still has a dark side above it earns nothing here; the jet seal always sits one
+// step past everything else the card can show.
+function perfectedChallenge(id, rec = challengeRecord(id)) {
+  return hasDarkSide(id) ? rec.darkClean : rec.clean;
+}
 const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#b6a98d" stroke-width="1.6"/></svg>`;
 const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
 const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="#e0a32f" stroke="#b9821f" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
@@ -11156,48 +11162,48 @@ const CHALLENGE_SEALS_DARK = Object.fromEntries(
   Object.entries(CHALLENGE_SEALS).map(([id, svg]) => [id, darkSealSvg(svg)])
 );
 
-// The burnt seal: the same wax after the flame has had it. Derived the same way as the other
-// two copies rather than filtered, for the reason the comment on .chall-detail-seal gives — a
-// blanket CSS filter can only flatten, and flattening a wax seal to black takes the sigil and
-// the beaded rim with it, which leaves an ink blot where the object used to be. Baking it
-// keeps the relief: the body cools to a warm charcoal that still has range between its lit and
-// shadowed faces, and the rim, which is the part that carries every one of these seals, goes to
-// a dull ember bronze rather than to black. That bronze is doing double duty — it is the only
-// value in the mark that reads on cream paper AND on the dark theme's near-black sheet, so a
-// charred seal stays an object on both instead of dissolving into one of them.
-// Only ever reached from the DARK seal (you cannot burn what you have not beaten), so the
-// motif's offset highlight keeps the boost darkSealSvg gave it; against char it is needed just
-// as badly.
-const BURNT_SEAL_BODY = {
-  "#cd5c55": "#5f5349", "#b8413f": "#4e4239", "#ae363b": "#453a32", "#ad353a": "#43382f",
-  "#a72e33": "#3d332b", "#9c282e": "#352c25", "#96262d": "#302823", "#93232a": "#2c251f",
-  "#8a2028": "#251f1a", "#781a20": "#1a1512",
-  "#b04046": "#b2723a",   // the beaded rim, banked down to an ember
+// The jet seal: a card whose top side has been won without missing a page. The same wax poured
+// true black, derived like the other copies. Its rim is gold, which is what separates it from
+// the dark side's black-violet: that seal is a cool near-black carried by a lilac rim, this one
+// a neutral black carried by gold, and the two have to stay apart on the shelf side by side.
+// The motif's offset highlight gets the same boost darkSealSvg gives it, or the sigil sinks
+// into the wax. Gold is also the one rim value that reads on cream paper AND the night sheet.
+const JET_SEAL_BODY = {
+  "#cd5c55": "#5a5650", "#b8413f": "#413e3a", "#ae363b": "#373431", "#ad353a": "#363330",
+  "#a72e33": "#2f2c29", "#9c282e": "#272523", "#96262d": "#242220", "#93232a": "#211f1d",
+  "#8a2028": "#1c1b19", "#781a20": "#121110",
+  "#b04046": "#d6a83c",   // the beaded rim, in gold
 };
-const BURNT_SEAL_HILITE = {
-  "rgba(250,188,168,0.4)": "rgba(226,206,186,0.4)", "rgba(255,216,198,0.17)": "rgba(232,214,196,0.17)",
-  "rgba(255,190,170,0.06)": "rgba(228,208,188,0.06)", "rgba(246,182,162,0.38)": "rgba(224,204,184,0.38)",
-  "rgba(246,184,164,0.28)": "rgba(224,205,185,0.28)",
-  "rgba(252,198,182,0.5)": "rgba(230,211,192,0.5)", "rgba(250,192,172,0.5)": "rgba(228,209,190,0.5)",
-  "rgba(252,198,180,0.45)": "rgba(244,228,208,0.62)",
+const JET_SEAL_HILITE = {
+  "rgba(250,188,168,0.4)": "rgba(236,226,210,0.4)", "rgba(255,216,198,0.17)": "rgba(236,226,210,0.17)",
+  "rgba(255,190,170,0.06)": "rgba(236,226,210,0.06)", "rgba(246,182,162,0.38)": "rgba(236,226,210,0.38)",
+  "rgba(246,184,164,0.28)": "rgba(236,226,210,0.28)",
+  "rgba(252,198,182,0.5)": "rgba(236,226,210,0.5)", "rgba(250,192,172,0.5)": "rgba(236,226,210,0.5)",
+  "rgba(252,198,180,0.45)": "rgba(244,236,222,0.62)",
 };
-const BURNT_SEAL_SHADOW = {
-  "rgba(88,14,18,0.4)": "rgba(26,20,15,0.4)", "rgba(74,13,17,0.6)": "rgba(22,17,13,0.6)",
-  "rgba(70,10,14,0.42)": "rgba(20,16,12,0.42)", "rgba(70,10,14,0.35)": "rgba(20,16,12,0.35)",
-  "rgba(60,8,12,0.42)": "rgba(18,14,10,0.42)", "rgba(60,8,11,0.42)": "rgba(18,14,10,0.42)",
-  "rgba(56,7,10,0.55)": "rgba(16,12,9,0.55)", "rgba(56,7,10,0.5)": "rgba(16,12,9,0.5)",
-  "rgba(56,7,10,0.45)": "rgba(16,12,9,0.45)", "rgba(50,6,9,0.6)": "rgba(14,11,8,0.6)",
+const JET_SEAL_SHADOW = {
+  "rgba(88,14,18,0.4)": "rgba(8,7,6,0.4)", "rgba(74,13,17,0.6)": "rgba(8,7,6,0.6)",
+  "rgba(70,10,14,0.42)": "rgba(8,7,6,0.42)", "rgba(70,10,14,0.35)": "rgba(8,7,6,0.35)",
+  "rgba(60,8,12,0.42)": "rgba(8,7,6,0.42)", "rgba(60,8,11,0.42)": "rgba(8,7,6,0.42)",
+  "rgba(56,7,10,0.55)": "rgba(8,7,6,0.55)", "rgba(56,7,10,0.5)": "rgba(8,7,6,0.5)",
+  "rgba(56,7,10,0.45)": "rgba(8,7,6,0.45)", "rgba(50,6,9,0.6)": "rgba(8,7,6,0.6)",
 };
-function burntSealSvg(redSvg) {
-  let s = redSvg.split("wax-").join("waxburnt-");   // re-scope ids so all four copies coexist
-  for (const k in BURNT_SEAL_BODY) s = s.split(k).join(BURNT_SEAL_BODY[k]);
-  for (const k in BURNT_SEAL_HILITE) s = s.split(k).join(BURNT_SEAL_HILITE[k]);
-  for (const k in BURNT_SEAL_SHADOW) s = s.split(k).join(BURNT_SEAL_SHADOW[k]);
+function jetSealSvg(redSvg) {
+  let s = redSvg.split("wax-").join("waxjet-");   // re-scope ids so every copy can coexist
+  for (const k in JET_SEAL_BODY) s = s.split(k).join(JET_SEAL_BODY[k]);
+  for (const k in JET_SEAL_HILITE) s = s.split(k).join(JET_SEAL_HILITE[k]);
+  for (const k in JET_SEAL_SHADOW) s = s.split(k).join(JET_SEAL_SHADOW[k]);
   return s;
 }
-const CHALLENGE_SEALS_BURNT = Object.fromEntries(
-  Object.entries(CHALLENGE_SEALS).map(([id, svg]) => [id, burntSealSvg(svg)])
+const CHALLENGE_SEALS_JET = Object.fromEntries(
+  Object.entries(CHALLENGE_SEALS).map(([id, svg]) => [id, jetSealSvg(svg)])
 );
+// The seal a card shows on its record: jet once perfected, black-violet once the dark side is
+// beaten, aged taupe once the card is, and the fresh red before that.
+function recordSeals(id, rec) {
+  return perfectedChallenge(id, rec) ? CHALLENGE_SEALS_JET
+    : rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS;
+}
 
 // Every wax seal carries internal SVG ids (the blob path, the gradients, the wax filter),
 // scoped by challenge id — which is only unique while ONE copy of that seal is in the
@@ -11212,7 +11218,7 @@ let sealScopeSeq = 0;
 function sealMarkup(svg) {
   if (!svg) return "";
   const n = ++sealScopeSeq;
-  return svg.replace(/(wax(?:aged|dark|burnt)?)-/g, `$1${n}-`);
+  return svg.replace(/(wax(?:aged|dark|jet)?)-/g, `$1${n}-`);
 }
 
 // Difficulty rating — cassette tapes (1 easy → 3 hard). Echoes the dark-shell +
@@ -11401,7 +11407,8 @@ function renderChallengesPage() {
     const rec = records.get(c.id);
     const open = unlocked.get(c.id);
     let mark, stateCls;
-    if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
+    if (perfectedChallenge(c.id, rec)) { mark = CHALL_TICK_JET; stateCls = "is-defeated is-perfect"; }
+    else if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
     else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
     else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
     else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
@@ -11616,7 +11623,7 @@ function renderChallengeDetail(id) {
   // with one of them hidden. The cell is always as tall and as wide as the longer side, and
   // the shorter side simply leaves the gap where the other's words would have gone. Nothing
   // on the card can move, and the flip reduces to one class on the root — cheap enough to
-  // hang off a hover, and no longer a rebuild that has to resume a burning seal mid-flame.
+  // hang off a hover.
   const canPeek = open && darkOpen;
   const dk = canPeek ? resolveChallenge(c, true) : null;
   const dkMode = dk ? challengeMode(dk) : null;
@@ -11696,55 +11703,13 @@ function renderChallengeDetail(id) {
           ? `${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"} · not yet beaten`
           : "dark side not yet attempted");
 
-  // How far into its second this seal's burn already is. A rebuild mid-burn has to pick the
-  // flame up at that offset, so the age is carried here and handed to armSealBurn below.
-  const burnStart = challBurningSeals.get(id);
-  // The MAP decides whether a seal is alight, not the clock: it is cleared at the exact moment
-  // the burn settles, whereas the elapsed time can overrun a full second before the settle
-  // timer gets a slice (a backgrounded tab throttles both, and unevenly). Reading the clock
-  // instead left a re-render in that window painting the seal lit and clickable again with a
-  // settle still pending behind it. The age only picks the resume point, so it clamps.
-  const sealIsBurning = burnStart != null;
-  const burnAge = sealIsBurning
-    ? Math.min(Math.max(0, Date.now() - burnStart), CHALL_SEAL_BURN_MS) : 0;
-  const sealIsCharred = challCharredSeals.has(id);
-  // Burnt is a terminal state, so the seal stops being burnable once it gets there: leaving
-  // is-burnable on meant a second click replayed the whole burn, and because the scorch starts
-  // from live violet, a black seal popped back to full colour before charring again.
-  const sealLit = rec.darkDefeated && !sealIsCharred && !sealIsBurning;
-  const sealClass = rec.darkDefeated
-    ? `is-dark${sealLit ? " is-burnable" : ""}${sealIsBurning ? " is-burning" : ""}${sealIsCharred ? " is-charred" : ""}`
+  const perfected = perfectedChallenge(id, rec);
+  const sealClass = perfected ? "is-perfect" : rec.darkDefeated ? "is-dark"
     : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked";
-  const sealTag = rec.darkDefeated ? "button" : "span";
-  // aria-disabled rather than disabled: a disabled button drops out of the tab order, which
-  // would throw focus to the body at the exact moment a keyboard player pressed the thing.
-  // It stays focusable and stays labelled; the handler is what refuses the second press.
-  const sealAttrs = rec.darkDefeated
-    ? ` type="button" data-burn-seal="${id}" aria-label="${sealLit
-          ? `Set the defeated ${escapeHtml(c.name)} Dark Side seal on fire`
-          : `The ${escapeHtml(c.name)} Dark Side seal, burnt to char`}"${sealLit ? "" : ` aria-disabled="true"`}`
-    : "";
-  // The char is a second, baked copy of the seal stacked over the live one and cross-faded in,
-  // not a filter over the first — see CHALLENGE_SEALS_BURNT for why a filter cannot do it.
-  const sealChar = rec.darkDefeated
-    ? `<span class="chall-seal-char" aria-hidden="true">${sealMarkup(CHALLENGE_SEALS_BURNT[c.id])}</span>`
-    : "";
-  // Twelve blend-mode particles over a pulsing bloom is a flash effect by any honest reading,
-  // so it answers to reducedFlashing the way every other one in the app does. The seal still
-  // chars; it just chars without the fire. Reduced motion takes the whole thing instantly.
-  const sealFire = rec.darkDefeated && !settings.reducedFlashing && !motionReduced()
-    ? `<span class="chall-seal-fire" aria-hidden="true">` +
-        `<span class="chall-fire-particles">` +
-          `<i></i><i></i><i></i><i></i><i></i><i></i>` +
-          `<i></i><i></i><i></i><i></i><i></i><i></i>` +
-        `</span>` +
-      `</span>`
-    : "";
 
   el.innerHTML =
     `<div class="chall-detail-head">` +
-      `<${sealTag} class="chall-detail-seal ${sealClass}"${sealAttrs}>` +
-        `${sealMarkup((rec.darkDefeated ? CHALLENGE_SEALS_DARK : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id])}${sealChar}${sealFire}</${sealTag}>` +
+      `<span class="chall-detail-seal ${sealClass}">${sealMarkup(recordSeals(id, rec)[c.id])}</span>` +
       `<span class="chall-detail-name">${escapeHtml(c.name)}</span>` +
       // The two badges share a cell, which is what finally settles the 10px the taller
       // "defeated" stamp used to knock the head down by on every flip. A card with no dark
@@ -11797,7 +11762,7 @@ function renderChallengeDetail(id) {
     returnPanel + darkPeek;
 
   // Flipping the card is a class on the root, not a rebuild: both sides are already sitting
-  // in the cell, so nothing is re-rendered, re-measured, or has its seal burn interrupted.
+  // in the cell, so nothing is re-rendered or re-measured.
   const paintPeek = () => {
     el.classList.toggle("is-peeking", canPeek && (challDetailPeek || challDetailHover));
     el.classList.toggle("is-pinned", canPeek && challDetailPeek);
@@ -11843,51 +11808,6 @@ function renderChallengeDetail(id) {
     db.addEventListener("focus", () => hover(true));
     db.addEventListener("blur", () => hover(false));
   }
-  const burnSeal = el.querySelector("[data-burn-seal]");
-  if (burnSeal) {
-    // A rebuild landed on a seal that was already alight: pick the flame up mid-stride rather
-    // than let the fresh node start a burn nobody is timing.
-    if (sealIsBurning) armSealBurn(burnSeal, id, c.name, burnAge);
-    burnSeal.addEventListener("click", () => {
-      const burnId = burnSeal.dataset.burnSeal;
-      if (challBurningSeals.has(burnId) || challCharredSeals.has(burnId)) return;
-      challBurningSeals.set(burnId, Date.now());
-      burnSeal.classList.remove("is-burnable");
-      burnSeal.classList.add("is-burning");
-      armSealBurn(burnSeal, burnId, c.name, 0);
-    });
-  }
-}
-
-// Settle a burning seal to char IN PLACE. Deliberately not a renderChallengeDetail() call:
-// rebuilding the panel here tore the button out from under a keyboard player's focus at the
-// exact moment they pressed it, and nothing else on the card reads burn state, so there is
-// nothing for a rebuild to update. Swapping the two classes is the whole job.
-function settleSealChar(seal, id, name) {
-  challBurnTimers.delete(id);
-  challBurningSeals.delete(id);
-  challCharredSeals.add(id);
-  if (!seal.isConnected) return;
-  seal.classList.remove("is-burning", "is-burnable");
-  seal.classList.add("is-charred");
-  seal.style.removeProperty("--seal-burn-offset");
-  seal.setAttribute("aria-disabled", "true");
-  seal.setAttribute("aria-label", `The ${name} Dark Side seal, burnt to char`);
-}
-
-// Start or resume the one-second burn on `seal`, already `age` ms into its run. The negative
-// animation-delay is what makes a resume a resume: the CSS starts partway in rather than from
-// the top, so a panel rebuilt at 600ms shows the last 400ms of the burn instead of replaying
-// the first 400 against a timer that expires immediately. Reduced motion skips the whole
-// second and chars on the spot, which is a cleaner answer than freezing a static ember on the
-// seal for a second and then cutting to black.
-function armSealBurn(seal, id, name, age) {
-  clearTimeout(challBurnTimers.get(id));
-  if (motionReduced()) { settleSealChar(seal, id, name); return; }
-  seal.style.setProperty("--seal-burn-offset", `-${age}ms`);
-  seal.setAttribute("aria-disabled", "true");
-  challBurnTimers.set(id, setTimeout(
-    () => settleSealChar(seal, id, name), Math.max(0, CHALL_SEAL_BURN_MS - age)));
 }
 
 /* ---------- Album Focus pages (the 12-album board, then one album's menu) ---------- */
@@ -20342,7 +20262,8 @@ function endChallenge() {
     : score;
   const lowWinsRule = c.rule === "newsong";
   const firstTime = !devNoLog && won
-    ? markChallengeDefeated(c.id, bestScore, challengeDark, lowWinsRule) : false;
+    ? markChallengeDefeated(c.id, bestScore, challengeDark, lowWinsRule,
+        roundResults.length > 0 && roundResults.every(Boolean)) : false;
   const rec = challengeRecord(c.id);
   /* The three charms about HOW a challenge was beaten rather than which one. All three used to
      hang off the first-ever defeat of a given challenge, which made each one a single
@@ -20418,7 +20339,8 @@ function endChallenge() {
   //
   // The challenge's own wax sits to the left of the name, and it answers the RECORD rather
   // than the run: red for a challenge still undefeated, aged taupe once it has been beaten,
-  // black-violet once its dark side has. The run's own verdict is stamped underneath in
+  // black-violet once its dark side has, jet once its top side has been won without a miss
+  // (see the topSide note below). The run's own verdict is stamped underneath in
   // letters an inch high, so a seal that also swung on win-or-lose would only be saying the
   // same thing twice — and worse, it would disagree with the drawer's copy of itself two
   // clicks later, since that one reports the record. `rec` is read AFTER
@@ -20434,8 +20356,12 @@ function endChallenge() {
   // and since the dark side is the only thing on the roster that wax means, the screen was
   // telling them they had just played a dark side. The fore-edge tab they stared at all run
   // picks its seal off `challengeDark` for exactly this reason; results now agrees with it.
+  // The jet seal follows the same rule: it shows only on a run of the TOP side, the side that
+  // perfects the card, so a light run on a perfected card with a dark side keeps the taupe.
+  const topSide = !!c.dark === hasDarkSide(c.id);
   const resultSeal = `<span class="podium-seal" aria-hidden="true">` +
-    sealMarkup((c.dark ? CHALLENGE_SEALS_DARK
+    sealMarkup((topSide && perfectedChallenge(c.id, rec) ? CHALLENGE_SEALS_JET
+      : c.dark ? CHALLENGE_SEALS_DARK
       : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id]) + `</span>`;
   // Seal and words are wrapped together rather than laid out on .podium-title itself, so the
   // whole arrangement is one node the other end paths' .textContent wipes on the way past.
@@ -34875,7 +34801,7 @@ function buildDevApi() {
           return ids.length; },
         reset: (id) => { const st = loadChallengeState();
           const ids = id ? [id] : CHALLENGE_ORDER;
-          ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), darkDefeated: false, darkAttempts: 0, darkBest: 0 }; });
+          ids.forEach((k) => { if (st[k]) st[k] = { ...challengeRecord(k), darkDefeated: false, darkAttempts: 0, darkBest: 0, darkClean: false }; });
           saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return ids.length; },
         // Open every dark side through the REAL gate so it can be played from the UI, not just
         // via dark.start's force hatch: marks each dark-side-bearing challenge unlocked + base-
@@ -34887,19 +34813,18 @@ function buildDevApi() {
           const ids = (id ? [id] : DARK_SIDE_IDS).filter((k) => hasDarkSide(k));
           ids.forEach((k) => { st[k] = { ...challengeRecord(k), unlocked: true, defeated: true }; });
           saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return ids.length; },
-        // The burn's char state, driven straight rather than through the one-second animation.
-        // The burnt seal is a fourth baked copy of the art (CHALLENGE_SEALS_BURNT), so it needs
-        // eyeballing per challenge the way the aged and dark copies do, and clicking through
-        // 25 of them a second at a time is not a way to compare them. `id` targets one; omit
-        // for all. `char(false)` puts the violet wax back.
-        char: (id, on = true) => {
-          const ids = (id === false ? [] : id ? [id] : DARK_SIDE_IDS).filter((k) => hasDarkSide(k));
-          if (id === false || on === false) challCharredSeals.clear();
-          else ids.forEach((k) => challCharredSeals.add(k));
-          challBurnTimers.forEach((t) => clearTimeout(t));
-          challBurnTimers.clear(); challBurningSeals.clear();
-          if ($("challengesBody")) renderChallengesPage();
-          return challCharredSeals.size; },
+        // Perfect a card's TOP side (dark where it has one) without playing it clean, so the
+        // jet seal and tick can be compared across the roster. Writes storage directly, so no
+        // charm fires. `id` targets one; omit for every challenge. `on = false` takes it off.
+        perfect: (id, on = true) => { const st = loadChallengeState();
+          const ids = id ? [id] : CHALLENGE_ORDER;
+          ids.forEach((k) => {
+            const r = challengeRecord(k);
+            st[k] = hasDarkSide(k)
+              ? { ...r, ...(on ? { unlocked: true, defeated: true, darkDefeated: true } : {}), darkClean: on }
+              : { ...r, ...(on ? { unlocked: true, defeated: true } : {}), clean: on };
+          });
+          saveChallengeState(st); if ($("challengesBody")) renderChallengesPage(); return ids.length; },
       },
       impostor: {
         words: () => impostorWordPool().slice(),                   // the pool THIS run draws fakes from (dark = harder subset)
