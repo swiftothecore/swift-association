@@ -8470,14 +8470,14 @@
   }
 
   /* The Smallest Song Who Ever Lived challenge — the prompt word is shrunk to a pencil
-     scrawl, tilted, dropped anywhere along the line, and left wandering a loop while its ink
-     breathes nearly out (display only; matching reads state). Placement, loop and fade are
-     set per round as inline --tiny-* vars in renderTinyWord, and the fade runs on its own
-     period so it never lines up with the loop. The wrap keeps the full word's height so the
-     page doesn't jump up and the word has somewhere to hide. Drift rides the separate
-     `translate` property so it never fights the placement transform, and it sits on .word,
-     not the wrap, which owns the tremor keyframes. Screen readers are untouched: the text
-     content is the word throughout. */
+     scrawl, tilted, dropped anywhere along the line, and left wandering while its ink
+     breathes nearly out (display only; matching reads state). Placement and fade are set
+     per round as inline --tiny-* vars in renderTinyWord; the wander is NOT here: it is
+     drawn leg by leg in tinyWander, because any keyframe loop is a pattern the eye learns
+     in one lap. It rides the separate `translate`/`rotate` properties so it never fights
+     the placement transform, and it sits on .word, not the wrap, which owns the tremor
+     keyframes. The wrap keeps the full word's height so the page doesn't jump up and the
+     word has somewhere to hide. Screen readers are untouched: the text is the word. */
   .word-wrap[data-tiny] { min-height: calc(clamp(50px, 12vw, 80px) * 1.05); }
   .word-wrap[data-tiny] .word {
     font-size: clamp(10px, 2vw, 12px); font-weight: 400;
@@ -8487,16 +8487,8 @@
   }
   .word-wrap[data-tiny] .word::before { display: none; }   /* hide the highlighter swipe — no help finding it */
   @media (prefers-reduced-motion: no-preference) {
-    .word-wrap[data-tiny] .word {
-      animation:
-        tiny-drift var(--tiny-wt, 2.8s) ease-in-out infinite,
-        tiny-fade var(--tiny-ft, 1.8s) ease-in-out var(--tiny-fd, 0s) infinite;
-    }
-    @keyframes tiny-drift {
-      0%, 100% { translate: 0 0; }
-      25% { translate: var(--tiny-wx, 50px) calc(var(--tiny-wy, 12px) * -1); }
-      50% { translate: calc(var(--tiny-wx, 50px) * 0.2) var(--tiny-wy, 12px); }
-      75% { translate: calc(var(--tiny-wx, 50px) * -1) calc(var(--tiny-wy, 12px) * -0.5); }
+    body:not([data-reduce-motion="on"]) .word-wrap[data-tiny] .word {
+      animation: tiny-fade var(--tiny-ft, 1.8s) ease-in-out var(--tiny-fd, 0s) infinite;
     }
     @keyframes tiny-fade {
       0%, 100% { opacity: 0.5; }

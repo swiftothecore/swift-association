@@ -19319,34 +19319,67 @@ function renderImpostorBanner() {
 // The Smallest Song Who Ever Lived: render the prompt word tiny, faint, tilted, and dropped
 // anywhere along the word line, then set it wandering and fading — every round, constant.
 // Display-only: matching reads currentWord from state, never the DOM. Reduced motion keeps
-// it still (no drift, no fade) but tiny, tilted and fainter still.
-// Playtested 2026-10-17 twice. First as easier than Vanishing Word's dark side: 15-22px is
-// body-text size, a +/-22px nudge left it under the player's eye, and the promised drift was
-// never built. Then, with that fixed, as still over the moment the word was READ: finding a
-// small word is one glance, and after it the page is an ordinary page. So the cost now sits
-// on reading it at all. The word wanders a loop around a box, not a line (a back-and-forth
-// is a target the eye can wait at), and its ink breathes down to almost nothing and back,
-// out of step with the loop, so it is only ever legible in glimpses and never sits still
-// for one. Retune size, spread, speed and fade together: any one alone hands it back.
+// it still (no wander, no fade) but tiny, tilted and fainter still.
+// Playtested 2026-10-17 three times. First as easier than Vanishing Word's dark side: 15-22px
+// is body-text size, a +/-22px nudge left it under the player's eye, and the promised drift
+// was never built. Then as still over the moment the word was READ, so its ink now breathes
+// down to almost nothing (CSS, on its own period) and it is only legible in glimpses. Then
+// because a CSS loop is a pattern: after one lap the eye knows where to wait. So the path is
+// no longer a keyframe. Each leg is drawn fresh (tinyWander): a dash clean across the line,
+// a short hop or a meander, at its own speed and easing, with the odd stall, so nothing
+// the word did a moment ago says where it is going next. Retune size, spread, speed and fade
+// together: any one alone hands it back.
+let tinyLeg = null;   // the running Web Animation for the current leg, so a new page can stop it
 function renderTinyWord(wrap, word) {
   wrap.dataset.tiny = "1";
-  $("wordDisplay").textContent = word;
+  const el = $("wordDisplay");
+  el.textContent = word;
+  if (tinyLeg) { tinyLeg.cancel(); tinyLeg = null; }
   const rnd = (lo, hi) => lo + Math.random() * (hi - lo);
-  const sign = () => (Math.random() < 0.5 ? -1 : 1);
   const half = Math.max(40, (wrap.clientWidth || 320) / 2);
   const wordHalf = Math.min(half * 0.5, word.length * 3.5 + 14);   // ~11px hand, plus padding
-  const driftX = Math.round(Math.min(rnd(40, 70), half * 0.3)) * sign();
-  const driftY = Math.round(rnd(10, 16)) * sign();
-  // The loop runs +/-drift around the base spot, so the base keeps that much clear of each end.
-  const roomX = Math.max(0, half - wordHalf - Math.abs(driftX));
+  const roomX = Math.max(0, half - wordHalf);
+  const dx = Math.round(rnd(-roomX, roomX));
   wrap.style.setProperty("--tiny-rot", Math.round(rnd(-35, 35)) + "deg");
-  wrap.style.setProperty("--tiny-dx", Math.round(rnd(-roomX, roomX)) + "px");
+  wrap.style.setProperty("--tiny-dx", dx + "px");
   wrap.style.setProperty("--tiny-dy", Math.round(rnd(-10, 10)) + "px");
-  wrap.style.setProperty("--tiny-wx", driftX + "px");
-  wrap.style.setProperty("--tiny-wy", driftY + "px");
-  wrap.style.setProperty("--tiny-wt", rnd(2.4, 3.2).toFixed(2) + "s");
   wrap.style.setProperty("--tiny-ft", rnd(1.5, 2.1).toFixed(2) + "s");
   wrap.style.setProperty("--tiny-fd", "-" + rnd(0, 1.5).toFixed(2) + "s");   // start mid-breath
+  if (!motionReduced() && el.animate) tinyWander(wrap, el, word, dx, roomX);
+}
+// One leg at a time, each chained off the last one's finish, for as long as this page's tiny
+// word is on screen. Positions are offsets from the placement spot (--tiny-dx), carried on the
+// separate `translate`/`rotate` properties so they compose with the placement transform.
+function tinyWander(wrap, el, word, dx, roomX) {
+  const rnd = (lo, hi) => lo + Math.random() * (hi - lo);
+  const EASES = ["ease-in-out", "ease-out", "ease-in", "linear", "cubic-bezier(.7,0,.2,1)"];
+  let x = 0, y = 0, r = 0;
+  const leg = () => {
+    if (!wrap.dataset.tiny || el.textContent !== word) { tinyLeg = null; return; }
+    const kind = Math.random();
+    let nx, ms;
+    if (kind < 0.3) {                       // dash: clean across to the far side of the line
+      const side = dx + x > 0 ? -1 : 1;
+      nx = side * rnd(roomX * 0.5, roomX) - dx;
+      ms = rnd(380, 700);
+    } else if (kind < 0.65) {               // hop: short and sudden
+      nx = x + rnd(-70, 70);
+      ms = rnd(200, 420);
+    } else {                                // meander: slow, in some new direction
+      nx = x + rnd(-160, 160);
+      ms = rnd(800, 1500);
+    }
+    nx = Math.max(-roomX - dx, Math.min(roomX - dx, nx));
+    const ny = rnd(-18, 18), nr = rnd(-18, 18);
+    const hold = Math.random() < 0.2 ? rnd(150, 500) : 0;   // the odd stall, so it never settles into a rhythm
+    tinyLeg = el.animate([
+      { translate: `${x}px ${y}px`, rotate: `${r}deg` },
+      { translate: `${nx}px ${ny}px`, rotate: `${nr}deg` },
+    ], { duration: ms, endDelay: hold, easing: EASES[Math.floor(Math.random() * EASES.length)], fill: "forwards" });
+    x = nx; y = ny; r = nr;
+    tinyLeg.onfinish = leg;
+  };
+  leg();
 }
 
 // Switch-Up: which answer type this page wants + the running score.
@@ -23098,12 +23131,10 @@ function advanceRound(options = {}) {
   wrap.classList.remove("impostor-laugh", "impostor-ha", "impostor-wronged");   // clear any prior gag
   wrap.removeAttribute("data-fx");            // clear any prior round's Word Games distortion
   wrap.removeAttribute("data-tiny");          // clear any prior round's Smallest Song shrink
+  if (tinyLeg) { tinyLeg.cancel(); tinyLeg = null; }   // …and stop its wander
   wrap.style.removeProperty("--tiny-rot");
   wrap.style.removeProperty("--tiny-dx");
   wrap.style.removeProperty("--tiny-dy");
-  wrap.style.removeProperty("--tiny-wx");
-  wrap.style.removeProperty("--tiny-wy");
-  wrap.style.removeProperty("--tiny-wt");
   wrap.style.removeProperty("--tiny-ft");
   wrap.style.removeProperty("--tiny-fd");
   wrap.removeAttribute("data-small");         // clear any prior round's Vanishing Word dark shrink
