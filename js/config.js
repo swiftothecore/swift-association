@@ -1608,11 +1608,14 @@ export const CHALLENGES = [
     blurb: "10s a page · every wrong answer cuts 3s off the clock, permanently",
     desc: "You start with a 10 second timer, but every wrong answer is a home invasion that steals 3 seconds from the timer. Four wrong answers ends the run.",
     win: "Score 9 / 13 before the clock runs dry." },
-  { id: "thirty-one", name: "Thirty-One", rule: "survive", mode: "infinite",
+  // `mode` is a DIFFICULTY (a MODES key), never a gameType. This entry once said "infinite",
+  // which is not one: the run fell back to Normal while the card read every lever as off and
+  // promised no suggestions, no clock and the word allowed in the title.
+  { id: "thirty-one", name: "Thirty-One", rule: "survive", mode: "medium",
     tagline: "reach page {target}",
     mastery: 6, target: 31, tapes: 4,
-    blurb: "Infinite sudden-death rules · reach round 31",
-    desc: "Picture infinite mode's rules with sudden death enabled, and you have to get to round 31. That's what this is.",
+    blurb: "Normal's rules on one life · reach round 31",
+    desc: "Normal's rules, ten seconds a page with the word never in the title, but there is only one life. One miss and it's over, and you have to reach round 31.",
     win: "Reach round 31 in a single unbroken run." },
   { id: "smallest-song", name: "The Smallest Song Who Ever Lived", rule: "tiny", mode: "medium",
     mastery: 6, target: 9, tapes: 4,

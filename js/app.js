@@ -11619,8 +11619,8 @@ function renderChallengeDetail(id) {
   // hang off a hover, and no longer a rebuild that has to resume a burning seal mid-flame.
   const canPeek = open && darkOpen;
   const dk = canPeek ? resolveChallenge(c, true) : null;
-  const dkMode = dk ? MODES[dk.mode] : null;
-  const mode = MODES[c.mode];
+  const dkMode = dk ? challengeMode(dk) : null;
+  const mode = challengeMode(c);
   // Both readings, one cell. `light`/`dark` arrive as HTML; the caller does the escaping.
   // A null `dark` means this card has no other side, so print the one line plainly.
   const swap = (tag, cls, light, dark) => dark == null
@@ -18101,6 +18101,11 @@ function resolveChallenge(c, dark) {
   return { ...c, ...c.hard, dark: true };
 }
 // Whether a challenge has a dark side authored at all.
+// The difficulty a challenge borrows. The run and the card's rule marks both read it from
+// here, so the levers a card promises are the levers the run plays.
+function challengeMode(c) {
+  return MODES[c && c.mode] || MODES.medium;
+}
 function hasDarkSide(id) {
   const c = CHALLENGE_BY_ID[id];
   return !!(c && c.hard);
@@ -18121,7 +18126,7 @@ function startChallenge(id, opts) {
   const c = resolveChallenge(base, dark);
   gameType = "challenge";
   if (!devNoLog) notePlayed(dark ? "dark" : "challenge", id);
-  currentMode = MODES[c.mode] || MODES.medium;   // fixed by the challenge, not persisted via DIFF_KEY
+  currentMode = challengeMode(c);                // fixed by the challenge, not persisted via DIFF_KEY
   // Some challenges override a lever of the borrowed mode (Revolving Door wants a 20s clock;
   // Shrinking Timer hides suggestions; Deep Cut disables hints). Clone so the shared MODES
   // object is never mutated; id stays the same so id-based achievement/label checks are unaffected.
@@ -18152,7 +18157,7 @@ function startChallenge(id, opts) {
   }
   // Home Invasion: run-scoped clock, starts at c.seconds and only shrinks on wrong answers.
   if (c.rule === "spite") spiteSeconds = c.seconds || 10;
-  // Thirty-One: runs on Infinite's sudden-death rules while staying a sandboxed challenge.
+  // Thirty-One: Normal's rules on a single life, while staying a sandboxed challenge.
   if (c.rule === "survive") lives = 1;
   if (!devNoLog) recordChallengeAttempt(id, dark);
   applyInputHints();
@@ -34654,7 +34659,7 @@ function buildDevApi() {
       // Mastery-gated, so walking the shelf with `start` can't reach them).
       taglines: () => CHALLENGES.flatMap((b) => [false, true].filter((d) => !d || b.hard).map((d) => {
         const c = resolveChallenge(b, d);
-        const secs = c.seconds != null ? c.seconds : (MODES[c.mode] || MODES.medium).seconds;
+        const secs = c.seconds != null ? c.seconds : challengeMode(c).seconds;
         return `${d ? "  (dark) " : ""}${c.name} · ${challengeTagline(c, `${secs} seconds each`)}`;
       })).join("\n"),
       /* The margin — what the run can still afford to get wrong. `state` is the live reading
