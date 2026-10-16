@@ -16183,9 +16183,12 @@ function updateTagline() {
 // A front-page tab row wraps on a phone, and a tab on any line but the last has nothing under
 // it: the page (or the shelf the row stands on) is only under the last line. Those tabs are
 // marked `.is-back` so styles.css gives each one a shelf of its own. It is layout, not state, so
-// it is re-measured whenever a row changes height as well as after every render.
+// it is re-measured whenever a row changes height as well as after every render. The difficulty
+// row's page is watched too, since its gradient is measured to the page's foot and the page
+// rewraps when the blurb changes under a row that has not moved.
 const tabRankWatch = typeof ResizeObserver === "function"
-  ? new ResizeObserver((entries) => entries.forEach((e) => rankTabs(e.target)))
+  ? new ResizeObserver((entries) => entries.forEach((e) =>
+      rankTabs(e.target.classList.contains("mode-blurb") ? $("modeTabs") : e.target)))
   : null;
 function rankTabs(row) {
   const tabs = [...row.querySelectorAll(".mode-tab")];
@@ -16201,11 +16204,24 @@ function rankTabs(row) {
     const a = page.getBoundingClientRect(), b = picked.getBoundingClientRect();
     picked.style.setProperty("--sheet-x", `${a.left - b.left}px`);
     picked.style.setProperty("--sheet-y", `${a.top - b.top}px`);
+    // Its gradient is one piece across tab and page, so both are painted from the box running
+    // from the tab's top to the page's foot. A tab wrapped away from its page is not joined, and
+    // each paints its own; so does a sheet measured before it was laid out, which would otherwise
+    // paint at 0px and vanish.
+    const sheet = page.parentElement.style;
+    if (picked.classList.contains("is-back") || !a.width) {
+      ["--sheet-w", "--sheet-h", "--sheet-rise"].forEach((p) => sheet.removeProperty(p));
+    } else {
+      sheet.setProperty("--sheet-w", `${a.width}px`);
+      sheet.setProperty("--sheet-h", `${a.bottom - b.top}px`);
+      sheet.setProperty("--sheet-rise", `${a.top - b.top}px`);
+    }
   }
 }
 function standTabs(row) {
   rankTabs(row);
   if (tabRankWatch) tabRankWatch.observe(row);
+  if (tabRankWatch && row.id === "modeTabs") tabRankWatch.observe($("modeBlurb"));
 }
 function renderModePicker() {
   const tabs = $("modeTabs");

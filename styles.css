@@ -3043,17 +3043,29 @@
      They are stated as tokens on the ROW, not as a background on the tab, because on the front
      page the picked difficulty's colour has to reach past its tab: the rule-terms strip under
      it is that tab's page and wears the same ink (see "The front page's pickers" below). */
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); --tab-grad: linear-gradient(var(--tab-sheet), var(--tab-sheet)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="classic"])  { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="hard"])     { --tab-wash: rgba(202,92,74,0.34);   --tab-edge: color-mix(in srgb, #9b362e 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="ultra"])    { --tab-wash: rgba(122,98,182,0.34);  --tab-edge: color-mix(in srgb, #5a4898 50%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab--modality.active)             { --tab-wash: rgba(212,108,152,0.28); --tab-edge: color-mix(in srgb, #bc4e80 50%, var(--paper)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(100,175,240,0.42), rgba(50,105,190,0.34)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(185,205,100,0.32), rgba(90,145,95,0.30)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="hard"])     { --tab-wash: rgba(202,92,74,0.34);   --tab-edge: color-mix(in srgb, #9b362e 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(242,130,88,0.36), rgba(178,48,58,0.31)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="ultra"])    { --tab-wash: rgba(122,98,182,0.34);  --tab-edge: color-mix(in srgb, #5a4898 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(170,120,205,0.28), rgba(65,70,150,0.30)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab--modality.active)             { --tab-wash: rgba(212,108,152,0.28); --tab-edge: color-mix(in srgb, #bc4e80 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(232,145,165,0.26), rgba(150,80,150,0.26)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="infinite"]) { --tab-wash: rgba(64,150,146,0.34);  --tab-edge: color-mix(in srgb, #287874 52%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="custom"])   { --tab-wash: rgba(176,104,150,0.32); --tab-edge: color-mix(in srgb, #964a7c 52%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="3lives"]) { --tab-edge: color-mix(in srgb, #786e46 50%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: color-mix(in srgb, #0c0907 80%, var(--paper)); }
+  /* Each difficulty also carries a pair of neighbouring inks, the treatment the game types wear
+     above it, as --tab-grad: sky into denim, lime into leaf, coral into brick, orchid into indigo,
+     rose into plum. Normal is the home base like Classic, so it blends the era's highlighter into
+     itself turned a step round the wheel and follows the era. Picked side by side on
+     scripts/ui/difficulty-tab-gradients.html, where a ladder that handed each rung the colour of
+     the one below was turned down: only one rung is ever picked, so it just read as two rungs. */
+  @supports (color: oklch(from red l c h)) {
+    :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"]) {
+      --tab-grad: linear-gradient(160deg, oklch(from var(--highlighter) l c h / calc(alpha * 0.78)), oklch(from var(--highlighter) calc(l - 0.05) calc(c + 0.03) calc(h - 28) / calc(alpha * 0.6)));
+    }
+  }
+  .mode-tab.active:is([data-mode], .mode-tab--modality) { background: var(--tab-grain), var(--tab-grad); }
   /* The stats page's "All" view sums every mode, so it wears every mode's wash at once: the
      ladder's colours laid side by side, relaxed denim through ultra violet. */
   .mode-tabs:has(.mode-tab.active[data-type="all"]) { --tab-edge: color-mix(in srgb, #5a505a 50%, var(--paper)); }
@@ -3068,9 +3080,6 @@
      instead was tried and printed khaki, because the accents are dark. Set on the
      tab, not as --tab-wash, because that token is mixed into a solid sheet colour elsewhere and
      a gradient cannot be. Picked side by side on scripts/ui/mode-tab-gradients.html. */
-  .mode-tab.active:is([data-type="classic"], [data-type="infinite"], [data-type="custom"]) {
-    --tab-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
   .mode-tab.active[data-type="classic"]  {
     background: var(--tab-grain), var(--highlighter);
     background: var(--tab-grain), linear-gradient(118deg, var(--highlighter) 10%, oklch(from var(--highlighter) calc(l - 0.05) calc(c + 0.03) calc(h - 28) / calc(alpha * 0.85)) 100%);
@@ -3128,6 +3137,9 @@
     /* The divider sheet: the tab and its page are one piece of paper in one ink. */
     --tab-sheet: color-mix(in srgb, var(--tab-wash) 62%, transparent);
     --tab-rim: color-mix(in srgb, var(--tab-edge) 78%, var(--paper));
+    /* A faint paper grain laid over every gradient wash, so a blend reads as ink soaked into
+       the stock rather than a screen fill. */
+    --tab-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.25  0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   .mode-picker > .mode-tabs { position: relative; padding-left: 7px; }
   /* Square to the line: none of the tab's own tilt, and none of ink.css's either, which tilts
@@ -3164,7 +3176,10 @@
   :is(#difficultyRow, [data-flip-id="difficultyRow"]) .mode-blurb {
     margin: 0; padding: 11px 12px 12px;
     border: 1.5px solid var(--tab-rim); border-radius: 3px 7px 6px 5px;
-    background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
+    background: var(--tab-grain), var(--tab-grad), var(--paper);
+    background-size: auto, var(--sheet-w, 100%) var(--sheet-h, 100%), auto;
+    background-position: 0 0, 0 calc(-1 * var(--sheet-rise, 0px)), 0 0;
+    background-repeat: repeat, no-repeat, repeat;
   }
   /* The sheet's grain: a faint field of 13s in the page's own edge ink, so it follows the picked
      difficulty's colour (and night) without a new colour of its own. Four per tile, laid as
@@ -3209,7 +3224,7 @@
   /* A picked difficulty wrapped onto a line above its page (a phone) cannot reach it, so it
      stands on its shelf like the rows above; it still wears the page's colour, so the two read
      as a pair across the line between them. */
-  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back { border-color: var(--tab-rim); background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper); }
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back { border-color: var(--tab-rim); background: var(--tab-grain), var(--tab-grad), var(--paper); }
   :is(#difficultyRow, [data-flip-id="difficultyRow"]) .blurb-clause { white-space: nowrap; }
   /* Lyricist's divider stands in the gap between tabs, not on the page: held off the strip by
      the same margin it keeps from the tabs' tops, so it reads as a mark between two tabs rather
@@ -3224,11 +3239,17 @@
   }
   :is(#modeTabs, [data-flip-id="modeTabs"]) { z-index: 1; }
   /* Its tab is the top of the same sheet: dropped 1.5px over the page's top edge in the page's own
-     colour, so the edge under it disappears. Its sides are the page's rim, so where they cross the
+     colour, so the edge under it disappears. The gradient is ONE piece across both, laid over the
+     box from the tab's top to the page's foot (rankTabs measures it as --sheet-w/-h on the row,
+     with --sheet-rise for how far the page starts below the tab), so the blend never restarts at
+     the seam. A tab wrapped onto its own line is not joined, and each paints its own. Its sides are the page's rim, so where they cross the
      page's top edge the two are one colour and the corner closes clean. */
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active:not(.is-back) {
     margin-bottom: -1.5px; padding-bottom: calc(var(--tab-foot) + 1.5px); border-color: var(--tab-rim);
-    background: linear-gradient(var(--tab-sheet), var(--tab-sheet)), var(--paper);
+    background: var(--tab-grain), var(--tab-grad), var(--paper);
+    background-size: auto, var(--sheet-w, 100%) var(--sheet-h, 100%), auto;
+    background-position: 0 0, var(--sheet-x, 0) 0, 0 0;
+    background-repeat: repeat, no-repeat, repeat;
   }
   /* the tab rows reused on the stats page — two tiers (view / difficulty) */
   .stats-tabs { margin-bottom: 16px; }
