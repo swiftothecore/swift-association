@@ -1436,7 +1436,7 @@ export const CHALLENGES = [
     win: "Recall 6 lines word-for-word (or better). Type the line exactly." },
   { id: "lyric-ink", name: "Long Story Long", rule: "ink", mode: "medium",
     tagline: "{ink} characters in 13 pages",
-    free: false, cost: 1, ink: 1100, seconds: 18, noTitle: false, dropdown: true, tapes: 3,
+    free: false, cost: 1, ink: 1100, seconds: 20, noTitle: false, dropdown: true, tapes: 3,
     // The only challenge scored in CHARACTERS rather than pages. Clearing a page and scoring
     // it are deliberately different things here: the lyric path already accepts any contiguous
     // run of four words that sings the prompt word, so the cheapest legal answer is about 18
@@ -1464,7 +1464,7 @@ export const CHALLENGES = [
     // WHICH IS WHY DARK NO LONGER BUYS MORE CLOCK. At 8 chars/sec five seconds is worth ~40
     // characters of headroom a page, more than the jump from one target to a higher one takes
     // away — so the old `seconds: 23` made the dark side EASIER per page than the base in
-    // relative terms. Dark is the number alone now, on the same 18s.
+    // relative terms. Dark is the number alone now, on the same clock as the base.
     //
     // 1100 is ~85 a page: reachable at a recital pace, unreachable at a remembering one, and
     // it still pays for two or three pages where the word lands somewhere you don't hold a
@@ -1473,7 +1473,7 @@ export const CHALLENGES = [
     hard: { ink: 1500,
       desc: "The same page, a third as much again to fill, and not a second more to do it in. A title banked here is a page thrown away: on this side only the lines will do, and the long ones at that.",
       win: "Write 1500 characters across 13 pages." },
-    blurb: "18s · suggestions · all words · title words allowed",
+    blurb: "20s · suggestions · all words · title words allowed",
     // Pencilled beside the goal on the card (renderChallengeDetail; *stars* mark the highlighter
     // swipe). The paragraph above is why: past recall, this run is a typing test, and a player
     // who knows the passage but types slowly loses it to the clock rather than to the lyric.
@@ -1909,23 +1909,25 @@ export const RISK_TOKENS = 3;
 
    THE NUMBER IS BOUNDED ABOVE BY THE CLOCK, not by taste, so it can be worked out rather
    than guessed. A page pays what you TYPE (lyricInk caps the credit at the span you actually
-   matched), the page is 18 seconds, and the playtest that forced the 400 -> 1200 retune put a
-   reciting player at ~8 characters a second. That is a hard ceiling of ~144 characters a
+   matched), the page is 20 seconds (18 until a 2026-10-16 retune), and the playtest that forced the 400 -> 1200 retune put a
+   reciting player at ~8 characters a second. That is a hard ceiling of ~160 characters a
    page, and only if the typing starts the instant the word lands. Measured 2026-09-02: the
    median lyric line holding a prompt word is ~37 characters, so the base target's 85 a page
    is a little over two lines, and each page of this flourish is three or more.
-     8 pages  -> 138 a page. 17.2s of unbroken typing out of 18. Effectively impossible.
-     9 pages  -> 122 a page. 15.3s of typing, 2.7s to read the word and find the passage.
+     8 pages  -> 138 a page. 17.2s of typing out of 20, 2.8s to read the word and find it.
+     9 pages  -> 122 a page. 15.3s of typing, 4.7s spare.
     10 pages  -> 110 a page. Real, but only 18% over the pace the base win already asks for.
     11 pages  -> 100 a page. Comfortably real.
+   The table predates the 18 -> 20s retune: the per-page figures still hold, but every row
+   now has two more seconds of slack, so 10 is now further from the edge than it was.
    NOTE: this table was re-derived off the 1200 -> 1100 retune below by the same arithmetic,
    not by a fresh playtest, so INK_FLOURISH_PAGES staying at 10 (rather than moving to 9, now
    the closer analogue of the old "edge of the clock" row) has not been re-validated. Move it
    here and the charm's desc follows; the charm id carries no number, because this one is
    expected to move again once a real run has been measured.
-   It reads the same on the dark side, where 1500 in ten pages asks 150 a page, over the
-   ceiling. The dark flourish is currently out of reach, and that is the honest reading of
-   an 18-second page, not a number to soften. */
+   On the dark side 1500 in ten pages asks 150 a page, just under the ceiling: 18.75s of
+   unbroken typing out of 20. The dark flourish is effectively out of reach, and that is the
+   honest reading of a 20-second page, not a number to soften. */
 export const INK_FLOURISH_PAGES = 10;
 /* Odd One Out — the reject grid. Each page shows ODD_TILES songs, of which exactly one is the
    odd one: the word appears in NEITHER its lyrics nor its title (so the tile isn't an unfair
