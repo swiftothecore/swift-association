@@ -26368,14 +26368,22 @@ function moreSongsBlock(pool, shown, word) {
     ? `<button type="button" class="more-songs-next" data-batch="${MORE_EXAMPLES_BATCH}">` +
       `<span class="ctl-lab">show ${Math.min(MORE_EXAMPLES_BATCH, remaining)} more · ${remaining} remaining</span>${MORE_CHEV}</button>`
     : "";
-  // Swift to the Lyric is Taylor-only. It is a secondary whole-catalogue exploration, never a
-  // substitute for completing this scoped list, and therefore stays out of guest/title pages.
+  // Swift to the Lyric is Taylor-only, so it stays out of guest and title pages. It sits at the
+  // foot of a list the player has just read to the end, so it only earns a place when the
+  // catalogue holds songs this page left out (an album lens, a no-title rule, a setlist): on an
+  // unscoped page the list already IS the catalogue and the link would only repeat it.
   let searcher = "";
   if (activeCorpus === "taylor" && word && !titleProofActive()) {
-    const hash = new URLSearchParams({ q: word, mode: effectiveStrict() ? "exact" : "stem", view: "grouped" });
-    searcher = `<a class="more-songs-all" href="search/#${hash.toString()}" target="_blank" rel="noopener"` +
-      ` aria-label="Explore ${escapeHtml(word)} across Taylor Swift's full catalogue in Swift to the Lyric">` +
-      `<span class="cta-run">explore “${escapeHtml(word)}” across Taylor's full catalogue${CTA_ARROW}</span></a>`;
+    const listed = new Set([...(pool || []), ...(shown || [])].map((song) => song.title));
+    const unseen = new Set(songsContainingWord(word, effectiveStrict())
+      .map((song) => song.title).filter((title) => !listed.has(title))).size;
+    if (unseen) {
+      const hash = new URLSearchParams({ q: word, mode: effectiveStrict() ? "exact" : "stem", view: "grouped" });
+      const label = `${unseen} more song${unseen === 1 ? "" : "s"} with “${escapeHtml(word)}” beyond this page`;
+      searcher = `<a class="more-songs-all" href="search/#${hash.toString()}" target="_blank" rel="noopener"` +
+        ` aria-label="${label}, in Swift to the Lyric">` +
+        `<span class="cta-run">${label}${CTA_ARROW}</span></a>`;
+    }
   }
   return `<button type="button" class="more-songs-toggle" aria-expanded="false" aria-controls="${id}"` +
       ` data-label="${escapeHtml(openingLabel)}"><span class="ctl-lab">${openingLabel}</span>${MORE_CHEV}</button>` +
