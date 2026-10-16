@@ -5620,6 +5620,18 @@ export const GRAVEYARD = [
       `keepsakes drawer, didn't feel like it came off the desk. Maybe the messages will come back ` +
       `one day, but they'll need a proper reason to exist this time.`,
   },
+  {
+    id: "charred",
+    name: "The charred seal",
+    born: "14 August 2026", died: "17 October 2026",
+    icon: "charred",
+    was: `It was a feature where you could click on the seal of a challenge once you had beaten its ` +
+      `dark side, and the seal would burn up and turn a charred black colour, staying that way ` +
+      `until you reloaded the page.`,
+    why: `It was just a fun visual easter egg, but once it went into battle with a feature I liked ` +
+      `more, seals turning black once you have perfected them 13/13, it had to go. There was ` +
+      `nothing particularly wrong with it, but a better idea came along.`,
+  },
 ];
 
 /* ---------- The credits ----------
