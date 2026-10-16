@@ -8469,15 +8469,28 @@
     }
   }
 
-  /* The Smallest Song Who Ever Lived challenge — the prompt word is shrunk, tilted, and
-     offset to a random spot (display only; matching reads state). The offset/tilt are set
-     per round as inline --tiny-* vars in renderTinyWord. */
+  /* The Smallest Song Who Ever Lived challenge — the prompt word is shrunk to a pencil
+     scrawl, tilted, dropped anywhere along the line and left wandering (display only;
+     matching reads state). Placement and drift are set per round as inline --tiny-* vars in
+     renderTinyWord. The wrap keeps the full word's height so the page doesn't jump up and
+     the word has somewhere to hide. Drift rides the separate `translate` property so it
+     never fights the placement transform, and it sits on .word, not the wrap, which owns
+     the tremor keyframes. */
+  .word-wrap[data-tiny] { min-height: calc(clamp(50px, 12vw, 80px) * 1.05); }
   .word-wrap[data-tiny] .word {
-    font-size: clamp(15px, 3vw, 22px);
+    font-size: clamp(10px, 2vw, 12px); font-weight: 400;
+    color: var(--ink-soft); opacity: 0.7;
     transform: translate(var(--tiny-dx, 0px), var(--tiny-dy, 0px)) rotate(var(--tiny-rot, 0deg));
     transition: none;
   }
   .word-wrap[data-tiny] .word::before { display: none; }   /* hide the highlighter swipe — no help finding it */
+  @media (prefers-reduced-motion: no-preference) {
+    .word-wrap[data-tiny] .word { animation: tiny-drift var(--tiny-wt, 4s) ease-in-out infinite alternate; }
+    @keyframes tiny-drift {
+      from { translate: 0 0; }
+      to   { translate: var(--tiny-wx, 24px) var(--tiny-wy, 8px); }
+    }
+  }
 
   /* Vanishing Word's dark side — the prompt renders at a fraction of its normal size
      (--word-scale, set per round in applyChallengeRound) on top of vanishing sooner. It

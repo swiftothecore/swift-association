@@ -19316,19 +19316,34 @@ function renderImpostorBanner() {
     `<span class="chall-prog-name">🚩 ${impostorFlagged} caught</span>` +
     `<span class="chall-prog-count">${score - impostorFlagged} / ${currentChallenge.target || 7}</span>`;
 }
-// The Smallest Song Who Ever Lived: render the prompt word tiny, tilted, and offset to a
-// random spot within the word area — every round, constant. Display-only: matching reads
-// currentWord from state, never the DOM. Reduced motion keeps it readable/static (no drift
-// animation) but still tiny + tilted.
+// The Smallest Song Who Ever Lived: render the prompt word tiny, faint, tilted, and dropped
+// anywhere along the word line, then set it wandering — every round, constant. Display-only:
+// matching reads currentWord from state, never the DOM. Reduced motion keeps it still (no
+// drift) but still tiny, faint and tilted.
+// Playtested 2026-10-17 as easier than Vanishing Word's dark side, and it was: 15-22px is
+// body-text size, a +/-22px nudge left it under the player's eye, and the drift the card
+// promised was never built. The word now lands anywhere across the line's real width (so the
+// eye has to search for it, not glance at it), is pencil-faint, and keeps moving, so a
+// first look that lands where it WAS finds nothing. Retune the size, spread and drift
+// together: any one alone hands the easy page back.
 function renderTinyWord(wrap, word) {
   wrap.dataset.tiny = "1";
-  const tilt = Math.round((Math.random() * 40) - 20);         // -20°..+20°
-  const dx = Math.round((Math.random() * 44) - 22);           // -22px..+22px
-  const dy = Math.round((Math.random() * 24) - 12);           // -12px..+12px
-  wrap.style.setProperty("--tiny-rot", tilt + "deg");
+  $("wordDisplay").textContent = word;
+  const rnd = (lo, hi) => lo + Math.random() * (hi - lo);
+  const half = Math.max(40, (wrap.clientWidth || 320) / 2);
+  const wordHalf = Math.min(half * 0.5, word.length * 3.5 + 14);   // ~11px hand, plus padding
+  const driftX = Math.round(rnd(18, 34)) * (Math.random() < 0.5 ? -1 : 1);
+  const driftY = Math.round(rnd(6, 12)) * (Math.random() < 0.5 ? -1 : 1);
+  // Room for the base spot is what is left once the word and its drift are both kept inside.
+  const roomX = Math.max(0, half - wordHalf - Math.abs(driftX));
+  const dx = Math.round(rnd(-roomX, roomX));
+  const dy = Math.round(rnd(-16, 16)) - Math.round(driftY / 2);
+  wrap.style.setProperty("--tiny-rot", Math.round(rnd(-35, 35)) + "deg");
   wrap.style.setProperty("--tiny-dx", dx + "px");
   wrap.style.setProperty("--tiny-dy", dy + "px");
-  $("wordDisplay").textContent = word;
+  wrap.style.setProperty("--tiny-wx", driftX + "px");
+  wrap.style.setProperty("--tiny-wy", driftY + "px");
+  wrap.style.setProperty("--tiny-wt", rnd(3.2, 5).toFixed(1) + "s");
 }
 
 // Switch-Up: which answer type this page wants + the running score.
@@ -23083,6 +23098,9 @@ function advanceRound(options = {}) {
   wrap.style.removeProperty("--tiny-rot");
   wrap.style.removeProperty("--tiny-dx");
   wrap.style.removeProperty("--tiny-dy");
+  wrap.style.removeProperty("--tiny-wx");
+  wrap.style.removeProperty("--tiny-wy");
+  wrap.style.removeProperty("--tiny-wt");
   wrap.removeAttribute("data-small");         // clear any prior round's Vanishing Word dark shrink
   wrap.removeAttribute("data-flip");          // …and its upside-down turn
   wrap.style.removeProperty("--word-scale");
