@@ -19864,7 +19864,7 @@ function buildWildcardConstraints() {
     { id: "titleword", label: "the word must be in the title",   accepts: (s) => rx.test(s.title) },
     { id: "vanish",    label: "the word vanishes",               accepts: null,
       display: (w) => { scheduleVanish(w, 1500); } },
-    { id: "scramble",  label: "the word is scrambled",           accepts: null, instant: true,
+    { id: "scramble",  label: "the word is jumbled",              accepts: null, instant: true,
       display: (w) => renderWordFx(w, currentWord, 1) },
   ];
   if (album) cons.push({ id: "album", label: `only from ${album}`, accepts: (s) => s.album === album });
@@ -19958,8 +19958,36 @@ function wordFxLevel(r) {
   if (eff <= 9) return 3;   // reverse
   return 4;                 // scramble + drop + reverse + wobble
 }
+// A scramble is only fair when its letters spell ONE word. "danger" jumbled could as well be
+// "garden", "night" could be "thing", and then the page stops testing the songs and becomes a
+// guess at which word the game meant. So a word that shares its letters with another word is
+// never scrambled, and every caller falls back to a warp that keeps the letters in order.
+// "Another word" means any word the playable list holds or the corpus sings (whole words only,
+// so "hadn't" never offers "hand" a partner). Full anagrams, not first-and-last-fixed ones,
+// because nothing on the page tells the player the ends stay put. Built once per corpus.
+let anagramIndex = null;
+function hasAnagramPartner(w) {
+  if (!anagramIndex || anagramIndex.songs !== allSongs) {
+    const keys = new Map();
+    const add = (t) => {
+      if (t.length < 3) return;
+      const k = t.split("").sort().join("");
+      if (!keys.has(k)) keys.set(k, new Set());
+      keys.get(k).add(t);
+    };
+    for (const s of allSongs) {
+      for (const t of (s.lyrics || "").toLowerCase().split(/[^a-z']+/)) if (/^[a-z]+$/.test(t)) add(t);
+    }
+    for (const t of playableWords) add(t.toLowerCase());
+    anagramIndex = { songs: allSongs, keys };
+  }
+  const low = w.toLowerCase();
+  const set = anagramIndex.keys.get(low.split("").sort().join(""));
+  return !!set && [...set].some((t) => t !== low);
+}
 function scrambleWord(w) {
   if (w.length < 4) return w;                 // too short to disguise — leave it
+  if (hasAnagramPartner(w)) return w;         // ambiguous: the caller warps it another way
   const interior = w.slice(1, -1);
   // Shuffle the interior, retrying so the result is never identical to the original
   // (a Fisher-Yates can legally produce the identity permutation, which read as "not
@@ -20000,8 +20028,8 @@ function renderWordFx(wrap, word, r, levelOverride) {
   else if (level === 2) text = dropLetters(word);
   else if (level === 3) text = word.split("").reverse().join("");
   else text = dropLetters(scrambleWord(word)).split("").reverse().join("");
-  // Safety net: if a short word slipped through unchanged (e.g. a 3-letter word at the
-  // scramble tier can't be shuffled), at least reverse it so it never shows un-warped.
+  // Safety net: if a word slipped through unchanged (a 3-letter word can't be shuffled, and a
+  // word with an anagram partner is never scrambled), reverse it so it never shows un-warped.
   if (text === word && word.length > 1) text = word.split("").reverse().join("");
   wrap.dataset.fx = String(level);
   const wobble = level === 4 && !prefersReducedMotion();
@@ -22345,7 +22373,7 @@ const DEVIL_CURSES = [
   { id: "drain", cat: "time",   build: () => ({ name: "Time Drain",  desc: "four fewer seconds on every remaining page", apply: () => { extraSecondsPerRound -= 4; } }) },
   { id: "dark", cat: "time",    build: () => ({ name: "In The Dark", desc: "no more suggestions for the rest of the run", apply: () => { devilDropOff = true; } }) },
   { id: "vanish", cat: "wordfx",  build: () => ({ name: "Disappearing Ink", desc: "the word fades away after a moment each page", apply: () => { devilVanish = true; } }) },
-  { id: "scramble", cat: "wordfx",build: () => ({ name: "Word Salad",  desc: "the word's letters are scrambled each page", apply: () => { devilFx = "scramble"; } }) },
+  { id: "scramble", cat: "wordfx",build: () => ({ name: "Word Salad",  desc: "the word's letters are jumbled each page", apply: () => { devilFx = "scramble"; } }) },
   { id: "drop", cat: "wordfx",    build: () => ({ name: "Redacted",    desc: "some of the word's letters go missing each page", apply: () => { devilFx = "drop"; } }) },
   { id: "reverse", cat: "wordfx", build: () => ({ name: "Backwards",   desc: "the word is shown reversed each page", apply: () => { devilFx = "reverse"; } }) },
   { id: "notitle", cat: "restrict", build: () => ({ name: "No Giveaways", desc: "the word can no longer be in your answer's title", apply: () => { devilNoTitle = true; } }) },
