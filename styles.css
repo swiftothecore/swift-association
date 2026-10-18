@@ -4369,6 +4369,68 @@
   }
   .zine-open.is-soon { filter: drop-shadow(0 8px 14px rgba(43, 39, 34, 0.18)) saturate(0.92); }
 
+  /* ---- Spot the Slip's B side (Correct the Slip) ----
+     The zine turned over. The page leaf is reprinted on the cover's own slate (#2f4858, the
+     ground of the Spot the Slip collage), so the dark side is this zine's colour rather than a
+     generic night stock, and it is the same navy by day and by night because it is printed
+     paper, not a theme. Only the page leaf turns: the cover leaf already carries the B side's
+     collage, and the bone around it is the same paper on both sides. */
+  .zine-open.is-bside .zine-leaf-page {
+    background: #2f4858; border-color: rgba(18, 28, 36, 0.5);
+    box-shadow: inset 14px 0 16px -12px rgba(0, 0, 0, 0.55);
+  }
+  .zine-open.is-bside .bonus-now-kicker { color: #f0a08c; }
+  .zine-open.is-bside .bonus-now-name { color: #f3ead7; }
+  .zine-open.is-bside .bonus-now-blurb { color: #d9d3c4; }
+  .zine-open.is-bside .bonus-now-meta { color: #a9b8bf; }
+  /* THE TURNED CORNER. The leaf is cut along the fold and the flap lies folded down over the
+     page, showing the back of the paper: the B side's slate on the A side, bone on the B side,
+     with the other side's name pencilled along it. It is the switch, so it is the only corner
+     of any leaf that is turned. The flap's shadow falls through a filter on the button, which
+     is unclipped, so it follows the triangle rather than the box. */
+  .zine-leaf-page.has-dogear {
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - var(--dogear)) 0, 100% var(--dogear), 100% 100%, 0 100%);
+    --dogear: 40px;
+  }
+  .zine-dogear {
+    position: absolute; top: 0; right: 0; width: var(--dogear); height: var(--dogear); z-index: 2;
+    padding: 0; border: 0; background: none; cursor: pointer;
+    filter: drop-shadow(-1.5px 2px 1.5px rgba(26, 18, 12, 0.32));
+    transition: filter 0.16s ease-out, transform 0.16s ease-out;
+  }
+  .zine-dogear:hover, .zine-dogear:focus-visible {
+    filter: drop-shadow(-3px 4px 2.5px rgba(26, 18, 12, 0.36));
+    transform: translate(-1px, 1px);
+  }
+  .zine-dogear:focus-visible { outline: none; }
+  .zine-dogear:active { transform: translate(-2px, 2px); }
+  .zine-dogear-flap {
+    position: absolute; inset: 0; display: block;
+    clip-path: polygon(0 0, 100% 100%, 0 100%);
+    background: linear-gradient(45deg, #26394a 0%, #2f4858 58%, #3a5568 100%);
+  }
+  .zine-dogear:focus-visible .zine-dogear-flap { box-shadow: inset 2px -2px 0 #c7951f; }
+  .zine-dogear-flap i {
+    position: absolute; left: 6px; top: 5px; white-space: nowrap; font-style: normal;
+    font-family: var(--hand); font-weight: 700; font-size: 11.5px; line-height: 1; color: #f0a08c;
+    transform: rotate(45deg); transform-origin: 0 0;
+  }
+  .zine-open.is-bside .zine-dogear-flap { background: linear-gradient(45deg, #e2d8c2 0%, #f1e9d6 58%, #f8f2e4 100%); }
+  .zine-open.is-bside .zine-dogear-flap i { color: #8a2626; }
+  /* The turn: the spread swings edge-on, the side changes out of sight, and it swings back.
+     It fades through edge-on rather than trusting backface-visibility, which composited
+     children ignore. turnSlipZine times the swap to the first half (ZINE_TURN_MS). */
+  .zine-open.is-turning-out { animation: zineTurnOut 0.23s ease-in forwards; }
+  .zine-open.is-turning-in { animation: zineTurnIn 0.32s cubic-bezier(0.2, 0.8, 0.3, 1); }
+  @keyframes zineTurnOut {
+    to { transform: perspective(1100px) rotateY(-86deg); opacity: 0.1; }
+  }
+  @keyframes zineTurnIn {
+    from { transform: perspective(1100px) rotateY(86deg); opacity: 0.1; }
+    to { transform: none; opacity: 1; }
+  }
+
   /* ---- what is written on the right-hand leaf ---- */
   .bonus-now-kicker {
     font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase;
@@ -5332,6 +5394,15 @@
     color: #8a2626;
   }
   .bg-word.is-wrong { text-decoration: line-through; text-decoration-color: rgba(43,39,34,0.5); opacity: 0.6; }
+  /* Correct the Slip, after the find: the impostor stays where it stood, struck through in the
+     red pen that circles it on a Spot the Slip reveal, and Sing It Back's gap opens beside it
+     for the word that belongs there. The chip's hover tint is gone, since it is no longer
+     something to tap. */
+  .bg-word.is-found { display: inline-flex; align-items: baseline; gap: 0.28em; background: none; box-shadow: none; }
+  .bg-struck {
+    text-decoration: line-through; text-decoration-color: #b23a3f; text-decoration-thickness: 2px;
+    color: var(--ink-soft); font-size: 0.82em;
+  }
 
   /* Sing It Back — one word left out of the line. The gap is gone over with the chisel
      highlighter a revealed lyric wears (the stroke is the shared rule, named on .lyric-card's

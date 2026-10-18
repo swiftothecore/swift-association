@@ -1004,6 +1004,20 @@ export const RUTHLESS_GAME = {
   line: "A word a second until you name it.",
   blurb: "The song writes itself out from its very first word, one word every second, and the clock never stops. Guess as often as you like, because a wrong answer costs nothing but the seconds it took.",
 };
+/* Spot the Slip's B side: the same pages, and once the impostor is found the real word has to be
+   written back in. It stands BESIDE the roster like RUTHLESS_GAME rather than in it, because the
+   shelf is a row of zines and this is not another zine: it is Spot the Slip turned over (the
+   turned corner on its open leaf, see turnSlipZine). Its own id gives it its own board, its own
+   endless board and its own sweep, so a ten-page Spot the Slip best is never compared with a run
+   that was asked for more. Its cover is the A side's collage in negative (zine.js). Two points
+   a page: one for the find, one for the fix. */
+export const CORRECT_THE_SLIP = {
+  id: "correct-the-slip", base: "spot-the-slip", name: "Correct the Slip",
+  ready: true, sweep: true, endless: true, points: 2,
+  kicker: "find it, then fix it", tint: "#bf5340",
+  line: "Catch the impostor, then write the real word back in.",
+  blurb: "One word in the lyric has been swapped for an impostor. Catch it, then write back the word that really goes there. A point for the find and a point for the fix.",
+};
 // A bonus run is short by design — these sit beside the main game, they don't replace it.
 export const BONUS_ROUNDS = 10;
 export const BONUS_SLIP_SECONDS = 20;   // reading a whole line takes longer than naming a title
@@ -1037,6 +1051,10 @@ export const NASHVILLE_KNOW_BETTER = 6;
    clock with nothing to do. Not lower: the slack is for typing one word on a phone, and for
    singing up to the gap from the top of the section, which is honest recall rather than stalling. */
 export const BONUS_BLANK_SECONDS = 15;
+// Correct the Slip's second clock, fresh from the tap that found the impostor: the find is
+// judged on Spot the Slip's own twenty, and the fix is a Sing It Back page, so it gets that
+// game's fifteen rather than whatever the find left over.
+export const BONUS_FIX_SECONDS = BONUS_BLANK_SECONDS;
 // Redacted's clock is a backstop rather than a pressure: the cost of thinking here is already
 // the strips you peel while you think, so a tight clock would charge you twice for the same
 // hesitation. Long enough to read two or three lines, weigh the blocks and write a title (cut from 30 after
@@ -4669,6 +4687,7 @@ export const ACHIEVEMENTS = [
   // Redacted. They are NOT masked like the challenge flourishes — a bonus game has no defeat
   // to reveal them on, so they stand as ordinary named targets from the start.
   { id: "sweep-spot-the-slip", name: "Something’s Changed", desc: "Sweep Spot the Slip",             tier: 2, secret: false, icon: "ringedword", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-correct-the-slip", name: "No Really, I Can", desc: "Sweep Correct the Slip: every impostor found and every word put back", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   { id: "sweep-name-that-song-one-line-each",   name: "The First Note",   desc: "Sweep Name That Song: all ten off one line each", tier: 2, secret: false, icon: "tuningfork", sitting: true, earn: { cat: "bonus" } },
   { id: "sweep-sing-it-back-all-words-exact", name: "Right Where You Left Me", desc: "Sweep Sing It Back with every word exact, not one typo forgiven", tier: 2, secret: false, icon: "jigsaw", sitting: true, earn: { cat: "bonus" } },
   { id: "name-redacted-song-no-strips-removed",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", tier: 2, secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
@@ -5166,7 +5185,7 @@ export const ACH_GROUP_OF = {
   "finish-first-custom-run": "custom", "keep-5-custom-presets": "custom", "reach-round-50-endless-custom": "custom", "perfect-custom-at-least-ultra": "custom",
   "admit-guest": "guests", "admit-guest-hard": "guests", "admit-guest-lyricist": "guests",
   "finish-first-bonus-run": "bonus", "play-every-bonus-game": "bonus", "clean-sweep-bonus-game": "bonus",
-  "clean-sweep-every-bonus-game": "bonus", "keep-bonus-back-cover": "bonus", "sweep-spot-the-slip": "bonus",
+  "clean-sweep-every-bonus-game": "bonus", "keep-bonus-back-cover": "bonus", "sweep-spot-the-slip": "bonus", "sweep-correct-the-slip": "bonus",
   "sweep-name-that-song-one-line-each": "bonus", "sweep-sing-it-back-all-words-exact": "bonus", "name-redacted-song-no-strips-removed": "bonus",
   "take-rarest-only-here-card-all-10-pages": "bonus", "finish-then-what-unbroken-chain": "bonus", "take-commonest-only-here-card": "bonus", "name-a-joint-production": "bonus",
   "name-redacted-song-after-buying-all-strips": "bonus", "time-out-all-10-only-here-pages": "bonus", "finish-bonus-run-one-page-short-of-sweep": "bonus",

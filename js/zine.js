@@ -195,23 +195,34 @@ export function grain(rand, n = 420, fieldW = 124, fieldH = 164) {
    clean at the fold — which is how the sun sits half off the page on Ruthless without
    anyone drawing a semicircle. */
 
+/* Spot the Slip's collage, drawn once and inked twice (its A and B sides). */
+const SLIP_A = { page: "#2f4858", rule: "#cfc3ab", slip: "#e0553c" };
+const SLIP_B = { page: "#1b2a35", rule: "#3c5566", slip: "#f2e6cf" };
+function slipCollage(r, ink) {
+  let s = sheet([[-6, 18], [126, 14], [126, 132], [-6, 136]], ink.page, r, { amp: 1.4 });
+  const rows = [30, 46, 62, 86, 102, 118];
+  rows.forEach((y, i) => {
+    if (i === 3) return;
+    const w = [74, 88, 62, 0, 80, 68][i];
+    s += sheet([[14, y], [14 + w, y - 1], [14 + w, y + 8], [14, y + 9]], ink.rule, r, { amp: 0.8, step: 4 });
+  });
+  // the slip: wider, hotter, tilted, and sticking out past the page it was pasted on
+  s += sheet([[8, 88], [118, 80], [120, 93], [10, 101]], ink.slip, r, { amp: 1.3, sy: 2.4, sx: 1.6 });
+  return s;
+}
+
 const COVERS = {
   /* SPOT THE SLIP — the line that throws. A slate page of ruled taupe strips with one
      vermillion impostor kicked out of line, longer than the rest and running off the edge.
      The idea is legible at thumbnail size with no reading at all: five things agree and
      one does not. */
-  "spot-the-slip": (r) => {
-    let s = sheet([[-6, 18], [126, 14], [126, 132], [-6, 136]], "#2f4858", r, { amp: 1.4 });
-    const rows = [30, 46, 62, 86, 102, 118];
-    rows.forEach((y, i) => {
-      if (i === 3) return;
-      const w = [74, 88, 62, 0, 80, 68][i];
-      s += sheet([[14, y], [14 + w, y - 1], [14 + w, y + 8], [14, y + 9]], "#cfc3ab", r, { amp: 0.8, step: 4 });
-    });
-    // the slip: wider, hotter, tilted, and sticking out past the page it was pasted on
-    s += sheet([[8, 88], [118, 80], [120, 93], [10, 101]], "#e0553c", r, { amp: 1.3, sy: 2.4, sx: 1.6 });
-    return s;
-  },
+  "spot-the-slip": (r) => slipCollage(r, SLIP_A),
+  /* CORRECT THE SLIP — the same zine turned over. Not a cover of its own: the B side of Spot
+     the Slip, the identical collage torn on the identical seed (SEED_AS) and printed in
+     negative. The slate goes down to a deeper navy, the ruled strips sink into it, and the
+     impostor, the one hot strip, comes up cream: the line that has been put right. The
+     tilt is left alone on purpose, so the two sides read as one object printed twice. */
+  "correct-the-slip": (r) => slipCollage(r, SLIP_B),
 
   /* NAME THAT SONG — sound coming out of nowhere. Concentric torn bands radiating from a
      cream disc low on the left, on a midnight ground: a line arrives and you have to say
@@ -630,6 +641,7 @@ function titleLabel(name, r, box) {
 // would put it over the gap on Sing It Back or the pin on Only Here.
 const LABELS = {
   "spot-the-slip":  { x: 12, y: 124, w: 96, h: 22, rot: -1.6 },
+  "correct-the-slip": { x: 12, y: 124, w: 96, h: 22, rot: -1.6 },
   "name-that-song": { x: 14, y: 16,  w: 94, h: 24, rot: 1.8 },
   "sing-it-back":   { x: 13, y: 116, w: 94, h: 22, rot: -2.2 },
   "redacted":       { x: 16, y: 120, w: 92, h: 22, rot: 1.4, fill: "#e9e0cb" },
@@ -680,9 +692,11 @@ let uid = 0;
    torn: shapes are authored over the edge of the field and cut off at the fold. Its id is
    counted rather than derived from the game, because a shelf draws the same cover twice
    (in the rack and open on the desk) and two nodes cannot share one. */
+// A side of another zine tears on that zine's seed, so both sides are the same paper.
+const SEED_AS = { "correct-the-slip": "spot-the-slip" };
 export function zineCover(g, extra = "") {
   const cls = `zine-cover${extra ? " " + extra : ""}`;
-  const r = rng(seedOf(g.id));
+  const r = rng(seedOf(SEED_AS[g.id] || g.id));
   const ready = !!g.ready;
   const art = ready ? (COVERS[g.id] || blankCover)(r) : blankCover(r);
   const label = titleLabel(g.name, r, ready ? (LABELS[g.id] || BLANK_LABEL) : BLANK_LABEL);

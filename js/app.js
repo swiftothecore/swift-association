@@ -28,7 +28,7 @@ import {
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   ACH_FAMILIES, ACH_FAMILY_COLORS,
-  BONUS_GAMES, RUTHLESS_GAME, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS,
+  BONUS_GAMES, RUTHLESS_GAME, CORRECT_THE_SLIP, BONUS_ROUNDS, BONUS_SLIP_SECONDS, BONUS_NAME_SECONDS, BONUS_BLANK_SECONDS, BONUS_FIX_SECONDS,
   BONUS_REDACT_SECONDS, REDACT_MIN_POINTS,
   BONUS_ONLY_SECONDS, ONLY_WIDE_PAGES,
   BONUS_CHAIN_SECONDS, CHAIN_EASY_PAGES, BONUS_SNAP_MS,
@@ -6892,6 +6892,12 @@ let bonusRecentFakes = []; // Spot the Slip: impostor words used recently, so a 
 // Spot the Slip: authored lines already dealt this run. A hard bar, kept apart from the song ban
 // list because an endless run hands its songs back long before it has used up their lines.
 let slipDealt = new Set();
+/* Correct the Slip's page has two halves. `slipFixing` is up between the tap that found the
+   impostor and the word written back, which is what hands the clock its second budget and the
+   timeout its "found it, didn't fix it" page. `slipFoundMs` is how long the FIND took, frozen at
+   the tap, so Saw It Coming still means "on sight" on this side rather than timing the typing. */
+let slipFixing = false;
+let slipFoundMs = 0;
 let bonusRecentSongs = []; // Name That Song / Sing It Back / Redacted: songs already used this run, so one doesn't come round twice
 let bonusRecentAlbums = [];// Running Order: the last couple of albums dealt, so a run doesn't ask three Midnights pages in a row
 /* Running Order: how long the page took, in seconds, frozen once as it settles. Measured off
@@ -7036,6 +7042,11 @@ function openBonus(from) {
    play screen and the keepsake all draw the one cover. An unwritten game gets a blank kraft
    cover with its name pencilled on: an object that exists, for a game that does not. */
 function bonusCover(g, extra = "") { return zineCover(g, extra); }
+// Either side of the Spot the Slip zine. Everything about the PAGE (the deal, the tappable line,
+// the reveal, the card) is the same on both, and asks this; only the records, the clock after
+// the find and the score ask for the side by id.
+function isSlipGame(g) { return !!g && (g.id === "spot-the-slip" || g.id === CORRECT_THE_SLIP.id); }
+function isFixRun() { return !!bonusGame && bonusGame.id === CORRECT_THE_SLIP.id; }
 
 /* The shelf is a row of zines: one is OPEN on the desk with its cover on the left leaf and
    everything about it written on the right, and the rest stand closed on the shelf below.
@@ -7248,8 +7259,12 @@ function tapeDeck(family, keys) {
 }
 
 function renderBonusPage() {
-  const g = bonusPicked();
-  bonusPick = g.id;
+  const base = bonusPicked();
+  bonusPick = base.id;
+  /* The open zine's right leaf describes, and its stickers start, the SIDE that is picked. Only
+     Spot the Slip has a second one today; the shelf tile below still reads the base game. */
+  const g = bonusPickedSide();
+  const slipZine = base.id === "spot-the-slip";
 
   /* The one lying open on the desk. Its own cover on the left leaf and everything the
      player needs on the right, across a stapled gutter: this is the "big front and centre"
@@ -7259,10 +7274,11 @@ function renderBonusPage() {
      came here to look at is the collage, and hiding it behind a physics lesson would make
      the open zine the one place on the shelf where the art is missing. */
   const open =
-    `<div class="zine-open${g.ready ? "" : " is-soon"}">` +
+    `<div class="zine-open${g.ready ? "" : " is-soon"}${slipZine && slipCorrectSide ? " is-bside" : ""}">` +
       `<div class="zine-leaf zine-leaf-art">${bonusCover(g)}</div>` +
       ZINE_STAPLES +
-      `<div class="zine-leaf zine-leaf-page">` +
+      `<div class="zine-leaf zine-leaf-page${slipZine ? " has-dogear" : ""}">` +
+        (slipZine ? slipDogEar() : "") +
         `<div class="bonus-now-kicker">${escapeHtml(g.kicker)}</div>` +
         `<h3 class="bonus-now-name">${escapeHtml(g.name)}</h3>` +
         `<p class="bonus-now-blurb">${escapeHtml(g.blurb)}</p>` +
@@ -7329,8 +7345,8 @@ function renderBonusPage() {
      the units are stacked. */
   const shelf = BONUS_GAMES.map((x) =>
     `<button type="button" class="zine-tile${x.ready ? "" : " is-soon"}` +
-      `${x.id === g.id ? " is-on" : ""}" data-id="${escapeHtml(x.id)}"` +
-      `${x.id === g.id ? ' aria-current="true"' : ""}` +
+      `${x.id === base.id ? " is-on" : ""}" data-id="${escapeHtml(x.id)}"` +
+      `${x.id === base.id ? ' aria-current="true"' : ""}` +
       ` aria-label="${escapeHtml(x.name + ". " + (x.line || x.kicker))}">` +
       `<span class="zine-tile-cover">${bonusCover(x)}</span>` +
       `<span class="zine-tile-meta">${bonusScoreLine(x, true).split(" · ")
@@ -7351,14 +7367,66 @@ function renderBonusPage() {
 
   el.querySelectorAll(".zine-tile").forEach((b) =>
     b.addEventListener("click", () => selectBonusGame(b.dataset.id)));
+  if ($("bonusDogEar")) $("bonusDogEar").addEventListener("click", turnSlipZine);
   if ($("bonusPlayBtn")) $("bonusPlayBtn").addEventListener("click", () => {
-    const pick = bonusPicked();
+    const pick = bonusPickedSide();
     if (pick.id === "track-by-track") { openTrackPicker("bonus"); return; }
     startBonusGame(pick);
   });
   if ($("bonusEndlessBtn"))
-    $("bonusEndlessBtn").addEventListener("click", () => startBonusGame(bonusPicked(), null, { endless: true }));
+    $("bonusEndlessBtn").addEventListener("click", () => startBonusGame(bonusPickedSide(), null, { endless: true }));
 }
+
+/* ---------- The Spot the Slip zine's two sides ----------
+   SPOT asks for the impostor; CORRECT asks for the impostor and then the word it replaced.
+   Correct the Slip is the zine's B SIDE: the top corner of the open leaf is turned down, its
+   back showing the B side's navy with "B side" pencilled on it, and lifting it turns the whole
+   zine over to its reverse (the same collage in negative, the leaf printed on the cover's
+   navy). On the B side the corner is cream and says "A side", so it always names where it goes.
+   A turned corner rather than a third sticker beside Play and Endless, because the difference
+   is how hard the page is, not what a run is: both sides play ten pages or endless the same
+   way, and two more stickers would make four doors on one zine. Shown on the open zine only:
+   the shelf tile is the zine standing closed, which is its A side. The side picked lives for
+   the session, like the zine left open. */
+let slipCorrectSide = false;
+function bonusPickedSide() {
+  const g = bonusPicked();
+  return g.id === "spot-the-slip" && slipCorrectSide ? CORRECT_THE_SLIP : g;
+}
+function slipDogEar() {
+  const to = slipCorrectSide ? "Spot the Slip" : "Correct the Slip";
+  return `<button type="button" id="bonusDogEar" class="zine-dogear"` +
+    ` aria-label="Turn the zine over to ${to}" data-tip="Turn it over: ${to}">` +
+    `<span class="zine-dogear-flap" aria-hidden="true"><i>${slipCorrectSide ? "A side" : "B side"}</i></span></button>`;
+}
+/* The turn is the spread swinging edge-on, swapping sides out of sight, and swinging back in.
+   It fades through the edge-on moment rather than relying on backface-visibility, which
+   composited children ignore. Reduced motion, or instant speed, just changes the side. */
+let slipTurning = false;
+function turnSlipZine() {
+  if (slipTurning) return;
+  const open = $("bonusBody").querySelector(".zine-open");
+  const swap = () => {
+    slipCorrectSide = !slipCorrectSide;
+    renderBonusPage();
+    $("bonusDogEar")?.focus({ preventScroll: true });
+  };
+  if (!open || motionReduced() || animInstant()) { swap(); return; }
+  slipTurning = true;
+  open.classList.add("is-turning-out");
+  setTimeout(() => {
+    swap();
+    const next = $("bonusBody").querySelector(".zine-open");
+    if (next) {
+      next.classList.add("is-turning-in");
+      // Timed rather than waited on: animationend never arrives in a background tab, and a
+      // class left standing would replay the swing the next time the spread is shown.
+      setTimeout(() => next.classList.remove("is-turning-in"), 360);
+    }
+    slipTurning = false;
+  }, ZINE_TURN_MS);
+}
+const ZINE_TURN_MS = 230;
 
 // Opening a different zine on the desk. Every game can be opened, including one that isn't
 // written yet: its blank kraft cover goes on the left leaf and the right one says so in
@@ -7390,7 +7458,8 @@ function startBonusGame(g, lensId = null, opts = {}) {
   // it marks. Marking the shelf's own id instead would leave every lens permanently unplayed in
   // the ledger's eyes and the whole category leaning at full strength for ever.
   if (lensId) notePlayed("ruthless", lensId);
-  else notePlayed("bonus", g.id);
+  // Correct the Slip is a side of the Spot the Slip zine, and the randomiser deals the zine.
+  else notePlayed("bonus", g.base || g.id);
   bonusRound = 0;
   bonusScore = 0;
   bonusEnded = false;
@@ -7407,6 +7476,7 @@ function startBonusGame(g, lensId = null, opts = {}) {
   bonusRecentFakes = [];
   bonusRecentSongs = [];
   slipDealt = new Set();
+  slipFixing = false;
   bonusLog = [];
   bonusBackRun = null;
   redactWorth = 0;
@@ -7472,7 +7542,7 @@ function startBonusGame(g, lensId = null, opts = {}) {
 
 function bonusSeconds() {
   if (!bonusGame) return BONUS_NAME_SECONDS;
-  if (bonusGame.id === "spot-the-slip") return BONUS_SLIP_SECONDS;
+  if (isSlipGame(bonusGame)) return slipFixing ? BONUS_FIX_SECONDS : BONUS_SLIP_SECONDS;
   if (bonusGame.id === "sing-it-back") return BONUS_BLANK_SECONDS;
   if (bonusGame.id === "redacted") return BONUS_REDACT_SECONDS;
   if (bonusGame.id === "only-here") return BONUS_ONLY_SECONDS;
@@ -7507,7 +7577,7 @@ function bonusSeconds() {
 function buildBonusPuzzle() {
   const indexes = bonusIndexes();
   const songs = bonusSongs();
-  if (bonusGame.id === "spot-the-slip")
+  if (isSlipGame(bonusGame))
     return buildSlipPuzzle(songs, slipSwaps, indexes.lineIndex, Math.random, new Set(bonusRecentSongs),
                            new Set(bonusRecentFakes), slipDealt);
   if (bonusGame.id === "sing-it-back")
@@ -7584,7 +7654,7 @@ function bonusDealCount() {
   if (bonusGame && bonusGame.id === "nashville") return nashvilleDealCount(nashvillePool);
   // Every song in the pool has authored lines today, but a song whose lines were all dropped as
   // stale is not a page, and counting it would leave the reshuffle waiting for it forever.
-  if (bonusGame && bonusGame.id === "spot-the-slip") return slipDealCount(songs, slipSwaps);
+  if (isSlipGame(bonusGame)) return slipDealCount(songs, slipSwaps);
   return songs.length;
 }
 
@@ -7618,7 +7688,7 @@ function endlessReshuffle() {
   onlyDealt = new Set();
   // Spot the Slip's dealt lines outlast the song list on purpose: a song handed back deals one
   // of its other lines, and only once every line is spent can a page come round again.
-  if (bonusGame && bonusGame.id === "spot-the-slip" &&
+  if (isSlipGame(bonusGame) &&
       !bonusSongs().some((s) => (slipSwaps.get(s.title) || []).some((r) => !slipDealt.has(r.id))))
     slipDealt = new Set();
 }
@@ -7684,6 +7754,8 @@ function nextBonusRound(options = {}) {
   redactPeeled = 0;
   trackSecs = 0;
   onlyPlayed = null;
+  slipFixing = false;
+  slipFoundMs = 0;
   whoPlayed = null;
   penPlayed = null;
   nashvilleDoor = null;
@@ -7763,7 +7835,7 @@ function bonusPageEra() {
    hang off `data-song-era` ("page" or "reveal"), so this colours nothing by itself. */
 const SONG_ERA_ON_PAGE = new Set(["sing-it-back", "then-what", "only-here", "running-order"]);
 const SONG_ERA_AT_REVEAL = new Set(["name-that-song", "redacted", "word-cloud", "the-capitals",
-                                    "spot-the-slip", "aaron-or-jack", "who-held-the-pen"]);
+                                    "spot-the-slip", "correct-the-slip", "aaron-or-jack", "who-held-the-pen"]);
 function paintSongEra(when) {
   const screen = screens.bonusplay;
   const album = bonusPuzzle && (bonusPuzzle.album || (bonusPuzzle.song && bonusPuzzle.song.album));
@@ -7853,12 +7925,13 @@ function renderBonusRound() {
   const label = p.label ? `<div class="bg-section">${escapeHtml(p.label.toLowerCase())}</div>` : "";
   paintSongEra(SONG_ERA_ON_PAGE.has(bonusGame.id) ? "page" : null);
 
-  if (bonusGame.id === "spot-the-slip") {
+  if (isSlipGame(bonusGame)) {
     const words = p.tokens.map((t, i) => t.tappable
       ? `<button type="button" class="bg-word" data-i="${i}">${escapeHtml(t.text)}</button>`
       : `<span class="bg-word-plain">${escapeHtml(t.text)}</span>`).join(" ");
     body.innerHTML =
-      `<p class="bg-ask">tap the word that was swapped in</p>` +
+      `<p class="bg-ask">${isFixRun() ? "tap the word that was swapped in, then put the real one back"
+                                        : "tap the word that was swapped in"}</p>` +
       label +
       `<div class="bg-line" role="group" aria-label="Lyric line with one wrong word">${words}</div>`;
     body.querySelectorAll(".bg-word").forEach((b) =>
@@ -8561,7 +8634,10 @@ function bonusTimeout() {
     settleBonusRound(false, nashvilleDetail(), true);
     return;
   }
-  const detail = bonusGame && bonusGame.id === "spot-the-slip"
+  // A fix the clock took is a page found and not fixed: the impostor was already named by the
+  // tap, so what is left to say is the word that should have gone in, which the gap now shows.
+  const detail = slipFixing ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> found, not fixed`
+    : isSlipGame(bonusGame)
     ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`
     : "";
   settleBonusRound(false, detail, true);
@@ -8569,8 +8645,11 @@ function bonusTimeout() {
 
 /* ---------- judging ---------- */
 function judgeSlip(i) {
-  if (bonusLocked) return;
+  if (bonusLocked || slipFixing) return;
   const correct = i === bonusPuzzle.answer;
+  // Correct the Slip: a find is only half the page. The page stays open for the fix, and a
+  // wrong tap falls through to the ordinary miss below, which pays nothing on either side.
+  if (correct && isFixRun()) { beginSlipFix(i); return; }
   // Mark the tap and always reveal the real impostor, so a wrong guess still teaches the line.
   const btns = $("bonusPlayBody").querySelectorAll(".bg-word");
   btns.forEach((b) => {
@@ -8582,6 +8661,52 @@ function judgeSlip(i) {
   // Naming the impostor is worth saying either way: on a hit it confirms what was spotted, on a
   // miss it's the whole lesson. The real word is then shown in place on the card below.
   settleBonusRound(correct, `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`);
+}
+
+/* ---------- Correct the Slip: the fix ----------
+   The impostor is struck through where it stood and a gap opens beside it, Sing It Back's gap
+   exactly (fixed width, so it never hands over a letter count, and the typing mirrored into it),
+   with the writing line under the line. The clock starts again on the fix's own budget: the find
+   was a Spot the Slip page and the fix is a Sing It Back page, and handing the fix whatever the
+   find left over would make a slow find a lost fix. Judged by judgeBlank, so the fix forgives
+   what Sing It Back forgives (a shared stem, one typo that is not itself a catalogue word) and
+   nothing more. */
+function beginSlipFix(i) {
+  stopBonusClock();
+  slipFoundMs = performance.now() - bonusPageStart;
+  slipFixing = true;
+  const body = $("bonusPlayBody");
+  body.querySelectorAll(".bg-word").forEach((b) => { b.disabled = true; });
+  const hit = body.querySelector(`.bg-word[data-i="${i}"]`);
+  if (hit) {
+    hit.classList.add("is-found");
+    hit.innerHTML = `<s class="bg-struck">${escapeHtml(bonusPuzzle.fakeWord)}</s>` +
+      `<span class="bg-blank bg-fix-gap" id="bonusBlank"></span>`;
+  }
+  const ask = body.querySelector(".bg-ask");
+  if (ask) ask.textContent = "now write the word that really goes there";
+  body.insertAdjacentHTML("beforeend", bonusWritingLine({
+    placeholder: "the real word…", aria: "Type the word the impostor replaced", hint: "one word, then Enter" }));
+  const input = $("bonusInput");
+  input.addEventListener("input", () => {
+    const gap = $("bonusBlank");
+    if (gap) gap.textContent = input.value.trim();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); judgeFix(); }
+  });
+  focusRoundInput(input);
+  startBonusClock();
+}
+
+function judgeFix() {
+  if (settingsPauseActive || bonusLocked || !slipFixing) return;
+  const raw = $("bonusInput").value.trim();
+  // Enter on an empty line is a slip of the hand, not an answer, as on Sing It Back.
+  if (!raw) return;
+  const { ctx } = bonusIndexes();
+  const fixed = judgeBlank(raw, { answer: bonusPuzzle.realWord }, ctx.freq);
+  settleBonusRound(fixed, fixed ? "" : `you wrote “<b>${escapeHtml(raw)}</b>”`);
 }
 
 /* ---------- Then What: the chain ----------
@@ -9517,7 +9642,7 @@ function bonusAnswerCard() {
         ` aria-label="Open full lyrics for ${escapeHtml(censor(p.song.title))} at this line">` +
         `<span class="cta-run">full lyrics${CTA_ARROW}</span></button></div></div>`;
   }
-  const slip = bonusGame.id === "spot-the-slip";
+  const slip = isSlipGame(bonusGame);
   return lyricCard(p.song, slip ? p.realWord : null, false, slip ? p.realLine : p.line, true);
 }
 
@@ -9559,6 +9684,9 @@ function bonusPageScore(correct) {
      exists on that side — a wrong page ends the run, which leaves a minus nothing to do. */
   if (bonusGame && bonusGame.id === "nashville")
     return correct ? 1 : nashvillePassed ? 0 : NASHVILLE_WRONG;
+  // A point for the find and a point for the fix. `correct` is the fix; a found page is one the
+  // fix step was reached on.
+  if (isFixRun()) return (slipFixing ? 1 : 0) + (correct ? 1 : 0);
   if (bonusGame && bonusGame.id === "aaron-or-jack")
     return !correct ? 0 : bonusPuzzle.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
   if (!correct) return 0;
@@ -9616,6 +9744,10 @@ function bonusBannerText(correct, isTimeout) {
     return correct ? (bonusPuzzle.hers ? "never came out, and you knew" : "somebody else's, and you knew")
          : nashvillePassed ? "left it alone"
          : isTimeout ? "the page ran out" : "not this one";
+  // A fix page lost on the word was still found, and the banner says so rather than "not this
+  // one" over the impostor the player circled.
+  if (isFixRun() && slipFixing)
+    return correct ? "found it and fixed it" : isTimeout ? "found it, ran out of ink" : "found it, not that word";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -9723,7 +9855,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     album: bonusPuzzle.song.album,
     words: ruthlessShown,
     handout,
-    note: bonusGame.id === "spot-the-slip" ? bonusPuzzle.fakeWord
+    // Correct the Slip notes the word that belonged there, which is the answer that side hid.
+    note: isFixRun() ? bonusPuzzle.realWord
+        : isSlipGame(bonusGame) ? bonusPuzzle.fakeWord
         : bonusGame.id === "sing-it-back" ? bonusPuzzle.answer
         // Redacted's pages are worth different amounts, and that number is the only thing the
         // back cover can't already work out — so it takes the note column outright.
@@ -9787,10 +9921,17 @@ function settleBonusRound(correct, detail, isTimeout = false) {
   foldBonusPageCharms(correct, isTimeout);
   if (bonusGame && SONG_ERA_AT_REVEAL.has(bonusGame.id)) paintSongEra("reveal");
   // Reveal the answer on a timeout too, whichever game we're in.
-  if (bonusGame.id === "spot-the-slip") {
+  if (isSlipGame(bonusGame)) {
     $("bonusPlayBody").querySelectorAll(".bg-word").forEach((b) => {
-      if (+b.dataset.i === bonusPuzzle.answer) b.classList.add("is-answer");
+      if (+b.dataset.i === bonusPuzzle.answer && !slipFixing) b.classList.add("is-answer");
     });
+    // A fix page writes the real word into its gap either way, gold-marked if it was yours and
+    // in red pen if it wasn't, so the line on the page ends up the one she sang.
+    const gap = slipFixing && $("bonusBlank");
+    if (gap) {
+      gap.textContent = bonusPuzzle.realWord;
+      gap.classList.add(correct ? "is-got" : "is-answer");
+    }
   } else if (bonusGame.id === "redacted") {
     revealRedacted();
   } else if (bonusGame.id === "only-here") {
@@ -10082,10 +10223,11 @@ function ruthlessRemark(secs, clean) {
 // card: what a page cost, how fast it was answered, and which card came off the table.
 function foldBonusPageCharms(correct, isTimeout) {
   if (!bonusGame || ruthlessLensId) return;
-  if (bonusGame.id === "spot-the-slip") {
+  if (isSlipGame(bonusGame)) {
     // Timed off the page's own baseline rather than off the clock's remaining seconds, so it
     // still means "on sight" if this game's clock is ever retuned.
-    if (correct && !isTimeout && performance.now() - bonusPageStart < BONUS_SNAP_MS)
+    if (slipFixing ? slipFoundMs < BONUS_SNAP_MS
+                   : correct && !isTimeout && performance.now() - bonusPageStart < BONUS_SNAP_MS)
       unlock("flag-spot-the-slip-impostor-under-2s");
   } else if (bonusGame.id === "redacted") {
     // Both of these are about what the page COST, so they are mutually exclusive by
@@ -10171,7 +10313,7 @@ function foldBonusRunCharms(perfect, cleared) {
     // Four games say their sweep in their own voice. Sing It Back's asks for more than a sweep
     // (every word exact), and Redacted's charm is a single page rather than a run, so neither
     // is in this table.
-    const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
+    const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "correct-the-slip": "sweep-correct-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
                          "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain",
                          "running-order": "sweep-running-order", "word-cloud": "sweep-word-cloud",
                          "the-capitals": "sweep-the-capitals",
@@ -10824,6 +10966,7 @@ function leaveBonusGame(to = "bonus") {
   // Both sides of the run are handed back, not just the game. A quit endless run leaving its
   // flag up would have the shelf answering questions about a run that is no longer on the desk.
   bonusEndless = false;
+  slipFixing = false;
   bonusDead = false;
   bonusGame = null;
   bonusPuzzle = null;
@@ -33263,7 +33406,7 @@ function buildDevApi() {
                  spoken: el ? el.getAttribute("aria-label") : "not on the shelf right now" };
       }),
       open: (from) => openBonus(from || "start"),
-      play: (id, endless = false) => { const g = BONUS_GAMES.find((x) => x.id === id);
+      play: (id, endless = false) => { const g = [...BONUS_GAMES, CORRECT_THE_SLIP].find((x) => x.id === id);
         if (g && g.ready) startBonusGame(g, null, { endless: !!endless });
         return g ? g.name + (bonusEndless ? " · endless" : "") : null; },
       sample: (id, n = 10) => {
@@ -33838,8 +33981,19 @@ function buildDevApi() {
       },
       // Sing It Back: read the gap's answer off the page, or fill it in and submit. Testing
       // the tenth round of a run you have to play honestly is nobody's idea of a dev tool.
-      gap: () => (bonusGame && bonusGame.id === "sing-it-back" && bonusPuzzle) ? bonusPuzzle.answer : null,
-      solve: () => {
+      // A Correct the Slip page answers too: `gap` reads the impostor and the word it replaced,
+      // and `solve` taps the impostor, then (called again, or with `true`) writes the word back.
+      gap: () => (isFixRun() && bonusPuzzle) ? { fake: bonusPuzzle.fakeWord, real: bonusPuzzle.realWord, fixing: slipFixing }
+        : (bonusGame && bonusGame.id === "sing-it-back" && bonusPuzzle) ? bonusPuzzle.answer : null,
+      solve: (both = false) => {
+        if (isFixRun() && bonusPuzzle && !bonusLocked) {
+          if (!slipFixing) { judgeSlip(bonusPuzzle.answer); if (!both) return `found ${bonusPuzzle.fakeWord}`; }
+          const input = $("bonusInput");
+          input.value = bonusPuzzle.realWord;
+          input.dispatchEvent(new Event("input"));
+          judgeFix();
+          return bonusPuzzle.realWord;
+        }
         if (!bonusGame || bonusGame.id !== "sing-it-back" || !bonusPuzzle || !$("bonusInput")) return "no gap on screen";
         const input = $("bonusInput");
         input.value = bonusPuzzle.answer;
@@ -33853,7 +34007,7 @@ function buildDevApi() {
       verdict: (ok = true, timeout = false) => {
         if (!bonusGame || !bonusPuzzle || bonusLocked) return "no live bonus page";
         // Carry each game's real detail line, so what's on screen is what a played page shows.
-        const detail = bonusGame.id === "spot-the-slip"
+        const detail = isSlipGame(bonusGame)
           ? `<b>${escapeHtml(bonusPuzzle.fakeWord)}</b> was the slip`
           : (ok || timeout) ? "" : `you wrote <b>something else</b>`;
         settleBonusRound(!!ok, detail, !!timeout);
@@ -33867,7 +34021,7 @@ function buildDevApi() {
       covers: () => {
         if (!$("bonusBody")) return "open the shelf first";
         renderBonusPage();
-        const row = (px) => [...BONUS_GAMES, RUTHLESS_GAME].map((g) =>
+        const row = (px) => [...BONUS_GAMES, CORRECT_THE_SLIP, RUTHLESS_GAME].map((g) =>
           `<span style="display:inline-block;width:${px}px">${bonusCover(g)}</span>`).join("") +
           `<span style="display:inline-block;width:${px}px">${bonusCover({ id: "not-yet", name: "Something New", ready: false })}</span>`;
         const strip = document.createElement("div");
@@ -33875,7 +34029,7 @@ function buildDevApi() {
         strip.innerHTML = [200, 96, 24].map((px) =>
           `<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">${row(px)}</div>`).join("");
         $("bonusBody").prepend(strip);
-        return [...BONUS_GAMES, RUTHLESS_GAME].map((g) => `${g.id}: ${hasCover(g.id) ? "drawn" : "NO COVER: blank kraft"}`);
+        return [...BONUS_GAMES, CORRECT_THE_SLIP, RUTHLESS_GAME].map((g) => `${g.id}: ${hasCover(g.id) ? "drawn" : "NO COVER: blank kraft"}`);
       },
       /* Then What. `chainClock(s)` trials the shared page clock's length. Every decoy is off the
          page's own song, so on screen three lines look alike by design, and `chain()` is the
@@ -33993,7 +34147,7 @@ function buildDevApi() {
             whoCeiling += p.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
           bonusLog.push({
             n, ok, title: p.song.title,
-            note: bonusGame.id === "spot-the-slip" ? p.fakeWord
+            note: isSlipGame(bonusGame) ? p.fakeWord
                 : bonusGame.id === "sing-it-back" ? p.answer
                 : bonusGame.id === "redacted" ? `${pts} pts`
                 : bonusGame.id === "then-what" ? `${pts} pts`
@@ -34044,7 +34198,7 @@ function buildDevApi() {
           const note = bonusGame.id === "running-order" ? `${(2.1 + (n % 6) + (n % 9) / 10).toFixed(2)}s`
             : bonusGame.id === "only-here" ? puz.hand[puz.optimal[0]].word.toLowerCase()
             : bonusGame.id === "redacted" ? (n % 4 ? `${n % 4} peeled` : "untouched")
-            : bonusGame.id === "spot-the-slip" ? puz.fakeWord
+            : isSlipGame(bonusGame) ? puz.fakeWord
             : bonusGame.id === "sing-it-back" ? puz.answer
             : bonusGame.id === "aaron-or-jack" ? puz.by
             : bonusGame.id === "who-held-the-pen"
