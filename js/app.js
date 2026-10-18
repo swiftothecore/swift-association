@@ -30207,42 +30207,458 @@ function glossTip(slug, inner) {
   return `<span class="gloss-term" data-gloss="${g.slug}" title="${escapeHtml(g.term)}: ${escapeHtml(glossaryDefn(g.slug))}">${inner}</span>`;
 }
 let glossaryBackTarget = "start";
+
+/* ---------- The glossary as plates ----------
+   A field guide rather than a word list. The words are grouped by where you meet them, and each
+   group is one PLATE: a real piece of the notebook, built by the same builders and worn in the
+   same classes as the thing itself, with each word written beside the part it names and a drawn
+   leader to it. The definitions sit under each plate in the order its labels read, and the few
+   words with nothing to point at close the page as plain entries.
+
+   Two rules hold the page together, and both were learned the hard way on the scratch board
+   (scripts/glossary/plates.html):
+   • Nothing on a plate is a lookalike or a re-tracing. Every object is the game's own art, and
+     the front page's pieces are cloned out of the live front page. An earlier pass that redrew
+     every object in one ink style so they would "match" was rejected as worse: the objects are
+     worth showing because they ARE the things.
+   • No label is placed by hand. Each names a side and layoutGlossary() writes it on the sheet's
+     ruled lines, so the page looks drawn with care at every width rather than at one.
+
+   The spoiler gates still decide everything: a word that isn't met loses its label, its leader,
+   its definition and any "see also" pointing at it, and a drawing of something unmet (the dark
+   side flag, a sticker, a polaroid) is left off the plate too. The sticker and polaroid shown
+   are ones this notebook has actually found, so a plate never shows off one still to come. */
+const glossBrace = (up) => `<svg class="pl-brace${up ? " pl-brace-up" : ""}" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">` +
+  `<path d="M1 1.5 C1.6 5.2 3.4 5.6 12 5.8 C34 6 44 5.4 48.6 7.6 C49.6 8.4 50 9.2 50.2 9.6 C50.6 8.8 51.4 7.8 53 7.4 C60 5.6 78 6.1 88 5.9 C96.4 5.8 98.4 5 99 1.6"` +
+  `${up ? ` transform="matrix(1 0 0 -1 0 10)"` : ""}/></svg>`;
+const glossMet = (slug) => !!GLOSSARY_BY_SLUG[slug] && glossaryMet(GLOSSARY_BY_SLUG[slug]);
+// A label is drawn when its word is met, when at least one thing it `needs` is on the plate, and
+// when its `when` (if any) still holds for this notebook.
+const glossLabelShown = (l) => glossMet(l.slug) && (!l.needs || l.needs.some(glossMet)) && (!l.when || l.when());
+// A piece of the front page, cloned off the live page. The id moves to data-flip-id, which is
+// how the page turn's own clones keep the nav cards' highlighter colours (keyed to their ids),
+// and any ids inside get a suffix so a mask on the copy never resolves to the original.
+let glossLiftSeq = 0;
+function glossLifted(id) {
+  const src = id === "masthead" ? document.querySelector("header.title h1") : $(id);
+  if (!src) return "";
+  const n = src.cloneNode(true);
+  if (n.id) { n.dataset.flipId = n.id; n.removeAttribute("id"); }
+  n.removeAttribute("title");
+  // The washi tape is the front page's own scattered dressing, re-dealt on every visit, not
+  // part of the card it happens to be stuck to.
+  for (const t of n.querySelectorAll(".nav-tape")) t.remove();
+  const html = n.outerHTML.replace(/<!--[\s\S]*?-->/g, "");
+  const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
+  const k = ++glossLiftSeq;
+  return ids.size ? html.replace(/(\bid="|url\(#|href="#)([^")]+)/g, (m, pre, x) => ids.has(x) ? `${pre}${x}--gl${k}` : m) : html;
+}
+
+// Targets that are not simply an element. A pony bead is a stack of same-sized rounded rects
+// (body, light, shade), so the first full-size rect at each x is one bead.
+function glossBeadAt(fig, n) {
+  const seen = new Set(), beads = [];
+  for (const r of fig.querySelectorAll(".bracelet svg rect")) {
+    const b = r.getBoundingClientRect();
+    if (+r.getAttribute("rx") < 7 || b.width < 12) continue;
+    const key = Math.round(b.left);
+    if (!seen.has(key)) { seen.add(key); beads.push(r); }
+  }
+  return beads[n] || beads[0];
+}
+// "bracelet" names the strand, so it lands on the cord, half way along its path.
+function glossCordAt(fig) {
+  const cord = fig.querySelector(".bracelet svg .b-cord");
+  if (!cord) return null;
+  const pt = cord.getPointAtLength(cord.getTotalLength() * 0.5);
+  const s = new DOMPoint(pt.x, pt.y).matrixTransform(cord.getScreenCTM());
+  return { getBoundingClientRect: () => ({ left: s.x - 1, top: s.y - 1, width: 2, height: 2 }) };
+}
+// A point on an element's bottom edge, `fx` of the way across.
+function glossEdgeOf(el, fx) {
+  if (!el) return null;
+  const b = el.getBoundingClientRect(), x = b.left + b.width * fx;
+  return { getBoundingClientRect: () => ({ left: x - 1, top: b.bottom - 2, width: 2, height: 2 }) };
+}
+// The box of an element's words rather than of its block, let out on the right because Caveat's
+// slant carries a tail a few pixels past the box the browser reports.
+function glossInkOf(el) {
+  if (!el) return null;
+  const r = document.createRange();
+  r.selectNodeContents(el);
+  return { getBoundingClientRect: () => { const b = r.getBoundingClientRect(); return { left: b.left, top: b.top, width: b.width + 4, height: b.height }; } };
+}
+
+const GLOSS_PLATE_CHALLENGE = "shrinking-timer";
+// Each label names a `side`: "above" or "below" (a row on the ruled line clear of the art),
+// "left" or "right" (a gutter column), or "nearest" (whichever half its object lays out in,
+// starting from `prefer`). `at` is a selector inside the figure or a function returning a
+// target. `hug` brings a lone label in to its own object instead of the column. A plate with
+// `minArt` is drawn at a reduced scale when squeezed narrower than that, rather than wrapping.
+const GLOSS_HEAD = { id: "head", rise: 1, labels: [{ slug: "page-mark", side: "above", at: ".page-mark svg" }] };
+const GLOSS_PLATES = [
+  {
+    id: "front", num: "i", title: "The front page",
+    art: () => `<div class="pl-front">` +
+      `<header class="title pl-mast">${glossLifted("masthead")}</header>` +
+      `<div class="pl-front-row">` +
+        `<span class="pl-stamp">${glossLifted("guestShelfBtn")}</span>` +
+        `<div class="see-also pl-nav">${glossLifted("masteryBtn")}${glossLifted("bonusBtn")}</div>` +
+      `</div></div>`,
+    labels: [
+      { slug: "ink", side: "above", at: ".mast-gold" },
+      { slug: "guest", side: "below", at: ".stamp--guest" },
+      // A card is a door, so its word lands on the card's edge, never through the writing on it.
+      // "skill" is the one word that IS written there, and only while the kicker is counting
+      // skill levels: once Mastery opens it reads the Mastery level, and skill goes to the
+      // plain entries rather than pointing at a number that isn't one.
+      { slug: "mastery", side: "below", at: (f) => glossEdgeOf(f.querySelector(".pl-nav .nav-card:first-child"), 0.24) },
+      { slug: "skill", side: "below", at: ".pl-nav .nav-card:first-child .nav-card-kicker", when: () => !isMasteryUnlocked() },
+      { slug: "bonus-game", side: "below", at: ".pl-nav .nav-card:last-child" },
+    ],
+  },
+  {
+    id: "top", num: "ii", title: "The top of every page",
+    art: () => {
+      const terms = ruleTermsFrom({ dropdown: true, hint: false, noTitle: true, seconds: 10 });
+      const strand = buildBraceletSVG([true, true, false, true, true], 5, -1, ["Red", "folklore", "Lover", "1989", "evermore"],
+        { compact: true, colors: ALBUM_COLORS, trinket: "star" });
+      return `<div class="pl-round"><div class="bracelet-wrap"><div class="bracelet-meta">` +
+        `<span class="bracelet-meta-left">page <b class="pl-pagenum">6</b><span class="pl-of"> of <b>13</b></span></span>` +
+        // "rule mark" names all five, so its leader lands on a brace over the set rather than on
+        // whichever single mark happens to sit in the middle.
+        `<span class="bracelet-meta-right"><span class="pl-group"><span class="rule-terms">${ruleTermsMarkup(terms)}</span>${glossBrace(true)}</span></span>` +
+        `</div><div class="bracelet">${strand}</div></div></div>`;
+    },
+    labels: [
+      { slug: "page", side: "above", at: ".pl-pagenum" },
+      { slug: "run", side: "above", at: ".pl-of b" },
+      { slug: "rule-mark", side: "above", at: ".pl-brace-up" },
+      { slug: "trinket", side: "below", at: (f) => f.querySelector(".bracelet svg .trinket-dangle") },
+      { slug: "bead", side: "below", at: (f) => glossBeadAt(f, 2) },
+      { slug: "bracelet", side: "below", at: glossCordAt },
+    ],
+  },
+  {
+    id: "answer", num: "iii", title: "Answering",
+    art: () => `<div class="pl-answer"><div class="input-area">` +
+      `<textarea class="song-input" rows="1" tabindex="-1" aria-hidden="true">love</textarea>` +
+      `<div class="dropdown show" data-side="below">` +
+        `<div class="dd-head" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#rule-suggest"/></svg>` +
+        `<span>suggestions</span><span class="dd-count">3 of 8</span></div>` +
+        `<div class="dd-list">${["Love Story", "Lover", "This Love"].map((t, i) =>
+          `<div class="item${i === 0 ? " active" : ""}"><span class="dd-title">${t}</span></div>`).join("")}</div>` +
+      `</div></div>` +
+      `<button type="button" class="hint-btn" tabindex="-1">need a hint?</button></div>`,
+    labels: [
+      { slug: "suggestion", side: "right", at: ".dropdown" },
+      // The button is short, so its word comes in to meet it rather than waiting out in the
+      // column at the end of a line that reads as an underline.
+      { slug: "hint", side: "right", at: ".hint-btn", hug: true },
+    ],
+  },
+  {
+    id: "challenge", num: "iv", title: "On a challenge card", minArt: 340,
+    art: () => {
+      const c = CHALLENGE_BY_ID[GLOSS_PLATE_CHALLENGE];
+      const t = (c.tapes || 0) === 0 ? 0 : Math.max(1, Math.min(4, c.tapes));
+      const dark = glossMet("dark-side")
+        ? `<span class="chall-detail-flag"><span class="chall-detail-dark">${CHALL_ECLIPSE}dark side</span></span>` : "";
+      // The wallet sits at the right of the shelf's header, as it does in the game, which leaves
+      // the space over the seal clear for the seal's word.
+      return `<div class="pl-chall">` +
+        `<div class="chall-head"><span class="chall-wallet"><span class="chall-wallet-stubs">${walletStubs(2)}</span>` +
+          `<span class="chall-wallet-cnt"><b>2</b>tokens</span></span></div>` +
+        `<div class="chall-detail">` +
+          `<div class="chall-detail-head"><span class="chall-detail-seal is-unbeaten">${sealMarkup(CHALLENGE_SEALS[c.id])}</span>` +
+            `<span class="chall-detail-name">${escapeHtml(c.name)}</span>${dark}</div>` +
+          `<div class="chall-diff"><span class="chall-eyebrow">Difficulty</span>` +
+            `<span class="chall-tapes t${t}">${TAPE_GLYPH.repeat(Math.max(1, t))}</span>` +
+            `<span class="chall-diff-word">${TAPE_WORD[t]}</span></div>` +
+          `<div class="chall-sec"><div class="chall-eyebrow">The rule</div><div class="chall-rule">${escapeHtml(c.desc)}</div></div>` +
+        `</div></div>`;
+    },
+    labels: [
+      { slug: "wax-seal", side: "above", at: ".chall-detail-seal svg" },
+      { slug: "token", side: "right", at: ".chall-wallet" },
+      { slug: "dark-side", side: "nearest", prefer: "right", at: ".chall-detail-dark" },
+      // The rating row's words, not the cassettes alone, so the leader arrives just after the
+      // rating rather than running through it.
+      { slug: "tape", side: "right", at: (f) => glossInkOf(f.querySelector(".chall-diff")) },
+      // A challenge is "one rule of the game bent", so its word lands on the rule. Aimed at the
+      // name it sat beside the dark side flag and the leaders knotted there.
+      { slug: "challenge", side: "right", at: (f) => glossInkOf(f.querySelector(".chall-rule")) },
+    ],
+  },
+  {
+    id: "collect", num: "v", title: "Things you collect", minArt: 330,
+    note: "Three collections, never the same thing: a charm for doing well, a sticker for noticing, a polaroid for finding.",
+    art: () => {
+      const stickers = loadStickers(), found = loadKeepsakes();
+      const st = glossMet("sticker") && STICKERS.find((s) => stickers[s.id]);
+      const pol = glossMet("polaroid") && POLAROIDS.find((p) => found[p.id]);
+      return `<div class="pl-collect">` +
+        `<div class="pl-cell pl-charm">${charmMarkup("locket", "var(--ach-th-lyricist)", "gloss-charm")}</div>` +
+        (st ? `<div class="pl-cell pl-sticker">${stickerMarkup(st)}</div>` : "") +
+        (pol ? `<div class="pl-cell pl-pol">${polaroidHTML("", pol.name, { keepsake: true, state: "developed", elapsed: POLAROID_DEVELOP_MS, art: pol.art, small: true, tilt: 4 })}</div>` : "") +
+        (st || pol ? glossBrace(false) : "") +
+        `</div>`;
+    },
+    labels: [
+      { slug: "charm", side: "above", at: ".pl-charm .charm" },
+      { slug: "sticker", side: "above", at: ".pl-sticker .sticker" },
+      { slug: "polaroid", side: "above", at: ".pl-pol .polaroid" },
+      // The drawer is labelled by what it holds, so with nothing in it yet there is nothing to
+      // point at, and the word drops to the plain entries instead.
+      { slug: "keepsake", side: "below", at: ".pl-brace", needs: ["sticker", "polaroid"] },
+    ],
+  },
+];
+// The words with nothing on a plate to point at. "page mark" is defined here but labelled on
+// the page's own header.
+const GLOSS_LOOSE = ["era", "lens", "page-mark"];
+
+function glossDefRow(g) {
+  // Cross-links only point at terms the reader can currently see. A "see also: dark side" on a
+  // notebook that has not earned dark side would leak the word this page just withheld.
+  const also = (g.also || []).map((s) => GLOSSARY_BY_SLUG[s]).filter((x) => x && glossaryMet(x));
+  const seeAlso = also.length
+    ? `<p class="gloss-also">see also ` + also.map((x) =>
+        `<button type="button" class="gloss-jump" data-gloss-jump="${x.slug}">${escapeHtml(x.term)}</button>`).join(" · ") + `</p>`
+    : "";
+  return `<div class="gloss-row" id="gloss-${g.slug}" data-gloss-row="${g.slug}">` +
+    `<dt class="gloss-term-name">${escapeHtml(g.term)}</dt>` +
+    `<dd class="gloss-defn">${Array.isArray(g.defn)
+      ? `<ol class="gloss-senses">${g.defn.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ol>`
+      : escapeHtml(g.defn)}${seeAlso}</dd></div>`;
+}
+const glossLabelBtn = (slug) => `<button type="button" class="pl-label" data-gloss-jump="${slug}">${escapeHtml(GLOSSARY_BY_SLUG[slug].term)}</button>`;
+
 function renderGlossary() {
   const el = $("glossaryBody");
   if (!el) return;
-  const met = GLOSSARY.filter(glossaryMet);
-  const hidden = GLOSSARY.length - met.length;
-  let html = `<p class="gloss-intro">The words this notebook made up, and what each one means. A word ` +
-    `turns up here once you've met it, so the page never gets ahead of you.</p>`;
-  html += `<dl class="gloss-list">` + met.map((g) => {
-    // Cross-links only point at terms the reader can currently see. A "see also: dark side" on a
-    // notebook that has not earned dark side would leak the word this page just withheld.
-    const also = (g.also || []).map((s) => GLOSSARY_BY_SLUG[s]).filter((x) => x && glossaryMet(x));
-    const seeAlso = also.length
-      ? `<p class="gloss-also">see also ` + also.map((x) =>
-          `<button type="button" class="gloss-jump" data-gloss-jump="${x.slug}">${escapeHtml(x.term)}</button>`).join(" · ") + `</p>`
-      : "";
-    return `<div class="gloss-row" id="gloss-${g.slug}" data-gloss-row="${g.slug}">` +
-      `<dt class="gloss-term-name">${escapeHtml(g.term)}</dt>` +
-      `<dd class="gloss-defn">${Array.isArray(g.defn)
-        ? `<ol class="gloss-senses">${g.defn.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ol>`
-        : escapeHtml(g.defn)}${seeAlso}</dd></div>`;
-  }).join("") + `</dl>`;
-  // The count without the words: honest that there is more, and it names none of it.
-  if (hidden) {
-    html += `<p class="gloss-rest">${hidden} more ${hidden === 1 ? "word" : "words"} you haven't met yet.</p>`;
+  // The header is static markup, so only its leader layer and its one label are written here.
+  const head = screens.glossary.querySelector('.pl-fig[data-plate="head"]');
+  if (head) {
+    for (const old of head.querySelectorAll(".pl-leaders, .pl-label")) old.remove();
+    head.insertAdjacentHTML("beforeend", `<svg class="pl-leaders" aria-hidden="true"></svg>` +
+      GLOSS_HEAD.labels.filter(glossLabelShown).map((l) => glossLabelBtn(l.slug)).join(""));
   }
+  const onPlates = GLOSS_PLATES.flatMap((p) => p.labels.filter(glossLabelShown).map((l) => l.slug));
+  // A word whose label is withheld for want of a target (keepsake with an empty drawer, skill
+  // once Mastery opens) is still met, so it joins the plain entries rather than vanishing.
+  const loose = [...new Set([...GLOSS_LOOSE, ...GLOSS_PLATES.flatMap((p) => p.labels.map((l) => l.slug))])]
+    .filter((s) => glossMet(s) && !onPlates.includes(s)).sort();
+  const shown = new Set([...onPlates, ...loose]);
+  const hidden = GLOSSARY.filter((g) => !shown.has(g.slug)).length;
+  let html = `<p class="gloss-intro">The words this notebook made up, found where they live. A word turns up ` +
+    `here once you've met it, so the page never gets ahead of you.</p>`;
+  for (const p of GLOSS_PLATES) {
+    const labels = p.labels.filter(glossLabelShown);
+    html += `<section class="pl" data-plate-sec="${p.id}">` +
+      `<header class="pl-head"><span class="pl-num">plate ${p.num}</span><h3 class="pl-title">${p.title}</h3></header>` +
+      (p.note ? `<p class="pl-note">${p.note}</p>` : "") +
+      `<figure class="pl-fig" data-plate="${p.id}"><div class="pl-art" inert>${p.art()}</div>` +
+        `<svg class="pl-leaders" aria-hidden="true"></svg>${labels.map((l) => glossLabelBtn(l.slug)).join("")}</figure>` +
+      `<dl class="gloss-list">${labels.map((l) => glossDefRow(GLOSSARY_BY_SLUG[l.slug])).join("")}</dl></section>`;
+  }
+  html += `<section class="pl pl-loose"><header class="pl-head"><span class="pl-num">and the rest</span>` +
+    `<h3 class="pl-title">Elsewhere in the notebook</h3></header>` +
+    `<dl class="gloss-list">${loose.map((s) => glossDefRow(GLOSSARY_BY_SLUG[s])).join("")}</dl></section>`;
+  // The alphabet, spaced rather than dotted: a separator always ends up dangling at the end of
+  // some line. The count without the words: honest that there is more, and it names none of it.
+  html += `<nav class="pl-index" aria-label="Every word"><span class="pl-index-lab">index</span>` +
+    GLOSSARY.filter((g) => shown.has(g.slug)).map((g) =>
+      `<button type="button" class="gloss-jump" data-gloss-jump="${g.slug}">${escapeHtml(g.term)}</button>`).join("") +
+    (hidden ? `<span class="pl-index-rest">and ${hidden} more you haven't met yet</span>` : "") +
+    `</nav>`;
   el.innerHTML = html;
+  glossLayoutKey = "";
+  layoutGlossary();
 }
+
+/* ---- the plate layout ----
+   Every label is written ON a ruled line of the sheet, the way you would label a drawing in a
+   notebook, and every leader is the same stroke: an S-curve that leaves the label square to it
+   and arrives square to the edge of what it names, with a dot where it touches down.
+     above / below: one row on the ruled line clear of the art, each label centred on what it
+       names and pushed apart along the line only as far as it takes to not touch. A row above
+       is written two lines up (the header's, one), so its leaders are drawn lines, not ticks.
+     left / right: a column in a gutter exactly as wide as its widest label plus the reach, each
+       label on the ruled line nearest the middle of what it names, pushed down a line when two
+       want the same one.
+   It measures the page, so it runs whenever the page is laid out at a new width or type size
+   (a ResizeObserver, see initGlossaryLayout) and is a no-op while the page is hidden. */
+const GLOSS_LINE = 32;              // --line
+const GLOSS_RULE = GLOSS_LINE - 1;  // a band's rule sits on its last pixel
+const GLOSS_BASE = 0.78;            // Caveat's baseline, as a fraction of the label's font size
+const GLOSS_GAP = 12;               // between neighbouring labels on one line
+const GLOSS_REACH = 30;             // label to art in a gutter: long enough to read as a leader
+const GLOSS_CLEAR = 22;             // the least room between the art and a row under it
+let glossLayoutKey = "";
+function layoutGlossary() {
+  const card = screens.glossary;
+  if (!card || !card.classList.contains("active") || !card.offsetWidth) return;
+  const probe = card.querySelector(".pl-label");
+  // Run once per width and type size: laying out changes the page's height, and the observer
+  // would otherwise call straight back in for a result that cannot have changed.
+  const key = card.offsetWidth + "|" + (probe ? getComputedStyle(probe).fontSize : "");
+  if (key === glossLayoutKey) return;
+  glossLayoutKey = key;
+  const cardTop = card.getBoundingClientRect().top;
+  for (const fig of card.querySelectorAll(".pl-fig[data-plate]")) {
+    const plate = fig.dataset.plate === "head" ? GLOSS_HEAD : GLOSS_PLATES.find((p) => p.id === fig.dataset.plate);
+    if (!plate) continue;
+    const art = fig.querySelector(".pl-art"), svg = fig.querySelector(".pl-leaders");
+    const labels = plate.labels.filter(glossLabelShown);
+    const labelEl = (l) => fig.querySelector(`.pl-label[data-gloss-jump="${l.slug}"]`);
+    const targetOf = (l) => typeof l.at === "function" ? l.at(fig) : fig.querySelector(l.at);
+    const rows = { above: labels.some((l) => l.side === "above"), below: labels.some((l) => l.side === "below") };
+
+    // 0. The gutters, and the scale of a squeezed drawing. A "nearest" label that finds its
+    //    object in the other half crosses over and the gutters are worked out again.
+    const side = new Map(labels.map((l) => [l, l.side === "nearest" ? (l.prefer || "right") : l.side]));
+    const gutters = () => {
+      for (const s of ["left", "right"]) {
+        const w = Math.max(0, ...labels.filter((l) => side.get(l) === s).map((l) => labelEl(l)?.offsetWidth || 0));
+        art.style[s === "left" ? "marginLeft" : "marginRight"] = w ? `${w + GLOSS_REACH + 6}px` : "";
+      }
+    };
+    // The scale goes on the drawing inside .pl-art, so the gutters stay in page pixels.
+    const draw = art.firstElementChild;
+    const fit = () => {
+      if (!draw || !plate.minArt) return;
+      draw.style.zoom = "";
+      if (art.clientWidth < plate.minArt) draw.style.zoom = (art.clientWidth / plate.minArt).toFixed(3);
+    };
+    gutters(); fit();
+    let moved = false;
+    for (const l of labels.filter((x) => x.side === "nearest")) {
+      const tEl = targetOf(l);
+      if (!tEl) continue;
+      const t = tEl.getBoundingClientRect(), a = art.getBoundingClientRect();
+      const want = t.left + t.width / 2 < a.left + a.width / 2 ? "left" : "right";
+      if (want !== side.get(l)) { side.set(l, want); moved = true; }
+    }
+    if (moved) { gutters(); fit(); }
+
+    // 1. Snap the art onto the ruling: with a row above, the art starts under that row's line.
+    fig.style.paddingTop = fig.style.paddingBottom = "0px";
+    const figRect = () => fig.getBoundingClientRect();
+    const z = figRect().width / fig.offsetWidth || 1;
+    const un = (r) => { const f = figRect(); return { x: (r.left - f.left) / z, y: (r.top - f.top) / z, w: r.width / z, h: r.height / z }; };
+    const figTop = (figRect().top - cardTop) / z;
+    const lift = rows.above ? 14 : 4;
+    let pad = rows.above ? (plate.rise ?? 2) * GLOSS_LINE : 0;
+    pad += ((GLOSS_RULE + lift - (figTop + pad)) % GLOSS_LINE + GLOSS_LINE) % GLOSS_LINE;
+    fig.style.paddingTop = pad + "px";
+    const artBox = un(art.getBoundingClientRect());
+    const ruleAt = (y) => Math.round((y + figTop - GLOSS_RULE) / GLOSS_LINE) * GLOSS_LINE + GLOSS_RULE - figTop;
+    const ruleAbove = (y) => Math.floor((y + figTop - GLOSS_RULE) / GLOSS_LINE) * GLOSS_LINE + GLOSS_RULE - figTop;
+    const ruleBelow = (y) => Math.ceil((y + figTop - GLOSS_RULE) / GLOSS_LINE) * GLOSS_LINE + GLOSS_RULE - figTop;
+    const fs = probe ? parseFloat(getComputedStyle(probe).fontSize) : 18;
+    const belowRule = rows.below ? ruleBelow(artBox.y + artBox.h + GLOSS_CLEAR + fs * GLOSS_BASE + 2) : 0;
+
+    // 2. Place the labels.
+    const W = fig.offsetWidth;
+    const placed = [];
+    for (const sd of ["above", "below", "left", "right"]) {
+      const group = labels.filter((l) => side.get(l) === sd).map((l) => {
+        const el = labelEl(l), tEl = targetOf(l);
+        return { l, el, t: tEl && un(tEl.getBoundingClientRect()), w: el ? el.offsetWidth : 0, h: el ? el.offsetHeight : 0 };
+      }).filter((g) => g.el && g.t);
+      if (sd === "above" || sd === "below") {
+        const rule = sd === "above" ? ruleAbove(artBox.y - 2) - GLOSS_LINE : belowRule;
+        group.sort((a, b) => (a.t.x + a.t.w / 2) - (b.t.x + b.t.w / 2));
+        let edge = 0;
+        for (const g of group) {
+          g.x = Math.max(edge, Math.min(W - g.w, g.t.x + g.t.w / 2 - g.w / 2));
+          edge = g.x + g.w + GLOSS_GAP;
+          g.y = rule - fs * GLOSS_BASE - 2;
+        }
+        // A row that ran off the right edge is walked back from the right.
+        let right = W;
+        for (const g of [...group].reverse()) { if (g.x + g.w > right) g.x = right - g.w; right = g.x - GLOSS_GAP; }
+      } else {
+        group.sort((a, b) => (a.t.y + a.t.h / 2) - (b.t.y + b.t.h / 2));
+        let next = -Infinity;
+        for (const g of group) {
+          let rule = ruleAt(g.t.y + g.t.h / 2 + fs * GLOSS_BASE / 2);
+          if (rule < next) rule = next;
+          next = rule + GLOSS_LINE;
+          g.y = rule - fs * GLOSS_BASE - 2;
+          // A hugging label sits a little further out than a column does, so its short leader
+          // still reads as a drawn line and not as a dash after the word.
+          const from = g.l.hug ? g.t : artBox, reach = g.l.hug ? GLOSS_REACH + 18 : GLOSS_REACH;
+          g.x = sd === "left" ? Math.max(0, from.x - reach - g.w) : Math.min(W - g.w, from.x + from.w + reach);
+        }
+      }
+      for (const g of group) { g.el.style.left = g.x + "px"; g.el.style.top = g.y + "px"; placed.push({ ...g, side: sd }); }
+    }
+    // The figure ends a fixed step under whatever is lowest, the drawing or a label, so every
+    // plate hands over to its legend with the same gap.
+    const low = Math.max(artBox.y + artBox.h, ...placed.map((g) => g.y + g.h));
+    fig.style.paddingBottom = Math.max(0, low + 16 - (artBox.y + artBox.h)) + "px";
+
+    // 3. The leaders.
+    svg.setAttribute("viewBox", `0 0 ${W} ${fig.offsetHeight}`);
+    const f = (p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`;
+    svg.innerHTML = placed.map((g) => {
+      const t = g.t, mid = g.y + g.h * 0.55;
+      let s, e;
+      if (g.side === "above") { s = [g.x + g.w / 2, g.y + g.h + 1]; e = [t.x + t.w / 2, t.y - 3]; }
+      else if (g.side === "below") { s = [g.x + g.w / 2, g.y + 1]; e = [t.x + t.w / 2, t.y + t.h + 3]; }
+      else if (g.side === "left") { s = [g.x + g.w + 4, mid]; e = [t.x - 3, t.y + t.h / 2]; }
+      else { s = [g.x - 4, mid]; e = [t.x + t.w + 3, t.y + t.h / 2]; }
+      const v = g.side === "above" || g.side === "below", k = 0.55;
+      const c1 = v ? [s[0], s[1] + (e[1] - s[1]) * k] : [s[0] + (e[0] - s[0]) * k, s[1]];
+      const c2 = v ? [e[0], e[1] - (e[1] - s[1]) * k] : [e[0] - (e[0] - s[0]) * k, e[1]];
+      return `<g data-slug="${g.l.slug}"><path class="pl-lead" d="M${f(s)} C${f(c1)} ${f(c2)} ${f(e)}"/>` +
+        `<circle class="pl-dot" cx="${e[0].toFixed(1)}" cy="${e[1].toFixed(1)}" r="1.8"/></g>`;
+    }).join("");
+    // The legend reads in the order the plate does: the row above, the row below, then the
+    // columns, each in the order its labels sit.
+    const dl = fig.closest(".pl")?.querySelector(".gloss-list");
+    if (dl) for (const g of placed) { const row = dl.querySelector(`[data-gloss-row="${g.l.slug}"]`); if (row) dl.appendChild(row); }
+  }
+}
+// A label and its definition are one word in two places, so pointing at either lights both.
+function lightGlossWord(slug) {
+  for (const el of screens.glossary.querySelectorAll(".is-lit")) el.classList.remove("is-lit");
+  if (!slug) return;
+  for (const el of screens.glossary.querySelectorAll(`.pl-label[data-gloss-jump="${slug}"], .pl-leaders g[data-slug="${slug}"], [data-gloss-row="${slug}"]`)) el.classList.add("is-lit");
+}
+// Arriving at a word: the highlighter swept across its headword.
+function sweepGlossRow(row) {
+  if (!row) return;
+  row.classList.remove("is-found"); void row.offsetWidth; row.classList.add("is-found");
+}
+function initGlossaryLayout() {
+  const card = screens.glossary;
+  if (!card || typeof ResizeObserver !== "function") return;
+  new ResizeObserver(() => requestAnimationFrame(layoutGlossary)).observe(card);
+  // Caveat settles after first paint and widens every label with it.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { glossLayoutKey = ""; layoutGlossary(); });
+}
+
 function openGlossary(from, focus = "") {
   glossaryBackTarget = from;
   routeTo("glossary", from);
   renderGlossary();
   flipAwayToScreen("glossary");
-  // After the turn has begun, so the reveal is claimed for the glossary rather than the page
-  // being left, and the arrival at the top doesn't overrule it.
-  const row = focus && $("glossaryBody").querySelector(`[data-gloss-row="${focus}"]`);
-  if (row) revealAfterFlip(() => row, { pad: 18 });
+  layoutGlossary();
+  if (!focus) return;
+  // A door lands on the PLATE that pictures the word, so the reader arrives looking at the thing
+  // the word names with its label lit, and the definition swept just under it. A word with
+  // nothing to point at lands on its plain entry. After the turn has begun, so the reveal is
+  // claimed for the glossary rather than the page being left.
+  const label = screens.glossary.querySelector(`.pl-label[data-gloss-jump="${focus}"]`);
+  const row = $("glossaryBody").querySelector(`[data-gloss-row="${focus}"]`);
+  const at = (label && label.closest(".pl")) || row;
+  if (!at) return;
+  revealAfterFlip(() => at, { pad: 18 });
+  lightGlossWord(focus);
+  sweepGlossRow(row);
 }
 
 /* ---------- The graveyard ----------
@@ -35656,12 +36072,21 @@ async function init() {
     e.preventDefault();
     turnGraveyard(e.key === "ArrowRight" ? 1 : -1);
   });
-  $("glossaryBody").addEventListener("click", (e) => {
+  // On the whole screen, not just the body: the header's "page mark" label is a jump too.
+  screens.glossary.addEventListener("click", (e) => {
     const jump = e.target.closest("[data-gloss-jump]");
     if (!jump) return;
     const row = $("glossaryBody").querySelector(`[data-gloss-row="${jump.dataset.glossJump}"]`);
-    if (row) row.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+    if (!row) return;
+    row.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+    sweepGlossRow(row);
   });
+  screens.glossary.addEventListener("pointerover", (e) => {
+    const hit = e.target.closest(".pl-label, .gloss-row");
+    lightGlossWord(hit ? (hit.dataset.glossJump || hit.dataset.glossRow) : null);
+  });
+  screens.glossary.addEventListener("pointerleave", () => lightGlossWord(null));
+  initGlossaryLayout();
   document.addEventListener("click", (e) => {
     const term = e.target.closest("[data-gloss]");
     if (!term) return;

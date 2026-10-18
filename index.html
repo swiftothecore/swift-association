@@ -3654,13 +3654,19 @@ if (location.pathname.endsWith('/index.html')) {
        place any of these words is defined; the surfaces that USE a term borrow their tooltip
        from the same row rather than restating it. -->
   <section id="screen-glossary" class="screen card" tabindex="-1" aria-label="Glossary">
-    <div class="stats-nav">
-      <span class="title-group">
-        <span class="page-mark mark-glossary" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-glossary"/></svg></span>
-        <span class="stats-title">Glossary</span>
-      </span>
-      <button id="glossaryBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
-    </div>
+    <!-- The header is a plate of its own: renderGlossary writes the "page mark" label and its
+         leader into this figure, so the page labels its own mark. -->
+    <figure class="pl-fig pl-headplate" data-plate="head">
+      <div class="pl-art">
+        <div class="stats-nav">
+          <span class="title-group">
+            <span class="page-mark mark-glossary" aria-hidden="true"><svg viewBox="0 0 36 24"><use href="#mark-glossary"/></svg></span>
+            <span class="stats-title">Glossary</span>
+          </span>
+          <button id="glossaryBackBtn" class="btn-link"><svg class="back-arrow" viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg><span class="ctl-lab">back</span></button>
+        </div>
+      </div>
+    </figure>
     <div id="glossaryBody"></div>
   </section>
 

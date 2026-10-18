@@ -12874,12 +12874,87 @@
   .gloss-jump:hover, .gloss-jump:focus-visible { background: var(--highlighter); outline: none; }
   /* spaced by margin, not a space character, so the underline stops at the last letter */
   .gloss-jump .cta-arrow { margin-left: 0.45em; }
-  /* The count of what is still hidden, with none of the words in it. */
-  .gloss-rest {
-    margin: 18px 0 0; padding-top: 12px; border-top: 1px dashed rgba(43,39,34,0.16);
-    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust));
-    color: var(--ink-soft); font-style: italic;
+  /* GLOSSARY PLATES — the page as a field guide (renderGlossary / layoutGlossary in app.js). Each
+     plate is a real piece of the notebook in its own classes, with the words written beside it
+     on the ruled lines. Everything here is the setting around the objects: the labels, the
+     leaders, the gaps. The objects themselves are never restyled to match one another. */
+  .pl { margin: 26px 0 0; }
+  .pl + .pl { margin-top: 46px; }
+  .pl-head { display: flex; align-items: baseline; gap: 12px; margin: 0 0 4px; }
+  .pl-num { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.6px;
+    text-transform: uppercase; color: var(--ink-soft); white-space: nowrap; }
+  .pl-title { font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust));
+    line-height: 1.1; margin: 0; color: var(--ink); }
+  .pl-note { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
+    font-style: italic; margin: 0; max-width: 60ch; line-height: 1.5; }
+  .pl > .gloss-list { margin-top: 10px; }
+  .pl-loose .gloss-row:last-child { padding-bottom: 0; }
+  /* The figure: the art, with labels around it. layoutGlossary sets its padding and the art's
+     gutters, each as wide as its widest label plus the leader's reach. */
+  .pl-fig { position: relative; margin: 0; }
+  .pl-art { position: relative; }
+  .pl-leaders { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none;
+    filter: url(#charmWobble); }
+  .pl-lead { fill: none; stroke: var(--ink-soft); stroke-width: 1.1; stroke-linecap: round;
+    transition: stroke 0.15s, stroke-width 0.15s; }
+  .pl-dot { fill: var(--ink-soft); transition: fill 0.15s; }
+  .pl-label {
+    position: absolute; z-index: 2; top: 0; left: 0;
+    font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); line-height: 1;
+    color: var(--ink); background: none; border: 0; padding: 2px 3px; cursor: pointer; white-space: nowrap;
   }
+  .pl-label:hover, .pl-label:focus-visible, .pl-label.is-lit { background: var(--highlighter); outline: none; border-radius: 2px; }
+  .pl-leaders g.is-lit .pl-lead { stroke: var(--ink); stroke-width: 1.6; }
+  .pl-leaders g.is-lit .pl-dot { fill: var(--ink); }
+  @media (max-width: 480px) { .pl-label { font-size: calc(15px + var(--text-size-adjust)); } }
+  /* the hand-drawn brace for a word that names a group */
+  .pl-brace { position: absolute; left: 34%; right: 2%; bottom: 0; height: 18px; width: 64%; overflow: visible;
+    filter: url(#charmWobble); }
+  .pl-group { position: relative; display: inline-flex; }
+  .pl-brace.pl-brace-up { left: -2px; right: -2px; width: auto; top: -13px; bottom: auto; height: 9px; }
+  .pl-brace path { fill: none; stroke: var(--ink-soft); stroke-width: 1.2; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  /* the page's own header, wearing its one label */
+  .pl-headplate .stats-nav { margin-bottom: 0; }
+  /* plate i: the front page. The masthead is lifted off the desk and set on the sheet, sized off
+     the plate's own width rather than the viewport's. */
+  .pl-front { display: flex; flex-direction: column; align-items: center; gap: 22px; container-type: inline-size; }
+  header.title.pl-mast { margin: 0; text-align: center; }
+  header.title.pl-mast h1 { font-size: clamp(22px, 8cqi, 44px); margin: 0; }
+  .pl-front-row { display: flex; align-items: flex-end; justify-content: center; gap: 28px; width: 100%; }
+  /* Under the body's id so it outranks the front page's own six-column card rules. */
+  #glossaryBody .see-also.pl-nav { margin: 0; flex: 0 1 300px; grid-template-columns: 1fr 1fr; }
+  #glossaryBody .see-also.pl-nav > .nav-card { grid-column: auto; }
+  /* plate iii: an answer half-written with the suggestions open. In the round the card floats
+     over the page; here it is laid in the flow so the hint button can sit under it. */
+  .pl-answer .input-area { position: relative; }
+  .pl-answer .dropdown { position: relative; top: auto; left: auto; right: auto; margin-top: 14px; }
+  .pl-answer .hint-btn { display: inline-block; margin-top: 22px; }
+  /* plate iv: a challenge card under the shelf's token wallet */
+  .pl-chall .chall-head { justify-content: flex-end; margin: 0 0 12px; }
+  .pl-chall .chall-rule { text-wrap: pretty; }
+  /* plate v: three collections, the drawer's brace under the two that live in it */
+  /* One row always: on a narrow page the three are drawn smaller (minArt) rather than wrapped,
+     since a wrapped polaroid sends its leader down between the other two. */
+  .pl-collect { position: relative; display: flex; align-items: flex-start; justify-content: space-around;
+    gap: 18px; padding: 14px 0 26px; }
+  .pl-cell { display: flex; align-items: flex-start; justify-content: center; }
+  .pl-charm .charm { width: 84px; height: 84px; }
+  .pl-sticker .sticker { width: 104px; }
+  .pl-pol .polaroid { width: 104px; }
+  /* the alphabet */
+  .pl-index { margin: 18px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 1.25em; row-gap: 2px;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.9; color: var(--ink-soft); }
+  .pl-index-lab { font-family: var(--hand); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); color: var(--ink); margin-right: 8px; }
+  .pl-index .gloss-jump { white-space: nowrap; }
+  .pl-index-rest { font-style: italic; }
+  /* a headword lit from its label, or swept on arrival through a door or a jump */
+  .gloss-row.is-lit .gloss-term-name, .gloss-row.is-found .gloss-term-name {
+    background: linear-gradient(transparent 52%, var(--highlighter) 52%, var(--highlighter) 88%, transparent 88%) no-repeat;
+    background-size: 100% 100%; display: inline-block; }
+  .gloss-row.is-found .gloss-term-name { animation: pl-sweep 0.7s ease-out; }
+  @keyframes pl-sweep { from { background-size: 0 100%; } to { background-size: 100% 100%; } }
+  @media (prefers-reduced-motion: reduce) { .gloss-row.is-found .gloss-term-name { animation: none; } }
+
   /* A term borrowing its definition wherever it is used. No underline: these sit on glyphs and
      counters all over the notebook, and dotting every one would look like an error state. */
   .gloss-term { cursor: help; }
