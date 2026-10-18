@@ -5317,8 +5317,11 @@
     font-family: var(--hand); font-size: calc(27px + var(--text-size-adjust)); line-height: 1.25; color: var(--ink);
   }
   .bg-word {
+    /* Caveat's ink starts ~0.11em inside its advance and overhangs the far side by ~0.06em, so
+       even padding left the box leaning left of the word. The padding is unequal to put the
+       ink in the middle; the total stays 8px, so the line's spacing doesn't move. */
     cursor: pointer; background: none; border: none; border-radius: 3px;
-    padding: 1px 4px; transition: background 0.12s, transform 0.12s;
+    padding: 1px calc(4px + 0.085em) 1px calc(4px - 0.085em); transition: background 0.12s, transform 0.12s;
   }
   .bg-word:hover:not(:disabled) { background: rgba(199,149,31,0.22); }
   .bg-word:active:not(:disabled) { transform: translateY(1px); }
