@@ -6983,14 +6983,16 @@
      seconds has nothing to put in: the tally and its ledger, the bracelet's caption and keepsake
      row, the podium heading, the full-width way home and the see-also tiles. What is left is the
      card, its two actions, and the skills and charms the house rule keeps below them. */
-  #screen-results.rl-end > .word-label,
-  #screen-results.rl-end .final-score,
-  #screen-results.rl-end .bracelet-result,
-  #screen-results.rl-end .podium-title,
-  #screen-results.rl-end #againBtn,
-  #screen-results.rl-end .see-also { display: none; }
+  /* Aliased for the page-turn clone, whose ids are renamed: without it, turning away from this
+     card flashed the whole folded-away results page back in for the length of the turn. */
+  :is(#screen-results, [data-flip-id="screen-results"]).rl-end > .word-label,
+  :is(#screen-results, [data-flip-id="screen-results"]).rl-end .final-score,
+  :is(#screen-results, [data-flip-id="screen-results"]).rl-end .bracelet-result,
+  :is(#screen-results, [data-flip-id="screen-results"]).rl-end .podium-title,
+  :is(#screen-results, [data-flip-id="screen-results"]).rl-end :is(#againBtn, [data-flip-id="againBtn"]),
+  :is(#screen-results, [data-flip-id="screen-results"]).rl-end .see-also { display: none; }
   /* The card is the top of the page now, so the paper starts at it. */
-  #screen-results.rl-end .podium { margin-top: 0; }
+  :is(#screen-results, [data-flip-id="screen-results"]).rl-end .podium { margin-top: 0; }
   /* The strand hangs under the card's head, in the room the shelf's listing would start in.
      It is the one thing on this card the back cover has no equivalent for, which is exactly
      why it is worth the height. */
@@ -16932,7 +16934,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .lu-goals { display: flex; flex-wrap: wrap; gap: 5px 12px; justify-content: center; margin: 0 0 9px; }
 .lu-goals[hidden] { display: none; }
 /* on the page, the hand keeps clear of the trinkets hanging off the strand above it */
-#lineupGoals { margin-top: 14px; }
+:is(#lineupGoals, [data-flip-id="lineupGoals"]) { margin-top: 14px; }
 .lu-goal {
   display: inline-flex; align-items: center; gap: 4px; position: relative;
   font-family: var(--type); font-size: 10px; letter-spacing: 0.4px; color: var(--ink-soft);
@@ -17092,7 +17094,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   /* The close link is pinned in the game card's top-right corner, above the page line. The
      phone padding above would slide the page line up under it and print the link straight
      across the rule marks, so the game page keeps the head room the desktop card gives it. */
-  #screen-game.card { padding-top: 32px; }
+  :is(#screen-game, [data-flip-id="screen-game"]).card { padding-top: 32px; }
   .settings-gear {
     position: absolute; top: calc(8px + env(safe-area-inset-top, 0px));
     right: max(10px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px;
