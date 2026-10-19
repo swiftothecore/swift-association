@@ -7938,7 +7938,9 @@
   .chall-path-overlay {
     position: absolute; inset: 0; z-index: 60;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(245, 239, 225, 0.9); animation: cpo-in 0.25s ease both;
+    /* Washed from the page's own paper, so the title (inked in --ink) stays legible on a dark
+       page instead of sitting pale-on-cream. */
+    background: color-mix(in srgb, var(--paper) 90%, transparent); animation: cpo-in 0.25s ease both;
   }
   @keyframes cpo-in { from { opacity: 0; } to { opacity: 1; } }
   .chall-path-panel { text-align: center; max-width: 460px; padding: 0 16px; }
@@ -8003,10 +8005,12 @@
   /* The risk batch — the same fork overlay for the bank / double-or-nothing offer, tinted
      toward the margin red so a page that is asking you to gamble reads differently from
      one handing out perks. */
-  .chall-path-overlay.is-risk { background: rgba(246, 238, 226, 0.94); }
+  .chall-path-overlay.is-risk { background: color-mix(in srgb, var(--paper) 94%, transparent); }
   .chall-path-overlay.is-risk .chall-path-title { color: #9c3b2e; }
   .chall-path-overlay.is-risk .chall-path-card { border-color: #b06a58; }
   .chall-path-overlay.is-risk .cpc-icon { color: #9c3b2e; }
+  /* The margin red is too dark to read on a dark page; lift it to the devil fork's ember. */
+  :root[data-theme="dark"] .chall-path-overlay.is-risk :is(.chall-path-title, .cpc-icon) { color: #e2725b; }
   @media (prefers-reduced-motion: reduce) {
     .chall-path-overlay { animation: none; }
     .chall-path-card { transition: none; }
