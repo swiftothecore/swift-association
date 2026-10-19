@@ -49,18 +49,18 @@ test('fuzzy early exit preserves acceptance, exact accepted scores and boundary 
 test('bonus pages build only their required indexes and restore the right corpus cache', () => {
   const calls = [];
   const builders = {
-    buildLineIndex: 'line', buildSlipContext: 'context', buildWordIndex: 'word', buildTrackIndex: 'track',
+    buildLineIndex: 'line', buildWordFreq: 'context', buildWordIndex: 'word', buildTrackIndex: 'track',
   };
   const games = {
-    'spot-the-slip': ['line', 'context'], 'sing-it-back': ['context'], redacted: ['context', 'line'],
+    'spot-the-slip': ['line'], 'sing-it-back': ['context'], redacted: ['context', 'line'],
     'only-here': ['word'], 'then-what': [], 'running-order': ['track'], 'word-cloud': ['word'],
     'aaron-or-jack': [], 'who-held-the-pen': [], nashville: [], 'the-capitals': [], ruthless: [],
-    'name-that-song': ['line'],
+    'name-that-song': ['line'], 'correct-the-slip': ['line'],
   };
   const context = vm.createContext({ ...config, Math, allSongs: songs, playableWords: [],
     bonusRecentSongs: [], bonusRecentAlbums: [], bonusRecentFakes: [], onlyDealt: [],
     bonusRound: 1, producerCredits: {}, writerCredits: {}, nashvillePool: [], secretMessages: [],
-    bonusSongs: () => songs, activeLens: () => 'top',
+    bonusSongs: () => songs, activeLens: () => 'top', slipSwaps: new Map(), slipDealt: new Set(), devRuthlessNext: null, ruthlessLensId: null,
   });
   for (const [name, label] of Object.entries(builders)) context[name] = (corpus) => {
     calls.push(label); return { label, corpus };
@@ -69,7 +69,7 @@ test('bonus pages build only their required indexes and restore the right corpus
     context[`build${name}Puzzle`] = (...args) => ({ name, args });
   }
   const start = app.indexOf('const bonusCorpusIndexes');
-  vm.runInContext(app.slice(start, app.indexOf('// What the whole shelf deals from:', start)) + fn(app, 'buildBonusPuzzle'), context);
+  vm.runInContext(app.slice(start, app.indexOf('// What the whole shelf deals from:', start)) + fn(app, 'isSlipGame') + fn(app, 'buildBonusPuzzle'), context);
   for (const [id, expected] of Object.entries(games)) {
     context.allSongs = [...songs];
     context.bonusGame = { id };
@@ -110,7 +110,7 @@ test('challenge rows use one fresh board snapshot and preserve pins and locks', 
       tapesMarkup: () => '', walletStubs: () => '', glossaryDefn: () => '', escapeHtml: util.escapeHtml,
       $: () => el, selectChallenge() {},
     });
-    vm.runInContext(fn(app, 'challengeUnlocked') + fn(app, 'renderChallengesPage'), context);
+    vm.runInContext(fn(app, 'challengeUnlocked') + fn(app, 'hasDarkSide') + fn(app, 'perfectedChallenge') + fn(app, 'renderChallengesPage'), context);
     context.renderChallengesPage();
     assert.equal(reads, 1);
     assert.match(el.innerHTML, /3 \/ 3/);

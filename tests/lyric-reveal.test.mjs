@@ -29,8 +29,6 @@ test("puts two same-section lines on either side without repeating the anchor", 
   assert.deepEqual(reveal.before.map((line) => line.text), ["one", "two"]);
   assert.deepEqual(reveal.after.map((line) => line.text), ["four", "five"]);
   assert.equal([...reveal.before, ...reveal.after].some((line) => line.text === "the word is here"), false);
-  assert.equal(reveal.truncatedBefore, false);
-  assert.equal(reveal.truncatedAfter, true);
 });
 
 test("prefers the raw displayed occurrence before a looser normalized twin", () => {
@@ -50,26 +48,24 @@ test("prefers the raw displayed occurrence before a looser normalized twin", () 
   assert.deepEqual(reveal.after.map((line) => line.text), ["the line after"]);
 });
 
-test("keeps repeated matching lines as coordinate-distinct occurrences", () => {
+// The peek counts its two lines either side across the whole song, not inside the section, so a
+// line at a section's edge still sits in the middle of five (see RADIUS in lyric-reveal.mjs).
+test("runs the peek straight across a section edge", () => {
   const song = {
     sections: [
-      { label: "Verse 1", lines: ["Break my soul in two", "first tail"] },
-      { label: "Verse 2", lines: ["second lead", "Will you forgive my soul", "second tail"] },
+      { label: "Verse 1", lines: ["first lead", "Break my soul in two"] },
+      { label: "Chorus", lines: ["chorus one", "chorus two", "chorus three"] },
     ],
   };
-  const matchesLine = (line) => /\bsoul\b/i.test(line);
-  const first = buildLyricReveal(song, "Break my soul in two", { normalize, matchesLine });
-  const second = buildLyricReveal(song, first.matches[1].text, {
+  const reveal = buildLyricReveal(song, "Break my soul in two", {
     normalize,
-    matchesLine,
-    anchor: first.matches[1],
+    matchesLine: (line) => /\bsoul\b/i.test(line),
   });
 
-  assert.equal(first.totalMatches, 2);
-  assert.equal(first.occurrence, 1);
-  assert.equal(second.occurrence, 2);
-  assert.equal(second.sectionLabel, "Verse 2");
-  assert.equal(second.anchorLineIndex, 1);
+  assert.equal(reveal.sectionLabel, "Verse 1");
+  assert.equal(reveal.anchorLineIndex, 1);
+  assert.deepEqual(reveal.before.map((line) => line.text), ["first lead"]);
+  assert.deepEqual(reveal.after.map((line) => line.text), ["chorus one", "chorus two"]);
 });
 
 test("treats a recovered multi-line answer as one span", () => {
@@ -121,14 +117,15 @@ test("real lenient babe reveal stays on the exact displayed Elizabeth Taylor lin
   ]);
 });
 
-test("real coney island soul hits remain two navigable occurrences", () => {
+test("real coney island soul reveal opens on the line the card shows", () => {
   const song = catalogue.find((candidate) => candidate.title === "coney island");
   const matchesLine = (line) => wordRegex("soul", false).test(line);
   const displayed = extractLineWithWord(song.lyrics, "soul", false);
   const reveal = buildLyricReveal(song, displayed, { normalize: normalizeLyric, matchesLine });
 
-  assert.equal(reveal.totalMatches, 2);
-  assert.deepEqual(reveal.matches.map((hit) => hit.sectionLabel), ["Verse 1", "Verse 2"]);
+  assert.equal(reveal.sectionLabel, "Verse 1");
+  assert.equal(song.sections[reveal.sectionIndex].lines[reveal.anchorLineIndex], displayed);
+  assert.equal([...reveal.before, ...reveal.after].some((line) => line.text === displayed), false);
 });
 
 test("Mary's Song is a title-only proof fixture for the prompt song", () => {

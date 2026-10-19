@@ -13,7 +13,7 @@ test("every visual page clone is collision-free, inert, and palette-stable", () 
   assert.equal(occurrences(app, "renameFlipIds(flip);"), 3);
   assert.equal(occurrences(app, 'flip.setAttribute("inert", "");'), 3);
   assert.equal(occurrences(app, "freezeFlipPalette(card, flip);"), 2);
-  assert.equal(occurrences(app, "freezeFlipPalette(src, flip);"), 1);
+  assert.equal(occurrences(app, "freezeFlipPalette(src, flip, incoming);"), 1);
   assert.equal(occurrences(app, "turn.layer.appendChild(flip);"), 3);
   assert.equal(occurrences(app, "copyFlipRuntimeState("), 3);
   assert.match(app, /copy\.scrollTop = node\.scrollTop;\s*copy\.scrollLeft = node\.scrollLeft;/);
@@ -54,12 +54,12 @@ test("the exposed challenge bookmark stays in the turn layer beneath the sheet",
   assert.match(css, /\.page-flip-sheet\s*\{[\s\S]*?z-index:\s*1;/);
 });
 
-test("long destination pages animate only through the visible viewport", () => {
-  assert.match(app, /const viewportBottom = window\.visualViewport/);
-  assert.match(app, /const visibleHeight = Math\.max\(appRect\.height, viewportBottom - appRect\.top\);/);
-  assert.match(app, /const animatedHeight = Math\.min\(natural, visibleHeight\);/);
-  assert.match(app, /app\.style\.height = animatedHeight \+ "px";/);
+// The notebook used to grow into a longer destination during the turn; 014b9bc removed that
+// (a height transition relayouts the whole notebook every frame). It stays locked instead.
+test("long destination pages never animate the notebook's height", () => {
+  assert.match(app, /app\.style\.height = appRect\.height \+ "px";/);
   assert.doesNotMatch(app, /app\.style\.height = natural \+ "px";/);
+  assert.doesNotMatch(app, /const animatedHeight = /);
 });
 
 test("renamed clone ids retain every id-based presentation rule", () => {
@@ -82,10 +82,21 @@ test("renamed clone ids retain every id-based presentation rule", () => {
     "saveNameBtn",
     "screen-start",
     "screen-stats",
+    "screen-game",
+    "lineupGoals",
   ];
+  // Only an id a rule actually targets needs the alias: the end-of-run buttons are styled by
+  // class now (the tape deck), so they have nothing to lose on the clone.
+  const comment = /\/\*[\s\S]*?\*\//g;
+  const rules = css.replace(comment, "");
   for (const id of aliasedIds) {
-    assert.ok(css.includes(`[data-flip-id="${id}"]`), `${id} has no clone styling alias`);
+    const targeted = new RegExp(`#${id}(?![\\w-])`).test(rules);
+    if (!targeted) continue;
+    assert.ok(rules.includes(`[data-flip-id="${id}"]`), `${id} has no clone styling alias`);
   }
+  // A rule that HIDES part of a page by id is the one that shows: the Ruthless ending folds the
+  // results page away, and its clone flashed it all back for the length of a turn.
+  assert.match(rules, /:is\(#screen-results, \[data-flip-id="screen-results"\]\)\.rl-end > \.word-label/);
   assert.match(css, /\.page-flip-sheet\[data-flip-id="screen-ruthless"\]\s*\{\s*display:\s*flex;/);
 });
 
@@ -114,7 +125,7 @@ test("bonus and Ruthless clocks wait for a fully interactive page", () => {
   assert.match(app, /if \(!\(bonusRunStart > 0\)\) bonusRunStart = performance\.now\(\);/);
   assert.match(app, /turnPageSheet\(\$\("screen-bonusplay"\), lay, begin, \{ inert: true \}\);/);
   assert.match(app, /renderBonusRound\(\);\s*showBonusClockReady\(\);/);
-  assert.match(app, /function showBonusClockReady\(\)[\s\S]*?label\.textContent = bonusSeconds\(\)\.toFixed\(1\);/);
+  assert.match(app, /function showBonusClockReady\(\)[\s\S]*?label\.textContent = bonusSeconds\(\)\.toFixed\(2\);/);
   assert.equal(occurrences(app, "bonusPageStart = performance.now();"), 1);
   assert.doesNotMatch(app, /answer given during the flip/);
 });

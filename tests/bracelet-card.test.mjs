@@ -59,7 +59,7 @@ test("longer card summaries split into two balanced rows", () => {
 
 test("the app supplies difficulty and an explicit hint count to keepsakes", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
-  const cardMeta = app.match(/function buildCardMeta\(\)[\s\S]*?\n}\n\n\/\* An exported SVG/);
+  const cardMeta = app.match(/function buildCardMeta\(\)[\s\S]*?\n}\n/);
 
   assert.ok(cardMeta, "could not locate buildCardMeta");
   assert.match(cardMeta[0], /currentMode\.label, l: "difficulty"/);
