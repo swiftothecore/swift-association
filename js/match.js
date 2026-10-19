@@ -99,6 +99,12 @@ export const FALSE_FRIENDS = {
   let:    ["letter", "letters"],                                                // letter
   move:   ["movie", "movies"],                                                  // movie
   pen:    ["penny", "pennies"],                                                 // penny
+  // And the "-er" nouns that are a thing of their own rather than a form of the verb: 5 of
+  // draw's 8 songs only had a drawer in them, and 4 of sweat's 7 only a sweater.
+  draw:   ["drawer", "drawers"],                                                // drawer
+  dress:  ["dresser", "dressers"],                                              // dresser
+  sneak:  ["sneaker", "sneakers"],                                              // sneaker
+  sweat:  ["sweater", "sweaters"],                                              // sweater
 };
 // A zero-width veto to sit just inside the leading boundary, so a false friend can never be the
 // token the alternation lands on. Empty for every word with nothing to disown.
