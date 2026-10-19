@@ -4,7 +4,7 @@
 // search returns exactly the lines the game would count as a match. Loads songs.json
 // itself and works off the structured `sections` (label + lines) so every hit knows
 // its section and per-section line number without re-parsing strings.
-import { escapeHtml, fuzzySubstringRatio, swappedNeighbours } from "../js/util.js";
+import { escapeHtml, fuzzySubstringRatio, swappedNeighbours, versionFamilies } from "../js/util.js";
 import "../js/credential-guard.js";
 import {
   boundedWordBody,
@@ -28,6 +28,7 @@ const SHARE_LABEL = canShare() ? "share link" : "copy link";
 const SHARE_TITLE = canShare() ? "Share a link to this search" : "Copy a shareable link to this search";
 
 let SONGS = [];                  // flat: { title, album, sections:[{label, lines}] }
+let FAMILY = new Map();          // song -> the song its other cuts belong to (versionFamilies)
 const ALBUM_INDEX = new Map();   // album name -> release order (from songs.json order)
 const PROMPT_WORDS = new Set();  // words.json (lowercased) — only these can "play in the game"
 
@@ -116,6 +117,7 @@ async function loadData() {
   SONGS = grouped.flatMap(({ album, songs }) =>
     songs.map((s) => ({ title: s.title, album, sections: Array.isArray(s.sections) ? s.sections : [] }))
   );
+  FAMILY = versionFamilies(SONGS);
   lineTokenCache.clear();
   lastSearch = null;
   const set = new Set();
@@ -546,11 +548,13 @@ function albumBar(counts) {
     `<span data-album="${escapeHtml(al)}" style="flex:${counts.get(al)};background:${ALBUM_COLORS[al] || "#999"}" title="${escapeHtml(al)}: ${counts.get(al)}"></span>`).join("");
 }
 
-// A plain-language rarity read, echoing the game's difficulty bands (common ≥18 songs,
-// rare 3–9) so the searcher and the game describe a word the same way.
+// A plain-language rarity read, echoing the game's difficulty bands (TAYLOR_BUCKETS: common
+// ≥18 songs, rare 3–9) so the searcher and the game describe a word the same way. The count is
+// of SONGS the way the game counts them, one per version family, so State Of Grace and its
+// acoustic cut are one song here too and a word is never read a band commoner than it plays.
 function rarityNote(songCount) {
   if (songCount >= 18) return "a common word";
-  if (songCount >= 8) return "fairly common";
+  if (songCount >= 10) return "fairly common";
   if (songCount >= 3) return "a rare word";
   return songCount === 1 ? "a one-song deep cut" : "a deep cut";
 }
@@ -576,7 +580,7 @@ function renderConcord(groups, counts) {
     : "";
   $("concord").innerHTML =
     `<div class="sx-concord-line">most in <b>${escapeHtml(topAlbum)}</b> ` +
-    `(${plural(topCount, "line")}) &middot; <span class="sx-rarity">${rarityNote(groups.length)}</span></div>` +
+    `(${plural(topCount, "line")}) &middot; <span class="sx-rarity">${rarityNote(new Set(groups.map((g) => FAMILY.get(g.song) || g.song)).size)}</span></div>` +
     `<div class="sx-concord-legend">${legend}${moreBtn}</div>`;
 }
 
