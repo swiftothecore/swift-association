@@ -756,6 +756,21 @@ export function buildOnlyHerePuzzle(songs, wordIndex, rng = Math.random, tries =
   return null;
 }
 
+// Whether `tail` turns `stem` into one of its own forms rather than into another word: a plural or
+// third person, a past tense or participle, a present participle (sung "in'" or written "ing"),
+// with the doubled consonant those take ("stop", "stopped"). Comparatives and derivations are
+// left out on purpose: "longer" is not "long" in a line, and "should"/"shoulder" is the reason.
+function inflects(stem, tail) {
+  const last = stem.slice(-1);
+  if (tail === "s" || tail === "ed" || tail === "ing" || tail === "in") return true;
+  if (tail === "es") return /(s|x|z|ch|sh|o)$/.test(stem);
+  if (tail === "d") return last === "e";
+  if (tail === "n") return last === "e" || last === "w";
+  if (tail === "g") return stem.endsWith("in");                       // gettin -> getting
+  if (tail.length === 3 && tail[0] === last && /^[^aeiou]$/.test(last)) return /^(ed|in)$/.test(tail.slice(1));
+  return false;
+}
+
 export function judgeBlank(typed, puzzle, vocab = null) {
   const got = wordKey(typed);
   if (!got) return false;
@@ -765,7 +780,13 @@ export function judgeBlank(typed, puzzle, vocab = null) {
 
   const short = got.length <= want.length ? got : want;
   const long = got.length <= want.length ? want : got;
-  if (short.length >= 4 && long.startsWith(short) && long.length - short.length <= 3) return true;
+  // A shared stem: one is the other plus up to three letters. When what was typed is itself a
+  // catalogue word, those letters have to be an inflection, or the rule takes a different word
+  // for the right one, and some of them are opposites ("could" for "couldn't", "with" for
+  // "without", "hear" for "heart"). A string the catalogue never sings keeps the plain prefix
+  // rule, since that is a clipped or half-typed word rather than a second answer.
+  if (short.length >= 4 && long.startsWith(short) && long.length - short.length <= 3 &&
+      (!(vocab && vocab.has(got)) || inflects(short, long.slice(short.length)))) return true;
 
   if (got.length >= 4 && Math.abs(got.length - want.length) <= 1 &&
       !(vocab && vocab.has(got)) &&
