@@ -83,14 +83,23 @@ export const FALSE_FRIENDS = {
   scar: ["scared", "scares", "scaring", "scary", "scarier", "scariest"],        // scare
   spin: ["spines"],                                                             // spine
   star: ["stared", "stares", "staring", "starin"],                              // stare
+  // The same collision through the tail itself rather than a silent "e": a whole other word
+  // that happens to be the prompt word plus an ordinary suffix. Measured on the catalogue,
+  // 9 of bus's 11 songs only sang "busy" and 18 of man's 53 only sang "many".
+  bus:    ["busy", "busier", "busiest", "busied", "busies"],                    // busy
+  cat:    ["cater", "caters"],                                                  // cater
+  ear:    ["early"],                                                            // early
+  hung:   ["hunger", "hungers"],                                                // hunger
+  man:    ["many"],                                                             // many
+  should: ["shoulder", "shoulders"],                                            // shoulder
 };
 // A zero-width veto to sit just inside the leading boundary, so a false friend can never be the
-// token the alternation lands on. Empty for the ~727 words with nothing to disown.
+// token the alternation lands on. Empty for every word with nothing to disown.
 export function falseFriendGuard(word) {
   const bad = FALSE_FRIENDS[canonicalMatchText(word).toLowerCase()];
   return bad ? "(?!(?:" + bad.map(exactWordBody).join("|") + ")(?![" + WORD_CHAR + "]))" : "";
 }
-// The same lenient alternation WITHOUT the veto, or null for the ~727 words that have
+// The same lenient alternation WITHOUT the veto, or null for the words that have
 // nothing to disown. It lets a caller tell "the veto refused this token" apart from "this
 // token has nothing to do with the word", which is a distinction worth saying out loud:
 // "he stared at me" on a page for "star" is a rejection a player will argue with, and the
