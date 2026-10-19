@@ -94,13 +94,15 @@ export function tally(key, n, cap, { min, label, off = false, over = 0, seed, te
   const full = width + 2 + (over ? 34 : 0);
   const overTxt = over > 0 ? `<text class="fm-over" x="${width + 6}" y="23">+${over}</text>` : "";
   return `<span class="fm-tally${off ? " off" : ""}" data-fm-tally="${key}" data-cap="${cap}" data-min="${min}" role="slider" tabindex="0" data-fm-focus="tally:${key}" ` +
-    `aria-label="${label}" aria-valuemin="${min}" aria-valuemax="${cap}" aria-valuenow="${n}" aria-valuetext="${text}" style="width:${full}px">` +
+    `aria-label="${label}" aria-valuemin="${min}" aria-valuemax="${cap}" aria-valuenow="${n}" aria-valuetext="${text}" data-w="${full}" style="width:${full}px">` +
     `<svg viewBox="0 0 ${full} 44" width="${full}" height="44" aria-hidden="true">${cells}${nums}${pen}${overTxt}</svg></span>`;
 }
 // The count a pointer at clientX means on a tally: the stroke nearest it (or none, before the first).
 export function tallyCountAt(el, clientX) {
   const cap = Number(el.dataset.cap), min = Number(el.dataset.min);
-  const x = clientX - el.getBoundingClientRect().left;
+  // The strip can be drawn smaller than its own units when its box is narrow (see .fm-tally).
+  const r = el.getBoundingClientRect();
+  const x = (clientX - r.left) * (r.width ? Number(el.dataset.w) / r.width : 1);
   let best = min, bestD = min === 0 ? Math.abs(x - 1) : Infinity;
   for (let c = Math.max(1, min); c <= cap; c++) { const d = Math.abs(slotX(cap, c) - x); if (d < bestD) { bestD = d; best = c; } }
   return best;

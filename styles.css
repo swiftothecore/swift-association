@@ -1194,6 +1194,11 @@
     transition: opacity 0.3s ease;
   }
   .life-mark.spent { opacity: 0.32; }
+  /* a long run's lives, written as a count under the one stroke that stands for them */
+  .life-count {
+    margin-left: -6px; font: 700 20px/1 var(--hand); color: var(--ink-soft);
+    transform: rotate(-6deg); opacity: 0.85;
+  }
   /* the diagonal slash that crosses out a spent life */
   .life-mark.spent::after {
     content: ""; position: absolute; left: -7px; top: 11px;
@@ -7787,8 +7792,10 @@
   .fm-comb:focus-within { background: var(--fm-tint-2); outline: 2px dashed var(--fm-pen); outline-offset: 3px; }
 
   /* tally strip: printed cells of five, numbered at their ends */
-  .fm-tally { display: block; cursor: crosshair; touch-action: pan-y; flex: none; }
-  .fm-tally svg { display: block; overflow: visible; }
+  /* Never wider than its box: a count written past the strip's end ("+70") would otherwise run
+     under the neighbouring box and lose its last digit, so the strip shrinks to make room. */
+  .fm-tally { display: block; cursor: crosshair; touch-action: pan-y; flex: none; max-width: 100%; }
+  .fm-tally svg { display: block; overflow: visible; width: 100%; height: auto; }
   .fm-cell { fill: none; stroke: var(--fm-rule); stroke-width: 1; }
   .fm-tnum { font: 700 7.5px var(--type); fill: var(--fm-print); text-anchor: middle; letter-spacing: .3px; }
   .fm-pen { fill: none; stroke: var(--fm-pen); stroke-linecap: round; }

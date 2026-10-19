@@ -13759,6 +13759,8 @@ function renderCustomRow() {
   if (!el) return;
   const active = customDraftPreset();
   const activeMode = normalizeCustomMode(active.mode);
+  // A redraw replaces the button, so a keyboard player sitting on it would be dropped to the page.
+  const hadFocus = document.activeElement && document.activeElement.id === "customChangeBtn";
 
   // One clean section: the active preset's name + lever summary, and a single Change button
   // that opens the full editor (which also holds the preset switcher). No extra chips here.
@@ -13772,6 +13774,7 @@ function renderCustomRow() {
     `</div>`;
 
   $("customChangeBtn").addEventListener("click", () => openCustomModal());
+  if (hadFocus) $("customChangeBtn").focus({ preventScroll: true });
 }
 
 // Re-render whatever custom UI is currently on screen (the start row and/or the open modal).
@@ -14837,6 +14840,7 @@ function clearStreakMark() {
 // Pencil tally in the margin: one mark per starting life, spent ones struck out.
 // Shown in infinite mode and in an infinite custom run; every other mode hides the element.
 function startingLives() { return infiniteVariant === "sudden" ? 1 : 3; }
+const LIVES_MARKS_MAX = 7;   // strokes drawn one per life; more than this are written as a count
 // Starting lives for whichever run counts them down (Infinite variant, or a custom infinite run).
 function runStartingLives() { return customInfinite() ? currentMode.lives : startingLives(); }
 function renderLives() {
@@ -14844,6 +14848,15 @@ function renderLives() {
   if (!el) return;
   if (gameType !== "infinite" && !customInfinite()) { el.classList.remove("show"); el.innerHTML = ""; return; }
   const total = runStartingLives();
+  // A Custom endless run can be given up to CUSTOM_LIVES_TYPED_MAX lives, and the margin holds
+  // about seven strokes above the foot of a page before the column runs off the paper. Past
+  // that, one stroke stands for them all with the count written beside it in pencil.
+  if (total > LIVES_MARKS_MAX) {
+    el.innerHTML = `<span class="life-mark${lives > 0 ? "" : " spent"}" aria-hidden="true"></span>` +
+      `<span class="life-count" aria-hidden="true">${Math.max(0, lives)}</span>`;
+    el.classList.add("show");
+    return;
+  }
   let marks = "";
   for (let i = 0; i < total; i++) {
     const spent = i >= lives;
@@ -16336,6 +16349,10 @@ function renderStartPickers() {
   // Same reasoning for the guest catalogue: back on the desk there is no live guest run, so
   // the stats, records and searcher reachable from here must be reading Taylor's songs.
   restoreCorpus();
+  // And no live Custom run. The preset just played otherwise outlives it until the next run's
+  // resetRunState, and the masthead goes on quoting a randomiser-dealt preset's pages and clock
+  // over the working copy that the Custom row (and Start) are actually showing.
+  customPreset = null;
   // A daily game forces currentMode to Normal without persisting; restore the
   // player's preference (a fixed default-difficulty setting, else their last pick).
   currentMode = (settings.defaultDifficulty !== "last" && MODES[settings.defaultDifficulty])
@@ -21024,14 +21041,15 @@ function customLeverSummary(m) {
   const parts = [];
   parts.push(m.rounds === 0
     ? `∞ · ${m.lives} li${m.lives === 1 ? "fe" : "ves"}`
-    : `${m.rounds} rounds`);
+    : `${m.rounds} page${m.rounds === 1 ? "" : "s"}`);
   parts.push(m.seconds > 0 ? `${m.seconds}s` : "no timer");
-  const answerLabel = m.titleOnly ? "titles only"
-    : m.lyricOnly ? "lyric lines only"
-    : (m.dropdown ? "suggestions" : "title or line");
-  parts.push(answerLabel);
-  const poolLabel = { easy: "common words", all: "all words", hard: "rare words", ultra: "rarest words" };
-  parts.push(poolLabel[m.pool] || "all words");
+  parts.push(m.titleOnly ? "titles only" : m.lyricOnly ? "lyric lines only" : "title or line");
+  // Suggestions go dark on a sung page (see effectiveDropdown), so only a titled run lists them.
+  if (m.dropdown && !m.lyricOnly) parts.push("suggestions");
+  // One label per stop on the form's rarity strip. Normal is its own stop, never "all words",
+  // or the default form and the All stop read the same here.
+  const poolLabel = { easy: "common words", normal: "normal words", all: "all words", hard: "rare words", ultra: "rarest words" };
+  parts.push(poolLabel[m.pool] || poolLabel[CUSTOM_DEFAULT_MODE.pool]);
   if (m.noTitle) parts.push("not in the title");
   // Lyric-only runs have no hint lever at all (see hintsAllowed), so listing it would read as
   // a choice the player made rather than one the mode took off the table.
@@ -25152,7 +25170,10 @@ function renderVerseMeter(text) {
   // nudge has the same guard for the same reason (see promptWordLegible) — the whole point of
   // those challenges is that the word is gone, and nothing else on screen may hand it back.
   if (!promptWordLegible()) { meter.hidden = true; return; }
-  const tier = (gameType !== "daily" && hintTier >= 3) ? null : verseProgress(text);
+  // A title-only Custom run never takes a sung line (see submitAnswer), so a gauge climbing
+  // toward a verse bonus would be promising a page the verdict is about to refuse.
+  if (currentMode.titleOnly) { meter.hidden = true; return; }
+  const tier =(gameType !== "daily" && hintTier >= 3) ? null : verseProgress(text);
   // Dark gauge, but the line is one of a song the page bars by its title: say so in the gauge's
   // place instead of letting the clock run out on it. Only ever when the gauge itself is dark.
   const barred = tier ? null : barredLyricProgress(text);
@@ -29975,17 +29996,36 @@ function fmExamples() {
   return eg;
 }
 
-function fmSet(k, v) {
+function fmSet(k, v, { soon = false } = {}) {
   const s = loadCustom();
   s.draft = normalizeCustomMode({ ...normalizeCustomMode(s.draft), [k]: v });
   saveCustom(s);
   fmChanged = k;
-  renderCustomModalBody();
+  if (soon) fmRedrawSoon(); else renderCustomModalBody();
+}
+
+/* A comb commits on blur, and the blur is usually the press on whatever is clicked next. Redrawing
+   the form there and then swaps that control out from under the pointer, so its click lands on
+   nothing: type 20 pages, click Rare, and Rare is never filled in. While a button is held the
+   redraw waits for it to come up, and is dropped if the click has redrawn the form itself. */
+let fmRenders = 0;
+let fmPointerHeld = false;
+document.addEventListener("pointerdown", () => { fmPointerHeld = true; }, true);
+for (const t of ["pointerup", "pointercancel"]) document.addEventListener(t, () => { fmPointerHeld = false; }, true);
+function fmRedrawSoon() {
+  const at = fmRenders;
+  const go = () => { if (fmRenders === at && $("customModal").classList.contains("open")) renderCustomModalBody(); };
+  if (!fmPointerHeld) { go(); return; }
+  let done = false;
+  const up = () => { if (done) return; done = true; setTimeout(go, 0); };
+  window.addEventListener("pointerup", up, { once: true });
+  window.addEventListener("pointercancel", up, { once: true });
 }
 
 function renderCustomModalBody() {
   const body = $("customModalBody");
   if (!body) return;
+  fmRenders++;
   const focusKey = (() => {
     const a = document.activeElement;
     if (!a || !body.contains(a)) return null;
@@ -30162,8 +30202,8 @@ function wireCustomModalBody() {
       wrap.insertAdjacentHTML("beforeend", F13.combDigits(inp.value, cells, inp.dataset.seed));
     });
     inp.addEventListener("change", () => {
-      if (inp.value === "") { renderCustomModalBody(); return; }
-      fmSet(k, Math.max(Number(inp.dataset.min), Math.min(Number(inp.dataset.max), Number(inp.value))));
+      if (inp.value === "") { fmRedrawSoon(); return; }
+      fmSet(k, Math.max(Number(inp.dataset.min), Math.min(Number(inp.dataset.max), Number(inp.value))), { soon: true });
     });
     inp.addEventListener("keydown", (e) => {
       if (e.key === "Enter") { e.preventDefault(); inp.blur(); }
@@ -30187,7 +30227,10 @@ function wireCustomModalBody() {
       e.preventDefault();
       const capN = Number(t.dataset.cap), min = Number(t.dataset.min), cur = now();
       const from = k === "rounds" ? (cur || capN) : (cur < 0 ? capN : cur);
-      fmSet(k, Math.max(min, Math.min(capN, Math.min(from, capN) + d)));
+      // A count typed past the strip steps from where it is, so an up arrow on a typed 100 is
+      // 101, never a drop back to the strip's end.
+      const top = from > capN ? (k === "rounds" ? CUSTOM_ROUNDS_TYPED_MAX : CUSTOM_HINT_TYPED_MAX) : capN;
+      fmSet(k, Math.max(min, Math.min(top, from + d)));
     });
   });
 
@@ -30204,7 +30247,9 @@ function wireCustomModalBody() {
       const d = arrow(e);
       if (!d) return;
       e.preventDefault();
-      fmSet("seconds", Math.max(0, Math.min(CUSTOM_SECONDS_MAX, Math.min(draftNow().seconds, CUSTOM_SECONDS_MAX) + d)));
+      // Same rule as the tallies: a clock typed past the face steps from its own value.
+      const cur = draftNow().seconds, top = cur > CUSTOM_SECONDS_MAX ? CUSTOM_SECONDS_TYPED_MAX : CUSTOM_SECONDS_MAX;
+      fmSet("seconds", Math.max(0, Math.min(top, cur + d)));
     });
   }
 
@@ -30260,7 +30305,10 @@ function wireCustomModalBody() {
       t.from = null;
       saveCustom(t);
       fmVoiding = false;
-      renderCustomModalBody();
+      // The form can be closed while the stamp is still coming down, and closing has already
+      // redrawn the start row under the copy's filed name. Redraw whichever of the two is up.
+      syncCustomUI();
+      if (!$("customModal").classList.contains("open")) return;
       const f = body.querySelector('[data-fm-act="file"]');
       if (f) f.focus({ preventScroll: true });
     }, motionReduced() ? 0 : 650);
@@ -30270,10 +30318,15 @@ function wireCustomModalBody() {
 }
 
 // A name not already filed (Sudden death, Sudden death 2, …).
+// The suffix comes out of the name's own room, so a full-length name stays inside CUSTOM_NAME_MAX.
 function uniqueCustomName(base, presets) {
   const taken = new Set(presets.map((p) => (p.name || "").toLowerCase()));
   if (!taken.has(base.toLowerCase())) return base;
-  for (let i = 2; i < 99; i++) { const n = `${base} ${i}`; if (!taken.has(n.toLowerCase())) return n; }
+  for (let i = 2; i < 99; i++) {
+    const tail = ` ${i}`;
+    const n = base.slice(0, CUSTOM_NAME_MAX - tail.length).trimEnd() + tail;
+    if (!taken.has(n.toLowerCase())) return n;
+  }
   return base;
 }
 
