@@ -18905,7 +18905,8 @@ function renderTapKnowledgeUI() {
     panel.hidden = !onWhose;
     panel.innerHTML = (onWhose && whosePuzzle)
       ? `<p class="whose-lead">whose line is it?</p>` +
-        `<div class="whose-line-text">${escapeHtml(censor(whosePuzzle.line))}</div>`
+        `<div class="whose-line-text${lyricQuoteEdges(whosePuzzle.line).open ? "" : " lq-no-open"}` +
+          `${lyricQuoteEdges(whosePuzzle.line).close ? "" : " lq-no-close"}">${escapeHtml(censor(whosePuzzle.line))}</div>`
       : "";
   }
 }
@@ -26369,6 +26370,15 @@ function fullLyricsButton(entry, extra = false) {
    at an edge, the card leaves its own off that edge, so the pair on screen is always one pair.
    The lyric itself is never edited: "in context" drops the card's marks and shows it as sung. */
 const LYRIC_OPENS = /^\s*["\u201C\u201D]/, LYRIC_CLOSES = /["\u201C\u201D]\s*$/;
+// Which of its own marks a quoting surface should still print around `line`. An odd count means
+// the edge mark belongs to a quotation running past the line; an even count with marks at both
+// edges is a whole quotation. Anything else keeps the surface's pair. Whose Line? asks too.
+function lyricQuoteEdges(line) {
+  const t = String(line || "");
+  const opens = LYRIC_OPENS.test(t), closes = LYRIC_CLOSES.test(t);
+  const odd = (t.match(/["\u201C\u201D]/g) || []).length % 2 === 1;
+  return { open: !(opens && (closes || odd)), close: !(closes && (opens || odd)) };
+}
 function lyricRevealInner(entry) {
   const model = entry.model;
   const hasContext = !!(entry.allowContext && model && (model.before.length || model.after.length));
@@ -26392,12 +26402,9 @@ function lyricRevealInner(entry) {
     : "";
   const actions = contextButton + (entry.allowContext ? fullLyricsButton(entry, hasContext) : "");
   const quote = `<span class="lq" aria-hidden="true">"</span>`;
-  // An odd count means the edge mark belongs to a quotation running past the line; an even
-  // count with marks at both edges is a whole quotation. Anything else keeps the card's pair.
-  const opens = LYRIC_OPENS.test(entry.line), closes = LYRIC_CLOSES.test(entry.line);
-  const odd = (String(entry.line).match(/["\u201C\u201D]/g) || []).length % 2 === 1;
-  const openQuote = opens && (closes || odd) ? "" : quote;
-  const closeQuote = closes && (opens || odd) ? "" : quote;
+  const edges = lyricQuoteEdges(entry.line);
+  const openQuote = edges.open ? quote : "";
+  const closeQuote = edges.close ? quote : "";
   // A card with nothing to offer gets no action row at all. An empty flex box still carries its
   // margin, which is where a chunk of the dead space under the smaller proofs was coming from.
   return `${before}<div class="lyric-line">` +

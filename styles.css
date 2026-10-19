@@ -10022,6 +10022,8 @@
   }
   .whose-line-text::before { content: "“"; }
   .whose-line-text::after  { content: "”"; }
+  /* A line that is itself speech brings its own marks (lyricQuoteEdges). */
+  .whose-line-text.lq-no-open::before, .whose-line-text.lq-no-close::after { content: none; }
   @media (max-width: 560px) { .whose-line-text { font-size: calc(23px + var(--text-size-adjust)); } }
 
   /* Common Thread — three lyric lines replace the prompt word; the typed input stays, but the
