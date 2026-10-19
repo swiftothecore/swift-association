@@ -26363,6 +26363,12 @@ function fullLyricsButton(entry, extra = false) {
    wave above the card already shows where they are, and "full lyrics" has them all lit). Every
    one of those was reasonable alone and together they were nine kinds of thing doing one job.
    The line holds still on screen while the verse opens round it: see the toggle's handler. */
+/* The card sets its line in quote marks of its own, so a line that is itself speech
+   ("Hey, isn't this easy?") printed them doubled, and a line opening or closing a quotation that
+   runs across lines printed a stray mark against the card's. Where the line already has a mark
+   at an edge, the card leaves its own off that edge, so the pair on screen is always one pair.
+   The lyric itself is never edited: "in context" drops the card's marks and shows it as sung. */
+const LYRIC_OPENS = /^\s*["\u201C\u201D]/, LYRIC_CLOSES = /["\u201C\u201D]\s*$/;
 function lyricRevealInner(entry) {
   const model = entry.model;
   const hasContext = !!(entry.allowContext && model && (model.before.length || model.after.length));
@@ -26386,10 +26392,16 @@ function lyricRevealInner(entry) {
     : "";
   const actions = contextButton + (entry.allowContext ? fullLyricsButton(entry, hasContext) : "");
   const quote = `<span class="lq" aria-hidden="true">"</span>`;
+  // An odd count means the edge mark belongs to a quotation running past the line; an even
+  // count with marks at both edges is a whole quotation. Anything else keeps the card's pair.
+  const opens = LYRIC_OPENS.test(entry.line), closes = LYRIC_CLOSES.test(entry.line);
+  const odd = (String(entry.line).match(/["\u201C\u201D]/g) || []).length % 2 === 1;
+  const openQuote = opens && (closes || odd) ? "" : quote;
+  const closeQuote = closes && (opens || odd) ? "" : quote;
   // A card with nothing to offer gets no action row at all. An empty flex box still carries its
   // margin, which is where a chunk of the dead space under the smaller proofs was coming from.
   return `${before}<div class="lyric-line">` +
-    `${quote}${lyricBreaks(line)}${quote}</div>${after}` +
+    `${openQuote}${lyricBreaks(line)}${closeQuote}</div>${after}` +
     (actions ? `<div class="lyric-reveal-actions">${actions}</div>` : "");
 }
 
