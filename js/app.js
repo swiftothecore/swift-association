@@ -2472,7 +2472,7 @@ function statsBestSetDate(tokens, best) {
   let first = null;
   for (const t of tokens) for (const r of loadRecords(t)) {
     if (r.score !== best || !r.date) continue;
-    const d = r.date.slice(0, 10);
+    const d = storedDayKey(r.date);
     if (!first || d < first) first = d;
   }
   return first;
@@ -4908,10 +4908,15 @@ function renderSongbook() {
 }
 
 /* ---------- Personal records (your own best runs, per mode) ---------- */
+// A stored date → its "YYYY-MM-DD" day. Legacy date-only strings are already a day; a full
+// ISO timestamp is UTC, so slicing it would print yesterday for anything earned before UTC
+// midnight caught up with the player's zone. Those go through the active zone instead.
+function storedDayKey(date) {
+  return String(date).length > 10 ? localDayKeyOf(date) : String(date);
+}
 function recordDateLabel(date) {
-  // Accepts both legacy date-only ("YYYY-MM-DD") and full ISO timestamps.
   return date
-    ? new Date(date.slice(0, 10) + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+    ? new Date(storedDayKey(date) + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
     : "—";
 }
 // Completion time (seconds) → "m:ss". null when the mode has no clock.
