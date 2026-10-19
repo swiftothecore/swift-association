@@ -90,7 +90,7 @@ export const FALSE_FRIENDS = {
   cat:    ["cater", "caters"],                                                  // cater
   ear:    ["early"],                                                            // early
   hung:   ["hunger", "hungers"],                                                // hunger
-  man:    ["many"],                                                             // many
+  man:    ["many", "manner", "manners"],                                        // many, manner
   should: ["shoulder", "shoulders"],                                            // shoulder
   // And through the stem-changing alternates in wordVariants: the doubled consonant (let +
   // t + er) and the dropped "e" (hole - e + y, move - e + ies). 6 of hole's 14 songs were
@@ -105,6 +105,13 @@ export const FALSE_FRIENDS = {
   dress:  ["dresser", "dressers"],                                              // dresser
   sneak:  ["sneaker", "sneakers"],                                              // sneaker
   sweat:  ["sweater", "sweaters"],                                              // sweater
+  // The guests' own. The table is shared, so these are keyed by word like the rest, but they
+  // were found in a guest's catalogue: "read" took 4 of Hannah Montana's 6 songs through
+  // "ready" (Are You Ready, Let's Get Crazy), "met" took Sabrina Carpenter's "meter".
+  read:   ["ready", "readied", "readies"],                                      // ready
+  met:    ["meter", "meters"],                                                  // meter
+  phone:  ["phony", "phonies"],                                                 // phony
+  home:   ["homie", "homies"],                                                  // homie
 };
 // A zero-width veto to sit just inside the leading boundary, so a false friend can never be the
 // token the alternation lands on. Empty for every word with nothing to disown.
