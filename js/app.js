@@ -8710,7 +8710,11 @@ function judgeFix() {
   // Enter on an empty line is a slip of the hand, not an answer, as on Sing It Back.
   if (!raw) return;
   const { ctx } = bonusIndexes();
-  const fixed = judgeBlank(raw, { answer: bonusPuzzle.realWord }, ctx.freq);
+  // The word just struck out is never the fix. judgeBlank forgives a shared stem, and a few
+  // authored swaps are one ("sign" standing in for "signal" in willow), so without this the
+  // impostor typed straight back would be taken as the real word.
+  const fixed = !blankExact(raw, { answer: bonusPuzzle.fakeWord }) &&
+    judgeBlank(raw, { answer: bonusPuzzle.realWord }, ctx.freq);
   settleBonusRound(fixed, fixed ? "" : `you wrote “<b>${escapeHtml(raw)}</b>”`);
 }
 
