@@ -92,6 +92,13 @@ export const FALSE_FRIENDS = {
   hung:   ["hunger", "hungers"],                                                // hunger
   man:    ["many"],                                                             // many
   should: ["shoulder", "shoulders"],                                            // shoulder
+  // And through the stem-changing alternates in wordVariants: the doubled consonant (let +
+  // t + er) and the dropped "e" (hole - e + y, move - e + ies). 6 of hole's 14 songs were
+  // "holy", Holy Ground among them, and "letter" put Tim McGraw on a page for "let".
+  hole:   ["holy"],                                                             // holy
+  let:    ["letter", "letters"],                                                // letter
+  move:   ["movie", "movies"],                                                  // movie
+  pen:    ["penny", "pennies"],                                                 // penny
 };
 // A zero-width veto to sit just inside the leading boundary, so a false friend can never be the
 // token the alternation lands on. Empty for every word with nothing to disown.
