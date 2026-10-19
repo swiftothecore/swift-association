@@ -17617,11 +17617,20 @@ function resolveRandomDifficulty(entry) {
   if (entry.cat === "infinite") entry.diff = randomDiff(MODE_ORDER);
   if (entry.cat === "album") entry.diff = entry.diff || randomDiff(ALBUM_FOCUS_DIFFS);
   if (entry.cat === "guest") entry.diff = entry.diff || randomDiff(GUEST_DIFFS);
+  // Track by Track is played on an album the shelf's picker hands it, and starting the game
+  // without one leaves it no sheet, so it bounced the player onto the shelf. The draw picks
+  // the album the way it picks Album Focus's difficulty: as the second half of the same deal.
+  if (entry.cat === "bonus" && entry.bonus === "track-by-track" && !entry.album) {
+    const index = trackIndexNow();
+    const albums = trackAlbums(index).filter((a) => buildAlbumSheet(a, index));
+    if (albums.length) entry.album = randomDiff(albums);
+  }
 }
 
 function randomDrawLabel(entry) {
   const mode = entry.diff ? MODES[entry.diff] : null;
   if (entry.cat === "difficulty") return entry.label + " difficulty";
+  if (entry.cat === "bonus" && entry.album) return entry.label + " · " + entry.album;
   return mode ? entry.label + " · " + mode.label + " difficulty" : entry.label;
 }
 
@@ -17651,7 +17660,13 @@ async function dispatchRandom(entry) {
     }
     case "challenge": startChallenge(entry.challenge); return true;
     case "dark":      startChallenge(entry.challenge, { dark: true }); return true;
-    case "bonus":     startBonusGame(BONUS_GAMES.find((g) => g.id === entry.bonus)); return true;
+    case "bonus":
+      if (entry.bonus === "track-by-track") {
+        if (!entry.album) return false;
+        startTrackRun(entry.album);
+        return isTrackRun();
+      }
+      startBonusGame(BONUS_GAMES.find((g) => g.id === entry.bonus)); return true;
     case "ruthless":  startRuthlessMode(entry.lens); return true;
     // Started from the drawn preset's id, not from the shelf's active one, and WITHOUT moving
     // the active pick: a roll is one run, the same way a drawn difficulty doesn't rewrite the
