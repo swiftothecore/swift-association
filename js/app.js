@@ -15786,11 +15786,13 @@ function dealLineupFlourish(kind) {
   // Snap to the settled felt: the end of the flight, and also what a click buys you. The deal
   // is long on purpose and a player who has seen it should never have to sit through it again.
   const finish = () => {
-    if (mine !== dealToken) return;
-    dealToken++;
+    // Off the document first, even for a deal a newer one has superseded: bailing on the token
+    // before this left both listeners attached for the rest of the session.
     document.removeEventListener("pointerdown", finish, true);
     document.removeEventListener("keydown", finish, true);
     clearTimeout(timer);
+    if (mine !== dealToken) return;
+    dealToken++;
     felt.classList.remove("dealing");
     cards.forEach((el, i) => {
       el.style.animation = "";
