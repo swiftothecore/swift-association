@@ -15989,7 +15989,11 @@
     #settingsModal .settings-card { max-height: calc(100vh - 70px); }
     .settings-tabs {
       left: 0; right: 0; top: 0; bottom: auto; transform: none; flex-direction: row; gap: 4px;
-      overflow-x: auto; overscroll-behavior-x: contain; padding: 0 4px 0 10px;
+      /* overflow-x: auto alone computes overflow-y to auto too, and the open tab's
+         2px drop makes the strip 2px taller than its box, so a thumb could nudge the
+         rail up and down. Pin the cross axis and let the strip only pan sideways. */
+      overflow-x: auto; overflow-y: hidden; touch-action: pan-x;
+      overscroll-behavior-x: contain; padding: 0 4px 0 10px;
       scrollbar-width: none;
     }
     .settings-tabs::-webkit-scrollbar { display: none; }
@@ -17068,6 +17072,16 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   header.title .tagline-row { margin-top: 18px; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; }
   .tagline-row .tag-heart { margin-inline: 5px; }
   .screen.card, [data-flip-id].card { --rule-x: 17px; padding: 20px 14px 26px 30px; }
+  /* The charm plate's bleed is tied to the card's padding (see .ach-plate), so it follows the
+     phone padding: -13px still lands its left edge on the moved rule, -14px runs it off the
+     paper's right edge instead of 16px past the screen's. */
+  .ach-plate { margin-left: -13px; margin-right: -14px; }
+  /* Beside the polaroid there is no room for both the 190px signature line and the pen lying
+     at its end: together they ran 67px off a 375px screen and let the whole page pan sideways.
+     The line takes the column's full width and the pen drops beneath it, still at its end. */
+  .rec-sig-text { flex: 1; }
+  .rec-sign-row { flex-wrap: wrap; justify-content: flex-end; row-gap: 12px; }
+  .rec-sign-row .set-text { width: 100%; min-width: 0; }
   /* The close link is pinned in the game card's top-right corner, above the page line. The
      phone padding above would slide the page line up under it and print the link straight
      across the rule marks, so the game page keeps the head room the desktop card gives it. */
