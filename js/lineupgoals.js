@@ -59,6 +59,18 @@ function longestStreak(pages, shelf) {
   }
   return best;
 }
+/* The longest run of answered pages a single artist holds at the END of the run so far: the
+   streak that can still grow. A card chasing a streak is only doomed when even this one, given
+   every page left, falls short. */
+function trailingStreak(pages, shelf) {
+  let best = 0;
+  for (const a of shelf) {
+    let run = 0;
+    for (let i = pages.length - 1; i >= 0 && pages[i].artists.includes(a); i--) run++;
+    best = Math.max(best, run);
+  }
+  return best;
+}
 /* Two different shapes of failure, and conflating them was the first bug in this file.
    KEEP is for a promise you can BREAK — a ban, or an "every page…" rule. Once broken it is
    broken forever, so it must die the moment it is, not wait politely for page thirteen.
@@ -130,7 +142,7 @@ const RULES = {
     return doomed(c, share, 7) ? DEAD : settle(done, false);
   },
   "long-story-short": (ps, c, done) =>
-    longestStreak(ps, c.shelf) >= 5 ? WON : doomed(c, 0, 5) ? DEAD : settle(done, false),
+    longestStreak(ps, c.shelf) >= 5 ? WON : doomed(c, trailingStreak(ps, c.shelf), 5) ? DEAD : settle(done, false),
   "two-of-us": (ps, c, done) => {
     // Every page on one of two artists. Try each pair the run could support.
     for (const a of c.shelf) for (const b of c.shelf) {
