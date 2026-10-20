@@ -7909,7 +7909,9 @@ function bonusSongHead(song, label) {
 function paintCloud() {
   const box = $("bonusCloud");
   if (!box || !bonusPuzzle || !bonusPuzzle.words) return;
-  const { html, height } = cloudMarkup(bonusPuzzle.words, { width: box.clientWidth });
+  // Masked like every other lyric on the shelf; a masked word keeps its length, so its size holds.
+  const words = bonusPuzzle.words.map((w) => ({ ...w, word: censor(w.word) }));
+  const { html, height } = cloudMarkup(words, { width: box.clientWidth });
   box.innerHTML = html;
   box.style.height = `${height}px`;
   if (!cloudFontReady() && !cloudRepaintQueued) {
@@ -7937,8 +7939,8 @@ function renderBonusRound() {
 
   if (isSlipGame(bonusGame)) {
     const words = p.tokens.map((t, i) => t.tappable
-      ? `<button type="button" class="bg-word" data-i="${i}">${escapeHtml(t.text)}</button>`
-      : `<span class="bg-word-plain">${escapeHtml(t.text)}</span>`).join(" ");
+      ? `<button type="button" class="bg-word" data-i="${i}">${escapeHtml(censor(t.text))}</button>`
+      : `<span class="bg-word-plain">${escapeHtml(censor(t.text))}</span>`).join(" ");
     body.innerHTML =
       `<p class="bg-ask">${isFixRun() ? "tap the word that was swapped in, then put the real one back"
                                         : "tap the word that was swapped in"}</p>` +
@@ -7953,7 +7955,7 @@ function renderBonusRound() {
     const words = p.tokens.map((t) => escapeHtml(t.pre) +
       (t.blank
         ? `<span class="bg-blank" id="bonusBlank"></span>`
-        : escapeHtml(t.core)) +
+        : escapeHtml(censor(t.core))) +
       escapeHtml(t.post)).map((w) => `<span class="bg-word-plain">${w}</span>`).join(" ");
     body.innerHTML =
       `<p class="bg-ask">write the missing word</p>` +
@@ -8038,9 +8040,9 @@ function renderBonusRound() {
         const core = t.hide
           ? `<button type="button" class="bg-tape" data-i="${bi++}" data-w="${escapeHtml(t.key)}" ` +
               `aria-label="peel a strip">` +
-              `<span class="bg-tape-word">${escapeHtml(t.core)}</span>` +
+              `<span class="bg-tape-word">${escapeHtml(censor(t.core))}</span>` +
               `<span class="bg-tape-strip" aria-hidden="true"></span></button>`
-          : escapeHtml(t.core);
+          : escapeHtml(censor(t.core));
         return `<span class="bg-tok">${escapeHtml(t.pre)}${core}${escapeHtml(t.post)}</span>`;
       }).join("") + `</div>`).join("");
     body.innerHTML =
@@ -8178,7 +8180,7 @@ function renderBonusRound() {
     body.innerHTML =
       `<p class="bg-ask">did this one ever come out?</p>` +
       `<div class="bg-sheet bg-sheet--ask">` +
-        `<h3 class="bg-sheet-title">${escapeHtml(p.title)}</h3>` +
+        `<h3 class="bg-sheet-title">${escapeHtml(censor(p.title))}</h3>` +
         `<div class="bg-sheet-rule" aria-hidden="true"></div>` +
         `<div class="bg-sheet-meta" id="bonusNashMeta"></div>` +
       `</div>` +
@@ -8298,7 +8300,7 @@ function renderBonusRound() {
        line sits is worth knowing once it is answered, so the reveal writes it under the title. */
     body.innerHTML =
       `<p class="bg-ask">name the song this line is from</p>` +
-      `<blockquote class="bg-lyric">${escapeHtml(p.line)}</blockquote>` +
+      `<blockquote class="bg-lyric">${escapeHtml(censor(p.line))}</blockquote>` +
       bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
                          hint: "Enter accepts the top match", dropdown: true });
     const input = $("bonusInput");
@@ -8494,7 +8496,7 @@ function revealRuthlessWord() {
   if (tok.br) el.appendChild(document.createElement("br"));
   const s = document.createElement("span");
   s.className = "bg-drip";
-  s.textContent = tok.text;
+  s.textContent = censor(tok.text);
   el.appendChild(s);
   el.scrollTop = el.scrollHeight;
   updateRuthlessMeta();
