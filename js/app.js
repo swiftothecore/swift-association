@@ -2680,7 +2680,7 @@ function statsClippingHTML(word, count) {
     `<div class="stp-head">“${w.charAt(0).toUpperCase() + w.slice(1)}” <span>Strikes Again</span></div>` +
     `<div class="stp-deck">${ord.charAt(0).toUpperCase() + ord.slice(1)} miss. Still at large.</div>` +
     `<div class="stp-cols" aria-hidden="true">${Array.from({ length: 60 }, () => w).join(" ")}</div>` +
-    `<a class="stp-pen-note" href="search/#q=${encodeURIComponent(word)}" title="See every song with “${w}” in the lyric searcher">look it up ${CTA_ARROW}</a>` +
+    `<a class="stp-pen-note" href="search/#term=${encodeURIComponent(word)}" title="See every song with “${w}” in the lyric searcher">look it up ${CTA_ARROW}</a>` +
     `</div></div>`;
 }
 
