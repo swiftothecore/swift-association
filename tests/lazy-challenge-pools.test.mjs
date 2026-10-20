@@ -55,8 +55,9 @@ test('cached word matches retain every song and its order under both matching ru
     for (const word of [...words, 'not-in-this-catalogue']) {
       const rx = wordRegex(word, strict);
       const lyrics = songs.filter((s) => rx.test(s.lyrics));
-      const titles = songs.filter((s) => rx.test(s.title));
-      const noTitle = lyrics.filter((s) => !rx.test(s.title));
+      // A title is searched with "$" read as "s" (_wordTitle), so Wi$h Li$t holds "wish".
+      const titles = songs.filter((s) => rx.test(s._wordTitle ?? s.title));
+      const noTitle = lyrics.filter((s) => !rx.test(s._wordTitle ?? s.title));
       assert.deepEqual(Array.from(h.context.songsContainingWord(word, strict)), Array.from(lyrics));
       assert.deepEqual(Array.from(h.context.validSongs(word, strict, false)), Array.from(lyrics));
       assert.deepEqual(Array.from(h.context.validSongs(word, strict, true)), Array.from(noTitle));

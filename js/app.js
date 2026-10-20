@@ -2011,14 +2011,14 @@ function songsContainingWord(word, strict) {
 function validSongs(word, strict, noTitle) {
   const matches = wordSongMatches(word, strict);
   const lyrics = matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics));
-  return (noTitle ? (matches.noTitle ??= lyrics.filter((s) => !matches.rx.test(s.title))) : lyrics).slice();
+  return (noTitle ? (matches.noTitle ??= lyrics.filter((s) => !matches.rx.test(s._wordTitle ?? s.title))) : lyrics).slice();
 }
 // Songs whose TITLE contains the prompt word — the ones the Hard/Ultra "not in
 // the title" rule blocks, so we can warn the player before they waste the clock.
 function titleSongsForWord(word, strict) {
   // A title-only challenge must not pay for a full lyric scan on its first visit.
   const matches = wordSongMatches(word, strict);
-  return (matches.titles ??= allSongs.filter((s) => matches.rx.test(s.title))).slice();
+  return (matches.titles ??= allSongs.filter((s) => matches.rx.test(s._wordTitle ?? s.title))).slice();
 }
 // Marginalia warning: in noTitle modes with no list to lean on (Hard/Ultra), name the songs
 // whose title holds the word so the player knows e.g. "All Too Well" won't be accepted. Modes
@@ -15186,6 +15186,11 @@ function installCorpus(grouped, words, opts = {}) {
   const families = versionFamilies(allSongs);
   for (const s of allSongs) {
     s._norm = normalizeTitle(s.title);
+    // The title as a word is looked for in it: a "$" is the "s" it stands for, so "wish" is in
+    // Wi$h Li$t's title the way it is in the song. Every "is the word in the title?" test reads
+    // this (falling back to the bare title), or the no-title bar waved Wi$h Li$t through on a
+    // page for "wish".
+    s._wordTitle = s.title.replace(/\$/g, "s");
     // The song this one is a pressing of (itself, when it is nobody's version): what songCount
     // and oneVersionEach count by. Per-song for the same reason as _normTitleLyric below.
     s._family = families.get(s);
@@ -16119,8 +16124,8 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     for (const s of songsContainingWord(w, false)) {
       easyS.add(s._family);
       albums.add(s.album);
-      if (!lenient.test(s.title)) hardS.add(s._family);
-      if (strict.test(s.lyrics) && !strict.test(s.title)) ultraS.add(s._family);   // strict, no title, rarest
+      if (!lenient.test(s._wordTitle ?? s.title)) hardS.add(s._family);
+      if (strict.test(s.lyrics) && !strict.test(s._wordTitle ?? s.title)) ultraS.add(s._family);   // strict, no title, rarest
     }
     const easyN = easyS.size, hardN = hardS.size, ultraN = ultraS.size;
     for (const a of albums) (albumWordMap[a] = albumWordMap[a] || []).push(w);
@@ -18554,7 +18559,7 @@ function buildSeaGrid() {
   const rx = wordRegex(currentWord, effectiveStrict());
   const validTitles = new Set(currentSongs.map((s) => s.title));
   const decoyPool = shuffle(allSongs.filter((s) =>
-    !validTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s.title)));
+    !validTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s._wordTitle ?? s.title)));
   const need = Math.max(0, SEA_GRID_SIZE - chosen.length);
   const decoys = decoyPool.slice(0, need).map((s) => ({ song: s, valid: false }));
 
@@ -18794,7 +18799,7 @@ function buildOddGrid() {
   const rx = wordRegex(currentWord, effectiveStrict());
   const holderTitles = new Set(currentSongs.map((s) => s.title));
   const odd = shuffle(allSongs.filter((s) =>
-    !holderTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s.title)))[0];
+    !holderTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s._wordTitle ?? s.title)))[0];
   if (!odd) return false;
   tapTiles = shuffle(holders.map((s) => ({ song: s, correct: false }))
     .concat([{ song: odd, correct: true }]));
@@ -20058,8 +20063,8 @@ function buildWildcardConstraints() {
     { id: "long",      label: "only titles of 3+ words",         accepts: (s) => words(s) >= 3 },
     { id: "vowel",     label: "title must start with a vowel",   accepts: (s) => isVowel(firstCh(s)) },
     { id: "consonant", label: "title must start with a consonant", accepts: (s) => { const c = firstCh(s); return !!c && !isVowel(c); } },
-    { id: "notitle",   label: "the word can't be in the title",  accepts: (s) => !rx.test(s.title) },
-    { id: "titleword", label: "the word must be in the title",   accepts: (s) => rx.test(s.title) },
+    { id: "notitle",   label: "the word can't be in the title",  accepts: (s) => !rx.test(s._wordTitle ?? s.title) },
+    { id: "titleword", label: "the word must be in the title",   accepts: (s) => rx.test(s._wordTitle ?? s.title) },
     { id: "vanish",    label: "the word vanishes",               accepts: null,
       display: (w) => { scheduleVanish(w, 1500); } },
     { id: "scramble",  label: "the word is jumbled",              accepts: null, instant: true,
@@ -23820,12 +23825,12 @@ function roundAcceptsSong(song) {
   // noTitle challenges (e.g. Revolving Door): never suggest a song whose title
   // contains the prompt word — the round would reject it.
   if (effectiveNoTitle() && currentWord &&
-      wordRegex(currentWord, effectiveStrict()).test(song.title)) return false;
+      wordRegex(currentWord, effectiveStrict()).test(song._wordTitle ?? song.title)) return false;
   if (currentChallenge.rule === "wildcard") {
     return !roundWildcard || !roundWildcard.accepts || roundWildcard.accepts(song);
   }
   if (currentChallenge.rule === "titleHas")
-    return wordRegex(currentWord, true).test(song.title);
+    return wordRegex(currentWord, true).test(song._wordTitle ?? song.title);
   if (currentChallenge.rule === "shorttitle")
     return titleWordCount(song.title) <= maxTitleWordsNow();
   if (currentChallenge.rule === "chain")
@@ -24099,7 +24104,7 @@ function noteWrongSubmission(song, { burned = false } = {}) {
 // Whether the prompt word sits in this song's title. The one measure behind both the
 // off-limits rule below and the giveaway filter on the dropdown.
 function titleHoldsWord(song) {
-  return !!song && !!currentWord && wordRegex(currentWord, effectiveStrict()).test(song.title);
+  return !!song && !!currentWord && wordRegex(currentWord, effectiveStrict()).test(song._wordTitle ?? song.title);
 }
 // A pick is off-limits when the active mode bars title songs and the word sits in
 // this song's title — the exact condition validSongs() uses to exclude it.
@@ -25711,11 +25716,11 @@ function submitAnswer(song, isTimeout) {
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "titleHas") {
     const strictRx = wordRegex(currentWord, true);
     const looseRx = wordRegex(currentWord, effectiveStrict());
-    if (!strictRx.test(song.title) && (looseRx.test(song.title) || looseRx.test(song.lyrics))) {
+    if (!strictRx.test(song._wordTitle ?? song.title) && (looseRx.test(song._wordTitle ?? song.title) || looseRx.test(song.lyrics))) {
       // A title holding only a derived form ("Crazier" for "crazy") is the near miss most
       // likely to be tried, so it gets its own line rather than the lyrics one.
       noteWrongSubmission(song);
-      looseRx.test(song.title) ? rejectTitleForm() : rejectTitleHas();
+      looseRx.test(song._wordTitle ?? song.title) ? rejectTitleForm() : rejectTitleHas();
       return;
     }
   }
@@ -31854,7 +31859,7 @@ function devPointWordAtSong(song) {
   if (!song) return null;
   for (const w of playableWords) {
     if (!wordRegex(w, effectiveStrict()).test(song.lyrics)) continue;
-    if (effectiveNoTitle() && wordRegex(w, effectiveStrict()).test(song.title)) continue;
+    if (effectiveNoTitle() && wordRegex(w, effectiveStrict()).test(song._wordTitle ?? song.title)) continue;
     devApplyWord(w);
     if (currentSongs.some((s) => s.title === song.title)) return w;
   }
