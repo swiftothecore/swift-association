@@ -30135,13 +30135,13 @@ function renderCustomModalBody() {
       `<div class="fm-part"><b>Part 1</b><span>the run</span></div>` +
       `<div class="fm-box fm-pages"><div class="fm-head">${F13.cap(1, "pages in the run")}` +
         `<div class="fm-fig">${F13.comb("rounds", endless ? "" : m.rounds, 3, { min: CUSTOM_ROUNDS_MIN, max: CUSTOM_ROUNDS_TYPED_MAX, label: "Pages in the run", inf: endless, seed: "rc" })}</div></div>` +
-        `<div class="fm-row">${F13.tally("rounds", rN, CUSTOM_ROUNDS_MAX, { min: CUSTOM_ROUNDS_MIN, label: "Pages in the run", off: endless, over: endless ? 0 : m.rounds - rN, seed: "rt", text: endless ? "endless" : m.rounds + " pages" })}</div></div>` +
+        `<div class="fm-row">${F13.tally("rounds", rN, CUSTOM_ROUNDS_MAX, { min: CUSTOM_ROUNDS_MIN, label: "Pages in the run", off: endless, over: endless ? 0 : m.rounds - rN, seed: "rt", text: endless ? "endless" : plural(m.rounds, "page") })}</div></div>` +
       `<div class="fm-box fm-lives${endless ? "" : " idle"}"><div class="fm-head">${F13.cap("1a", "endless run", "with lives")}` +
         (endless ? `<div class="fm-fig">${F13.comb("lives", m.lives, 2, { min: CUSTOM_LIVES_MIN, max: CUSTOM_LIVES_TYPED_MAX, label: "Lives", seed: "lc" })}</div>` : "") + `</div>` +
         `<div class="fm-row">${F13.tickBox("endless", "endless", endless)}<div class="fm-hearts" role="group" aria-label="Lives">${hearts}</div></div></div>` +
       `<div class="fm-box fm-clock">${F13.cap(2, "time per page", "wind the hand")}` +
         `<div class="fm-watch-wrap"><div class="fm-dial" data-fm-dial data-fm-focus="dial" role="slider" tabindex="0" aria-label="Seconds per page" aria-valuemin="0" aria-valuemax="${CUSTOM_SECONDS_MAX}" ` +
-          `aria-valuenow="${Math.min(m.seconds, CUSTOM_SECONDS_MAX)}" aria-valuetext="${m.seconds ? m.seconds + " seconds" : "no clock"}">${F13.watch(m.seconds, "w")}</div>` +
+          `aria-valuenow="${Math.min(m.seconds, CUSTOM_SECONDS_MAX)}" aria-valuetext="${m.seconds ? plural(m.seconds, "second") : "no clock"}">${F13.watch(m.seconds, "w")}</div>` +
         `<div class="fm-side"><div class="fm-row">${F13.comb("seconds", m.seconds || "", 3, { min: 0, max: CUSTOM_SECONDS_TYPED_MAX, label: "Seconds per page", seed: "sc" })}<span class="fm-unit">sec</span></div>` +
           `${F13.tickBox("noclock", "no clock", m.seconds === 0)}</div></div></div>` +
 
@@ -30156,7 +30156,7 @@ function renderCustomModalBody() {
       `<div class="fm-part"><b>Part 3</b><span>help on the page</span></div>` +
       `<div class="fm-box fm-hints${line ? " na" : ""}"><div class="fm-head">${F13.cap(6, "hints for the run")}` +
         `<div class="fm-fig">${F13.comb("hintBudget", m.hintUnlimited ? "" : m.hintBudget, 2, { min: 0, max: CUSTOM_HINT_TYPED_MAX, label: "Hints for the run", inf: m.hintUnlimited, seed: "hc" })}</div></div>` +
-        `<div class="fm-row">${F13.tally("hintBudget", hN, CUSTOM_HINT_MAX, { min: 0, label: "Hints for the run", off: m.hintUnlimited, over: m.hintUnlimited ? 0 : m.hintBudget - hN, seed: "ht", text: m.hintUnlimited ? "unlimited" : m.hintBudget + " hints" })}</div>` +
+        `<div class="fm-row">${F13.tally("hintBudget", hN, CUSTOM_HINT_MAX, { min: 0, label: "Hints for the run", off: m.hintUnlimited, over: m.hintUnlimited ? 0 : m.hintBudget - hN, seed: "ht", text: m.hintUnlimited ? "unlimited" : plural(m.hintBudget, "hint") })}</div>` +
         `<div class="fm-row">${F13.tickBox("unlimited", "unlimited", m.hintUnlimited)}</div>` +
         // stored is what they authored, live is what the round allows: the value stays legible under the Z
         (line ? F13.zOut("n/a when singing", "zh") : "") + `</div>` +
