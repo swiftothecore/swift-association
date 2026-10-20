@@ -180,9 +180,10 @@ const RULES = {
   },
   "round-the-table": (ps, c, done) => {
     // Nobody twice until everybody once: the first `shelf` pages must all be different.
+    // A repeat inside the head breaks it the page it happens, not when the head fills.
     const head = ps.slice(0, c.shelf.length);
-    if (head.length === c.shelf.length && distinctArtists(head, c.shelf) < c.shelf.length) return DEAD;
-    return settle(done, distinctArtists(ps.slice(0, c.shelf.length), c.shelf) >= c.shelf.length);
+    if (distinctArtists(head, c.shelf) < head.length) return DEAD;
+    return settle(done, head.length === c.shelf.length);
   },
   "undercard": (ps, c, done) => {
     const away = ps.filter((p) => p.artists.some((a) => a !== c.home)).length;
@@ -191,8 +192,8 @@ const RULES = {
   },
   "no-repeats-yet": (ps, c, done) => {
     const head = ps.slice(0, 8);
-    if (head.length === 8 && distinctArtists(head, c.shelf) < 8) return DEAD;
-    return settle(done, head.length === 8 && distinctArtists(head, c.shelf) >= 8);
+    if (distinctArtists(head, c.shelf) < head.length) return DEAD;
+    return settle(done, head.length === 8);
   },
   "headliners": (ps, c, done) => {
     const got = distinctArtists(ps, c.shelf);
@@ -200,7 +201,8 @@ const RULES = {
   },
   "opening-act": (ps, c, done) => {
     const head = ps.slice(0, 5);
-    if (head.length === 5 && distinctArtists(head, c.shelf) < 4) return DEAD;
+    // Dead once the pages left in the opening five cannot bring it up to four.
+    if (distinctArtists(head, c.shelf) + (5 - head.length) < 4) return DEAD;
     return head.length === 5 && distinctArtists(head, c.shelf) >= 4 ? WON : settle(done, false);
   },
 
