@@ -3787,7 +3787,7 @@ function renderVerseAnthology() {
   const rows = verseKeepsake.map((k, i) => {
     const tint = vaBeadTint(k);
     const bead = tint ? `<i class="va-bead" style="--c:${tint}"></i>` : "";
-    const song = k.song ? `<span class="va-song">${bead}${escapeHtml(k.song)}</span>` : "";
+    const song = k.song ? `<span class="va-song">${bead}${escapeHtml(censor(k.song))}</span>` : "";
     const verse = k.tier === "verse" ? `<em class="va-verse">whole verse</em>` : "";
     return `<li class="va-row${i === pick ? " is-pick" : ""}">` +
       `<span class="va-pg">${k.page ? `p.${k.page}` : ""}</span><div class="va-body">` +
@@ -19963,9 +19963,9 @@ function renderNewSongBanner() {
     `</span>`;
   el.innerHTML = got
     ? `<span class="chall-banner-tag" style="border-color:${col};color:${col}">found</span> ` +
-      `<span style="text-decoration:line-through;opacity:0.7">${escapeHtml(challengeTargetSong.title)}</span> ✓`
+      `<span style="text-decoration:line-through;opacity:0.7">${escapeHtml(censor(challengeTargetSong.title))}</span> ✓`
     : `<span class="chall-banner-tag">find</span> ` +
-      `<span class="chall-prog-name" style="color:${col}">${escapeHtml(challengeTargetSong.title)}</span>` +
+      `<span class="chall-prog-name" style="color:${col}">${escapeHtml(censor(challengeTargetSong.title))}</span>` +
       livesPips;
 }
 
@@ -22102,7 +22102,7 @@ function challengeIntroHTML(c) {
   if (c.rule === "newsong" && challengeTargetSong) {
     const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
     return curtainCardHTML({ kicker: kick("one of a kind"), dark: challengeDark, tag: "find this song",
-      headline: challengeTargetSong.title, headlineColor: col,
+      headline: censor(challengeTargetSong.title), headlineColor: col,
       sub: challengeTargetSong.album
         ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b>, hiding somewhere in the next 13 pages`
         : `it's hiding somewhere in the next 13 pages`,
@@ -25783,7 +25783,7 @@ function submitAnswer(song, isTimeout) {
     const need = currentChallenge.need || 2;
     if (roundNamed.includes(song.title)) {
       noteWrongSubmission(song);
-      softRejectFlash(`already named <b>${escapeHtml(song.title)}</b>. name a different song`);
+      softRejectFlash(`already named <b>${escapeHtml(censor(song.title))}</b>. name a different song`);
       return;
     }
     // Another pressing of a song already named ("All Too Well" and its ten-minute version) is
@@ -28396,7 +28396,7 @@ function surfaceBottle(side) {
       if (!note) return;                             // bottle already drifted off
       note.innerHTML =
         `<span class="bottle-note-msg">${escapeHtml(s.message)}</span>` +
-        `<span class="bottle-note-cite">${escapeHtml(s.song)} · ${escapeHtml(s.album)}</span>`;
+        `<span class="bottle-note-cite">${escapeHtml(censor(s.song))} · ${escapeHtml(s.album)}</span>`;
     });
     earnPolaroid("message-in-a-bottle");             // idempotent — the first catch develops it
     earnSticker("ufo");                              // "like I was abducted" — caught the bottle
