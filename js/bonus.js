@@ -302,7 +302,13 @@ export function buildBlankPuzzle(songs, ctx, rng = Math.random, tries = 120, avo
     // from — but stop insisting near the end of the budget rather than fail the page over it.
     if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
 
-    const titleWords = new Set(normalizeLyric(song.title).split(/\s+/).filter(Boolean));
+    // Keyed the way the line's own words are (wordKey) as well as the lyric way. normalizeLyric
+    // alone folds "getting" to "gettin", so the title's word never matched the line's and a page
+    // headed We Are Never Ever Getting Back Together could blank "getting" right under it.
+    const titleWords = new Set([
+      ...normalizeLyric(song.title).split(/\s+/),
+      ...String(song.title).split(/\s+|(?<=\p{L})(?:\.{2,}|…)(?=\p{L})/u).map(wordKey),
+    ].filter(Boolean));
     const lines = songLines(song);
     // Every line of this song as a token list, for bar 4.
     const shapes = lines.map(({ line }) =>
