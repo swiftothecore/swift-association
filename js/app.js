@@ -15248,11 +15248,13 @@ function installCorpus(grouped, words, opts = {}) {
   // Spaceless fallback: forgive misplaced spaces ("all to owell" -> "all too well") by
   // indexing each title/alias with its spaces stripped. Only kept when unambiguous — if
   // two distinct songs collapse to the same spaceless key, we drop it rather than guess.
+  // Titles with no spaces go in too: the lookup squeezes the TYPED key, so "im gonna get
+  // you back" can only ever find imgonnagetyouback here, never in the normal index.
   spacelessIndex = new Map();
   const spaceClash = new Set();
   for (const [key, song] of titleIndex) {
     const sp = key.replace(/ /g, "");
-    if (!sp || sp === key) continue;          // no spaces -> the normal index already covers it
+    if (!sp) continue;
     const existing = spacelessIndex.get(sp);
     if (existing && existing !== song) { spaceClash.add(sp); continue; }
     spacelessIndex.set(sp, song);
