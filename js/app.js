@@ -17469,7 +17469,8 @@ function useHint() {
     const title = roundHintSong.title || "";
     // A letter or a digit: "22" starts with a 2, and a letters-only search printed "?" for it.
     const letter = (title.match(/[a-z0-9]/i) || ["?"])[0].toUpperCase();
-    const words = title.trim().split(/\s+/).filter(Boolean).length;
+    // An ellipsis written between two words parts them: "Come Back...Be Here" is four words.
+    const words = title.trim().split(/\s+|(?<=\p{L})(?:\.{2,}|…)(?=\p{L})/u).filter(Boolean).length;
     tiers.push(`<p class="hint-tier">starts with “<b>${escapeHtml(letter)}</b>” · ${words} word${words === 1 ? "" : "s"}</p>`);
   }
   // Tier 3 — the actual lyric line, prompt word highlighted.
