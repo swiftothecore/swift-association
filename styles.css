@@ -9449,25 +9449,39 @@
   }
   :root[data-theme="dark"] .dropdown .item.off-limits .dd-tag { color: #e5837d; }
 
-  /* red reject-flash — pops above the input when a blocked title is picked, then
-     fades. The input gets a matching red underline pulse. */
+  /* The soft-reject note: a red-pen margin note hung UNDER the answer line, its arrow curling
+     back up at what was just refused. It used to float above the line as a see-through pill,
+     which put it straight over the timer's seconds while the clock was still running. Under
+     the line the dropdown has just closed, so the slot is free; it is absolutely placed so
+     nothing below jumps, and whatever does sit there (the typing hint, the hint ladder, the
+     verse gauge) steps aside for the note's 1.7s rather than showing through it. Same form as
+     the gauge's barred-line note, so a warning while typing and a refusal on picking read as
+     one editor's hand. */
   .reject-flash {
-    position: absolute; left: 0; right: 0; bottom: calc(100% + 8px);
-    text-align: center; pointer-events: none; z-index: 60;
-    font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: #9b2226;
-    background: rgba(178,58,58,0.12); border: 1.5px solid rgba(178,58,58,0.4);
-    border-radius: 13px; padding: 5px 14px;
-    opacity: 0; transform: translateY(6px) rotate(-0.5deg);
+    position: absolute; left: 0; right: 0; top: 100%;
+    display: flex; justify-content: center; align-items: flex-start; gap: 6px;
+    pointer-events: none; z-index: 60;
+    opacity: 0; transform: translateY(-5px);
   }
-  .reject-flash b { font-weight: 700; }
+  .rf-arrow {
+    flex: 0 0 auto; width: 30px; height: 30px;
+    fill: none; stroke: var(--red-pen); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .rf-text {
+    margin-top: 9px; line-height: 1.1; text-align: left;
+    font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: #9b2226;
+  }
+  :root[data-theme="dark"] .rf-text { color: #e5837d; }
+  .rf-text b { font-weight: 700; }
   .reject-flash.show { animation: reject-pop 1.7s ease forwards; }
   @keyframes reject-pop {
-    0%   { opacity: 0; transform: translateY(6px) rotate(-0.5deg); }
-    8%   { opacity: 1; transform: translateY(0) rotate(-0.5deg); }
-    12%  { transform: translateY(0) rotate(0.8deg); }
-    16%  { transform: translateY(0) rotate(-0.5deg); }
-    80%  { opacity: 1; transform: translateY(0) rotate(-0.5deg); }
-    100% { opacity: 0; transform: translateY(-4px) rotate(-0.5deg); }
+    0%   { opacity: 0; transform: translateY(-5px); }
+    8%   { opacity: 1; transform: translateY(0); }
+    80%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(2px); }
+  }
+  #playArea:has(.reject-flash.show) :is(.hint, .hint-btn, .hint-box, .verse-meter, .excluded-note) {
+    opacity: 0; transition: opacity 0.15s;
   }
   .song-input.reject-pulse { animation: input-reject 0.5s ease; }
   /* Same rule, not a second one: the reject flash travels through the border colour so the
@@ -9477,7 +9491,7 @@
     50%      { border-bottom-color: #b23a3a; }
   }
   body[data-reduce-motion="on"] .reject-flash.show {
-    animation: none; opacity: 1; transform: translateY(0) rotate(-0.5deg);
+    animation: none; opacity: 1; transform: none;
   }
   body[data-reduce-motion="on"] .song-input.reject-pulse { animation: none; }
 

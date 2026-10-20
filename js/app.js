@@ -24103,29 +24103,12 @@ function isGiveawayPick(song) {
   return giveawaysHidden && titleHoldsWord(song);
 }
 let giveawaysHidden = true;   // dev toggle only — see buildDevApi().giveaways
-// Soft rejection: don't consume the round. Flash a red note, wipe the line, and
-// keep the clock running so the player can answer the same word with a valid song.
+// Soft rejection: don't consume the round. The shared soft-reject flash wipes the line and
+// keeps the clock running so the player can answer the same word with a valid song.
 let rejectFlashTimer = null;
 function rejectOffLimits(song) {
   unlock("submit-title-answer-off-limits");
-  const input = $("songInput");
-  input.value = "";
-  dropdownItems = []; activeIndex = -1;
-  hideDropdown();
-  const el = $("rejectFlash");
-  el.innerHTML = `<b>“${escapeHtml(censor(song.title))}”</b> is in the title. try another`;
-  el.classList.remove("show");
-  void el.offsetWidth;                 // restart the pop-in animation
-  el.classList.add("show");
-  input.classList.remove("reject-pulse");
-  void input.offsetWidth;
-  input.classList.add("reject-pulse");
-  clearTimeout(rejectFlashTimer);
-  rejectFlashTimer = setTimeout(() => {
-    el.classList.remove("show");
-    input.classList.remove("reject-pulse");
-  }, 1700);
-  input.focus();
+  softRejectFlash(`<b>“${escapeHtml(censor(song.title))}”</b> is in the title. try another`);
 }
 // Wrapped Like A Chain / Devil's Path: the first A–Z letter of a title (ignoring punctuation/digits).
 function firstAlphaLetter(title) {
@@ -24144,7 +24127,7 @@ function softRejectFlash(html, keep) {
   dropdownItems = []; activeIndex = -1;
   hideDropdown();
   const el = $("rejectFlash");
-  el.innerHTML = html;
+  el.querySelector(".rf-text").innerHTML = html;
   el.classList.remove("show");
   void el.offsetWidth;
   el.classList.add("show");
