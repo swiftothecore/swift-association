@@ -9971,7 +9971,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
        needs no mark, because the banner above it has already said so. */
     const slot = $("bonusSlot");
     if (slot) {
-      slot.textContent = bonusPuzzle.song.title;
+      slot.textContent = censor(bonusPuzzle.song.title);
       if (!correct) slot.classList.add("is-answer");
     }
     const meta = $("bonusTrackMeta");
@@ -9995,7 +9995,7 @@ function settleBonusRound(correct, detail, isTimeout = false) {
        that claim is false — a title in quotes reads as a title being doubted. */
     const slot = $("bonusSlot");
     if (slot) {
-      slot.textContent = bonusPuzzle.song.title;
+      slot.textContent = censor(bonusPuzzle.song.title);
       slot.classList.remove("bg-caps-note");
       if (!correct) slot.classList.add("is-answer");
     }
