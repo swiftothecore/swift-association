@@ -25207,8 +25207,8 @@ function renderVerseMeter(text) {
   meter.classList.toggle("barred", !!barred);
   if (barred) {
     meter.hidden = false;
-    meter.querySelector(".vm-label").textContent =
-      `“${censor(barred.title)}” has “${censor(currentWord)}” in its title`;
+    meter.querySelector(".vm-label").innerHTML = `<span class="vm-typed">title barred</span>`
+      + `<b>“${escapeHtml(censor(barred.title))}”</b> has “${escapeHtml(censor(currentWord))}” in its title`;
     return;
   }
   if (!tier) { meter.hidden = true; return; }

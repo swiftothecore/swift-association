@@ -9831,10 +9831,27 @@
     margin-left: 8px; font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); color: var(--ink-soft);
     white-space: nowrap;
   }
-  /* A line of a title-barred song: no rungs to climb, just the note, in the gauge's own quiet
-     ink since nothing has been refused yet. Allowed to wrap, so a long title fits a phone. */
+  /* A line of a title-barred song: no rungs to climb, just a margin note. The editor's red-pen
+     arrow curls back up at the line, over a small typed label, so the warning reads as marked
+     on the page rather than as loose text. The sentence stays in the gauge's quiet pencil, with
+     the title in full ink, since nothing has been refused yet. Allowed to wrap on a phone. */
+  .vm-arrow { display: none; }
+  .verse-meter.barred { align-items: flex-start; margin-top: 4px; }
   .verse-meter.barred .vm-strokes { display: none; }
-  .verse-meter.barred .vm-label { margin-left: 0; white-space: normal; text-align: center; }
+  .verse-meter.barred .vm-arrow {
+    display: block; flex: 0 0 auto; width: 30px; height: 30px;
+    fill: none; stroke: var(--red-pen); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .verse-meter.barred .vm-label {
+    margin: 10px 0 0; white-space: normal; text-align: left; line-height: 1.2;
+    font-size: calc(17px + var(--text-size-adjust));
+  }
+  .verse-meter.barred .vm-label b { font-weight: inherit; color: var(--ink); }
+  .vm-typed {
+    display: block; margin-bottom: 1px;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--red-pen);
+  }
 
   /* ---------- Quit / give-up (close the notebook) ---------- */
   .quit-btn {
