@@ -48,11 +48,12 @@ export const ACRONYM_MIN_WORDS = 3;
 
 // A title's initials as the fandom writes them: "We Are Never Ever Getting Back Together" ->
 // "wanegbt". Pass the BASE title (no trailing qualifier), so every version of a song shares
-// one. Words are split on spaces, dashes and slashes, and a token with no letter or digit in it
+// one. Words are split on spaces, dashes, slashes and an ellipsis between letters, and a token with no letter or digit in it
 // ("&") is not a word. Run through normalizeTitle so it compares with a typed key on the same
 // footing. Empty when the title is too short to have one.
 export function titleAcronym(title) {
-  const words = String(title || "").toLowerCase().split(/[\s\-–—/]+/)
+  // An ellipsis between two words parts them too: "Come Back...Be Here" is cbbh, not cbh.
+  const words = String(title || "").toLowerCase().split(/[\s\-–—/]+|(?<=\p{L})(?:\.{2,}|…)(?=\p{L})/u)
     .map((w) => (w.match(/[\p{L}\p{N}]/u) || [""])[0])
     .filter(Boolean);
   if (words.length < ACRONYM_MIN_WORDS) return "";
