@@ -427,7 +427,13 @@ export function buildRedactedPuzzle(songs, ctx, lineIndex, rng = Math.random, tr
     if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
 
     const titleKey = normalizeLyric(song.title);
-    const titleWords = new Set(titleKey.split(/\s+/).filter(Boolean));
+    // Keyed the way each token is (wordKey) as well, splitting on an ellipsis between letters:
+    // the lyric key reads "Come Back...Be Here" as "come backbe here", which left "back"
+    // uncovered on that song's own page.
+    const titleWords = new Set([
+      ...titleKey.split(/\s+/),
+      ...String(song.title).split(/\s+|(?<=\p{L})(?:\.{2,}|…)(?=\p{L})/u).map(wordKey),
+    ].filter(Boolean));
 
     const secs = song.sections.filter((s) => (s.lines || []).filter((l) => l && l.trim()).length >= REDACT_LINES_MIN);
     if (!secs.length) continue;
