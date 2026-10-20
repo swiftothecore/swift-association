@@ -1848,7 +1848,11 @@ const CLOUD_MIN_WORDS = 12;
 /* Which of a song's words go on its page, in the order they would be dealt. Exported for the
    dev panel, which wants to see the whole ranked list rather than the slice a page took. */
 export function cloudWords(song, wordIndex, want = 25) {
-  const titleStems = new Set(lyricTokens(song.title || "").map(({ key }) => stemOf(key)));
+  // The title read the way its lyrics spell it: a "$" is the "s" it stands for (Wi$h Li$t sings
+  // "wish list"), and an ellipsis between letters parts two words. Keyed raw, "Wi$h" became
+  // "wih", so the cloud's two biggest words were the title it was asking for.
+  const titleText = String(song.title || "").replace(/\$/g, "s").replace(/(?<=\p{L})(?:\.{2,}|…)(?=\p{L})/gu, " ");
+  const titleStems = new Set(lyricTokens(titleText).map(({ key }) => stemOf(key)));
   const counts = new Map(), spelling = cloudSpellings(song);
   for (const w of String(song.lyrics || "").split(/\s+/)) {
     const p = splitWord(w);
