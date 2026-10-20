@@ -2700,7 +2700,7 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
     kicker: "BEST SCORE", value: s.best, unit: `/${TOTAL_ROUNDS}`,
     line: perfect ? `${perfect} perfect ${perfect === 1 ? "game" : "games"}` : s.best >= 11 ? "so close to perfect" : "still climbing",
     serial: pad3(s.played), serialLabel: `${s.played === 1 ? "GAME" : "GAMES"}<br>PLAYED`,
-    tip: `Best score ${s.best} of ${TOTAL_ROUNDS}, ${s.played} games played`,
+    tip: `Best score ${s.best} of ${TOTAL_ROUNDS}, ${s.played} ${s.played === 1 ? "game" : "games"} played`,
     set: s.best > 0 ? statsBestSetDate(isAll ? MODE_ORDER : [viewMode], s.best) : null,
   }));
   out.push(`<div class="stp-item stp-w2 stp-o1" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx"><div class="stp-lab">the gist</div>` +
@@ -3062,7 +3062,7 @@ function infiniteTabHTML() {
     kicker: "LONGEST RUN", value: top.best, unit: top.best === 1 ? "page" : "pages",
     line: `${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}`,
     serial: pad3(games), serialLabel: `INFINITE<br>${games === 1 ? "RUN" : "RUNS"}`,
-    tip: `Longest infinite run ${top.best} pages, ${VARIANT_LABELS[top.variant]}, ${MODES[top.mode].label}`,
+    tip: `Longest infinite run ${top.best} ${top.best === 1 ? "page" : "pages"}, ${VARIANT_LABELS[top.variant]}, ${MODES[top.mode].label}`,
     set: statsBestSetDate([`inf-${top.variant}-${top.mode}`], top.best),
   }) + `</div>`;
   const group = (variant) => {
