@@ -69,17 +69,21 @@ const comparableToken = (text) => canonicalMatchText(text).toLowerCase();
 // Every fuzzy token range for one term in a line. Four-letter words explicitly allow
 // one edit, while three-letter words keep the normal bar so fuzzy mode does not turn a
 // short prompt into most of the dictionary. Adjacent swaps are handled as one typo.
+// A phrase is held against runs of as many consecutive words as it has.
 function fuzzyTermRanges(line, term) {
-  const ql = comparableToken(term);
+  const ql = comparableToken(term).replace(/\s+/g, " ").trim();
   const min = ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN;
+  const n = ql.split(" ").filter(Boolean).length || 1;
+  const toks = [...line.matchAll(WORD_TOKEN_RE)];
   const ranges = [];
-  for (const m of line.matchAll(WORD_TOKEN_RE)) {
-    const tok = m[0];
-    if (tok.length < 2 || Math.abs(tok.length - ql.length) > 2) continue;   // cheap length prefilter
-    const tl = comparableToken(tok);
+  for (let i = 0; i + n <= toks.length; i++) {
+    const run = toks.slice(i, i + n);
+    const tl = run.map((m) => comparableToken(m[0])).join(" ");
+    if (tl.length < 2 || Math.abs(tl.length - ql.length) > 2) continue;   // cheap length prefilter
     const swapped = ql.length >= FUZZY_SWAP_MIN_LENGTH && swappedNeighbours(ql, tl);
     const score = swapped ? 1 : fuzzySubstringRatio(ql, tl);
-    if (score >= min) ranges.push({ start: m.index, len: tok.length, score });
+    const last = run[n - 1];
+    if (score >= min) ranges.push({ start: run[0].index, len: last.index + last[0].length - run[0].index, score });
   }
   return ranges;
 }

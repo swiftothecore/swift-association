@@ -209,7 +209,7 @@ function prepareSearch(terms, mode) {
   return {
     mode, highlights: new Map(),
     terms: terms.map((term) => {
-      const ql = comparableToken(term);
+      const ql = comparableToken(term).replace(/\s+/g, " ").trim();
       if (mode === "fuzzy" || mode === "contains") {
         return { ql, minimum: ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN, scores: new Map() };
       }
@@ -227,18 +227,25 @@ function prepareSearch(terms, mode) {
 // Every fuzzy token range for one term in a line. Four-letter words explicitly allow
 // one edit, while three-letter words keep the normal bar so fuzzy mode does not turn a
 // short prompt into most of the dictionary. Adjacent swaps are handled as one typo.
+// A phrase ("love story") is held against runs of as many consecutive words as it has, so a
+// line only ever matches it as a phrase: one word at a time, a two-word query was never within
+// two letters of any single word, and fuzzy mode found nothing for a phrase every other mode finds.
 function fuzzyTermRanges(line, term) {
   const { ql, minimum, scores } = term;
   const ranges = [];
-  for (const tok of tokensForLine(line)) {
-    if (tok.len < 2 || Math.abs(tok.len - ql.length) > 2) continue;
-    let score = scores.get(tok.text);
+  const tokens = tokensForLine(line);
+  const n = ql.split(" ").filter(Boolean).length || 1;
+  for (let i = 0; i + n <= tokens.length; i++) {
+    const first = tokens[i], last = tokens[i + n - 1];
+    const text = n === 1 ? first.text : tokens.slice(i, i + n).map((t) => t.text).join(" ");
+    if (text.length < 2 || Math.abs(text.length - ql.length) > 2) continue;
+    let score = scores.get(text);
     if (score === undefined) {
-      const swapped = ql.length >= FUZZY_SWAP_MIN_LENGTH && swappedNeighbours(ql, tok.text);
-      score = swapped ? 1 : fuzzySubstringRatio(ql, tok.text, minimum);
-      scores.set(tok.text, score);
+      const swapped = ql.length >= FUZZY_SWAP_MIN_LENGTH && swappedNeighbours(ql, text);
+      score = swapped ? 1 : fuzzySubstringRatio(ql, text, minimum);
+      scores.set(text, score);
     }
-    if (score >= minimum) ranges.push({ start: tok.start, len: tok.len, score });
+    if (score >= minimum) ranges.push({ start: first.start, len: last.start + last.len - first.start, score });
   }
   return ranges;
 }
