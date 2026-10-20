@@ -17467,7 +17467,8 @@ function useHint() {
   // Tier 2 — the title's shape: first letter + word count.
   if (hintTier >= 2) {
     const title = roundHintSong.title || "";
-    const letter = (title.match(/[a-z]/i) || ["?"])[0].toUpperCase();
+    // A letter or a digit: "22" starts with a 2, and a letters-only search printed "?" for it.
+    const letter = (title.match(/[a-z0-9]/i) || ["?"])[0].toUpperCase();
     const words = title.trim().split(/\s+/).filter(Boolean).length;
     tiers.push(`<p class="hint-tier">starts with “<b>${escapeHtml(letter)}</b>” · ${words} word${words === 1 ? "" : "s"}</p>`);
   }
@@ -22472,7 +22473,7 @@ function renderPerkReveals() {
   const sample = roundHintSong || currentSongs[0];
   const parts = [];
   if (perkReveals.has("count")) { const n = songCount(currentSongs); parts.push(`${n} song${n === 1 ? "" : "s"} fit`); }
-  if (perkReveals.has("letter"))  parts.push(`starts with “${escapeHtml((sample.title.match(/[A-Za-z]/) || ["?"])[0].toUpperCase())}”`);
+  if (perkReveals.has("letter"))  parts.push(`starts with “${escapeHtml((sample.title.match(/[A-Za-z0-9]/) || ["?"])[0].toUpperCase())}”`);
   if (perkReveals.has("album") && sample.album) {
     const col = albumColor(sample.album) || "var(--ink-soft)";
     parts.push(`from <span style="color:${col};font-weight:700">${escapeHtml(sample.album)}</span>`);
