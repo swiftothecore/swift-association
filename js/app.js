@@ -20031,7 +20031,10 @@ function revolveWord() {
   hideDropdown();
   renderVerseMeter("");
   renderRevolveCounter();
-  input.focus();
+  // Through the same gate a page opening uses: the swap is on a timer, so on a phone with
+  // "Open keyboard each round" off a bare focus() would throw the keyboard up unasked every
+  // few seconds. A line the player is already typing on keeps its focus either way.
+  focusRoundInput(input);
 }
 
 // Wildcard's rotating sub-constraints, rebuilt each round against the round's word /
