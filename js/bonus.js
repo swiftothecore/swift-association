@@ -1764,6 +1764,13 @@ export function resolveTrackGuess(typed, cands) {
   const exact = cands.filter((c) => c.key === got);
   if (exact.length) return { hit: exact[0].title, why: "exact" };
 
+  // The same title with its spaces in other places: "im gonna get you back" is imgonnagetyouback
+  // written out, not a near miss on some other track, so it is the title as written. Only when
+  // exactly one track on the record squeezes to it, like the answer box's own spaceless rule.
+  const squeezed = got.replace(/ /g, "");
+  const spaced = cands.filter((c) => c.key.replace(/ /g, "") === squeezed);
+  if (spaced.length === 1) return { hit: spaced[0].title, why: "spaces" };
+
   if (got.length >= TRACK_FRAGMENT_MIN) {
     const frag = cands.filter((c) => tokenRun(c.tokens, words));
     if (frag.length === 1) return { hit: frag[0].title, why: "fragment" };
