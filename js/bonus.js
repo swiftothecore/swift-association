@@ -641,6 +641,13 @@ function lyricTokens(text) {
   return out;
 }
 
+// A title's words, read the way its lyrics spell them: a "$" is the "s" it stands for (Wi$h Li$t
+// sings "wish list") and an ellipsis between letters parts two words (Come Back...Be Here). Read
+// raw, "Wi$h" keys as "wih" and "Back...Be" as "backbe", and neither matches a word of the song.
+function titleTokens(title) {
+  return lyricTokens(String(title || "").replace(/\$/g, "s").replace(/(?<=\p{L})(?:\.{2,}|…)(?=\p{L})/gu, " "));
+}
+
 // A transcribed hook ("dadadada", "mindindind") is unique to its song and looks like a find,
 // but nobody would ever call it a word and dealing it as a card is a joke at the player's
 // expense. Two tells, both cheap: a bigram that comes round three times, or a word spelled out
@@ -731,7 +738,7 @@ export function buildOnlyHerePuzzle(songs, wordIndex, rng = Math.random, tries =
 
     // The title is written across the top of the page, so a card out of it is the page reading
     // itself back.
-    const titleWords = new Set(lyricTokens(song.title).map((x) => x.key));
+    const titleWords = new Set(titleTokens(song.title).map((x) => x.key));
     const stems = new Set();
     const priced = [];
     lyricTokens(song.lyrics || "").forEach((x) => {
@@ -1848,11 +1855,7 @@ const CLOUD_MIN_WORDS = 12;
 /* Which of a song's words go on its page, in the order they would be dealt. Exported for the
    dev panel, which wants to see the whole ranked list rather than the slice a page took. */
 export function cloudWords(song, wordIndex, want = 25) {
-  // The title read the way its lyrics spell it: a "$" is the "s" it stands for (Wi$h Li$t sings
-  // "wish list"), and an ellipsis between letters parts two words. Keyed raw, "Wi$h" became
-  // "wih", so the cloud's two biggest words were the title it was asking for.
-  const titleText = String(song.title || "").replace(/\$/g, "s").replace(/(?<=\p{L})(?:\.{2,}|…)(?=\p{L})/gu, " ");
-  const titleStems = new Set(lyricTokens(titleText).map(({ key }) => stemOf(key)));
+  const titleStems = new Set(titleTokens(song.title).map(({ key }) => stemOf(key)));
   const counts = new Map(), spelling = cloudSpellings(song);
   for (const w of String(song.lyrics || "").split(/\s+/)) {
     const p = splitWord(w);
