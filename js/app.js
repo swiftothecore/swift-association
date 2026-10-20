@@ -16242,11 +16242,11 @@ function updateTagline() {
   const cm = gameType === "custom"
     ? (customPreset ? normalizeCustomMode(customPreset.mode) : activeCustomMode())
     : currentMode;
-  const clock = cm.seconds > 0 ? `${cm.seconds} seconds each` : "no timer";
+  const clock = cm.seconds > 0 ? `${plural(cm.seconds, "second")} each` : "no timer";
   const line = gameType === "infinite"
     ? `endless pages · ${clock}`
     : gameType === "custom"
-    ? `${cm.rounds === 0 ? "endless pages" : cm.rounds + " pages"} · ${clock} · your own rules`
+    ? `${cm.rounds === 0 ? "endless pages" : plural(cm.rounds, "page")} · ${clock} · your own rules`
     // A guest run is the one place where "name the song" doesn't mean a Taylor song, and the
     // tagline is the only line on the game screen with room to say so.
     : gameType === "guest"
