@@ -2941,13 +2941,18 @@ function statsDailyPassHTML(streak) {
   for (let day = 1; day <= daysInMonth; day++) {
     const key = `${viewKey}-${String(day).padStart(2, "0")}`, score = played[key];
     const isToday = key === today, done = score != null;
+    // A day still sealed behind the reveal keeps its score off the pass, the star punch included,
+    // exactly as the results screen's pass and the front page's ticket keep it.
+    const sealed = done && settings.hideDailyScore && loadDailyResult(key)?.revealed !== true;
+    const star = done && !sealed && score === TOTAL_ROUNDS;
     const cls = "stp-dp-box" + (key > today ? " is-future" : "") + (isToday ? " is-today" : "") + (done ? " is-done" : "");
     const inner = `<span class="stp-dp-n">${day}</span>` +
-      (done ? dailyPunchSVG(score === TOTAL_ROUNDS, key) : isToday ? `<span class="stp-dp-aim" aria-hidden="true"></span>` : "");
+      (done ? dailyPunchSVG(star, key) : isToday ? `<span class="stp-dp-aim" aria-hidden="true"></span>` : "");
     const current = isToday ? ` aria-current="date"` : "";
+    const told = sealed ? "sealed" : `${score}/${TOTAL_ROUNDS}${star ? " · star punch" : ""}`;
     boxes += done
-      ? `<button type="button" class="${cls}"${current} data-daily-date="${key}" aria-label="${MONTH_NAMES[mm - 1]} ${day}, ${score} of ${TOTAL_ROUNDS}, reopen" ` +
-        `data-tip="${score}/${TOTAL_ROUNDS}${score === TOTAL_ROUNDS ? " · star punch" : ""} · tap to reopen" data-tip-delay="200">${inner}</button>`
+      ? `<button type="button" class="${cls}"${current} data-daily-date="${key}" aria-label="${MONTH_NAMES[mm - 1]} ${day}, ${sealed ? "sealed" : `${score} of ${TOTAL_ROUNDS}`}, reopen" ` +
+        `data-tip="${told} · tap to reopen" data-tip-delay="200">${inner}</button>`
       : `<div class="${cls}"${current}>${inner}</div>`;
   }
   // the printed grid closes as a rectangle, the way a pass is printed
