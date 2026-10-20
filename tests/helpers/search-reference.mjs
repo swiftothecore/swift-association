@@ -71,7 +71,8 @@ const comparableToken = (text) => canonicalMatchText(text).toLowerCase();
 // short prompt into most of the dictionary. Adjacent swaps are handled as one typo.
 // A phrase is held against runs of as many consecutive words as it has.
 function fuzzyTermRanges(line, term) {
-  const ql = comparableToken(term).replace(/\s+/g, " ").trim();
+  const ql = [...canonicalMatchText(term).replace(/\$/g, "s").matchAll(WORD_TOKEN_RE)]
+    .map((m) => m[0].toLowerCase()).join(" ");
   const min = ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN;
   const n = ql.split(" ").filter(Boolean).length || 1;
   const toks = [...line.matchAll(WORD_TOKEN_RE)];

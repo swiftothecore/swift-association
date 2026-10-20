@@ -205,11 +205,20 @@ function tokensForLine(line) {
   return tokens;
 }
 
+// The query as fuzzy compares it: cut into words exactly the way a line is (letters and inner
+// apostrophes), so "Mr." is held against "mr" and "ooh-ooh" against "ooh ooh". Kept whole, its
+// punctuation sat in the comparison against lines that had none, and fuzzy found nothing for
+// queries the exact mode answers. A "$" reads as the "s" it stands for, as in titles.
+function fuzzyQuery(term) {
+  return [...canonicalMatchText(term).replace(/\$/g, "s").matchAll(WORD_TOKEN_RE)]
+    .map((m) => m[0].toLowerCase()).join(" ");
+}
+
 function prepareSearch(terms, mode) {
   return {
     mode, highlights: new Map(),
     terms: terms.map((term) => {
-      const ql = comparableToken(term).replace(/\s+/g, " ").trim();
+      const ql = mode === "fuzzy" ? fuzzyQuery(term) : comparableToken(term).replace(/\s+/g, " ").trim();
       if (mode === "fuzzy" || mode === "contains") {
         return { ql, minimum: ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN, scores: new Map() };
       }
