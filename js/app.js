@@ -5077,7 +5077,16 @@ let _pbByMode = {};               // per-mode best, for crowning history rows
 function dailyBest() {
   let best = 0;
   for (const h of loadHistory()) if (h.t === "daily" && h.s > best) best = h.s;
-  return best;
+  if (!settings.hideDailyScore) return best;
+  // A day still sealed behind the reveal cannot set the best it would give away: the ticket
+  // prints "?" for today's score, and a "best 13" beside it would say what the seal is hiding.
+  // So the best is capped at the highest day that has been opened, by the same test the passes
+  // use to decide whether a day is sealed.
+  let opened = 0;
+  for (const [key, score] of Object.entries(dailyPlayedDates())) {
+    if (score > opened && loadDailyResult(key)?.revealed === true) opened = score;
+  }
+  return Math.min(best, opened);
 }
 // Accent colour for a record tile — classic mode, infinite token (borrows its
 // difficulty), or daily (the red margin rule).
