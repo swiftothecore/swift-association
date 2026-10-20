@@ -15702,8 +15702,9 @@ function dealLineupFlourish(kind) {
     : DEAL_FLOURISHES[Math.floor(Math.random() * DEAL_FLOURISHES.length)];
 
   // Reduced motion gets the settled felt and no flight at all. Not a faster deal: the request
-  // is for no movement, and a quick spin is still a spin.
-  if (motionReduced()) return;
+  // is for no movement, and a quick spin is still a spin. Instant animation speed skips it the
+  // same way, as it skips every other timed animation.
+  if (motionReduced() || animInstant()) return;
 
   // AND SO DOES A FELT THAT DOES NOT FIT THE SCREEN. Five cards at their printed size stack one
   // per row on a phone, so the felt runs about 1460px and only the first card is ever on screen
@@ -26750,7 +26751,7 @@ function fillCountDots(label, hits, { words = [currentWord], named } = {}) {
   if (!svg) return;
   label.classList.toggle("vw-count-below", below);
   label.insertAdjacentHTML("beforeend", svg);
-  if (!motionReduced()) tipOutCountDots(label.querySelector(".count-dots"), words.join("+"));
+  if (!motionReduced() && !animInstant()) tipOutCountDots(label.querySelector(".count-dots"), words.join("+"));
 }
 // The count label the dots are drawn into: "forty-one songs sing it". Filled by fillCountDots
 // once it is on the page and can be measured.
