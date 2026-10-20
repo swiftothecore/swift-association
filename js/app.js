@@ -25875,8 +25875,10 @@ function submitAnswer(song, isTimeout) {
   // colour on a voice-axis guest, and by the results screen the corpus has been handed back
   // to Taylor and the song object is gone.
   // Same reasoning, one mode over: who the answered song belongs to, resolved while the blend
-  // is still installed. Empty off a lineup run; see lineupArtists.
-  roundArtists[round - 1] = lineupArtists(song || tapAnswer || null);
+  // is still installed. Empty off a lineup run; see lineupArtists. Empty on a missed page too,
+  // wrong answer included: the goal judge reads an empty list as "not answered", and a song
+  // named wrongly answers nothing, so it must never credit its artist to the page.
+  roundArtists[round - 1] = correct ? lineupArtists(song || tapAnswer || null) : [];
   // One slot, two modes, and they can never both be live: a guest run strings the answered
   // record in its catalogue's own palette, a lineup run strings the answered ARTIST. Both are
   // resolved here rather than at render time for the same reason.
