@@ -1802,7 +1802,7 @@ function openCoverAdmire(back) {
   loading.addEventListener("click", closeCoverAdmire);
   document.addEventListener("keydown", coverAdmireKey, true);
   if (tab) { tab.hidden = false; tab.focus(); }
-  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  window.scrollTo({ top: 0, behavior: motionReduced() ? "auto" : "smooth" });
   return true;
 }
 
@@ -12430,7 +12430,7 @@ function submitTrack() {
      on a thirty-track record is thirty unnecessary scrolls and makes the page feel like it is
      fighting the player. */
   const el = $("bonusPlayBody").querySelector(".tbt-row.is-now");
-  if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: motionReduced() ? "auto" : "smooth" });
 }
 
 /* ---------- The clock ----------
@@ -15703,7 +15703,7 @@ function dealLineupFlourish(kind) {
 
   // Reduced motion gets the settled felt and no flight at all. Not a faster deal: the request
   // is for no movement, and a quick spin is still a spin.
-  if (prefersReducedMotion()) return;
+  if (motionReduced()) return;
 
   // AND SO DOES A FELT THAT DOES NOT FIT THE SCREEN. Five cards at their printed size stack one
   // per row on a phone, so the felt runs about 1460px and only the first card is ever on screen
@@ -20213,7 +20213,7 @@ function renderWordFx(wrap, word, r, levelOverride) {
   // word with an anagram partner is never scrambled), reverse it so it never shows un-warped.
   if (text === word && word.length > 1) text = word.split("").reverse().join("");
   wrap.dataset.fx = String(level);
-  const wobble = level === 4 && !prefersReducedMotion();
+  const wobble = level === 4 && !motionReduced();
   $("wordDisplay").innerHTML = text.split("").map((ch, i) => {
     const rot = wobble ? (((i * 37) % 11) - 5) : 0;   // deterministic small per-letter tilt
     const style = rot ? ` style="--fx-rot:${rot}deg"` : "";
@@ -26750,7 +26750,7 @@ function fillCountDots(label, hits, { words = [currentWord], named } = {}) {
   if (!svg) return;
   label.classList.toggle("vw-count-below", below);
   label.insertAdjacentHTML("beforeend", svg);
-  if (!prefersReducedMotion()) tipOutCountDots(label.querySelector(".count-dots"), words.join("+"));
+  if (!motionReduced()) tipOutCountDots(label.querySelector(".count-dots"), words.join("+"));
 }
 // The count label the dots are drawn into: "forty-one songs sing it". Filled by fillCountDots
 // once it is on the page and can be measured.
@@ -36320,7 +36320,7 @@ async function init() {
     if (!jump) return;
     const row = $("glossaryBody").querySelector(`[data-gloss-row="${jump.dataset.glossJump}"]`);
     if (!row) return;
-    row.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+    row.scrollIntoView({ behavior: motionReduced() ? "auto" : "smooth", block: "center" });
     sweepGlossRow(row);
   });
   screens.glossary.addEventListener("pointerover", (e) => {
