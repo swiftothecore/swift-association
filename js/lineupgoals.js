@@ -239,7 +239,9 @@ export function judge(card, pages, ctx) {
   const c = { pages: 13, shelf: [], home: "", named: [], admitted: [], ...ctx, played: pages.length };
   const done = pages.length >= c.pages;
   if (card.miss === "fails" && pages.some(isMiss)) return DEAD;
-  // Clean Sheet and Ten In A Row are ABOUT the misses, so they get the run unfiltered.
-  const raw = card.id === "clean-sheet" || card.id === "ten-in-a-row";
+  // A card with no ruling gets the run unfiltered. Clean Sheet and Ten In A Row are ABOUT the
+  // misses, and the rest of the clubs judge how every page was played: a hint pulled or a
+  // dropdown opened on a page that was then missed was still pulled, still opened.
+  const raw = !card.miss;
   return rule(raw ? pages : answeredPages(pages), c, done);
 }
