@@ -12404,7 +12404,7 @@ function submitTrack() {
       r.textContent = "not that one";
       r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
     }
-    sfx.play("wrong");
+    playSound("wrong");
     // The wrong count lives in the score slot, so it has to be repainted here: nothing else
     // redraws on a reject, and a counter that only catches up on the next correct answer reads
     // as though the miss had not registered.
@@ -12419,7 +12419,7 @@ function submitTrack() {
   if (input) input.value = "";
   trackAt++;
   skipToNextBlank();
-  sfx.play("correct");
+  playSound("correct");
   if (trackDone()) { endTrackRun(); return; }
   renderTrackSheet(false, true);
   focusTrackInput();
