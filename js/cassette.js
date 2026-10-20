@@ -53,6 +53,7 @@
 
 import { STUDIO_ALBUMS, ALBUM_TRACKS, TS_MILESTONES } from "./config.js";
 import { mulberry32, dailySeed } from "./util.js";
+import { settingsTodayKey } from "./storage.js";
 
 const svg = document.querySelector(".di-cassette svg");
 const titleEl = svg && svg.querySelector(".cs-title");
@@ -238,9 +239,7 @@ export function render(dateKey) {
 function currentKey() {
   const dev = typeof window !== "undefined" && window.__devDate;
   if (dev && /^\d{4}-\d{2}-\d{2}$/.test(dev)) return dev;
-  const d = new Date();
-  const p = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  return settingsTodayKey();   // the daily's time zone, which is the day the watcher turns it on
 }
 export const refresh = () => render(currentKey());
 

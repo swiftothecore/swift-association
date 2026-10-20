@@ -1611,6 +1611,20 @@ export function recentDailyAlbums(endDate, n) {
   return out.reverse();
 }
 
+/* ---------- Today, in the daily's time zone ----------
+   "YYYY-MM-DD" for now in the zone Settings picked for the daily ("auto" is the device's own),
+   the same day app.js's todayKey() reads. The desk calendar and the cassette are dated surfaces
+   that app.js's day-rollover watcher turns on the daily's beat, so they have to read the day in
+   the same zone it watches, or a player who has picked a zone sees the pad on a different day
+   from the daily and the margin, and left standing a day stale once its own midnight passes. */
+export function settingsTodayKey() {
+  const tz = loadSettings().timezone;
+  try {
+    if (tz && tz !== "auto") return new Date().toLocaleDateString("en-CA", { timeZone: tz });
+  } catch (e) { /* invalid stored zone, so fall through to the device's own */ }
+  return new Date().toLocaleDateString("en-CA");
+}
+
 /* ---------- Settings ---------- */
 // DEFAULT_SETTINGS is merged under the stored object, so a newly-added default
 // key fills in for existing players without a migration step.

@@ -38,7 +38,7 @@
 // nothing.
 
 import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, ALBUM_COLORS, CB_ALBUM_COLORS } from "./config.js";
-import { loadSettings } from "./storage.js";
+import { loadSettings, settingsTodayKey } from "./storage.js";
 import { MONTH_SEASON, southernSeasons, seasonMonth } from "./season.js";
 
 const SVG = "http://www.w3.org/2000/svg";
@@ -736,13 +736,12 @@ export function render(now) {
 // What day the pad is open to. The app's dev date override (window.__devDate,
 // "YYYY-MM-DD", session-only — a reload goes live again) wins, so scrubbing the
 // date in the dev panel scrubs the calendar with it.
+// Otherwise it is today in the daily's time zone, the day the rollover watcher turns it on.
 function currentDate() {
   const dev = typeof window !== "undefined" && window.__devDate;
-  if (dev && /^\d{4}-\d{2}-\d{2}$/.test(dev)) {
-    const [y, m, d] = dev.split("-").map(Number);
-    return new Date(y, m - 1, d);
-  }
-  return new Date();
+  const key = dev && /^\d{4}-\d{2}-\d{2}$/.test(dev) ? dev : settingsTodayKey();
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 export const refresh = () => render(currentDate());
 
