@@ -822,6 +822,12 @@ export function blankExact(typed, puzzle) {
   return !!got && got === wordKey(puzzle.answer);
 }
 
+// Whether the lifted word is one the catalogue sings exactly once (Just One Time). Read off the
+// same frequency map that keeps well-worn words out of the gap, so the two can never disagree.
+export function blankSungOnce(puzzle, freq) {
+  return freq.get(wordKey(puzzle.answer)) === 1;
+}
+
 /* ---------- Then What ----------
    One song, one line written out, and three lines that might follow it. Pick the one that
    really does and it locks into the page; four picks and the page is a verse.

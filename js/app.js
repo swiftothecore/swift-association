@@ -114,7 +114,7 @@ import { buildLineIndex, buildWordFreq, buildSlipPuzzle, readSlipSwaps, slipDeal
          buildNashvillePuzzle, nashvilleDealCount,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
-         judgeBlank, blankExact } from "./bonus.js";
+         judgeBlank, blankExact, blankSungOnce } from "./bonus.js";
 import { passportHTML, stampCardsHTML, passportStamp, passportTracing, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
 import { rewardBoardHTML, titleFileHTML } from "./rewardboard.js";
 import { skillMarkHTML } from "./skillmarks.js";
@@ -3297,6 +3297,8 @@ const HIDDEN_ACH_IDS = [
   // Nashville's two failures worn well. Secret for the shelf's usual reason: you have to go and
   // commit them on purpose once you know they exist.
   "finish-nashville-run-below-zero", "pass-last-nashville-page-to-finish-on-zero",
+  // Then What's, Sing It Back's and Name That Song's second charms, each a single page.
+  "pick-a-then-what-line-from-the-wrong-verse", "write-back-a-word-sung-only-once", "name-wrong-song-off-the-right-record",
   /* The Core batch's remaining secrets. Listing them roughly two-thirds
      again on the capstone's price, which is the deliberate reading of it: leaving them out
      would make Is It Over Now?'s own description untrue the moment they shipped. Grouped the
@@ -8890,6 +8892,9 @@ function judgeChain(i) {
     chainNow++;
     if (chainNow > chainRun) chainRun = chainNow;
   } else chainNow = 0;
+  // Wrong Turn: the tapped decoy was the line from the same point in another verse, which the
+  // builder tags as it deals. A fact about one tap, so it is judged here and nowhere else.
+  if (i >= 0 && pick.cards[i].from === "parallel") unlock("pick-a-then-what-line-from-the-wrong-verse");
   chainTaken.push({ picked: i, right });
   playSound(right ? "correct" : "wrong");
 
@@ -9201,6 +9206,7 @@ function judgeName(picked = null) {
   // true and kind. Name That Song only: Redacted's verse is several lines of the record already.
   const sameRecord = !correct && bonusGame.id === "name-that-song" &&
     song.album === bonusPuzzle.song.album;
+  if (sameRecord) unlock("name-wrong-song-off-the-right-record");
   const detail = correct
     ? (bonusGame.id === "redacted" ? redactDetail(bonusPageScore(true)) : "")
     : `you wrote <b>${escapeHtml(censor(song.title))}</b>` + (sameRecord ? " · right record" : "");
@@ -9220,9 +9226,14 @@ function judgeGap() {
   // one, and Right Where You Left Me asks for a run of exact ones. Written here rather than at
   // the settle because this is the only place that still has what was typed.
   if (!blankExact(raw, bonusPuzzle)) blankExactRun = false;
+  // A word sung once in the whole catalogue says so either way, because it is the one fact about
+  // the gap the page cannot show, and Just One Time would otherwise unlock without a reason.
+  const once = blankSungOnce(bonusPuzzle, ctx.freq);
+  if (correct && once) unlock("write-back-a-word-sung-only-once");
   // The gap is filled with the real word either way, and the card below highlights it in the
   // whole line — so on a miss the only thing worth adding is what was written instead.
-  settleBonusRound(correct, correct ? "" : `you wrote “<b>${escapeHtml(raw)}</b>”`);
+  const miss = correct ? "" : `you wrote “<b>${escapeHtml(raw)}</b>”`;
+  settleBonusRound(correct, once ? (miss ? `${miss} · sung only once` : "sung only once") : miss);
 }
 
 /* ---------- Only Here: the hand ----------
@@ -10345,6 +10356,10 @@ function foldBonusRunCharms(perfect, cleared) {
                          "who-held-the-pen": "sweep-who-held-the-pen" }[bonusGame.id];
     if (sweepCharm) unlock(sweepCharm);
     if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
+    // Extra Credit: a sweep on a deal that carried a joint production, read off the deal's own
+    // ceiling, which only climbs past one a page when a "both" page was dealt.
+    if (bonusGame.id === "aaron-or-jack" && whoCeiling > BONUS_ROUNDS * WHO_PAY_ONE)
+      unlock("sweep-aaron-or-jack-with-a-joint-production");
   }
   // NOT gated on a sweep: knowing a song off the spare cloud is the flex here, and a run that
   // cleared all five thin pages and dropped a fat one has done the hard half. Outside the

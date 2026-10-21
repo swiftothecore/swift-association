@@ -4750,6 +4750,15 @@ export const ACHIEVEMENTS = [
      Named off "The knife cuts both ways" (long story short), which is on evermore and so is a
      song this very game can deal. */
   { id: "name-a-joint-production",             name: "Both Ways",        desc: "Name a song both Aaron and Jack produced", secret: true, icon: "overprint" },
+  /* Aaron or Jack's sweep, and deliberately MORE than a sweep: the ten pages have to include a
+     joint production called as one. A plain sweep on a deal with no "both" in it is ten coin
+     flips read right, which the shelf-wide sweep charms already pay for; the page that asks for
+     the third stamp is the one this game exists to ask, so the charm waits for it. About two
+     deals in five carry one (four joint songs in a pool of 87), and every run is a fresh deal,
+     so nothing here can be walked past. It is visible on the back cover too: a sweep on such a
+     deal is the only way to score above ten. Named off "Did all the extra credit" (Bejeweled),
+     which is on Midnights and so is a song this game can deal. */
+  { id: "sweep-aaron-or-jack-with-a-joint-production", name: "Extra Credit", desc: "Sweep Aaron or Jack on a deal with a joint production in it", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
   /* Who Held The Pen's two, and they are Aaron or Jack's pair in shape: one ordinary sweep, and
      one PAGE that asks for the thing the game was built around. The page charm is the solo
      credit on a record that almost never carried one — the twelve titles PEN_GUESTS brings up
@@ -4780,6 +4789,23 @@ export const ACHIEVEMENTS = [
   { id: "pass-last-nashville-page-to-finish-on-zero", name: "Just Walk Away", desc: "Pass the last page of a Nashville run and finish on exactly zero", secret: true, icon: "levelscale" },
   { id: "take-commonest-only-here-card",      name: "I Bought It",      desc: "Take the commonest card in an Only Here hand", secret: true, icon: "receipt" },
   { id: "name-redacted-song-after-buying-all-strips",   name: "Knew The Price",   desc: "Buy every strip on a Redacted page and still name the song", secret: true, icon: "peeled" },
+  /* Three more, one each for the games that had only their sweep (2026-10-21).
+     Wrong Turn is Then What's own mistake: the PARALLEL decoy, the line sung at the same point
+     in another section of the same kind (verse 2 against verse 1). The builder already tags it
+     (`from: "parallel"` on the card), so the charm asks the tap rather than the page. A failure
+     worn well, and a common one, roughly three decoys in ten. Off "And we took a wrong turn"
+     (Wonderland).
+     Just One Time is Sing It Back's knowledge flex: the lifted word is one she sang exactly once
+     in the whole catalogue (`blankSungOnce`). About one page in seventeen deals one (117 of 2,000
+     sampled), so nearly half of all runs carry a chance at it, and luck cannot win it because you
+     still have to know the word.
+     The reveal says "sung only once" so the unlock is never a mystery. Off "Just one time"
+     (Electric Touch).
+     Close Enough To Touch is Name That Song's near miss, priced in the "right record" note the
+     page already prints: the wrong title, off the right album. Off Sparks Fly. */
+  { id: "pick-a-then-what-line-from-the-wrong-verse", name: "Wrong Turn", desc: "Pick the right line from the wrong verse", secret: true, icon: "placeholder" },
+  { id: "write-back-a-word-sung-only-once", name: "Just One Time", desc: "Write back a word she only ever sang once", secret: true, icon: "placeholder" },
+  { id: "name-wrong-song-off-the-right-record", name: "Close Enough To Touch", desc: "Name the wrong song, but off the right record", secret: true, icon: "placeholder" },
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
   { id: "flag-spot-the-slip-impostor-under-2s",    name: "Saw It Coming",    desc: "Flag a Spot the Slip impostor inside two seconds", secret: true, icon: "mask" },
@@ -4819,8 +4845,10 @@ export const ACHIEVEMENTS = [
      on past your lens into the rest of the song, so a page you cannot place will eventually
      sing its own name at you — and taking it within a few words is a visible, specific, faintly
      embarrassing moment rather than a slow page. Secret because a card that described it would
-     be teaching a tactic, and because the shelf writes its failures this way. */
-  { id: "name-ruthless-page-just-after-its-title-appears", name: "Say My Name",        desc: "Take the answer within moments of the song singing its own name outside your lens", secret: true, icon: "heardit" },
+     be teaching a tactic, and because the shelf writes its failures this way. Named off "forgets
+     he ever even heard my name" (Mr. Perfectly Fine); it was Say My Name until The Capitals took
+     that name for a charm that is literally a name. */
+  { id: "name-ruthless-page-just-after-its-title-appears", name: "Heard My Name",      desc: "Take the answer within moments of the song singing its own name outside your lens", secret: true, icon: "heardit" },
   /* ---- Catalogue knowledge: what you know about the records (2026-08-18 batch) ----
      Twenty-two charms, all in the Catalogue theme, and every one of them is priced in a fact
      about the catalogue rather than in how well the run was played. Three shapes:
