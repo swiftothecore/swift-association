@@ -12903,10 +12903,9 @@ function guardTitleInk() {
 // the next morning on its own. A re-recording's day wears the original's ink (one album, one
 // ink), and 27 October, which both 1989s share, comes out the same either way.
 //
-// Picking a swatch in the ink tray waives it for the rest of the day. The tray has no preview of
-// its own because the masthead IS the preview, so a title pinned to the album would make every
-// tap there look broken. The waiver is per page load and keyed to the day, so it needs no reset.
-let dayInkWaived = null;
+// Nothing waives it, the ink tray included: the day belongs to the album, and a tap that put the
+// house gold back would undo the support the day is there to show. The tray still saves the pick
+// (it is what comes back tomorrow) and says on its header line why the title is not following.
 function dayInkFor(dateKey) {
   const md = dateKey.slice(5), year = +dateKey.slice(0, 4);
   const hit = TS_MILESTONES.find((m) => m.md === md && (m.kind === "album" || m.kind === "tv")
@@ -12914,8 +12913,7 @@ function dayInkFor(dateKey) {
   return hit ? MAST_INKS[hit.album].slug : "";
 }
 function wornTitleInk() {
-  const day = todayKey();
-  const dated = dayInkWaived === day ? "" : dayInkFor(day);
+  const dated = dayInkFor(todayKey());
   if (dated) return dated;
   return inkSlugKnown(settings.titleInk) ? settings.titleInk : "";
 }
@@ -13062,6 +13060,7 @@ function renderInkTrayPage() {
   const el = $("inkTrayBody");
   if (!el) return;
   const worn = earnedTitleInk();
+  const dayInk = dayInkFor(todayKey());
   // STUDIO_ALBUMS, never Object.keys(MAST_INKS): "1989" is an integer-like key, so JS hoists it
   // to the front of any object-key walk and the tray comes out shuffled. Walking the album list
   // also keeps the tray in the same order as the board it hangs off, which is the point of it.
@@ -13083,7 +13082,11 @@ function renderInkTrayPage() {
 
   el.innerHTML =
     `<div class="chall-head">` +
-      `<div class="chall-head-sub">tap an ink · the title above is written in it</div>` +
+      // On a release day the masthead is pinned to the album and stops previewing the tray, so
+      // the line says so rather than letting every tap look broken.
+      `<div class="chall-head-sub">${dayInk
+        ? `tap an ink · today the title wears ${escapeHtml(albumTileName(MAST_INK_BY_SLUG[dayInk].album))}`
+        : "tap an ink · the title above is written in it"}</div>` +
       `<span class="chall-beaten"><span class="chall-beaten-txt">` +
         `<b>${owned}</b>of ${albums.length} inks earned` +
         // Second line, not a clause: the <b> above is the hand-set headline numeral and the leaf
@@ -13097,7 +13100,6 @@ function renderInkTrayPage() {
 
   el.querySelectorAll("[data-ink-pick]").forEach((b) => b.addEventListener("click", () => {
     settings.titleInk = b.dataset.inkPick || "";
-    dayInkWaived = todayKey();   // the masthead is the tray's preview, so a pick has to show
     saveSettings(settings);
     applySettings();
     renderInkTrayPage();
@@ -36012,7 +36014,6 @@ function buildDevApi() {
       set: (slug) => {
         if (slug && !inkSlugKnown(slug)) return `no such ink: ${slug}`;
         settings.titleInk = slug || "";
-        dayInkWaived = todayKey();
         saveSettings(settings); applySettings();
         return settings.titleInk || "(brand gold)";
       },
