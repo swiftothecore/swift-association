@@ -3223,7 +3223,8 @@ export const ACH_ICONS = {
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
   // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; as of
-  // 2026-10-08 nothing wears it, and a new charm borrowing it should not stay on it for long.
+  // 2026-10-21 only Close Enough To Touch wears it, and a new charm borrowing it should not
+  // stay on it for long.
   placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
@@ -3892,6 +3893,25 @@ export const ACH_ICONS = {
   // a whole verse on every page: a profile with four lines of verse kept inside it. Not
   // brain, which is the organ; this is the words themselves, learned and carried
   versehead:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M7.6 21.8 L7.7 17.6 C5.4 16 4.1 13.6 4.2 10.6 C4.3 6 7.7 2.9 12.2 2.9 C16.3 2.9 19.3 5.5 19.6 9.4 C19.7 10.2 20 10.8 20.4 11.6 L21.2 13.1 C21.4 13.6 21.1 13.9 20.6 13.9 L19.7 13.9 L19.8 15.8 C19.8 17 19 17.7 17.8 17.6 L15.6 17.4 L15.5 21.8"/><g class="ink" stroke-width="1.15"><path d="M7.4 7.4 Q8.22 7.82 9.04 7.47 Q9.86 7.09 10.68 7.45 Q11.5 7.79 12.32 7.3 Q13.14 7.08 13.96 7.41 Q14.78 7.74 15.6 7.39"/><path d="M6.6 10 Q7.42 10.43 8.23 9.97 Q9.05 9.69 9.87 10 Q10.68 10.33 11.5 9.92 Q12.32 9.68 13.13 9.96 Q13.95 10.29 14.77 10.05 Q15.58 9.47 16.4 9.97"/><path d="M6.8 12.6 Q7.64 13.06 8.48 12.73 Q9.32 12.32 10.16 12.49 Q11 13.09 11.84 12.7 Q12.68 12.16 13.52 12.5 Q14.36 12.98 15.2 12.71"/><path d="M8 15.2 Q8.8 15.71 9.6 15.29 Q10.4 14.88 11.2 15.31 Q12 15.57 12.8 15.26"/></g></svg>`,
+  /* ---- The third placeholder batch drawn (2026-10-21) ----
+     Five of the six charms the one-charm bonus games gained on 2026-10-21, each picked from
+     three candidates (four of them after a second pass). Close Enough To Touch is still
+     waiting: two rounds of hands never read at charm size. */
+  // a bottle of correction fluid, brush out, and the right word written over the dried patch
+  // on the line beside it. Every impostor found and every word put back
+  whiteout:`<svg viewBox="0 0 24 24"><g transform="rotate(-7 6.4 15)"><rect class="ink-fill" x="2.4" y="11.6" width="7.8" height="9.8" rx="1.8"/><rect class="ink-fill" x="4.4" y="9" width="3.8" height="2.6" rx="0.5"/><path class="ink" stroke-width="0.9" opacity="0.5" d="M4.4 15.4 H8.4 M4.4 17.4 H7.4"/></g><g transform="rotate(32 14.4 4.4)"><rect class="ink-fill" x="12.6" y="1.2" width="3.8" height="4.4" rx="0.7"/><path class="ink" stroke-width="1.2" d="M14.5 5.6 V9.8"/><path d="M13.7 9.6 H15.3 C15.3 11 15 12 14.5 12.6 C14 12 13.7 11 13.7 9.6 Z" fill="currentColor" stroke="none"/></g><path class="ink" stroke-width="1" opacity="0.5" d="M11.4 17.6 H12.6 M21.8 17.5 H23"/><path class="ink-fill" d="M13.4 14.6 C15.6 14 18.6 14.1 21 14.6 C21.4 16.1 21.3 17.8 20.9 19.4 C18.6 19.9 16 19.9 13.6 19.4 C13.1 17.8 13 16.2 13.4 14.6 Z"/><path stroke-width="1.15" class="ink" fill="none" d="M14.8 17.4 c0.5 -0.9 0.9 0.8 1.4 0 s0.9 0.8 1.4 -0.1 s0.9 0.8 1.4 0"/></svg>`,
+  // just the fast-forward mark, inked by hand with speed ticks behind it. A deck key around
+  // it was the first draft and read as a box with a glyph in it
+  ffmark:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M4.6 6.6 L11.6 11.9 L4.8 17.4 C4.4 13.8 4.4 10.2 4.6 6.6 Z"/><path class="ink-fill" d="M11.8 5.8 L20.2 12 L12 18.4 C11.6 14.2 11.6 10 11.8 5.8 Z"/><g class="ink" stroke-width="1.15" opacity="0.6"><path d="M0.8 9.4 H2.6"/><path d="M0.6 12 H2.8"/><path d="M0.8 14.6 H2.4"/></g></svg>`,
+  // two stamp rings pressed half over each other with a star in the overlap: the third stamp,
+  // "both", is where the two producers meet. Inner dotted rings were tried and read as mess
+  twostamps:`<svg viewBox="0 0 24 24"><ellipse class="ink-fill" cx="8.8" cy="12.6" rx="6.7" ry="6.4" transform="rotate(-10 8.8 12.6)"/><ellipse class="ink-fill" cx="15.4" cy="11.2" rx="6.1" ry="6.4" transform="rotate(14 15.4 11.2)"/><path d="M12.4 9.3 L13.05 10.7 L14.5 10.9 L13.4 11.9 L13.7 13.4 L12.4 12.65 L11.1 13.4 L11.4 11.9 L10.3 10.9 L11.75 10.7 Z" fill="currentColor" stroke="none"/></svg>`,
+  // a diamond road sign with a turn arrow on it, the post in a little crooked: "we took a
+  // wrong turn" (Wonderland), the right line off the wrong verse
+  wrongturn:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.6" d="M12.2 18.6 L12.6 22.4"/><path class="ink" stroke-width="1.1" opacity="0.5" d="M9.4 22.4 H16.2"/><path class="ink-fill" d="M12 1.8 L20.6 10.2 L12.2 18.8 L3.6 10.4 Z"/><path class="ink" stroke-width="1.7" fill="none" d="M10.4 14.2 V11.2 C10.4 9.8 11.2 9 12.4 9 H14.6"/><path class="ink" stroke-width="1.7" fill="none" d="M13.4 7.4 L15.2 9 L13.4 10.6"/></svg>`,
+  // a star with three trails behind it, every trail leaving from its edge: a word she sang
+  // once and never again. An outlined comet read as a lollipop
+  shootingstar:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M16.8 2.2 L18.3 5.5 L21.9 5.9 L19.2 8.3 L20 11.9 L16.8 10.1 L13.6 11.9 L14.4 8.3 L11.7 5.9 L15.3 5.5 Z"/><g class="ink" fill="none"><path stroke-width="1.4" d="M14.3 8.9 C10.6 11.2 6.2 14.6 2.6 18.6"/><path stroke-width="1.2" d="M13.75 11.2 C11.4 14 9.4 17.4 7.6 21"/><path stroke-width="1" opacity="0.7" d="M12.6 6.7 C9.8 7.8 6.6 9.6 3.6 12"/></g><circle cx="20.6" cy="16.6" r="0.7" fill="currentColor" stroke="none"/></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -4687,7 +4707,7 @@ export const ACHIEVEMENTS = [
   // Redacted. They are NOT masked like the challenge flourishes — a bonus game has no defeat
   // to reveal them on, so they stand as ordinary named targets from the start.
   { id: "sweep-spot-the-slip", name: "Something’s Changed", desc: "Sweep Spot the Slip",             tier: 2, secret: false, icon: "ringedword", sitting: true, earn: { cat: "bonus" } },
-  { id: "sweep-correct-the-slip", name: "No Really, I Can", desc: "Sweep Correct the Slip: every impostor found and every word put back", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-correct-the-slip", name: "No Really, I Can", desc: "Sweep Correct the Slip: every impostor found and every word put back", tier: 3, secret: false, icon: "whiteout", sitting: true, earn: { cat: "bonus" } },
   { id: "sweep-name-that-song-one-line-each",   name: "The First Note",   desc: "Sweep Name That Song: all ten off one line each", tier: 2, secret: false, icon: "tuningfork", sitting: true, earn: { cat: "bonus" } },
   { id: "sweep-sing-it-back-all-words-exact", name: "Right Where You Left Me", desc: "Sweep Sing It Back with every word exact, not one typo forgiven", tier: 2, secret: false, icon: "jigsaw", sitting: true, earn: { cat: "bonus" } },
   { id: "name-redacted-song-no-strips-removed",      name: "Blind Faith",      desc: "Name a Redacted song with every strip still down", tier: 2, secret: false, icon: "taped", sitting: true, earn: { cat: "bonus" } },
@@ -4711,7 +4731,7 @@ export const ACHIEVEMENTS = [
      seconds a track is set against the player's own folklore best of 18.44 (about 1.15 a
      track), so it asks for a record known that well, not for the fastest run ever written. */
   { id: "write-out-an-album-with-no-wrong-guesses", name: "Every Word", desc: "Write out a record in Track by Track without a single wrong guess", tier: 2, secret: false, icon: "cleaneraser", sitting: true, earn: { cat: "bonus" } },
-  { id: "write-out-an-album-at-under-two-seconds-a-track", name: "Fast Forward", desc: "Write out a record in Track by Track at under two seconds a track", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "write-out-an-album-at-under-two-seconds-a-track", name: "Fast Forward", desc: "Write out a record in Track by Track at under two seconds a track", tier: 3, secret: false, icon: "ffmark", sitting: true, earn: { cat: "bonus" } },
   { id: "write-out-the-longest-album", name: "Straight Through", desc: "Write out the longest record on the shelf, top to bottom", tier: 2, secret: false, icon: "longscroll", sitting: true, earn: { cat: "bonus" } },
   { id: "write-out-all-twelve-albums", name: "Remember It All", desc: "Write out all twelve records in Track by Track", tier: 3, secret: false, icon: "twelvering" },
   { id: "sweep-word-cloud", name: "All The Words", desc: "Sweep Word Cloud", tier: 2, secret: false, icon: "wordcloud", sitting: true, earn: { cat: "bonus" } },
@@ -4758,7 +4778,7 @@ export const ACHIEVEMENTS = [
      so nothing here can be walked past. It is visible on the back cover too: a sweep on such a
      deal is the only way to score above ten. Named off "Did all the extra credit" (Bejeweled),
      which is on Midnights and so is a song this game can deal. */
-  { id: "sweep-aaron-or-jack-with-a-joint-production", name: "Extra Credit", desc: "Sweep Aaron or Jack on a deal with a joint production in it", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-aaron-or-jack-with-a-joint-production", name: "Extra Credit", desc: "Sweep Aaron or Jack on a deal with a joint production in it", tier: 2, secret: false, icon: "twostamps", sitting: true, earn: { cat: "bonus" } },
   /* Who Held The Pen's two, and they are Aaron or Jack's pair in shape: one ordinary sweep, and
      one PAGE that asks for the thing the game was built around. The page charm is the solo
      credit on a record that almost never carried one — the twelve titles PEN_GUESTS brings up
@@ -4803,8 +4823,8 @@ export const ACHIEVEMENTS = [
      (Electric Touch).
      Close Enough To Touch is Name That Song's near miss, priced in the "right record" note the
      page already prints: the wrong title, off the right album. Off Sparks Fly. */
-  { id: "pick-a-then-what-line-from-the-wrong-verse", name: "Wrong Turn", desc: "Pick the right line from the wrong verse", secret: true, icon: "placeholder" },
-  { id: "write-back-a-word-sung-only-once", name: "Just One Time", desc: "Write back a word she only ever sang once", secret: true, icon: "placeholder" },
+  { id: "pick-a-then-what-line-from-the-wrong-verse", name: "Wrong Turn", desc: "Pick the right line from the wrong verse", secret: true, icon: "wrongturn" },
+  { id: "write-back-a-word-sung-only-once", name: "Just One Time", desc: "Write back a word she only ever sang once", secret: true, icon: "shootingstar" },
   { id: "name-wrong-song-off-the-right-record", name: "Close Enough To Touch", desc: "Name the wrong song, but off the right record", secret: true, icon: "placeholder" },
   { id: "time-out-all-10-only-here-pages", name: "Never Heard Silence", desc: "Let all ten Only Here clocks run out without a card played", secret: true, icon: "spider" },
   { id: "finish-bonus-run-one-page-short-of-sweep",    name: "Almost Had It",    desc: "Finish one page shy of a clean sweep", secret: true, icon: "dart" },
