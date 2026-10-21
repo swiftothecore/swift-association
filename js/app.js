@@ -19448,20 +19448,20 @@ function applyChallengeRound(wrap) {
   if (currentChallenge.rule === "wordfx") {
     renderWordFx(wrap, currentWord, round);
   } else if (currentChallenge.rule === "flashwarp") {
-    // Are You Sure You're …Ready For It??? — max warp AND vanishing, constant from round 1.
+    // …Ready For It??? — max warp AND vanishing, constant from round 1.
     // The vanish timeout itself is armed in beginRoundClock (which knows the clock start).
     renderWordFx(wrap, currentWord, round, FLASHWARP_LEVEL);
   } else if (currentChallenge.rule === "devil") {
     if (devilFx) renderDevilFx(wrap, currentWord, devilFx);
   } else if (currentChallenge.rule === "tiny") {
-    // The Smallest Song Who Ever Lived — shrink, tilt, and offset the prompt, constant.
+    // The Smallest Song — shrink, tilt, and offset the prompt, constant.
     renderTinyWord(wrap, currentWord);
   } else if (currentChallenge.rule === "path") {
     renderPerkReveals();
   } else if (currentChallenge.rule === "accelerate") {
     roundSecondsOverride = accelSeconds(round);   // Shrinking Timer: shrink this page's clock
   } else if (currentChallenge.rule === "spite") {
-    // I Have No Experience With Home Invasion — this page's clock is the run-scoped value.
+    // Home Invasion — this page's clock is the run-scoped value.
     roundSecondsOverride = spiteSeconds;
   }
   renderChallengeProgress();
@@ -19546,7 +19546,7 @@ function renderImpostorBanner() {
     `<span class="chall-prog-name">🚩 ${impostorFlagged} caught</span>` +
     `<span class="chall-prog-count">${score - impostorFlagged} / ${currentChallenge.target || 7}</span>`;
 }
-// The Smallest Song Who Ever Lived: render the prompt word tiny, faint, tilted, and dropped
+// The Smallest Song: render the prompt word tiny, faint, tilted, and dropped
 // anywhere along the word line, then set it wandering and fading — every round, constant.
 // Display-only: matching reads currentWord from state, never the DOM. Reduced motion keeps
 // it still (no wander, no fade) but tiny, tilted and fainter still.

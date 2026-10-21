@@ -8556,7 +8556,7 @@
     }
   }
 
-  /* The Smallest Song Who Ever Lived challenge — the prompt word is shrunk to a pencil
+  /* The Smallest Song challenge — the prompt word is shrunk to a pencil
      scrawl, tilted, dropped anywhere along the line, and left wandering while its ink
      breathes nearly out (display only; matching reads state). Placement and fade are set
      per round as inline --tiny-* vars in renderTinyWord; the wander is NOT here: it is
