@@ -4,12 +4,11 @@
    The tile is the notebook page — cream paper, red margin rule, two feint lines — with the "13"
    inked over a highlighter blob and a star in the corner. Two of those take the Album Focus ink:
 
-   - the highlighter blob, DILUTED. A highlighter is a translucent ink, and the "13" strokes on
-     top of it are near-black, so a blob painted at full strength in reputation's black or
-     midnights' navy would swallow them. `highlighterTint` waters the ink toward the paper until
-     the blob AS COMPOSITED (the fill over cream, at the alpha it is drawn with) clears a
-     luminance floor, which is exactly what watering a marker down does. It keeps the hue, which
-     at 16px is the only thing telling reputation's blob from folklore's.
+   - the highlighter blob, LIGHTENED. The "13" strokes on top of it are near-black, so a blob
+     painted at full strength in reputation's black or midnights' navy would swallow them.
+     `highlighterTint` lifts the ink's lightness until the blob AS COMPOSITED (the fill over
+     cream, at the alpha it is drawn with) clears a luminance floor. It keeps the hue and the
+     chroma, which at 16px are the only things telling one dark ink's blob from another's.
    - the star, at FULL strength. It carries its own near-black outline, so it stays visible at
      any value, and it is the one element that shows the ink undiluted. That is also why it is
      the element the perfect tier gilds: PERFECT the album and a small leaf twinkle is set BESIDE
@@ -64,20 +63,60 @@ function onPaper(rgb) {
   return rgb.map((v, i) => v * BLOB_ALPHA + PAPER[i] * (1 - BLOB_ALPHA));
 }
 
-// Water the ink down toward the paper until the composited blob clears the floor. Luminance
-// rises monotonically with the mix, so a short bisection lands on the LEAST dilution that works:
-// the pale half of the palette comes back untouched and only the dark end actually moves.
+// Lift the ink's lightness until the composited blob clears the floor, keeping its hue and its
+// chroma. It used to be watered toward the paper instead, the way a real marker is, but the paper
+// is a warm cream and halfway between navy and cream is a dead blue-grey: midnights' blob came
+// out the colour of pencil lead. Raising OKLCH lightness alone turns navy into periwinkle and
+// brown into caramel, which is the ink read lighter rather than the ink read through dishwater.
+// A lightened colour can fall outside sRGB, so chroma is trimmed only as far as it takes to land
+// back in gamut. Lightness lifts luminance monotonically, so a short bisection lands on the
+// LEAST lift that works: the pale half of the palette comes back untouched.
+const toLin = (v) => { const s = v / 255; return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); };
+const toSrgb = (v) => 255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+function rgbToOklch(rgb) {
+  const [r, g, b] = rgb.map(toLin);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+  const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+  const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+  return [L, Math.hypot(A, B), Math.atan2(B, A)];
+}
+// Linear sRGB, unclamped, so the caller can tell whether the colour is in gamut.
+function oklchToLin([L, C, h]) {
+  const A = C * Math.cos(h), B = C * Math.sin(h);
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.2914855480 * B) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+  ];
+}
+function oklchToRgb([L, C, h]) {
+  let lo = 0, hi = C;
+  if (oklchToLin([L, C, h]).some((v) => v < 0 || v > 1)) {
+    for (let i = 0; i < 14; i++) {
+      const c = (lo + hi) / 2;
+      if (oklchToLin([L, c, h]).some((v) => v < 0 || v > 1)) hi = c; else lo = c;
+    }
+    C = lo;
+  }
+  return oklchToLin([L, C, h]).map((v) => toSrgb(Math.min(1, Math.max(0, v))));
+}
 export function highlighterTint(hex) {
   const rgb = hexToRgb(hex);
   if (!rgb) return FAVICON_BLOB;
   if (relLuminance(onPaper(rgb)) >= HL_FLOOR) return rgbToHex(rgb);
-  let lo = 0, hi = 1;
+  const [L0, C, h] = rgbToOklch(rgb);
+  let lo = L0, hi = 1;
   for (let i = 0; i < 14; i++) {
-    const t = (lo + hi) / 2;
-    const mixed = rgb.map((v, j) => v + (PAPER[j] - v) * t);
-    if (relLuminance(onPaper(mixed)) >= HL_FLOOR) hi = t; else lo = t;
+    const L = (lo + hi) / 2;
+    if (relLuminance(onPaper(oklchToRgb([L, C, h]))) >= HL_FLOOR) hi = L; else lo = L;
   }
-  return rgbToHex(rgb.map((v, j) => v + (PAPER[j] - v) * hi));
+  return rgbToHex(oklchToRgb([hi, C, h]));
 }
 
 // The star in the corner, drawn exactly the same way gilded or not: the ink, with its own
