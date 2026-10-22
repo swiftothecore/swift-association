@@ -2,7 +2,7 @@
 // Decorative layers never own the label, take pointer input, or enter the accessible name.
 import { CTA_LABELS, CTA_MARKS } from "./config.js";
 import { escapeHtml } from "./util.js";
-import { anniversaryArt } from "./anniversarycta.js";
+import { anniversaryArt, anniversaryWords } from "./anniversarycta.js";
 
 // mulberry32: fixed draws from load to load, so hand-scattered art never re-deals on reload,
 // without the lockstep patterns an index formula leaves between one property and the next.
@@ -459,18 +459,22 @@ const FINISH_ART = {
 const goldStroke = (words) => `<i class="cta-stroke"><span class="cta-stroke-copy"><span class="cta-copy-label">${words}</span><i class="cta-stroke-line"></i></span></i>`;
 
 export function ctaContentHTML(labelId = "", finish = "", dateKey = "") {
-  const opt = labelId ? CTA_LABELS[labelId] : null;
+  // A record's anniversary brings its own lyric (js/anniversarycta.js), forced over the chosen
+  // words, and wears the default pencil with it.
+  const lyric = anniversaryWords(finish);
+  const opt = labelId && !lyric ? CTA_LABELS[labelId] : null;
+  const plain = lyric || "Start writing";
   // No chosen words means the default, which wears the drawn pencil (the one mark that wiggles).
   const markId = opt ? opt.mark : "pencil";
   const mark = markId ? `<span class="cta-mark${opt ? "" : " cta-mark--pencil"}" aria-hidden="true">${CTA_MARKS[markId] || ""}</span>` : "";
-  const words = `${mark}${opt ? escapeHtml(opt.text) : "Start writing"}`;
+  const words = `${mark}${escapeHtml(opt ? opt.text : plain)}`;
   // An album-anniversary finish (js/anniversarycta.js) brings its own art, and two of them need
   // more than the clipped layer: Red's fringe and Lover's butterflies hang past the button's
   // edge, and Tortured Poets types the words out again a letter at a time. The birthday's candles
   // are her age on `dateKey`, the day the button is worn.
   const anniversary = anniversaryArt(finish, dateKey);
   if (anniversary) {
-    const text = opt ? opt.text : "Start writing";
+    const text = opt ? opt.text : plain;
     const typed = anniversary.label === "typed"
       ? `${mark}${[...text].map((ch, i) => `<span class="anv-ch" style="--i:${i}">${escapeHtml(ch)}</span>`).join("")}` : words;
     return `<span class="cta-fx" aria-hidden="true">${anniversary.fx}</span><span class="cta-label">${typed}</span>` +

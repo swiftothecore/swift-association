@@ -1,5 +1,5 @@
 // The dated Start writing button: sixteen finishes, one per studio album and one per Taylor's
-// Version, and the rule that puts each on the button on its record's release day; one for her
+// Version, each with its own lyric for the words, and the rule that puts each on the button on its record's release day; one for her
 // birthday, Iced for her; one for Christmas Day, Fresh off the baler; and one more, Thirteen
 // marks, for the 13th of every month.
 //
@@ -1020,30 +1020,40 @@ export const christmasFinishFor = (dateKey) => dateKey?.slice(5) === CHRISTMAS.m
 /* ---------- which finish, on which day ---------- */
 // Keyed by the TS_MILESTONES album name, so the release dates live in one table and a date fix
 // there moves the button with the margin note.
+//
+// Each row is [finish, drawing, words]. The words are a lyric from that record standing in for
+// "Start writing", and like the finish they are forced: on the day they replace whatever words
+// the player has chosen through Mastery, and the button goes back to its default pencil, since a
+// Mastery mark beside her lyric would be speaking for the wrong words. The four Taylor's Versions
+// take their line from the vault tracks, so their day says something the original's does not.
+// None may share a name with a charm or a CTA_LABELS entry, or the day reads as a repeat: that
+// ruled out Next Chapter, Let The Games Begin, Write What You Know, Write this down and more.
 const ANNIVERSARY_FINISHES = {
-  "Taylor Swift": ["anv-debut", debutPorch],
-  "Fearless": ["anv-fearless", fearless],
-  "Speak Now": ["anv-speaknow", speakCastle],
-  "Red": ["anv-red", red],
-  "1989": ["anv-1989", n1989],
-  "reputation": ["anv-rep", rep],
-  "Lover": ["anv-lover", lover],
-  "folklore": ["anv-folklore", fkStep],
-  "evermore": ["anv-evermore", evermoreFlannel],
-  "Midnights": ["anv-midnights", midnights],
-  "The Tortured Poets Department": ["anv-ttpd", ttpd],
-  "The Life of a Showgirl": ["anv-showgirl", showgirl],
+  "Taylor Swift": ["anv-debut", debutPorch, "I grabbed a pen"],               // Our Song
+  "Fearless": ["anv-fearless", fearless, "Once upon a time"],                  // Forever & Always
+  "Speak Now": ["anv-speaknow", speakCastle, "The start of an age"],          // Long Live
+  "Red": ["anv-red", red, "Tonight’s the night"],                             // 22
+  "1989": ["anv-1989", n1989, "Put it into words"],                          // You Are In Love
+  "reputation": ["anv-rep", rep, "I’ve got a list of names"],              // Look What You Made Me Do
+  "Lover": ["anv-lover", lover, "A fresh page on the desk"],                 // Cornelia Street
+  "folklore": ["anv-folklore", fkStep, "This is me trying"],                 // this is me trying
+  "evermore": ["anv-evermore", evermoreFlannel, "Write it down for me"],     // marjorie
+  "Midnights": ["anv-midnights", midnights, "I wrote a poem"],               // Sweet Nothing
+  "The Tortured Poets Department": ["anv-ttpd", ttpd, "At the starting line"], // Fresh Out The Slammer
+  "The Life of a Showgirl": ["anv-showgirl", showgirl, "So let’s get into it"], // Patient Zero
 };
 // The four Taylor's Versions, keyed the same way off their own TS_MILESTONES rows (kind "tv").
 const TV_FINISHES = {
-  "Fearless": ["anv-fearless-tv", fearlessTV],
-  "Red": ["anv-red-tv", redTV],
-  "Speak Now": ["anv-speaknow-tv", speakNowTV],
-  "1989": ["anv-1989-tv", n1989TV],
+  "Fearless": ["anv-fearless-tv", fearlessTV, "I see your writing"],         // Bye Bye Baby
+  "Red": ["anv-red-tv", redTV, "I’d write this in the sky"],              // The Very First Night
+  "Speak Now": ["anv-speaknow-tv", speakNowTV, "The story started"],        // Timeless
+  "1989": ["anv-1989-tv", n1989TV, "More than a chapter"],                // Suburban Legends
 };
 const BY_KIND = { album: ANNIVERSARY_FINISHES, tv: TV_FINISHES };
 const finishOf = (m) => BY_KIND[m.kind]?.[m.album]?.[0] || "";
-const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake], ["anv-christmas", balerTree]]);
+const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake], ["anv-christmas", balerTree]]
+  .map(([id, draw]) => [id, draw]));
+const WORDS = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES)].map(([id, , words]) => [id, words]));
 
 // The finish the button is forced into on `dateKey` (YYYY-MM-DD, the player's own day), or "" on
 // every other day. Every studio album's release day counts, and so does every Taylor's Version's.
@@ -1074,6 +1084,35 @@ export function anniversaryArt(finish, dateKey = "") {
   return draw ? draw(dateKey) : null;
 }
 
+// The lyric a record's finish puts on the button in place of the player's words, or "" for every
+// other finish (her birthday, Christmas and the 13th leave the words alone).
+export const anniversaryWords = (finish) => WORDS[finish] || "";
+
+// A record's lyric runs longer than "Start writing", and on a phone the button shares its row
+// with the dice, so the longest ("I’d write this in the sky") want about 295px of a 235px label.
+// Wrapped, they strand their last word on a second line and the button grows a third taller.
+// So the words, and only the words, are set down to fit on one line: the pencil keeps its drawn
+// size, since it is measured against the marks rather than the type. 0.75 is the floor: at 375px
+// the sky line needs 0.78 and the list of names 0.81, both still clean in the typewriter face. A
+// line that would need less wraps instead of shrinking past legibility.
+const LYRIC_MIN_SCALE = 0.75;
+function fitLyric(btn) {
+  const label = btn.querySelector(".cta-label");
+  if (!label || !anniversaryWords(btn.dataset.startbtn) || !btn.clientWidth) return;
+  label.style.fontSize = "";
+  label.style.whiteSpace = "nowrap";
+  const cs = getComputedStyle(btn);
+  const room = btn.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const mark = label.querySelector(".cta-mark");
+  const markW = mark ? mark.offsetWidth + parseFloat(getComputedStyle(mark).marginRight) : 0;
+  const need = label.offsetWidth;
+  if (need <= room) return;
+  const scale = (room - markW) / (need - markW);
+  if (scale < LYRIC_MIN_SCALE) { label.style.whiteSpace = ""; return; }
+  // A hair under the exact fit, so subpixel rounding in the face cannot tip it back onto two lines.
+  label.style.fontSize = `${(scale * 0.99).toFixed(3)}em`;
+}
+
 // Anything that has to measure the button once it is on the page. Red's fringe keeps one spacing
 // at every width, so it is hung by the button's width; the 13th's count and the birthday's
 // inscription and candles are laid beside the words, and Christmas's tag round them, so they are laid by where the label sits,
@@ -1085,6 +1124,7 @@ export function layoutAnniversaryArt(btn) {
     if (btn.querySelector(".ch-count")) layCount(btn);
     if (btn.querySelector(".bd-half")) layCake(btn);
     if (btn.querySelector(".nt-tag")) layTag(btn);
+    fitLyric(btn);
   };
   lay();
   if (watched.has(btn) || typeof ResizeObserver === "undefined") return;

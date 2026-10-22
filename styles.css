@@ -2735,7 +2735,10 @@
     position: relative; display: flex; align-items: center; gap: 10px;
     margin-top: 18px;
   }
-  .play-row .btn-primary.play-cta { flex: 1 1 auto; width: auto; margin: 0; }
+  /* min-width 0: an anniversary lyric is held to one line (fitLyric in js/anniversarycta.js), and
+     a flex item's automatic minimum is its content, so without it the long lines would widen
+     the button into the dice instead of being set down to fit the width it already has. */
+  .play-row .btn-primary.play-cta { flex: 1 1 auto; width: auto; margin: 0; min-width: 0; }
 
   /* The chance stamp: the CTA's box, squared off, and cut from board rather than inked.
      Kept on .btn-primary so it inherits the ink border, the hard shadow and the ink-fill hover
