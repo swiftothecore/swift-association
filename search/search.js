@@ -218,7 +218,10 @@ function prepareSearch(terms, mode) {
   return {
     mode, highlights: new Map(),
     terms: terms.map((term) => {
-      const ql = mode === "fuzzy" ? fuzzyQuery(term) : comparableToken(term).replace(/\s+/g, " ").trim();
+      // Contains reads the query the way fuzzy does, for the same reason: a line's words are
+      // held with their punctuation stripped, so "mr." or "(oh)" kept whole never sat inside one.
+      const ql = mode === "fuzzy" || mode === "contains" ? fuzzyQuery(term)
+        : comparableToken(term).replace(/\s+/g, " ").trim();
       if (mode === "fuzzy" || mode === "contains") {
         return { ql, minimum: ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN, scores: new Map() };
       }
@@ -267,6 +270,7 @@ function fuzzyTermRanges(line, term) {
 function containsTermRanges(line, term) {
   const { ql } = term;
   const ranges = [];
+  if (!ql) return ranges;   // all punctuation ("--"): an empty needle sits inside every word
   for (const tok of tokensForLine(line)) {
     const token = tok.text;
     let from = 0;
