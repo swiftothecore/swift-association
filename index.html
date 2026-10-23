@@ -2225,12 +2225,19 @@ if (location.pathname.endsWith('/index.html')) {
       <rect x="48" y="36" width="96" height="32" fill="#15120e"/>
       <!-- slip sheet behind the packs, catching a little light at the top -->
       <rect x="48" y="36" width="96" height="32" fill="url(#csSlip)"/>
-      <!-- the strand, drawn BEFORE the packs so they sit on top of it: the one
-           straight line that touches the bottom of both, which is where tape
-           actually runs. A bowed path laid over the reels reads as a stripe
-           across the window rather than as tape leaving two packs. -->
-      <path d="M48 66.2 L144 60.3" fill="none" stroke="#2b1e0d" stroke-width="2.8"/>
-      <path d="M48 65 L144 59.1" fill="none" stroke="#7a5a2b" stroke-width="0.5" opacity="0.4"/>
+      <!-- the two strands, drawn BEFORE the packs so they sit on top of them.
+           No tape runs between the packs: each strand drops out of the window
+           to the guide roller in its own bottom corner, on to the head. Both
+           reels turn clockwise when side A plays, so each strand leaves its
+           pack on the INNER underside and crosses beneath it on the way out.
+           Each line is the tangent from the corner roller (24,104 and 168,104)
+           to its pack, and the label's aperture clips it at the window edge.
+           The tape stands on edge in the shell, so from above it is a hairline,
+           not a ribbon. -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M81.4 62.2 L70.7 70 M111.9 59.8 L124.8 70" stroke="#2b1e0d" stroke-width="1.15"/>
+        <path d="M81.2 61.8 L70.5 69.6 M112.1 59.4 L125 69.6" stroke="#7a5a2b" stroke-width="0.4" opacity="0.45"/>
+      </g>
       <!-- LEFT pack: wound thick, so the run is past the middle of the song -->
       <circle cx="74" cy="52" r="12.6" fill="url(#csPack)"/>
       <g fill="none" stroke="#6b4d24" stroke-width="0.55" opacity="0.42">
@@ -2246,17 +2253,22 @@ if (location.pathname.endsWith('/index.html')) {
         <path d="M110.6 53.8 A7.7 7.7 0 0 1 120.5 44.7"/>
       </g>
       <path d="M111 59 A9.9 9.9 0 0 1 122.3 42.9" fill="none" stroke="#8a6631" stroke-width="0.7" opacity="0.5"/>
-      <!-- hubs: six-toothed, with the spindle hole through the middle -->
+      <!-- hubs: a moulded ring round a wide spindle hole, its six drive teeth
+           pointing INWARD to grip the deck's spindle. Teeth drawn outward from
+           a pinhole read as a wagon wheel rather than a reel. The hole goes
+           right through the shell, so it shows the dark of the desk below. -->
       <g>
         <circle cx="74" cy="52" r="7.5" fill="#e7dfca" stroke="#a99e83" stroke-width="1"/>
-        <path d="M77 52 H80.8 M75.5 54.6 L77.4 57.9 M72.5 54.6 L70.6 57.9 M71 52 H67.2 M72.5 49.4 L70.6 46.1 M75.5 49.4 L77.4 46.1" stroke="#8a7f66" stroke-width="1.8"/>
-        <circle cx="74" cy="52" r="2.4" fill="#15120e"/>
+        <circle cx="74" cy="52" r="5.5" fill="none" stroke="#b3a88d" stroke-width="0.5" opacity="0.7"/>
+        <circle cx="74" cy="52" r="3.5" fill="#1c140c" stroke="#8a7f66" stroke-width="0.5"/>
+        <path d="M77.38 53.95 L75.99 53.15 M74.00 55.90 L74.00 54.30 M70.62 53.95 L72.01 53.15 M70.62 50.05 L72.01 50.85 M74.00 48.10 L74.00 49.70 M77.38 50.05 L75.99 50.85" stroke="#d9d0b8" stroke-width="1.1"/>
         <path d="M69.6 47.6 A6.2 6.2 0 0 1 74 45.8" fill="none" stroke="#fbf6e8" stroke-width="1.1" opacity="0.7"/>
       </g>
       <g>
         <circle cx="118" cy="52" r="7.5" fill="#e7dfca" stroke="#a99e83" stroke-width="1"/>
-        <path d="M121 52 H124.8 M119.5 54.6 L121.4 57.9 M116.5 54.6 L114.6 57.9 M115 52 H111.2 M116.5 49.4 L114.6 46.1 M119.5 49.4 L121.4 46.1" stroke="#8a7f66" stroke-width="1.8"/>
-        <circle cx="118" cy="52" r="2.4" fill="#15120e"/>
+        <circle cx="118" cy="52" r="5.5" fill="none" stroke="#b3a88d" stroke-width="0.5" opacity="0.7"/>
+        <circle cx="118" cy="52" r="3.5" fill="#1c140c" stroke="#8a7f66" stroke-width="0.5"/>
+        <path d="M121.38 53.95 L119.99 53.15 M118.00 55.90 L118.00 54.30 M114.62 53.95 L116.01 53.15 M114.62 50.05 L116.01 50.85 M118.00 48.10 L118.00 49.70 M121.38 50.05 L119.99 50.85" stroke="#d9d0b8" stroke-width="1.1"/>
         <path d="M113.6 47.6 A6.2 6.2 0 0 1 118 45.8" fill="none" stroke="#fbf6e8" stroke-width="1.1" opacity="0.7"/>
       </g>
       <!-- the clear pane over the aperture: a thin lit edge and two streaks -->
@@ -2266,11 +2278,13 @@ if (location.pathname.endsWith('/index.html')) {
 
       <rect x="48" y="36" width="96" height="32" fill="url(#csWell)"/>
       <rect x="4" y="6" width="184" height="112" rx="10" fill="url(#csGloss)"/>
-      <!-- the paper insert, with the aperture cut out of it -->
-      <path d="M22 16 H170 Q174 16 174 20 V72 Q174 76 170 76 H22 Q18 76 18 72 V20 Q18 16 22 16 Z M50 38 H142 V66 H50 Z"
-            fill-rule="evenodd" fill="url(#csLabel)" stroke="#c2b394" stroke-width="0.9"/>
+      <!-- the paper insert, with the aperture cut out of it and its bottom-right
+           corner missing where it has lifted off the shell (the flap is drawn
+           further down, over the writing layer) -->
+      <path d="M22 16 H170 Q174 16 174 20 V68 L166 76 H22 Q18 76 18 72 V20 Q18 16 22 16 Z M50 38 H142 V66 H50 Z"
+            fill-rule="evenodd" fill="url(#csLabel)" stroke="#c2b394" stroke-width="0.9" stroke-linejoin="round"/>
       <!-- the card sits proud of the shell, so it casts a hairline of its own -->
-      <path d="M18 72 Q18 76 22 76 H170 Q174 76 174 72" fill="none" stroke="#100e0a" stroke-width="1.1" opacity="0.3"/>
+      <path d="M18 72 Q18 76 22 76 H166" fill="none" stroke="#100e0a" stroke-width="1.1" opacity="0.3"/>
       <!-- printed header band and side letter -->
       <path d="M22 16 H170 Q174 16 174 20 V20.9 H18 V20 Q18 16 22 16 Z" fill="#c76a7e" opacity="0.62"/>
       <path d="M18 20.9 H174" stroke="#a8536a" stroke-width="0.5" opacity="0.45"/>
@@ -2286,9 +2300,15 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- age: two faint foxing blooms -->
       <ellipse cx="36" cy="60" rx="5.2" ry="3.4" fill="#b39a6a" opacity="0.11"/>
       <ellipse cx="160" cy="30" rx="4" ry="5.6" fill="#b39a6a" opacity="0.09"/>
-      <!-- one lifted corner, curling off the shell -->
-      <path d="M174 74 Q174 76 170 76 L163 76 L174 65 Z" fill="#dfd3b4" stroke="#b3a685" stroke-width="0.7"/>
-      <path d="M163 76 L174 65" stroke="#8c8069" stroke-width="0.7" opacity="0.6"/>
+      <!-- one lifted corner, curling up off the shell. The paper is gone from
+           the corner, so the bare plastic shows there; the flap is the same
+           corner bent back about halfway over its hinge, so it is shorter than
+           the gap it left and shows its duller underside. The lamp is upper
+           left, so the flap throws its shadow down-right into that gap. Kept
+           small so the longest album line on the blue rule ends before it. -->
+      <path d="M166 76 L174 68 Q174.8 72.6 172.4 75 Q170 77 166 76 Z" fill="#000000" opacity="0.2"/>
+      <path d="M166 76 Q166.7 72.6 167.7 70.7 Q168.1 70 168.9 69.8 Q171.3 68.7 174 68 Z" fill="#d6c9a8" stroke="#ab9e7d" stroke-width="0.55" stroke-linejoin="round"/>
+      <path d="M166.7 75.3 L173.3 68.7" stroke="#8c8069" stroke-width="0.6" opacity="0.5"/>
 
       <!-- moulded ribs across the front of the shell, each a shadow with a lit lip -->
       <g>
@@ -2319,16 +2339,18 @@ if (location.pathname.endsWith('/index.html')) {
       <path d="M78.4 107.6 A3.4 3.4 0 0 1 82.6 106.9" fill="none" stroke="#6b6457" stroke-width="0.6" opacity="0.5"/>
       <path d="M108.4 107.6 A3.4 3.4 0 0 1 112.6 106.9" fill="none" stroke="#6b6457" stroke-width="0.6" opacity="0.5"/>
 
-      <!-- the four corner screws, each sunk in a moulded recess -->
+      <!-- the four corner screws, each sunk in a moulded recess. They sit in
+           the bare plastic outside the insert: a screw drawn over the card's
+           corner reads as a screw driven through the paper. -->
       <g>
-        <circle cx="16" cy="18" r="4.2" fill="#211e19" opacity="0.55"/>
-        <circle cx="16" cy="18" r="3" fill="url(#csScrew)"/><path d="M13.9 15.9 L18.1 20.1 M18.1 15.9 L13.9 20.1" stroke="#35312a" stroke-width="1"/>
-        <circle cx="176" cy="18" r="4.2" fill="#211e19" opacity="0.55"/>
-        <circle cx="176" cy="18" r="3" fill="url(#csScrew)"/><path d="M173.9 15.9 L178.1 20.1 M178.1 15.9 L173.9 20.1" stroke="#35312a" stroke-width="1"/>
-        <circle cx="16" cy="106" r="4.2" fill="#211e19" opacity="0.55"/>
-        <circle cx="16" cy="106" r="3" fill="url(#csScrew)"/><path d="M13.9 103.9 L18.1 108.1 M18.1 103.9 L13.9 108.1" stroke="#35312a" stroke-width="1"/>
-        <circle cx="176" cy="106" r="4.2" fill="#211e19" opacity="0.55"/>
-        <circle cx="176" cy="106" r="3" fill="url(#csScrew)"/><path d="M173.9 103.9 L178.1 108.1 M178.1 103.9 L173.9 108.1" stroke="#35312a" stroke-width="1"/>
+        <circle cx="12.6" cy="17.5" r="3.9" fill="#211e19" opacity="0.55"/>
+        <circle cx="12.6" cy="17.5" r="2.8" fill="url(#csScrew)"/><path d="M10.7 15.6 L14.5 19.4 M14.5 15.6 L10.7 19.4" stroke="#35312a" stroke-width="0.95"/>
+        <circle cx="179.4" cy="17.5" r="3.9" fill="#211e19" opacity="0.55"/>
+        <circle cx="179.4" cy="17.5" r="2.8" fill="url(#csScrew)"/><path d="M177.5 15.6 L181.3 19.4 M181.3 15.6 L177.5 19.4" stroke="#35312a" stroke-width="0.95"/>
+        <circle cx="12.6" cy="106.5" r="3.9" fill="#211e19" opacity="0.55"/>
+        <circle cx="12.6" cy="106.5" r="2.8" fill="url(#csScrew)"/><path d="M10.7 104.6 L14.5 108.4 M14.5 104.6 L10.7 108.4" stroke="#35312a" stroke-width="0.95"/>
+        <circle cx="179.4" cy="106.5" r="3.9" fill="#211e19" opacity="0.55"/>
+        <circle cx="179.4" cy="106.5" r="2.8" fill="url(#csScrew)"/><path d="M177.5 104.6 L181.3 108.4 M181.3 104.6 L177.5 108.4" stroke="#35312a" stroke-width="0.95"/>
       </g>
 
       <!-- played-often wear: two hairline scuffs worn into the moulding -->
