@@ -2572,9 +2572,11 @@ if (location.pathname.endsWith('/index.html')) {
        in which every bead landed the same way up is not a spill. There is no
        face-down state and there must never be one: these beads carry the same
        letter on BOTH faces, so whichever way one falls it reads.
-       One loose spill below the floss station, and its eight letters are the
+       One loose spill below the floss station, and its letters are the
        letters of a song, scrambled the way a tipped-out handful scrambles
-       them. The heart among them is what a kit actually ships. -->
+       them: eight on most days, seven or nine when an album's anniversary
+       has no eight-letter song (js/beads.js). The heart among them is what a
+       kit actually ships. -->
   <div class="desk-item di-beads-r">
     <svg viewBox="0 0 240 220" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -2636,19 +2638,12 @@ if (location.pathname.endsWith('/index.html')) {
       </defs>
       <!-- The spill itself. Every disc sits square to the lamp and only its
            stamp is turned, and no two are quite the same size, because these
-           came out of one tub and landed as they fell. -->
-      <g transform="translate(208 26)"><use href="#bdDisc"/><g transform="rotate(-18)"><text class="bead-letter bead-letter-lip" x="-0.11" y="4.96">G</text><text class="bead-letter" x="-0.11" y="4.06">G</text></g></g>
-      <g transform="translate(172 44) scale(1.04)"><use href="#bdDisc"/><circle r="10.5" fill="#d3bf90" opacity="0.16"/><g transform="rotate(12)"><text class="bead-letter bead-letter-lip" y="4.96">I</text><text class="bead-letter" y="4.06">I</text></g></g>
+           came out of one tub and landed as they fell. The lettered discs are
+           stamped into .bd-letters by js/beads.js, which picks the day's song and
+           deals its letters to the slots; this markup only holds the two beads
+           that carry no letter. -->
+      <g class="bd-letters"></g>
       <g transform="translate(140 34) rotate(-35)"><use href="#bdSide" fill="url(#bdSideA)"/></g>
-      <g transform="translate(190 78) scale(0.97)"><use href="#bdDisc"/><g transform="rotate(40)"><text class="bead-letter bead-letter-lip" y="4.96">A</text><text class="bead-letter" y="4.06">A</text></g>
-        <!-- the scuff every bead in a tub eventually collects -->
-        <path d="M3.4 6.6 q3 -1.4 5.4 -3.6" fill="none" stroke="#ffffff" stroke-width="0.6" opacity="0.4"/></g>
-      <g transform="translate(148 70) scale(1.02)"><use href="#bdDisc"/><g transform="rotate(-30)"><text class="bead-letter bead-letter-lip" y="4.96">D</text><text class="bead-letter" y="4.06">D</text></g></g>
-      <g transform="translate(114 94) scale(1.01)"><use href="#bdDisc"/><g transform="rotate(64)"><text class="bead-letter bead-letter-lip" y="4.96">A</text><text class="bead-letter" y="4.06">A</text></g></g>
-      <g transform="translate(134 110) scale(0.99)"><use href="#bdDisc"/><g transform="rotate(8)"><text class="bead-letter bead-letter-lip" y="4.96">C</text><text class="bead-letter" y="4.06">C</text></g></g>
-      <g transform="translate(98 130)"><use href="#bdDisc"/><circle r="10.5" fill="#cbb98e" opacity="0.13"/><g transform="rotate(-52)"><text class="bead-letter bead-letter-lip" x="-0.07" y="4.88">N</text><text class="bead-letter" x="-0.07" y="3.98">N</text></g></g>
-      <g transform="translate(74 126) scale(1.03)"><use href="#bdDisc"/><g transform="rotate(22)"><text class="bead-letter bead-letter-lip" x="-0.14" y="4.96">R</text><text class="bead-letter" x="-0.14" y="4.06">R</text></g>
-        <path d="M-7.2 -3.4 q2.6 -2.4 5.6 -3.4" fill="none" stroke="#8b8168" stroke-width="0.5" opacity="0.35"/></g>
       <!-- The heart bead every kit ships a handful of, stamped and inked the
            same way the letters are: smaller than a letter, because a heart is
            a mark rather than a character, and sitting on the bead's own centre

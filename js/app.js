@@ -15120,6 +15120,9 @@ async function loadData() {
   // so a guest run leaves her tape sitting on the desk where it belongs.
   try { (await import("./cassette.js")).install(taylorCorpus.allSongs); }
   catch (e) { console.warn("desk cassette failed to load", e); }
+  // Spill the desk beads, the same way and for the same reason.
+  try { (await import("./beads.js")).install(taylorCorpus.allSongs); }
+  catch (e) { console.warn("desk beads failed to load", e); }
 }
 
 /* ---------- The corpus (which catalogue the game is currently playing) ----------
@@ -16455,6 +16458,7 @@ function refreshDateSurfaces() {
   renderDayTape();
   window.deskCalendar?.refresh();
   window.deskCassette?.refresh();
+  window.deskBeads?.refresh();
   // Moving the date moves what "today" means to the daily gate, so the button's
   // played/unplayed coat and its countdown have to be redrawn with it.
   renderDailyButtonState();

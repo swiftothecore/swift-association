@@ -1138,6 +1138,7 @@ export function initDev(api) {
   const dateInput = mk("input", { type: "date", class: "dv-text", style: "width:124px",
     onchange: () => showDate(api.date.set(dateInput.value)) });
   const markSel = select(api.date.marked(), (m) => m.key, (m) => m.label);
+  let beadStep = -1;
   body.append(section("date",
     row(dateInput, btn("set", () => showDate(api.date.set(dateInput.value))),
         btn("-1 day", () => showDate(api.date.shift(-1))),
@@ -1150,7 +1151,20 @@ export function initDev(api) {
     row(btn("hemisphere", () => toast("seasons: " + api.date.hemisphere())),
         btn("north", () => toast("seasons: " + api.date.hemisphere("north"))),
         btn("south", () => toast("seasons: " + api.date.hemisphere("south"))),
-        btn("by zone", () => toast("seasons: " + api.date.hemisphere("auto"))))));
+        btn("by zone", () => toast("seasons: " + api.date.hemisphere("auto")))),
+    // The desk beads (js/beads.js) follow the date above. "beads" says what today spilled and
+    // why; "next spill" steps through every title they can spell, 7, 8 and 9 beads alike,
+    // which is the quickest way to look over the centring and the two flexed layouts.
+    row(btn("beads", () => {
+      const s = window.deskBeads?.shown();
+      toast(s ? `beads: ${s.title} (${s.beads.length})${s.why ? " for " + s.why : ""}, dealt ${s.deal}` : "beads: not spilled");
+    }), btn("next spill", () => {
+      const all = window.deskBeads?.titles() || [];
+      if (!all.length) return toast("beads: no titles");
+      beadStep = (beadStep + 1) % all.length;
+      const s = window.deskBeads.spell(all[beadStep].title);
+      toast(`beads ${beadStep + 1}/${all.length}: ${s.title} (${s.beads.length}), dealt ${s.deal}`);
+    }))));
 
   // ---- Daily -----------------------------------------------------------------
   // "preview album pool" dumps an anniversary daily to the console without playing it: the

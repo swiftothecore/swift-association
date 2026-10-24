@@ -701,6 +701,9 @@
     width: 240px; top: 27%; right: 30px;
     filter: drop-shadow(1.5px 3px 2px rgba(46,32,14,0.32)) saturate(0.92);
   }
+  /* js/beads.js stamps the day's letters; until it has, the handful stays off the desk rather
+     than showing a heart and an empty rim with nothing spilled round them. */
+  .di-beads-r svg:not(.is-spilled) { visibility: hidden; }
   .desk-items .bead-letter {
     font: 700 14px "Courier Prime", monospace;
     fill: #2e2b26; text-anchor: middle; opacity: 0.92;
