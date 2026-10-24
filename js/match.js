@@ -95,6 +95,9 @@ export const FALSE_FRIENDS = {
   // And through the stem-changing alternates in wordVariants: the doubled consonant (let +
   // t + er) and the dropped "e" (hole - e + y, move - e + ies). 6 of hole's 14 songs were
   // "holy", Holy Ground among them, and "letter" put Tim McGraw on a page for "let".
+  // babe is the worst of them: 80 of its 101 songs only sang "baby", which made it a second,
+  // easier page for the word "baby" rather than a word of its own. It keeps 21 songs.
+  babe:   ["baby", "babies", "baby's"],                                         // baby
   hole:   ["holy"],                                                             // holy
   let:    ["letter", "letters"],                                                // letter
   move:   ["movie", "movies"],                                                  // movie
