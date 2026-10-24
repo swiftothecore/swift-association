@@ -47,13 +47,18 @@
 // does nothing. The SVG stays hidden until the first spill is written, so the player never sees
 // an empty handful.
 
-import { STUDIO_ALBUMS, TS_MILESTONES } from "./config.js";
+import { STUDIO_ALBUMS, TS_MILESTONES, ALBUM_COLORS } from "./config.js";
 import { mulberry32, dailySeed } from "./util.js";
 import { settingsTodayKey } from "./storage.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const svg = document.querySelector(".di-beads-r svg");
 const layer = svg && svg.querySelector(".bd-letters");
+// The heart bead is inked in the era colour of the album the song came off, so the one bead
+// carrying a colour belongs to the song on the desk. The grey in the markup is folklore's, the
+// album cardigan is from, and only shows if a spill has no album to name.
+const heart = svg && svg.querySelector(".bd-heart");
+const HEART_FALLBACK = "#9b9b9b";
 
 const STUDIO = new Set(STUDIO_ALBUMS);
 const DAILY_COUNT = 8;
@@ -221,6 +226,7 @@ function spill(song, rng) {
   if (!slots || !layer) return;
   const deal = scramble(song.beads, slots, rng);
   layer.replaceChildren(...slots.map((slot, i) => stampBead(slot, deal[i])));
+  if (heart) heart.setAttribute("fill", ALBUM_COLORS[song.album] || HEART_FALLBACK);
   shown = { ...song, deal: deal.join("") };
   svg.classList.add("is-spilled");
 }
@@ -268,7 +274,8 @@ export function install(songs) {
     spell(title) {
       const beads = beadsFor(title);
       if (!LAYOUTS[beads.length]) return null;
-      spill({ title, beads, album: "", why: "dev" }, mulberry32(dailySeed("beads-dev:" + title)));
+      const known = [...byAlbum.values()].flat().find((e) => e.title === title || e.beads === beads);
+      spill({ title, beads, album: known ? known.album : "", why: "dev" }, mulberry32(dailySeed("beads-dev:" + title)));
       return shown;
     },
   };
