@@ -3763,103 +3763,198 @@
     letter-spacing: 0; text-transform: none; color: var(--ink); line-height: 0.85; margin-bottom: 1px;
   }
   .chall-beaten-perf { display: block; margin-top: 2px; color: #9a7a2e; }
-  .chall-layout { display: grid; grid-template-columns: 247px 1fr; gap: 0; }
+  /* ---- the tally: how many of the roster are beaten, said once, at the top ---- */
+  .mx-tally { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .mx-tally b { font-family: var(--hand); font-weight: 700; font-size: calc(44px + var(--text-size-adjust)); line-height: 0.8; color: var(--ink); }
+  .mx-tally-of {
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--ink-soft); line-height: 1.5;
+  }
+  .mx-tally-sub { display: block; opacity: 0.72; }
 
-  /* ---- left: the contents list ---- */
-  /* The column holds the divider + tally still; only .chall-list scrolls, so the
-     notebook page never grows and you browse challenges within a fixed frame. The list's
-     cap is what sets how tall the page stands (fitPeek in app.js reads it back as its
-     budget, then snaps down to a half-row peek), and 350px is the masthead, page head and
-     tally with about 25px of desk left under the page, so a screen shows as many
-     challenges as it can hold rather than stopping short with a band of empty desk below. */
-  .chall-col {
-    display: flex; flex-direction: column; min-height: 0;
-    padding-left: 2px; padding-right: 16px;
-    border-right: 1px solid rgba(60,40,18,0.16);
+  /* ---- the shelf: a cassette per difficulty (see mixtapeSVG in app.js) ----
+     Flat colour and ink edges like the tape glyphs they grew out of, and like the Play
+     sticker, a flat offset shadow rather than a blurred one: these are stationery objects
+     on the page, not rendered ones. Each tape leans its own way; the open one is lifted
+     off the shelf with its tier's colour laid under it, which is what ties it to the
+     J-card below. */
+  .mx-shelf {
+    display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 16px;
+    padding: 12px 6px 0; margin: 0 0 6px;
   }
-  /* Soft edge fade signals there's more to scroll: the list dissolves into the
-     page on whichever edge has hidden content. --fade-top/--fade-bot are driven
-     by JS (wired in renderChallengesPage) so a fade only shows where it's true;
-     the bottom starts faded as a sensible pre-JS default for the full list. */
-  .chall-list {
-    overflow-y: auto; max-height: calc(100vh - 350px); padding-right: 2px; margin-right: -14px; scrollbar-gutter: stable;
-    /* The list is pulled left and padded back by the same amount: content lands where
-       .chall-col puts it while the scroll surface reaches into the unused left gutter. */
-    padding-left: 14px; margin-left: -14px;
-    --fade-top: 0px; --fade-bot: 30px;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
-            mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bot)), transparent 100%);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(60,40,18,0.26) transparent;
+  .mx-tape {
+    --tc: #2b2722; --lab: #f4ecd8;
+    position: relative; display: block; padding: 0 0 13px; margin: 0; background: none; border: 0;
+    color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transform: rotate(var(--lean, 0deg));
+    transition: transform 0.24s cubic-bezier(.3, 1.35, .5, 1);
   }
-  /* The default scrollbar lays a white trough down the page, which on ruled paper reads
-     as a strip of something else taped over the notebook. Track goes transparent so the
-     rules run under it; the thumb is just a soft graphite bar, the same ink the divider
-     and the tally rule are drawn in, darkening a little under the cursor. */
-  .chall-list::-webkit-scrollbar { width: 8px; }
-  .chall-list::-webkit-scrollbar-track { background: transparent; }
-  .chall-list::-webkit-scrollbar-thumb {
-    background: rgba(60,40,18,0.26); border-radius: 4px;
+  .mx-tape:nth-child(5n+1) { --lean: -2.2deg; }
+  .mx-tape:nth-child(5n+2) { --lean: 1.3deg; }
+  .mx-tape:nth-child(5n+3) { --lean: -0.7deg; }
+  .mx-tape:nth-child(5n+4) { --lean: 1.9deg; }
+  .mx-tape:nth-child(5n+5) { --lean: -1.4deg; }
+  .mx-tape:hover { transform: translateY(-3px) rotate(calc(var(--lean) * 0.5)); }
+  .mx-tape.is-open { transform: translateY(-9px) rotate(calc(var(--lean) * 0.4)); cursor: default; }
+  .mx-tape:focus-visible { outline: none; }
+  .mx-tape:focus-visible .mx-cass { outline: 1.5px dashed var(--ink); outline-offset: 4px; border-radius: 9px; }
+  /* the open tape's mark: its colour laid on the page under it, the J-card's spine in miniature */
+  .mx-tape::after {
+    content: ""; position: absolute; left: 22%; right: 22%; bottom: 0; height: 5px; border-radius: 3px;
+    background: var(--tc); opacity: 0; transform: scaleX(0.4); transition: opacity 0.2s, transform 0.24s ease;
   }
-  .chall-list::-webkit-scrollbar-thumb:hover { background: rgba(60,40,18,0.42); }
-  .chall-item {
-    position: relative; display: grid; grid-template-columns: 1fr 20px;
-    align-items: center; column-gap: 6px; width: 100%;
-    padding: 0 8px 0 4px; min-height: 40px;
-    background: none; border: none; border-radius: 2px; text-align: left;
-    font: inherit; color: var(--ink); transition: background 0.12s;
+  .mx-tape.is-open::after { opacity: 0.8; transform: scaleX(1); }
+  .mx-tape--t1 { --tc: #4f7a45; }
+  .mx-tape--t2 { --tc: #cd8a2c; }
+  .mx-tape--t3 { --tc: #b23a3a; }
+  .mx-tape--t4 { --tc: #5c1a1a; }
+  .mx-tape--t0 { --tc: #b3a584; }
+  .mx-tape--pin { --tc: var(--blue-pencil); }
+
+  .mx-cass { display: block; width: 100%; height: auto; overflow: visible; }
+  .mx-cass text { font-family: var(--hand); }
+  .mx-shell { fill: var(--tc); stroke: #2b2722; stroke-width: 1.6; }
+  .mx-label { fill: var(--lab); stroke: rgba(43,39,34,0.45); stroke-width: 1; }
+  .mx-band { fill: color-mix(in srgb, var(--tc) 30%, var(--lab)); }
+  .mx-rule { fill: none; stroke: rgba(43,39,34,0.2); stroke-width: 0.8; }
+  .mx-side { font-family: var(--type) !important; font-size: 7.4px; font-weight: 700; letter-spacing: 1.3px; fill: #6b6457; }
+  .mx-word { font-size: 21px; font-weight: 700; fill: #2b2722; }
+  .mx-num { font-size: 21px; font-weight: 700; fill: #2b2722; }
+  .mx-of { font-size: 14px; font-weight: 400; fill: #6b6457; }
+  .mx-tape.is-full .mx-num, .mx-tape.is-full .mx-of { fill: #9a7a2e; }
+  .mx-win { fill: #2b2722; stroke: #1d1a17; stroke-width: 1.2; }
+  .mx-pack { fill: #8b5e3f; stroke: #5e3d28; stroke-width: 0.8; }
+  .mx-hub { fill: var(--lab); stroke: #1d1a17; stroke-width: 1; }
+  .mx-tooth { fill: none; stroke: #2b2722; stroke-width: 1.4; stroke-linecap: round; }
+  .mx-screw { fill: rgba(0,0,0,0.14); stroke: rgba(0,0,0,0.42); stroke-width: 0.9; }
+  .mx-screw-slot { fill: none; stroke: rgba(0,0,0,0.5); stroke-width: 0.9; stroke-linecap: round; }
+  .mx-foot { fill: rgba(0,0,0,0.15); stroke: rgba(0,0,0,0.38); stroke-width: 1; stroke-linejoin: round; }
+  .mx-hole { fill: rgba(0,0,0,0.42); }
+  .mx-shadow { fill: rgba(43,39,34,0.17); }
+  /* the pinned mix: a home-made tape, cream shell and blue pencil, never a difficulty colour */
+  .mx-tape--pin .mx-shell { fill: #e6dcc4; }
+  .mx-tape--pin .mx-band { fill: color-mix(in srgb, var(--blue-pencil) 16%, var(--lab)); }
+  .mx-tape--pin .mx-word { fill: var(--blue-pencil); }
+  /* unrated: a blank shell in dashed pencil, the same ghost the unrated tape glyph is */
+  .mx-tape--t0 .mx-shell { fill: color-mix(in srgb, var(--paper) 70%, #d3c7a8); stroke: #b3a584; stroke-dasharray: 4 3; }
+  .mx-tape--t0 .mx-word { font-style: italic; fill: #8d8468; }
+  /* the cellophane over a tape Mastery still holds shut */
+  .mx-cello { stroke: rgba(255,255,255,0.55); stroke-width: 1; }
+  .mx-cello-wash { fill: rgba(255,255,255,0.13); }
+  .mx-cello-line { stroke: rgba(255,255,255,0.32); stroke-width: 1.5; }
+  .mx-glare { fill: none; stroke: rgba(255,255,255,0.72); stroke-width: 1.6; stroke-linecap: round; }
+  /* the Mastery level, on the same gold sticker stock as Play */
+  .mx-sticker {
+    position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%) rotate(-4deg); white-space: nowrap;
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; padding: 3px 7px 2px; color: #2b2722; background: #efb73e;
+    border: 1.5px solid #2b2722; border-radius: 2px; box-shadow: 2px 2px 0 rgba(43,39,34,0.2);
   }
-  .chall-item:hover { background: rgba(43,39,34,0.05); }
-  .chall-item.selected { background: rgba(39,69,96,0.10); }
-  /* A carriage-return shape turning into the selected title. It is a real `.charm`, so the
-     rounded ink and subtle turbulence wobble are the achievement treatment rather than a
-     lookalike CSS texture. Its highlighter swipe is omitted here: at 19px it read as a circle. */
-  .chall-item > .chall-selector-arrow {
-    position: absolute; z-index: 2; left: -16px; top: 50%;
-    width: 19px; height: 19px; color: #943338;
-    opacity: 0; pointer-events: none; transform: translateY(-50%) rotate(-4deg);
+  :root[data-theme="dark"] .mx-tape { --lab: #d2c6ab; }
+  :root[data-theme="dark"] .mx-shell { stroke: #14110d; }
+  :root[data-theme="dark"] .mx-shadow { fill: rgba(0,0,0,0.38); }
+  :root[data-theme="dark"] .mx-tape--pin .mx-shell { fill: #9c9179; }
+  :root[data-theme="dark"] .mx-tape--pin .mx-word { fill: #274560; }
+  :root[data-theme="dark"] .mx-tape--pin .mx-band { fill: color-mix(in srgb, #274560 16%, var(--lab)); }
+  :root[data-theme="dark"] .mx-tape--t0 .mx-shell { fill: color-mix(in srgb, var(--paper) 80%, #b3a584); stroke: #8d8468; }
+  :root[data-theme="dark"] .mx-sticker { background: #e0a83a; box-shadow: 2px 2px 0 rgba(0,0,0,0.35); }
+
+  /* ---- the J-card: the open tape's insert, folded out under the shelf ----
+     Spine across the top in the tier's colour, tracklist on the left panel, and the selected
+     track's card (.chall-detail, exactly as before) on the right. The card is tinted the
+     faintest wash of the tier so the two read as one object. Nothing inside scrolls: a tier
+     is at most thirteen tracks, and the page grows to hold them. */
+  .mx-jcard {
+    --tc: #4f7a45;
+    position: relative; margin: 6px 0 6px; transform-origin: 50% 0;
+    background: color-mix(in srgb, var(--tc) 6%, var(--paper));
+    border: 1.5px solid color-mix(in srgb, var(--ink) 55%, transparent); border-radius: 3px;
+    box-shadow: 3px 4px 0 rgba(43,39,34,0.1);
   }
-  .chall-item > .chall-selector-arrow::before { display: none; }
-  .chall-item.selected .chall-selector-arrow { opacity: 1; }
-  .chall-item-select {
-    grid-column: 1; min-width: 0; padding: 8px 0; border: none; background: transparent;
+  :root[data-theme="dark"] .mx-jcard { background: color-mix(in srgb, var(--tc) 9%, var(--paper)); box-shadow: 3px 4px 0 rgba(0,0,0,0.3); }
+  .mx-jcard.is-unfolding { animation: mxUnfold 0.28s cubic-bezier(.2, .8, .3, 1); }
+  @keyframes mxUnfold { from { transform: translateY(-8px) scaleY(0.97); } }
+  .mx-spine {
+    display: flex; align-items: center; gap: 10px; padding: 7px 14px 6px;
+    background: var(--tc); color: #f4ecd8; border-radius: 1.5px 1.5px 0 0;
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; line-height: 1.2;
+  }
+  /* Cream lettering clears 4.5:1 on green, red and oxblood but not on the orange or the unrated
+     khaki, which take ink instead. */
+  .mx-jcard--t2 .mx-spine, .mx-jcard--t0 .mx-spine { color: #2b2722; }
+  .mx-spine-word { display: inline-flex; align-items: center; gap: 6px; }
+  .mx-spine-word .chall-pin-svg { width: 13px; height: 13px; }
+  .mx-spine-count { margin-left: auto; font-weight: 400; letter-spacing: 1px; text-transform: none; opacity: 0.92; }
+  .mx-jcard-body { display: grid; grid-template-columns: 240px minmax(0, 1fr); }
+  .mx-tracks { padding: 10px 10px 14px 10px; border-right: 1.5px dashed color-mix(in srgb, var(--ink) 26%, transparent); min-width: 0; }
+  .mx-side {
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--ink-soft); margin: 4px 0 3px 5px;
+  }
+  .mx-track + .mx-side { margin-top: 12px; }
+  .mx-track {
+    position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) 22px;
+    align-items: center; column-gap: 4px; min-height: 34px; padding: 0 4px 0 5px;
+    border-radius: 2px; transition: background 0.12s;
+  }
+  .mx-track:hover { background: rgba(43,39,34,0.05); }
+  .mx-track.selected { background: rgba(39,69,96,0.10); }
+  :root[data-theme="dark"] .mx-track:hover { background: rgba(236,229,214,0.05); }
+  :root[data-theme="dark"] .mx-track.selected { background: rgba(116,171,225,0.14); }
+  .mx-track-no { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); }
+  .mx-track-select {
+    grid-column: 2; min-width: 0; padding: 6px 0; border: none; background: transparent;
     text-align: left; font: inherit; color: inherit; cursor: pointer;
   }
-  .chall-item-select:focus-visible { outline: 1px dashed #274560; outline-offset: 2px; border-radius: 2px; }
-  .chall-item-num { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); text-align: right; }
-  .chall-item-name { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
-  .chall-item.selected .chall-item-name { color: #1f3a52; }
+  .mx-track-select:focus-visible { outline: 1px dashed #274560; outline-offset: 2px; border-radius: 2px; }
+  .mx-track-name {
+    display: block; font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust));
+    line-height: 1.02; color: var(--ink); overflow-wrap: break-word;
+  }
   /* Selection is said in navy because the unselected names are plain --ink; on the night page
-     --ink is cream, so the navy that used to read as "this one" read as 1.26:1, i.e. as nothing.
-     Lifted to the file's dark denim, which is the same hue the light navy is, arriving from the
-     other side of the paper. */
-  :root[data-theme="dark"] .chall-item.selected .chall-item-name { color: #74abe1; }
-  .chall-item-mark { grid-column: 2; grid-row: 1; display: flex; justify-content: center; }
+     --ink is cream, so it lifts to the dark denim, the same hue arriving from the other side. */
+  .mx-track.selected .mx-track-name { color: #1f3a52; }
+  :root[data-theme="dark"] .mx-track.selected .mx-track-name { color: #74abe1; }
+  .mx-track.is-locked .mx-track-name { color: var(--ink-soft); }
+  .mx-track.is-locked .mx-track-no { color: #b3a993; }
+  .mx-track.is-locked .mx-track-mark { color: #c4bca9; }
+  :root[data-theme="dark"] .mx-track.is-locked .mx-track-no,
+  :root[data-theme="dark"] .mx-track.is-locked .mx-track-mark { color: #6f6656; }
+  .mx-track-mark { grid-column: 3; grid-row: 1; display: flex; justify-content: center; }
+  /* The progress mark owns the quiet state. Hover gives its square to a pin, keeping the list
+     to one deliberate action at a time; keyboard focus reveals the pin only when the pin itself
+     is reached, so selecting a track does not leave the icon showing. */
+  .mx-track-pin {
+    grid-column: 3; grid-row: 1; z-index: 1; display: flex; align-items: center; justify-content: center;
+    justify-self: center; width: 24px; height: 24px; padding: 0; color: #50677c; background: rgba(245,239,225,0.86);
+    border: 1px dashed rgba(39,69,96,0.48); border-radius: 50%; cursor: pointer; opacity: 0;
+    transform: rotate(2deg) scale(0.76); transition: transform 0.12s, background 0.12s;
+  }
+  .mx-track:hover .mx-track-mark, .mx-track:has(.mx-track-pin:focus-visible) .mx-track-mark { opacity: 0; }
+  .mx-track:hover .mx-track-pin, .mx-track-pin:focus-visible { opacity: 1; transform: rotate(2deg) scale(1); }
+  .mx-track-pin:hover, .mx-track-pin:focus-visible { color: #1f3a52; background: #e7eef3; border-style: solid; outline: none; }
+  .mx-track-pin.is-pinned { width: 20px; height: 20px; color: #9b2f35; background: #f4d9d8; border-color: #b64a4f; border-style: solid; }
+  .mx-track-pin.is-pinned .chall-pin-svg { display: none; }
+  .mx-track-pin.is-pinned .chall-unpin-svg { display: block; }
+  .mx-track-pin:disabled { color: #aaa18f; background: rgba(245,239,225,0.76); border-color: #c9c0ad; cursor: default; }
+  :root[data-theme="dark"] .mx-track-pin { color: var(--blue-pencil); background: var(--paper); border-color: color-mix(in srgb, var(--blue-pencil) 60%, transparent); }
+  :root[data-theme="dark"] .mx-track-pin:hover, :root[data-theme="dark"] .mx-track-pin:focus-visible { color: #cfe0ef; background: #2c3c4c; }
+  :root[data-theme="dark"] .mx-track-pin.is-pinned { color: #f0b3b0; background: #4a2626; border-color: #b0605c; }
+  :root[data-theme="dark"] .mx-track-pin:disabled { color: #6f6656; background: var(--paper); border-color: #5a5246; }
+  /* Without hover the pin can't borrow the mark's square on demand, and laid permanently over
+     it the pin would hide every tick on the tape. So on touch it gets a column of its own. */
+  @media (hover: none) {
+    .mx-track { grid-template-columns: 24px minmax(0, 1fr) 22px 28px; }
+    .mx-track-pin { grid-column: 4; opacity: 1; transform: rotate(2deg) scale(1); }
+    .mx-track:hover .mx-track-mark { opacity: 1; }
+  }
+  .mx-jcard .chall-detail { padding: 16px 18px 18px 20px; }
   .chall-mark-svg { width: 20px; height: 20px; display: block; }
   /* The token mark. Inline-block with a text-relative nudge so it sits on the line wherever a
      sentence mentions a token, and in currentColor so it inks itself from its surroundings. */
   .chall-ticket-svg { width: 21px; height: 14px; display: inline-block; vertical-align: -0.24em; color: currentColor; }
-  /* The progress mark owns the quiet state. Hover gives its small right-hand square to a pin,
-     keeping the list to one deliberate action at a time. Keyboard focus reveals the pin only
-     when the pin itself is reached, so selecting a challenge does not leave the icon showing. */
-  .chall-item-pin {
-    grid-column: 2; grid-row: 1; z-index: 1; display: flex; align-items: center; justify-content: center;
-    width: 24px; height: 24px; padding: 0; color: #50677c; background: rgba(245,239,225,0.86);
-    border: 1px dashed rgba(39,69,96,0.48); border-radius: 50%; cursor: pointer; opacity: 0;
-    transform: rotate(2deg) scale(0.76); transition: transform 0.12s, background 0.12s;
-  }
-  .chall-item:hover .chall-item-mark, .chall-item:has(.chall-item-pin:focus-visible) .chall-item-mark { opacity: 0; }
-  .chall-item:hover .chall-item-pin, .chall-item-pin:focus-visible { opacity: 1; transform: rotate(2deg) scale(1); }
-  .chall-item-pin:hover, .chall-item-pin:focus-visible { color: #1f3a52; background: #e7eef3; border-style: solid; outline: none; }
-  .chall-item-pin.is-pinned {
-    width: 20px; height: 20px; color: #9b2f35; background: #f4d9d8;
-    border-color: #b64a4f; border-style: solid;
-  }
   .chall-unpin-svg { display: none; width: 14px; height: 14px; }
-  .chall-item-pin.is-pinned .chall-pin-svg { display: none; }
-  .chall-item-pin.is-pinned .chall-unpin-svg { display: block; }
-  .chall-item-pin:disabled { color: #aaa18f; background: rgba(245,239,225,0.76); border-color: #c9c0ad; cursor: default; }
-  @media (hover: none) { .chall-item-pin { opacity: 1; transform: rotate(2deg) scale(1); } }
 
   /* difficulty: cassette tapes, coloured by tier (green → orange → red) */
   .chall-tapes { display: inline-flex; align-items: center; gap: 3px; }
@@ -3875,44 +3970,12 @@
   .chall-tapes.t4 .tape-label { fill: #efe7d4; }
   .chall-tapes.t4 .tape-reel  { stroke: #efe7d4; }
 
-  /* difficulty groups in the list */
-  .chall-group + .chall-group { margin-top: 14px; }
-  .chall-group-head {
-    display: flex; align-items: center; gap: 8px;
-    padding: 0 4px 5px; margin-bottom: 4px;
-    border-bottom: 1px dashed #c7ba9b;
-  }
-  .chall-group-label {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.6px;
-    text-transform: uppercase; color: var(--ink-soft);
-  }
-  .chall-group-count {
-    margin-left: auto; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: #b3a584;
-  }
-  /* brutal tier group-head: oxblood accent on the divider + label */
-  .chall-group-head.t4 { border-bottom-color: color-mix(in srgb, var(--red-pen) 62%, var(--paper)); }
-  .chall-group-head.t4 .chall-group-label { color: var(--red-pen); }
-  /* Pinning is a small personal shortlist, not a new completion tier. It gets blue pencil
-     rather than a cassette colour so it cannot be mistaken for difficulty. */
-  .chall-group--pinned { margin-bottom: 16px; }
-  .chall-group-head--pinned { border-bottom-color: rgba(39,69,96,0.42); }
-  .chall-group-head--pinned .chall-group-label { color: var(--blue-pencil); }
-  .chall-group-head--pinned .chall-pin-svg { width: 17px; height: 17px; color: var(--blue-pencil); }
   /* tier 0 "unrated" — placeholder while a freshly-built challenge's real difficulty is
      decided. A single ghosted, dashed cassette; the group sits last in the list. */
   .chall-tapes.t0 { opacity: 0.8; }
   .chall-tapes.t0 .tape-shell { fill: none; stroke: #b3a584; stroke-dasharray: 2.4 1.8; }
   .chall-tapes.t0 .tape-label { fill: #d3c7a8; }
   .chall-tapes.t0 .tape-reel  { stroke: #b3a584; }
-  .chall-group-head.t0 { border-bottom-color: #cfc3a4; }
-  .chall-group-head.t0 .chall-group-label { color: #a9a081; font-style: italic; }
-  .chall-item.is-locked .chall-item-name { color: var(--ink-soft); }
-  .chall-item.is-locked .chall-item-num { color: #c7bfac; }
-  .chall-item.is-locked .chall-item-mark { color: #c4bca9; }
-  .chall-tally {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.6px; color: var(--ink-soft);
-    text-align: center; margin-top: 10px; padding-top: 9px; border-top: 1px dashed #c7ba9b;
-  }
 
   /* ---- right: the selected challenge ---- */
   .chall-detail { padding-left: 22px; min-width: 0; }
@@ -4285,12 +4348,19 @@
     /* the confirm's two actions get a full-width row each, which is the better tap
        target anyway in a column this narrow */
     .chall-return-actions button { flex: 1 1 100%; justify-content: center; }
-    .chall-layout { grid-template-columns: 1fr; }
-    .chall-col { border-right: none; border-bottom: 1px solid rgba(60,40,18,0.16); padding-bottom: 8px; margin-bottom: 14px; }
-    .chall-list { padding-right: 0; margin-right: 0; padding-left: 14px; margin-left: -14px; }
-    .chall-detail { padding-left: 0; }
+    /* Two to a row, three once a pinned or unrated tape makes five; a short last row is
+       centred under the full ones rather than left hanging at the margin. */
+    .mx-shelf { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 18px; padding: 10px 10px 0; }
+    .mx-shelf > .mx-tape { flex: 0 0 calc((100% - 18px) / 2); }
+    .mx-shelf--many { gap: 10px 12px; }
+    .mx-shelf--many > .mx-tape { flex-basis: calc((100% - 24px) / 3); }
+    .mx-jcard-body { grid-template-columns: 1fr; }
+    .mx-tracks { border-right: 0; border-bottom: 1.5px dashed color-mix(in srgb, var(--ink) 26%, transparent); }
+    .mx-jcard .chall-detail { padding: 16px 14px 18px; }
   }
   @media (prefers-reduced-motion: reduce) {
+    .mx-tape, .mx-tape::after { transition: none; }
+    .mx-jcard.is-unfolding { animation: none; }
     .chall-go { transform: none; }
     .chall-go:active { transform: translateY(1px); }
   }

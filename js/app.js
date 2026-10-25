@@ -6561,9 +6561,8 @@ function renderMasteryPage() {
       else if (door) door.focus();
     });
   });
-  // The super-hard vault's door: straight to the brutal group on the Challenges board. NOT
-  // the bottom of that list — the groups render [1,2,3,4,0], so the bottom is the UNRATED
-  // tier and scrolling there would land the player nowhere near what they just unlocked.
+  // The super-hard vault's door: straight to the brutal tape on the Challenges board, its
+  // J-card open on the first brutal challenge still to beat.
   const brutal = body.querySelector("[data-open-brutal]");
   if (brutal) brutal.addEventListener("click", () => {
     const id = firstSuperHardChallenge();
@@ -11045,7 +11044,7 @@ let challSelectedId = null;          // which challenge the detail panel is show
 let challDetailPeek = false;         // ...and whether its "what changes on the dark side?" is unfolded
 let challDetailHover = false;        // ...and whether the Dark Side button is being hovered/focused right now
 let challReturnConfirmId = null;      // first tap arms a return; the explicit second tap confirms it
-let challListResizeHandler = null;   // window-resize handler that re-snaps the list peek
+let challTape = null;                 // the tape picked by hand; null follows the selection's tier
 
 // Status marks for the contents list (gold tick = defeated, violet tick = dark side also
 // defeated, jet tick = the top side won without missing a page, hollow ring = open,
@@ -11431,12 +11430,11 @@ function openChallenges(from, focusId) {
   challDetailPeek = false;
   challReturnConfirmId = null;
   // A caller can point the page at one challenge (the Mastery super-hard tile does): it
-  // becomes the selection, so the detail panel is already showing the right thing, and the
-  // list scrolls its GROUP into view once the screen has a height to scroll within.
-  if (focusId && CHALLENGE_BY_ID[focusId]) challSelectedId = focusId;
+  // becomes the selection, and the open tape follows it, so the page arrives on that tier's
+  // J-card with the right card already showing.
+  if (focusId && CHALLENGE_BY_ID[focusId]) { challSelectedId = focusId; challTape = null; }
   renderChallengesPage();
   flipAwayToScreen("challenges");
-  if (focusId && CHALLENGE_BY_ID[focusId]) scrollChallengeGroupIntoView(focusId);
 }
 
 // The first challenge of the super-hard tier worth landing on: the first one still
@@ -11447,33 +11445,11 @@ function firstSuperHardChallenge() {
   return (tier.find((c) => !challengeRecord(c.id).defeated) || tier[0]).id;
 }
 
-// Scroll the challenge list so a challenge's DIFFICULTY GROUP sits at the top of the
-// scroller — the group header first, not the row, because a caller arriving from Mastery
-// is being shown a tier rather than one entry.
-//
-// The row's data-id lives on the inner .chall-item-select button, not on the .chall-item
-// wrapper. A pinned challenge is also drawn TWICE (once in the local Pinned shortlist above the
-// tiers, once in its own tier), and the shortlist copy comes first in the DOM — so take the last
-// match, which is always the one sitting under a real difficulty header. Landing on "Pinned"
-// would be the same failure as landing at the top: a caller sent here to be shown the brutal
-// tier has to arrive at the brutal tier.
-function scrollChallengeGroupIntoView(id) {
-  revealAfterFlip(
-    () => {
-      const rows = document.querySelectorAll(`#challengesBody .chall-list .chall-item-select[data-id="${CSS.escape(id)}"]`);
-      const row = rows[rows.length - 1];
-      const group = row && row.closest(".chall-group");
-      return (group && group.querySelector(".chall-group-head")) || row || null;
-    },
-    { within: () => document.querySelector("#challengesBody .chall-list"), pad: 4 }
-  );
-}
-
-// Arrive on a screen you have just flipped to and bring one thing on it into view. Both doors
-// out of the Mastery reward vaults land somewhere specific on a page they don't own, and the
-// two pages scroll differently: the challenge list is its own scroller inside a notebook page
-// that never grows, while the charm collection has no inner scroller at all and moves the
-// window. `opts.within` names a scroller to move; without it the window moves.
+// Arrive on a screen you have just flipped to and bring one thing on it into view. The doors
+// out of the Mastery reward vaults land somewhere specific on a page they don't own, and not
+// every destination scrolls the same way: the charm collection has no inner scroller at all
+// and moves the window, while the keepsakes drawer is its own scroller inside a modal card.
+// `opts.within` names a scroller to move; without it the window moves.
 //
 // Three things this has to survive, all of them consequences of the flip:
 //   • The window is left exactly where the page you came FROM was scrolled to (showScreen
@@ -11482,7 +11458,7 @@ function scrollChallengeGroupIntoView(id) {
 //     scrolled past its own top — worst on narrow layouts, where a page is at its tallest.
 //     So the window goes to the top first, before anything is measured.
 //   • The destination has no layout at the moment it's asked for: it was display:none a tick
-//     ago, and the challenge list in particular has no height until fitPeek has snapped it.
+//     ago, and an inner scroller has no height until its content has arrived.
 //     Hence the retry loop — wait for a real measurement rather than guessing at the flip's
 //     duration. `find` returns null until its target exists, so it can be re-run each frame.
 //   • The jump is instant on purpose. The page is already arriving on a page turn, and a
@@ -11515,20 +11491,18 @@ function revealAfterFlip(find, opts) {
     }
     if (scroller) {
       const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
-      // Clamped by the scroller itself: the last groups can't reach the top edge, and landing
-      // as high as they go is exactly right. The edge fade follows on the list's scroll handler.
+      // Clamped by the scroller itself: whatever sits last can't reach the top edge, and
+      // landing as high as it goes is exactly right.
       scroller.scrollTop = Math.max(0, top - pad);
     } else {
       window.scrollTo({ top: Math.max(0, window.scrollY + el.getBoundingClientRect().top - pad), behavior: "instant" });
     }
     // One placement isn't enough: the destination's geometry is still settling for a frame or
-    // two. The challenge list's fitPeek trims the scroller's height AFTER this first runs, and
-    // a shorter scroller can reach further down its own content — so a target clamped against
-    // the taller measurement is left stranded mid-list. Re-place it until a frame measures the
-    // same as the one before it.
-    // BOTH of a scroller's heights are watched, not just its own. The challenge list settles by
-    // changing the height of the BOX (fitPeek trims it) while its content stands still; the
-    // keepsakes drawer settles the opposite way, since a modal card's height is pinned by
+    // two, and a target clamped against the first measurement is left stranded. Re-place it
+    // until a frame measures the same as the one before it.
+    // BOTH of a scroller's heights are watched, not just its own. A scroller can settle by
+    // changing the height of the BOX while its content stands still, or the opposite way: the
+    // keepsakes drawer settles by its content, since a modal card's height is pinned by
     // max-height from the first frame while its CONTENT is still arriving. Watching the box
     // alone ends the loop on the SECOND frame for that second case — a pinned height never
     // changes, so nothing keeps it going — and the sticker shelf sits below a wall of polaroids
@@ -11558,6 +11532,61 @@ function toggleChallengePin(id) {
   return true;
 }
 
+/* ---- the tapes ----------------------------------------------------------------
+   The shelf is four cassettes, one per difficulty, because difficulty was already a cassette
+   everywhere else (the tape glyphs, the deck on the desk). Each tape is also its own progress
+   meter: the tape winds off the left reel onto the right as that tier's challenges are beaten,
+   so a finished tier is a tape played through and nobody has to read a number to see it.
+   Picking a tape folds its J-card out underneath: the tier's challenges as a tracklist over
+   Side A and Side B, and the selected track's card (renderChallengeDetail, untouched) on the
+   right-hand panel. Brutal arrives still in its cellophane while Mastery holds every track on
+   it shut. Pins get a tape of their own, a home-made one in blue pencil, so a shortlist never
+   reads as a fifth difficulty. */
+// The J-card wears its tape's colour (the shells themselves are coloured in styles.css).
+const MIXTAPE_INK = { 0: "#9a9077", 1: "#4f7a45", 2: "#cd8a2c", 3: "#b23a3a", 4: "#5c1a1a", pinned: "#3d5f80" };
+let mixtapeSeq = 0;   // every render scopes its clip and pattern ids, as sealMarkup does for seals
+
+// One cassette in a 150 x 98 box. `done` of `total` wound onto the take-up reel; `wrapped`
+// lays the cellophane over it. The pinned and unrated tapes are drawn as blanks: a plain
+// shell, a dashed one for a tier still waiting on its rating.
+function mixtapeSVG(key, word, done, total, { wrapped = false } = {}) {
+  const n = ++mixtapeSeq;
+  const p = total ? done / total : 0, rMin = 9.6, rMax = 17.2;
+  const rl = rMin + (1 - p) * (rMax - rMin), rr = rMin + p * (rMax - rMin);
+  // The two reels never sit at the same turn, so the hubs are not a mirrored pair.
+  const hub = (cx, turn) => `<circle class="mx-hub" cx="${cx}" cy="61" r="6.6"/>` +
+    [0, 60, 120, 180, 240, 300].map((a) => {
+      const r = (a + turn) * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
+      return `<path class="mx-tooth" d="M${(cx + c * 2.9).toFixed(2)} ${(61 + s * 2.9).toFixed(2)} L${(cx + c * 5.1).toFixed(2)} ${(61 + s * 5.1).toFixed(2)}"/>`;
+    }).join("");
+  const screw = (x, y, a) => `<circle class="mx-screw" cx="${x}" cy="${y}" r="2.3"/>` +
+    `<path class="mx-screw-slot" d="M${x - 1.5} ${y} L${x + 1.5} ${y}" transform="rotate(${a} ${x} ${y})"/>`;
+  const side = key === "pinned" ? "MIX" : key === 4 ? "SIDE M" : "SIDE A";
+  return `<svg class="mx-cass" viewBox="0 0 150 98" aria-hidden="true">` +
+    `<defs><clipPath id="mxw${n}"><rect x="31" y="47" width="88" height="28" rx="13.5"/></clipPath>` +
+    (wrapped ? `<pattern id="mxc${n}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">` +
+      `<rect width="6" height="6" class="mx-cello-wash"/><path d="M0 0 V6" class="mx-cello-line"/></pattern>` : "") +
+    `</defs>` +
+    `<rect class="mx-shadow" x="4.5" y="5.5" width="146" height="94" rx="7"/>` +
+    `<rect class="mx-shell" x="2" y="2" width="146" height="94" rx="7"/>` +
+    screw(9, 9, 20) + screw(141, 9, -35) + screw(9, 89, 60) + screw(141, 89, 5) +
+    `<rect class="mx-label" x="14" y="8" width="122" height="68" rx="3"/>` +
+    `<path class="mx-band" d="M14 42 H136 V73 a3 3 0 0 1 -3 3 H17 a3 3 0 0 1 -3 -3 Z"/>` +
+    `<path class="mx-rule" d="M21 36.5 H129"/>` +
+    `<text class="mx-side" x="21" y="17.5">${side}</text>` +
+    `<text class="mx-word" x="21" y="33">${escapeHtml(word)}</text>` +
+    `<text class="mx-num" x="129" y="33" text-anchor="end">${done}<tspan class="mx-of"> / ${total}</tspan></text>` +
+    `<rect class="mx-win" x="31" y="47" width="88" height="28" rx="13.5"/>` +
+    `<g clip-path="url(#mxw${n})"><circle class="mx-pack" cx="52" cy="61" r="${rl.toFixed(1)}"/>` +
+      `<circle class="mx-pack" cx="98" cy="61" r="${rr.toFixed(1)}"/></g>` +
+    hub(52, 14) + hub(98, 41) +
+    `<path class="mx-foot" d="M35 96 L41 83.5 H109 L115 96"/>` +
+    `<circle class="mx-hole" cx="54" cy="90" r="2.1"/><circle class="mx-hole" cx="96" cy="90" r="2.1"/>` +
+    (wrapped ? `<rect class="mx-cello" x="0.5" y="0.5" width="149" height="97" rx="8" fill="url(#mxc${n})"/>` +
+      `<path class="mx-glare" d="M8 31 L37 4 M113 95 L146 64 M120 95 L146 71"/>` : "") +
+    `</svg>`;
+}
+
 function renderChallengesPage() {
   checkChallengeBoardCharms();   // mastery-gated locks fall with no purchase to notice them
   const wallet = loadChallengeTokens();
@@ -11566,136 +11595,114 @@ function renderChallengesPage() {
   const board = loadChallengeState();
   const records = new Map(CHALLENGES.map((c) => [c.id, challengeRecord(c.id, board)]));
   const unlocked = new Map(CHALLENGES.map((c) => [c.id, challengeUnlocked(c.id, records.get(c.id))]));
-  const pinned = CHALLENGES.filter((c) => records.get(c.id).pinned && unlocked.get(c.id));
+  const shelf = byShelf(CHALLENGES);
+  const pinned = shelf.filter((c) => records.get(c.id).pinned && unlocked.get(c.id));
   const defeated = CHALLENGES.filter((c) => records.get(c.id).defeated).length;
 
-  // Default selection: keep the current pick if still valid, else the first
-  // not-yet-defeated challenge on the shelf, else the shelf's first row.
-  if (!challSelectedId || !CHALLENGE_BY_ID[challSelectedId]) {
-    // Shelf order, not authoring order, so the pre-selected row is the first one
-    // you can actually see rather than an arbitrary one further down the list.
-    const shelf = byShelf(CHALLENGES);
-    const firstOpen = shelf.find((c) => !records.get(c.id).defeated);
-    challSelectedId = (firstOpen || shelf[0]).id;
-  }
+  // The tapes on the shelf, in tier order; unrated only while something is waiting on a
+  // rating, and the pinned mix last, only while there is something on it. Pins deliberately
+  // change no game state beyond this shelf: they do not affect the randomiser, unlock
+  // economy, records, or the completion tally.
+  const tapes = [1, 2, 3, 4, 0]
+    .map((t) => ({ key: t, word: TAPE_WORD[t], list: shelf.filter((c) => (c.tapes || 0) === t) }))
+    .filter((t) => t.list.length);
+  if (pinned.length) tapes.push({ key: "pinned", word: "pinned", list: pinned });
+  const tapeOf = (key) => tapes.find((t) => t.key === key);
+  const firstOpenIn = (list) => (list.find((c) => unlocked.get(c.id) && !records.get(c.id).defeated)
+    || list.find((c) => !records.get(c.id).defeated) || list[0]).id;
 
-  // Grouped by difficulty, with a small local shortlist above it. Pins deliberately
-  // change no game state beyond this shelf: they do not affect the randomiser,
-  // unlock economy, records, or the completion tally.
-  // The return arrow uses the achievement charm's exact ink classes and wobble filter.
-  // Every row owns one so changing selection stays a class toggle.
-  const selectorArrow = `<span class="charm chall-selector-arrow" aria-hidden="true">` +
-    `<svg viewBox="0 0 24 24" focusable="false">` +
-      `<path class="ink" d="M5 3.4 V8.2 C5 11.3 6.9 13 10 13 H20"/>` +
-      `<path class="ink" d="M15.5 8.7 C17.3 10.3 18.8 11.7 20.4 13 C18.8 14.4 17.2 15.8 15.3 17.4"/>` +
-    `</svg></span>`;
-  const challengeRow = (c) => {
+  // Default selection: keep the current pick if still valid, else the first open challenge
+  // still to beat, else the first one still to beat at all, else the shelf's first row.
+  if (!challSelectedId || !CHALLENGE_BY_ID[challSelectedId]) challSelectedId = firstOpenIn(shelf);
+  // The open tape follows the selection unless a tape was picked by hand, and a hand-picked
+  // tape that has since emptied (the last pin pulled) falls back to the selection's tier.
+  if (challTape != null && !tapeOf(challTape)) challTape = null;
+  const sel = CHALLENGE_BY_ID[challSelectedId];
+  const open = (challTape != null && tapeOf(challTape)) || tapeOf(sel.tapes || 0);
+  if (!open.list.includes(sel)) challSelectedId = firstOpenIn(open.list);
+
+  const tapeBtn = (t) => {
+    const done = t.list.filter((c) => records.get(c.id).defeated).length;
+    // Cellophane only while EVERY track on it is still behind Mastery; one open track and the
+    // wrapper is off, because a tape you can play from is not a sealed one.
+    const wrapped = t.key !== "pinned" && t.list.every((c) => c.mastery && !unlocked.get(c.id));
+    const isOpen = t === open;
+    const label = t.key === "pinned"
+      ? `Pinned challenges, ${t.list.length} pinned`
+      : `${t.word} challenges, ${done} of ${t.list.length} defeated${wrapped ? `, unlocks at Mastery level ${t.list[0].mastery}` : ""}`;
+    return `<button type="button" class="mx-tape mx-tape--${t.key === "pinned" ? "pin" : "t" + t.key}${isOpen ? " is-open" : ""}` +
+        `${done === t.list.length ? " is-full" : ""}"` +
+        ` data-tape="${t.key}" aria-pressed="${isOpen}" aria-label="${escapeHtml(label)}">` +
+      mixtapeSVG(t.key, t.word, done, t.list.length, { wrapped }) +
+      (wrapped ? `<span class="mx-sticker">Mastery ${t.list[0].mastery}</span>` : "") +
+    `</button>`;
+  };
+
+  // The J-card's tracklist: the tier split down the middle onto two sides, the longer side
+  // first, numbered the way a tape's insert numbers them.
+  const half = Math.ceil(open.list.length / 2);
+  const twoSides = open.list.length > 3;
+  const trackNo = (i) => !twoSides ? `${i + 1}` : i < half ? `A${i + 1}` : `B${i - half + 1}`;
+  const track = (c, i) => {
     const rec = records.get(c.id);
-    const open = unlocked.get(c.id);
+    const isOpen = unlocked.get(c.id);
     let mark, stateCls;
     if (perfectedChallenge(c.id, rec)) { mark = CHALL_TICK_JET; stateCls = "is-defeated is-perfect"; }
     else if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
     else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
-    else if (open)      { mark = CHALL_RING; stateCls = "is-open"; }
+    else if (isOpen)    { mark = CHALL_RING; stateCls = "is-open"; }
     else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
     const pinLimitReached = !rec.pinned && pinned.length >= CHALLENGE_PIN_LIMIT;
-    const pin = open
-      ? `<button type="button" class="chall-item-pin${rec.pinned ? " is-pinned" : ""}" data-pin="${c.id}"` +
+    const pin = isOpen
+      ? `<button type="button" class="mx-track-pin${rec.pinned ? " is-pinned" : ""}" data-pin="${c.id}"` +
           `${pinLimitReached ? " disabled aria-disabled=\"true\"" : ""}` +
           ` aria-pressed="${rec.pinned}" aria-label="${rec.pinned ? "Remove " : "Pin "}${escapeHtml(c.name)}${pinLimitReached ? "; pin limit reached" : ""}"` +
-          ` title="${rec.pinned ? "remove from pinned challenges" : pinLimitReached ? "you can pin up to three challenges" : "pin this challenge"}">${CHALL_PIN}${rec.pinned ? CHALL_UNPIN : ""}</button>`
+          ` title="${rec.pinned ? "take this off the pinned mix" : pinLimitReached ? "you can pin up to three challenges" : "pin this challenge"}">${CHALL_PIN}${rec.pinned ? CHALL_UNPIN : ""}</button>`
       : "";
-    return `<div class="chall-item ${stateCls}">` +
-      selectorArrow +
-      `<button type="button" class="chall-item-select" data-id="${c.id}"><span class="chall-item-name">${escapeHtml(c.name)}</span></button>` +
-      `<span class="chall-item-mark">${mark}</span>${pin}</div>`;
-  };
-  let list = "";
-  if (pinned.length) {
-    list += `<div class="chall-group chall-group--pinned">` +
-      `<div class="chall-group-head chall-group-head--pinned">${CHALL_PIN}` +
-      `<span class="chall-group-label">Pinned</span>` +
-      `<span class="chall-group-count">${pinned.length} / ${CHALLENGE_PIN_LIMIT}</span></div>` +
-      pinned.map(challengeRow).join("") + `</div>`;
-  }
-  [1, 2, 3, 4, 0].forEach((tier) => {
-    const inTier = byShelf(CHALLENGES.filter((c) => (c.tapes || 0) === tier));
-    if (!inTier.length) return;
-    list += `<div class="chall-group">` +
-      `<div class="chall-group-head t${tier}">` +
-        `${tapesMarkup(tier)}` +
-        `<span class="chall-group-label">${TAPE_WORD[tier]}</span>` +
-        `<span class="chall-group-count">${inTier.length}</span>` +
+    return (twoSides && (i === 0 || i === half) ? `<div class="mx-side">side ${i === 0 ? "a" : "b"}</div>` : "") +
+      `<div class="mx-track ${stateCls}${c.id === challSelectedId ? " selected" : ""}">` +
+        `<span class="mx-track-no" aria-hidden="true">${trackNo(i)}</span>` +
+        `<button type="button" class="mx-track-select" data-id="${c.id}" aria-current="${c.id === challSelectedId}">` +
+          `<span class="mx-track-name">${escapeHtml(c.name)}</span></button>` +
+        `<span class="mx-track-mark">${mark}</span>${pin}` +
       `</div>`;
-    inTier.forEach((c) => { list += challengeRow(c); });
-    list += `</div>`;
-  });
+  };
+  const openDone = open.list.filter((c) => records.get(c.id).defeated).length;
 
   const html =
     `<div class="chall-head">` +
-      `<div class="chall-head-sub">spend a token · defeat the rule</div>` +
+      `<div class="mx-tally"><b>${defeated}</b><span class="mx-tally-of">of ${CHALLENGES.length} defeated` +
+        `<span class="mx-tally-sub">spend a token · defeat the rule</span></span></div>` +
       `<span class="chall-wallet${tk === 0 ? " is-empty" : ""}" data-gloss="token" title="${escapeHtml("token: " + glossaryDefn("token"))}">` +
         `<span class="chall-wallet-stubs" aria-hidden="true">${walletStubs(tk)}</span>` +
         `<span class="chall-wallet-cnt"><b>${tk}</b>token${tk === 1 ? "" : "s"}</span></span>` +
     `</div>` +
-    `<div class="chall-layout">` +
-      `<div class="chall-col">` +
-        `<div class="chall-list">${list}</div>` +
-        `<div class="chall-tally">${defeated} of ${CHALLENGES.length} defeated</div>` +
+    `<div class="mx-shelf${tapes.length > 4 ? " mx-shelf--many" : ""}" style="--n:${tapes.length}" role="group" aria-label="Challenge tapes by difficulty">${tapes.map(tapeBtn).join("")}</div>` +
+    `<div class="mx-jcard mx-jcard--${open.key === "pinned" ? "pin" : "t" + open.key}" style="--tc:${MIXTAPE_INK[open.key]}">` +
+      `<div class="mx-spine"><span class="mx-spine-word">${open.key === "pinned" ? `${CHALL_PIN}pinned` : escapeHtml(open.word)}</span>` +
+        `<span class="mx-spine-count">${open.list.length} track${open.list.length === 1 ? "" : "s"} · ${openDone} defeated</span></div>` +
+      `<div class="mx-jcard-body">` +
+        `<div class="mx-tracks">${open.list.map(track).join("")}</div>` +
+        `<div class="chall-detail" id="challDetail"></div>` +
       `</div>` +
-      `<div class="chall-detail" id="challDetail"></div>` +
     `</div>`;
 
   const el = $("challengesBody");
   el.innerHTML = html;
-  el.querySelectorAll(".chall-item-select").forEach((b) =>
+  el.querySelectorAll(".mx-tape").forEach((b) => b.addEventListener("click", () => {
+    const key = b.dataset.tape === "pinned" ? "pinned" : +b.dataset.tape;
+    if (key === open.key) return;
+    challTape = key;
+    // The selection stays put when it is on the tape just picked (a pinned track is on two).
+    const t = tapeOf(key);
+    if (!t.list.some((c) => c.id === challSelectedId)) challSelectedId = firstOpenIn(t.list);
+    renderChallengesPage();
+    el.querySelector(".mx-jcard")?.classList.add("is-unfolding");
+  }));
+  el.querySelectorAll(".mx-track-select").forEach((b) =>
     b.addEventListener("click", () => selectChallenge(b.dataset.id)));
-  el.querySelectorAll(".chall-item-pin").forEach((b) =>
+  el.querySelectorAll(".mx-track-pin").forEach((b) =>
     b.addEventListener("click", () => { if (toggleChallengePin(b.dataset.pin)) renderChallengesPage(); }));
-
-  // The list scrolls internally; cue that with a soft edge fade plus a half-row
-  // "peek" — trim the visible height so the bottom edge bisects the next row, so
-  // its top half shows under the fade and reads as "there's more below".
-  const listEl = el.querySelector(".chall-list");
-  if (listEl) {
-    const FADE = 30;
-    const updateFade = () => {
-      if (!listEl.clientHeight) return;  // hidden (screen not shown yet) — keep CSS default
-      const atTop = listEl.scrollTop <= 1;
-      const atBottom = listEl.scrollTop + listEl.clientHeight >= listEl.scrollHeight - 1;
-      listEl.style.setProperty("--fade-top", atTop ? "0px" : FADE + "px");
-      listEl.style.setProperty("--fade-bot", atBottom ? "0px" : FADE + "px");
-    };
-    // Snap the visible height to the deepest row midpoint that fits the vh budget,
-    // so the bottom edge lands mid-row and that row's top half peeks through.
-    const fitPeek = () => {
-      if (!listEl.clientHeight) return;  // hidden — nothing to measure yet
-      // The budget is the stylesheet's own cap on .chall-list, read back with the last snap's
-      // inline height lifted off, so the page's height is set in one place (styles.css).
-      listEl.style.maxHeight = "";
-      const budget = Math.round(parseFloat(getComputedStyle(listEl).maxHeight)) || Math.round(window.innerHeight * 0.58);
-      const listTop = listEl.getBoundingClientRect().top;
-      let target = budget;
-      // A tier heading is a stop as well as a row: snapping to rows alone fell back past a
-      // whole heading plus half a row whenever a tier break sat near the edge, which is what
-      // left the page standing short of the desk's bottom.
-      for (const it of listEl.querySelectorAll(".chall-item, .chall-group + .chall-group > .chall-group-head")) {
-        const r = it.getBoundingClientRect();
-        const mid = (r.top - listTop + listEl.scrollTop) + r.height / 2;  // row midpoint in content
-        if (mid <= budget - 2) target = mid; else break;
-      }
-      target = Math.round(target);
-      if (Math.abs(listEl.clientHeight - target) > 1) listEl.style.maxHeight = target + "px";
-      updateFade();
-    };
-    listEl.addEventListener("scroll", updateFade, { passive: true });
-    // Re-snap once the screen is actually shown (0→real size) and on viewport resize.
-    if (typeof ResizeObserver === "function") new ResizeObserver(fitPeek).observe(listEl);
-    if (challListResizeHandler) window.removeEventListener("resize", challListResizeHandler);
-    challListResizeHandler = fitPeek;
-    window.addEventListener("resize", challListResizeHandler);
-    fitPeek();
-  }
 
   selectChallenge(challSelectedId);
 }
@@ -11710,10 +11717,12 @@ function selectChallenge(id) {
   challSelectedId = id;
   const body = $("challengesBody");
   if (!body) return;
-  // The row's data-id is on its select button, not on the .chall-item wrapper that carries the
+  // The track's data-id is on its select button, not on the .mx-track wrapper that carries the
   // selected styling, so read the id from the button and mark its row.
-  body.querySelectorAll(".chall-item-select").forEach((b) =>
-    b.closest(".chall-item").classList.toggle("selected", b.dataset.id === id));
+  body.querySelectorAll(".mx-track-select").forEach((b) => {
+    b.closest(".mx-track").classList.toggle("selected", b.dataset.id === id);
+    b.setAttribute("aria-current", String(b.dataset.id === id));
+  });
   renderChallengeDetail(id);
 }
 
