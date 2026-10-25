@@ -21,6 +21,19 @@ export function shuffle(arr) {
 
 export function chance(p) { return Math.random() < p; }
 
+// True when one prompt word is the other's plural (hand/hands, fence/fences, lady/ladies). The
+// pools hold both halves of a dozen such pairs, and a run that deals "hands" on page 2 and
+// "hand" on page 12 reads as a game that has run out of words, so a run treats them as one.
+// Only ever compared word against word, never used to strip a suffix, so "bus" is safe.
+export function pluralPair(a, b) {
+  if (a.length > b.length) [a, b] = [b, a];
+  return b === a + "s" || b === a + "es" || (a.endsWith("y") && b === a.slice(0, -1) + "ies");
+}
+// Has this word, or its singular/plural, already been dealt in `used`?
+export function wordTaken(used, w) {
+  return used.some((u) => u === w || pluralPair(u, w));
+}
+
 // Canonical comparison key for a song title (or a typed answer). Lets a player's
 // answer match regardless of punctuation, & vs "and", the $ stylisation, bracket
 // tags, or numerals-vs-words. Display titles stay canonical — this only feeds the

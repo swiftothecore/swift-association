@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets, wordTaken } from "./util.js";
 import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
@@ -254,6 +254,9 @@ let albumOrder = [];     // album names in canonical songs.json order (On Tour! 
 let score = 0;
 let round = 0;
 let usedWords = [];
+// The run's no-repeat test. A word is spent once it or its plural/singular has been dealt
+// (wordTaken), so every draw filters on this rather than on usedWords.includes.
+const wordSpent = (w) => wordTaken(usedWords, w);
 let noveltySeen = null;  // Normal-mode coverage bias: Set of words already encountered (tally words+misses), snapshotted at game start. Non-null only during a Normal (classic · medium) run; pickWord favours words NOT in it. null everywhere else → uniform draw.
 let roundResults = [];   // per-round true/false for the bracelet
 let roundAlbums = [];    // per-round album of the picked song (for the final bracelet)
@@ -18544,7 +18547,7 @@ function setupImpostorChallenge() {
 // A fresh impostor decoy not used yet this run (falls back to the whole pool if exhausted).
 function pickImpostorWord() {
   const all = impostorWordPool();
-  const fresh = all.filter((w) => !usedWords.includes(w));
+  const fresh = all.filter((w) => !wordSpent(w));
   const pool = fresh.length ? fresh : all;
   const w = pool[Math.floor(Math.random() * pool.length)];
   usedWords.push(w);
@@ -19061,11 +19064,10 @@ function bothWordsClash(a, b) {
 // dead one). BOTH_PARTNER_TRIES caps the work so a hopeless anchor can't stall the page turn.
 function pickBothPartner(pool, chosen) {
   const min = bothMinSongsNow();
-  const used = new Set(usedWords);
   let tried = 0;
   for (const w of shuffle(playableWords.slice())) {
     if (tried++ >= BOTH_PARTNER_TRIES) break;
-    if (used.has(w) || chosen.some((c) => bothWordsClash(c, w))) continue;
+    if (wordSpent(w) || chosen.some((c) => bothWordsClash(c, w))) continue;
     const rx = wordRegex(w, effectiveStrict());
     const songs = pool.filter((s) => rx.test(s.lyrics));
     if (songs.length >= min) return { word: w, songs };
@@ -19175,7 +19177,7 @@ function buildCommonPuzzle() {
   commonPuzzle = null;
   const want = commonLinesNow();
   let candidates = playableWords.filter((w) => {
-    if (usedWords.includes(w)) return false;
+    if (wordSpent(w)) return false;
     const n = songsThreadingWord(w).length;
     // Need at least `want` songs to draw `want` distinct lines, and stay under the ubiquity cap.
     return n >= Math.max(COMMON_MIN_SONGS, want) && n <= COMMON_MAX_SONGS;
@@ -19317,7 +19319,7 @@ function pickTourWord() {
   const album = tourSetlist[round - 1];
   if (!album) return null;
   const all = albumWordMap[album] || [];
-  const pool = all.filter((w) => !usedWords.includes(w));
+  const pool = all.filter((w) => !wordSpent(w));
   const choices = pool.length ? pool : all;
   if (!choices.length) return null;                 // degenerate — let pickWord fall back
   const w = choices[Math.floor(Math.random() * choices.length)];
@@ -19330,7 +19332,7 @@ function pickTourWord() {
 function pickChainWord() {
   if (!chainLetter) return null;
   const bucket = wordBuckets[effectivePool()] || playableWords;
-  const fresh = shuffle(bucket.filter((w) => !usedWords.includes(w)));
+  const fresh = shuffle(bucket.filter((w) => !wordSpent(w)));
   for (const w of fresh) {
     if (validSongs(w, effectiveStrict(), effectiveNoTitle())
         .some((s) => firstAlphaLetter(s.title) === chainLetter)) {
@@ -21705,13 +21707,13 @@ function previewDailyAlbum(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
   const used = [];
   const words = [];
   for (let i = 0; i < TOTAL_ROUNDS; i++) {
-    const gen = bucket.filter((w) => !used.includes(w));
+    const gen = bucket.filter((w) => !wordTaken(used, w));
     const genChoices = gen.length ? gen : bucket;
-    const albumChoices = built.pool.filter((s) => !used.includes(s.w));
+    const albumChoices = built.pool.filter((s) => !wordTaken(used, s.w));
     const fromAlbum = albumChoices.length > 0 && rng() < DAILY_ALBUM_SKEW;
     let from = genChoices;
     if (!fromAlbum && normalTailOpen(MODES.medium.pool, "daily", used) && rng() < NORMAL_TAIL_CHANCE) {
-      const tail = wordBuckets.normalTail.filter((w) => !used.includes(w));
+      const tail = wordBuckets.normalTail.filter((w) => !wordTaken(used, w));
       if (tail.length) from = tail;
     }
     const word = fromAlbum ? weightedAlbumWord(albumChoices, rng, exp)
@@ -21822,7 +21824,7 @@ function pickWord() {
   // No-repeat within a game: exclude every word already used this run. Buckets
   // are guaranteed ≥ TOTAL_ROUNDS words (see indexPlayableWords' MIN), so the pool
   // only empties on a degenerate list — fall back to the full bucket if so.
-  const pool = bucket.filter((w) => !usedWords.includes(w));
+  const pool = bucket.filter((w) => !wordSpent(w));
   let choices = pool.length ? pool : bucket;
   // Double Trouble: a page is only winnable if the word has at least `need` valid
   // songs (after the no-title rule). Keep only such words; fall back if none remain.
@@ -21876,7 +21878,7 @@ function pickWord() {
   // chosen word is still answerable from any song — this constrains which word surfaces, not the
   // valid answers — so winnability matches a normal daily and this is no Album Focus clone.
   if (dailyAlbumPool) {
-    const albumChoices = dailyAlbumPool.filter((s) => !usedWords.includes(s.w));
+    const albumChoices = dailyAlbumPool.filter((s) => !wordSpent(s.w));
     if (albumChoices.length && rng() < DAILY_ALBUM_SKEW) {
       const word = weightedAlbumWord(albumChoices, rng);
       usedWords.push(word);
@@ -21891,7 +21893,7 @@ function pickWord() {
   // which previewDailyAlbum mirrors call for call.
   let from = choices;
   if (normalTailOpen(effectivePool(), gameType, usedWords) && rng() < NORMAL_TAIL_CHANCE) {
-    const tail = wordBuckets.normalTail.filter((w) => !usedWords.includes(w));
+    const tail = wordBuckets.normalTail.filter((w) => !wordSpent(w));
     if (tail.length) from = tail;
   }
   const word = noveltySeen
@@ -21925,7 +21927,7 @@ function pickAlbumWord(album) {
   const bucketSet = new Set(wordBuckets[effectivePool()] || playableWords);
   const narrowed = albumWords.filter((w) => bucketSet.has(w));
   const base = narrowed.length >= TOTAL_ROUNDS ? narrowed : albumWords;
-  const fresh = shuffle(base.filter((w) => !usedWords.includes(w)));
+  const fresh = shuffle(base.filter((w) => !wordSpent(w)));
   const pool = fresh.length ? fresh : shuffle(base.slice());
   for (const w of pool) {
     if (validSongs(w, effectiveStrict(), effectiveNoTitle()).some((s) => s.album === focus)) {
@@ -35977,7 +35979,7 @@ function buildDevApi() {
         // `minSongs`. Defaults to the live challenge's floor.
         room: (n) => { const floor = n || (currentChallenge && (currentChallenge.minSongs
             || currentChallenge.need)) || 2;
-          const pool = (wordBuckets[effectivePool()] || playableWords).filter((w) => !usedWords.includes(w));
+          const pool = (wordBuckets[effectivePool()] || playableWords).filter((w) => !wordSpent(w));
           return { floor, words: pool.filter((w) => multiWordRoom(w) >= floor).length, of: pool.length }; },
         win: (id) => { const c = CHALLENGE_BY_ID[id || "name-three"];
           score = (c && c.target) || 8; endGame(); },
