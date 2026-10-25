@@ -164,7 +164,7 @@
   body[data-era="denim"]    { --ink-accent:#3f6fa3; --highlighter:rgba(120,170,220,0.45); --bead:#5b87b8; --page-wash:rgba(91,135,184,0.05); }
   body[data-era="graphite"] { --ink-accent:#4a4a4a; --highlighter:rgba(130,130,130,0.40); --bead:#6b6b6b; --page-wash:rgba(90,90,90,0.05); }
   body[data-era="midnight"] { --ink-accent:#2b3a67; --highlighter:rgba(90,110,180,0.42); --bead:#3d4f86; --page-wash:rgba(150,165,210,0.06); }
-  body[data-era="debut"]      { --ink-accent:#3f7d54; --highlighter:rgba(120,185,135,0.42); --bead:#5a9e6e; --page-wash:rgba(63,125,84,0.05); }
+  body[data-era="debut"]      { --ink-accent:#19726b; --highlighter:rgba(118,196,188,0.44); --bead:#2e9890; --page-wash:rgba(46,152,144,0.05); }
   body[data-era="reputation"] { --ink-accent:#2c2c2e; --highlighter:rgba(80,80,86,0.42);   --bead:#3a3a3e; --page-wash:rgba(170,172,180,0.07); }
   body[data-era="lover"]      { --ink-accent:#b8487f; --highlighter:rgba(234,150,196,0.46); --bead:#d472a6; --page-wash:rgba(196,100,154,0.05); }
   body[data-era="evermore"]   { --ink-accent:#6b4a2e; --highlighter:rgba(160,120,80,0.42);  --bead:#8a6038; --page-wash:rgba(122,90,56,0.05); }
@@ -196,7 +196,7 @@
 
      These are NOT the era accents. Five differ from the era their album plays in, each for a
      reason found by eye on the real oak at real size; MAST_INKS in js/config.js carries the
-     reasons, and PLAN.md the full palette note. Do not "simplify" them back to --ink-accent.
+     reasons. Do not "simplify" them back to --ink-accent.
 
      Each ink is stated ONCE, as a day/night pair, and --mast-ink is resolved from that pair.
      That is what lets the generated favicon read --mast-ink-day off the body whatever theme
@@ -212,7 +212,7 @@
      whatever theme the page is in (see the favicon note above), and --brand-gold is swapped
      by theme on :root. If the gold on line 109/283 moves, move it here too. */
   [data-ink="brand"]        { --mast-ink-day:#a9791f; --mast-ink-night:#e0a83a; }
-  [data-ink="debut"]        { --mast-ink-day:#3f7d54; --mast-ink-night:#74c48b; }
+  [data-ink="debut"]        { --mast-ink-day:#19726b; --mast-ink-night:#67c4bb; }
   [data-ink="fearless"]     { --mast-ink-day:#d0a021; --mast-ink-night:#f4cf62; }
   [data-ink="speaknow"]     { --mast-ink-day:#6d5aa6; --mast-ink-night:#bca6f0; }
   [data-ink="red"]          { --mast-ink-day:#9b2226; --mast-ink-night:#eb6a66; }
@@ -335,7 +335,7 @@
   :root[data-theme="dark"] body[data-era="denim"]    { --ink-accent:#74abe1; --highlighter:rgba(120,170,220,0.30); --bead:#74abe1; --page-wash:rgba(110,160,215,0.06); }
   :root[data-theme="dark"] body[data-era="graphite"] { --ink-accent:#bcbcbc; --highlighter:rgba(180,180,180,0.26); --bead:#bcbcbc; --page-wash:rgba(170,170,170,0.05); }
   :root[data-theme="dark"] body[data-era="midnight"] { --ink-accent:#8398da; --highlighter:rgba(120,142,215,0.30); --bead:#8398da; --page-wash:rgba(110,132,205,0.06); }
-  :root[data-theme="dark"] body[data-era="debut"]      { --ink-accent:#74c48b; --highlighter:rgba(120,190,140,0.30); --bead:#74c48b; --page-wash:rgba(110,180,130,0.06); }
+  :root[data-theme="dark"] body[data-era="debut"]      { --ink-accent:#67c4bb; --highlighter:rgba(110,196,186,0.30); --bead:#67c4bb; --page-wash:rgba(103,196,187,0.06); }
   :root[data-theme="dark"] body[data-era="reputation"] { --ink-accent:#cdccd2; --highlighter:rgba(150,150,160,0.26); --bead:#cdccd2; --page-wash:rgba(150,150,160,0.06); }
   :root[data-theme="dark"] body[data-era="lover"]      { --ink-accent:#f194c1; --highlighter:rgba(235,150,196,0.30); --bead:#f194c1; --page-wash:rgba(225,140,186,0.06); }
   :root[data-theme="dark"] body[data-era="evermore"]   { --ink-accent:#cb9568; --highlighter:rgba(190,140,90,0.30);  --bead:#cb9568; --page-wash:rgba(180,130,80,0.06); }
@@ -3694,7 +3694,7 @@
      the values that inline var() falls through to, which is the only way in. */
   :root[data-theme="dark"] {
     --mode-relaxed:  #74abe1;   /* dark denim */
-    --mode-easy:     #74c48b;   /* dark debut */
+    --mode-easy:     #74c48b;   /* green, debut's old night accent; easy kept it when debut went teal */
     --mode-medium:   #e6ad3d;   /* dark gold */
     --mode-hard:     #eb6a66;   /* dark red */
     --mode-ultra:    #aeadbd;   /* graphite, lifted, violet lean kept */
@@ -14509,10 +14509,11 @@
      "worn" state stays the louder of the two in both themes. */
   :root[data-theme="dark"] .mastery-page { --m-accent: 201, 112, 155; --m-accent-deep: 240, 156, 196; }
   /* The five skill inks at night. config.js says outright that each tint is "drawn from the era
-     palette", so each one here is simply that era's DARK accent — midnight, red, lover, debut,
+     palette", so each one here is simply that era's DARK accent — midnight, red, lover,
      lavender. Nothing is hand-picked, which is the point: a stamp card cannot drift away from
      the era colour it is supposed to be printed in. Level text was measuring 1.95:1 against the
-     paper before this.
+     paper before this. The one exception is endurance: it was debut's night green, and when
+     debut went teal The Long Game kept its green by day (config.js), so it keeps it by night.
 
      As triplets, not colours, because config.js hands the day column over the same way and the
      page wraps both in rgb() at the one place it reads them. */
@@ -14520,7 +14521,7 @@
     --skill-resolve:   131, 152, 218;   /* dark midnight */
     --skill-tempo:     235, 106, 102;   /* dark red */
     --skill-lyricist:  241, 148, 193;   /* dark lover */
-    --skill-endurance: 116, 196, 139;   /* dark debut */
+    --skill-endurance: 116, 196, 139;   /* green, debut's old night accent */
     --skill-range:     188, 166, 240;   /* dark lavender */
   }
 
@@ -15719,15 +15720,16 @@
      2.32:1 puts it mid-pack between lavender and denim, and black ink still reads 9:1
      over the mark. The searcher copies this pair verbatim, so it moves in both or neither.
      Debut then inherited the floor at 1.86:1, the same yellow-green-on-white problem, and
-     took the same lever: 0.62 to 0.84 on an unchanged hue gives 2.36:1 beside gold and
-     denim, with black ink still 8.9:1 over the mark. Lover is the floor now, at 2.09:1. */
+     took the same lever: opacity up until it reached 2.36:1 beside gold and denim, with black
+     ink still 8.9:1 over the mark. When debut turned teal the swipe was re-tuned to land on
+     exactly those two numbers again (0.82 on the teal), so moving the hue moved nothing else. Lover is the floor now, at 2.09:1. */
   body[data-contrast="high"][data-era="gold"]     { --ink-accent:#7a5300; --highlighter:rgba(202,152,0,0.88); --bead:#7a5300; }
   body[data-contrast="high"][data-era="lavender"] { --ink-accent:#3f2c80; --highlighter:rgba(150,120,225,0.7); --bead:#3f2c80; }
   body[data-contrast="high"][data-era="red"]      { --ink-accent:#8a0008; --highlighter:rgba(210,40,45,0.6);  --bead:#8a0008; }
   body[data-contrast="high"][data-era="denim"]    { --ink-accent:#0d3f73; --highlighter:rgba(60,130,200,0.65); --bead:#0d3f73; }
   body[data-contrast="high"][data-era="graphite"] { --ink-accent:#222222; --highlighter:rgba(90,90,90,0.6);   --bead:#222222; }
   body[data-contrast="high"][data-era="midnight"] { --ink-accent:#101d4d; --highlighter:rgba(60,80,170,0.6);  --bead:#101d4d; }
-  body[data-contrast="high"][data-era="debut"]      { --ink-accent:#14512c; --highlighter:rgba(60,175,95,0.84); --bead:#14512c; }
+  body[data-contrast="high"][data-era="debut"]      { --ink-accent:#00524c; --highlighter:rgba(40,170,160,0.82); --bead:#00524c; }
   body[data-contrast="high"][data-era="reputation"] { --ink-accent:#000000; --highlighter:rgba(64,64,72,0.6);   --bead:#000000; }
   body[data-contrast="high"][data-era="lover"]      { --ink-accent:#8a0050; --highlighter:rgba(230,90,165,0.62); --bead:#8a0050; }
   body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#452a10; --highlighter:rgba(175,115,50,0.62); --bead:#452a10; }
@@ -15767,7 +15769,7 @@
      data-contrast lives on the body, and a descendant combinator does not match the element it
      hangs off. One half of each pair catches the body, the other catches the chips. */
   body[data-contrast="high"][data-ink="debut"],
-  body[data-contrast="high"] [data-ink="debut"]        { --mast-ink-day:#14512c; --mast-ink-night:#8ee0a6; }
+  body[data-contrast="high"] [data-ink="debut"]        { --mast-ink-day:#00524c; --mast-ink-night:#62e2d7; }
   body[data-contrast="high"][data-ink="fearless"],
   body[data-contrast="high"] [data-ink="fearless"]     { --mast-ink-day:#8a6200; --mast-ink-night:#ffd97a; }
   body[data-contrast="high"][data-ink="speaknow"],
@@ -15829,7 +15831,7 @@
   :root[data-theme="dark"] body[data-contrast="high"][data-era="denim"]    { --ink-accent:#8fc4ff; --highlighter:rgba(130,185,240,0.46); --bead:#8fc4ff; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="graphite"] { --ink-accent:#dcdcdc; --highlighter:rgba(200,200,200,0.46); --bead:#dcdcdc; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="midnight"] { --ink-accent:#9fb4ff; --highlighter:rgba(135,158,240,0.48); --bead:#9fb4ff; }
-  :root[data-theme="dark"] body[data-contrast="high"][data-era="debut"]      { --ink-accent:#8ee0a6; --highlighter:rgba(130,205,155,0.46); --bead:#8ee0a6; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="debut"]      { --ink-accent:#62e2d7; --highlighter:rgba(94,207,197,0.46); --bead:#62e2d7; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="reputation"] { --ink-accent:#e6e5ec; --highlighter:rgba(180,180,192,0.46); --bead:#e6e5ec; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="lover"]      { --ink-accent:#ffaad3; --highlighter:rgba(255,165,210,0.46); --bead:#ffaad3; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="evermore"]   { --ink-accent:#e8ad7c; --highlighter:rgba(208,155,100,0.48); --bead:#e8ad7c; }

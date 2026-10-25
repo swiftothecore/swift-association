@@ -2950,12 +2950,18 @@ export const VAULT_ALBUMS = ["Fearless", "Speak Now", "Red", "1989"];
 export const IMPOSTOR_BEAD = "#3b2a4d";
 export const COMMON_THREAD_BEADS = ["#1f6b3a", "#9a7b16", "#8f1d1d"];
 
+/* Debut is teal because the record is, and 1989 is the pale blue of its re-recording. The two
+   used to sit 5.8 apart in OKLab (x100), the second-closest pair in this table, so they are held
+   apart on hue AND lightness: debut leans green and sits darker, 1989 leans blue and sits
+   lighter, 12.7 apart, which also lifts debut clear of folklore's grey. The debut era and its
+   masthead ink in styles.css are the same teal, so a debut page never pairs a teal album tag
+   with a green shell. Move one and move the other. */
 export const ALBUM_COLORS = {
-  "Taylor Swift":                     "#5a9ea6",
+  "Taylor Swift":                     "#2e9890",
   "Fearless":                         "#b8943a",
   "Speak Now":                        "#8b5fa0",
   "Red":                              "#a32a2a",
-  "1989":                             "#4a8fb5",
+  "1989":                             "#70add4",
   "reputation":                       "#555555",
   "Lover":                            "#c4649a",
   "folklore":                         "#9b9b9b",
@@ -3000,7 +3006,7 @@ export const CB_ALBUM_COLORS = {
    second copy of the value.
 
    The inks are NOT the era accents, and five of them deliberately differ from the era their
-   album plays in. Read the palette note in PLAN.md before "simplifying" any of them back:
+   album plays in. Read the reasons before "simplifying" any of them back:
    - Fearless is off gold because the gold era's accent IS --brand-gold, so that unlock would
      have handed the player the colour they already had.
    - folklore is off graphite because ALBUM_ERA maps folklore AND the Tortured Poets to the same
@@ -3009,7 +3015,7 @@ export const CB_ALBUM_COLORS = {
      and swallowed "Song" whole.
    - The Tortured Poets and The Life of a Showgirl have no era of their own to borrow from. */
 export const MAST_INKS = {
-  "Taylor Swift":                  { slug: "debut",      name: "Debut green" },
+  "Taylor Swift":                  { slug: "debut",      name: "Sea glass" },
   "Fearless":                      { slug: "fearless",   name: "Champagne" },
   "Speak Now":                     { slug: "speaknow",   name: "Lavender" },
   "Red":                           { slug: "red",        name: "Red" },
