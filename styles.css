@@ -11327,6 +11327,9 @@
     margin: 0 0 6px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2.5px;
     text-transform: uppercase; color: #7b7062;
   }
+  /* On a phone the label's measure is about 193px and the kicker at 2.5px tracking is 196px, so
+     it broke as "a songwriter's" over "notebook" by three pixels. Tracked at 2px it is 184px. */
+  @media (max-width: 560px) { .nb-cover-kicker { letter-spacing: 2px; } }
   .nb-cover-title {
     margin: 0; font-family: var(--hand); font-weight: 700; line-height: 1.02;
     font-size: clamp(30px, 5.4vw, 44px); color: #43301a;
