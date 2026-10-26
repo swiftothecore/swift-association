@@ -4416,6 +4416,9 @@
   .bonus-intro {
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink-soft);
     line-height: 1.5; margin: 0; max-width: 46ch;
+    /* Pretty, so the paragraph never closes on a word alone: on a phone it ended "Take one off
+       the shelf and play" with "it." on a line of its own. */
+    text-wrap: pretty;
   }
   .bonus-count {
     flex: none; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1.5px;
