@@ -2835,6 +2835,64 @@
     fill: #6b4a22;
   }
 
+  /* THE DICE PICK UP THE DAY. On the days the Start writing button is forced into a dated
+     finish (js/anniversarycta.js), the dice beside it join in, but small: the stamp, its board
+     and its outline stay exactly as they are, and only the pips (and on two days one drawn
+     extra) change. A second full costume beside the button's would make the row a matching set
+     rather than one celebration. paintChanceDice (js/app.js) writes the attributes.
+       A record's release day inks the pips in that record's masthead ink, the one the
+     wordmark's gold word is wearing the same day, so the title, the button and the dice all
+     belong to one album. These are the masthead's day inks, taken toward the dice's own ink
+     only as far as it takes to clear 3:1 on the board: Fearless's champagne was 2.1:1 on the
+     day card. The night stamp is still a light board (#b9b09e), so the night inks drawn for a
+     dark page would vanish on it; the night column is the day ink taken further down instead.
+       Her birthday inks them in the icing pink of Iced for her and stands a candle on the back
+     die; Christmas inks them berry red and tucks holly in above the front die. The 13th adds
+     nothing, because the dice already rest on a 1 and a 3 every day of the year.
+       Every day's pips hand back to the plain inversion on hover, where a navy or black pip
+     would sink into the inked board, and high contrast keeps them in ink outright. The
+     candle and holly keep their fills, and their outlines follow the stamp's ink. Rejected on
+     scripts/ui/chance-days.html: a flame for the lone pip (a blob at 28px), sprinkles (read as
+     a mistake), a fir sprig (a feather) and the stamp chalked onto the 13th's blackboard. */
+  .btn-primary.chance-cta[data-day-ink="debut"]      { --pip: #19726b; --pip-night: #1d625b; }
+  .btn-primary.chance-cta[data-day-ink="fearless"]   { --pip: #9e7c21; --pip-night: #6d561c; }
+  .btn-primary.chance-cta[data-day-ink="speaknow"]   { --pip: #6d5aa6; --pip-night: #604f8a; }
+  .btn-primary.chance-cta[data-day-ink="red"]        { --pip: #9b2226; --pip-night: #9b2226; }
+  .btn-primary.chance-cta[data-day-ink="nineteen89"] { --pip: #3f6fa3; --pip-night: #3a5c80; }
+  .btn-primary.chance-cta[data-day-ink="reputation"] { --pip: #2c2c2e; --pip-night: #2c2c2e; }
+  .btn-primary.chance-cta[data-day-ink="lover"]      { --pip: #b8487f; --pip-night: #8e3d60; }
+  .btn-primary.chance-cta[data-day-ink="folklore"]   { --pip: #7e8180; --pip-night: #595752; }
+  .btn-primary.chance-cta[data-day-ink="evermore"]   { --pip: #7e4a1f; --pip-night: #7e4a1f; }
+  .btn-primary.chance-cta[data-day-ink="midnights"]  { --pip: #2b3a67; --pip-night: #2b3a67; }
+  .btn-primary.chance-cta[data-day-ink="poets"]      { --pip: #856c50; --pip-night: #6a5640; }
+  .btn-primary.chance-cta[data-day-ink="showgirl"]   { --pip: #c2571a; --pip-night: #8d451a; }
+  .btn-primary.chance-cta[data-day="birthday"]       { --pip: #a4345a; --pip-night: #983254; }
+  .btn-primary.chance-cta[data-day="christmas"]      { --pip: #9b2226; --pip-night: #9b2226; }
+  body[data-contrast="high"] .btn-primary.chance-cta { --pip: currentColor; --pip-night: currentColor; }
+  .btn-primary.chance-cta .chance-mark .pips {
+    fill: var(--pip, currentColor); transition: fill var(--chance-turn, 0.2s) ease;
+  }
+  :root[data-theme="dark"] .btn-primary.chance-cta .chance-mark .pips { fill: var(--pip-night, currentColor); }
+  .btn-primary.chance-cta:hover .chance-mark .pips,
+  .btn-primary.chance-cta:focus-visible .chance-mark .pips,
+  :root[data-theme="dark"] .btn-primary.chance-cta:hover .chance-mark .pips,
+  :root[data-theme="dark"] .btn-primary.chance-cta:focus-visible .chance-mark .pips { fill: currentColor; }
+  /* The candle stands above the mark's 24-unit box, which is still well inside the stamp. */
+  .chance-mark svg { overflow: visible; }
+  .chance-mark .day-candle, .chance-mark .day-holly { display: none; }
+  .btn-primary.chance-cta[data-day="birthday"] .day-candle,
+  .btn-primary.chance-cta[data-day="christmas"] .day-holly { display: inline; }
+  .chance-mark .day-x {
+    stroke: currentColor; stroke-width: 0.7; stroke-linejoin: round; stroke-linecap: round;
+    fill: none; transition: stroke var(--chance-turn, 0.2s) ease;
+  }
+  .chance-mark .day-x.thin { stroke-width: 0.55; }
+  .chance-mark .candle-wax { fill: #f3c4d3; }
+  .chance-mark .candle-flame { fill: #e9a23b; }
+  .chance-mark .holly-leaf { fill: #2f6b4f; }
+  .chance-mark .holly-leaf--lit { fill: #3d7d5c; }
+  .chance-mark .holly-berry { fill: #b3262b; }
+
   /* THE IDLE BOB, AND THE RATTLE INSIDE IT. The gold bar beside this one has always breathed
      on a loop, and a stamp that sits perfectly still next to it reads as disabled rather than
      calm, so the stamp moves too — the whole board, and the dice inked on it as well.

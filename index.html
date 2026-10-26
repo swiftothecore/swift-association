@@ -2961,6 +2961,13 @@ if (location.pathname.endsWith('/index.html')) {
                 <g transform="rotate(-13 8.2 8.6)">
                   <rect class="ink" x="2" y="2.4" width="12.4" height="12.4" rx="2.8"/>
                   <g class="ink-fill pips" data-cx="8.2" data-cy="8.6"><circle cx="8.2" cy="8.6" r="1.5"/></g>
+                  <!-- Her birthday: one candle stood on the back die, so the die is the cake.
+                       Hidden on every other day (styles.css, THE DICE PICK UP THE DAY). -->
+                  <g class="day-candle">
+                    <rect class="day-x candle-wax" x="7.2" y="-2.2" width="2" height="4.6" rx=".4"/>
+                    <path class="day-x thin" d="M7.3 -.4L9.1 -1.5M7.3 1.6L9.1 .5"/>
+                    <path class="candle-flame" d="M8.2 -6.9C9 -5.8 9.5 -4.9 9.3 -4.1C9.1 -3.3 8.7 -3 8.2 -3C7.7 -3 7.3 -3.3 7.1 -4.1C6.9 -4.9 7.4 -5.8 8.2 -6.9Z"/>
+                  </g>
                 </g>
               </g></g>
               <g class="die die-front"><g class="die-rock">
@@ -2973,6 +2980,15 @@ if (location.pathname.endsWith('/index.html')) {
                   </g>
                 </g>
               </g></g>
+              <!-- Christmas Day: a sprig of holly tucked into the empty corner above the front
+                   die, its berries the red the pips are inked in that day. -->
+              <g class="day-holly" transform="translate(17.4 5.9) scale(.92)">
+                <path class="day-x holly-leaf" d="M0 0Q1.3 -.5 1.9 -1.7Q2.6 -.9 3.6 -1.9Q4.2 -.8 5.2 -1.6Q5.4 -.6 6.6 0Q5.4 .6 5.2 1.6Q4.2 .8 3.6 1.9Q2.6 .9 1.9 1.7Q1.3 .5 0 0Z" transform="rotate(-44)"/>
+                <path class="day-x holly-leaf holly-leaf--lit" d="M0 0Q1.3 -.5 1.9 -1.7Q2.6 -.9 3.6 -1.9Q4.2 -.8 5.2 -1.6Q5.4 -.6 6.6 0Q5.4 .6 5.2 1.6Q4.2 .8 3.6 1.9Q2.6 .9 1.9 1.7Q1.3 .5 0 0Z" transform="rotate(-4)"/>
+                <circle class="day-x thin holly-berry" cx="-.3" cy=".5" r="1.05"/>
+                <circle class="day-x thin holly-berry" cx="1.2" cy="1.1" r="1.05"/>
+                <circle class="day-x thin holly-berry" cx=".5" cy="-.8" r="1.05"/>
+              </g>
             </svg>
           </span>
         </button>
