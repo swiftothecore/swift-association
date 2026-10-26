@@ -12518,19 +12518,22 @@
   }
   @keyframes foilShift { to { background-position: -240% 0; } }
   /* a soft warm sheen that sweeps across the paper, like light catching the page */
-  .shine-sweep { position: absolute; inset: 0; border-radius: 3px; pointer-events: none; z-index: 6; overflow: hidden; }
+  .shine-sweep { position: absolute; inset: 0; border-radius: 3px; pointer-events: none; z-index: 6; overflow: hidden; container-type: size; }
   /* The band slides on transform alone. Its old soft-light blend and blur are baked into
      the gradient: a blend forces everything under it to repaint as it passes. The steps
-     in translateX are the old -60% and 140% of the card, over a band 42% wide. */
+     in translateX are the old -60% and 140% of the card, over a band 42% wide, plus 23cqh:
+     the skew leans the band's ends tan(18deg) x 70% of the card's height either side of
+     its middle, so a tall phone card left the band resting on the page at both ends of
+     its run, a pale wedge for half of every loop, unless the travel grows with height. */
   .shine-sweep::before {
     content: ""; position: absolute; top: -20%; bottom: -20%; left: 0; width: 42%;
     background: linear-gradient(105deg, transparent 18%, rgba(255,250,232,.16) 38%, rgba(255,253,244,.3) 50%, rgba(255,250,232,.16) 62%, transparent 82%);
-    transform: translateX(-143%) skewX(-18deg); will-change: transform;
+    transform: translateX(calc(-143% - 23cqh)) skewX(-18deg); will-change: transform;
     animation: shineSweep 4.4s ease-in-out infinite;
   }
   @keyframes shineSweep {
-    0% { transform: translateX(-143%) skewX(-18deg); }
-    55%, 100% { transform: translateX(333%) skewX(-18deg); }
+    0% { transform: translateX(calc(-143% - 23cqh)) skewX(-18deg); }
+    55%, 100% { transform: translateX(calc(333% + 23cqh)) skewX(-18deg); }
   }
   /* a field of twinkling sparkles scattered over the page */
   .twinkle-layer { position: absolute; inset: 0; pointer-events: none; z-index: 4; overflow: hidden; }
