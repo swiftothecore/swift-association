@@ -12263,7 +12263,8 @@ function renderTrackPicker() {
     // One line at the head, not four. The sub-line under it already says the clock is the score,
     // and a clock reading 0.00 that does not move until you type says the rest by itself.
     `<p class="tbt-blurb">Pick a record and write its running order out from the top.</p>` +
-    `<p class="tbt-sub"><span>one album · the clock is the score · low wins</span></p>` +
+    `<p class="tbt-sub"><span><span class="sub-clause">one album ·</span> <span class="sub-clause">the clock is the score ·</span> ` +
+      `<span class="sub-clause">low wins</span></span></p>` +
     `<div class="tbt-shelf">${cards}</div>` +
     `<p class="tbt-foot">No suggestions and no skipping. A wrong guess costs nothing but the ` +
       `seconds it took, and part of a title is enough if only one track on the record has it.</p>`;
@@ -12828,7 +12829,8 @@ function renderRuthlessPage() {
   el.innerHTML =
     `<p class="rl-blurb">Ten songs will write themselves out from wherever you point, ` +
     `one word a second. Name them.</p>` +
-    `<p class="rl-sub"><span>ten pages · the clock is the score · low wins</span>` +
+    `<p class="rl-sub"><span><span class="sub-clause">ten pages ·</span> <span class="sub-clause">the clock is the score ·</span> ` +
+      `<span class="sub-clause">low wins</span></span>` +
       `<span class="rl-count">played ${played}/${lenses.length}</span></p>` +
     `<div class="rl-doc">${secs}</div>` +
     `<p class="rl-foot"><svg class="rl-tip" aria-hidden="true" focusable="false"><use href="#rule-hint"/></svg>` +

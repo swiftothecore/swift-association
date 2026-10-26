@@ -6986,6 +6986,9 @@
     margin: 0; padding-bottom: clamp(4px, .9vh, 8px); border-bottom: 1px solid var(--rule);
   }
   .rl-count { white-space: nowrap; }
+  /* The terms line breaks only between its clauses, never inside one: left to wrap anywhere it
+     set "the clock is the score · low" with "wins" alone under it. Track by Track's line too. */
+  :is(.rl-sub, .tbt-sub) .sub-clause { white-space: nowrap; }
 
   /* The document: exactly the measured height, with the six sections spread into it. */
   .rl-doc {
