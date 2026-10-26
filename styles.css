@@ -10679,6 +10679,10 @@
       linear-gradient(104deg, transparent 0 3px, var(--hl) 3px calc(100% - 3px), transparent calc(100% - 3px))
         var(--hl-in, 4px) var(--hl-y, 70%) / calc(100% - var(--hl-in, 4px)) var(--hl-h, 66%) no-repeat;
   }
+  /* A mark inside a sung line hands its padding back as margin, so the pen overhangs the word
+     without moving the text: padded and nothing more, it pushed the next character off and the
+     line read "Please , take my hand". */
+  .lyric-card .lyric-line mark, .vw-say mark, .bg-only-line mark, .va-text mark { margin: 0 -4px; }
   .lyric-card:nth-child(3n+2) .lyric-line mark,
   .ms-row:nth-child(3n+2) .lyric-line mark { --hl-y: 78%; --hl-h: 62%; }
   .lyric-card:nth-child(3n) .lyric-line mark,
@@ -10832,7 +10836,7 @@
     font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust));
     color: var(--ink-soft); line-height: 1.35;
   }
-  .lyric-reveal--compact .lyric-line mark { padding: 0 3px; margin: 0; }
+  .lyric-reveal--compact .lyric-line mark { padding: 0 3px; margin: 0 -3px; }
   .lyric-reveal--compact .lc-line { font-size: calc(16px + var(--text-size-adjust)); }
   .more-songs-next { margin: 2px 0; }
   .more-songs-next:hover:not(:disabled) { color: var(--ink); }
