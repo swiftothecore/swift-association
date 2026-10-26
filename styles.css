@@ -5450,11 +5450,14 @@
   .bg-ask {
     font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: lowercase;
     color: var(--ink-soft); text-align: center; margin: 0 0 4px;
+    /* Balanced, because a centred instruction that wraps on a phone otherwise leaves its last
+       word alone on the second line ("pick the word the fewest other songs / sing"). */
+    text-wrap: balance;
   }
   /* The hint under the writing line, same voice as the round screen's. */
   .bg-hint {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
-    text-align: center; margin: 9px 0 0; min-height: 1em;
+    text-align: center; margin: 9px 0 0; min-height: 1em; text-wrap: balance;
   }
   /* The writing line itself is the round screen's (.input-area + .song-input); all this does
      is hold it to a sensible measure and give the suggestion cards somewhere to hang. */
