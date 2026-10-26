@@ -11045,6 +11045,9 @@ let challDetailPeek = false;         // ...and whether its "what changes on the 
 let challDetailHover = false;        // ...and whether the Dark Side button is being hovered/focused right now
 let challReturnConfirmId = null;      // first tap arms a return; the explicit second tap confirms it
 let challTape = null;                 // the tape picked by hand; null follows the selection's tier
+let challOpenTape = null;             // the tape whose J-card is showing, as of the last render
+const challTapePicks = {};            // the track last picked on each tape, so a tape reopens on it
+const CHALL_NARROW = matchMedia("(max-width: 620px)");   // the J-card in one column (see placeChallengeDetail)
 
 // Status marks for the contents list (gold tick = defeated, violet tick = dark side also
 // defeated, jet tick = the top side won without missing a page, hollow ring = open,
@@ -11546,12 +11549,16 @@ function toggleChallengePin(id) {
 const MIXTAPE_INK = { 0: "#9a9077", 1: "#4f7a45", 2: "#cd8a2c", 3: "#b23a3a", 4: "#5c1a1a", pinned: "#3d5f80" };
 let mixtapeSeq = 0;   // every render scopes its clip and pattern ids, as sealMarkup does for seals
 
-// One cassette in a 150 x 98 box. `done` of `total` wound onto the take-up reel; `wrapped`
-// lays the cellophane over it. The pinned and unrated tapes are drawn as blanks: a plain
-// shell, a dashed one for a tier still waiting on its rating.
-function mixtapeSVG(key, word, done, total, { wrapped = false } = {}) {
+// One cassette in a 150 x 98 box. `done` of `total` is printed on the label and, unless `wind`
+// says otherwise, wound onto the take-up reel; `wrapped` lays the cellophane over it. The pinned
+// and unrated tapes are drawn as blanks: a plain shell, a dashed one for a tier still waiting on
+// its rating.
+// The reels run from a bare hub to a pack that fills the window's height. A narrower range was
+// tried first and two tapes at 0 and 7 of 10 looked the same at shelf size, which left the
+// number doing all the work the reels were drawn to do.
+function mixtapeSVG(key, word, done, total, { wrapped = false, wind } = {}) {
   const n = ++mixtapeSeq;
-  const p = total ? done / total : 0, rMin = 9.6, rMax = 17.2;
+  const p = wind != null ? wind : total ? done / total : 0, rMin = 7.6, rMax = 20.8;
   const rl = rMin + (1 - p) * (rMax - rMin), rr = rMin + p * (rMax - rMin);
   // The two reels never sit at the same turn, so the hubs are not a mirrored pair.
   const hub = (cx, turn) => `<circle class="mx-hub" cx="${cx}" cy="61" r="6.6"/>` +
@@ -11561,7 +11568,6 @@ function mixtapeSVG(key, word, done, total, { wrapped = false } = {}) {
     }).join("");
   const screw = (x, y, a) => `<circle class="mx-screw" cx="${x}" cy="${y}" r="2.3"/>` +
     `<path class="mx-screw-slot" d="M${x - 1.5} ${y} L${x + 1.5} ${y}" transform="rotate(${a} ${x} ${y})"/>`;
-  const side = key === "pinned" ? "MIX" : key === 4 ? "SIDE M" : "SIDE A";
   return `<svg class="mx-cass" viewBox="0 0 150 98" aria-hidden="true">` +
     `<defs><clipPath id="mxw${n}"><rect x="31" y="47" width="88" height="28" rx="13.5"/></clipPath>` +
     (wrapped ? `<pattern id="mxc${n}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">` +
@@ -11573,9 +11579,8 @@ function mixtapeSVG(key, word, done, total, { wrapped = false } = {}) {
     `<rect class="mx-label" x="14" y="8" width="122" height="68" rx="3"/>` +
     `<path class="mx-band" d="M14 42 H136 V73 a3 3 0 0 1 -3 3 H17 a3 3 0 0 1 -3 -3 Z"/>` +
     `<path class="mx-rule" d="M21 36.5 H129"/>` +
-    `<text class="mx-side" x="21" y="17.5">${side}</text>` +
-    `<text class="mx-word" x="21" y="33">${escapeHtml(word)}</text>` +
-    `<text class="mx-num" x="129" y="33" text-anchor="end">${done}<tspan class="mx-of"> / ${total}</tspan></text>` +
+    `<text class="mx-word" x="21" y="30">${escapeHtml(word)}</text>` +
+    `<text class="mx-num" x="129" y="30" text-anchor="end">${done}<tspan class="mx-of"> / ${total}</tspan></text>` +
     `<rect class="mx-win" x="31" y="47" width="88" height="28" rx="13.5"/>` +
     `<g clip-path="url(#mxw${n})"><circle class="mx-pack" cx="52" cy="61" r="${rl.toFixed(1)}"/>` +
       `<circle class="mx-pack" cx="98" cy="61" r="${rr.toFixed(1)}"/></g>` +
@@ -11620,29 +11625,40 @@ function renderChallengesPage() {
   const sel = CHALLENGE_BY_ID[challSelectedId];
   const open = (challTape != null && tapeOf(challTape)) || tapeOf(sel.tapes || 0);
   if (!open.list.includes(sel)) challSelectedId = firstOpenIn(open.list);
+  challOpenTape = open.key;
+  // Cellophane only while EVERY track on a tape is still behind Mastery; one open track and the
+  // wrapper is off, because a tape you can play from is not a sealed one.
+  const sealedTape = (t) => t.key !== "pinned" && t.list.every((c) => c.mastery && !unlocked.get(c.id));
 
   const tapeBtn = (t) => {
     const done = t.list.filter((c) => records.get(c.id).defeated).length;
-    // Cellophane only while EVERY track on it is still behind Mastery; one open track and the
-    // wrapper is off, because a tape you can play from is not a sealed one.
-    const wrapped = t.key !== "pinned" && t.list.every((c) => c.mastery && !unlocked.get(c.id));
+    const wrapped = sealedTape(t);
     const isOpen = t === open;
-    const label = t.key === "pinned"
-      ? `Pinned challenges, ${t.list.length} pinned`
+    const isPin = t.key === "pinned";
+    const label = isPin
+      ? `Pinned challenges, ${t.list.length} of ${CHALLENGE_PIN_LIMIT} pins used`
       : `${t.word} challenges, ${done} of ${t.list.length} defeated${wrapped ? `, unlocks at Mastery level ${t.list[0].mastery}` : ""}`;
-    return `<button type="button" class="mx-tape mx-tape--${t.key === "pinned" ? "pin" : "t" + t.key}${isOpen ? " is-open" : ""}` +
-        `${done === t.list.length ? " is-full" : ""}"` +
+    // The pinned mix is a shortlist, not a tier to finish, so its label counts pins against the
+    // limit and its reels stay where a fresh blank sits.
+    return `<button type="button" class="mx-tape mx-tape--${isPin ? "pin" : "t" + t.key}${isOpen ? " is-open" : ""}` +
+        `${!isPin && done === t.list.length ? " is-full" : ""}"` +
         ` data-tape="${t.key}" aria-pressed="${isOpen}" aria-label="${escapeHtml(label)}">` +
-      mixtapeSVG(t.key, t.word, done, t.list.length, { wrapped }) +
+      (isPin ? mixtapeSVG(t.key, t.word, t.list.length, CHALLENGE_PIN_LIMIT, { wind: 0 })
+        : mixtapeSVG(t.key, t.word, done, t.list.length, { wrapped })) +
       (wrapped ? `<span class="mx-sticker">Mastery ${t.list[0].mastery}</span>` : "") +
     `</button>`;
   };
 
-  // The J-card's tracklist: the tier split down the middle onto two sides, the longer side
-  // first, numbered the way a tape's insert numbers them.
+  // The J-card's tracklist: a long tier split down the middle onto two sides, the longer side
+  // first, numbered the way a tape's insert numbers them. A short one stays a single list,
+  // because two sides of two tracks is ceremony with nothing in it. The pinned mix numbers its
+  // tracks with their own tier's tape instead, since it is the one list that crosses tiers.
+  const SIDES_FROM = 7;
   const half = Math.ceil(open.list.length / 2);
-  const twoSides = open.list.length > 3;
-  const trackNo = (i) => !twoSides ? `${i + 1}` : i < half ? `A${i + 1}` : `B${i - half + 1}`;
+  const twoSides = open.list.length >= SIDES_FROM;
+  const trackNo = (c, i) => open.key === "pinned"
+    ? `<span class="chall-tapes t${Math.max(0, Math.min(4, c.tapes || 0))}">${TAPE_GLYPH}</span>`
+    : !twoSides ? `${i + 1}` : i < half ? `A${i + 1}` : `B${i - half + 1}`;
   const track = (c, i) => {
     const rec = records.get(c.id);
     const isOpen = unlocked.get(c.id);
@@ -11651,6 +11667,9 @@ function renderChallengesPage() {
     else if (rec.darkDefeated) { mark = CHALL_TICK_DARK; stateCls = "is-defeated is-dark-defeated"; }
     else if (rec.defeated) { mark = CHALL_TICK; stateCls = "is-defeated"; }
     else if (isOpen)    { mark = CHALL_RING; stateCls = "is-open"; }
+    // A track no token can buy says what it is waiting on, in the tape's own sticker stock, so a
+    // Mastery lock never passes for a one-token one.
+    else if (c.mastery) { mark = `<span class="mx-track-mastery" title="unlocks at Mastery level ${c.mastery}">M${c.mastery}</span>`; stateCls = "is-locked is-mastery"; }
     else                { mark = CHALL_LOCK; stateCls = "is-locked"; }
     const pinLimitReached = !rec.pinned && pinned.length >= CHALLENGE_PIN_LIMIT;
     const pin = isOpen
@@ -11660,14 +11679,28 @@ function renderChallengesPage() {
           ` title="${rec.pinned ? "take this off the pinned mix" : pinLimitReached ? "you can pin up to three challenges" : "pin this challenge"}">${CHALL_PIN}${rec.pinned ? CHALL_UNPIN : ""}</button>`
       : "";
     return (twoSides && (i === 0 || i === half) ? `<div class="mx-side">side ${i === 0 ? "a" : "b"}</div>` : "") +
-      `<div class="mx-track ${stateCls}${c.id === challSelectedId ? " selected" : ""}">` +
-        `<span class="mx-track-no" aria-hidden="true">${trackNo(i)}</span>` +
+      `<div class="mx-track ${stateCls}${rec.pinned && isOpen ? " is-pinned" : ""}${c.id === challSelectedId ? " selected" : ""}">` +
+        `<span class="mx-track-no" aria-hidden="true">${trackNo(c, i)}</span>` +
         `<button type="button" class="mx-track-select" data-id="${c.id}" aria-current="${c.id === challSelectedId}">` +
-          `<span class="mx-track-name">${escapeHtml(c.name)}</span></button>` +
+          `<span class="mx-track-name">${escapeHtml(c.name)}` +
+            // The pin button only shows on hover where there is one, so a pinned track says so
+            // beside its name too; the pinned mix needs no reminder of what it is.
+            `${rec.pinned && isOpen && open.key !== "pinned" ? `<span class="mx-track-pinned" aria-hidden="true">${CHALL_PIN}</span>` : ""}` +
+          `</span></button>` +
         `<span class="mx-track-mark">${mark}</span>${pin}` +
       `</div>`;
   };
+  // The spine says what the tape and the tally above it don't: what is left on this one.
   const openDone = open.list.filter((c) => records.get(c.id).defeated).length;
+  const openLocked = open.list.filter((c) => !unlocked.get(c.id)).length;
+  const spineNote = open.key === "pinned" ? `${pinned.length} of ${CHALLENGE_PIN_LIMIT} pins`
+    : sealedTape(open) ? `sealed until Mastery ${open.list[0].mastery}`
+    : openDone === open.list.length ? "all beaten"
+    : `${open.list.length - openDone} to beat${openLocked ? ` · ${openLocked} locked` : ""}`;
+  // Every tier's J-card is cut to the longest tier's tracklist, so flicking along the shelf
+  // never moves the page under the pointer.
+  const tierLists = tapes.filter((t) => t.key !== "pinned").map((t) => t.list.length);
+  const maxRows = Math.max(...tierLists);
 
   const html =
     `<div class="chall-head">` +
@@ -11680,8 +11713,8 @@ function renderChallengesPage() {
     `<div class="mx-shelf${tapes.length > 4 ? " mx-shelf--many" : ""}" style="--n:${tapes.length}" role="group" aria-label="Challenge tapes by difficulty">${tapes.map(tapeBtn).join("")}</div>` +
     `<div class="mx-jcard mx-jcard--${open.key === "pinned" ? "pin" : "t" + open.key}" style="--tc:${MIXTAPE_INK[open.key]}">` +
       `<div class="mx-spine"><span class="mx-spine-word">${open.key === "pinned" ? `${CHALL_PIN}pinned` : escapeHtml(open.word)}</span>` +
-        `<span class="mx-spine-count">${open.list.length} track${open.list.length === 1 ? "" : "s"} · ${openDone} defeated</span></div>` +
-      `<div class="mx-jcard-body">` +
+        `<span class="mx-spine-count">${spineNote}</span></div>` +
+      `<div class="mx-jcard-body" style="--rows:${maxRows};--heads:${maxRows >= SIDES_FROM ? 2 : 0}">` +
         `<div class="mx-tracks">${open.list.map(track).join("")}</div>` +
         `<div class="chall-detail" id="challDetail"></div>` +
       `</div>` +
@@ -11693,14 +11726,30 @@ function renderChallengesPage() {
     const key = b.dataset.tape === "pinned" ? "pinned" : +b.dataset.tape;
     if (key === open.key) return;
     challTape = key;
-    // The selection stays put when it is on the tape just picked (a pinned track is on two).
+    // The selection stays put when it is on the tape just picked (a pinned track is on two);
+    // otherwise the tape reopens on whatever was last picked on it.
     const t = tapeOf(key);
-    if (!t.list.some((c) => c.id === challSelectedId)) challSelectedId = firstOpenIn(t.list);
+    if (!t.list.some((c) => c.id === challSelectedId)) {
+      const kept = t.list.find((c) => c.id === challTapePicks[key]);
+      challSelectedId = kept ? kept.id : firstOpenIn(t.list);
+    }
     renderChallengesPage();
     el.querySelector(".mx-jcard")?.classList.add("is-unfolding");
   }));
-  el.querySelectorAll(".mx-track-select").forEach((b) =>
-    b.addEventListener("click", () => selectChallenge(b.dataset.id)));
+  el.querySelectorAll(".mx-track-select").forEach((b) => b.addEventListener("click", () => {
+    // In one column the card opens under the row that was tapped, which moves everything below
+    // the last open card; hold the tapped row where the finger left it, then bring the card's
+    // foot (and its Play button) into view if there is room to without losing the row.
+    const before = b.getBoundingClientRect().top;
+    selectChallenge(b.dataset.id);
+    if (!CHALL_NARROW.matches) return;
+    window.scrollBy({ top: b.getBoundingClientRect().top - before, behavior: "instant" });
+    const card = $("challDetail"), row = b.closest(".mx-track");
+    if (!card || !row) return;
+    const over = card.getBoundingClientRect().bottom + 12 - window.innerHeight;
+    const room = row.getBoundingClientRect().top - 12;
+    if (over > 0 && room > 0) window.scrollBy({ top: Math.min(over, room), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  }));
   el.querySelectorAll(".mx-track-pin").forEach((b) =>
     b.addEventListener("click", () => { if (toggleChallengePin(b.dataset.pin)) renderChallengesPage(); }));
 
@@ -11715,6 +11764,7 @@ function selectChallenge(id) {
     challReturnConfirmId = null;
   }
   challSelectedId = id;
+  if (challOpenTape != null) challTapePicks[challOpenTape] = id;
   const body = $("challengesBody");
   if (!body) return;
   // The track's data-id is on its select button, not on the .mx-track wrapper that carries the
@@ -11723,8 +11773,24 @@ function selectChallenge(id) {
     b.closest(".mx-track").classList.toggle("selected", b.dataset.id === id);
     b.setAttribute("aria-current", String(b.dataset.id === id));
   });
+  placeChallengeDetail();
   renderChallengeDetail(id);
 }
+
+// Side by side, the card has the J-card's right-hand panel. In one column it used to sit under
+// the whole tracklist, so on a phone a tap on a track changed a card a screen and a half below
+// the finger and looked like it had done nothing. There it opens under the tapped row instead.
+function placeChallengeDetail() {
+  const body = $("challengesBody"), card = $("challDetail");
+  if (!body || !card) return;
+  const row = body.querySelector(".mx-track.selected");
+  if (CHALL_NARROW.matches && row) { if (row.nextElementSibling !== card) row.after(card); }
+  else {
+    const home = body.querySelector(".mx-jcard-body");
+    if (home && card.parentElement !== home) home.append(card);
+  }
+}
+CHALL_NARROW.addEventListener("change", placeChallengeDetail);
 
 function renderChallengeDetail(id) {
   const el = $("challDetail");

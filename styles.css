@@ -3804,6 +3804,10 @@
     background: var(--tc); opacity: 0; transform: scaleX(0.4); transition: opacity 0.2s, transform 0.24s ease;
   }
   .mx-tape.is-open::after { opacity: 0.8; transform: scaleX(1); }
+  /* The tapes not playing step back a little, so which one the J-card belongs to is said by the
+     whole shelf and not only by a lift of a few pixels. Hover brings one forward again. */
+  .mx-tape .mx-cass { transition: opacity 0.2s; }
+  .mx-tape:not(.is-open):not(:hover):not(:focus-visible) .mx-cass { opacity: 0.8; }
   .mx-tape--t1 { --tc: #4f7a45; }
   .mx-tape--t2 { --tc: #cd8a2c; }
   .mx-tape--t3 { --tc: #b23a3a; }
@@ -3817,13 +3821,12 @@
   .mx-label { fill: var(--lab); stroke: rgba(43,39,34,0.45); stroke-width: 1; }
   .mx-band { fill: color-mix(in srgb, var(--tc) 30%, var(--lab)); }
   .mx-rule { fill: none; stroke: rgba(43,39,34,0.2); stroke-width: 0.8; }
-  .mx-side { font-family: var(--type) !important; font-size: 7.4px; font-weight: 700; letter-spacing: 1.3px; fill: #6b6457; }
-  .mx-word { font-size: 21px; font-weight: 700; fill: #2b2722; }
-  .mx-num { font-size: 21px; font-weight: 700; fill: #2b2722; }
-  .mx-of { font-size: 14px; font-weight: 400; fill: #6b6457; }
+  .mx-word { font-size: 24px; font-weight: 700; fill: #2b2722; }
+  .mx-num { font-size: 24px; font-weight: 700; fill: #2b2722; }
+  .mx-of { font-size: 15px; font-weight: 400; fill: #6b6457; }
   .mx-tape.is-full .mx-num, .mx-tape.is-full .mx-of { fill: #9a7a2e; }
   .mx-win { fill: #2b2722; stroke: #1d1a17; stroke-width: 1.2; }
-  .mx-pack { fill: #8b5e3f; stroke: #5e3d28; stroke-width: 0.8; }
+  .mx-pack { fill: #9a6a46; stroke: #5e3d28; stroke-width: 0.8; }
   .mx-hub { fill: var(--lab); stroke: #1d1a17; stroke-width: 1; }
   .mx-tooth { fill: none; stroke: #2b2722; stroke-width: 1.4; stroke-linecap: round; }
   .mx-screw { fill: rgba(0,0,0,0.14); stroke: rgba(0,0,0,0.42); stroke-width: 0.9; }
@@ -3845,7 +3848,7 @@
   .mx-glare { fill: none; stroke: rgba(255,255,255,0.72); stroke-width: 1.6; stroke-linecap: round; }
   /* the Mastery level, on the same gold sticker stock as Play */
   .mx-sticker {
-    position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%) rotate(-4deg); white-space: nowrap;
+    position: absolute; left: 50%; bottom: 7px; transform: translateX(-50%) rotate(-4deg); white-space: nowrap;
     font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1px;
     text-transform: uppercase; padding: 3px 7px 2px; color: #2b2722; background: #efb73e;
     border: 1.5px solid #2b2722; border-radius: 2px; box-shadow: 2px 2px 0 rgba(43,39,34,0.2);
@@ -3887,7 +3890,11 @@
   .mx-spine-word .chall-pin-svg { width: 13px; height: 13px; }
   .mx-spine-count { margin-left: auto; font-weight: 400; letter-spacing: 1px; text-transform: none; opacity: 0.92; }
   .mx-jcard-body { display: grid; grid-template-columns: 240px minmax(0, 1fr); }
-  .mx-tracks { padding: 10px 10px 14px 10px; border-right: 1.5px dashed color-mix(in srgb, var(--ink) 26%, transparent); min-width: 0; }
+  .mx-tracks {
+    padding: 10px 10px 14px 10px; border-right: 1.5px dashed color-mix(in srgb, var(--ink) 26%, transparent); min-width: 0;
+    /* cut to the longest tier (rows and side heads set inline), so every tape's J-card is one height */
+    min-height: calc(var(--rows, 0) * 32px + var(--heads, 0) * 26px + 24px);
+  }
   .mx-side {
     font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; color: var(--ink-soft); margin: 4px 0 3px 5px;
@@ -3895,7 +3902,7 @@
   .mx-track + .mx-side { margin-top: 12px; }
   .mx-track {
     position: relative; display: grid; grid-template-columns: 24px minmax(0, 1fr) 22px;
-    align-items: center; column-gap: 4px; min-height: 34px; padding: 0 4px 0 5px;
+    align-items: center; column-gap: 4px; min-height: 32px; padding: 0 4px 0 5px;
     border-radius: 2px; transition: background 0.12s;
   }
   .mx-track:hover { background: rgba(43,39,34,0.05); }
@@ -3904,7 +3911,7 @@
   :root[data-theme="dark"] .mx-track.selected { background: rgba(116,171,225,0.14); }
   .mx-track-no { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); }
   .mx-track-select {
-    grid-column: 2; min-width: 0; padding: 6px 0; border: none; background: transparent;
+    grid-column: 2; min-width: 0; padding: 5px 0; border: none; background: transparent;
     text-align: left; font: inherit; color: inherit; cursor: pointer;
   }
   .mx-track-select:focus-visible { outline: 1px dashed #274560; outline-offset: 2px; border-radius: 2px; }
@@ -3919,6 +3926,19 @@
   .mx-track.is-locked .mx-track-name { color: var(--ink-soft); }
   .mx-track.is-locked .mx-track-no { color: #b3a993; }
   .mx-track.is-locked .mx-track-mark { color: #c4bca9; }
+  /* the pinned mix numbers its tracks with their own tier's tape */
+  .mx-track-no .chall-tapes { display: flex; }
+  .mx-track-no .tape-glyph { width: 17px; height: 11px; }
+  /* a Mastery lock, on the tape sticker's stock: no token buys these */
+  .mx-track-mastery {
+    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.3px;
+    line-height: 1; padding: 2px 2px 1px; color: #2b2722; background: #efb73e; border: 1px solid #2b2722;
+    border-radius: 2px; transform: rotate(-4deg); opacity: 0.85;
+  }
+  :root[data-theme="dark"] .mx-track-mastery { background: #e0a83a; border-color: #14110d; }
+  /* pinned, said beside the name; on touch the pin button says it instead (below) */
+  .mx-track-pinned { display: inline-block; margin-left: 6px; color: var(--blue-pencil); vertical-align: 0.05em; }
+  .mx-track-pinned .chall-pin-svg { display: block; width: 14px; height: 14px; }
   :root[data-theme="dark"] .mx-track.is-locked .mx-track-no,
   :root[data-theme="dark"] .mx-track.is-locked .mx-track-mark { color: #6f6656; }
   .mx-track-mark { grid-column: 3; grid-row: 1; display: flex; justify-content: center; }
@@ -3934,13 +3954,17 @@
   .mx-track:hover .mx-track-mark, .mx-track:has(.mx-track-pin:focus-visible) .mx-track-mark { opacity: 0; }
   .mx-track:hover .mx-track-pin, .mx-track-pin:focus-visible { opacity: 1; transform: rotate(2deg) scale(1); }
   .mx-track-pin:hover, .mx-track-pin:focus-visible { color: #1f3a52; background: #e7eef3; border-style: solid; outline: none; }
-  .mx-track-pin.is-pinned { width: 20px; height: 20px; color: #9b2f35; background: #f4d9d8; border-color: #b64a4f; border-style: solid; }
-  .mx-track-pin.is-pinned .chall-pin-svg { display: none; }
-  .mx-track-pin.is-pinned .chall-unpin-svg { display: block; }
+  /* Pinned is a pressed pin in blue pencil. The red cross only arrives under the pointer, as the
+     thing a click will do: left standing beside the status marks it read as a failed track. */
+  .mx-track-pin.is-pinned { color: #f4ecd8; background: var(--blue-pencil); border-color: var(--blue-pencil); border-style: solid; }
+  .mx-track-pin.is-pinned:hover, .mx-track-pin.is-pinned:focus-visible { color: #9b2f35; background: #f4d9d8; border-color: #b64a4f; }
+  .mx-track-pin.is-pinned:hover .chall-pin-svg, .mx-track-pin.is-pinned:focus-visible .chall-pin-svg { display: none; }
+  .mx-track-pin.is-pinned:hover .chall-unpin-svg, .mx-track-pin.is-pinned:focus-visible .chall-unpin-svg { display: block; }
   .mx-track-pin:disabled { color: #aaa18f; background: rgba(245,239,225,0.76); border-color: #c9c0ad; cursor: default; }
   :root[data-theme="dark"] .mx-track-pin { color: var(--blue-pencil); background: var(--paper); border-color: color-mix(in srgb, var(--blue-pencil) 60%, transparent); }
   :root[data-theme="dark"] .mx-track-pin:hover, :root[data-theme="dark"] .mx-track-pin:focus-visible { color: #cfe0ef; background: #2c3c4c; }
-  :root[data-theme="dark"] .mx-track-pin.is-pinned { color: #f0b3b0; background: #4a2626; border-color: #b0605c; }
+  :root[data-theme="dark"] .mx-track-pin.is-pinned { color: #1c1a17; background: var(--blue-pencil); border-color: var(--blue-pencil); }
+  :root[data-theme="dark"] .mx-track-pin.is-pinned:hover, :root[data-theme="dark"] .mx-track-pin.is-pinned:focus-visible { color: #f0b3b0; background: #4a2626; border-color: #b0605c; }
   :root[data-theme="dark"] .mx-track-pin:disabled { color: #6f6656; background: var(--paper); border-color: #5a5246; }
   /* Without hover the pin can't borrow the mark's square on demand, and laid permanently over
      it the pin would hide every tick on the tape. So on touch it gets a column of its own. */
@@ -3948,6 +3972,7 @@
     .mx-track { grid-template-columns: 24px minmax(0, 1fr) 22px 28px; }
     .mx-track-pin { grid-column: 4; opacity: 1; transform: rotate(2deg) scale(1); }
     .mx-track:hover .mx-track-mark { opacity: 1; }
+    .mx-track-pinned { display: none; }
   }
   .mx-jcard .chall-detail { padding: 16px 18px 18px 20px; }
   .chall-mark-svg { width: 20px; height: 20px; display: block; }
@@ -4355,8 +4380,19 @@
     .mx-shelf--many { gap: 10px 12px; }
     .mx-shelf--many > .mx-tape { flex-basis: calc((100% - 24px) / 3); }
     .mx-jcard-body { grid-template-columns: 1fr; }
-    .mx-tracks { border-right: 0; border-bottom: 1.5px dashed color-mix(in srgb, var(--ink) 26%, transparent); }
+    .mx-tracks { border-right: 0; min-height: 0; }
     .mx-jcard .chall-detail { padding: 16px 14px 18px; }
+    /* the card opens under the tapped row (placeChallengeDetail), joined to it by the row's tint */
+    .mx-tracks > .chall-detail {
+      margin: 0 -10px 8px; padding: 14px 14px 16px;
+      border-top: 1.5px dashed color-mix(in srgb, var(--ink) 26%, transparent);
+      border-bottom: 1.5px dashed color-mix(in srgb, var(--ink) 26%, transparent);
+      background: rgba(39,69,96,0.05);
+    }
+    :root[data-theme="dark"] .mx-tracks > .chall-detail { background: rgba(116,171,225,0.06); }
+    .mx-tally b { font-size: calc(38px + var(--text-size-adjust)); }
+    .mx-tally-of { letter-spacing: 1px; }
+    .mx-tally-sub { white-space: nowrap; font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.6px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .mx-tape, .mx-tape::after { transition: none; }
