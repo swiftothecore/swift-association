@@ -11343,6 +11343,11 @@
     display: grid; place-items: center;
   }
   .nb-cover-sub > span { grid-area: 1 / 1; }
+  /* The dots hang off the end of the line rather than sitting in it. In the line they were
+     centred with the words even while they were still untyped, which held "opening the
+     notebook" about ten pixels left of the label's middle. */
+  .nb-cover-opening { position: relative; }
+  .nb-cover-dots { position: absolute; left: 100%; top: 0; white-space: nowrap; }
   /* The cover is only ever on screen shut for three reasons. Loading and the turn that follows
      it (the flip sheet is a clone without .loading) say it is opening; admiring it and the
      notebook that would not open are a book sitting shut, so they wear the tagline. */
