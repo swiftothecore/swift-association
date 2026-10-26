@@ -6065,9 +6065,11 @@
     display: flex; flex-direction: column; align-items: center; gap: 3px;
     max-width: min(54ch, 100%); margin: 0 auto 14px;
   }
-  .bg-rline {
-    display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 1px 7px;
-  }
+  /* Inline and balanced, for the reason .bg-line gives: as a wrapping flex row a long verse line
+     left its last word or two alone on a row of their own. The tokens sit on real spaces in the
+     line's monospace face, so 7px less 1ch is the 7px gap the row used to have. */
+  .bg-rline { text-align: center; text-wrap: balance; word-spacing: calc(7px - 1ch); }
+  .bg-rline > * { word-spacing: normal; }
   .bg-tok { font-family: var(--hand); font-size: calc(24px + var(--text-size-adjust)); line-height: 1.35; color: var(--ink); }
   .bg-tape {
     position: relative; display: inline-block; font: inherit; color: inherit;
@@ -6611,7 +6613,7 @@
     /* A redacted verse is several lines rather than one, and a block can't hyphenate, so it
        comes down further than the single-line games to keep the words off each other. */
     .bg-tok { font-size: calc(21px + var(--text-size-adjust)); }
-    .bg-rline { gap: 1px 6px; }
+    .bg-rline { word-spacing: calc(6px - 1ch); }
     /* One column of full lines, so it only needs the type to come down and the marks to come
        in off a margin a phone hasn't got. */
     /* Two rows of three still fit a phone, but the scraps have to give up their padding and

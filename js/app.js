@@ -8057,7 +8057,7 @@ function renderBonusRound() {
               `<span class="bg-tape-strip" aria-hidden="true"></span></button>`
           : escapeHtml(censor(t.core));
         return `<span class="bg-tok">${escapeHtml(t.pre)}${core}${escapeHtml(t.post)}</span>`;
-      }).join("") + `</div>`).join("");
+      }).join(" ") + `</div>`).join("");
     body.innerHTML =
       /* The page's two sides ask for different things and have to say so, because the whole of
          Redacted's play is what a strip is costing you. Ten pages: a point a strip. Endless: the
