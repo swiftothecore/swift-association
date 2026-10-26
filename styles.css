@@ -5491,10 +5491,16 @@
   }
 
   /* Spot the Slip — the doctored line, each word its own tappable chip. */
+  /* Inline rather than a wrapping flex row, so the line can be balanced: a flex row filled the
+     first line greedily and stranded the last word of a lyric on its own ("…like city" over
+     "lights"). The words sit on the HTML's own spaces, set in the line's typewriter face; that
+     face is monospace, so a space is exactly 1ch and the spacing below lands on the 5px the
+     flex gap used to give. The words themselves are single words and get normal spacing back. */
   .bg-line {
-    display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline;
-    gap: 2px 5px; max-width: 44ch; margin: 0 auto 6px;
+    display: block; text-align: center; text-wrap: balance; word-spacing: calc(5px - 1ch);
+    max-width: 44ch; margin: 0 auto 6px;
   }
+  .bg-line > * { word-spacing: normal; }
   .bg-word, .bg-word-plain {
     font-family: var(--hand); font-size: calc(27px + var(--text-size-adjust)); line-height: 1.25; color: var(--ink);
   }
