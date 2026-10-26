@@ -15694,7 +15694,9 @@
   [data-reduce-motion="on"] .stamp { transition: none; }
   [data-reduce-motion="on"] .stamp:hover,
   [data-reduce-motion="on"] .stamp:focus-visible { transform: rotate(var(--stamp-rot)); }
-  @media (max-width: 480px) {
+  /* The small dies start at 600px, not at the phone breakpoint: between the two the type tabs
+     already reach the page's right edge, and full-size stamps sat on top of Custom. */
+  @media (max-width: 600px) {
     .franking { top: 9px; right: 9px; }
     .stamp--focus { width: 34px; }
     .stamp--ruthless { width: 33px; margin-left: -2px; }
@@ -17301,6 +17303,9 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   }
   .corner-link, .feedback-link { min-height: 44px; gap: 7px; padding: 8px 12px; }
   .corner-link-label, .feedback-link .corner-link-label { max-width: 160px; opacity: 1; }
+  /* The type tabs span the page here, so the picker drops below the corner franking rather
+     than running its last tab under the stamps. */
+  .mode-picker:has(> #typeTabs) { padding-top: 18px; }
   .mode-tabs { gap: 5px; }
   .mode-tab { --tab-foot: 8px; min-height: 40px; padding: 8px 10px var(--tab-foot); }
   /* A tab that reaches down through its line has to grow by that reach here, or the min-height
