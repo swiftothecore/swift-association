@@ -6083,9 +6083,13 @@
   }
   /* The strip itself. Correction tape, not marker ink: a flat opaque off-white a shade cooler
      than the paper, laid over the word with a soft shadow so it reads as sitting ON the page,
-     and a slightly darker edge where the roller pressed it down. */
+     and a slightly darker edge where the roller pressed it down.
+     It is set 0.085em right of the word's box, the same lean .bg-word corrects for: Caveat's
+     ink starts inside its advance and overhangs the far side, so the neighbours' ink sits
+     unevenly in an even gap, and a strip centred on the box sat flush against the word before
+     it ("It▭ like") with a wide space after. */
   .bg-tape-strip {
-    position: absolute; left: -3px; right: -3px; top: 0.14em; bottom: 0.2em;
+    position: absolute; left: calc(-3px + 0.085em); right: calc(-3px - 0.085em); top: 0.14em; bottom: 0.2em;
     background:
       linear-gradient(180deg, rgba(255,255,255,0.55), rgba(0,0,0,0.045) 62%, rgba(0,0,0,0.02)),
       #f2eee2;
