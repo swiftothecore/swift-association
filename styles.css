@@ -5093,6 +5093,9 @@
     }
     .zine-leaf-page .bonus-now-blurb, .zine-leaf-page .bonus-now-soon { margin-left: auto; margin-right: auto; }
     .zine-leaf-page .bonus-now-soon { text-align: left; }
+    /* The Play and Endless pair is a flex row, which text-align never reaches, so it kept the
+       spread's left edge and sat off to one side under a centred page. */
+    .zine-leaf-page .bonus-play-row { justify-content: center; }
     /* the staples turn with the fold: across the top of the page leaf, not down a side */
     .zine-spine { left: 0; right: 0; top: 40%; bottom: auto; width: auto; height: 0; }
     .zine-spine i { left: auto; top: -6px; width: 3px; height: 12px; }
