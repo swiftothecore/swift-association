@@ -14875,7 +14875,8 @@
   .msc-owed { fill: none; stroke: var(--t); stroke-width: 3.8; stroke-linecap: round; }
   .msc-pencil-n { font-family: var(--hand); font-weight: 700; font-size: 18px; fill: currentColor; }
   .msc-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  .msc-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); }
+  /* Pretty: in the half-width cards on a phone, The Long Game's blurb closed on "run." alone. */
+  .msc-blurb { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.45; color: var(--ink-soft); text-wrap: pretty; }
   .msc-next { font-family: var(--type); font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); white-space: nowrap; color: var(--ink); }
   .msc.maxed .msc-lv { display: flex; align-items: center; }
   /* A full card comes out of the packet dyed: card stock in a deep shade of the skill's colour
