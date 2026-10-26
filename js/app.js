@@ -758,7 +758,14 @@ function resizeSongInput() {
   const scrollTop = input.scrollTop;
   input.style.overflowY = "hidden";
   input.style.height = "auto";
-  const full = input.scrollHeight + borders;
+  // An empty field measures its placeholder, which wraps to two lines on a phone. Keep that
+  // height while the answer is shorter, or the first letter typed collapses the field and
+  // jumps everything under it up a line.
+  // The floor is kept per width, so turning the phone drops a floor measured for the old one.
+  const measured = input.scrollHeight + borders;
+  if (!input.value) input.dataset.floor = input.clientWidth + ":" + measured;
+  const [floorWidth, floor] = (input.dataset.floor || "").split(":").map(Number);
+  const full = floorWidth === input.clientWidth ? Math.max(measured, floor) : measured;
   input.style.height = Math.min(full, limit) + "px";
   input.style.overflowY = full > limit ? "auto" : "hidden";
   input.scrollTop = full > limit ? scrollTop : 0;
@@ -17478,6 +17485,8 @@ function applyInputHints() {
   // sitting above a gap that nothing is in any more.
   hint.hidden = shown.length === 0;
   noteTypeHintsSeen(segs);
+  // the placeholder may have changed length, and the empty field is sized to it
+  resizeSongInput();
 }
 
 // Impostor: show the 🚩 flag bar for the whole run and re-enable it each fresh page.
