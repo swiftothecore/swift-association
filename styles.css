@@ -17391,6 +17391,15 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .rec-sig-text { flex: 1; }
   .rec-sign-row { flex-wrap: wrap; justify-content: flex-end; row-gap: 12px; }
   .rec-sign-row .set-text { width: 100%; min-width: 0; }
+  /* At 320px the column beside the polaroid is 125px, and less the field's 28px of side
+     padding that is 97px for a 112px "sign your notebook": the placeholder printed cut off
+     mid-word. A tighter gap and a slightly smaller photo give the line back 16px, and the
+     right padding (only a last glyph's exit stroke needs it) gives 4px more. */
+  @media (max-width: 359px) {
+    .rec-sig { gap: 10px; }
+    .rec-sig .pol-photo { width: 88px; height: 88px; }
+    .rec-sign-row .set-text { padding-right: 10px; }
+  }
   /* The close link is pinned in the game card's top-right corner, above the page line. The
      phone padding above would slide the page line up under it and print the link straight
      across the rule marks, so the game page keeps the head room the desktop card gives it. */
