@@ -16443,11 +16443,13 @@ function updateTagline() {
   // page count, just quietly harder numbers. The eclipse + "dark side" is the only thing on
   // the game screen that says which variant you're actually in.
   el.classList.toggle("is-dark-run", !!challengeDark);
-  if (challengeDark) {
-    el.innerHTML = `${escapeHtml(line)}<span class="tagline-dark">${CHALL_ECLIPSE}dark side</span>`;
-  } else {
-    el.textContent = line;
-  }
+  // Each " · " segment is unbreakable, so a line too long for a phone breaks between them
+  // ("13 pages · 7 seconds each" over "Hard difficulty") and never inside one ("7 seconds"
+  // over "each"). The row is balanced in styles.css so neither line is left with one word.
+  // The dot rides at the end of the segment before it, so a second line never opens on one.
+  const parts = line.split(" · ");
+  const segs = parts.map((t, i) => `<span class="tag-seg">${escapeHtml(t)}${i < parts.length - 1 ? "\u00a0·" : ""}</span>`).join(" ");
+  el.innerHTML = challengeDark ? `${segs}<span class="tagline-dark">${CHALL_ECLIPSE}dark side</span>` : segs;
 }
 // A front-page tab row wraps on a phone, and a tab on any line but the last has nothing under
 // it: the page (or the shelf the row stands on) is only under the last line. Those tabs are

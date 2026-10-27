@@ -1016,7 +1016,12 @@
   }
   /* Nudged clear of the swash without paying for it in layout: a transform moves
      the ink only, so the notebook below stays exactly where it was drawn. */
-  .tagline-row { transform: translateY(5px); }
+  /* Balanced, because a tagline one word too long for a phone otherwise wraps only its last
+     heart, or "difficulty ♡", onto a second line on its own. */
+  .tagline-row { transform: translateY(5px); text-wrap: balance; }
+  /* a block of its own rather than nowrap, so a challenge's own tagline segment longer than a
+     phone is wide can still wrap inside itself instead of running off the desk */
+  .tag-seg { display: inline-block; max-width: 100%; }
   /* small inked hearts holding the tagline */
   .tagline-row .tag-heart {
     width: 13px; height: auto; overflow: visible;
