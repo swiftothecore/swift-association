@@ -5188,10 +5188,12 @@ function pbTile(mode, opts = {}) {
     `<span class="pb-score">${empty ? "—" : rec.score + (unit ? `<span class="pb-unit">${unit}</span>` : "")}</span>` +
     `<span class="pb-sub">${escapeHtml(sub)}</span></div>`;
 }
+// Day and time are separate runs so a phone's narrow date column can stack them (the
+// separator hides there) instead of wrapping after the dot and leaving it dangling.
 function histDateLabel(iso) {
   const d = new Date(iso);
-  return d.toLocaleDateString("en-US", { day: "numeric", month: "short" }) + " · " +
-         d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+  return `<span class="hist-day">${d.toLocaleDateString("en-US", { day: "numeric", month: "short" })}</span>` +
+         `<span class="hist-sep"> · </span><span class="hist-clock">${fmtClock(d)}</span>`;
 }
 function appendHistoryRows(hist) {
   const rowsEl = $("histRows");
