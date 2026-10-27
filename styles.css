@@ -9294,7 +9294,7 @@
     display: block; margin-top: 1px;
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink-soft);
   }
-  .va-song { white-space: nowrap; }   /* the bead never wraps away from its song */
+  .va-lead { white-space: nowrap; }   /* the bead never wraps away from its song */
   /* the album's bead, the colour that page wears on the strand */
   .va-bead {
     display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px;

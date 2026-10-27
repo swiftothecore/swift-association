@@ -3840,7 +3840,12 @@ function renderVerseAnthology() {
   const rows = verseKeepsake.map((k, i) => {
     const tint = vaBeadTint(k);
     const bead = tint ? `<i class="va-bead" style="--c:${tint}"></i>` : "";
-    const song = k.song ? `<span class="va-song">${bead}${escapeHtml(censor(k.song))}</span>` : "";
+    // The bead is glued to the title's first word, not the whole title: a nowrap title as long
+    // as "We Are Never Ever Getting Back Together" ran far past the slip on a phone.
+    const title = k.song ? escapeHtml(censor(k.song)) : "";
+    const cut = title.indexOf(" ");
+    const song = k.song ? `<span class="va-song"><span class="va-lead">${bead}${cut < 0 ? title : title.slice(0, cut)}</span>` +
+      `${cut < 0 ? "" : title.slice(cut)}</span>` : "";
     const verse = k.tier === "verse" ? `<em class="va-verse">whole verse</em>` : "";
     return `<li class="va-row${i === pick ? " is-pick" : ""}">` +
       `<span class="va-pg">${k.page ? `p.${k.page}` : ""}</span><div class="va-body">` +
