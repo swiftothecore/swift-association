@@ -9466,7 +9466,11 @@
   .excluded-note .ex-title {
     font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); line-height: 1;
     color: #9b2226; background: rgba(178,58,58,0.12);
-    padding: 3px 12px; border-radius: 13px; white-space: nowrap;
+    padding: 3px 12px; border-radius: 13px;
+    /* Never nowrap: the longest titles run about 280px at this size, wider than a 320px
+       phone's page, and an unbreakable pill in a centred row spilled over the margin rule
+       on one side and off the paper on the other. A long one wraps to two lines instead. */
+    max-width: 100%; text-align: center;
   }
   .excluded-note .ex-more {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft);
