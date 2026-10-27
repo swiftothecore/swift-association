@@ -17514,6 +17514,11 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 @media (pointer: coarse) {
   .btn-link, .countdown-skip, .countdown-hold, .tt-reset, .bc-refill-hd button { min-height: 44px; padding-block: 10px; }
   .rw-die { min-height: 44px; }   /* the matchbox stays its own size, centred in the taller hit */
+  /* "close the notebook" is 10px type in a 20px-tall button, the smallest target on the game
+     page. A finger aiming for it caught the page line instead (and missed the second, arming
+     tap). The hit area grows invisibly up and out from the word, so the corner it sits in does
+     not move, and never down: the rule marks sit just under it and keep their own taps. */
+  .quit-btn::after { content: ""; position: absolute; inset: -12px -10px 0; }
   .see-also--row .nav-card-title {
     position: static; display: block; width: auto; height: auto; margin: 7px 0 0; padding: 0;
     overflow: visible; clip: auto; clip-path: none; border: 0; white-space: normal; text-align: center; line-height: 1.15;
