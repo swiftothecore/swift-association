@@ -14699,8 +14699,11 @@
      unbreakable runs: "achievements" and "bonus games". Both come down a step rather than
      run out of the card. Large text gets the same sizes here: there is no width left to
      give it anything bigger. */
+  /* The kicker also runs nearly the card's whole width here, so its first letters reach
+     into the corner where the bottom row's washi strip crosses (challenges' "unlock" lost
+     its U under the tape). A little more paper under the kicker lifts it clear. */
   @container navrow (max-width: 300px) {
-    .nav-card, body[data-text-size="large"] .nav-card { padding-left: 3px; padding-right: 3px; }
+    .nav-card, body[data-text-size="large"] .nav-card { padding-left: 3px; padding-right: 3px; padding-bottom: 17px; }
     .nav-card-title, body[data-text-size="large"] .nav-card-title { font-size: 14.5px; }
     .nav-card-kicker, body[data-text-size="large"] .nav-card-kicker { font-size: 7px; letter-spacing: 0.4px; }
   }
