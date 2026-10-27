@@ -8880,9 +8880,17 @@
   .hist-verse-nib svg { display: block; width: 100%; height: 100%; }
   .hist-mode, .hist-date { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
   .hist-day, .hist-clock { white-space: nowrap; }
+  /* The score column is about 35px on a 320px phone, and a best run's crown plus "12/13" is
+     about 59px, so the score wrapped under its crown and sat a line below the rest of its row.
+     Here the crown is lifted out of the line and stands over the score in the row's own head
+     room, and the header's tracking eases so "verse" stops running into "mode". */
   @media (max-width: 600px) {
     .hist-sep { display: none; }
     .hist-day, .hist-clock { display: block; }
+    .hist-score { position: relative; white-space: nowrap; }
+    .hist-row:has(.hist-crown) { padding-top: 19px; }
+    .hist-row .hist-crown { position: absolute; left: 0; bottom: 100%; width: 13px; height: 13px; margin: 0 0 3px; }
+    .hist-head { letter-spacing: 0.4px; }
   }
   /* PB crown — the same SVG as the achievement charm, sized to sit on the score baseline. */
   .hist-crown { display: inline-block; width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; }
