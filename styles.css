@@ -17464,6 +17464,12 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   :is(#screen-results, [data-flip-id="screen-results"]) .bracelet-result {
     width: 100%; max-width: 100%; margin-left: 0;
   }
+  /* The tally column's -14px is half the desktop page's 58px/30px padding difference. The
+     phone page pads 30px/14px, so its paper centre is only 8px left of the content's: at
+     -14px the column overshot by 6px and laid the Copy button's left edge on the margin rule. */
+  :is(#screen-results, [data-flip-id="screen-results"]) > .word-label,
+  :is(#screen-results, [data-flip-id="screen-results"]) .final-score,
+  :is(#screen-results, [data-flip-id="screen-results"]) .bracelet-result { left: -8px; }
   .word-wrap { margin-bottom: 16px; }
   .timer-wrap { margin-bottom: 18px; }
   .tap-grid, .tap-grid[data-cols="2"], .tap-grid[data-cols="3"] {
