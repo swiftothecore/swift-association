@@ -14592,7 +14592,10 @@ function buildCardMeta() {
     const finite = !customInfinite();
     title = "Custom Game";
     headline = [finite ? strung(correct, customSessionLen) : { v: String(roundResults.length), l: "rounds" }, clock].filter(Boolean);
-    if (customPreset) stats.push({ v: customPreset.name, l: "preset" });
+    // A form never copied from a filed preset has no name of its own ("Unsaved mode" is a
+    // description, not a name), so it gets no preset chip.
+    const named = customPreset && !(customPreset.id === CUSTOM_DRAFT_ID && !customPreset.src);
+    if (named) stats.push({ v: customPreset.name, l: "preset" });
   } else if (gameType === "challenge" && (challengeCard || currentChallenge)) {
     // Every challenge names itself here, base or dark. Only Thirty-One used to, so every other
     // card — Vanishing Word, and its dark side — fell through to the fixed-13 branch below and
