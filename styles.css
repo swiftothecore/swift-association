@@ -2836,7 +2836,7 @@
 
   /* THE DICE PICK UP THE DAY. On the days the Start writing button is forced into a dated
      finish (js/anniversarycta.js), the scratch card beside it joins in by taking the day's
-     colour in its own materials: the foil's hatching, the pips, and on two days one drawn extra.
+     colour in its own materials: the foil's hatching, the pips, and one drawn extra.
      It stays a scratch card every day of the year; the 13th's blackboard was tried as a whole
      new surface for the stamp and read as a second costume rather than the same card dressed.
      paintChanceDice (js/app.js) writes the attributes. All four were picked by the user from
@@ -2847,6 +2847,20 @@
      only as far as it takes to clear 3:1 on the card: Fearless's champagne was 2.1:1 on the day
      card. The night card is still light (#b9b09e), so the night inks drawn for a dark page would
      vanish on it; the night column is the day ink taken further down instead.
+       Each record also puts one small object on the dice (js/dicetrinkets.js, drawn in by
+     paintDiceTrinket): a guitar leaning behind them for the debut, gold glitter
+     thrown off them for Fearless, a crown on the back die for Speak Now, the scarf over its
+     shoulder for Red, a beach polaroid tucked behind them for 1989, a snake along the back die
+     for reputation, a butterfly landed on the front one for Lover, mushrooms at their foot for
+     folklore, ivy climbing the back die for evermore, a crescent moon and stars for Midnights, a
+     quill set down nib first for TTPD and a plume of feathers for Showgirl. They are drawn as
+     objects that rest, hang and overlap the dice the way the real thing would, never as flat
+     icons laid on top; a first round drawn as flat icons was sent back as unnatural. Picked by the
+     user from scripts/ui/chance-album-trinkets.html. Turned down there: a cowboy boot, the Love
+     Story ring, a sparkler, a maple leaf, a paper airplane (it kept reading as a mouse cursor), a
+     coiled snake, a heart balloon, a gold string tying the two dice together, a champagne cork,
+     Karma the cat asleep on a die, a UFO, dressing-room bulbs round the card, and a wisp of
+     lavender haze across the moon (it read as sea).
        Her birthday inks the pips in the icing pink of Iced for her and stands a candle on the
      back die, so the die is the cake; the foil stays plain. Christmas tucks holly in above the
      front die and draws the foil in pine, with the pips left in ink. The 13th draws the foil in
@@ -2854,10 +2868,10 @@
      board's own green (#2e3b34) drawn as thin hatching reads as heavier black lines rather than
      green. Her birthday is always a 13th, and wins it, as it does on the button.
        The card does not invert on hover, so the day's colours hold through it. High contrast
-     keeps the pips in ink and the foil plain. The candle and holly keep their fills, and their
-     outlines follow the stamp's ink. Turned down: a flame for the lone pip (a blob at 28px),
-     sprinkles (read as a mistake), a fir sprig (a feather), snow on the foil, red and green
-     pips, and a second scratched window revealing a 13. */
+     keeps the pips in ink and the foil plain. The candle, the holly and the records' objects keep
+     their fills, and their outlines follow the stamp's ink. Turned down: a flame for the lone
+     pip (a blob at 28px), sprinkles (read as a mistake), a fir sprig (a feather), snow on the
+     foil, red and green pips, and a second scratched window revealing a 13. */
   .btn-primary.chance-cta[data-day-ink="debut"]      { --pip: #19726b; --pip-night: #1d625b; }
   .btn-primary.chance-cta[data-day-ink="fearless"]   { --pip: #9e7c21; --pip-night: #6d561c; }
   .btn-primary.chance-cta[data-day-ink="speaknow"]   { --pip: #6d5aa6; --pip-night: #604f8a; }
@@ -2896,6 +2910,18 @@
   .chance-mark .holly-leaf { fill: #2f6b4f; }
   .chance-mark .holly-leaf--lit { fill: #3d7d5c; }
   .chance-mark .holly-berry { fill: #b3262b; }
+  /* The records' objects carry their own colours and weights per shape, as --tf (fill), --tw
+     (outline weight) and --tc (an outline in the object's own darker hue, where black would
+     harden something soft: the plume, the quill), and --lc / --lw on open strokes. */
+  .chance-mark .day-fill {
+    fill: var(--tf, none); stroke: var(--tc, currentColor); stroke-width: var(--tw, .5);
+    stroke-linejoin: round; stroke-linecap: round;
+  }
+  .chance-mark .day-line {
+    fill: none; stroke: var(--lc, currentColor); stroke-width: var(--lw, .4);
+    stroke-linejoin: round; stroke-linecap: round;
+  }
+  body[data-contrast="high"] .chance-mark .day-fill { stroke: currentColor; }
 
   /* THE IDLE BOB, AND THE RATTLE INSIDE IT. The gold bar beside this one has always breathed
      on a loop, and a stamp that sits perfectly still next to it reads as disabled rather than

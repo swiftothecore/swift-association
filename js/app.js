@@ -5,6 +5,7 @@ import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
 import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, christmasFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
+import { dayTrinket } from "./dicetrinkets.js";
 import { seasonOn, SEASONS, southernSeasons } from "./season.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
    js/lineuphand.js for what a hand of them costs and what cannot sit beside what, and
@@ -579,9 +580,9 @@ function paintStartButton() {
 }
 
 // The scratch card beside the button picks up the same days, in the same order, in its foil,
-// its pips and, on her birthday and Christmas, one drawn extra (styles.css, THE DICE PICK UP THE
-// DAY). A release day inks it in the record's masthead ink, read from dayInkFor so the card and
-// the wordmark can never disagree about whose day it is. Like the button's finish, nothing is
+// its pips and one drawn extra (styles.css, THE DICE PICK UP THE DAY). A release day inks it in the
+// record's masthead ink, read from dayInkFor so the card and the wordmark can never disagree about
+// whose day it is, and that ink also names the record's drawing. Like the button's finish, nothing is
 // stored and the next day hands the plain card back.
 function paintChanceDice(day) {
   const dice = $("randomGear");
@@ -593,6 +594,27 @@ function paintChanceDice(day) {
   else delete dice.dataset.dayInk;
   if (occasion) dice.dataset.day = occasion;
   else delete dice.dataset.day;
+  paintDiceTrinket(dice, ink);
+}
+// A release day also puts that record's drawn extra on the stamp (js/dicetrinkets.js), in the
+// layer its drawing asks for, and the next day takes it out again. applySettings repaints the
+// stamp on every settings change, so the drawing is only rebuilt when the record changes.
+function paintDiceTrinket(dice, ink) {
+  if ((dice.dataset.trinket || "") === ink) return;
+  dice.querySelectorAll(".day-trinket").forEach((el) => el.remove());
+  const t = ink ? dayTrinket(ink) : null;
+  if (!t) { delete dice.dataset.trinket; return; }
+  dice.dataset.trinket = ink;
+  const mark = dice.querySelector(".chance-mark svg"), art = `<g class="day-trinket">${t.svg}</g>`;
+  if (t.at === "top") mark.insertAdjacentHTML("beforeend", art);
+  else if (t.at === "between") dice.querySelector(".die-front").insertAdjacentHTML("beforebegin", art);
+  else if (t.at === "back") dice.querySelector(".die-back .die-rock > g[transform]").insertAdjacentHTML("beforeend", art);
+  else if (t.at === "behind") {
+    // Behind both dice, so the back die needs the knock the front one already has.
+    mark.insertAdjacentHTML("afterbegin", art);
+    dice.querySelector(".die-back .ink").insertAdjacentHTML("beforebegin",
+      '<rect class="knock day-trinket" x="2" y="2.4" width="12.4" height="12.4" rx="2.8"/>');
+  } else dice.querySelector(t.at === "backrock" ? ".die-back .die-rock" : ".die-front .die-rock").insertAdjacentHTML("beforeend", art);
 }
 
 function applySettings() {
