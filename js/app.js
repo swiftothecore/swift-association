@@ -11760,7 +11760,7 @@ function renderChallengesPage() {
   const html =
     `<div class="chall-head">` +
       `<div class="mx-tally"><b>${defeated}</b><span class="mx-tally-of">of ${CHALLENGES.length} defeated` +
-        `<span class="mx-tally-sub">spend a token · defeat the rule</span></span></div>` +
+        `<span class="mx-tally-sub"><span>spend a token\u00a0·</span> <span>defeat the rule</span></span></span></div>` +
       `<span class="chall-wallet${tk === 0 ? " is-empty" : ""}" data-gloss="token" title="${escapeHtml("token: " + glossaryDefn("token"))}">` +
         `<span class="chall-wallet-stubs" aria-hidden="true">${walletStubs(tk)}</span>` +
         `<span class="chall-wallet-cnt"><b>${tk}</b>token${tk === 1 ? "" : "s"}</span></span>` +

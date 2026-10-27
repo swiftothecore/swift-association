@@ -4497,7 +4497,10 @@
     :root[data-theme="dark"] .mx-tracks > .chall-detail { background: rgba(116,171,225,0.06); }
     .mx-tally b { font-size: calc(38px + var(--text-size-adjust)); }
     .mx-tally-of { letter-spacing: 1px; }
-    .mx-tally-sub { white-space: nowrap; font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.6px; }
+    /* Each half is held whole, but the line may break between them: held as one nowrap run,
+       "defeat the rule" ran under the token wallet on a 320px phone and printed through it. */
+    .mx-tally-sub { font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.6px; }
+    .mx-tally-sub > span { white-space: nowrap; }
   }
   @media (prefers-reduced-motion: reduce) {
     .mx-tape, .mx-tape::after { transition: none; }
