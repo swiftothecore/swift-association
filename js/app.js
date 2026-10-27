@@ -14547,6 +14547,8 @@ function buildCardMeta() {
   const timeLabel = fmtClock(new Date());
 
   const stats = [];
+  let headline = [];
+  let footer = dateLabel + " · " + timeLabel + " · swiftassociation.com";
   let title = "the bracelet you made";
   let darkRun = false;            // a dark side signs the card in its own violet ink
 
@@ -14628,18 +14630,31 @@ function buildCardMeta() {
       stats.push({ v: ch.score + "/" + ch.total, l: "strung" });
     }
     if (ch.secs != null) stats.push({ v: fmtTime(ch.secs), l: "on the clock" });
-  } else {
-    // classic, daily, challenge — a fixed 13-round page
+  } else if (gameType === "daily") {
+    // A daily is the one card two players can hold side by side, so it is titled with its date
+    // (the day the puzzle belongs to, not the day the button was pressed) and the score and
+    // clock, the two numbers they compare, are lifted out as its headline. The title already
+    // says Daily, so there is no mode chip, and a perfect run keeps its date and says so in
+    // the score's label instead.
     const perfect = correct === TOTAL_ROUNDS;
     const hidden = dailyResultIsSealed();
-    title = hidden ? "today's Daily, sealed"
-          : perfect ? "thirteen for thirteen"
-          : gameType === "daily" ? "today's daily" : "the bracelet you made";
-    stats.push({ v: gameType === "daily" ? "Daily" : (GAMETYPE_LABELS[gameType] || "Classic"), l: "mode" });
+    const day = new Date((dailyRunDate || dateKey) + "T00:00:00")
+      .toLocaleDateString("en-US", { month: "long", day: "numeric" });
+    title = day + "'s Daily Challenge" + (hidden ? ", sealed" : "");
+    headline = [{ v: hidden ? "?" : correct + "/" + TOTAL_ROUNDS, l: perfect && !hidden ? "perfect" : "strung" }];
+    if (runTime != null && !hidden) headline.push({ v: fmtTime(runTime), l: "on the clock" });
     stats.push({ v: currentMode.label, l: "difficulty" });
-    stats.push({ v: hidden ? "?" : correct + "/" + TOTAL_ROUNDS, l: "strung" });
-    if (runTime != null && !hidden) stats.push({ v: fmtTime(runTime), l: "on the clock" });
     if (verseBonus > 0 && !hidden) stats.push({ v: "+" + verseBonus, l: "verse bonus" });
+    footer = "swiftassociation.com";
+  } else {
+    // classic and the other fixed 13-round pages
+    const perfect = correct === TOTAL_ROUNDS;
+    title = perfect ? "thirteen for thirteen" : "the bracelet you made";
+    stats.push({ v: GAMETYPE_LABELS[gameType] || "Classic", l: "mode" });
+    stats.push({ v: currentMode.label, l: "difficulty" });
+    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
+    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
+    if (verseBonus > 0) stats.push({ v: "+" + verseBonus, l: "verse bonus" });
   }
 
   // Hint use is part of how the result was achieved, including when the honest count is zero.
@@ -14652,10 +14667,11 @@ function buildCardMeta() {
     kicker: "Swift to the Song Association",
     title,
     braceletMarkup: $("resultBracelet").innerHTML,
+    headline,
     stats: stats.slice(0, 6),
     dark: darkRun,          // violet eclipse on the kicker + violet tape, as the game marks it
     signature: name,
-    footer: dateLabel + " · " + timeLabel + " · swiftassociation.com",
+    footer,
     filename: "swift-bracelet-" + dateKey + ".png",
     heartHands: HEART_HANDS_SVG,   // the notebook's own emblem, re-tinted on the card
     vars: cardVars(),

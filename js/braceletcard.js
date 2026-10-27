@@ -181,45 +181,57 @@ export function buildCardSVG(meta, fontCss) {
   // Four facts fit on one ruled line. A run can honestly need five or six now that its
   // difficulty and hint use travel with the bracelet, so those cards use two balanced
   // rows instead of silently dropping the last facts or squeezing album names into slivers.
+  // A card can also lift one or two facts out as a headline (the Daily's score and clock,
+  // the two numbers people compare on a shared day). They are set large on their own line,
+  // and the ordinary chips drop to a smaller second rank beneath them.
+  const headline = (meta.headline || []).slice(0, 2);
   const stats = (meta.stats || []).slice(0, 6);
-  const sy = by + bh + 66;
+  const divY = by + bh + 24;
+  const heroY = divY + 84;
+  const sy = headline.length ? heroY + 76 : divY + 42;
+  const chipSize = headline.length ? 30 : 40;
+  const labelDy = headline.length ? 21 : 22;
   const rowSizes = stats.length > 4
     ? [Math.ceil(stats.length / 2), Math.floor(stats.length / 2)]
     : [stats.length];
-  const statRowGap = 58;
-  const H = Math.round(sy + 116 + (rowSizes.length - 1) * statRowGap);
+  const statRowGap = headline.length ? 50 : 58;
+  const H = Math.round(sy + (headline.length ? 137 : 116) + (rowSizes.length - 1) * statRowGap);
 
   // faint ruled feint across the page
   let rules = "";
   for (let y = 132; y < H - 20; y += 30) {
     rules += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="${v.rule}" stroke-width="1"/>`;
   }
+  // One chip: the value in the hand over its label in the typewriter, centred on cx.
+  // A stat value is a name as often as it is a number — a challenge, an album, a guest — and
+  // a name clipped to "Vanishing W…" fails at the one job the chip has. So the ink shrinks
+  // to fit its column first, to two thirds of its size, and only a value still too long after
+  // that is trimmed. Numbers, which fit at full size, are untouched.
+  const chip = (s, cx, y, colW, full, dy) => {
+    const raw = s.v == null ? "" : String(s.v);
+    const floor = Math.round(full * 0.66);
+    let size = full;
+    while (size > floor && measureText(raw, `700 ${size}px Caveat, cursive`) > colW - 12) size -= 2;
+    const value = fitText(raw, `700 ${size}px Caveat, cursive`, colW - 12);
+    const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
+      '11.5px "Courier Prime", monospace', colW - 12, 1.6);
+    return `<text x="${cx}" y="${y}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
+      `<text x="${cx}" y="${y + dy}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
+  };
   let statSvg = "";
+  headline.forEach((s, col) => {
+    const colW = contentW / headline.length;
+    statSvg += chip(s, +(contentL + colW * (col + 0.5)).toFixed(1), heroY, colW, 76, 26);
+  });
   let statIndex = 0;
   rowSizes.forEach((rowSize, rowIndex) => {
     const colW = rowSize ? contentW / rowSize : contentW;
     const rowY = sy + rowIndex * statRowGap;
     for (let col = 0; col < rowSize; col++) {
-      const s = stats[statIndex++];
-      const cx = +(contentL + colW * (col + 0.5)).toFixed(1);
-      // A stat value is a name as often as it is a number — a challenge, an album, a guest — and
-      // a name clipped to "Vanishing W…" fails at the one job the chip has. So the ink shrinks
-      // to fit its column first, down to 26px, and only a value still too long after that is
-      // trimmed. Numbers, which fit at full size, are untouched.
-      const raw = s.v == null ? "" : String(s.v);
-      let size = 40;
-      while (size > 26 && measureText(raw, `700 ${size}px Caveat, cursive`) > colW - 12) size -= 2;
-      const valueFont = `700 ${size}px Caveat, cursive`;
-      const value = fitText(raw, valueFont, colW - 12);
-      const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
-        '11.5px "Courier Prime", monospace', colW - 12, 1.6);
-      statSvg +=
-        `<text x="${cx}" y="${rowY}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
-        `<text x="${cx}" y="${rowY + 22}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
+      statSvg += chip(stats[statIndex++], +(contentL + colW * (col + 0.5)).toFixed(1), rowY, colW, chipSize, labelDy);
     }
   });
-  const divY = sy - 42;
-  const divider = stats.length
+  const divider = stats.length || headline.length
     ? `<line x1="${contentL}" y1="${divY}" x2="${contentR}" y2="${divY}" stroke="${v.inkSoft}" stroke-dasharray="4 5" stroke-width="1" opacity="0.45"/>`
     : "";
 
