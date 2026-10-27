@@ -9762,7 +9762,10 @@
     max-width: 68ch; margin-left: auto; margin-right: auto; text-align: center;
   }
   .hint[hidden] { display: none; }
-  .hint-bit { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 5px; }
+  /* text-align too: a bit that is one run of text is ONE anonymous flex item, so on a phone,
+     where "suggestions once you're a few letters in" needs two lines, the item filled the row
+     and its text sat ragged-left under the centred bits around it. */
+  .hint-bit { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 5px; text-align: center; }
   /* A whole sentence is text, not a row of parts: let it wrap and centre as text, or a long
      line breaks into flex lines that ragged-left themselves under a centred first line. */
   .hint[data-form="long"] .hint-bit { display: block; }
