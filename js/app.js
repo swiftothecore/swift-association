@@ -578,17 +578,17 @@ function paintStartButton() {
   paintChanceDice(day);
 }
 
-// The dice beside the button pick up the same days, in the same order, but only in their pips
-// and, on her birthday and Christmas, one drawn extra (styles.css, THE DICE PICK UP THE DAY).
-// A release day inks them in the record's masthead ink, read from dayInkFor so the dice and the
-// wordmark can never disagree about whose day it is. The 13th leaves them alone: they already
-// rest on a 1 and a 3. Like the button's finish, nothing is stored and the next day hands the
-// plain dice back.
+// The scratch card beside the button picks up the same days, in the same order, in its foil,
+// its pips and, on her birthday and Christmas, one drawn extra (styles.css, THE DICE PICK UP THE
+// DAY). A release day inks it in the record's masthead ink, read from dayInkFor so the card and
+// the wordmark can never disagree about whose day it is. Like the button's finish, nothing is
+// stored and the next day hands the plain card back.
 function paintChanceDice(day) {
   const dice = $("randomGear");
   if (!dice) return;
   const ink = dayInkFor(day);
-  const occasion = ink ? "" : birthdayFinishFor(day) ? "birthday" : christmasFinishFor(day) ? "christmas" : "";
+  const occasion = ink ? "" : birthdayFinishFor(day) ? "birthday" : christmasFinishFor(day) ? "christmas"
+    : thirteenthFinishFor(day) ? "thirteenth" : "";
   if (ink) dice.dataset.dayInk = ink;
   else delete dice.dataset.dayInk;
   if (occasion) dice.dataset.day = occasion;
