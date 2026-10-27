@@ -2924,6 +2924,18 @@
      the dice are out of step with the board.
      It stays small: the board carries the movement and this is the detail inside it.
 
+     ONCE ON ARRIVAL, THEN ONLY IN THE HAND. The bob runs for as long as the page is up, but the
+     knocking plays one lap each time the front page arrives and after that only while the stamp
+     is hovered or focused, like picking the box up to give it a shake. Knocking forever was the
+     one thing on the front page acting on its own constantly, and a small repeating movement at
+     the edge of the eye pulled attention off Start writing every 2.8 seconds.
+       It is done by telling the rattle HOW MANY LAPS to run (--rattle-laps, written by
+     js/app.js), never by starting and stopping it. Changing only the count keeps the animation's
+     start time, so a rattle picked up mid-session is still on the bob's clock, and a count that
+     ends at lap N stops the dice exactly at a lap boundary, where they are at rest, on the
+     animation's own clock. Waiting on lap events or timers was tried first and is the worse
+     read: at boot, and in a throttled tab, they land late, mid-knock, and the dice jump.
+
      THE REST ANGLE LIVES IN THE KEYFRAMES. An infinite animation on the button outranks the
      transform on the rule above, so every frame here has to carry the 0.7deg itself or the
      stamp snaps square the moment the loop starts. The press is the other half of that: the
@@ -2937,8 +2949,8 @@
   .chance-mark .die-back  { --a: var(--ra-b, 1); --r: var(--rr-b, 1); }
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.chance-cta { animation: chanceBob 2.8s ease-in-out infinite; }
-    .chance-mark .die-front { animation: chanceRattleFront 2.8s ease-in-out infinite; }
-    .chance-mark .die-back  { animation: chanceRattleBack 2.8s ease-in-out infinite; }
+    .chance-mark .die-front { animation: chanceRattleFront 2.8s ease-in-out; animation-iteration-count: var(--rattle-laps, 0); }
+    .chance-mark .die-back  { animation: chanceRattleBack 2.8s ease-in-out; animation-iteration-count: var(--rattle-laps, 0); }
     .btn-primary.chance-cta:active,
     .btn-primary.chance-cta:active .die { animation: none; }
   }

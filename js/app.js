@@ -1116,6 +1116,7 @@ function showScreen(name, options = {}) {
   // The daily reset countdown only lives on the start screen; don't let its interval
   // outlive the view (renderDailyButtonState restarts it when start is shown again).
   if (name !== "start") stopResetCountdown();
+  else knockOnArrival();   // the dice give one shake as the front page arrives
   // The era wash belongs to a run and to the results it earned. Every other page is the plain
   // gold desk — otherwise a finale era rides out of a finished game and tints the whole
   // notebook until the next run or a reload (midnight is navy, so the desk just goes blue).
@@ -17948,6 +17949,56 @@ function varyDiceRattle(e) {
   s.setProperty("--rr-f", turn().toFixed(2));
   s.setProperty("--ra-b", between(0.75, 1.15).toFixed(2));
   s.setProperty("--rr-b", turn().toFixed(2));
+}
+
+// The knocking plays one lap each time the front page arrives, then only while the stamp is in
+// the hand: hovered or focused (styles.css, ONCE ON ARRIVAL, THEN ONLY IN THE HAND). It is driven
+// by the rattle's lap count, --rattle-laps, because a count that ends on lap N stops the dice at
+// a lap boundary on the animation's own clock, which no timer or lap event can promise.
+// The one thing a count cannot do is start cleanly: raising it mid-knock (26% to 62% of the lap)
+// would drop the dice straight into the middle of a slide. So a pickup inside that stretch
+// waits for it to pass, and checks again when it fires in case the timer ran late.
+const DICE_LAP = 2800, DICE_KNOCK = [0.2, 0.66];
+let diceArrivalLaps = 0;
+function diceLapNow(btn) {
+  const bob = btn.getAnimations().find((a) => a.animationName === "chanceBob");
+  return bob && !bob.pending && bob.currentTime ? bob.currentTime / DICE_LAP : null;
+}
+// Runs `then(lap)` at the first moment the dice are outside the knock; returns false if the bob is
+// not running yet (under the closed cover, or before the first frame).
+function atDiceRest(btn, then) {
+  const lap = diceLapNow(btn);
+  if (lap == null) return false;
+  const p = lap % 1;
+  if (p < DICE_KNOCK[0] || p > DICE_KNOCK[1]) then(lap);
+  else setTimeout(() => atDiceRest(btn, then), (DICE_KNOCK[1] - p) * DICE_LAP + 20);
+  return true;
+}
+function armDiceShake(btn) {
+  const held = () => btn.matches(":hover, :focus-visible");
+  const laps = (n) => btn.style.setProperty("--rattle-laps", n);
+  const pickUp = () => atDiceRest(btn, () => { if (held()) laps("infinite"); });
+  // Put down: finish the lap in hand, and any arrival lap still owed.
+  const putDown = () => {
+    const lap = diceLapNow(btn);
+    laps(lap == null ? 0 : Math.max(Math.floor(lap) + 1, diceArrivalLaps));
+  };
+  btn.addEventListener("pointerenter", pickUp);
+  btn.addEventListener("pointerleave", () => { if (!held()) putDown(); });
+  btn.addEventListener("focus", () => { if (held()) pickUp(); });
+  btn.addEventListener("blur", () => { if (!held()) putDown(); });
+}
+// The arrival lap: the next lap that still has its whole knock ahead of it. Zeroed first, because
+// a return to the front page restarts the rattle from lap 0 and an old count would let it run on.
+function knockOnArrival(tries = 0) {
+  const btn = $("randomGear");
+  if (!btn || motionReduced()) return;
+  if (!tries) { btn.style.setProperty("--rattle-laps", 0); diceArrivalLaps = 0; }
+  const started = atDiceRest(btn, (lap) => {
+    diceArrivalLaps = Math.floor(lap) + (lap % 1 < DICE_KNOCK[0] ? 1 : 2);
+    if (btn.style.getPropertyValue("--rattle-laps") !== "infinite") btn.style.setProperty("--rattle-laps", diceArrivalLaps);
+  });
+  if (!started && tries < 40) setTimeout(() => knockOnArrival(tries + 1), 250);
 }
 
 async function rollRandom() {
@@ -36518,6 +36569,7 @@ async function init() {
   $("keepsakesGear").addEventListener("click", openKeepsakes);
   $("randomGear").addEventListener("click", () => { rollRandom(); });
   $("randomGear").addEventListener("animationiteration", varyDiceRattle);
+  armDiceShake($("randomGear"));
   $("keepsakesCloseBtn").addEventListener("click", closeKeepsakes);
   $("keepsakesModalScrim").addEventListener("click", closeKeepsakes);
   $("keepsakesModal").addEventListener("keydown", (e) => {
