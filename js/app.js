@@ -14546,56 +14546,53 @@ function buildCardMeta() {
   // Stamp the time the keepsake was made (real clock; the date honours any dev override).
   const timeLabel = fmtClock(new Date());
 
+  // Every card is titled with what was played, in Title Case ("Classic Game", "Press Your
+  // Luck"), so no mode chip repeats it underneath. What the run was judged on is lifted into
+  // the headline and set large; everything else is a smaller chip below. A perfect run says
+  // so in its score's label rather than trading its title away.
   const stats = [];
   let headline = [];
   let footer = dateLabel + " · " + timeLabel + " · swiftassociation.com";
-  let title = "the bracelet you made";
+  let title = "Classic Game";
   let darkRun = false;            // a dark side signs the card in its own violet ink
+  const strung = (n, of) => ({ v: n + "/" + of, l: n === of ? "perfect" : "strung" });
+  const clock = runTime != null ? { v: fmtTime(runTime), l: "on the clock" } : null;
 
   if (gameType === "infinite") {
-    title = "an infinite strand";
-    stats.push({ v: "Infinite", l: "mode" });
+    title = "Infinite Run";
+    headline = [{ v: String(roundResults.length), l: "rounds" }, clock].filter(Boolean);
     stats.push({ v: currentMode.label, l: "difficulty" });
-    stats.push({ v: String(roundResults.length), l: "rounds" });
     stats.push({ v: String(correct), l: "strung" });
-    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
   } else if (gameType === "album" && focusAlbum) {
-    const perfect = correct === TOTAL_ROUNDS;
-    title = perfect ? focusAlbum + ", start to finish" : "an album, in beads";
-    stats.push({ v: "Album Focus", l: "mode" });
-    stats.push({ v: focusAlbum, l: "the album" });
+    // The album is what was played, so it takes the whole headline line to itself, where
+    // even The Tortured Poets Department fits whole. The score drops to the first chip.
+    title = "Album Focus";
+    headline = [{ v: focusAlbum, l: "the album" }];
+    stats.push(strung(correct, TOTAL_ROUNDS));
     stats.push({ v: currentMode.label, l: "difficulty" });
-    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "guest" && guestRunId) {
+    // The same shape as Album Focus: the catalogue is the thing that was played.
     const guest = GUESTS.find((x) => x.id === guestRunId);
-    const perfect = correct === TOTAL_ROUNDS;
-    title = perfect ? "admitted to the shelf" : "a night on someone else's catalogue";
-    stats.push({ v: "Guest shelf", l: "mode" });
-    stats.push({ v: (guest && guest.name) || "Guest", l: "the catalogue" });
+    title = "Guest Shelf";
+    headline = [{ v: (guest && guest.name) || "Guest", l: "the catalogue" }];
+    stats.push(strung(correct, TOTAL_ROUNDS));
     stats.push({ v: currentMode.label, l: "difficulty" });
-    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "lineup") {
-    const covered = lineupCovered().length;
-    title = "everybody, on one strand";
-    stats.push({ v: "The lineup", l: "mode" });
-    stats.push({ v: covered + "/" + SHELF, l: "artists" });
+    title = "The Lineup";
+    headline = [strung(correct, TOTAL_ROUNDS), { v: lineupCovered().length + "/" + SHELF, l: "artists" }];
     stats.push({ v: currentMode.label, l: "difficulty" });
-    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
   } else if (gameType === "ruthless" && ruthlessCard) {
     // Read off the run's own snapshot rather than roundResults, which a Ruthless run never
     // touches: the bonus loop keeps its pages in bonusLog and would otherwise hand the card
-    // the last classic run's thirteen.
-    const clean = ruthlessCard.named === ruthlessCard.pages;
-    title = clean ? "ten named, nothing handed back" : "ten pages against the clock";
-    stats.push({ v: "Ruthless Game", l: ruthlessCard.lens || "mode" });
-    stats.push({ v: fmtTimeFine(ruthlessCard.secs), l: "the run" });
-    stats.push({ v: ruthlessCard.named + "/" + ruthlessCard.pages, l: "named" });
+    // the last classic run's thirteen. The clock is the score here (low wins), so it leads.
+    title = ruthlessCard.lens ? "Ruthless Game: " + ruthlessCard.lens : "Ruthless Game";
+    headline = [{ v: fmtTimeFine(ruthlessCard.secs), l: "the run" },
+      { v: ruthlessCard.named + "/" + ruthlessCard.pages, l: "named" }];
   } else if (gameType === "custom") {
     const finite = !customInfinite();
-    title = "a bracelet on my terms";
-    stats.push({ v: "Custom", l: customPreset ? customPreset.name : "mode" });
-    stats.push({ v: finite ? correct + "/" + customSessionLen : String(roundResults.length), l: finite ? "strung" : "rounds" });
-    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
+    title = "Custom Game";
+    headline = [finite ? strung(correct, customSessionLen) : { v: String(roundResults.length), l: "rounds" }, clock].filter(Boolean);
+    if (customPreset) stats.push({ v: customPreset.name, l: "preset" });
   } else if (gameType === "challenge" && (challengeCard || currentChallenge)) {
     // Every challenge names itself here, base or dark. Only Thirty-One used to, so every other
     // card — Vanishing Word, and its dark side — fell through to the fixed-13 branch below and
@@ -14609,51 +14606,43 @@ function buildCardMeta() {
       ink: inkRuleActive() ? gameInk : null, inkTarget: inkRuleActive() ? inkTarget() : 0,
       secs: runTime, survive: surviveRuleActive(),
     };
-    darkRun = !!ch.dark;
-    title = ch.survive ? (ch.won ? "thirty-one unbroken" : "the long strand")
-          : ch.dark    ? (ch.won ? "the dark side, defeated" : "a card with the light taken out")
-          : ch.won     ? "the challenge, defeated"
-                       : "a challenge, on paper";
-    stats.push({ v: ch.name, l: ch.dark ? "dark side" : "challenge" });
+    darkRun = !!ch.dark;   // the kicker's eclipse badge says dark side; the title is the name
+    title = ch.name;
+    const chClock = ch.secs != null ? { v: fmtTime(ch.secs), l: "on the clock" } : null;
     // A risk challenge is scored in beads against a target rather than out of its pages, the
-    // same reading the tally on screen gives it.
+    // same reading the tally on screen gives it, and the pair reads as the verdict.
     if (ch.bead) {
-      stats.push({ v: String(ch.score), l: "beads" });
-      if (ch.target) stats.push({ v: String(ch.target), l: "needed" });
+      headline = [{ v: String(ch.score), l: "beads" }];
+      if (ch.target) headline.push({ v: String(ch.target), l: "needed" });
+      if (chClock) stats.push(chClock);
     } else if (ch.ink != null) {
       // Long Story Long is scored in characters written, so the keepsake says what the run
       // was actually judged on. Pages cleared are not on the card at all: thirteen cheap
       // answers is a full strand and a lost run, and printing "13/13" would say the opposite.
-      stats.push({ v: String(ch.ink), l: "characters" });
-      if (ch.inkTarget) stats.push({ v: String(ch.inkTarget), l: "needed" });
+      headline = [{ v: String(ch.ink), l: "characters" }];
+      if (ch.inkTarget) headline.push({ v: String(ch.inkTarget), l: "needed" });
+      if (chClock) stats.push(chClock);
     } else {
-      stats.push({ v: ch.score + "/" + ch.total, l: "strung" });
+      // No target on the card to read a verdict off, so the score's label carries it.
+      headline = [{ v: ch.score + "/" + ch.total, l: ch.won ? "defeated" : "strung" }, chClock].filter(Boolean);
     }
-    if (ch.secs != null) stats.push({ v: fmtTime(ch.secs), l: "on the clock" });
   } else if (gameType === "daily") {
     // A daily is the one card two players can hold side by side, so it is titled with its date
-    // (the day the puzzle belongs to, not the day the button was pressed) and the score and
-    // clock, the two numbers they compare, are lifted out as its headline. The title already
-    // says Daily, so there is no mode chip, and a perfect run keeps its date and says so in
-    // the score's label instead.
-    const perfect = correct === TOTAL_ROUNDS;
+    // (the day the puzzle belongs to, not the day the button was pressed), and the footer drops
+    // the date it would only repeat.
     const hidden = dailyResultIsSealed();
     const day = new Date((dailyRunDate || dateKey) + "T00:00:00")
       .toLocaleDateString("en-US", { month: "long", day: "numeric" });
     title = day + "'s Daily Challenge" + (hidden ? ", sealed" : "");
-    headline = [{ v: hidden ? "?" : correct + "/" + TOTAL_ROUNDS, l: perfect && !hidden ? "perfect" : "strung" }];
-    if (runTime != null && !hidden) headline.push({ v: fmtTime(runTime), l: "on the clock" });
+    headline = hidden ? [{ v: "?", l: "strung" }] : [strung(correct, TOTAL_ROUNDS), clock].filter(Boolean);
     stats.push({ v: currentMode.label, l: "difficulty" });
     if (verseBonus > 0 && !hidden) stats.push({ v: "+" + verseBonus, l: "verse bonus" });
     footer = "swiftassociation.com";
   } else {
     // classic and the other fixed 13-round pages
-    const perfect = correct === TOTAL_ROUNDS;
-    title = perfect ? "thirteen for thirteen" : "the bracelet you made";
-    stats.push({ v: GAMETYPE_LABELS[gameType] || "Classic", l: "mode" });
+    title = (GAMETYPE_LABELS[gameType] || "Classic") + " Game";
+    headline = [strung(correct, TOTAL_ROUNDS), clock].filter(Boolean);
     stats.push({ v: currentMode.label, l: "difficulty" });
-    stats.push({ v: correct + "/" + TOTAL_ROUNDS, l: "strung" });
-    if (runTime != null) stats.push({ v: fmtTime(runTime), l: "on the clock" });
     if (verseBonus > 0) stats.push({ v: "+" + verseBonus, l: "verse bonus" });
   }
 
