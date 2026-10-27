@@ -29140,6 +29140,22 @@ function setBookplateHTML() {
     `</div>` +
   `</div>`;
 }
+// The bookplate signs the name at 38px, but its line is about 165px on a 320px phone and
+// 210px on a 375px one, so a name past ten letters printed cut off mid-word in the one place
+// it is shown to its owner. Step the size down until the whole name fits, never below 18px
+// (the 20-letter limit fits a 320px phone at that); past that the field scrolls as any input does.
+let _nameFitCtx = null;
+function fitNameField(el) {
+  el.style.fontSize = "";
+  const cs = getComputedStyle(el);
+  const room = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const text = el.value || el.placeholder;
+  if (room <= 0 || !text) return;
+  _nameFitCtx ||= document.createElement("canvas").getContext("2d");
+  _nameFitCtx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const w = _nameFitCtx.measureText(text).width;
+  if (w > room) el.style.fontSize = Math.max(18, Math.floor(parseFloat(cs.fontSize) * room / w)) + "px";
+}
 /* The bookplate's "chosen in Mastery" door. Two things it has to get right beyond shutting
    the modal. The BACK ARROW: the gear is global, so Mastery must return to whichever screen
    was sitting under the modal, never a hardcoded start. And a LIVE RUN: the modal only pauses
@@ -29654,6 +29670,20 @@ function wireSettingsBody() {
     slider.addEventListener("change", () => { settings.countdownSecs = parseInt(slider.value, 10) || 5; saveSettings(settings); });
   }
   const nameField = $("set-playerName");
+  if (nameField) {
+    nameField.addEventListener("input", () => fitNameField(nameField));
+    // The modal can render while it is still closed, so the fit waits for the line to have a
+    // width, and it is redone only when that width changes: the fit itself changes the
+    // field's height, which would otherwise set this off again.
+    if (typeof ResizeObserver === "function") {
+      let seen = -1;
+      new ResizeObserver(([e]) => {
+        if (e.contentRect.width === seen) return;
+        seen = e.contentRect.width;
+        fitNameField(nameField);
+      }).observe(nameField);
+    }
+  }
   if (nameField) nameField.addEventListener("change", () => {
     settings.playerName = nameField.value.trim().slice(0, 20);
     saveSettings(settings);
