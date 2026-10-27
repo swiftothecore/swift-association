@@ -81,6 +81,20 @@ export function measureText(str, font) {
   } catch (e) { return String(str).length * 17; }
 }
 
+// How far the ink of `str` sits from the middle of its advance box, in px (negative = the ink
+// is right of centre). Caveat leans: its figures overhang their advance to the right, a "14"
+// at 76px by ten pixels, so a value set text-anchor="middle" drifts visibly off the label
+// centred under it. Adding this to x centres the ink itself.
+export function inkCentreShift(str, font) {
+  try {
+    const ctx = measureText._c || (measureText._c = document.createElement("canvas").getContext("2d"));
+    ctx.font = font;
+    const m = ctx.measureText(str);
+    if (!Number.isFinite(m.actualBoundingBoxRight)) return 0;
+    return m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2;
+  } catch (e) { return 0; }
+}
+
 // The heart-hands emblem (the game's own HEART_HANDS_SVG, passed in via meta so the
 // keepsake reuses the exact glyph from the notebook signature / settings). Re-tinted to
 // `fill` and placed at (x,y) with the given box, dropping the page-only class.
@@ -215,7 +229,8 @@ export function buildCardSVG(meta, fontCss) {
     const value = fitText(raw, `700 ${size}px Caveat, cursive`, colW - 12);
     const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
       '11.5px "Courier Prime", monospace', colW - 12, 1.6);
-    return `<text x="${cx}" y="${y}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
+    const vx = +(cx + inkCentreShift(value, `700 ${size}px Caveat, cursive`)).toFixed(1);
+    return `<text x="${vx}" y="${y}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
       `<text x="${cx}" y="${y + dy}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
   };
   let statSvg = "";
