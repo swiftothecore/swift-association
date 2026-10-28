@@ -3913,7 +3913,7 @@ function syncRecapBand() {
 // how the run went, so they sit under their own quieter label rather than being folded into
 // the charm count. They need the results page at all because their toast is the worst-timed
 // one in the game — foldRunStickers fires as the results screen arrives, and a polaroid
-// earned mid-run is black film for the next thirteen minutes, so the toast is the only
+// earned mid-run is still in the murk for the next thirteen minutes, so the toast is the only
 // pointer the player gets toward a drawer they now have a reason to open.
 const FOUND_RECAP_SHOWN = 3;   // objects shown before "+N" unfolds the rest in place
 // (3, not more: these are drawn at 64px — the sticker floor, see the stickers skill — and a
@@ -3942,7 +3942,7 @@ function foundRecapItems() {
 }
 
 // The found line's markup: a label, the objects themselves, then their names underneath.
-// A polaroid is drawn as the toast's mini frame, veil and all, because on this screen it IS
+// A polaroid is drawn as the toast's mini frame, murk and all, because on this screen it IS
 // still developing and saying so is the whole point of showing it here.
 // "+N" on the found line, written on a kraft tag tied to the end of the row: the rest of this
 // run's keepsakes, not yet unwrapped. Hover swings it.
@@ -5576,35 +5576,33 @@ function polaroidHTML(photo, caption, opts = {}) {
   const cap = (caption || "").trim();
 
   // Keepsake variant — a collectible polaroid carrying SVG art (not a photo data-URL), a
-  // two-line caption, and one of three develop states. It shares the frame, washi tape and
-  // tilt with the profile polaroid below; only the photo well and caption block differ.
-  //   locked     — never earned: a plain black rectangle, no frame or caption (a sealed mystery).
-  //                It carries the developed tile's two boxes (square well + empty caption) so
-  //                it stands exactly as tall as its neighbours; being one flat colour, that
-  //                structure is invisible and the sealed look is unchanged.
-  //   developing — earned <13min ago: the photo under a black veil that is still fading up.
+  // two-line caption, and one of two develop states. It shares the frame and tilt with the
+  // profile polaroid below; only the photo well and caption block differ. An unearned
+  // keepsake is not a frame at all: the drawer shows it as an empty peg (renderKeepsakesPage).
+  //   developing — earned <13min ago: the photo still coming up out of the murk.
   //   developed  — earned 13min+ ago: the fully cleared photo + both caption lines.
+  // `tape: false` leaves the washi strip off, for the drawer, where a peg holds the print.
   if (opts.keepsake) {
-    const state = opts.state || "locked";
-    if (state === "locked") {
-      return `<span class="keep-locked${opts.small ? " keep-locked-sm" : ""}" style="--tilt:${tilt}deg" aria-hidden="true">` +
-        `<span class="keep-locked-well"></span><span class="pol-cap"></span></span>`;
-    }
+    const state = opts.state || "developed";
     const cls = "polaroid polaroid-keep is-" + state + (opts.small ? " polaroid-sm" : "");
-    // Instant film: the photo sits under a black veil whose opacity slides from 1 (just
-    // unlocked) to 0 across POLAROID_DEVELOP_MS. `elapsed` drives a linear CSS animation
-    // (a live, continuous fade via negative delay) AND a static opacity fallback that
-    // takes over when the animation is off (reduced motion).
+    // Old integral instant film: a fresh print is a flat grey-green square (.pol-murk) that
+    // thins across POLAROID_DEVELOP_MS while the picture under it (.pol-develop) comes up
+    // flat and colourless and takes its colour last. Both are linear CSS animations resumed
+    // at `elapsed` by a negative delay, and each also carries the static value for that
+    // moment inline, which is what shows when the animation is off (reduced motion).
     const total = POLAROID_DEVELOP_MS;
     const elapsed = Math.max(0, opts.elapsed || 0);
-    const frac = Math.max(0, Math.min(1, 1 - elapsed / total));
-    const veil = `<span class="pol-veil" style="opacity:${frac.toFixed(3)};` +
-      `animation-duration:${Math.round(total / 1000)}s;animation-delay:-${Math.round(elapsed / 1000)}s"></span>`;
-    const well = `<span class="pol-photo pol-art">${polaroidArt(opts.art)}${veil}</span>`;
+    const p = Math.max(0, Math.min(1, elapsed / total));
+    const anim = `animation-duration:${Math.round(total / 1000)}s;animation-delay:-${Math.round(elapsed / 1000)}s`;
+    const art = state === "developed" ? polaroidArt(opts.art)
+      : `<span class="pol-develop" style="filter:saturate(${(p * p).toFixed(2)}) contrast(${(0.45 + 0.55 * p).toFixed(2)}) ` +
+        `brightness(${(0.86 + 0.14 * p).toFixed(2)});${anim}">${polaroidArt(opts.art)}</span>` +
+        `<span class="pol-murk" style="opacity:${Math.pow(1 - p, 1.3).toFixed(3)};${anim}"></span>`;
+    const well = `<span class="pol-photo pol-art">${art}</span>`;
     const lines = `<span class="pol-lip-main">${escapeHtml(cap)}</span>` +
       (state === "developed" && opts.sub ? `<span class="pol-lip-sub">${escapeHtml(opts.sub)}</span>` : "");
     return `<span class="${cls}" style="--tilt:${tilt}deg">` +
-      `<span class="pol-tape" aria-hidden="true"></span>` +
+      (opts.tape === false ? "" : `<span class="pol-tape" aria-hidden="true"></span>`) +
       well +
       `<span class="pol-cap">${lines}</span></span>`;
   }
@@ -5622,29 +5620,29 @@ function polaroidHTML(photo, caption, opts = {}) {
 }
 
 /* ---------- Keepsakes: the collectible polaroid set (see js/polaroids.js) ---------- */
-// A polaroid develops like real instant film: solid black on unlock, the photo fading in
-// POLAROID_DEVELOP_MS (13 min) later. "developed" is DERIVED from the stored unlock time at
+// A polaroid develops like real instant film: a grey-green murk on unlock, the photo coming
+// up through it over POLAROID_DEVELOP_MS (13 min). "developed" is DERIVED from the stored unlock time at
 // render, never a running timer — so it survives reloads/closes and self-heals.
 function polaroidDeveloped(iso) {
   if (!iso) return false;
   const t = Date.parse(iso);
   return Number.isFinite(t) && (Date.now() - t) >= POLAROID_DEVELOP_MS;
 }
-// "locked" (not earned) | "developing" (earned, still black) | "developed" (earned, 13min+).
+// "locked" (not earned) | "developing" (earned, still in the murk) | "developed" (earned, 13min+).
 function polaroidState(id, earned) {
   const map = earned || loadKeepsakes();
   const iso = map[id];
   if (!iso) return "locked";
   return polaroidDeveloped(iso) ? "developed" : "developing";
 }
-// Build a keepsake tile for polaroid `p` at its current develop state. `small` shrinks it.
-// `elapsed` (ms since unlock) drives the develop veil's live fade.
+// Build the drawer's print of earned polaroid `p` at its current develop state, untaped
+// because a peg holds it. `elapsed` (ms since unlock) drives the develop's live fade.
 function keepsakePolaroidHTML(p, opts = {}) {
   const earned = opts.earned || loadKeepsakes();
   const state = opts.state || polaroidState(p.id, earned);
   const iso = earned[p.id];
   const elapsed = iso ? Date.now() - Date.parse(iso) : 0;
-  return polaroidHTML(null, p.name, { keepsake: true, state, elapsed, art: p.art, sub: p.sub, tilt: opts.tilt, small: opts.small });
+  return polaroidHTML(null, p.name, { keepsake: true, state, elapsed, art: p.art, sub: p.sub, tilt: opts.tilt, tape: false });
 }
 // Re-render the Keepsakes wall wherever it is open: its modal, or its divider in a phone's
 // settings (otherwise a no-op).
@@ -5682,8 +5680,8 @@ function earnPolaroid(id) {
   return true;
 }
 
-// The keepsake unlock toast — a mini polaroid caught mid-develop (its art under a
-// half-lifted black veil) beside the "new keepsake / {name} · developing" note.
+// The keepsake unlock toast — a mini polaroid caught mid-develop (its art drained and
+// half under the grey-green murk) beside the "new keepsake / {name} · developing" note.
 //
 // It carries the charm toast's hover tip, on the same 500ms delay: a keepsake arrives with no
 // explanation of itself, and several of them (the whale, the impostor flag, a discovery three
@@ -5791,19 +5789,115 @@ function updateKeepsakesNav() {
   }
 }
 
-// A stable per-polaroid tilt + vertical nudge so the wall reads as hand-pinned rather than
-// gridded — deterministic (hashed from the id), so it never reshuffles between renders.
-function polaroidJitter(id) {
-  const rng = mulberry32(fnv1a(id));
-  // The sideways numbers are deliberately the small ones. A tilt already moves a tall frame's
-  // corners about 12px sideways, so tilt and --dx spend the SAME gutter, and the two together
-  // used to overrun it and lap the neighbouring polaroid. Vertical drift costs nothing by
-  // comparison — the row gap is not competing with the rotation — so the scattered look is
-  // bought with --dy and the tilt, and --dx only breaks up the column edges.
-  const tilt = (rng() * 14 - 7).toFixed(2);  // -7deg .. +7deg — pinned any-old-how
-  const dy = (rng() * 22 - 7).toFixed(1);    // -7px .. +15px
-  const dx = (rng() * 10 - 5).toFixed(1);    // -5px .. +5px
-  return { tilt, dy, dx };
+// The drawer is a drying line, the way a darkroom hangs its prints: each row of the wall is a
+// length of twine, every keepsake has its own little wooden peg on it, and an earned print
+// hangs from its peg. An unearned one is the peg alone with its number pencilled under it,
+// so a new notebook opens on a few photos and a line of waiting pegs, not a wall of black.
+// Everything about a peg is hashed from the id, so nothing reshuffles between renders.
+function polaroidHang(id) {
+  const rng = mulberry32(fnv1a(id + ":peg"));
+  const px = (rng() - 0.5) * 14;     // pegs are never quite centred: up to 7% of the cell off
+  const swing = (rng() - 0.5) * 5;   // the print swings up to 2.5deg either way from its peg
+  // The peg leans with half its print's swing plus a lean of its own, and the pencilled
+  // number under an empty one is written at its own slant.
+  const pr = swing * 0.6 + (rng() - 0.5) * 4;
+  const nr = (rng() - 0.5) * 8;
+  return { px: px.toFixed(2), swing: swing.toFixed(2), pr: pr.toFixed(2), nr: nr.toFixed(2), rng };
+}
+
+// A mini craft peg turned a little toward you, jaw tip at the bottom of a 20x60 box: its face,
+// then a darker strip down the right that is the thickness of BOTH prongs, with the hairline
+// between them opening into a sliver above the spring and a groove bitten out of the jaws
+// where the twine sits. The spring's wire wraps the face and runs one leg down toward the
+// jaws; its coil sticks out of the side. Every peg takes its own small wobble from `rng`.
+// Chosen against a painted peg and the side-on profile on scripts/polaroids/wall/board.html.
+function keepPegSVG(rng) {
+  const w = (a, k = 0.4) => (a + (rng() - 0.5) * k).toFixed(2);
+  const y1 = +w(25.4, 0.6), y2 = w(28, 0.6);
+  return `<svg viewBox="0 0 20 60">` +
+    // the side strip first, so the face's outline sits on top of the shared edge
+    `<path class="kp-side" d="M12.7 3.4 C${w(13.4)} 2.1 15.6 1.9 16.5 ${w(3.2)} L${w(17)} 43.4 ` +
+    `C15.4 44 15.3 47.8 17 48.4 L17 55.6 C16.9 57.6 15 58.6 12.6 58.5 Z"/>` +
+    `<path class="kp-gap" d="M${w(14.9)} 30 L13.9 2.7 L${w(16.2)} 3 Z"/>` +
+    `<path class="kp-split" d="M14.9 30.5 C${w(15)} 40 ${w(14.8)} 50 15 58.2"/>` +
+    `<path class="kp-face" d="M3.4 3.6 C3.5 2 5.4 1.3 8.2 ${w(1.3)} C11 1.3 12.6 1.9 12.8 3.4 L${w(13.1)} 54.4 ` +
+    `C13.1 57 12.4 58.5 10.6 58.6 L5.6 58.6 C3.9 58.5 3.2 57 3.2 ${w(54.4)} Z"/>` +
+    `<path class="kp-grain" d="M6.2 6 C${w(6.7)} 12 ${w(5.8)} 17 6.4 ${w(22)} M10.5 33 C${w(10.1)} 40 ${w(10.9)} 46 10.3 ${w(53)}"/>` +
+    `<path class="kp-wire" d="M3.1 ${y1} C7 ${w(25)} 11 ${w(25.1)} 16.8 ${y1} M3.1 ${y2} C7 ${w(27.7)} 11 ${w(27.7)} 16.8 ${y2} ` +
+    `M${w(8.3)} 28.2 C8.5 31 ${w(8.2)} 34 8.5 37.2 L9.7 37.6"/>` +
+    `<path class="kp-glint" d="M4.2 ${(y1 - 0.45).toFixed(2)} C7 24.7 10 24.8 12.4 ${(y1 - 0.45).toFixed(2)}"/>` +
+    `<path class="kp-wire" d="M16.6 ${(y1 - 0.4).toFixed(2)} c2.2 -0.5 2.6 1.6 0.2 1.7 c2.3 -0.2 2.5 1.7 0.1 1.8 c1.7 0 1.6 1.2 -0.1 1"/></svg>`;
+}
+
+// String the twine across each row of the wall. The rows are the grid's own (a plain
+// auto-fill grid, so a phone gets two columns and a desk four or five): this reads where the
+// cells landed, gives each row a line sagging between two pins out in the card's margins,
+// and drops each cell's peg onto that line at the peg's own x. It only restyles cells and
+// never moves one, because re-inserting a print would restart its develop animation.
+// It runs again whenever the wall changes size (a resize, the drawer opening from hidden, a
+// caption reflowing as the fonts arrive), and does nothing while the wall has no width.
+let keepWallObserver = null;
+const keepWalls = new Map();   // body element -> the wall it is showing, so a re-render unobserves
+function hangKeepsakeWall(wall) {
+  const W = wall.clientWidth;
+  if (!W || wall.dataset.hung === `${W}x${wall.offsetHeight}`) return;
+  const cells = [...wall.querySelectorAll(".keep-cell")];
+  const rows = [];
+  for (let k = 0, top = null; k < cells.length; k++) {
+    if (cells[k].offsetTop !== top) { rows.push([]); top = cells[k].offsetTop; }
+    rows[rows.length - 1].push(cells[k]);
+  }
+  const cs = getComputedStyle(wall);
+  const extL = parseFloat(cs.getPropertyValue("--line-l")) || 0;
+  const extR = parseFloat(cs.getPropertyValue("--line-r")) || 0;
+  const span = W + extL + extR;
+  const lines = rows.map((row, ri) => {
+    const rr = mulberry32(fnv1a("keep-line:" + ri));
+    const sag = 9 + rr() * 7, lean = rr() * 7 - 3.5, y0 = 12 + rr() * 3;
+    const y = (x) => { const t = (x + extL) / span; return y0 + lean * t + sag * 4 * t * (1 - t); };
+    for (const c of row) {
+      const px = (parseFloat(c.style.getPropertyValue("--px")) || 0) / 100 * c.offsetWidth;
+      c.style.setProperty("--py", y(c.offsetLeft + c.offsetWidth / 2 + px).toFixed(2) + "px");
+    }
+    // a few gentle segments, so the line is not a perfect parabola
+    const pts = [];
+    for (let k = 0; k <= 12; k++) {
+      const x = -extL + (span * k) / 12;
+      pts.push([x + extL, y(x) + (k && k < 12 ? (rr() - 0.5) * 0.9 : 0)]);
+    }
+    let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(2)}`;
+    for (let k = 1; k < pts.length; k++) {
+      const [xa, ya] = pts[k - 1], [xb, yb] = pts[k];
+      d += ` Q${((xa + xb) / 2).toFixed(1)} ${((ya + yb) / 2 + (rr() - 0.5) * 0.6).toFixed(2)} ${xb.toFixed(1)} ${yb.toFixed(2)}`;
+    }
+    const [lx, ly] = pts[0], [rx, ry] = pts[pts.length - 1];
+    return { row, svg: `<svg class="keep-twine" width="${span.toFixed(1)}" height="60" viewBox="0 0 ${span.toFixed(1)} 60" aria-hidden="true">` +
+      `<path class="tw" d="${d}"/><path class="tw-ply" d="${d}"/>` +
+      `<path class="tw-knot" d="M${(lx + 2).toFixed(1)} ${(ly - 2.6).toFixed(2)} c2.4 0.6 3 3.8 0.2 4.6 c-2 0.4 -3.6 -1.4 -2.4 -3"/>` +
+      `<circle class="tw-pin" cx="${lx.toFixed(1)}" cy="${ly.toFixed(2)}" r="3.3"/>` +
+      `<circle class="tw-pin" cx="${rx.toFixed(1)}" cy="${ry.toFixed(2)}" r="3.1"/></svg>` };
+  });
+  // Placed after every --py is set, since a row's top depends on the rows above it.
+  wall.querySelectorAll(".keep-twine").forEach((t) => t.remove());
+  for (const { row, svg } of lines) {
+    wall.insertAdjacentHTML("afterbegin", svg);
+    const t = wall.firstElementChild;
+    t.style.top = row[0].offsetTop + "px";
+    t.style.left = -extL + "px";
+  }
+  wall.dataset.hung = `${W}x${wall.offsetHeight}`;
+}
+function watchKeepsakeWall(body, wall) {
+  if (!keepWallObserver) {
+    keepWallObserver = new ResizeObserver((entries) => requestAnimationFrame(() => {
+      for (const e of entries) if (e.target.isConnected) hangKeepsakeWall(e.target);
+    }));
+  }
+  const prev = keepWalls.get(body);
+  if (prev) keepWallObserver.unobserve(prev);
+  keepWalls.set(body, wall);
+  keepWallObserver.observe(wall);
+  hangKeepsakeWall(wall);
 }
 
 // The Keepsakes modal — opened from the camera icon beside the settings gear. Reuses the
@@ -5835,9 +5929,9 @@ function closeKeepsakes() {
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
 }
 
-// The polaroid wall: a lead, the found counter, then the messy pinned grid. Every tile is a
-// keepsake polaroid at its current develop state (blacked-out lock / developing / developed),
-// pinned at its deterministic jitter so the wall reads hand-done rather than gridded.
+// The polaroid wall: a lead, the found counter, then the drying line (see polaroidHang). Every
+// keepsake has a peg; an earned one hangs its print at the current develop state, an unearned
+// one is the empty peg and its pencilled number.
 function renderKeepsakesPage(body = $("keepsakesBody")) {
   if (!body) return;
   const earned = loadKeepsakes();
@@ -5851,24 +5945,29 @@ function renderKeepsakesPage(body = $("keepsakesBody")) {
   const counter =
     `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
     `<span class="keep-counter-d">/ ${POLAROID_TOTAL}</span>` +
-    `<span class="keep-counter-l">pinned up</span></div>`;
+    `<span class="keep-counter-l">hung up</span></div>`;
 
-  const tiles = POLAROIDS.map((p) => {
+  const tiles = POLAROIDS.map((p, i) => {
     const state = polaroidState(p.id, earned);
-    const j = polaroidJitter(p.id);
+    const h = polaroidHang(p.id);
     // An earned tile says what you did for it, the way the sticker shelf and the unlock toast
     // do: the caption is a quip, not an explanation, and by the time a photo has developed the
     // game that earned it is often several sessions back. The name is NOT in here: the frame
     // prints it an inch below, so a tip that opened with it spent itself on the line the eye
-    // had just read. A locked cell stays the question.
+    // had just read. An empty peg stays the question.
     const feat = p.how || p.name;
     const label = state === "locked" ? "a keepsake not yet earned"
       : state === "developing" ? feat + " (still developing)" : feat;
-    return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--dy:${j.dy}px;--dx:${j.dx}px" title="${escapeHtml(label)}">` +
-      keepsakePolaroidHTML(p, { earned, state, tilt: j.tilt, small: true }) + `</div>`;
+    const peg = `<span class="keep-peg" style="--pr:${h.pr}deg" aria-hidden="true">${keepPegSVG(h.rng)}</span>`;
+    const print = state === "locked"
+      ? `<span class="keep-num" style="--nr:${h.nr}deg" aria-hidden="true">no. ${i + 1}</span>`
+      : keepsakePolaroidHTML(p, { earned, state, tilt: h.swing });
+    return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--px:${h.px}%" title="${escapeHtml(label)}">` +
+      peg + print + `</div>`;
   }).join("");
 
-  body.innerHTML = intro + counter + `<div class="keep-grid">${tiles}</div>` + stickerShelfHTML();
+  body.innerHTML = intro + counter + `<div class="keep-wall">${tiles}</div>` + stickerShelfHTML();
+  watchKeepsakeWall(body, body.querySelector(".keep-wall"));
   // "Look at the cover" (never "close the notebook" — the in-run quit button owns that phrase):
   // the drawer is a modal over the front page, so it has to get out of the way first, and focus
   // comes back to the keepsakes icon once the book reopens.
@@ -5882,7 +5981,7 @@ function renderKeepsakesPage(body = $("keepsakesBody")) {
   scheduleKeepsakeDevWatch();   // re-arm the develop watch for the next tile due to finish
 }
 
-// The photo veil fades continuously in pure CSS, so the only thing the watch still does is
+// The develop runs continuously in pure CSS, so the only thing the watch still does is
 // re-render when a tile crosses the 13-min line, to reveal its second caption line. One
 // timeout for the soonest pending tile; none at all when nothing is developing. Derived from
 // stored unlock times, so it never earns anything.
@@ -5925,8 +6024,8 @@ function stickerCount(earned) {
   return STICKERS.reduce((n, s) => n + (map[s.id] ? 1 : 0), 0);
 }
 // A stable per-sticker tilt, hashed from the id, so the shelf reads stuck-down-by-hand rather
-// than gridded and never reshuffles between renders. Same idea as polaroidJitter, smaller
-// numbers: a sticker is pressed flat, not pinned up.
+// than gridded and never reshuffles between renders. Hashed from the id like a polaroid's
+// peg, in small numbers: a sticker is pressed flat, not hung up.
 function stickerTilt(id) {
   const rng = mulberry32(fnv1a("sticker:" + id));
   return (rng() * 11 - 5.5).toFixed(2);
@@ -5967,7 +6066,7 @@ function earnSticker(id) {
 }
 
 // The sticker unlock toast. Deliberately the CHARM surface, not the keepsake one: the keepsake
-// toast is built around the develop veil and says "developing…", which is a promise a sticker
+// toast is built around the developing print and says "developing…", which is a promise a sticker
 // does not make. Same component, same chime, the sticker art where charmMarkup would go.
 function showStickerToast(st) {
   const layer = $("toastLayer");
@@ -35201,7 +35300,7 @@ function buildDevApi() {
     keepsakes: {
       list: () => { const e = loadKeepsakes(); return POLAROIDS.map((p) => ({ id: p.id, name: p.name, state: polaroidState(p.id, e), at: e[p.id] || null })); },
       state: (id) => polaroidState(id),
-      // Grant `id` as freshly unlocked (still developing / black film).
+      // Grant `id` as freshly unlocked (still developing, all murk).
       earn: (id) => devSetKeepsake(id, 0),
       // Grant `id` already developed (backdated past the 13-min line).
       develop: (id) => devSetKeepsake(id, POLAROID_DEVELOP_MS + 1000),
@@ -35217,7 +35316,7 @@ function buildDevApi() {
       open: () => openKeepsakes(),                             // jump to the polaroid wall
       // One polaroid's frame at a chosen develop state, for the dev panel's gallery. The
       // store is not consulted and not written: `state` and `frac` (how far through the
-      // develop window the veil should pretend to be, 0 → 1) are handed in, so the whole set
+      // develop window the print should pretend to be, 0 → 1) are handed in, so the whole set
       // can be looked at mid-develop without granting anything or waiting out the 13 minutes.
       markup: (id, state = "developed", frac = 1) => {
         const p = POLAROID_BY_ID[id];

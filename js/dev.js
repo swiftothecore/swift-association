@@ -1683,8 +1683,8 @@ export function initDev(api) {
   // ---- Keepsake polaroid gallery -----------------------------------------------
   // The whole photo set on one wall, in the frame the drawer draws, at whichever develop state
   // you want to judge it in. Nothing is granted and nothing is written: the state is faked per
-  // render, so black film and a half-cleared veil can both be looked at without earning a
-  // keepsake or sitting out its thirteen minutes.
+  // render, so a fresh print and one halfway out of the murk can both be looked at without
+  // earning a keepsake or sitting out its thirteen minutes.
   // The audit is duplicate SVG ids across the hand-written art. Every render is re-scoped by
   // polaroidArt, so a shared id no longer bleeds one photo's fill into another, but two photos
   // naming the same gradient is still a slip worth renaming in js/polaroids.js.
@@ -1692,7 +1692,6 @@ export function initDev(api) {
     { label: "developed", state: "developed", frac: 1 },
     { label: "developing · fresh", state: "developing", frac: 0 },
     { label: "developing · half", state: "developing", frac: 0.5 },
-    { label: "locked · sealed", state: "locked", frac: 0 },
   ];
   const svgIds = (art) => [...String(art).matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
 
@@ -2020,7 +2019,7 @@ function injectStyles() {
   /* the known generator fault (curvature kinked into corners) — advisory, hover for the score */
   .dvg-cell.fault { border-color: #c08a2e; background: rgba(192,138,46,.09); }
   .dv-btn.dvs-mini { padding: 0 4px; line-height: 14px; min-width: 0; }
-  /* Polaroid gallery — the keepsake wall's own tiles, so the frame, veil and caption block
+  /* Polaroid gallery — the keepsake wall's own prints, so the frame, develop and caption block
      are the real ones from styles.css and only the grid is dev's. */
   #dv-pol { position: fixed; inset: 0; z-index: 2147482999; background: rgba(12,10,8,.55);
     display: flex; flex-direction: column; align-items: center; padding: 24px; overflow-y: auto; }
@@ -2029,9 +2028,9 @@ function injectStyles() {
     gap: 22px 20px; align-items: start; }
   .dvp-cell { padding: 4px 0 2px; }
   .dvp-frame { display: block; width: 100%; }
-  /* The real veil is a live 13-minute fade, so a "half developed" bench would quietly clear
+  /* The real develop is a live 13-minute fade, so a "half developed" bench would quietly clear
      itself while you were looking at it. Frozen here: the gallery shows the state you picked. */
-  .dvp-frame .pol-veil { animation-play-state: paused; }
+  .dvp-frame :is(.pol-develop, .pol-murk) { animation-play-state: paused; }
   .dvg-cell.gap { border-color: #c08a2e; background: rgba(192,138,46,.09); }   /* missing caption/how */
   /* Sticker gallery — same deal: .sticker and its two die-cut filters do the drawing, and the
      smallest step is the shelf's 64px floor rather than a doodle-sized preview. */

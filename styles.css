@@ -3499,8 +3499,8 @@
 
   /* Keepsake polaroids — the collectible set (see js/polaroids.js). A cream instant-film
      frame that fills its grid cell, carrying SVG art and a two-line handwritten caption.
-     Earned tiles show the photo under a black veil (.pol-veil) that fades from opaque to
-     clear across 13 minutes, like real instant film. Shares the washi .pol-tape rule. */
+     A fresh print comes up out of the murk across 13 minutes, like real instant film. The
+     drawer hangs it from a peg; anywhere else it wears the shared washi .pol-tape. */
   .polaroid-keep {
     display: block; width: 100%; box-sizing: border-box;
     background: #f7f2e5; border: 1px solid #d8cfba; border-radius: 2px;
@@ -3512,28 +3512,29 @@
     border: 1px solid #cfc6b0; border-radius: 1px; overflow: hidden; background: #0c0a07;
   }
   .polaroid-keep .pol-art svg { display: block; width: 100%; height: 100%; }
-  /* The develop veil — a black sheet over the photo whose opacity slides 1 → 0 across the
-     13-min develop window. The linear animation gives a live, continuous fade; its negative
-     delay (elapsed, set inline) resumes it at the right point after a reload. Under reduced
-     motion the animation is off and the inline static opacity (also elapsed-derived) shows. */
-  .polaroid-keep .pol-veil {
-    position: absolute; inset: 0; background: #0c0a07;
-    animation-name: polDevelopFade; animation-timing-function: linear; animation-fill-mode: both;
+  /* The develop, as old integral film did it rather than the modern black-to-clear: a flat
+     grey-green murk (.pol-murk) thins away while the picture under it (.pol-develop) comes
+     up flat and colourless, contrast first and colour last. The duration and a negative
+     delay (elapsed) are set inline, so a reload resumes mid-develop; under reduced motion the
+     animations are off and the inline static values for that moment show instead.
+     The picture's filter steps every ten seconds or so rather than gliding: it is repainting
+     a whole drawing, for thirteen minutes, to make a change nobody could see frame to frame.
+     The murk is opacity only, which is cheap, so it glides. */
+  .polaroid-keep .pol-develop {
+    display: block; width: 100%; height: 100%;
+    animation-name: polDevelopArt; animation-timing-function: steps(39, end); animation-fill-mode: both;
   }
-  @keyframes polDevelopFade { from { opacity: 1; } to { opacity: 0; } }
-  /* Locked — a sealed keepsake: still just a black rectangle, no cream frame and no caption.
-     It is built from the earned tile's own boxes (a square well and an empty caption block)
-     rather than an aspect-ratio guess, purely so it occupies EXACTLY the footprint of a
-     developed polaroid. A 5/6 box was roughly a polaroid's proportions but not this
-     polaroid's, so every locked tile came up ~55px short and punched a hole in the row. It is
-     all one colour, so borrowing the structure costs the sealed look nothing. */
-  .keep-locked {
-    display: block; width: 100%; box-sizing: border-box; padding: 9px 9px 0;
-    background: #0c0a07; border: 1px solid #0c0a07; border-radius: 2px;
-    box-shadow: 0 2px 6px rgba(43, 39, 34, 0.20);
-    transform: rotate(var(--tilt, -2deg)); transition: transform 0.16s ease;
+  .polaroid-keep .pol-develop svg { display: block; width: 100%; height: 100%; }
+  .polaroid-keep .pol-murk {
+    position: absolute; inset: 0; background: #56625b;
+    animation-name: polDevelopMurk; animation-timing-function: linear; animation-fill-mode: both;
   }
-  .keep-locked-well { display: block; width: 100%; aspect-ratio: 1 / 1; }
+  @keyframes polDevelopArt {
+    0%   { filter: saturate(0) contrast(0.45) brightness(0.86); }
+    50%  { filter: saturate(0.25) contrast(0.72) brightness(0.93); }
+    100% { filter: saturate(1) contrast(1) brightness(1); }
+  }
+  @keyframes polDevelopMurk { 0% { opacity: 1; } 50% { opacity: 0.41; } 100% { opacity: 0; } }
   /* The caption block is a RESERVED box, not a box that grows to fit its text, and that is
      what levels the wall. Three things used to change a tile's height for free: a name that
      wrapped to three lines, a sub-line that wrapped to three, and a still-developing tile
@@ -3561,8 +3562,8 @@
     --tape-color: rgba(224, 196, 120, 0.6);
   }
   @media (prefers-reduced-motion: reduce) {
-    .polaroid-keep, .keep-locked { transition: none; }
-    .polaroid-keep .pol-veil { animation: none; }
+    .polaroid-keep { transition: none; }
+    .polaroid-keep .pol-develop, .polaroid-keep .pol-murk { animation: none; }
   }
 
   /* The same lamp as the Album Focus board (see .af-tile below): instant film is a physical
@@ -3639,29 +3640,65 @@
      tiles were not really different sizes, their captions were. 150px gives the handwritten
      name two lines at most for every keepsake in the set.
 
-     The 26px column gap is the other half of the overlap fix and has to be read together with
-     polaroidJitter: a tile carries up to 5px of --dx AND a rotation of up to 7deg, which
-     swings the corners of a ~200px-tall frame about 12px sideways. Two neighbours leaning
-     toward each other therefore spend ~34px of the gutter between them. At the old 12px they
-     genuinely overlapped — eight pairs of them, by up to 14px. Do not trim this gap back
-     without trimming the jitter to match. */
-  .keep-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 28px 26px; align-items: start; padding: 16px 4px 12px;
+     The wall is a drying line (polaroidHang in app.js). The grid only decides the rows; script
+     then strings a length of twine across each one (.keep-twine, absolutely placed, under the
+     prints) and sets each cell's --py, how far down its row the twine runs at that peg's x.
+     The print hangs below that point and swings from its peg, so its transform-origin is the
+     peg (--px, a percentage of the cell, which is also the print's width). --line-l/-r are
+     how far the twine runs out past the wall into the card's padding to reach its pins.
+     The 26px column gap is sized against the swing: up to 2.5deg either way, from a peg up to
+     7% off-centre, moves the bottom corners of a ~200px print about 9px sideways. */
+  .keep-wall {
+    position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 22px 26px; align-items: start; padding: 18px 4px 6px;
+    --line-l: 26px; --line-r: 18px;
   }
   /* No content-visibility here, deliberately: `auto` also applies PAINT containment, which
-     clips each tile to its own cell — and these tiles are tilted up to 7deg, so the corners
-     that stick out got sliced off with a hard vertical edge. A wall of 22 inline SVGs paints
-     fine without it; if the set ever grows enough to need the optimisation back, it has to go
-     on a padded wrapper that the rotated polaroid can overflow into. */
-  .keep-cell { transform: translate(var(--dx, 0), var(--dy, 0)); }
+     clips each cell to its own box, and both the peg above a print and the swung print's
+     corners stick out of it. A wall of 22 inline SVGs paints fine without it; if the set ever
+     grows enough to need the optimisation back, it has to go on a padded wrapper. */
+  .keep-cell {
+    position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
+    padding-top: calc(var(--py, 14px) + 4px);
+  }
+  .keep-cell .polaroid-keep { transform-origin: calc(50% + var(--px, 0%)) 0; box-shadow: 0 4px 10px rgba(43, 39, 34, 0.15); }
+  /* The peg's jaw bites about 11px down onto the print's top edge, and the twine runs behind
+     it through the groove in its jaws. */
+  .keep-peg {
+    position: absolute; z-index: 2; top: calc(var(--py, 14px) - 40px); left: calc(50% + var(--px, 0%));
+    width: 19px; height: 57px; transform: translateX(-50%) rotate(var(--pr, 0deg)); transform-origin: 50% 60%;
+  }
+  .keep-peg svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .keep-peg .kp-face { fill: #ead6ab; stroke: var(--ink); stroke-width: 0.9; stroke-linejoin: round; }
+  .keep-peg .kp-side { fill: #c6a36f; stroke: var(--ink); stroke-width: 0.9; stroke-linejoin: round; }
+  .keep-peg .kp-gap { fill: #5c4630; }
+  .keep-peg .kp-split { fill: none; stroke: #6d5336; stroke-width: 0.6; }
+  .keep-peg .kp-grain { fill: none; stroke: #c4a273; stroke-width: 0.5; stroke-linecap: round; }
+  .keep-peg .kp-wire { fill: none; stroke: #6c6862; stroke-width: 1.05; stroke-linecap: round; }
+  .keep-peg .kp-glint { fill: none; stroke: #e9e6df; stroke-width: 0.45; stroke-linecap: round; }
+  /* An unearned keepsake: its peg, empty, with the number pencilled under it. */
+  .keep-num {
+    margin-top: 22px; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust));
+    color: var(--ink-soft); opacity: 0.6; transform: rotate(var(--nr, 0deg));
+  }
+  .keep-twine { position: absolute; z-index: 0; overflow: visible; pointer-events: none; }
+  .keep-twine .tw { fill: none; stroke: #8b7254; stroke-width: 1.6; stroke-linecap: round; }
+  .keep-twine .tw-ply { fill: none; stroke: #c3aa82; stroke-width: 0.6; stroke-dasharray: 1.6 2.6; stroke-linecap: round; }
+  .keep-twine .tw-knot { fill: none; stroke: #8b7254; stroke-width: 1.2; stroke-linecap: round; }
+  .keep-twine .tw-pin { fill: #b9a06a; stroke: var(--ink); stroke-width: 1; }
+  /* Night takes the wood and the twine down a stop, as it does the prints, rather than
+     repainting them: they are objects on the page, not ink. */
+  :root[data-theme="dark"] .keep-peg { filter: brightness(0.8); }
+  :root[data-theme="dark"] .keep-twine .tw, :root[data-theme="dark"] .keep-twine .tw-knot { stroke: #a48c69; }
+  :root[data-theme="dark"] .keep-twine .tw-ply { stroke: #6e5c43; }
+  :root[data-theme="dark"] .keep-twine .tw-pin { fill: #8f7c54; }
   /* An earned tile carries a `title` saying what developed it, and a native tooltip is
      invisible until you happen to rest on one. So the pointer announces it: a hand-inked
      magnifying glass, hotspot on the lens, meaning "there is something to read here".
      Drawn rather than borrowed — the built-in `zoom-in` glass wears a plus sign and promises
      a zoom that never happens. `help` is the fallback for anything that refuses the image,
-     since a question mark is the honest second choice. Locked cells keep the plain arrow:
-     their tooltip only says the keepsake is unearned, which is what the black frame says. */
+     since a question mark is the honest second choice. An empty peg keeps the plain arrow:
+     its tooltip only says the keepsake is unearned, which is what the empty peg says. */
   .keep-cell[data-state="developed"],
   .keep-cell[data-state="developing"] { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Cg fill='none' stroke='%23fdfbf4' stroke-width='4.4' stroke-linecap='round'%3E%3Cpath d='M16.4 5.6a6.6 6.6 0 1 1-9.5 9.1 6.6 6.6 0 0 1 9.5-9.1z'/%3E%3Cpath d='M16.2 15.9 22.4 22.2'/%3E%3C/g%3E%3Cg fill='none' stroke='%232b2721' stroke-width='2.1' stroke-linecap='round'%3E%3Cpath d='M16.4 5.6a6.6 6.6 0 1 1-9.5 9.1 6.6 6.6 0 0 1 9.5-9.1z'/%3E%3Cpath d='M16.2 15.9 22.4 22.2'/%3E%3C/g%3E%3C/svg%3E") 11 11, help; }
   @media (max-width: 560px) {
@@ -3669,13 +3706,12 @@
        desktop. That is the point: the card only has ~290px of usable width once the notebook's
        left margin is paid for, and three columns of ~86px would put every caption back onto
        three lines. Two properly-sized polaroids beat three unreadable ones.
-       The 26px gutter does NOT shrink with the columns. It cannot: it is sized against the
-       tilt, which swings a tile's corners ~12px sideways no matter how narrow the phone is,
-       and at 16px the tiles lapped each other here even though the desktop wall was clean. */
-    .keep-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 22px 26px; }
+       The 26px gutter does NOT shrink with the columns: it is sized against the swing, which
+       moves a print's corners the same distance however narrow the phone is. The twine runs
+       out less far, because the phone card's padding is narrower. */
+    .keep-wall { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); --line-l: 20px; --line-r: 10px; }
     .keep-counter-n { font-size: calc(32px + var(--text-size-adjust)); }
   }
-  @media (prefers-reduced-motion: reduce) { .keep-cell { transform: none; } }
 
   /* Stickers: the die-cut vinyl shelf, a second family in the keepsakes drawer and never
      mixed into the polaroid wall above it. The art (js/stickers.js) carries fill as a
@@ -12759,7 +12795,9 @@
     border-radius: 1px; overflow: hidden; background: #0c0a07;
   }
   .toast .pol-thumb-art svg { display: block; width: 100%; height: 100%; }
-  .toast .pol-thumb-veil { position: absolute; inset: 0; background: #0c0a07; opacity: 0.5; }
+  /* caught halfway up out of the murk, the way the drawer's own develop draws it */
+  .toast .pol-thumb-veil { position: absolute; inset: 0; background: #56625b; opacity: 0.45; }
+  .toast .pol-thumb-art:has(.pol-thumb-veil) svg { filter: saturate(0.25) contrast(0.72) brightness(0.93); }
   @keyframes toastIn { from { opacity: 0; transform: translateX(30px) rotate(-1deg); } to { opacity: 1; transform: translateX(0) rotate(-1deg); } }
   @keyframes toastOut { to { opacity: 0; transform: translateX(30px) rotate(-1deg); } }
 
@@ -12909,7 +12947,8 @@
     border-radius: 1px; overflow: hidden; background: #0c0a07;
   }
   .found-chip--polaroid .pol-thumb-art svg { display: block; width: 100%; height: 100%; }
-  .found-chip--polaroid .pol-thumb-veil { position: absolute; inset: 0; background: #0c0a07; opacity: 0.5; }
+  .found-chip--polaroid .pol-thumb-veil { position: absolute; inset: 0; background: #56625b; opacity: 0.45; }
+  .found-chip--polaroid .pol-thumb-art:has(.pol-thumb-veil) svg { filter: saturate(0.25) contrast(0.72) brightness(0.93); }
   .found-chip.found-folded { display: none; }
   /* the rest of the run's keepsakes, on a kraft tag tied to the end of the row; hover swings it */
   .found-chip--more { align-self: flex-end; margin-bottom: 8px; border: none; background: none; border-radius: 0; padding: 0; cursor: pointer; }

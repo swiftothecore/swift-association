@@ -5557,7 +5557,7 @@ export const GLOSSARY = [
   { term: "page mark", slug: "page-mark", seen: "always", also: ["rule-mark"],
     defn: "The small inked doodle beside the handwritten title of every inside page. It says which page you are on, and it kicks if you poke it." },
   { term: "polaroid", slug: "polaroid", seen: "polaroidFound", also: ["keepsake"],
-    defn: "A photograph pinned up inside the keepsakes drawer. It develops when you find it, not when you score well." },
+    defn: "A photograph pegged up inside the keepsakes drawer. It develops when you find it, not when you score well." },
   { term: "rule mark", slug: "rule-mark", seen: "always", also: ["page-mark", "challenge"],
     defn: "The five small icons that set out a page's terms before you play: the clock, suggestions, hints, which words can come up, and how you're allowed to answer. A crossed-out mark means that one is off here." },
   { term: "run", slug: "run", seen: "always", also: ["page"],
