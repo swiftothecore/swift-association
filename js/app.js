@@ -8018,10 +8018,14 @@ function nextBonusRound(options = {}) {
    The games that name their song (or, for Running Order, its record) from the first moment are
    the exception (SONG_ERA_ON_PAGE, below): a shuffled era only clashed with the song's own
    colour on the rule beside it, so they wear the song's era instead and the whole page
-   matches. Shuffled is the fallback for an album with no era of its own. */
+   matches. Shuffled is the fallback for an album with no era of its own.
+   The slip zine keeps gold on both sides. Its chips hover gold, so the colour in hand at the
+   tap is gold, and Correct the Slip's gap and writing line open there: a shuffled era would
+   arrive at that moment and read as the verdict, and Red lands beside the red pen that strikes
+   the impostor. The song's own colour still comes in at the reveal. */
 let bonusRecentEras = [];
 function bonusPageEra() {
-  if (isRuthlessRun()) return "gold";
+  if (isRuthlessRun() || isSlipGame(bonusGame)) return "gold";
   const album = bonusPuzzle && (bonusPuzzle.album || (bonusPuzzle.song && bonusPuzzle.song.album));
   if (SONG_ERA_ON_PAGE.has(bonusGame && bonusGame.id) && ALBUM_ERA[album]) return ALBUM_ERA[album];
   let pool = ERAS.filter((e) => !bonusRecentEras.includes(e));
