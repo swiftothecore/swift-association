@@ -74,6 +74,11 @@ export const DAILY_ALBUM_SKEW = 1.0;
 // no-title rule, with stem matching both on and off. A hard floor, never relaxed; see
 // scoreDailyAlbumPool. __dev.daily.audit() checks it across a century of anniversaries.
 export const DAILY_ALBUM_MIN_ANSWERS = 3;
+// The first day the anniversary daily leaves out its album's previous anniversary's words (see
+// anniversaryPool). Days before it deal with nothing left out, which is where the chain of
+// previous anniversaries bottoms out and why no daily already played changes its words. Moving
+// it re-deals every anniversary after it, so it stays put.
+export const DAILY_ALBUM_SKIP_FROM = "2026-10-29";
 // The exponent the anniversary daily's distinctiveness score is raised to when it becomes a draw
 // weight (see weightedAlbumWord). Steeper means the album's signature words surface more often at
 // the cost of variety between one anniversary and the next. Re-derived against the score's units,
@@ -85,7 +90,11 @@ export const DAILY_ALBUM_MIN_ANSWERS = 3;
 // and nothing else. Re-measure with __dev.daily.years if the score changes again. Those figures
 // predate DAILY_ALBUM_MIN_ANSWERS: on the narrower three-answer pools (50-132 words), averaged
 // over 12 albums x 20 years, exponent 1 repeats 2.4 of 13 words year-to-year, 2 repeats 2.9 and
-// 3 repeats 3.6, with folklore, reputation and the debut near 5.
+// 3 repeats 3.6, with folklore, reputation and the debut near 5. Since DAILY_ALBUM_SKIP_FROM
+// no word repeats from one anniversary to the next at any exponent, so the measure that is left
+// is two anniversaries apart (100 years, all albums): 1 repeats 2.8, 2 repeats 3.3, 3 repeats
+// 4.0, and a signature word like reputation's "drama" lands every other year at 3 (44 of 100
+// at 2). The narrow pools bound that more than the weighting does, so 3 stays.
 export const DAILY_ALBUM_WEIGHT_EXP = 3;
 
 /* ---------- Address-bar routes ---------- */

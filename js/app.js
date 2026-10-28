@@ -17,7 +17,7 @@ import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineup
 import { judge, WON, DEAD } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
-  TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, NORMAL_TAIL_CHANCE, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DAILY_ALBUM_MIN_ANSWERS, DIFF_KEY, DEFAULT_SETTINGS,
+  TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, NORMAL_TAIL_CHANCE, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DAILY_ALBUM_MIN_ANSWERS, DAILY_ALBUM_SKIP_FROM, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
   GRAVEYARD,
   CREDITS,
@@ -18450,8 +18450,9 @@ function startDaily() {
   braceletSeed = dailySeed(dateStr);
   // On a real album anniversary, lean today's words toward that album (deterministic — the
   // album comes from the date, the skew is rolled on dailyRng). See pickWord.
+  // The pool leaves out whatever this album's previous anniversary dealt (see anniversaryPool).
   const annAlbum = anniversaryAlbumFor(dateStr);
-  dailyAlbumPool = buildDailyAlbumPool(annAlbum);
+  dailyAlbumPool = anniversaryPool(dateStr).pool;
   // Only claim the album once its words are actually behind the run — a thin album that
   // yields no pool leans on nothing, so it shouldn't dress the page as though it did.
   dailyAlbum = dailyAlbumPool ? annAlbum : null;
@@ -21885,7 +21886,7 @@ function dailyAlbumAnswers(word, album) {
   const count = (strict) => songCount(validSongs(word, strict, MODES.medium.noTitle).filter((s) => s.album === album));
   return Math.min(count(false), count(true));
 }
-// The working out behind buildDailyAlbumPool, kept separate so the dev preview can see the
+// The working out behind anniversaryPool, kept separate so the dev preview can see the
 // steps (the surviving pool, and whether it came in under FLOOR) without re-deriving them.
 // `poolName` names the rarity bucket to intersect with; it defaults to the live one, but a
 // preview for another date must pass daily's own bucket rather than inherit whatever mode
@@ -21915,12 +21916,65 @@ function scoreDailyAlbumPool(album, poolName = effectivePool()) {
   const pool = scored.filter((s) => s.answers >= DAILY_ALBUM_MIN_ANSWERS);
   return pool.length >= TOTAL_ROUNDS ? { pool, scored, thin: pool.length < FLOOR, floor: FLOOR } : null;
 }
-// The album's word pool for an anniversary daily: its playable words (intersected with the
-// active rarity bucket), scored by distinctiveness, most album-defining first. null when there's
-// no album today or the pool is empty (→ pickWord just behaves like a normal daily).
-function buildDailyAlbumPool(album) {
-  const built = scoreDailyAlbumPool(album);
-  return built ? built.pool : null;
+// The anniversary chain. Each anniversary daily leaves out the words its album's previous
+// anniversary dealt, so no word is on an album's day two anniversaries running. The previous
+// anniversary is the album's last release day before this one, which is a year back for most
+// albums, and the other release day for the four with a Taylor's Version (Fearless TV on 9 April
+// skips what Fearless dealt the 11 November before it). What that day dealt is found by dealing
+// it again, which needs ITS previous day's words, and so on back down the chain: a day before
+// DAILY_ALBUM_SKIP_FROM deals with nothing left out, which is both where the chain bottoms out
+// and the promise that no daily already played changes its words. Plural pairs count as the
+// same word (wordTaken), so "dream" one year does not let "dreams" through the next.
+//
+// The draw weighting and the three-answer floor are untouched: the skip only takes words out of
+// the pool scoreDailyAlbumPool built, and if that ever left fewer than TOTAL_ROUNDS the day keeps
+// its whole pool. Pools are 50 words and up, so no album is near it.
+//
+// Memoised per corpus: the built pool per album and the dealt words per date. Keyed off the
+// allSongs array itself, so a guest corpus swap can never answer with Taylor's pools or the
+// reverse; nothing here is a loadData index the swap has to carry.
+let anniversaryMemo = { corpus: null, pools: new Map(), dealt: new Map() };
+function anniversaryMemoNow() {
+  if (anniversaryMemo.corpus !== allSongs) anniversaryMemo = { corpus: allSongs, pools: new Map(), dealt: new Map() };
+  return anniversaryMemo;
+}
+function anniversaryBuiltPool(album) {
+  const memo = anniversaryMemoNow();
+  if (!memo.pools.has(album)) memo.pools.set(album, scoreDailyAlbumPool(album, MODES.medium.pool));
+  return memo.pools.get(album);
+}
+// The latest date before `dateKey` that is an anniversary of the same album, or null.
+function previousAnniversary(dateKey, album) {
+  const year = +dateKey.slice(0, 4);
+  const mds = new Set(TS_MILESTONES.filter((m) => m.album === album && (m.kind === "album" || m.kind === "tv")).map((m) => m.md));
+  const before = [...mds].flatMap((md) => [`${year}-${md}`, `${year - 1}-${md}`])
+    .filter((k) => k < dateKey && anniversaryAlbumFor(k) === album)
+    .sort();
+  return before.length ? before[before.length - 1] : null;
+}
+// The pool a date's anniversary daily draws from, after the skip. `pool` is null on a day with
+// no album or no usable pool (pickWord then deals an ordinary daily). `exp` only matters to the
+// dev tools trying another weighting: the chain is dealt with it all the way down, so a trial
+// exponent is measured against its own previous years, not the shipped ones.
+function anniversaryPool(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
+  const album = anniversaryAlbumFor(dateKey);
+  const built = album ? anniversaryBuiltPool(album) : null;
+  if (!built) return { album, built: null, pool: null, prev: null, skipped: [] };
+  const prev = dateKey >= DAILY_ALBUM_SKIP_FROM ? previousAnniversary(dateKey, album) : null;
+  const last = prev ? anniversaryWords(prev, exp) : [];
+  const fresh = built.pool.filter((s) => !wordTaken(last, s.w));
+  const skipping = last.length > 0 && fresh.length >= TOTAL_ROUNDS;
+  return { album, built, pool: skipping ? fresh : built.pool, prev, skipped: skipping ? last : [] };
+}
+// The thirteen words a date's anniversary daily deals ([] on a day without one), memoised.
+function anniversaryWords(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
+  const memo = anniversaryMemoNow();
+  const key = `${exp}|${dateKey}`;
+  if (!memo.dealt.has(key)) {
+    const r = previewDailyAlbum(dateKey, exp);
+    memo.dealt.set(key, r.words ? r.words.map((w) => w.word) : []);
+  }
+  return memo.dealt.get(key);
 }
 // Weighted pick from [{ w, songs, catalogue, score }], favouring the album-defining words via a
 // score^exp weight so they surface well ahead of the long tail. The exponent is coupled to the
@@ -21944,9 +21998,8 @@ function weightedAlbumWord(scored, rng, exp = DAILY_ALBUM_WEIGHT_EXP) {
 // mirrors pickWord's daily path — including the rng call order, which is what makes the words
 // match the real run — so it has to move whenever that path does.
 function previewDailyAlbum(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
-  const album = anniversaryAlbumFor(dateKey);
-  const built = album ? scoreDailyAlbumPool(album, MODES.medium.pool) : null;
-  if (!built) return { date: dateKey, album, pool: null, words: null };
+  const { album, built, pool, prev, skipped } = anniversaryPool(dateKey, exp);
+  if (!pool) return { date: dateKey, album, pool: null, words: null };
   const bucket = wordBuckets[MODES.medium.pool] || playableWords;
   const byWord = new Map(built.pool.map((s) => [s.w, s]));
   const rng = mulberry32(dailySeed(dateKey));
@@ -21955,7 +22008,7 @@ function previewDailyAlbum(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
   for (let i = 0; i < TOTAL_ROUNDS; i++) {
     const gen = bucket.filter((w) => !wordTaken(used, w));
     const genChoices = gen.length ? gen : bucket;
-    const albumChoices = built.pool.filter((s) => !wordTaken(used, s.w));
+    const albumChoices = pool.filter((s) => !wordTaken(used, s.w));
     const fromAlbum = albumChoices.length > 0 && rng() < DAILY_ALBUM_SKEW;
     let from = genChoices;
     if (!fromAlbum && normalTailOpen(MODES.medium.pool, "daily", used) && rng() < NORMAL_TAIL_CHANCE) {
@@ -21970,6 +22023,8 @@ function previewDailyAlbum(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
   return {
     date: dateKey, album, era: ALBUM_ERA[album] || "gold", exp,
     size: built.pool.length, scored: built.scored.length, floor: built.floor,
+    // The album's previous anniversary and the words it dealt, left out of today's draw.
+    prev, skipped,
     // true → fewer than FLOOR words reach DAILY_ALBUM_MIN_ANSWERS album answers. Still a full
     // run, but the year-to-year repeats climb as the pool narrows, so it is worth a look.
     thin: built.thin,
@@ -21990,8 +22045,10 @@ function previewDailyAlbumAll(year, exp) {
 // each year repeats from the one before. This is the instrument for the failure the design can't
 // see by playing: distinctiveness, a steep exponent and skew 1.0 all narrow toward the same words,
 // and a pool narrow enough to hand back last year's paper only shows itself a year later. Sample
-// it whenever the score or the exponent moves. As tuned, on the three-answer pools: ~3.6 of 13
-// repeat over twenty years, and the smallest pools (folklore, reputation, the debut) repeat most.
+// it whenever the score or the exponent moves. Since the anniversary chain, a word can no longer
+// come back on the very next anniversary, so this counts repeats from two anniversaries back for
+// the four albums with a Taylor's Version day between (none for the rest): the signature words
+// now land every other year instead of every year.
 function previewDailyAlbumYears(dateKey, count = 5, exp) {
   const md = dateKey.slice(5);
   const y0 = +dateKey.slice(0, 4);
