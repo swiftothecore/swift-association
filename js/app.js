@@ -21637,7 +21637,19 @@ function applyAgainBtnLabel() {
    does. They exist for the clipboard. */
 const shareDateLabel = (dateStr) =>
   new Date(dateStr + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
-const shareGrid = () => roundResults.map((r) => (r ? "⭐" : "⬜")).join("");
+/* The grid is the bracelet in text: each page you got prints the heart of the album you
+   answered it with, so two perfect days still read differently. Twelve coloured hearts, twelve
+   studio albums, one each, re-records already filed under their original. The four shelves
+   past the studio twelve (holiday, movies, written for others, collaborations) and any older
+   save that never recorded its album fall back to a star, which still means "got it". A miss
+   is a small square, deliberately not the big white one, which sits too close to TTPD's 🤍. */
+const SHARE_HEARTS = {
+  "Taylor Swift": "💚", "Fearless": "💛", "Speak Now": "💜", "Red": "❤️", "1989": "🩵",
+  "reputation": "🖤", "Lover": "🩷", "folklore": "🩶", "evermore": "🤎", "Midnights": "💙",
+  "The Tortured Poets Department": "🤍", "The Life of a Showgirl": "🧡",
+};
+const shareGrid = () => roundResults
+  .map((r, i) => (r ? SHARE_HEARTS[roundAlbums[i]] || "⭐" : "▫️")).join("");
 // Active solving time (sum of per-round answer seconds, capped per round) rides on the
 // score line — a fair, comparable number since everyone gets the same words. m:ss so
 // pasted results sort and compare cleanly.
