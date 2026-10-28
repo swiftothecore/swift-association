@@ -69,6 +69,11 @@ export const NORMAL_TAIL_CHANCE = 0.05;
 // The draw is weighted by distinctiveness. Consumed through the seeded dailyRng so it stays
 // identical for everyone on the day. See pickWord / startDaily.
 export const DAILY_ALBUM_SKEW = 1.0;
+// How many of the anniversary album's own songs must answer a word before it can be an
+// anniversary daily page: counted once per song (a remix is not a second answer), under Normal's
+// no-title rule, with stem matching both on and off. A hard floor, never relaxed; see
+// scoreDailyAlbumPool. __dev.daily.audit() checks it across a century of anniversaries.
+export const DAILY_ALBUM_MIN_ANSWERS = 3;
 // The exponent the anniversary daily's distinctiveness score is raised to when it becomes a draw
 // weight (see weightedAlbumWord). Steeper means the album's signature words surface more often at
 // the cost of variety between one anniversary and the next. Re-derived against the score's units,
@@ -77,7 +82,10 @@ export const DAILY_ALBUM_SKEW = 1.0;
 // words year-to-year; 2 gives 38% / 1.9; 3 gives 49% / 2.5. 3 buys the strongest album character
 // for about one extra repeated word a year, which is invisible on a prompt a player meets once
 // every 365 days. Word difficulty is flat across all three, so this trades character for variety
-// and nothing else. Re-measure with __dev.daily.years if the score changes again.
+// and nothing else. Re-measure with __dev.daily.years if the score changes again. Those figures
+// predate DAILY_ALBUM_MIN_ANSWERS: on the narrower three-answer pools (50-132 words), averaged
+// over 12 albums x 20 years, exponent 1 repeats 2.4 of 13 words year-to-year, 2 repeats 2.9 and
+// 3 repeats 3.6, with folklore, reputation and the debut near 5.
 export const DAILY_ALBUM_WEIGHT_EXP = 3;
 
 /* ---------- Address-bar routes ---------- */

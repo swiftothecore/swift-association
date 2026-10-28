@@ -1197,7 +1197,7 @@ export function initDev(api) {
     row(btn("preview album pool", () => {
           const r = api.daily.preview();
           api.daily.dump(r.date);
-          toast(r.pool ? `${r.album}: pool ${r.size}${r.relaxed ? " (relaxed)" : ""}: see console` : "no album pool that day");
+          toast(r.pool ? `${r.album}: pool ${r.size}${r.thin ? " (thin)" : ""}: see console` : "no album pool that day");
         }),
         btn("all albums", () => toast(api.daily.dump())),
         btn("5 years", () => {
@@ -1208,6 +1208,15 @@ export function initDev(api) {
           console.log(`${y.distinct}/${y.of} distinct words overall`);
           console.groupEnd();
           toast(`${y.album}: ${y.distinct}/${y.of} distinct: see console`);
+        }),
+        // A century of anniversary dailies, every page re-judged: the "3 album songs answer
+        // every page" promise checked from outside the pool that makes it.
+        btn("100 years", () => {
+          const a = api.daily.audit(100);
+          console.log("anniversary audit", a);
+          toast(a.below.length || a.noPool.length
+            ? `${a.below.length} pages under ${a.need}, ${a.noPool.length} days unpooled: see console`
+            : `${a.pages} pages, every one ${a.need}+ (fewest ${a.fewest}): see console`);
         }))));
 
   // ---- Dated marginalia / sharing ------------------------------------------

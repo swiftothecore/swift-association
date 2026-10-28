@@ -17,7 +17,7 @@ import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineup
 import { judge, WON, DEAD } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
-  TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, NORMAL_TAIL_CHANCE, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DIFF_KEY, DEFAULT_SETTINGS,
+  TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, NORMAL_TAIL_CHANCE, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DAILY_ALBUM_MIN_ANSWERS, DIFF_KEY, DEFAULT_SETTINGS,
   LAUNCH_DATE, SERIAL_DIGITS,
   GRAVEYARD,
   CREDITS,
@@ -21876,33 +21876,44 @@ function albumWordScore(word, album) {
   // earns no weight at all); never negative, since catalogue can't exceed the song count.
   return { w: word, songs, catalogue, score: songs * Math.log(allSongs.length / catalogue) };
 }
+// How many of `album`'s own songs answer `word` as an anniversary daily page judges it: Normal's
+// rule (in the lyrics, never in the title), counted once per song so a remix or a piano version
+// is not a second answer, and taken under BOTH matchers a player can be on. Stem matching is a
+// setting, so the same seeded page reaches one player stem-lenient and another exact-word only;
+// the smaller of the two counts is the one a player is guaranteed.
+function dailyAlbumAnswers(word, album) {
+  const count = (strict) => songCount(validSongs(word, strict, MODES.medium.noTitle).filter((s) => s.album === album));
+  return Math.min(count(false), count(true));
+}
 // The working out behind buildDailyAlbumPool, kept separate so the dev preview can see the
-// steps (the surviving pool, and whether the FLOOR relax path let hapax words back in) without
-// re-deriving them. `poolName` names the rarity bucket to intersect with; it defaults to the
-// live one, but a preview for another date must pass daily's own bucket rather than inherit
-// whatever mode happens to be loaded. null when there's no album or nothing survives.
+// steps (the surviving pool, and whether it came in under FLOOR) without re-deriving them.
+// `poolName` names the rarity bucket to intersect with; it defaults to the live one, but a
+// preview for another date must pass daily's own bucket rather than inherit whatever mode
+// happens to be loaded. null when there's no album or too little survives to fill a run.
 //
 // Worth knowing before tuning this: daily is always Normal, and MODES.medium.pool is "normal",
 // so the intersection drops the album's one- and two-song words (Normal's rare tail) before the
-// hapax filter below runs. An anniversary daily never deals its rare tail page either: the album
-// skew is 1.0, so every page comes off the album pool.
+// answer filter below runs. An anniversary daily never deals its rare tail page either: the
+// album skew is 1.0, so every page comes off the album pool.
 function scoreDailyAlbumPool(album, poolName = effectivePool()) {
   if (!album || !albumWordMap[album]) return null;
   const bucketSet = new Set(wordBuckets[poolName] || playableWords);
   const scored = albumWordMap[album]
     .filter((w) => bucketSet.has(w))
-    .map((w) => albumWordScore(w, album))
+    .map((w) => ({ ...albumWordScore(w, album), answers: dailyAlbumAnswers(w, album) }))
     .sort((a, b) => b.score - a.score);
-  // Recurring across the album is a separate test from distinctive, and both have to pass: drop
-  // hapax words (in a single album song), which can score well on rarity alone while saying
-  // nothing about the album. Deliberately still keyed on the raw song count, not the score.
-  // Keep a floor of distinct words (well over TOTAL_ROUNDS) so the no-repeat draw never starves;
-  // relax if an album is too thin. No album is close today (pools run 100-219 words).
+  // The day is the album's, so every page has to be answerable from it, and with room to
+  // spare: DAILY_ALBUM_MIN_ANSWERS of its own songs, as dailyAlbumAnswers counts them. This is a
+  // hard rule with no relax path. It replaced a two-song recurrence test on the raw pressing
+  // count, which let a word through when its only album song held it in the title and had a
+  // second pressing: Snow On The Beach and its remix carried "snow" and "beach" onto Midnights'
+  // day, and Forever & Always and its piano version carried "forever" onto Fearless', each a
+  // page no Midnights or Fearless song could answer. FLOOR is now only a dev warning (`thin`):
+  // the no-repeat draw needs TOTAL_ROUNDS words and gets a normal daily below that. Pools run
+  // 50-132 words under this rule (folklore smallest, TTPD largest), so no album is close.
   const FLOOR = TOTAL_ROUNDS * 2;
-  const recurring = scored.filter((s) => s.songs >= 2);
-  const relaxed = recurring.length < FLOOR;
-  const pool = relaxed ? scored : recurring;
-  return pool.length ? { pool, scored, relaxed, floor: FLOOR } : null;
+  const pool = scored.filter((s) => s.answers >= DAILY_ALBUM_MIN_ANSWERS);
+  return pool.length >= TOTAL_ROUNDS ? { pool, scored, thin: pool.length < FLOOR, floor: FLOOR } : null;
 }
 // The album's word pool for an anniversary daily: its playable words (intersected with the
 // active rarity bucket), scored by distinctiveness, most album-defining first. null when there's
@@ -21959,11 +21970,10 @@ function previewDailyAlbum(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
   return {
     date: dateKey, album, era: ALBUM_ERA[album] || "gold", exp,
     size: built.pool.length, scored: built.scored.length, floor: built.floor,
-    // true → the album was too thin to fill the floor on recurring words alone, so hapax
-    // words (in a single album song) were let back in. Worth watching: it's the pool
-    // quietly widening past "characteristic of the album".
-    relaxed: built.relaxed,
-    pool: built.pool.map((s) => ({ w: s.w, songs: s.songs, catalogue: s.catalogue, score: +s.score.toFixed(2) })),
+    // true → fewer than FLOOR words reach DAILY_ALBUM_MIN_ANSWERS album answers. Still a full
+    // run, but the year-to-year repeats climb as the pool narrows, so it is worth a look.
+    thin: built.thin,
+    pool: built.pool.map((s) => ({ w: s.w, songs: s.songs, answers: s.answers, catalogue: s.catalogue, score: +s.score.toFixed(2) })),
     words,
   };
 }
@@ -21980,8 +21990,8 @@ function previewDailyAlbumAll(year, exp) {
 // each year repeats from the one before. This is the instrument for the failure the design can't
 // see by playing: distinctiveness, a steep exponent and skew 1.0 all narrow toward the same words,
 // and a pool narrow enough to hand back last year's paper only shows itself a year later. Sample
-// it whenever the score or the exponent moves. As tuned: ~2.5 of 13 repeat, against ~1.4 for an
-// unweighted draw from the same pool, and the smallest pools (the debut, reputation) repeat most.
+// it whenever the score or the exponent moves. As tuned, on the three-answer pools: ~3.6 of 13
+// repeat over twenty years, and the smallest pools (folklore, reputation, the debut) repeat most.
 function previewDailyAlbumYears(dateKey, count = 5, exp) {
   const md = dateKey.slice(5);
   const y0 = +dateKey.slice(0, 4);
@@ -21997,6 +22007,34 @@ function previewDailyAlbumYears(dateKey, count = 5, exp) {
   }
   return { date: dateKey, album, exp: exp === undefined ? DAILY_ALBUM_WEIGHT_EXP : exp,
     distinct: new Set(runs.flatMap((r) => r.words)).size, of: count * TOTAL_ROUNDS, years: runs };
+}
+
+// Dev-only: every album-anniversary daily from `fromKey` for `years` years, dealt through
+// previewDailyAlbum and each page judged afresh with validSongs under both matchers, rather than
+// trusting the pool that dealt it. The guarantee scoreDailyAlbumPool makes, checked from the
+// outside: `below` lists every page short of DAILY_ALBUM_MIN_ANSWERS album answers and should be
+// empty. `days` with no pool are anniversaries that fell back to an ordinary daily. A hundred
+// years is about 1,500 dailies and runs in a few seconds.
+function auditDailyAlbumYears(fromKey, years = 100) {
+  const start = new Date(fromKey + "T00:00:00Z");
+  const end = new Date(start); end.setUTCFullYear(end.getUTCFullYear() + years);
+  const out = { from: fromKey, years, need: DAILY_ALBUM_MIN_ANSWERS, days: 0, pages: 0, noPool: [], below: [], fewest: Infinity, spread: {} };
+  for (let d = start; d < end; d = new Date(d.getTime() + 864e5)) {
+    const key = d.toISOString().slice(0, 10);
+    const album = anniversaryAlbumFor(key);
+    if (!album) continue;
+    out.days++;
+    const r = previewDailyAlbum(key);
+    if (!r.words) { out.noPool.push({ date: key, album }); continue; }
+    r.words.forEach((w, i) => {
+      const n = dailyAlbumAnswers(w.word, album);
+      out.pages++;
+      out.fewest = Math.min(out.fewest, n);
+      out.spread[n] = (out.spread[n] || 0) + 1;
+      if (n < DAILY_ALBUM_MIN_ANSWERS) out.below.push({ date: key, album, page: i + 1, word: w.word, answers: n });
+    });
+  }
+  return out;
 }
 
 // Every prompt word this notebook has already shown the player — the union of the tally's
@@ -33214,6 +33252,9 @@ function buildDevApi() {
       // The only way to see the one failure playing can't show: a pool narrow enough to hand
       // back last year's thirteen words. Run it whenever the score or the exponent moves.
       years: (dateKey, count, exp) => previewDailyAlbumYears(dateKey || window.__devDate || todayKey(), count, exp),
+      // Every anniversary daily for the next `years` years, each page re-judged from scratch:
+      // `below` should be empty. See auditDailyAlbumYears.
+      audit: (years, fromKey) => auditDailyAlbumYears(fromKey || window.__devDate || todayKey(), years),
       // Both, printed rather than returned: pools are long, and a console table per album is
       // the readable shape. Defaults to every album; pass a date key for just that one.
       dump: (dateKey, exp) => {
@@ -33221,7 +33262,7 @@ function buildDevApi() {
           : previewDailyAlbumAll(+((window.__devDate || todayKey()).slice(0, 4)), exp);
         for (const r of reports) {
           if (!r.pool) { console.log(`%c${r.album || "(no album)"} · ${r.date || "no release date"}: no pool (no skew that day)`, "color:#888"); continue; }
-          console.group(`${r.album}  ${r.date}  [${r.era}]  pool ${r.size}/${r.scored}  exp ${r.exp}${r.relaxed ? `  ⚠ FLOOR relaxed (<${r.floor} recurring; hapax words let back in)` : ""}`);
+          console.group(`${r.album}  ${r.date}  [${r.era}]  pool ${r.size}/${r.scored}  exp ${r.exp}${r.thin ? `  ⚠ thin (<${r.floor} words with ${DAILY_ALBUM_MIN_ANSWERS}+ album answers)` : ""}`);
           console.log("13 words:", r.words.map((w) => `${w.word}${w.fromAlbum ? `(${w.songs}/${w.catalogue}→${w.score})` : "*general*"}`).join(", "));
           console.table(r.pool);
           console.groupEnd();
