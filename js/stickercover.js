@@ -293,7 +293,7 @@ export function placeCoverStickers(cov, opts) {
     const st = STICKER_BY_ID[slot.id];
     const p = spots[slot.anchor];
     const cell = document.createElement("span");
-    cell.className = "cover-sticker" + (st.bordered ? " cover-sticker-bordered" : "");
+    cell.className = "cover-sticker";
     cell.dataset.sticker = st.id;
     cell.dataset.anchor = slot.anchor;
     cell.style.cssText =

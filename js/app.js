@@ -6033,7 +6033,7 @@ function stickerTilt(id) {
 // One sticker at one state. `locked` swaps the die-cut filter for the silhouette variant;
 // nothing else about the markup changes, so the two states share a footprint exactly.
 function stickerMarkup(s, locked) {
-  const cls = "sticker" + (locked ? " sticker-locked" : "") + (s.bordered ? " sticker-bordered" : "");
+  const cls = "sticker" + (locked ? " sticker-locked" : "");
   return `<span class="${cls}" style="--rot:${stickerTilt(s.id)}deg" aria-hidden="true">${stickerArt(s)}</span>`;
 }
 // Re-render the keepsakes drawer if it is open (otherwise a no-op), so an unlock landing while

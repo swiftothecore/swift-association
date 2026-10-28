@@ -3727,7 +3727,6 @@
     filter: url(#stickCut);
   }
   .sticker-locked svg { filter: url(#stickCutLocked); }
-  .sticker-bordered:not(.sticker-locked) svg { filter: none; }
   .sticker .ln { stroke: #2b2722; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
   .sticker .ln.t { stroke-width: 1.4; }   /* interior detail */
   .sticker .ln.h { stroke-width: 1.7; }   /* between the two */
@@ -11564,7 +11563,6 @@
   }
   /* Stroke only. Every path in the artwork carries its own fill attribute, so these classes
      must never set one, or the fills stop being the drawing's own. */
-  .cover-sticker-bordered svg { filter: none; }
   .cover-sticker .ln { stroke: #2b2722; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
   .cover-sticker .ln.t { stroke-width: 1.4; }   /* interior detail */
   .cover-sticker .ln.h { stroke-width: 1.7; }   /* between the two */
