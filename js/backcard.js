@@ -89,6 +89,9 @@ function stamp(text, rightX, topY) {
 
 const TICK = `<path d="M3 8.6 L6.4 12 L13 4.6" fill="none" stroke="#c7951f" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>`;
 const CROSS = `<path d="M4 4 L12 12 M12 4 L4 12" fill="none" stroke="#b23a3f" stroke-width="2" stroke-linecap="round"/>`;
+// Correct the Slip's found-but-not-fixed page: a small tick and a small cross (BG_HALF in app.js).
+const HALF = `<path d="M2 8.6 L5 11.6 L10.6 5" fill="none" stroke="#c7951f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>` +
+  `<path d="M11.6 9.6 L15 13 M15 9.6 L11.6 13" fill="none" stroke="#b23a3f" stroke-width="1.6" stroke-linecap="round"/>`;
 
 // One line of the listing, laid out right to left: the mark holds the margin, the note
 // takes what it needs, and the TITLE gives way last — a clipped song name is worse than a
@@ -112,7 +115,7 @@ function track(t, x, baseline, v) {
       ? `<text x="${noteX.toFixed(1)}" y="${baseline - 1}" text-anchor="end" font-family="Courier Prime" font-size="9.5"` +
         ` letter-spacing="0.7" fill="${t.ok ? v.inkSoft : RED}">${esc(note)}</text>`
       : "") +
-    `<svg x="${markX}" y="${baseline - 13}" width="15" height="15" viewBox="0 0 16 16">${t.ok ? TICK : CROSS}</svg>` +
+    `<svg x="${markX}" y="${baseline - 13}" width="15" height="15" viewBox="0 0 16 16">${t.ok ? TICK : t.half ? HALF : CROSS}</svg>` +
     `<line x1="${x}" y1="${baseline + 6}" x2="${x + COL_W}" y2="${baseline + 6}"` +
       ` stroke="${v.inkSoft}" stroke-width="1" stroke-dasharray="1 3" opacity="0.5"/>`;
 }

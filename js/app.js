@@ -10076,6 +10076,9 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     // Nashville alone: a page nobody called. It is NOT `ok`, because nothing was got right, and
     // it must not be drawn as a miss either — see BG_DASH.
     passed: bonusGame.id === "nashville" && nashvillePassed,
+    // Correct the Slip alone: the impostor was found and the word written back was wrong. Half
+    // the page, and marked as half (BG_HALF), so it never reads like an impostor walked past.
+    half: isFixRun() && slipFixing && !correct,
     title: bonusPuzzle.song.title,
     album: bonusPuzzle.song.album,
     words: ruthlessShown,
@@ -10369,6 +10372,12 @@ const BG_CROSS = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true
    so nothing about it was right or wrong. Drawn like the other two, since everything inside
    that card is ink. */
 const BG_DASH = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M4 8.2 L12 7.8" fill="none" stroke="rgba(60,40,18,0.5)" stroke-width="2" stroke-linecap="round"/></svg>`;
+/* A FOURTH, AND ONLY CORRECT THE SLIP CAN EARN IT: the impostor found and the fix wrong. A
+   smaller gold tick for the find with a small red cross at its foot for the fix, the page's two
+   halves marked one each, so a page that got half way never wears the same cross as one that
+   never started. A tick struck through was tried first and at 14px it reads as a cross. The
+   PNG draws the same strokes (HALF in backcard.js). */
+const BG_HALF = `<svg viewBox="0 0 16 16" class="bg-mark-svg" aria-hidden="true"><path d="M2 8.6 L5 11.6 L10.6 5" fill="none" stroke="#c7951f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.6 9.6 L15 13 M15 9.6 L11.6 13" fill="none" stroke="#b23a3f" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 
 /* The mark on the back cover's copy button: a second sheet slipped out from behind the first,
    ruled with the two lines every card on this desk is written on, and the gold tick the run
@@ -10405,11 +10414,14 @@ function endlessRemark(pages) {
   return "no sign of stopping";
 }
 
-function bonusRemark(score, max, clean) {
+function bonusRemark(score, max, clean, missed) {
   if (bonusTimed(bonusGame)) return ruthlessRemark(score, clean);
   if (clean) return "not a page out of place";
   const r = max ? score / max : 0;
-  if (r >= 0.9) return "one smudge, no more";
+  // "One smudge" is a count, so it is read off the listing and not the score: on a points game
+  // two half-paid pages can still come to ninety per cent, and the card would then print a
+  // single smudge over two crosses.
+  if (r >= 0.9 && missed === 1) return "one smudge, no more";
   if (r >= 0.7) return "a clean copy";
   if (r >= 0.5) return "half the book";
   if (r >= 0.3) return "a rough cut and paste";
@@ -10842,7 +10854,7 @@ function endBonusRun() {
   bonusBackRun = {
     game: bonusGame,
     endless,
-    remark: endless ? endlessRemark(bonusScore) : bonusRemark(bonusScore, max, perfect),
+    remark: endless ? endlessRemark(bonusScore) : bonusRemark(bonusScore, max, perfect, bonusLog.filter((t) => !t.ok).length),
     aside, stamp: stampText, foot, label: listLabel,
     // A depth stands alone: there is no total for a run with no last page to be out of, which
     // is the timed card's reason for the same omission.
@@ -10855,7 +10867,7 @@ function endBonusRun() {
   // rows after the run is over, and `bonusGame` is cleared the moment the player leaves.
   const listGame = bonusGame;
   const trackRow = (t) =>
-    `<li class="bg-track ${t.ok ? "ok" : "no"}">` +
+    `<li class="bg-track ${t.ok ? "ok" : "no"}${t.half ? " half" : ""}">` +
       `<span class="bg-track-n">${t.n}</span>` +
       `<span class="bg-track-title">${escapeHtml(censor(t.title))}</span>` +
       // A time is a NUMBER, and a clipped number is a wrong one rather than a short one, so
@@ -10863,8 +10875,8 @@ function endBonusRun() {
       (t.note ? `<span class="bg-track-note${listGame.id === "running-order" ? " is-time" : ""}">` +
                   `${escapeHtml(t.note)}</span>` : "") +
       `<span class="bg-track-mark" aria-hidden="true">` +
-        `${t.ok ? BG_TICK : t.passed ? BG_DASH : BG_CROSS}</span>` +
-      `<span class="sr-only">${t.ok ? "correct" : t.passed ? "passed" : "missed"}</span>` +
+        `${t.ok ? BG_TICK : t.passed ? BG_DASH : t.half ? BG_HALF : BG_CROSS}</span>` +
+      `<span class="sr-only">${t.ok ? "correct" : t.passed ? "passed" : t.half ? "found, not fixed" : "missed"}</span>` +
     `</li>`;
   const tracks = shown.map(trackRow).join("");
 
@@ -14830,7 +14842,7 @@ function buildBackMeta() {
     stamp: r.stamp,
     foot: r.foot,
     label: r.label,
-    tracks: r.tracks.map((t) => ({ n: t.n, ok: t.ok, title: censor(t.title), note: t.note || "" })),
+    tracks: r.tracks.map((t) => ({ n: t.n, ok: t.ok, half: !!t.half, title: censor(t.title), note: t.note || "" })),
     cover,
     signature: (settings.playerName || "").trim(),
     footer: dateLabel + " · " + fmtClock(new Date()) + " · swiftassociation.com",
@@ -34735,7 +34747,11 @@ function buildDevApi() {
           // listing is eyeballed with the column it will really carry.
           // Only Here never fails a page, so a "missed" one is a page the clock took, and a
           // cleared one lands anywhere on the ladder rather than at the top of it.
-          const pts = bonusGame.id === "only-here" ? (ok ? 1 + (n % 5) : 0)
+          // Correct the Slip alternates its misses between a found-but-unfixed page (half, one
+          // point) and an impostor never found, so the listing shows both marks.
+          const half = isFixRun() && !ok && n % 2 === 1;
+          const pts = isFixRun() ? (ok ? 2 : half ? 1 : 0)
+            : bonusGame.id === "only-here" ? (ok ? 1 + (n % 5) : 0)
             // A missed Then What page still banked whatever picks it made, which is the
             // column the listing has to show off.
             : bonusGame.id === "then-what" ? (ok ? CHAIN_PAGE : n % CHAIN_PAGE)
@@ -34747,8 +34763,9 @@ function buildDevApi() {
           if (bonusGame.id === "aaron-or-jack")
             whoCeiling += p.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
           bonusLog.push({
-            n, ok, title: p.song.title,
-            note: isSlipGame(bonusGame) ? p.fakeWord
+            n, ok, half, title: p.song.title,
+            note: isFixRun() ? p.realWord
+                : isSlipGame(bonusGame) ? p.fakeWord
                 : bonusGame.id === "sing-it-back" ? p.answer
                 : bonusGame.id === "redacted" ? `${pts} pts`
                 : bonusGame.id === "then-what" ? `${pts} pts`
