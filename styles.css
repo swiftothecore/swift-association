@@ -16168,6 +16168,23 @@
   .keepsakes-gear { right: 114px; }
   @media (min-width: 1040px) { .keepsakes-gear { right: 122px; } }
   body.in-game .keepsakes-gear { display: none; }
+
+  /* Weather icon: only while snow or leaves are falling (body[data-weather], set by
+     paintWeatherGear). It takes the third seat, beside sound, and the jar steps one seat out for
+     the season, so the two switches sit together and nothing moves when a round hides the jar.
+     Plain ink in both states: it is on by default, and an accent would make it the loudest
+     thing on the desk all week. The drawing alone says on or off. */
+  .weather-gear { display: none; right: 114px; }
+  body[data-weather] .weather-gear { display: block; }
+  body[data-weather] .keepsakes-gear { right: 164px; }
+  @media (min-width: 1040px) {
+    .weather-gear { right: 122px; }
+    body[data-weather] .keepsakes-gear { right: 172px; }
+  }
+  .weather-gear[data-on="false"] .wg-on,
+  .weather-gear[data-on="true"] .wg-off,
+  .weather-gear[data-season="snow"] .wg-leaf,
+  .weather-gear[data-season="leaf"] .wg-snow { display: none; }
   .keepsakes-gear-badge {
     position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px;
     box-sizing: border-box; border-radius: 9px; background: var(--ink); color: var(--paper);
@@ -17442,7 +17459,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   /* A phone's corner holds the gear alone. Sound is a settings divider already, and the
      keepsakes drawer becomes one here (settingsPanels in app.js, same 560px breakpoint), so
      the gear wears the drawer's unread badge instead. */
-  .sound-gear, .keepsakes-gear { display: none; }
+  .sound-gear, .keepsakes-gear, body[data-weather] .weather-gear { display: none; }
   .settings-gear-badge:not(.is-empty) { display: block; }
   body.in-game .settings-gear-badge { display: none; }
   .corner-links {

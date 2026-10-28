@@ -896,7 +896,7 @@ function stopSnow() {
     snowCanvas.style.display = "none";
   }
 }
-function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); }
+function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); paintWeatherGear(); }
 
 /* ---------- Autumn leaves ---------- */
 // The snowfall's seasonal sibling on the same rAF machinery: a full-viewport canvas of leaves
@@ -1014,7 +1014,36 @@ function stopLeaves() {
     leafCanvas.style.display = "none";
   }
 }
-function refreshLeaves() { if (leavesActive()) startLeaves(); else stopLeaves(); }
+function refreshLeaves() { if (leavesActive()) startLeaves(); else stopLeaves(); paintWeatherGear(); }
+
+/* ---------- Weather icon (corner) ----------
+   The off switch for the snow and the leaves, on the desk only while one of them is falling.
+   It asks the calendar and reduce-motion but NOT the setting, so it stays after being switched
+   off: the way back has to be where the way out was. Like the speaker it is a view of the
+   setting, never its own state, and both refreshers repaint it so a dev force shows it too. */
+function weatherSeason() {
+  if (motionReduced()) return null;
+  if (devForceSnow || todayKey().slice(5, 7) === "12") return "snow";
+  if (devForceLeaves || LEAF_DAYS.has(todayKey().slice(5, 10))) return "leaf";
+  return null;
+}
+function paintWeatherGear() {
+  const b = $("weatherGear");
+  if (!b) return;
+  const season = weatherSeason();
+  if (season) document.body.dataset.weather = season;
+  else delete document.body.dataset.weather;
+  if (!season) return;
+  const on = settings.seasonalEffects !== false;
+  b.dataset.season = season;
+  b.dataset.on = on ? "true" : "false";
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  // The strike is cut out of the flake rather than drawn over it, so it reads on any disc.
+  const flake = b.querySelector(".wg-flake");
+  if (on) flake.removeAttribute("mask"); else flake.setAttribute("mask", "url(#weatherStrikeCut)");
+  const what = season === "snow" ? "Snow" : "Falling leaves";
+  b.title = on ? `${what} on. Tap to stop it.` : `${what} off. Tap to bring it back.`;
+}
 // Remember the last type clicked so defaultGameType:"last" can restore it next launch.
 function rememberGameType(t) {
   if (settings.lastGameType !== t) { settings.lastGameType = t; saveSettings(settings); }
@@ -36755,6 +36784,13 @@ async function init() {
   $("soundGear").addEventListener("click", () => {
     setSound(!settings.sound);
     // If they got here with settings open behind, keep that toggle honest too.
+    if ($("settingsModal").classList.contains("open")) renderSettingsBody();
+  });
+  // Weather icon: the same straight toggle, for settings.seasonalEffects.
+  $("weatherGear").addEventListener("click", () => {
+    settings.seasonalEffects = settings.seasonalEffects === false;
+    saveSettings(settings);
+    applySettings();
     if ($("settingsModal").classList.contains("open")) renderSettingsBody();
   });
 
