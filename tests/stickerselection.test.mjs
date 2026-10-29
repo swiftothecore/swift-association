@@ -62,7 +62,8 @@ test('imported preferences cannot duplicate occupants or anchors or exceed the c
 });
 
 test('simultaneous artwork copies have distinct clip IDs and matching references', () => {
-  const st = STICKERS.find((s) => s.id === 'pegacorn');
+  // Exercise the scoping contract independently of whether today's artwork uses clips.
+  const st = { art: '<svg><defs><clipPath id="edge"><path d="M0 0h10v10z"/></clipPath></defs><g clip-path="url(#edge)"><circle r="5"/></g></svg>' };
   const a = stickerArt(st), b = stickerArt(st);
   const ids = (svg) => [...svg.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
   assert.ok(ids(a).length > 0);
