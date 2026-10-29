@@ -25,6 +25,7 @@ import {
 const HISTORY_CAP = 1000;   // keep the most recent N runs; older ones drop off
 
 const STREAK_THRESHOLD = 7; // score >= this counts toward a streak
+const RECORDS_MIGRATED_KEY = RECORDS_KEY + ".migrated";
 
 /* ---------- Stats (separate per mode) ---------- */
 // Medium keeps the legacy key for back-compat; other modes get a suffix.
@@ -1270,13 +1271,19 @@ export function loadRecords(mode) {
 // new score into stats, so the seed reflects history rather than the run in progress.
 // Idempotent: only seeds a mode that has a best but no records yet.
 export function migrateRecordsFromStats() {
+  try { if (localStorage.getItem(RECORDS_MIGRATED_KEY)) return; } catch (e) { return; }
   const tokens = MODE_ORDER.slice();
   for (const v of ["3lives", "sudden"]) for (const m of MODE_ORDER) tokens.push("inf-" + v + "-" + m);
   for (const mode of tokens) {
     if (loadRecords(mode).length) continue;   // already has records
     const best = loadStats(mode).best;
-    if (best > 0) saveRecords([{ score: best, date: null }], mode);
+    if (best > 0) {
+      saveRecords([{ score: best, date: null }], mode);
+      // A failed write must leave the migration retryable on the next load.
+      if (!loadRecords(mode).length) return;
+    }
   }
+  try { localStorage.setItem(RECORDS_MIGRATED_KEY, "1"); } catch (e) { /* retry next load */ }
 }
 export function saveRecords(list, mode) {
   try { localStorage.setItem(recordsKey(mode), JSON.stringify(list)); } catch (e) { /* ignore */ }
@@ -1690,22 +1697,37 @@ export function exportData() {
   return out;
 }
 // Restore from such a snapshot. Only keys in the app namespace are written.
-// Returns the number of keys restored.
+// Returns the number of keys restored. A storage failure rolls back the keys already
+// written and is reported to the caller, so a partial backup never looks like a success.
 export function importData(obj) {
-  if (!obj || typeof obj !== "object") return 0;
-  let n = 0;
-  for (const k in obj) {
-    if (!k.startsWith(APP_PREFIX) || typeof obj[k] !== "string") continue;
-    if (k === DAILY_OWNER_KEY) continue;   // never restore a tab claim — see exportData
-    try { localStorage.setItem(k, obj[k]); n++; } catch (e) { /* ignore */ }
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return 0;
+  const entries = Object.entries(obj).filter(([k, v]) =>
+    k.startsWith(APP_PREFIX) && k !== DAILY_OWNER_KEY && typeof v === "string");
+  const before = new Map(entries.map(([k]) => [k, localStorage.getItem(k)]));
+  const written = [];
+  try {
+    for (const [k, v] of entries) {
+      if (v === before.get(k)) continue;
+      localStorage.setItem(k, v);
+      written.push(k);
+    }
+  } catch (e) {
+    // Remove imported values first to recover the space the original values occupied.
+    // Untouched keys, including the write that failed, keep their original contents.
+    for (const k of written) localStorage.removeItem(k);
+    for (const k of written) if (before.get(k) !== null) localStorage.setItem(k, before.get(k));
+    throw e;
   }
-  return n;
+  return entries.length;
 }
 
 // Per-category resets (the danger zone). Each clears one family of keys.
 // Sweeps the records, the run history, and the dormant legacy fake-celebrity board.
 export function resetRecords() {
   removeByPrefix(RECORDS_KEY);
+  // Resetting records leaves stats intact. Keep the legacy migration retired, otherwise
+  // the next load silently recreates every erased best from those untouched stats.
+  try { localStorage.setItem(RECORDS_MIGRATED_KEY, "1"); } catch (e) { /* ignore */ }
   try { localStorage.removeItem(HISTORY_KEY); } catch (e) { /* ignore */ }
   removeByPrefix(HS_KEY);
 }

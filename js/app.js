@@ -37169,7 +37169,7 @@ async function init() {
     reader.onload = () => {
       let n = 0;
       try { n = importData(JSON.parse(reader.result)); }
-      catch (err) { alert("Couldn't read that backup file."); return; }
+      catch (err) { alert("Couldn't restore that backup. Check the file and available browser storage."); return; }
       if (n > 0) { alert("Restored " + n + " item(s). Reloading…"); location.reload(); }
       else alert("Nothing to restore from that file.");
     };
