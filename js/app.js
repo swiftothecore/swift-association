@@ -7586,9 +7586,9 @@ function renderBonusPage() {
 /* ---------- The Spot the Slip zine's two sides ----------
    SPOT asks for the impostor; CORRECT asks for the impostor and then the word it replaced.
    Correct the Slip is the zine's B SIDE: the top corner of the open leaf is turned down, its
-   back showing the B side's navy with "B side" pencilled on it, and lifting it turns the whole
+   back showing the B side's navy with "SIDE B" typed on it, and lifting it turns the whole
    zine over to its reverse (the same collage in negative, the leaf printed on the cover's
-   navy). On the B side the corner is cream and says "A side", so it always names where it goes.
+   navy). On the B side the corner is cream and says "SIDE A", so it always names where it goes.
    A turned corner rather than a third sticker beside Play and Endless, because the difference
    is how hard the page is, not what a run is: both sides play ten pages or endless the same
    way, and two more stickers would make four doors on one zine. Shown on the open zine only:
@@ -7599,11 +7599,20 @@ function bonusPickedSide() {
   const g = bonusPicked();
   return g.id === "spot-the-slip" && slipCorrectSide ? CORRECT_THE_SLIP : g;
 }
+/* The flap's label, typed like a record label: SIDE B spaced out along the fold with a rule
+   under it. Drawn on the flap's own 40-unit square and centred in the triangle's mass (10 units
+   off the fold, halfway along it), not pinned to the tip, where it would hug the fold and leave
+   the flap's broad corner empty. */
+function dogEarLabel(side) {
+  return `<svg viewBox="0 0 40 40"><g transform="translate(13 27) rotate(45)">` +
+    `<text text-anchor="middle" dominant-baseline="central">SIDE ${side}</text>` +
+    `<path d="M-13 5.2 H13.5"/></g></svg>`;
+}
 function slipDogEar() {
   const to = slipCorrectSide ? "Spot the Slip" : "Correct the Slip";
   return `<button type="button" id="bonusDogEar" class="zine-dogear"` +
     ` aria-label="Turn the zine over to ${to}" data-tip="Turn it over: ${to}">` +
-    `<span class="zine-dogear-flap" aria-hidden="true"><i>${slipCorrectSide ? "A side" : "B side"}</i></span></button>`;
+    `<span class="zine-dogear-flap" aria-hidden="true">${dogEarLabel(slipCorrectSide ? "A" : "B")}</span></button>`;
 }
 /* The turn is the spread swinging edge-on, swapping sides out of sight, and swinging back in.
    It fades through the edge-on moment rather than relying on backface-visibility, which

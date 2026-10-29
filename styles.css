@@ -4648,7 +4648,7 @@
   .zine-open.is-bside .bonus-now-meta { color: #a9b8bf; }
   /* THE TURNED CORNER. The leaf is cut along the fold and the flap lies folded down over the
      page, showing the back of the paper: the B side's slate on the A side, bone on the B side,
-     with the other side's name pencilled along it. It is the switch, so it is the only corner
+     with the other side's name typed along it like a record label. It is the switch, so it is the only corner
      of any leaf that is turned. The flap's shadow falls through a filter on the button, which
      is unclipped, so it follows the triangle rather than the box. */
   .zine-leaf-page.has-dogear {
@@ -4674,13 +4674,14 @@
     background: linear-gradient(45deg, #26394a 0%, #2f4858 58%, #3a5568 100%);
   }
   .zine-dogear:focus-visible .zine-dogear-flap { box-shadow: inset 2px -2px 0 #c7951f; }
-  .zine-dogear-flap i {
-    position: absolute; left: 6px; top: 5px; white-space: nowrap; font-style: normal;
-    font-family: var(--hand); font-weight: 700; font-size: 11.5px; line-height: 1; color: #f0a08c;
-    transform: rotate(45deg); transform-origin: 0 0;
+  .zine-dogear-flap { color: #f0a08c; }
+  .zine-dogear-flap svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .zine-dogear-flap text {
+    font-family: var(--type); font-weight: 700; font-size: 6.2px; letter-spacing: 1.1px; fill: currentColor;
   }
+  .zine-dogear-flap path { stroke: currentColor; stroke-width: 0.7; stroke-linecap: round; opacity: 0.8; }
   .zine-open.is-bside .zine-dogear-flap { background: linear-gradient(45deg, #e2d8c2 0%, #f1e9d6 58%, #f8f2e4 100%); }
-  .zine-open.is-bside .zine-dogear-flap i { color: #8a2626; }
+  .zine-open.is-bside .zine-dogear-flap { color: #8a2626; }
   /* The turn: the spread swings edge-on, the side changes out of sight, and it swings back.
      It fades through edge-on rather than trusting backface-visibility, which composited
      children ignore. turnSlipZine times the swap to the first half (ZINE_TURN_MS). */
