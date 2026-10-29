@@ -3404,7 +3404,7 @@
   /* ---------- Records page (personal bests + history) ---------- */
   .rec-sig { display: flex; align-items: center; gap: 18px; margin: 2px 0 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(43,39,34,0.16); }
   .rec-sig-text { min-width: 0; }
-  .rec-sig-name { font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); color: var(--ink); display: block; line-height: 1.05; transform: rotate(-0.6deg); }
+  .rec-sig-name { font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); color: var(--ink); display: block; line-height: 1.05; transform: rotate(-0.6deg); overflow-wrap: anywhere; }
   .rec-sig-sub { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); display: block; margin-top: 5px; }
   .rec-sign-row { display: flex; align-items: center; gap: 8px; }
   .rec-sign-row .set-text { text-align: left; width: 190px; }
@@ -7872,6 +7872,8 @@
     border-bottom: 1.5px solid rgba(43,39,34,0.18);
   }
   .guest-detail-name { font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); line-height: 1.05; color: var(--g-pen, var(--ink)); }
+  :root[data-theme="dark"] .guest-detail-name { color: color-mix(in srgb, var(--g-pen, var(--ink)) 35%, var(--ink)); }
+  :root body[data-contrast="high"] .guest-detail-name { color: var(--ink); }
   .guest-detail-nums { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); }
   /* the record list, then the rule/goal sections borrowed from a challenge card: the margin
      is what keeps the last record off the "the rule" eyebrow */
@@ -9490,6 +9492,9 @@
   .word-wrap[data-rarity="scarce"]   .rarity-stamp { color: #c02026; --stamp-op: 0.86; }
   .word-wrap[data-rarity="singular"] .rarity-stamp { color: #4a1f66; --stamp-op: 0.92; }
   .rarity-stamp.show { animation: stamp-in 0.45s cubic-bezier(.2,1.4,.4,1) forwards; }
+  /* The stamp needs its own line above the prompt, including when a long word wraps. */
+  .word-wrap:has(> .rarity-stamp.show) { padding-top: calc(58px + var(--text-size-adjust)); }
+  .word-wrap > .rarity-stamp.show { top: 12px; }
   @keyframes stamp-in {
     0%   { opacity: 0; transform: rotate(7deg) scale(1.6); }
     /* overshoot past the settled weight — the press before the pad lifts */
@@ -10881,9 +10886,10 @@
   .album-tag {
     display: inline-block; margin-left: 8px;
     font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.8px;
-    color: var(--album-color, var(--ink-soft));
+    color: color-mix(in srgb, var(--album-color, var(--ink-soft)) 25%, var(--ink));
     vertical-align: middle; opacity: 0.85; text-transform: uppercase;
   }
+  body[data-contrast="high"] .album-tag { color: var(--ink); opacity: 1; }
 
   /* Both Of Us proof card: ONE song, one line per word on the page. The lines sit together
      under a single title because they are all the same song singing — tighter than a stack
@@ -12129,6 +12135,10 @@
   .stp-ps-wash { fill: var(--k); fill-opacity: .2; }
   .stp-ps-hl { fill: none; stroke: var(--highlighter); stroke-width: 5.2; }
   .stp-ps-word { stroke: var(--k); stroke-width: 1.62; stroke-linecap: round; }
+  @media (max-width: 389px) {
+    .stp-ps { grid-template-columns: minmax(0, 1fr); }
+    .stp-ps-lift:last-child:nth-child(odd) { grid-column: auto; width: 100%; }
+  }
 
   /* songs found: a sheet of blotting paper, an album a drop of ink bled out as far as you've
      found (statsBlotterHTML in app.js). The paper is unsized and shows its fibres, and has no
@@ -12967,7 +12977,8 @@
   .found-recap-name-item:not(:first-child)::before { content: "\2022"; color: var(--ink-soft); margin: 0 0.4em; }
 
   /* charm tiles — used by the grouped grid on the Charm Collection page */
-  .ach-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 6px; }
+  .ach-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
+  @media (max-width: 480px) { .ach-grid { grid-template-columns: minmax(0, 1fr); } }
   .ach {
     display: flex; align-items: center; gap: 10px;
     border: 1.5px solid rgba(43,39,34,0.12); border-radius: 2px; padding: 9px 11px;
@@ -15600,7 +15611,7 @@
   .tf-hold::before, .tf-hold::after { content: ""; position: absolute; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: #6e5524; }
   .tf-hold::before { left: -1px; } .tf-hold::after { right: -1px; }
   .tf-lab { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 3px 6px; background: #fbf8ef; border: 1px solid #8a6d32;
-    font-family: var(--hand); font-size: calc(14px + var(--text-size-adjust)); line-height: 1.05; color: #6b6357; text-align: center; overflow-wrap: break-word; }
+    font-family: var(--hand); font-size: calc(14px + var(--text-size-adjust)); line-height: 1.05; color: #6b6357; text-align: center; overflow-wrap: anywhere; }
   .tf-hold.here { border-color: var(--ink) !important; transform: translateY(-3px); box-shadow: 0 3px 0 var(--ink); }
   .tf-hold.here .tf-lab { font-weight: 700; color: #2b2722; }
   .tf-hold:not(.here):hover { transform: translateY(-2px); }
@@ -15610,6 +15621,10 @@
     .tf-tab-tx b { display: none; } .tf-tab-tx i { font-size: 11px; padding-top: 7px; }
     .tf-tab:not(.on) .tf-tab-tx { display: none; }   /* too narrow for "at 11": the stamp carries the level */
     .tf-box { gap: 5px; padding-inline: 8px; } .tf-lab { padding: 3px 3px; font-size: calc(12.5px + var(--text-size-adjust)); }
+  }
+  @container rw (max-width: 300px) {
+    .tf-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tf-hold { max-width: none; }
   }
   /* Shared with the ink swatches in settings: the padlock primitive the old reward tiles drew. */
   .rb-lock { display: inline-flex; width: 15px; height: 15px; color: var(--ink-soft); }
@@ -16470,8 +16485,15 @@
   .song-modal-nav {
     display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
     margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px dashed rgba(43, 39, 34, 0.2);
+    position: sticky; top: 0; z-index: 3; background: var(--paper);
   }
-  .song-modal-title { margin: 0; font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); color: var(--ink); line-height: 1.1; }
+  /* Cover the scrollport's top padding and the quoted line's small left overhang too. */
+  .song-modal-nav::before {
+    content: ""; position: absolute; inset: -28px -24px 0 -10px; z-index: -1;
+    background: var(--paper);
+  }
+  .song-modal-title { margin: 0; min-width: 0; overflow-wrap: anywhere; font-family: var(--hand); font-weight: 700; font-size: calc(24px + var(--text-size-adjust)); color: var(--ink); line-height: 1.1; }
+  #songModalClose { flex: none; white-space: nowrap; }
   .song-modal-body { font-family: var(--hand); }
   .fs-section { margin: 0 0 16px; }
   .fs-section:last-child { margin-bottom: 0; }

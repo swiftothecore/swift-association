@@ -343,6 +343,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 .sx-explain {
   font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); line-height: 1.5;
   border-left: 2px solid #e0d6bf; padding-left: 10px; margin: 12px 0 0;
+  overflow-wrap: anywhere;
 }
 .sx-explain:empty { display: none; }
 .sx-explain b { color: var(--pen); font-weight: 700; }
@@ -353,7 +354,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 
 /* counter + album bar */
-.sx-counter { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 18px; min-height: 17px; }
+.sx-counter { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 18px; min-height: 17px; overflow-wrap: anywhere; }
 /* collapse entirely before a search so the start hint sits right under the controls */
 .sx-counter:empty { display: none; }
 .sx-counter b { color: var(--ink); font-weight: 700; }
@@ -469,7 +470,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 .sx-album-era {
   font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1.1;
-  color: #fff8ec; letter-spacing: .01em;
+  color: var(--album-ink, #fff8ec); letter-spacing: .01em;
 }
 .sx-album-body {
   margin-top: 8px; padding: 6px 8px 8px 10px;
@@ -515,9 +516,13 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
    tucked under both). Desktop only (needs the desk margin). */
 .sx-rail {
   position: fixed; top: 50%; right: 0; transform: translateY(-50%);
-  display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
-  gap: 4px; z-index: 5; min-height: 340px; padding: 34px 26px 38px 0;
+  display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start;
+  gap: 4px; z-index: 5; padding: 34px 26px 38px 6px;
   filter: drop-shadow(3px 7px 6px rgba(46, 32, 14, 0.30));
+  /* Keep every index flag reachable on a short desktop window. */
+  min-height: min(340px, calc(100dvh - 24px)); max-height: calc(100dvh - 24px);
+  overflow-y: auto; overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 /* the page block: a cream fore-edge strip, its stacked-page lines running with the spine */
 .sx-rail::before {
@@ -538,6 +543,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
    the outer tip, each settled at its own slight angle pivoting where it enters the book */
 .sx-rail button {
   position: relative; z-index: 1;
+  flex-shrink: 0;
   font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: .02em; text-align: right;
   color: var(--ink-soft); background: color-mix(in srgb, var(--al) 10%, var(--paper-edge));
   border: 1px solid #ddd2bb; border-right: none; border-left: 5px solid var(--al);
@@ -549,6 +555,8 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 .sx-rail button:nth-child(odd) { transform: rotate(-.5deg); }
 .sx-rail button:nth-child(even) { transform: rotate(.5deg); }
+.sx-rail button:first-child { margin-top: auto; }
+.sx-rail button:last-child { margin-bottom: auto; }
 .sx-rail button:hover { opacity: 1; background: #fff8ec; transform: rotate(0) translateX(-3px); }
 @media (max-width: 1279px) { .sx-rail { display: none; } }
 
@@ -786,6 +794,8 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 
 /* One focus treatment for the search actions, matching their red-pen selection ink. */
-.sx-page :is(button, a, select):focus-visible, .sx-back:focus-visible {
+.sx-page :is(button, a, select):focus-visible, #q:focus-visible, .sx-back:focus-visible {
   outline: 2px solid var(--pen); outline-offset: 3px;
 }
+/* Album colour still marks the divider and spine; high contrast uses the page ink to read. */
+:root[data-contrast="high"] .sx-song-title { color: var(--ink); }

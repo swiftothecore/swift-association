@@ -27,6 +27,26 @@ const RECENT_MAX = 8;     // how many recent searches to keep
 const SHARE_LABEL = canShare() ? "share link" : "copy link";
 const SHARE_TITLE = canShare() ? "Share a link to this search" : "Copy a shareable link to this search";
 
+// Divider stock ranges from midnight blue to pale ice. Choose its printed ink by contrast.
+function albumTabInk(color) {
+  const linear = (value) => {
+    const s = value / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = (hex) => {
+    const rgb = hex.slice(1).match(/../g).map((part) => linear(parseInt(part, 16)));
+    return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+  };
+  const background = luminance(/^#[0-9a-f]{6}$/i.test(color) ? color : "#999999");
+  const contrast = (hex) => {
+    const ink = luminance(hex);
+    return (Math.max(ink, background) + 0.05) / (Math.min(ink, background) + 0.05);
+  };
+  const ink = contrast("#2b2722") >= contrast("#fff8ec") ? "#2b2722" : "#fff8ec";
+  if (contrast(ink) >= 4.5) return ink;
+  return contrast("#000000") >= contrast("#ffffff") ? "#000000" : "#ffffff";
+}
+
 let SONGS = [];                  // flat: { title, album, sections:[{label, lines}] }
 let FAMILY = new Map();          // song -> the song its other cuts belong to (versionFamilies)
 const ALBUM_INDEX = new Map();   // album name -> release order (from songs.json order)
@@ -684,7 +704,7 @@ function render(terms, groups) {
             <span class="sx-song-count">${plural(g.hits.length, "line")}</span>
           </div>${hits}</div>`;
       }).join("");
-      return `<section id="sx-al-${i}" class="sx-album" data-album="${escapeHtml(al)}" style="--album:${color}">
+      return `<section id="sx-al-${i}" class="sx-album" data-album="${escapeHtml(al)}" style="--album:${color};--album-ink:${albumTabInk(color)}">
         <span class="sx-album-rule" aria-hidden="true"></span>
         <div class="sx-album-tab"><span class="sx-album-era">${escapeHtml(al)}</span></div>
         <div class="sx-album-body">${songs}</div></section>`;
