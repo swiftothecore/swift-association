@@ -232,6 +232,7 @@ export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120
     if (avoid && (avoid.has(song.title) ||
         [...avoid].some((t) => versionFamily(t) === versionFamily(song.title)))) continue;
     const titleKey = normalizeLyric(song.title);
+    const titleFlat = titleKey.replace(/ /g, "");
     const titleWords = titleStems(song.title);
     const family = versionFamily(song.title);
 
@@ -247,7 +248,7 @@ export function buildNamePuzzle(songs, lineIndex, rng = Math.random, tries = 120
       // with something the player could name and be wrongly marked down for.
       if (owners.some((o) => o !== song.title &&
           (versionFamily(o) !== family || !dealable.has(o)))) return false;
-      if (titleKey && key.includes(titleKey)) return false;
+      if (titleKey && (key.includes(titleKey) || key.replace(/ /g, "").includes(titleFlat))) return false;
       if (singsTitle(key, titleWords)) return false;
       return true;
     });
@@ -1478,19 +1479,14 @@ export function buildTrackIndex(songs) {
    tried first and dropped if the pool cannot honour it, which is what keeps a run from ever
    failing to deal a page over a cosmetic preference. */
 export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, avoid = null, avoidAlbums = null) {
-  const pool = songs.filter((song) => index.ask.has(song.title));
-  if (!pool.length) return null;
-  const pick = (fussy) => {
-    for (let t = 0; t < tries; t++) {
-      const song = pool[Math.floor(rng() * pool.length)];
-      if (avoid && avoid.has(song.title)) continue;
-      const spot = index.of.get(song.title);
-      if (fussy && avoidAlbums && avoidAlbums.has(spot.album)) continue;
-      return { song, album: spot.album, track: spot.track, total: spot.total };
-    }
-    return null;
-  };
-  return pick(true) || pick(false);
+  const pool = songs.filter((song) => index.ask.has(song.title) && !(avoid && avoid.has(song.title)));
+  if (!pool.length || tries <= 0) return null;
+  // Every eligible title is already a valid page. Draw from the open pool directly so an
+  // unlucky retry budget cannot reshuffle an endless run while unplayed tracks remain.
+  const fresh = avoidAlbums ? pool.filter((song) => !avoidAlbums.has(index.of.get(song.title).album)) : pool;
+  const song = pick(fresh.length ? fresh : pool, rng);
+  const spot = index.of.get(song.title);
+  return { song, album: spot.album, track: spot.track, total: spot.total };
 }
 
 /* ---------- The Capitals ----------
@@ -1515,15 +1511,11 @@ export function buildTrackPuzzle(songs, index, rng = Math.random, tries = 120, a
    `installSecretMessages`) for the reason the credits are: a page that quietly stops existing
    is the kind of bug nobody ever sees. */
 export function buildCapitalsPuzzle(songs, messages, rng = Math.random, tries = 120, avoid = null) {
-  const pool = songs.filter((song) => messages.has(song.title));
-  if (!pool.length) return null;
-  for (let t = 0; t < tries; t++) {
-    const song = pool[Math.floor(rng() * pool.length)];
-    if (avoid && avoid.has(song.title)) continue;
-    const row = messages.get(song.title);
-    return { song, album: row.album, message: row.message };
-  }
-  return null;
+  const pool = songs.filter((song) => messages.has(song.title) && !(avoid && avoid.has(song.title)));
+  if (!pool.length || tries <= 0) return null;
+  const song = pick(pool, rng);
+  const row = messages.get(song.title);
+  return { song, album: row.album, message: row.message };
 }
 
 /* What the pool really is, asked the same way the builder asks it, so `bonusDealCount` and the
@@ -1553,15 +1545,12 @@ export function capitalsDealCount(songs, messages) {
    `installProducerCredits`), because a page silently vanishing from the pool is the kind of bug
    that never shows up as a bug. */
 export function buildProducerPuzzle(songs, credits, rng = Math.random, tries = 120, avoid = null) {
-  const pool = songs.filter((song) => PRODUCER_ALBUMS.includes(song.album) && credits.has(song.title));
-  if (!pool.length) return null;
-  for (let t = 0; t < tries; t++) {
-    const song = pool[Math.floor(rng() * pool.length)];
-    if (avoid && avoid.has(song.title)) continue;
-    const c = credits.get(song.title);
-    return { song, by: c.by, credit: c.credit, album: song.album };
-  }
-  return null;
+  const pool = songs.filter((song) => PRODUCER_ALBUMS.includes(song.album) && credits.has(song.title) &&
+    !(avoid && avoid.has(song.title)));
+  if (!pool.length || tries <= 0) return null;
+  const song = pick(pool, rng);
+  const c = credits.get(song.title);
+  return { song, by: c.by, credit: c.credit, album: song.album };
 }
 
 /* How many songs this game can deal, which is what an endless run's no-repeat list is measured
