@@ -300,5 +300,12 @@ export function highlightWord(line, word, strict) {
     body = exactRx.test(line) ? exactWordBody(word) : variantBody(word);
   }
   const rx = new RegExp(boundedWordBody("(" + body + ")"), "giu");
-  return escapeHtml(line).replace(rx, "<mark>$1</mark>");
+  // Match the original text: escaping first hides punctuation matches and lets
+  // words such as "amp" match inside the HTML entities created by escaping.
+  let html = "", pos = 0;
+  for (const hit of line.matchAll(rx)) {
+    html += escapeHtml(line.slice(pos, hit.index)) + "<mark>" + escapeHtml(hit[0]) + "</mark>";
+    pos = hit.index + hit[0].length;
+  }
+  return html + escapeHtml(line.slice(pos));
 }

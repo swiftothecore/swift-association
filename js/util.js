@@ -42,10 +42,10 @@ export function wordTaken(used, w) {
 export function normalizeTitle(s) {
   return s
     .toLowerCase()
-    .replace(/’/g, "'")                 // curly apostrophe -> straight
+    .replace(/[’‘]/g, "'")                 // curly apostrophe -> straight
     .replace(/\$/g, "s")                     // Wi$h Li$t -> wish list
     .replace(/[&+]/g, "and")                 // & / + -> and
-    .replace(/[().!?,:;"'…]/g, "")       // drop punctuation + bracket chars (keep content)
+    .replace(/[().!?,:;"“”'…]/g, "")       // drop punctuation + bracket chars (keep content)
     .replace(/[-–—/]/g, " ")        // dashes & slashes -> space
     .replace(/\btwenty[\s-]?two\b/g, "22")
     .replace(/\bten\b/g, "10")
@@ -102,7 +102,7 @@ export function normalizeLyric(s, { keepApostrophes = false } = {}) {
     .replace(/\$/g, "s")
     .replace(/[&+]/g, "and")
     .replace(keepApostrophes ? /(?<![\p{L}\p{N}])'|'(?![\p{L}\p{N}])/gu : /'/g, "")
-    .replace(/[().!?,:;"…]/g, "")
+    .replace(/[().!?,:;"“”…]/g, "")
     .replace(/[-–—/]/g, " ")
     .replace(/(\S*?)ing('s|s)?(?=\s|$)/g,            // dancing / dancin' -> dancin
              (m, stem, s2) => (/[aeiouy]/.test(stem) ? stem + "in" + (s2 || "") : m))
