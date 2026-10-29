@@ -67,7 +67,10 @@ const state = { q: "", terms: [], mode: "stem", grouped: true, section: "any", p
    (section/position) are deliberately NOT persisted: a sticky filter silently hiding
    results on the next visit is a trap. Both still travel in the deep-link hash. */
 function loadStore() {
-  try { return JSON.parse(localStorage.getItem(SEARCH_KEY)) || {}; } catch (e) { return {}; }
+  try {
+    const value = JSON.parse(localStorage.getItem(SEARCH_KEY));
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  } catch (e) { return {}; }
 }
 function saveStore(o) {
   try { localStorage.setItem(SEARCH_KEY, JSON.stringify(o)); } catch (e) { /* private mode / full disk */ }
@@ -205,7 +208,9 @@ function highlightTerms(line, query) {
     query.highlights.set(body, rx);
   }
   rx.lastIndex = 0;
-  return escapeHtml(line).replace(rx, "<mark>$1</mark>");
+  // Locate matches before escaping so punctuation still matches and entity names
+  // such as "amp" cannot become spurious highlights inside escaped text.
+  return markRanges(line, [...line.matchAll(rx)].map((m) => ({ start: m.index, len: m[0].length })));
 }
 
 const WORD_TOKEN_RE = /[\p{L}\p{M}]+(?:['’‘][\p{L}\p{M}]+)*/gu;
@@ -458,12 +463,13 @@ function applyRecent(raw) {
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
 function renderInitial(q) {
+  pinnedAlbum = null;
+  clearIsolate();
   $("counter").innerHTML = "";
   $("bar").innerHTML = "";
   $("barlabel").innerHTML = "";
   $("concord").innerHTML = "";
   renderRail([]);
-  $("results").classList.remove("sx-iso");
   LAST_COUNTS = null;
   setEraTint(null);
   const msg = q.length === 1
@@ -636,6 +642,10 @@ function hitHTML(h, flatMeta, album) {
 }
 
 function render(terms, groups) {
+  // A new result state clears both the hidden albums and the bar's hover/lock
+  // classes. Replacing only its spans would leave every new colour dimmed.
+  pinnedAlbum = null;
+  clearIsolate();
   const songs = groups.length;
   const lines = groups.reduce((n, g) => n + g.hits.length, 0);
   const termLabels = terms.map((t) => `<b>${escapeHtml(t)}</b>`).join(", ");
@@ -652,10 +662,8 @@ function render(terms, groups) {
     $("barlabel").innerHTML = "";
     $("concord").innerHTML = "";
     $("results").innerHTML = "";
-    $("results").classList.remove("sx-iso");
     renderRail([]);
     LAST_COUNTS = null;
-    pinnedAlbum = null;
     setEraTint(null);
     return;
   }
@@ -676,8 +684,6 @@ function render(terms, groups) {
   $("counter").innerHTML = `<span>found in <b>${plural(songs, "song")}</b> &middot; <b>${plural(lines, "line")}</b></span><span class="sx-result-actions">${play}${share}</span>`;
   const counts = albumLineCounts(groups);
   LAST_COUNTS = counts;
-  pinnedAlbum = null;                         // a new result set clears any locked album
-  $("results").classList.remove("sx-iso");   // drop any stale isolation from the previous search
   $("bar").innerHTML = albumBar(counts);
   const bl = $("barlabel");
   if (bl) { bl.dataset.hint = counts.size > 1 ? "choose an album below to see its lines; choose it again to show all" : ""; bl.textContent = bl.dataset.hint; }
