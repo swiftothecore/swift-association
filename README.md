@@ -12,7 +12,6 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 
 **Ways to play**
 
-- Five difficulty options, with hints if you want them
 - Infinite mode
 - Album focus mode so you can concentrate on ONE album only
 - Daily challenge

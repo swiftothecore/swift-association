@@ -799,3 +799,18 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 /* Album colour still marks the divider and spine; high contrast uses the page ink to read. */
 :root[data-contrast="high"] .sx-song-title { color: var(--ink); }
+
+/* Follow the notebook's motion choice, including an explicit override of the OS. */
+:root[data-reduce-motion="on"] *,
+:root[data-reduce-motion="on"] *::before,
+:root[data-reduce-motion="on"] *::after,
+:root[data-anim-speed="instant"] *,
+:root[data-anim-speed="instant"] *::before,
+:root[data-anim-speed="instant"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+:root[data-reduce-motion="off"] .dx-book { transition: transform .55s cubic-bezier(.22, .61, .36, 1); }
+:root[data-reduce-motion="off"] .dx-sway { animation: dxSway 5.6s ease-in-out infinite; }
+:root[data-anim-speed="fast"] .dx-sway { animation-duration: 2.8s; }

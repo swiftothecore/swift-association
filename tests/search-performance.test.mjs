@@ -13,7 +13,7 @@ const slice = (a, b) => source.slice(source.indexOf(a), source.indexOf(b, source
 function harness(corpus = songs) {
   const state = { q: 'love', terms: [], mode: 'stem', grouped: true, section: 'any', pos: 'any' };
   const rendered = [];
-  const context = vm.createContext({ ...util, ...match, state, SONGS: corpus,
+  const context = vm.createContext({ displayText: (text) => util.censorText(text, false), albumColor: () => "#a00", ...util, ...match, state, SONGS: corpus,
     FUZZY_MIN: 0.78, FUZZY_FOUR_MIN: 0.75, FUZZY_SWAP_MIN_LENGTH: 4,
     ALBUM_INDEX: new Map(grouped.map((g, i) => [g.album, i])),
     renderChips() {}, renderExplain() {}, renderInitial() {},

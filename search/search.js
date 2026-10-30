@@ -4,7 +4,7 @@
 // search returns exactly the lines the game would count as a match. Loads songs.json
 // itself and works off the structured `sections` (label + lines) so every hit knows
 // its section and per-section line number without re-parsing strings.
-import { escapeHtml, fuzzySubstringRatio, swappedNeighbours, versionFamilies } from "../js/util.js";
+import { escapeHtml, censorText, fuzzySubstringRatio, swappedNeighbours, versionFamilies } from "../js/util.js";
 import "../js/credential-guard.js";
 import {
   boundedWordBody,
@@ -13,8 +13,24 @@ import {
   wordRegex,
   variantBody,
 } from "../js/match.js";
-import { ALBUM_COLORS, SEARCH_KEY } from "../js/config.js";
+import { ALBUM_COLORS, CB_ALBUM_COLORS, SEARCH_KEY, SETTINGS_KEY } from "../js/config.js";
 import { canShare, shareOrCopy } from "../js/share.js";
+
+let notebookSettings = readNotebookSettings();
+function readNotebookSettings() {
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
+  catch (_) { return {}; }
+}
+function albumColor(album) {
+  return (notebookSettings.colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS)[album] || "#999";
+}
+function displayText(text) {
+  return censorText(text, notebookSettings.censorExplicit === true);
+}
+function reducedMotion() {
+  const { reduceMotion, animSpeed } = document.documentElement.dataset;
+  return reduceMotion === "on" || animSpeed === "instant";
+}
 
 const $ = (id) => document.getElementById(id);
 const FUZZY_MIN = 0.78;          // token similarity needed for a fuzzy hit (0..1)
@@ -185,6 +201,9 @@ function makeHit(sec, si, li, label, html) {
 // Wrap a set of match ranges in <mark> (used by fuzzy, which locates its tokens by
 // similarity rather than regex). Ranges may arrive unsorted or overlapping.
 function markRanges(line, ranges) {
+  // Mask the complete line before slicing so a highlight cannot split a censored word.
+  // censorText preserves length, leaving every original match offset intact.
+  line = displayText(line);
   const sorted = ranges.filter((r) => r.start >= 0).sort((a, b) => a.start - b.start);
   let html = "", pos = 0;
   for (const r of sorted) {
@@ -585,13 +604,13 @@ function clearIsolate() {
 function renderRail(albums) {
   const on = state.grouped && albums.length >= 2;
   $("rail").innerHTML = !on ? "" : albums.map((al, i) =>
-    `<button type="button" data-al="${i}" style="--al:${ALBUM_COLORS[al] || "#999"}" title="${escapeHtml(al)}">${escapeHtml(al)}</button>`).join("");
+    `<button type="button" data-al="${i}" style="--al:${albumColor(al)}" title="${escapeHtml(al)}">${escapeHtml(al)}</button>`).join("");
 }
 
 function albumBar(counts) {
   const albums = [...counts.keys()].sort((a, b) => ALBUM_INDEX.get(a) - ALBUM_INDEX.get(b));
   return albums.map((al) =>
-    `<span data-album="${escapeHtml(al)}" style="flex:${counts.get(al)};background:${ALBUM_COLORS[al] || "#999"}" title="${escapeHtml(al)}: ${counts.get(al)}"></span>`).join("");
+    `<span data-album="${escapeHtml(al)}" style="flex:${counts.get(al)};background:${albumColor(al)}" title="${escapeHtml(al)}: ${counts.get(al)}"></span>`).join("");
 }
 
 // A plain-language rarity read, echoing the game's difficulty bands (TAYLOR_BUCKETS: common
@@ -619,7 +638,7 @@ function renderConcord(groups, counts) {
   const legend = entries.map(([al, c], i) =>
     `<button type="button" class="sx-leg${i >= CONCORD_TOP ? " sx-leg-extra" : ""}" ` +
     `data-album="${escapeHtml(al)}" aria-pressed="false" aria-label="Show only ${escapeHtml(al)}, ${plural(c, "line")}">` +
-    `<span class="sx-leg-dot" aria-hidden="true" style="background:${ALBUM_COLORS[al] || "#999"}"></span>` +
+    `<span class="sx-leg-dot" aria-hidden="true" style="background:${albumColor(al)}"></span>` +
     `${escapeHtml(al)} <b aria-hidden="true">${c}</b></button>`).join("");
   const moreBtn = more > 0
     ? `<button type="button" class="sx-leg-more" id="moreAlbums" data-more="${more}" aria-expanded="false">+${more} more album${more === 1 ? "" : "s"}</button>`
@@ -631,7 +650,7 @@ function renderConcord(groups, counts) {
 }
 
 function hitHTML(h, flatMeta, album) {
-  const ctx = (l) => l ? `<div class="sx-ctx">${escapeHtml(l)}</div>` : "";
+  const ctx = (l) => l ? `<div class="sx-ctx">${escapeHtml(displayText(l))}</div>` : "";
   const ann = flatMeta
     ? `<div class="sx-ann sx-ann-flat">${flatMeta}</div>`
     : `<div class="sx-ann"><span class="sx-sec">${escapeHtml(h.sectionLabel)}</span><span class="sx-ln">l.${h.lineNo}</span></div>`;
@@ -689,7 +708,7 @@ function render(terms, groups) {
   if (bl) { bl.dataset.hint = counts.size > 1 ? "choose an album below to see its lines; choose it again to show all" : ""; bl.textContent = bl.dataset.hint; }
   renderConcord(groups, counts);
   const top = topAlbum(counts);
-  setEraTint(top ? ALBUM_COLORS[top[0]] : null);
+  setEraTint(top ? albumColor(top[0]) : null);
   pushRecent(terms);
 
   if (state.grouped) {
@@ -701,12 +720,12 @@ function render(terms, groups) {
     }
     const albums = [...byAlbum.keys()].sort((a, b) => ALBUM_INDEX.get(a) - ALBUM_INDEX.get(b));
     $("results").innerHTML = albums.map((al, i) => {
-      const color = ALBUM_COLORS[al] || "#999";
+      const color = albumColor(al);
       const songs = byAlbum.get(al).map((g) => {
         const hits = g.hits.map((h) => hitHTML(h, null)).join("");
         return `<div class="sx-song">
           <div class="sx-song-head">
-            <span class="sx-song-title">${escapeHtml(g.song.title)}</span>
+            <span class="sx-song-title">${escapeHtml(displayText(g.song.title))}</span>
             <span class="sx-song-count">${plural(g.hits.length, "line")}</span>
           </div>${hits}</div>`;
       }).join("");
@@ -720,9 +739,9 @@ function render(terms, groups) {
     renderRail([]);
     const rows = [];
     for (const g of groups) {
-      const color = ALBUM_COLORS[g.song.album] || "#999";
+      const color = albumColor(g.song.album);
       for (const h of g.hits) {
-        const meta = `<span class="sx-dot" style="--album:${color}"></span><span class="sx-flat-title">${escapeHtml(g.song.title)}</span><span class="sx-flat-album">${escapeHtml(g.song.album)}</span><span class="sx-flat-loc">${escapeHtml(h.sectionLabel)} &middot; l.${h.lineNo}</span>`;
+        const meta = `<span class="sx-dot" style="--album:${color}"></span><span class="sx-flat-title">${escapeHtml(displayText(g.song.title))}</span><span class="sx-flat-album">${escapeHtml(g.song.album)}</span><span class="sx-flat-loc">${escapeHtml(h.sectionLabel)} &middot; l.${h.lineNo}</span>`;
         rows.push(hitHTML(h, meta, g.song.album));
       }
     }
@@ -781,6 +800,12 @@ function syncToggles() {
 }
 
 function init() {
+  window.addEventListener("storage", (event) => {
+    if (event.key && event.key !== SETTINGS_KEY) return;
+    notebookSettings = readNotebookSettings();
+    lastSearch = null;   // cached hits contain display HTML, so censoring needs a fresh render
+    runSearch();
+  });
   applyPrefs();   // remembered mode + layout first; the deep-link hash overrides below
   readHash();
   const input = $("q");
@@ -821,7 +846,7 @@ function init() {
   // Album rail: scroll to the chosen album's results block.
   $("rail").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-al]");
-    if (b) document.getElementById("sx-al-" + b.dataset.al)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (b) document.getElementById("sx-al-" + b.dataset.al)?.scrollIntoView({ behavior: reducedMotion() ? "instant" : "smooth", block: "start" });
   });
 
   // Deep-reference dictionary: it stays below the fold until you scroll into a long result

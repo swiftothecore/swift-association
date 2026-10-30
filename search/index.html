@@ -33,6 +33,10 @@
       if (cfg.highContrast) root.setAttribute("data-contrast", "high");
       else root.removeAttribute("data-contrast");
       root.setAttribute("data-text-size", ["small", "large"].includes(cfg.textSize) ? cfg.textSize : "standard");
+      var motion = cfg.reduceMotion === "on" || (cfg.reduceMotion !== "off" &&
+        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      root.setAttribute("data-reduce-motion", motion ? "on" : "off");
+      root.setAttribute("data-anim-speed", cfg.animSpeed || "normal");
       var m = document.querySelector('meta[name="theme-color"]');
       if (m) m.setAttribute("content", dark ? "#14110d" : "#f5efe1");
     } catch (e) { /* light is the default; nothing to do */ }
@@ -44,6 +48,8 @@
   // change the theme on the front page and the searcher behind it turns with it, which is
   // the whole point of sharing one settings object rather than keeping a private copy.
   if (mq && mq.addEventListener) mq.addEventListener("change", apply);
+  var motionMq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+  if (motionMq && motionMq.addEventListener) motionMq.addEventListener("change", apply);
   window.addEventListener("storage", function (e) {
     if (!e.key || e.key === "swiftSongAssociation.settings") apply();
   });

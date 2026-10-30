@@ -9,7 +9,7 @@ const source = readFileSync(new URL('../search/search.js', import.meta.url), 'ut
 const slice = (start, end) => source.slice(source.indexOf(start), source.indexOf(end, source.indexOf(start)));
 
 function searchHarness() {
-  const context = vm.createContext({ ...util, ...match,
+  const context = vm.createContext({ displayText: (text) => util.censorText(text, false), albumColor: () => "#a00", ...util, ...match,
     state: { section: 'any', pos: 'any' },
     FUZZY_MIN: 0.78, FUZZY_FOUR_MIN: 0.75, FUZZY_SWAP_MIN_LENGTH: 4,
   });
@@ -75,7 +75,7 @@ function renderHarness() {
     }
     return elements.get(id);
   };
-  const context = vm.createContext({ ...util, $: get, getRecent: () => [], pushRecent() {},
+  const context = vm.createContext({ displayText: (text) => util.censorText(text, false), albumColor: () => "#a00", ...util, $: get, getRecent: () => [], pushRecent() {},
     state: { grouped: true, section: 'any', pos: 'any', mode: 'stem' },
     SONGS: [], ALBUM_COLORS: { Red: '#a00' }, ALBUM_INDEX: new Map([['Red', 0]]),
     FAMILY: new Map(), PROMPT_WORDS: new Set(), SHARE_TITLE: '', SHARE_LABEL: '', albumTabInk: () => '#000',

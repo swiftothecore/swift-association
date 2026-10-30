@@ -2216,7 +2216,7 @@ function aggregateStats() {
 // (the active difficulty), or a specific mode id.
 function defaultStatsView() {
   const d = settings.defaultStatsTab;
-  if (d === "all") return "all";
+  if (d === "all" || d === "infinite") return d;
   if (d && d !== "last" && MODES[d]) return d;
   return currentMode.id;
 }
@@ -17211,15 +17211,25 @@ function todayKey() {
   try { return new Date().toLocaleDateString("en-CA", { timeZone: activeTimeZone() }); }
   catch (e) { return new Date().toLocaleDateString("en-CA"); }
 }
-// ms until the next local midnight in the active zone (seconds-of-day from the wall
-// clock, subtracted from a full day). Good enough for a countdown — ignores the rare
-// DST-transition day where a day isn't exactly 86400s.
+// Find the next date boundary in the chosen zone, including 23/25-hour DST days.
+// Cache the boundary, not the remaining duration: every visible countdown can reuse it.
+let dailyResetBoundary = null;
 function msUntilDailyReset() {
-  const p = new Intl.DateTimeFormat("en-GB", { timeZone: activeTimeZone(), hour12: false,
-    hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(new Date());
-  const g = (t) => +(p.find((x) => x.type === t)?.value || 0);
-  const into = (g("hour") % 24) * 3600 + g("minute") * 60 + g("second");
-  return (86400 - into) * 1000;
+  const now = Date.now();
+  const zone = activeTimeZone();
+  if (!dailyResetBoundary || dailyResetBoundary.zone !== zone ||
+      now < dailyResetBoundary.from || now >= dailyResetBoundary.at) {
+    const format = new Intl.DateTimeFormat("en-CA", { timeZone: zone });
+    const day = format.format(now);
+    let low = now, high = now + 48 * 60 * 60 * 1000;
+    while (high - low > 1) {
+      const mid = Math.floor((low + high) / 2);
+      if (format.format(mid) === day) low = mid;
+      else high = mid;
+    }
+    dailyResetBoundary = { zone, from: now, at: high };
+  }
+  return dailyResetBoundary.at - now;
 }
 // "7h 02m" when an hour or more remains, "42m 10s" under an hour.
 function formatResetCountdown(ms) {
@@ -29584,7 +29594,10 @@ function bookplateTitleToMastery() {
 // wireSettingsBody's existing handler drives it.
 const SET_TICK_SVG = `<svg class="set-check-tick" viewBox="0 0 20 20" aria-hidden="true"><path d="M2.4 10.6 C4.6 12.1 6.3 13.8 7.6 16.4 C10.4 10.2 13.6 5.6 18.2 2.2"/></svg>`;
 function setCheckHTML(key, name, desc) {
-  return `<button type="button" class="set-check" data-toggle="${key}" aria-pressed="${!!settings[key]}">` +
+  // The current answer pool was built under this rule. Keep it fixed until the run ends.
+  const locked = key === "stemMatching" && settingsOverRun();
+  if (locked) desc += "; change between runs";
+  return `<button type="button" class="set-check" data-toggle="${key}" aria-pressed="${!!settings[key]}"${locked ? " disabled" : ""}>` +
     `<span class="set-check-box">${SET_TICK_SVG}</span>` +
     `<span class="set-check-lbl"><span class="set-check-name">${setIco(key)}${name}</span>` +
     (desc ? `<span class="set-check-desc">${desc}</span>` : "") + `</span></button>`;
@@ -29631,7 +29644,7 @@ function dangerItems() {
       cost: dailyProgress
         ? `${dailies} played, ${dailyProgress} in progress`
         : (streak ? `${dailies} played, ${streak} run` : plural(dailies, "puzzle")) },
-    { key: "settings", name: "Settings", n: 1, cost: "back to defaults" },
+    { key: "settings", name: "Settings", n: 1, cost: settingsOverRun() ? "between runs" : "back to defaults" },
   ];
 }
 
@@ -29640,7 +29653,7 @@ function dangerItems() {
 function dangerRowHTML(key, name, cost, opts = {}) {
   const dead = !!opts.dead;
   return `<button class="led-row${opts.wipe ? " led-row--total" : ""}" ` +
-    `data-danger="${key}"${dead ? " disabled" : ""}>` +
+    `data-danger="${key}"${dead || opts.locked ? " disabled" : ""}>` +
     `<span class="led-item">${escapeHtml(name)}</span>` +
     `<span class="led-count">${escapeHtml(dead ? "nothing to lose" : cost)}</span>` +
     `<span class="led-act">${dead ? "" : "void"}</span>` +
@@ -29650,7 +29663,7 @@ function dangerRowHTML(key, name, cost, opts = {}) {
 
 function dangerRowsHTML() {
   return `<div class="danger-led">` +
-    dangerItems().map((it) => dangerRowHTML(it.key, it.name, it.cost, { dead: !it.n })).join("") +
+    dangerItems().map((it) => dangerRowHTML(it.key, it.name, it.cost, { dead: !it.n, locked: it.key === "settings" && settingsOverRun() })).join("") +
     dangerRowHTML("all", "Everything", "incl. your name", { wipe: true }) +
   `</div>`;
 }
@@ -29824,11 +29837,20 @@ const ENVELOPE_OPENED = `<svg viewBox="0 0 200 62" preserveAspectRatio="none" ar
 function renderSettingsBody() {
   disarmBookplateTitle();   // the re-render replaces the bookplate, so no arm may outlive it
   const diffOpts = [{ val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
-  const statsOpts = [{ val: "all", label: "All" }, { val: "last", label: "Last" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
+  const statsOpts = [{ val: "all", label: "All" }, { val: "last", label: "Last" }, { val: "infinite", label: "Infinite" }].concat(MODE_ORDER.map((m) => ({ val: m, label: MODES[m].label })));
   const zones = (typeof Intl.supportedValuesOf === "function") ? Intl.supportedValuesOf("timeZone") : COMMON_TZ_FALLBACK;
   const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // supportedValuesOf omits UTC and aliases that Intl still accepts. Preserve a saved
+  // valid alias (including one restored from a backup) rather than displaying Auto for it.
+  const zoneSet = new Set(["UTC", ...zones]);
+  if (settings.timezone && settings.timezone !== "auto") {
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: settings.timezone });
+      zoneSet.add(settings.timezone);
+    } catch (_) { /* an invalid stored zone uses Auto */ }
+  }
   const tzOpts = [{ val: "auto", label: `Auto (detected: ${detectedTz})` }]
-    .concat(zones.map((z) => ({ val: z, label: z.replace(/_/g, " ") })));
+    .concat([...zoneSet].sort().map((z) => ({ val: z, label: z.replace(/_/g, " ") })));
   const panels = {};
   panels.notebook =
     setSection("",
@@ -29855,7 +29877,7 @@ function renderSettingsBody() {
         setCheckHTML("enterOnMiss", "Enter advances on a miss", "leaves the answer screen"),
         setCheckHTML("showExamples", "Show example songs", "cards after a miss, and the rest of the field on either verdict"),
         setCheckHTML("stemMatching", "Match word variants", "off = exact word only (love won’t match loving)"),
-        setCheckHTML("enableHints", "Hints", "Relaxed only; records note how many you took"),
+        setCheckHTML("enableHints", "Hints", "where the mode allows them; records note how many you took"),
         setCheckHTML("censorExplicit", "Censor explicit words", "mask swearing in lyrics &amp; titles (f**k, s**t)"),
         ...(phoneViewport() ? [setCheckHTML("openKeyboard", "Open keyboard each round", "focus the answer line as a new page opens")] : []),
         setCheckHTML("confirmLeave", "Confirm before leaving a run", "requires a second tap before giving up"),
@@ -29993,6 +30015,7 @@ function wireSettingsBody() {
   }));
   body.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => {
     const k = b.dataset.toggle;
+    if (k === "stemMatching" && settingsOverRun()) return;
     const disablingDailySeal = k === "hideDailyScore" && settings.hideDailyScore;
     const revealHeldDaily = disablingDailySeal && dailyResultIsSealed();
     // Sound has a second control in the corner, so it writes through setSound (which saves,
@@ -30000,6 +30023,22 @@ function wireSettingsBody() {
     if (k === "sound") { setSound(!settings.sound); renderSettingsBody(); return; }
     settings[k] = !settings[k];
     saveSettings(settings); applySettings(); renderSettingsBody();
+    if (k === "autoAdvance" && !settings.autoAdvance &&
+        ((screens.game.classList.contains("active") && countdownId) ||
+         (screens.bonusplay.classList.contains("active") && bonusLocked && !bonusEnded && bonusCdValue > 0))) {
+      pauseAutoAdvanceForReading();
+    }
+    if (k === "enableHints" && screens.game.classList.contains("active") && !roundLocked) {
+      // Do not reset the ladder: already revealed hints and their accounting survive a toggle.
+      const btn = $("hintBtn");
+      btn.hidden = !hintsAllowed() || !roundHintSong;
+      btn.disabled = hintTier >= 3;
+      if (!btn.hidden) paintHintBtn(btn,
+        hintTier >= 3 ? "no more hints" : hintTier ? "another hint?" : "need a hint?",
+        hintTier ? 3 - hintTier : hintRungs());
+      if (!hintsAllowed()) $("hintBtn").classList.remove("urge");
+      applyInputHints();
+    }
     if (disablingDailySeal && !settings.hideDailyScore) {
       const dateStr = dailyRunDate || todayKey();
       if (revealHeldDaily) {
@@ -30025,7 +30064,7 @@ function wireSettingsBody() {
   body.querySelectorAll("[data-select]").forEach((sel) => sel.addEventListener("change", () => {
     settings[sel.dataset.select] = sel.value;
     saveSettings(settings);
-    renderDailyButtonState();   // refresh the start-screen button + countdown live
+    refreshDateSurfaces();   // the reset zone dates the desk and seasonal art too
     renderSettingsBody();       // refresh the "today here is…" note
   }));
   const slider = $("countdownSlider");
@@ -30096,6 +30135,7 @@ function armDanger(row) {
   dangerTimer = setTimeout(() => disarmDanger(row), 3000);
 }
 function performDanger(which) {
+  if (which === "settings" && settingsOverRun()) return;
   if (which === "all") { clearAllData(); location.reload(); return; }
   if (which === "hof") resetRecords();
   else if (which === "stats") resetStatsAll();
@@ -30107,9 +30147,13 @@ function performDanger(which) {
   else if (which === "tally") resetTally();
   else if (which === "daily") resetDaily();
   else if (which === "settings") {
-    // Revert every preference to its default, but keep the player's signature
-    // and the runtime "last game type" memory — those aren't a tuned preference.
-    settings = { ...DEFAULT_SETTINGS, playerName: settings.playerName, lastGameType: settings.lastGameType };
+    // Reset preferences, not identity or first-impression history. These fields grew
+    // after the original reset, which only knew about the signature and last game type.
+    const identity = Object.fromEntries([
+      "playerName", "avatar", "favouriteAlbum", "lastGameType", "firstRunDone",
+      "firstMatchDone", "seenCoachmarks", "typingHintsSeen",
+    ].map((key) => [key, settings[key]]));
+    settings = { ...DEFAULT_SETTINGS, ...identity };
     saveSettings(settings);
     applySettings();
   }

@@ -228,12 +228,12 @@ export const DEFAULT_SETTINGS = {
   openKeyboard: true,       // phones only: focus the answer line when each new round opens
   confirmLeave: true,       // require a second tap before abandoning an in-progress run
 
-  enableHints: true,        // show progressive hints in Relaxed (the record notes how many were taken)
+  enableHints: true,        // show progressive hints wherever the mode permits (the record notes how many were taken)
   censorExplicit: false,    // mask general profanity (fuck→f**k) in shown lyrics/titles; the racial slur is always masked regardless
 
   defaultGameType: "last",  // "last" | "classic" | "infinite" | "custom"
   defaultDifficulty: "last",// "last" | a MODES id
-  defaultStatsTab: "all",   // which Stats tab opens first: "all" | "last" | a MODES id
+  defaultStatsTab: "all",   // which Stats tab opens first: "all" | "last" | "infinite" | a MODES id
   // display & accessibility
   theme: "light",           // page theme: "light" | "system" (follow OS) | "dark" (a dark notebook for low light)
   textSize: "standard",     // "small" | "standard" | "large"
