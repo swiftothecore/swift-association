@@ -836,6 +836,7 @@ function init() {
   // Enter / comma commits the live word into a chip (AND-ed with the rest); Backspace on an
   // empty input peels the last chip back off.
   input.addEventListener("keydown", (e) => {
+    if (e.isComposing || e.keyCode === 229) return;
     if (e.key === "Enter" || e.key === ",") { e.preventDefault(); commitTerm(); }
     else if (e.key === "Backspace" && input.value === "" && state.terms.length) { e.preventDefault(); removeTermAt(state.terms.length - 1); }
   });
