@@ -2753,8 +2753,9 @@ export const TS_LORE_DAYS = [
 
    Two of the seven are not people and are not pretended to be. Wicked has an opening night
    and Hannah Montana has a premiere, so each names its own `headline` and the `arrived`
-   phrase its screen-reader line is built from, exactly the way a songday overrides its note, and a
-   `calKey` for the desk calendar's small print, which otherwise calls a day "<name>'s birthday".
+   phrase its screen-reader line is built from, exactly the way a songday overrides its note, a
+   `calKey` for the desk calendar's small print, which otherwise calls a day "<name>'s birthday",
+   and a `caption` for the in-game day tape, which otherwise says "happy birthday, <first name>".
    The remaining five take the default "Happy <nth> birthday, <first name>".
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const GUEST_DAYS = [
@@ -2762,13 +2763,13 @@ export const GUEST_DAYS = [
   { md: "02-20", year: 2003, kind: "guest", guest: "olivia-rodrigo",    name: "Olivia Rodrigo" },
   { md: "03-24", year: 2006, kind: "guest", guest: "hannah-montana",    name: "Hannah Montana",
     headline: "Happy premiere day, Hannah", arrived: "first aired on the Disney Channel",
-    calKey: "Hannah Montana's premiere" },
+    calKey: "Hannah Montana's premiere", caption: "happy premiere day, Hannah" },
   { md: "05-11", year: 1999, kind: "guest", guest: "sabrina-carpenter", name: "Sabrina Carpenter" },
   { md: "06-26", year: 1993, kind: "guest", guest: "ariana-grande",     name: "Ariana Grande" },
   { md: "09-04", year: 1981, kind: "guest", guest: "beyonce",           name: "Beyoncé",        soon: true },
   { md: "10-30", year: 2003, kind: "guest", guest: "wicked-soundtrack", name: "Wicked",
     headline: "Happy opening night, Wicked", arrived: "opened on Broadway",
-    calKey: "Wicked's opening night" },
+    calKey: "Wicked's opening night", caption: "happy opening night, Wicked" },
   { md: "11-23", year: 1992, kind: "guest", guest: "miley-cyrus",       name: "Miley",          soon: true },
   { md: "12-18", year: 2001, kind: "guest", guest: "billie-eilish",     name: "Billie Eilish" },
 ];

@@ -407,9 +407,10 @@ export function anniversaryNote(dateKey, milestones) {
 // notebook, and on the one day both could speak she does. A guest day still outranks the
 // sacred 13, because a birthday is a thing that happened and a 13-day is arithmetic.
 //
-// Both surfaces carry the Long Live line, because a guest day is the notebook being generous
-// about somebody else rather than a fact about a record: the slip says it in the note, the
-// day tape in its caption, and neither ever shows the other's copy.
+// The margin note carries the Long Live line, because a guest day is the notebook being generous
+// about somebody else rather than a fact about a record. The day tape says whose day it is
+// instead ("happy birthday, Harry", "happy opening night, Wicked"): one lyric on every guest's
+// tape read as the same note whatever the occasion.
 //
 // A row flagged `soon` is a name the shelf has announced without a catalogue yet. It gets the
 // same birthday wish, since the player can read that name on the shelf, but a different eyebrow
@@ -442,7 +443,7 @@ export function guestDayNote(dateKey, guestDays) {
     // Nothing on it implies the player could go and play an announced name this afternoon,
     // and the hollow crown already marks one; the aria says "coming" outright.
     line: `${g.arrived ? "since" : "born in"} ${g.year}, we all got crowns`,
-    caption: "we all got crowns",
+    caption: g.caption || `happy birthday, ${first}`,
     aria: `${headline}. ${opening}${g.soon ? " Coming to the guest shelf." : ""}`,
   };
 }
