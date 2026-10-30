@@ -12195,7 +12195,7 @@ function renderChallengeDetail(id) {
     `<div class="chall-diff">` +
       `<span class="chall-eyebrow">Difficulty</span>` +
       `${tapesMarkup(c.tapes)}` +
-      `<span class="chall-diff-word">${TAPE_WORD[(c.tapes || 0) === 0 ? 0 : Math.max(1, Math.min(4, c.tapes))]}</span>` +
+      `<span class="chall-diff-word" data-tier="${TAPE_WORD[(c.tapes || 0) === 0 ? 0 : Math.max(1, Math.min(4, c.tapes))]}">${TAPE_WORD[(c.tapes || 0) === 0 ? 0 : Math.max(1, Math.min(4, c.tapes))]}</span>` +
     `</div>` +
     `<div class="chall-sec">` +
       `<div class="chall-eyebrow">The rule</div>` +
@@ -31243,7 +31243,7 @@ const GLOSS_PLATES = [
             `<span class="chall-detail-name">${escapeHtml(c.name)}</span>${dark}</div>` +
           `<div class="chall-diff"><span class="chall-eyebrow">Difficulty</span>` +
             `<span class="chall-tapes t${t}">${TAPE_GLYPH.repeat(Math.max(1, t))}</span>` +
-            `<span class="chall-diff-word">${TAPE_WORD[t]}</span></div>` +
+            `<span class="chall-diff-word" data-tier="${TAPE_WORD[t]}">${TAPE_WORD[t]}</span></div>` +
           `<div class="chall-sec"><div class="chall-eyebrow">The rule</div><div class="chall-rule">${escapeHtml(c.desc)}</div></div>` +
         `</div></div>`;
     },
