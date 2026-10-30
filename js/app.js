@@ -378,7 +378,10 @@ let pathMulligans = 0;          // Choose Your Path: wrong answers that can be r
 let perkReveals = new Set();    // Choose Your Path: active per-round reveals (letter/album/count/example)
 let perkPoolOverride = null;    // Choose Your Path: Crowd Pleaser → draw words from the common pool
 let perkNoTitleOff = false;     // Choose Your Path: Off The Record → allow the word in the title
-let perkCalm = false;           // Choose Your Path: Steady Hands → no timer tremor/tension
+let perkBank = false;           // Choose Your Path: Time In The Bank → unused seconds carry to the next page
+let bankedSeconds = 0;          // Choose Your Path: the seconds the last page carried into this one
+let perkHints = false;          // Choose Your Path: Pocket Hints → the hint ladder opens on a budget
+let perkAlbum = null;           // Choose Your Path: Home Turf → the album the rest of the words come from
 let roundLyricOnly = false;     // Switch-Up: this page demands a lyric line (true) or a title (false)
 let roundNamed = [];            // Double Trouble / Name Three: distinct valid titles named this page so far
 let bothWords = [];             // Both Of Us: every prompt word on this page (bothWords[0] === currentWord)
@@ -17418,7 +17421,10 @@ function resetRunState() {
   perkReveals = new Set();
   perkPoolOverride = null;
   perkNoTitleOff = false;
-  perkCalm = false;
+  perkBank = false;
+  bankedSeconds = 0;
+  perkHints = false;
+  perkAlbum = null;
   roundLyricOnly = false;
   roundNamed = [];
   bothWords = [];
@@ -17684,7 +17690,7 @@ function typeHintSegments(input) {
       full: `${keycap(INSURE_KEY_LABEL)} insures this page: a shield takes the miss for you.`,
       short: `${keycap(INSURE_KEY_LABEL)} insures this page` });
   }
-  if (settings.enableHints !== false && currentMode.hint && gameType !== "daily" && hintBudgetLeft > 0) {
+  if (settings.enableHints !== false && modeOffersHints() && gameType !== "daily" && hintBudgetLeft > 0) {
     // Keep Tab available for normal keyboard navigation. The visible hint button works with
     // touch, mouse, Enter, and Space, so the same instruction is honest on every device.
     if (hintBudgetActive()) {
@@ -17737,13 +17743,16 @@ function renderImpostorBar() {
 // (the R-E-V-E-N-G-E charm, Album Focus's stamps, guest admission — see endGame). Custom mode
 // caps the total reveals with a hint budget (hintBudgetLeft); every other mode is uncapped.
 function hintBudgetActive() { return Number.isFinite(hintBudgetLeft); }
+// Whether this run offers the hint ladder at all: the mode's own lever, or Choose Your Path's
+// Pocket Hints opening it mid-run on a budget of presses.
+function modeOffersHints() { return !!currentMode.hint || perkHints; }
 // Hints and lyric-line answering are mutually exclusive, and it's the hint ladder's own top
 // rung that forces it: tier 3 prints the lyric line, which on a lyric page IS the answer you
 // were about to type. So a hint would stop being a clue and start being a script. Checked per
 // round rather than per mode, so Switch-Up's lyric pages hide the affordance and its title
 // pages keep it.
 function hintsAllowed() {
-  return settings.enableHints !== false && !!currentMode.hint && !lyricModeNow() &&
+  return settings.enableHints !== false && modeOffersHints() && !lyricModeNow() &&
     gameType !== "daily" && !roundLocked && hintBudgetLeft > 0;
 }
 
@@ -19100,7 +19109,7 @@ function currentRuleTerms() {
     // flips while an answer is being judged, and the mark must not flicker with it. The
     // budget does belong here — Custom's last hint being spent genuinely changes what the
     // NEXT page will offer, which is exactly the sort of thing this row exists to say.
-    hint: gameType !== "daily" && !!currentMode.hint && hintBudgetLeft > 0,
+    hint: gameType !== "daily" && modeOffersHints() && hintBudgetLeft > 0,
     noTitle: effectiveNoTitle(),
     seconds: baseSeconds(),
     lyricOnly: lyricModeNow(),
@@ -22297,6 +22306,9 @@ function pickWord() {
     if (currentChallenge.rule === "album5" && currentChallenge.album) {
       const w = pickAlbumWord(currentChallenge.album); if (w) return w;
     }
+    // Choose Your Path's Home Turf: words with an answer on the album the player picked. Any
+    // album still answers them; the album only decides which words turn up.
+    if (currentChallenge.rule === "path" && perkAlbum) { const w = pickAlbumWord(perkAlbum); if (w) return w; }
   }
   // Album Focus draws only words with a valid in-album answer (honouring the difficulty's
   // title rule), so every round is winnable from the chosen album.
@@ -23019,90 +23031,140 @@ function beginRoundClock() {
   showCard();
 }
 
-// Each perk's mark on its fork card: a thing off the desk that tells the perk's story (a snail
-// with a clock for a shell, take two on a clapperboard, a cat peeking over the card's edge),
-// drawn on a 40-unit square. Four layers, painted in order: pk-spot is a flat tint knocked a
+// Each perk's mark on its fork card: a thing off the desk that tells the perk's story (take two
+// on a clapperboard, a piggy bank fed a clock for a coin, a ladder in a back pocket), drawn on
+// a 40-unit square. Four layers, painted in order: pk-spot is a flat tint knocked a
 // unit out of register under the ink, pk-knock is the card's paper so a thing in front hides
 // what's behind it, pk-pen is the pen line and pk-blot solid ink. All of it inks in the
-// card's own colour, so the marks follow .cpc-icon. The candidates that lost, and the board
-// they were picked on, are scripts/challenges/path-perk-icons.{js,html}.
+// card's own colour, so the marks follow .cpc-icon. The candidates that lost, and the boards
+// they were picked on, are scripts/challenges/path-perk-icons{,-new}.{js,html}.
 const PERK_MARKS = {
-  slow: `<path class="pk-spot" d="M12.4,21 C11.6,14.4 16,9.4 22.2,9.3 C28.4,9.2 32.4,13.8 32.2,19.6 C32,25.4 27.4,29.2 21.8,29.1 C17,29 13.2,26 12.4,21 Z"/><path class="pk-pen" stroke-width="1.9" d="M9.8,30.9 C17,31.4 27.2,31.3 35.4,30 C33.6,29.2 31.4,28.8 29.6,28.8"/><path class="pk-pen" stroke-width="1.9" d="M9.8,30.9 C7.4,30.7 5.4,29.4 5.6,27 C5.8,24.8 7.8,23.6 9.8,24 C11.2,24.3 12.2,25.2 12.8,26.4"/><path class="pk-pen" stroke-width="1.5" d="M7.3,24.2 L5.2,18.6"/><path class="pk-pen" stroke-width="1.5" d="M9.6,23.9 L10.6,18.3"/><circle class="pk-blot" cx="5.1" cy="18.1" r="1.3"/><circle class="pk-blot" cx="10.7" cy="17.8" r="1.3"/><path class="pk-pen" stroke-width="2.1" d="M12.4,21 C11.6,14.4 16,9.4 22.2,9.3 C28.4,9.2 32.4,13.8 32.2,19.6 C32,25.4 27.4,29.2 21.8,29.1 C17,29 13.2,26 12.4,21 Z"/><path class="pk-pen" stroke-width="1.4" d="M22.1,11.4 V12.7"/><path class="pk-pen" stroke-width="1.4" d="M30.1,19.6 H28.8"/><path class="pk-pen" stroke-width="1.4" d="M21.9,27 V25.7"/><path class="pk-pen" stroke-width="1.4" d="M14.5,19.8 H15.8"/><path class="pk-pen" stroke-width="1.7" d="M22.1,19.4 L22.5,13.8"/><path class="pk-pen" stroke-width="1.9" d="M22.1,19.4 L26,21.6"/><circle class="pk-blot" cx="22.1" cy="19.4" r="1.1"/>`,
   encore: `<path class="pk-spot" d="M14.2,33.4 C16.6,31.6 23.6,31.6 26,33.6 Z"/><path class="pk-spot" d="M4.8,6.6 C5.2,15 5.2,26 5,35 L9.8,35 C11.4,27 12.6,18.6 16.4,10.4 C17,9 17.4,7.6 17.2,6.6 Z"/><path class="pk-spot" d="M35.2,6.4 C35,15 35.2,26 35.4,35 L30.8,35.2 C29,27.6 27.8,19.8 24,11.4 C23.4,10 22.8,7.6 23,6.6 Z"/><path class="pk-pen" stroke-width="1.9" d="M4.8,6.6 C5.2,15 5.2,26 5,35 L9.8,35 C11.4,27 12.6,18.6 16.4,10.4 C17,9 17.4,7.6 17.2,6.6"/><path class="pk-pen" stroke-width="1.9" d="M35.2,6.4 C35,15 35.2,26 35.4,35 L30.8,35.2 C29,27.6 27.8,19.8 24,11.4 C23.4,10 22.8,7.6 23,6.6"/><path class="pk-pen" stroke-width="1.1" d="M8,9 C8.8,16 8.6,24 7.6,33"/><path class="pk-pen" stroke-width="1.1" d="M32.4,9 C31.8,16 32,25 32.8,33.4"/><path class="pk-pen" stroke-width="1.6" d="M5,21.2 C7.4,22 10,21.8 12.2,20.6"/><path class="pk-pen" stroke-width="1.6" d="M35.3,22.4 C32.9,23 30.6,22.8 28.6,21.8"/><path class="pk-pen" stroke-width="2.2" d="M3.2,5.8 C14,5.4 26,6 37,5.6"/><path class="pk-pen" stroke-width="2" d="M2.4,35.4 C14,35.8 26,35.2 37.8,35.6"/>`,
+  bank: `<path class="pk-spot" d="M7.4,21.8 C7.2,16.2 12.8,12.6 19.8,12.5 C27.2,12.4 33.2,16.2 33.3,22.2 C33.4,27.6 28.4,31 20.2,31.1 C12.8,31.2 7.6,27.6 7.4,21.8 Z"/><path class="pk-pen" stroke-width="2.1" d="M7.4,21.8 C7.2,16.2 12.8,12.6 19.8,12.5 C27.2,12.4 33.2,16.2 33.3,22.2 C33.4,27.6 28.4,31 20.2,31.1 C12.8,31.2 7.6,27.6 7.4,21.8 Z"/><path class="pk-knock" d="M7.4,22 C7.4,24.2 6.4,25.6 5.2,25.6 C4,25.6 3.2,24.2 3.2,22 C3.2,19.8 4,18.4 5.2,18.4 C6.4,18.4 7.4,19.8 7.4,22 Z"/><path class="pk-pen" stroke-width="1.8" d="M7.4,22 C7.4,24.2 6.4,25.6 5.2,25.6 C4,25.6 3.2,24.2 3.2,22 C3.2,19.8 4,18.4 5.2,18.4 C6.4,18.4 7.4,19.8 7.4,22 Z"/><circle class="pk-blot" cx="5" cy="20.8" r="0.6"/><circle class="pk-blot" cx="5.1" cy="23.2" r="0.6"/><circle class="pk-blot" cx="11.6" cy="18.2" r="0.95"/><path class="pk-pen" stroke-width="1.7" d="M12.6,14.6 L11.6,10.4 L16,13.2"/><path class="pk-pen" stroke-width="2.2" d="M12.2,30.4 L11.9,34.6"/><path class="pk-pen" stroke-width="2.2" d="M16.6,31 L16.8,34.9"/><path class="pk-pen" stroke-width="2.2" d="M24.9,30.9 L25.3,34.7"/><path class="pk-pen" stroke-width="2.2" d="M29.3,29.4 L29.9,33.8"/><path class="pk-pen" stroke-width="1.4" d="M33.1,21.2 C35.6,20.2 37,22.4 35.6,23.3 C34.4,24 34,22.2 35.6,21.5 C36.7,21 37.6,21.7 37.9,22.8"/><path class="pk-pen" stroke-width="2.6" d="M18.2,13.4 C20,13 22.4,13 24.4,13.4"/><path class="pk-knock" d="M25.4,5 C25.4,7.4 23.6,9.4 21.2,9.4 C18.8,9.4 17,7.4 17,5 C17,2.6 18.8,0.6 21.2,0.6 C23.6,0.6 25.4,2.6 25.4,5 Z"/><path class="pk-pen" stroke-width="1.8" d="M25.4,5 C25.4,7.4 23.6,9.4 21.2,9.4 C18.8,9.4 17,7.4 17,5 C17,2.6 18.8,0.6 21.2,0.6 C23.6,0.6 25.4,2.6 25.4,5 Z"/><path class="pk-pen" stroke-width="1.3" d="M21.2,5.1 L21.3,2.7"/><path class="pk-pen" stroke-width="1.5" d="M21.2,5.1 L23.2,6.1"/>`,
   swap: `<path class="pk-pen" stroke-width="1.9" d="M3.8,31 C5.4,27.6 6.8,32.4 8.6,29.2 C10.2,26.4 11.4,31.4 13.2,28.6"/><path class="pk-pen" stroke-width="1" d="M2.6,34 C10,33.6 26,34 37.4,33.6"/><circle class="pk-blot" cx="16.2" cy="30.6" r="0.9"/><circle class="pk-blot" cx="19" cy="32" r="0.8"/><circle class="pk-blot" cx="14.6" cy="32.6" r="0.7"/><circle class="pk-blot" cx="22.2" cy="32.4" r="0.9"/><circle class="pk-blot" cx="17.6" cy="29" r="0.6"/><g transform="rotate(-32 26 21)"><path class="pk-knock" d="M17,16.4 L35,16.6 L35,25.4 L17,25.6 Z"/><path class="pk-spot" d="M17,16.4 L26,16.5 L26,25.5 L17,25.6 Z"/><path class="pk-pen" stroke-width="2" d="M17,16.4 L35,16.6 L35,25.4 L17,25.6 Z"/><path class="pk-pen" stroke-width="1.6" d="M26,16.5 L26.1,25.5"/><path class="pk-pen" stroke-width="1" d="M29.4,17.6 L29.4,24.4"/><path class="pk-pen" stroke-width="1" d="M32,17.6 L32,24.4"/></g><path class="pk-pen" stroke-width="1.3" d="M31.6,6.4 L33.4,4.2"/><path class="pk-pen" stroke-width="1.3" d="M35.4,9.6 L37.8,8.4"/>`,
-  doovers: `<path class="pk-spot" d="M9.6,15.4 L30.6,15.2 L30.6,24.8 L9.8,25 Z"/><path class="pk-pen" stroke-width="2" d="M5.2,10.8 L35,10.6 C36,10.6 36.6,11.2 36.6,12.2 L36.6,31.2 C36.6,32 36,32.6 35.2,32.6 L5,32.8 C4.2,32.8 3.6,32.2 3.6,31.4 L3.6,12.4 C3.6,11.4 4.2,10.8 5.2,10.8 Z"/><path class="pk-pen" stroke-width="1.5" d="M9.6,15.4 L30.6,15.2 L30.6,24.8 L9.8,25 Z"/><path class="pk-pen" stroke-width="1.5" d="M11,32.6 L12.8,28.2 L27.6,28 L29.4,32.4"/><path class="pk-pen" stroke-width="1.5" d="M26,17.4 C27.8,17.4 29,18.6 29,20.1 C29,21.6 27.8,22.8 26,22.8 C24.2,22.8 23,21.6 23,20.1 C23,18.6 24.2,17.4 26,17.4 Z"/><path class="pk-pen" stroke-width="1.5" d="M11.3,20.1 C11.3,16.2 17.1,16.2 17.1,20.1 C17.1,24 11.3,24 11.3,20.1 Z"/><path class="pk-knock" d="M14.2,20.2 L13.3,14.8 L5.2,2.4 L1.6,4.8 L9.6,17.2 Z"/><path class="pk-spot" d="M5.2,2.4 L1.6,4.8 L3.2,7.3 L6.9,4.9 Z"/><path class="pk-pen" stroke-width="1.8" d="M14.2,20.2 L13.3,14.8 L5.2,2.4 L1.6,4.8 L9.6,17.2 Z"/><path class="pk-pen" stroke-width="1.3" d="M6.9,4.9 L3.2,7.3"/><path class="pk-blot" d="M14.2,20.2 L13.8,17.8 L12.3,18.8 Z"/><path class="pk-pen" stroke-width="1.3" d="M9.6,22.6 C10.6,24.8 13.4,25.6 15.6,24.4"/>`,
   second: `<path class="pk-spot" d="M5,21.4 L35,21.4 L35,35 L5,35 Z"/><path class="pk-pen" stroke-width="2" d="M5,21.4 L35,21.4 L35,35 L5,35 Z"/><path class="pk-pen" stroke-width="1.9" d="M5,17 L35,17 L35,21.4 L5,21.4 Z"/><path class="pk-pen" stroke-width="1.6" d="M10.6,17.2 L8.4,21.2"/><path class="pk-pen" stroke-width="1.6" d="M17.2,17.2 L15,21.2"/><path class="pk-pen" stroke-width="1.6" d="M23.8,17.2 L21.6,21.2"/><path class="pk-pen" stroke-width="1.6" d="M30.4,17.2 L28.2,21.2"/><path class="pk-pen" stroke-width="1.9" d="M5.4,16.2 L33.4,7.2 L34.8,11.4 L6.8,20.4"/><path class="pk-pen" stroke-width="1.5" d="M11.6,14.2 L10.8,18.6"/><path class="pk-pen" stroke-width="1.5" d="M18.2,12.1 L17.4,16.4"/><path class="pk-pen" stroke-width="1.5" d="M24.8,10 L24,14.3"/><path class="pk-pen" stroke-width="1.5" d="M31.2,7.9 L30.6,12.2"/><circle class="pk-blot" cx="5.8" cy="18.6" r="1.3"/><path class="pk-pen" stroke-width="1.2" d="M8.6,26 H13.4"/><path class="pk-pen" stroke-width="1.2" d="M8.6,29.6 H12.2"/><path class="pk-pen" stroke-width="2.2" d="M18,26.2 C18.8,23.6 22.4,23 24.2,24.6 C26,26.2 25,28.6 23,30.4 L17.8,33 C21,32.6 24.2,32.8 27.4,32.8"/>`,
-  ninelives: `<path class="pk-spot" d="M8.6,28 C8,22 8.8,16.4 10.2,13 L9.4,6.8 L14.6,10.4 C17.8,9.4 22.2,9.4 25.4,10.4 L30.6,6.6 L29.8,13 C31.2,16.4 32,22 31.4,28 Z"/><path class="pk-pen" stroke-width="2" d="M8.6,28 C8,22 8.8,16.4 10.2,13 L9.4,6.8 L14.6,10.4 C17.8,9.4 22.2,9.4 25.4,10.4 L30.6,6.6 L29.8,13 C31.2,16.4 32,22 31.4,28"/><path class="pk-pen" stroke-width="1.3" d="M12.6,19.4 C13.8,17.6 16.2,17.6 17.4,19.4 C16.2,20.8 13.8,20.8 12.6,19.4 Z"/><path class="pk-pen" stroke-width="1.3" d="M22.8,19.4 C24,17.6 26.4,17.6 27.6,19.4 C26.4,20.8 24,20.8 22.8,19.4 Z"/><path class="pk-blot" d="M15,17.9 C15.6,18.8 15.6,20 15,20.9 C14.4,20 14.4,18.8 15,17.9 Z"/><path class="pk-blot" d="M25.2,17.9 C25.8,18.8 25.8,20 25.2,20.9 C24.6,20 24.6,18.8 25.2,17.9 Z"/><path class="pk-blot" d="M18.8,22.8 L21.4,22.8 L20.1,24.2 Z"/><path class="pk-pen" stroke-width="1" d="M3.6,21.6 L10.2,22.8"/><path class="pk-pen" stroke-width="1" d="M4.4,24.4 L10.2,23.8"/><path class="pk-pen" stroke-width="1" d="M30,22.8 L36.4,21.4"/><path class="pk-pen" stroke-width="1" d="M30,23.8 L35.6,24.4"/><path class="pk-pen" stroke-width="2.2" d="M1.6,28.2 C14,27.8 26,28.4 38.4,28"/><path class="pk-knock" d="M10.2,30.6 C9.8,27.2 10.7,25 12.6,25 C14.5,25 16.0,27.2 15.6,30.6 C14.0,31.4 11.8,31.4 10.2,30.6 Z"/><path class="pk-spot" d="M10.2,30.6 C9.8,27.2 10.7,25 12.6,25 C14.5,25 16.0,27.2 15.6,30.6 C14.0,31.4 11.8,31.4 10.2,30.6 Z"/><path class="pk-pen" stroke-width="1.7" d="M10.2,30.6 C9.8,27.2 10.7,25 12.6,25 C14.5,25 16.0,27.2 15.6,30.6 C14.0,31.4 11.8,31.4 10.2,30.6 Z"/><path class="pk-pen" stroke-width="1.1" d="M12.1,31 L12.0,29.2"/><path class="pk-pen" stroke-width="1.1" d="M13.8,31 L13.9,29.2"/><path class="pk-knock" d="M24.4,30.6 C24.0,27.2 25.5,25 27.4,25 C29.3,25 30.2,27.2 29.8,30.6 C28.2,31.4 26.0,31.4 24.4,30.6 Z"/><path class="pk-spot" d="M24.4,30.6 C24.0,27.2 25.5,25 27.4,25 C29.3,25 30.2,27.2 29.8,30.6 C28.2,31.4 26.0,31.4 24.4,30.6 Z"/><path class="pk-pen" stroke-width="1.7" d="M24.4,30.6 C24.0,27.2 25.5,25 27.4,25 C29.3,25 30.2,27.2 29.8,30.6 C28.2,31.4 26.0,31.4 24.4,30.6 Z"/><path class="pk-pen" stroke-width="1.1" d="M26.3,31 L26.2,29.2"/><path class="pk-pen" stroke-width="1.1" d="M28.0,31 L28.1,29.2"/>`,
   openbook: `<path class="pk-spot" d="M8.8,8.6 L31.4,8.8 L31.2,31.4 L8.6,31.2 Z"/><path class="pk-pen" stroke-width="2" d="M6,5.6 L34.2,6 L34,34.4 L5.8,34.2 Z"/><path class="pk-pen" stroke-width="1" d="M8.8,8.6 L31.4,8.8 L31.2,31.4 L8.6,31.2 Z"/><path class="pk-pen" stroke-width="2.6" d="M12.8,28 L19.8,11.4 L27.2,27.8"/><path class="pk-pen" stroke-width="1.9" d="M15.6,21.8 L24.4,21.6"/><path class="pk-pen" stroke-width="1.6" d="M10.8,28.1 H15"/><path class="pk-pen" stroke-width="1.6" d="M25.2,27.9 H29.4"/><path class="pk-pen" stroke-width="1.1" d="M11,15.2 C10.4,12.6 12.2,10.8 14.2,11.6 C15.4,12.2 15,13.8 13.8,13.6"/><path class="pk-pen" stroke-width="1.1" d="M31,26.4 C29.8,28.8 27.4,29.6 26,28.6 C25,27.8 25.8,26.4 27,26.8"/>`,
   liner: `<path class="pk-pen" stroke-width="2" d="M12.4,20.2 C12.2,13.4 17.6,8 24.6,8 C31.4,8.2 36.6,13.4 36.4,20.2 C36.2,26.8 31,32 24.2,31.8 C17.4,31.6 12.6,26.6 12.4,20.2 Z"/><path class="pk-pen" stroke-width="1" d="M30.4,13.2 C32.4,15.2 33.2,18.2 32.8,21"/><path class="pk-pen" stroke-width="1" d="M31.6,26 C30,27.8 27.8,28.8 25.6,29"/><path class="pk-pen" stroke-width="1.4" d="M24.8,16 C27.2,16.2 28.6,18 28.6,20 C28.6,22 27.2,23.8 24.8,23.8"/><path class="pk-knock" d="M3.6,8.6 L24.8,8.4 L25,31.6 L3.8,31.8 Z"/><path class="pk-spot" d="M3.6,8.6 L24.8,8.4 L25,31.6 L3.8,31.8 Z"/><path class="pk-pen" stroke-width="2" d="M3.6,8.6 L24.8,8.4 L25,31.6 L3.8,31.8 Z"/><path class="pk-pen" stroke-width="1.6" d="M7.2,26.4 C8.8,24.4 10,27.6 11.6,25.6 C13,24 14.4,26.8 16.4,25.4"/>`,
-  tongue: `<path class="pk-spot" d="M8.4,20 C8.2,27 8.8,33.8 12,34.6 C17,35.4 23,35.4 28,34.6 C31.2,33.8 31.8,27 31.6,20 Z"/><path class="pk-pen" stroke-width="2" d="M9.6,12.2 C8,14.2 7.4,17 7.6,22 C7.8,30 8.6,34.4 12,35.2 C17,35.8 23,35.8 28,35.2 C31.4,34.4 32.2,30 32.4,22 C32.6,17 32,14.2 30.4,12.2"/><path class="pk-pen" stroke-width="1.4" d="M9.4,12.4 C16,11.6 24,11.6 30.6,12.4"/><path class="pk-pen" stroke-width="1.9" d="M10.2,11.8 L10.4,6.8 C16.8,6 23.2,6 29.6,6.8 L29.8,11.8"/><path class="pk-pen" stroke-width="0.9" d="M13.4,7 V11.4"/><path class="pk-pen" stroke-width="0.9" d="M16.6,6.8 V11.4"/><path class="pk-pen" stroke-width="0.9" d="M19.8,6.7 V11.4"/><path class="pk-pen" stroke-width="0.9" d="M23,6.8 V11.4"/><path class="pk-pen" stroke-width="0.9" d="M26.2,7 V11.4"/><path transform="rotate(-30 12.6 31)" class="pk-pen" d="M11,31 C11,29.6 14.2,29.6 14.2,31 C14.2,32.4 11,32.4 11,31 Z" stroke-width="1.1"/><path transform="rotate(20 17 31.6)" class="pk-pen" d="M15.4,31.6 C15.4,30.2 18.6,30.2 18.6,31.6 C18.6,33 15.4,33 15.4,31.6 Z" stroke-width="1.1"/><path transform="rotate(-10 21.6 31.4)" class="pk-pen" d="M20,31.4 C20,30 23.2,30 23.2,31.4 C23.2,32.8 20,32.8 20,31.4 Z" stroke-width="1.1"/><path transform="rotate(35 26 31.2)" class="pk-pen" d="M24.4,31.2 C24.4,29.8 27.6,29.8 27.6,31.2 C27.6,32.6 24.4,32.6 24.4,31.2 Z" stroke-width="1.1"/><path transform="rotate(-20 29 27.2)" class="pk-pen" d="M27.4,27.2 C27.4,25.8 30.6,25.8 30.6,27.2 C30.6,28.6 27.4,28.6 27.4,27.2 Z" stroke-width="1.1"/><path transform="rotate(40 11.2 26.6)" class="pk-pen" d="M9.6,26.6 C9.6,25.2 12.8,25.2 12.8,26.6 C12.8,28 9.6,28 9.6,26.6 Z" stroke-width="1.1"/><path transform="rotate(-15 15.2 27.2)" class="pk-pen" d="M13.6,27.2 C13.6,25.8 16.8,25.8 16.8,27.2 C16.8,28.6 13.6,28.6 13.6,27.2 Z" stroke-width="1.1"/><path transform="rotate(25 19.8 27)" class="pk-pen" d="M18.2,27 C18.2,25.6 21.4,25.6 21.4,27 C21.4,28.4 18.2,28.4 18.2,27 Z" stroke-width="1.1"/><path transform="rotate(-35 24.4 26.8)" class="pk-pen" d="M22.8,26.8 C22.8,25.4 26,25.4 26,26.8 C26,28.2 22.8,28.2 22.8,26.8 Z" stroke-width="1.1"/><path transform="rotate(10 13.2 22.4)" class="pk-pen" d="M11.6,22.4 C11.6,21 14.8,21 14.8,22.4 C14.8,23.8 11.6,23.8 11.6,22.4 Z" stroke-width="1.1"/><path transform="rotate(-25 17.8 22.8)" class="pk-pen" d="M16.2,22.8 C16.2,21.4 19.4,21.4 19.4,22.8 C19.4,24.2 16.2,24.2 16.2,22.8 Z" stroke-width="1.1"/><path transform="rotate(30 22.4 22.4)" class="pk-pen" d="M20.8,22.4 C20.8,21 24,21 24,22.4 C24,23.8 20.8,23.8 20.8,22.4 Z" stroke-width="1.1"/><path transform="rotate(-5 27 22.4)" class="pk-pen" d="M25.4,22.4 C25.4,21 28.6,21 28.6,22.4 C28.6,23.8 25.4,23.8 25.4,22.4 Z" stroke-width="1.1"/><path class="pk-pen" stroke-width="1.1" d="M12.4,15.4 C12,17 12,18.6 12.2,20"/>`,
-  cheat: `<path class="pk-spot" d="M5.0,11.4 C5.0,2.9 17.8,2.9 17.8,11.4 C17.8,19.9 5.0,19.9 5.0,11.4 Z"/><path class="pk-pen" stroke-width="2.1" d="M5.0,11.4 C5.0,2.9 17.8,2.9 17.8,11.4 C17.8,19.9 5.0,19.9 5.0,11.4 Z"/><path class="pk-knock" d="M9.2,11.4 C9.2,8.5 13.6,8.5 13.6,11.4 C13.6,14.3 9.2,14.3 9.2,11.4 Z"/><path class="pk-pen" stroke-width="1.5" d="M9.2,11.4 C9.2,8.5 13.6,8.5 13.6,11.4 C13.6,14.3 9.2,14.3 9.2,11.4 Z"/><path class="pk-pen" stroke-width="2.4" d="M16.2,15.8 L31.2,30.8"/><path class="pk-pen" stroke-width="2" d="M26.8,26.4 L24,29.2 L26,31.2"/><path class="pk-pen" stroke-width="2" d="M30,29.6 L27.6,32"/><path class="pk-pen" stroke-width="1.1" d="M8.2,16.6 C6.8,19 7.2,21.4 8.6,23.4"/><path class="pk-knock" d="M8.8,22.4 L13.8,25.8 L13.6,37 L4,37 L3.8,25.8 Z"/><path class="pk-spot" d="M8.8,22.4 L13.8,25.8 L13.6,37 L4,37 L3.8,25.8 Z"/><path class="pk-pen" stroke-width="1.7" d="M8.8,22.4 L13.8,25.8 L13.6,37 L4,37 L3.8,25.8 Z"/><circle class="pk-blot" cx="8.8" cy="26" r="1"/><path class="pk-pen" stroke-width="1.3" d="M5.8,30.8 C6.8,29.6 7.8,31.8 9,30.6 C10,29.6 10.8,31.4 11.8,30.4"/><path class="pk-pen" stroke-width="1.1" d="M6,34 L11.4,33.8"/>`,
+  pocket: `<path class="pk-knock" d="M13.4,2.6 L13.6,24 L25.2,23.8 L25.4,2.4 Z"/><path class="pk-pen" stroke-width="2" d="M14.4,22 L13.8,2.8"/><path class="pk-pen" stroke-width="2" d="M25,21.8 L25.6,2.6"/><path class="pk-pen" stroke-width="1.7" d="M14.1,14.4 L25.2,14.2"/><path class="pk-pen" stroke-width="1.7" d="M14,10.6 L25.3,10.4"/><path class="pk-pen" stroke-width="1.7" d="M13.9,6.8 L25.4,6.5"/><path class="pk-pen" stroke-width="1.7" d="M13.8,3.4 L25.5,3.1"/><path class="pk-knock" d="M7.4,16.4 L32.8,16 L32.6,29.6 L20.2,36 L7.6,29.8 Z"/><path class="pk-spot" d="M7.4,16.4 L32.8,16 L32.6,29.6 L20.2,36 L7.6,29.8 Z"/><path class="pk-pen" stroke-width="2.1" d="M7.4,16.4 L32.8,16 L32.6,29.6 L20.2,36 L7.6,29.8 Z"/><path class="pk-pen" stroke-width="1.5" d="M7.5,19.4 C16,19 24.6,19 32.7,19.2"/><path class="pk-pen" stroke-width="1" d="M10.2,21.8 L10.3,28.4 M11.6,30 L13.6,31.1 M15.6,32.1 L18,33.3 M22.4,33.3 L24.8,32 M26.8,31 L28.9,29.9 M29.9,28.2 L29.9,21.6"/><circle class="pk-blot" cx="9.4" cy="17.8" r="0.8"/><circle class="pk-blot" cx="30.9" cy="17.6" r="0.8"/>`,
   crowd: `<g transform="rotate(40 18 18)"><path class="pk-spot" d="M11.6,11.4 C11.6,6.6 14.4,3.6 18,3.6 C21.6,3.6 24.4,6.6 24.4,11.4 Z"/><path class="pk-pen" stroke-width="2" d="M11.6,11.4 C11.6,6.6 14.4,3.6 18,3.6 C21.6,3.6 24.4,6.6 24.4,11.4 C24.4,13.2 22.8,14.2 18,14.2 C13.2,14.2 11.6,13.2 11.6,11.4 Z"/><path class="pk-pen" stroke-width="1" d="M14,5.4 L15,13.8"/><path class="pk-pen" stroke-width="1" d="M18,3.8 V14"/><path class="pk-pen" stroke-width="1" d="M22,5.4 L21,13.8"/><path class="pk-pen" stroke-width="1" d="M12,9.4 C16,10.2 20,10.2 24,9.4"/><path class="pk-pen" stroke-width="2" d="M13.6,14 L15.8,33.6 C16,35 20,35 20.2,33.6 L22.4,14"/><path class="pk-pen" stroke-width="1.3" d="M14.6,20 H21.4"/></g><path class="pk-pen" stroke-width="1.5" d="M27.4,4 C30,4.6 32,6.4 32.8,9"/><path class="pk-pen" stroke-width="1.5" d="M29.6,0.8 C33.4,1.8 36,4.4 37.2,8.2"/><path class="pk-pen" stroke-width="1.3" d="M30.2,12.4 C31.8,12.4 33.4,13 34.6,14.2"/>`,
   offrec: `<path class="pk-spot" d="M3.4,22 C3.2,14.6 9,8.8 16.4,8.8 C23.8,8.8 29.6,14.6 29.4,22 C29.2,29.2 23.6,35 16.4,35 C9.2,35 3.6,29.2 3.4,22 Z"/><path class="pk-pen" stroke-width="2" d="M3.4,22 C3.2,14.6 9,8.8 16.4,8.8 C23.8,8.8 29.6,14.6 29.4,22 C29.2,29.2 23.6,35 16.4,35 C9.2,35 3.6,29.2 3.4,22 Z"/><path class="pk-pen" stroke-width="1" d="M8.2,16.4 C9.8,14.2 12.2,12.8 14.8,12.4"/><path class="pk-pen" stroke-width="1" d="M24.6,27.4 C23,29.6 20.6,31 18,31.4"/><path class="pk-knock" d="M12.2,22 C12.2,19.6 14,17.8 16.4,17.8 C18.8,17.8 20.6,19.6 20.6,22 C20.6,24.4 18.8,26.2 16.4,26.2 C14,26.2 12.2,24.4 12.2,22 Z"/><path class="pk-pen" stroke-width="1.4" d="M12.2,22 C12.2,19.6 14,17.8 16.4,17.8 C18.8,17.8 20.6,19.6 20.6,22 C20.6,24.4 18.8,26.2 16.4,26.2 C14,26.2 12.2,24.4 12.2,22 Z"/><circle class="pk-blot" cx="16.4" cy="22" r="0.9"/><path class="pk-pen" stroke-width="1.6" d="M33.6,6.2 C35,6.2 36.2,7.4 36.2,8.8 C36.2,10.2 35,11.4 33.6,11.4 C32.2,11.4 31,10.2 31,8.8 C31,7.4 32.2,6.2 33.6,6.2 Z"/><path class="pk-pen" stroke-width="1.9" d="M34,11.4 L35.4,29.2 L33.6,32.4"/><path class="pk-knock" d="M31,31.6 L35.2,33.4 L34,36.4 L29.8,34.6 Z"/><path class="pk-pen" stroke-width="1.6" d="M31,31.6 L35.2,33.4 L34,36.4 L29.8,34.6 Z"/><path class="pk-pen" stroke-width="1.3" d="M36.8,24.6 H38.6 V27.4"/>`,
-  steady: `<path class="pk-pen" stroke-width="1" d="M2,11 C14,10.6 26,11.2 38,10.8"/><path class="pk-pen" stroke-width="1" d="M2,31 C14,30.6 26,31.2 38,30.8"/><path class="pk-pen" stroke-width="1.8" d="M2.6,21 L4.4,16.2 L6.2,26.4 L8,13.6 L9.8,28.2 L11.6,15.4 L13.4,25.2 L15.2,17.8 L17,23.6 L18.8,19.2 L20.6,22.2 L22.4,20.2 L24.2,21.2 C27,20.8 30,21 33.6,20.8"/><path class="pk-pen" stroke-width="1.8" d="M33.6,20.8 L30.6,4.6"/><path class="pk-knock" d="M29.4,1.6 L32.6,1 L33.6,6.4 L30.4,7 Z"/><path class="pk-pen" stroke-width="1.5" d="M29.4,1.6 L32.6,1 L33.6,6.4 L30.4,7 Z"/><circle class="pk-blot" cx="33.6" cy="20.8" r="1.2"/>`,
+  turf: `<g transform="translate(5 2.6)"><path class="pk-pen" stroke-width="1.7" d="M17.2,10 C17.2,13.4 14.4,16.2 11,16.2 C7.6,16.2 4.8,13.4 4.8,10 C4.8,6.6 7.6,3.8 11,3.8 C14.4,3.8 17.2,6.6 17.2,10 Z"/><path class="pk-pen" stroke-width="1" d="M15.8,7.2 C16.6,8.4 16.8,9.6 16.6,10.8"/><path class="pk-pen" stroke-width="1.6" d="M8.9,15.8 C8.2,16.8 8,17.8 8.2,18.8"/><path class="pk-spot" d="M15.4,26.2 C15.4,30.4 12.2,33.8 8.2,33.8 C4.2,33.8 1,30.4 1,26.2 C1,22 4.2,18.8 8.2,18.8 C12.2,18.8 15.4,22 15.4,26.2 Z"/><path class="pk-pen" stroke-width="1.9" d="M15.4,26.2 C15.4,30.4 12.2,33.8 8.2,33.8 C4.2,33.8 1,30.4 1,26.2 C1,22 4.2,18.8 8.2,18.8 C12.2,18.8 15.4,22 15.4,26.2 Z"/><path class="pk-pen" stroke-width="0.9" d="M3.6,28.4 C4.4,30.2 6.2,31.4 8.2,31.4"/><path class="pk-pen" stroke-width="0.9" d="M10.6,21.4 C12,22.2 12.8,23.6 13,25"/><circle class="pk-blot" cx="8.2" cy="26.2" r="2.5"/><circle class="pk-knock" cx="8.2" cy="26.2" r="0.6"/><g transform="translate(16.9 15.1) rotate(42)"><path class="pk-knock" d="M4.6,0 C4.6,2.6 2.6,4.6 0,4.6 C-2.6,4.6 -4.6,2.6 -4.6,0 C-4.6,-2.6 -2.6,-4.6 0,-4.6 C2.6,-4.6 4.6,-2.6 4.6,0 Z M4.2,-2.4 L6.2,-2.4 L6.2,-1.8 L19.4,-1.8 L20.8,0 L19.2,1.8 L17.6,1.8 L16.8,3.4 L15.6,1.8 L14.4,1.8 L13.6,3.6 L12.4,1.8 L10.2,1.8 L9.4,3.2 L8.4,1.8 L6.2,1.8 L6.2,2.4 L4.2,2.4 Z"/><path class="pk-spot" d="M4.6,0 C4.6,2.6 2.6,4.6 0,4.6 C-2.6,4.6 -4.6,2.6 -4.6,0 C-4.6,-2.6 -2.6,-4.6 0,-4.6 C2.6,-4.6 4.6,-2.6 4.6,0 Z"/><path class="pk-pen" stroke-width="1.9" d="M4.6,0 C4.6,2.6 2.6,4.6 0,4.6 C-2.6,4.6 -4.6,2.6 -4.6,0 C-4.6,-2.6 -2.6,-4.6 0,-4.6 C2.6,-4.6 4.6,-2.6 4.6,0 Z"/><path class="pk-pen" stroke-width="1.3" d="M-0.5,0 C-0.5,0.9 -1.2,1.5 -1.9,1.5 C-2.7,1.5 -3.3,0.9 -3.3,0 C-3.3,-0.8 -2.7,-1.4 -1.9,-1.4 C-1.2,-1.4 -0.5,-0.8 -0.5,0 Z"/><path class="pk-pen" stroke-width="1.7" d="M4.5,-2.4 L6.2,-2.4 L6.2,-1.8 L19.4,-1.8 L20.8,0 L19.2,1.8 L17.6,1.8 L16.8,3.4 L15.6,1.8 L14.4,1.8 L13.6,3.6 L12.4,1.8 L10.2,1.8 L9.4,3.2 L8.4,1.8 L6.2,1.8 L6.2,2.4 L4.5,2.4"/><path class="pk-pen" stroke-width="0.9" d="M7.2,-0.1 L18.2,-0.2"/></g></g>`,
 };
 function perkMark(id) {
   return `<svg class="cpc-mark" viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#navInk)">${PERK_MARKS[id]}</g></svg>`;
 }
 
-// Choose Your Path perk registry. Each perk's apply() mutates run state (time/swaps/
-// mulligans/reveals/pool/title/calm); at a fork the player is offered a random TWO of
-// the perks they haven't already taken, and picks one. 13 perks total, deliberately
-// spanning time, retries, reveals, and rule-relaxers so the two on offer feel distinct.
+// Choose Your Path perk registry. Each perk's apply() mutates run state for the rest of the run,
+// and each belongs to one of four families: the clock, second goes, clues, and the deck the
+// words are dealt from. A fork offers two perks from two DIFFERENT families, and a run takes at
+// most one perk per family (see pathOfferPool), so every fork is a choice between two kinds of
+// help rather than two sizes of the same one.
+//
+// The deck was rebuilt on 2026-10-30 against three rules. No perk answers the page for you:
+// Cheat Sheet printed a fitting title on every page, which on a suggestions mode made every page
+// after the fork free and the run won at page 4. No perk comes in two sizes: Slow Down Time /
+// Encore, Word Swap / Do-Overs and Second Chance / Nine Lives were each one perk at two strengths,
+// so a fork that dealt the pair was no choice at all. And every perk must change the game on
+// every page it is live: Steady Hands only stilled the page's shake, and Tip Of My Tongue's
+// count was weak and is already the ladder's first rung. One clue per run is the rule that keeps
+// Open Book and Liner Notes from both describing the same song and naming it between them.
+//
+// Sizing leans on when a perk lands. A perk that works on every page is worth nine pages at the
+// first fork and five at the second; a perk with a few uses is worth the same at either, so the
+// right pick at page 4 can be the wrong one at page 8. Within a family the sizes are meant to
+// match, not the counts: a swap is spent before you fail, on a word you can see you don't know,
+// while a retry only helps after a miss and only if you had a second song in mind, so the retry
+// gets three uses to the swap's two. Every number here is a first estimate pending playtests.
+const PATH_BANK_CAP = 10;   // Time In The Bank: the most seconds a page can carry into the next
+const PATH_HINT_PRESSES = 4;   // Pocket Hints: presses of the hint ladder for the rest of the run
 const PERKS = [
-  { id: "slow",     name: "Slow Down Time", desc: "two extra seconds on every remaining word", apply: () => { extraSecondsPerRound += 2; } },
-  { id: "encore",   name: "Encore",          desc: "four extra seconds on every remaining word", apply: () => { extraSecondsPerRound += 4; } },
-  { id: "swap",     name: "Word Swap",       desc: "swap one word you don't know for a fresh one", apply: () => { skipTokens += 1; } },
-  { id: "doovers",  name: "Do-Overs",        desc: "swap two words you don't know for fresh ones", apply: () => { skipTokens += 2; } },
-  { id: "second",   name: "Second Chance",   desc: "a wrong answer can be retried once", apply: () => { pathMulligans += 1; } },
-  { id: "ninelives", name: "Nine Lives",      desc: "two wrong answers can be retried", apply: () => { pathMulligans += 2; } },
-  { id: "openbook", name: "Open Book",       desc: "see the first letter of a song that fits, every round", apply: () => { perkReveals.add("letter"); } },
-  { id: "liner",    name: "Liner Notes",     desc: "see the album of a song that fits, every round", apply: () => { perkReveals.add("album"); } },
-  { id: "tongue",   name: "Tip Of My Tongue", desc: "see how many songs fit, every round", apply: () => { perkReveals.add("count"); } },
-  { id: "cheat",    name: "Cheat Sheet",     desc: "see one song that fits, every round", apply: () => { perkReveals.add("example"); } },
-  { id: "crowd",    name: "Crowd Pleaser",   desc: "the rest of the words come from popular songs", apply: () => { perkPoolOverride = "easy"; } },
-  { id: "offrec",   name: "Off The Record",  desc: "the word is allowed to be in the title now", apply: () => { perkNoTitleOff = true; } },
-  { id: "steady",   name: "Steady Hands",    desc: "the page stops shaking as the clock runs down", apply: () => { perkCalm = true; } },
+  { id: "encore",   cat: "clock",  name: "Encore",            desc: "thirteen seconds on every page from here", apply: () => { extraSecondsPerRound += 3; } },
+  { id: "bank",     cat: "clock",  name: "Time In The Bank",  desc: `answer with time to spare and up to ${PATH_BANK_CAP} unused seconds carry to the next page`, apply: () => { perkBank = true; } },
+  { id: "swap",     cat: "second", name: "Word Swap",         desc: "swap two words you don't know for fresh ones", apply: () => { skipTokens += 2; } },
+  { id: "second",   cat: "second", name: "Second Chance",     desc: "three more goes at a page you miss", apply: () => { pathMulligans += 3; } },
+  { id: "openbook", cat: "clue",   name: "Open Book",         desc: "see the first letter of a song that fits, every page", apply: () => { perkReveals.add("letter"); } },
+  { id: "liner",    cat: "clue",   name: "Liner Notes",       desc: "see the album of a song that fits, every page", apply: () => { perkReveals.add("album"); } },
+  { id: "pocket",   cat: "clue",   name: "Pocket Hints",      desc: `the hint ladder opens, with ${PATH_HINT_PRESSES} presses for the rest of the run`, apply: () => { perkHints = true; hintBudgetLeft = PATH_HINT_PRESSES; } },
+  { id: "crowd",    cat: "deck",   name: "Crowd Pleaser",     desc: "the rest of the words come from popular songs", apply: () => { perkPoolOverride = "easy"; } },
+  { id: "offrec",   cat: "deck",   name: "Off The Record",    desc: "the word is allowed to be in the title now", apply: () => { perkNoTitleOff = true; } },
+  // Home Turf's album is chosen on a second panel of the fork (showTurfPicker), so its apply()
+  // takes the album rather than drawing one.
+  { id: "turf",     cat: "deck",   name: "Home Turf",         desc: "pick an album: the rest of the words come from its songs", apply: (album) => { perkAlbum = album; } },
 ];
 const PERK_BY_ID = Object.fromEntries(PERKS.map((p) => [p.id, p]));
 
-// Choose Your Path: a mid-run perk fork. Covers the answered page with a random two of
-// the not-yet-taken perks; the pick applies a run-modifier for the rest of the run, then
-// resumes the page-turn. No scoring change — the win is still the score target.
+// The perks a fork may deal from: untaken, and from a family this run hasn't taken a perk from.
+// Four families against two forks means the second fork always has three families left.
+function pathOfferPool() {
+  const takenCats = new Set(perksTaken.map((id) => PERK_BY_ID[id]?.cat).filter(Boolean));
+  return PERKS.filter((p) => !perksTaken.includes(p.id) && !takenCats.has(p.cat));
+}
+// Two perks from two different families: the first drawn from the whole pool, the second from
+// whatever is left outside its family. Falls back to any two if the families somehow run dry.
+function dealPathOffer() {
+  let pool = pathOfferPool();
+  if (pool.length < 2) pool = PERKS.filter((p) => !perksTaken.includes(p.id));
+  const first = shuffle(pool.slice())[0];
+  const rest = pool.filter((p) => p.cat !== first.cat);
+  const second = shuffle((rest.length ? rest : pool.filter((p) => p !== first)).slice())[0];
+  return [first, second];
+}
+
+// Choose Your Path: a mid-run perk fork. Covers the answered page with two perks from two
+// families; the pick applies a run-modifier for the rest of the run, then resumes the
+// page-turn. No scoring change — the win is still the score target.
 function showPathFork(forkRound) {
   if (document.querySelector(".chall-path-overlay")) return;   // never stack two forks
-  // Offer two distinct perks the player hasn't taken yet (fall back to the full set if
-  // somehow exhausted — there are 13, far more than the two forks need).
-  let pool = PERKS.filter((p) => !perksTaken.includes(p.id));
-  if (pool.length < 2) pool = PERKS.slice();
-  const offer = shuffle(pool.slice()).slice(0, 2);
-
-  const card = $("screen-game");
+  const offer = dealPathOffer();
   const ov = document.createElement("div");
   ov.className = "chall-path-overlay";
-  ov.innerHTML =
-    `<div class="chall-path-panel">` +
-    `<h3 class="chall-path-title">choose your path</h3>` +
-    `<p class="chall-path-sub">page ${forkRound} cleared: pick a perk for the rest of the run</p>` +
-    `<div class="chall-path-cards">` +
-    offer.map((p) =>
-      `<button class="chall-path-card" data-perk="${p.id}"><span class="cpc-icon">${perkMark(p.id)}</span>` +
-      `<span class="cpc-name">${escapeHtml(p.name)}</span><span class="cpc-desc">${escapeHtml(p.desc)}</span></button>`).join("") +
-    `</div></div>`;
-  card.appendChild(ov);
-  ov.querySelectorAll("[data-perk]").forEach((b) => b.addEventListener("click", () => {
-    const perk = PERK_BY_ID[b.dataset.perk];
-    if (perk) { perk.apply(); perksTaken.push(perk.id); }
+  $("screen-game").appendChild(ov);
+  const take = (perk, arg) => {
+    perk.apply(arg);
+    perksTaken.push(perk.id);
     pathForksTaken.push(forkRound);
     ov.remove();
     renderPathSkip();
     nextRound();   // fork is taken now — fall through to the normal advance
-  }, { once: true }));
+  };
+  const showOffer = () => {
+    ov.innerHTML =
+      `<div class="chall-path-panel">` +
+      `<h3 class="chall-path-title">choose your path</h3>` +
+      `<p class="chall-path-sub">page ${forkRound} cleared: pick a perk for the rest of the run</p>` +
+      `<div class="chall-path-cards">` +
+      offer.map((p) =>
+        `<button class="chall-path-card" data-perk="${p.id}"><span class="cpc-icon">${perkMark(p.id)}</span>` +
+        `<span class="cpc-name">${escapeHtml(p.name)}</span><span class="cpc-desc">${escapeHtml(p.desc)}</span></button>`).join("") +
+      `</div></div>`;
+    ov.querySelectorAll("[data-perk]").forEach((b) => b.addEventListener("click", () => {
+      const perk = PERK_BY_ID[b.dataset.perk];
+      if (!perk) return;
+      if (perk.id === "turf") showTurfPicker(); else take(perk);
+    }, { once: true }));
+  };
+  // Home Turf's second panel: the twelve studio albums as era-coloured chips, the same chip the
+  // hint ladder names an album with. "back" returns to the two cards, so picking Home Turf is
+  // never a commitment made before seeing what it asks of you.
+  const showTurfPicker = () => {
+    const albums = STUDIO_ALBUMS.filter((a) => (albumWordMap[a] || []).length);
+    ov.innerHTML =
+      `<div class="chall-path-panel">` +
+      `<h3 class="chall-path-title">home turf</h3>` +
+      `<p class="chall-path-sub">pick an album: the rest of the words come from its songs. answers from any album still count</p>` +
+      `<div class="chall-path-albums">` +
+      albums.map((a) => `<button class="hint-chip cpa-album" style="--chip:${albumColor(a) || "var(--bead)"}" data-album="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("") +
+      `</div><button class="cpa-back" type="button">back</button></div>`;
+    ov.querySelectorAll("[data-album]").forEach((b) => b.addEventListener("click", () => take(PERK_BY_ID.turf, b.dataset.album), { once: true }));
+    ov.querySelector(".cpa-back").addEventListener("click", showOffer, { once: true });
+  };
+  showOffer();
 }
 
-// Choose Your Path reveals (Open Book / Liner Notes / Tip Of My Tongue / Cheat Sheet):
-// a non-scoring hint line in the shared banner, derived from a fitting song. Re-rendered
-// each round; absent when no reveal perk is active.
+// Choose Your Path reveals (Open Book / Liner Notes): a non-scoring hint line in the shared
+// banner, derived from a fitting song. Re-rendered each round; absent when no reveal perk is
+// active. A run holds at most one of them (one clue per run, see PERKS), so the letter and the
+// album never describe the same song together.
 function renderPerkReveals() {
   if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "path") return;
   if (!perkReveals.size) { const b = $("challBanner"); if (b) b.remove(); return; }
@@ -23110,13 +23172,11 @@ function renderPerkReveals() {
   if (!currentSongs.length) { el.innerHTML = `<span class="chall-banner-tag">help</span> no song fits, so swap it`; return; }
   const sample = roundHintSong || currentSongs[0];
   const parts = [];
-  if (perkReveals.has("count")) { const n = songCount(currentSongs); parts.push(`${n} song${n === 1 ? "" : "s"} fit`); }
   if (perkReveals.has("letter"))  parts.push(`starts with “${escapeHtml((sample.title.match(/[A-Za-z0-9]/) || ["?"])[0].toUpperCase())}”`);
   if (perkReveals.has("album") && sample.album) {
     const col = albumColor(sample.album) || "var(--ink-soft)";
     parts.push(`from <span style="color:${col};font-weight:700">${escapeHtml(sample.album)}</span>`);
   }
-  if (perkReveals.has("example")) parts.push(`e.g. <b>${escapeHtml(censor(sample.title))}</b>`);
   el.innerHTML = `<span class="chall-banner-tag">help</span> ${parts.join(" · ")}`;
 }
 
@@ -23206,7 +23266,7 @@ function devilMark(id) {
   return `<svg class="cpc-mark" viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#navInk)">${DEVIL_MARKS[id]}</g></svg>`;
 }
 
-// The 13 curses, mirroring PERKS — but each is a handicap you're forced to accept.
+// The 13 curses, Choose Your Path's dark twin: each is a handicap you're forced to accept.
 // `build(reserved)` resolves any per-pick randomness (which album to ban) so the offered
 // card can name specifics; it returns the display + an apply() that mutates run state,
 // plus an optional `album` the fork reserves so two album-bans never collide.
@@ -23870,7 +23930,7 @@ function revealedHintSong() {
   if (!roundHintSong) return null;
   if (hintTier >= 1) return roundHintSong;
   const pathPerk = gameType === "challenge" && currentChallenge && currentChallenge.rule === "path" &&
-    (perkReveals.has("letter") || perkReveals.has("album") || perkReveals.has("example"));
+    (perkReveals.has("letter") || perkReveals.has("album"));
   return pathPerk ? roundHintSong : null;
 }
 
@@ -24110,7 +24170,7 @@ function showTimerFull() {
   // Floor a clocked page so stacked time penalties (Devil's Path) can't zero it, but never
   // above the mode's own base, so a deliberately short custom clock (e.g. 2s) stays as set.
   const floor = Math.min(base, 3);
-  const total = base > 0 ? Math.max(floor, base + (extraSecondsPerRound || 0)) : base;
+  const total = base > 0 ? Math.max(floor, base + pathClockBonus()) : base;
   if (!(total > 0)) { if (wrap) wrap.style.display = "none"; return; }
   if (wrap) wrap.style.display = "";
   paintTimerFill(fill, 1);
@@ -24164,7 +24224,7 @@ const timerSpark = (() => {
   function frame(now) {
     if (!running) return;
     // toggling tension off (or the calm perk / reduced motion) stops it promptly
-    if (!settings.timerTension || perkCalm || motionReduced()) { stop(); return; }
+    if (!settings.timerTension || motionReduced()) { stop(); return; }
     const dt = Math.min(2.5, Math.max(0.5, (now - (last || now)) / 16.67)); last = now;
     // keep the backing store in sync with layout — self-heals if the bar wasn't laid
     // out (width 0) the instant start() ran, or after a resize/orientation change
@@ -24228,7 +24288,7 @@ const timerSpark = (() => {
     raf = requestAnimationFrame(frame);
   }
   function start() {
-    if (motionReduced() || !settings.timerTension || perkCalm) { stop(); return; }
+    if (motionReduced() || !settings.timerTension) { stop(); return; }
     canvas = $("timerSpark"); if (!canvas) return;
     ctx = canvas.getContext("2d"); if (!ctx) return;
     readEra(); resize();                       // refresh era colour + size each round
@@ -24256,12 +24316,17 @@ function expireComboRun() {
   submitAnswer(null, true);
   if (comboRuleActive() && screens.game.classList.contains("active")) endGame();
 }
+// The seconds the path forks add to (or, on Devil's Path, take from) a page's clock: the flat
+// per-page change, plus whatever Time In The Bank carried over from the page before.
+function pathClockBonus() {
+  return (extraSecondsPerRound || 0) + (perkBank ? bankedSeconds : 0);
+}
 function startTimer(resume, resumeTotal, revolveDelay) {
   clearTimer();
   const fill = $("timerFill");
   const label = $("timerLabel");
-  // Choose Your Path's "Slow Down Time" perk adds seconds, but only where there's
-  // already a clock (Relaxed stays clock-less). baseSeconds() applies Shrinking Timer's
+  // Choose Your Path's clock perks (and Devil's Path's clock curses) move the page's seconds,
+  // but only where there's already a clock (Relaxed stays clock-less). baseSeconds() applies Shrinking Timer's
   // per-round override.
   const wrap = document.querySelector(".timer-wrap");
   let total, begin;
@@ -24278,7 +24343,7 @@ function startTimer(resume, resumeTotal, revolveDelay) {
     // Floor a clocked page so stacked time penalties (Devil's Path) can't zero it, but never
     // above the mode's own base, so a deliberately short custom clock (e.g. 2s) stays as set.
     const floor = Math.min(base, 3);
-    const builtTotal = base > 0 ? Math.max(floor, base + (extraSecondsPerRound || 0)) : base;
+    const builtTotal = base > 0 ? Math.max(floor, base + pathClockBonus()) : base;
     total = Number.isFinite(resumeTotal) && resumeTotal > 0 ? resumeTotal : builtTotal;
     // Relaxed mode (seconds <= 0): no clock at all — hide the bar and never time out.
     if (!(total > 0)) {
@@ -24311,7 +24376,7 @@ function startTimer(resume, resumeTotal, revolveDelay) {
   // is all "final seconds", and would open on a tick over the page turn) — the same
   // guard the spoken low-time cue uses.
   const tickCountdown = (remaining) => {
-    if (!settings.sound || !settings.timerTension || perkCalm) return;
+    if (!settings.sound || !settings.timerTension) return;
     if (!(total > 3) || !(remaining > 0) || remaining > 3) return;
     const n = Math.ceil(remaining);
     if (n === tickedNumeral) return;
@@ -24355,7 +24420,7 @@ function startTimer(resume, resumeTotal, revolveDelay) {
 // Seconds still on this page's clock, right now — the same reading the countdown is showing.
 // null in Relaxed and anywhere else without a clock, which callers must treat as "no answer",
 // never as zero. Read off the total startTimer actually built, so a Shrinking Timer page or a
-// Slow Down Time perk is measured against its own clock rather than the mode's nominal one.
+// Choose Your Path clock perk is measured against its own clock rather than the mode's nominal one.
 function clockRemaining() {
   if (!(roundClockTotal > 0)) return null;
   return Math.max(0, roundClockTotal - (performance.now() - timerStart) / 1000);
@@ -24413,9 +24478,8 @@ function startRevolve(firstDelay) {
 // three ticks are one sound leaning in rather than three separate alarms.
 const COUNTDOWN_TICK_GAIN = { 3: 0.55, 2: 0.78, 1: 1 };
 function setTension(t) {
-  // Timer-tension setting off (or Choose Your Path's Steady Hands perk) → keep the
-  // vignette/tremor at rest.
-  document.body.style.setProperty("--tension", (settings.timerTension && !perkCalm) ? String(t) : "0");
+  // Timer-tension setting off → keep the vignette/tremor at rest.
+  document.body.style.setProperty("--tension", settings.timerTension ? String(t) : "0");
 }
 function updateTally(remaining) {
   if (!settings.timerTension) return;
@@ -26488,7 +26552,7 @@ function submitAnswer(song, isTimeout) {
   const correct = commonRuleActive() ? !!commonAnswerCorrect
     : tapKnowledgeActive() ? !!tapAnswerCorrect
     : (!!song && currentSongs.some((s) => s.title === song.title));
-  // Choose Your Path — Second Chance / Nine Lives: spend a mulligan to retry a miss
+  // Choose Your Path — Second Chance: spend a mulligan to retry a miss
   // (same word, fresh clock) instead of burning the round. Only kicks in on an actual
   // miss while mulligans remain; correct answers and the other challenges are untouched.
   if (!correct && currentChallenge && currentChallenge.rule === "path" && pathMulligans > 0) {
@@ -26502,6 +26566,9 @@ function submitAnswer(song, isTimeout) {
     return;
   }
   roundResults[round - 1] = correct;
+  // Time In The Bank: a page answered right with time on the clock carries what's left (capped)
+  // into the next one. A miss or a timeout carries nothing, so a fast wrong guess can't bank.
+  if (perkBank) bankedSeconds = correct && answerClockLeft != null ? Math.min(PATH_BANK_CAP, answerClockLeft) : 0;
   // The tap grids answer with a tile rather than a typed song, so `song` is null here and the
   // bracelet used to string every page of Whose Line? and Odd One Out in the notebook's era
   // colour — thirteen beads that look picked at random because nothing about the run picked
@@ -36183,7 +36250,7 @@ function buildDevApi() {
       path: {
         fork: () => {
           if (gameType !== "challenge" || !currentChallenge || currentChallenge.rule !== "path") return "start a Choose Your Path run first";
-          showPathFork(round); return PERKS.filter((p) => !perksTaken.includes(p.id)).length + " perks still on offer";
+          showPathFork(round); return pathOfferPool().length + " perks still on offer";
         },
         marks: () => Object.keys(PERK_MARKS),
       },

@@ -8242,6 +8242,16 @@
   .chall-path-title { font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); color: var(--ink); margin: 0 0 2px; }
   .chall-path-sub { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft); margin: 0 0 18px; }
   .chall-path-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  /* Home Turf's second panel: the studio albums as the hint ladder's era-coloured chips, set a
+     size up so they read as buttons, with a plain typed "back" to the two cards beneath. Scoped
+     under .chall-path-albums because .hint-chip is declared later and would win a tie. */
+  .chall-path-albums { display: flex; flex-wrap: wrap; gap: 8px 10px; justify-content: center; max-width: 420px; margin: 0 auto; }
+  .chall-path-albums .cpa-album { border: none; cursor: pointer; padding: 4px 12px; font-size: calc(12px + var(--text-size-adjust));
+    box-shadow: 1px 2px 0 rgba(43, 39, 34, 0.18); transition: transform 0.12s ease; }
+  .chall-path-albums .cpa-album:is(:hover, :focus-visible) { transform: translateY(-2px) rotate(-1deg); }
+  .cpa-back { margin-top: 16px; background: none; border: none; cursor: pointer; padding: 4px 8px;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; }
   .chall-path-card {
     flex: 1 1 0; min-width: 150px; max-width: 200px; cursor: pointer; text-align: center;
     background: var(--paper); border: 1.5px solid var(--ink-soft); border-radius: 4px;
