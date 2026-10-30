@@ -4263,10 +4263,10 @@
   .chall-diff > .gloss-term { display: flex; align-items: center; }
   .chall-diff .tape-glyph { width: 22px; height: 15px; }
   .chall-diff-word { font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); }
-  /* Centre the visible Caveat ink, not just its shared line box. Descending y/g
-     lower easy, tricky and tough by different amounts; these em offsets match
-     their ink centres to brutal, which already sits correctly. */
-  .chall-diff-word[data-tier="easy"] { transform: translateY(-0.22em); }
+  /* Balance Caveat's letter bodies against the cassette rather than centring the
+     full ink bounds: giving easy's long y equal weight lifts its body too high.
+     Each word needs its own optical offset; brutal already sits correctly. */
+  .chall-diff-word[data-tier="easy"] { transform: translateY(-0.12em); }
   .chall-diff-word[data-tier="tricky"] { transform: translateY(-0.1em); }
   .chall-diff-word[data-tier="tough"] { transform: translateY(-0.08em); }
   .chall-sec { margin-bottom: 14px; }
