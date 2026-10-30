@@ -22601,12 +22601,15 @@ function briefStrikeSVG(seed) {
   return `<svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">` +
     `<path d="M-2 ${6 + +y()} C30 ${5 + +y()} 70 ${4 + +y()} 102 ${3 + +y()}"/></svg>`;
 }
-// A pen loop that never quite closes: start and end overlap by a little.
+// A pen loop that never quite closes: it starts left of top centre, goes once round an
+// ellipse even on both sides of the figure, and overshoots its start a little. The jitter is
+// kept small so the wobble never pushes one side of the loop onto the digits.
 function briefLoopSVG(seed) {
-  const r = mulberry32(seed), j = (v) => (v + (r() - 0.5) * 4).toFixed(1);
-  return `<svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="M${j(62)} ${j(4)} ` +
-    `C${j(92)} ${j(6)} ${j(100)} ${j(44)} ${j(60)} ${j(56)} C${j(24)} ${j(60)} ${j(-2)} ${j(44)} ${j(4)} ${j(24)} ` +
-    `C${j(10)} ${j(6)} ${j(40)} ${j(1)} ${j(74)} ${j(8)}"/></svg>`;
+  const r = mulberry32(seed), j = (v) => (v + (r() - 0.5) * 3).toFixed(1);
+  return `<svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="M${j(38)} ${j(5.5)} ` +
+    `C${j(60)} ${j(1.5)} ${j(97)} ${j(12)} ${j(97)} ${j(30)} C${j(97)} ${j(45)} ${j(76)} ${j(57)} ${j(50)} ${j(57)} ` +
+    `C${j(24)} ${j(57)} ${j(3)} ${j(45)} ${j(3)} ${j(30)} C${j(3)} ${j(13)} ${j(26)} ${j(3.2)} ${j(52)} ${j(2.6)} ` +
+    `C${j(58)} ${j(2.5)} ${j(63)} ${j(2.8)} ${j(68)} ${j(3.6)}"/></svg>`;
 }
 const briefWas = (text, seed) => `<span class="brief-was">${escapeHtml(text)}${briefStrikeSVG(seed)}</span>`;
 // The start button is a rubber stamp in the ENCORE family. textLength fits the caps to the
