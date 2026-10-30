@@ -3162,22 +3162,21 @@
      They are stated as tokens on the ROW, not as a background on the tab, because on the front
      page the picked difficulty's colour has to reach past its tab: the rule-terms strip under
      it is that tab's page and wears the same ink (see "The front page's pickers" below). */
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(250,208,64,0.46), rgba(248,170,70,0.34)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="medium"])   { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); --tab-grad: linear-gradient(180deg, rgba(240,185,50,0.52), rgba(247,201,72,0.30)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="classic"])  { --tab-edge: color-mix(in srgb, var(--ink-accent) 55%, var(--paper)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(100,175,240,0.42), rgba(50,105,190,0.34)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(185,205,100,0.32), rgba(90,145,95,0.30)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="hard"])     { --tab-wash: rgba(202,92,74,0.34);   --tab-edge: color-mix(in srgb, #9b362e 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(242,130,88,0.36), rgba(178,48,58,0.31)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="ultra"])    { --tab-wash: rgba(122,98,182,0.34);  --tab-edge: color-mix(in srgb, #5a4898 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(170,120,205,0.28), rgba(65,70,150,0.30)); }
-  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab--modality.active)             { --tab-wash: rgba(212,108,152,0.28); --tab-edge: color-mix(in srgb, #bc4e80 50%, var(--paper)); --tab-grad: linear-gradient(160deg, rgba(232,145,165,0.26), rgba(150,80,150,0.26)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="relaxed"])  { --tab-wash: rgba(103,150,190,0.36); --tab-edge: color-mix(in srgb, #3f6fa3 50%, var(--paper)); --tab-grad: linear-gradient(180deg, rgba(103,150,190,0.40), rgba(103,150,190,0.21)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="easy"])     { --tab-wash: rgba(133,173,96,0.40);  --tab-edge: color-mix(in srgb, #60833e 50%, var(--paper)); --tab-grad: linear-gradient(180deg, rgba(120,165,90,0.36), rgba(133,173,96,0.23)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="hard"])     { --tab-wash: rgba(202,92,74,0.34);   --tab-edge: color-mix(in srgb, #9b362e 50%, var(--paper)); --tab-grad: linear-gradient(180deg, rgba(185,70,60,0.44), rgba(202,92,74,0.23)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-mode="ultra"])    { --tab-wash: rgba(122,98,182,0.34);  --tab-edge: color-mix(in srgb, #5a4898 50%, var(--paper)); --tab-grad: linear-gradient(180deg, rgba(122,98,182,0.38), rgba(122,98,182,0.24)); }
+  :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab--modality.active)             { --tab-wash: rgba(212,108,152,0.28); --tab-edge: color-mix(in srgb, #bc4e80 50%, var(--paper)); --tab-grad: linear-gradient(180deg, rgba(200,95,145,0.32), rgba(212,108,152,0.20)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="infinite"]) { --tab-wash: rgba(64,150,146,0.34);  --tab-edge: color-mix(in srgb, #287874 52%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-type="custom"])   { --tab-wash: rgba(176,104,150,0.32); --tab-edge: color-mix(in srgb, #964a7c 52%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="3lives"]) { --tab-edge: color-mix(in srgb, #786e46 50%, var(--paper)); }
   :is(.mode-tabs, #difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active[data-variant="sudden"]) { --tab-edge: #8a2416; }
-  /* Each difficulty also carries a pair of neighbouring inks, the treatment the game types wear
-     above it, as --tab-grad: sky into denim, lime into leaf, coral into brick, orchid into indigo,
-     rose into plum, and Normal honey into apricot like Classic above it. Picked side by side on
-     scripts/ui/difficulty-tab-gradients.html, where a ladder that handed each rung the colour of
-     the one below was turned down: only one rung is ever picked, so it just read as two rungs. */
+  /* Each difficulty gathers colour at the tab and fades to a fuller wash at the page's foot.
+     Relaxed has enough contrast to show the fade; Ultra keeps a lighter purple so the faint
+     field of 13s stays visible. The shared sheet measurements below carry one vertical
+     gradient across both surfaces. Picked on scripts/ui/difficulty-tab-gradients.html. */
   .mode-tab.active:is([data-mode], .mode-tab--modality) { background: var(--tab-grain), var(--tab-grad); }
   /* The stats page's "All" view sums every mode, so it wears every mode's wash at once: the
      ladder's colours laid side by side, relaxed denim through ultra violet. */
