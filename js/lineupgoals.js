@@ -108,7 +108,7 @@ const RULES = {
     return keep(done, true);
   },
   "closed-shelf": (ps, c, done) => {
-    if (!ps.length) return ALIVE;
+    if (!ps.length) return keep(done, true);
     // Banned is whoever answers page one — the artist you ANSWER with, never the artist of a
     // page you missed, so tanking page one cannot dodge the ban.
     const first = ps[0].artists;
@@ -120,10 +120,14 @@ const RULES = {
     return keep(done, ps.every((p) => p.artists.some((a) => !shut.has(a))));
   },
   "one-and-done": (ps, c, done) => {
-    for (let i = 1; i < ps.length; i++) {
-      const prev = ps[i - 1].artists, here = ps[i].artists;
-      // Only a forced repeat breaks it: if either page could be credited elsewhere, it was.
-      if (prev.length === 1 && here.length === 1 && prev[0] === here[0]) return DEAD;
+    let previous = null;
+    for (const p of ps) {
+      // Keep only credits reachable without repeating the previous page. Checking pairs in
+      // isolation would let A / [A,B] / B give the shared page two incompatible credits.
+      const next = new Set(p.artists.filter((a) =>
+        !previous || previous.size > 1 || !previous.has(a)));
+      if (!next.size) return DEAD;
+      previous = next;
     }
     return keep(done, true);
   },
@@ -159,17 +163,27 @@ const RULES = {
   },
   "the-last-great": (ps, c, done) => {
     // Never answer with a NEW artist until the one before has been used twice.
-    const seen = new Map();
-    let prev = null;
-    for (const p of ps) {
-      const a = p.artists.length === 1 ? p.artists[0] : null;
-      if (!a) { prev = prev; continue; }                      // a shared song is never the new face
-      const known = seen.has(a);
-      if (!known && prev && (seen.get(prev) || 0) < 2) return DEAD;
-      seen.set(a, (seen.get(a) || 0) + 1);
-      prev = a;
-    }
-    return keep(done, true);
+    // Shared songs still answer a page. Try each credit, retaining a single consistent
+    // history rather than skipping the song or counting it once for every artist.
+    const artists = [...new Set(ps.flatMap((p) => p.artists))];
+    const choices = ps.map((p) => p.artists.map((a) => artists.indexOf(a)));
+    const counts = artists.map(() => 0), failed = new Set();
+    const visit = (i, prev) => {
+      if (i === choices.length) return true;
+      const key = [i, prev, ...counts].join(",");
+      if (failed.has(key)) return false;
+      for (const a of choices[i]) {
+        const used = counts[a];
+        if (!used && prev !== -1 && counts[prev] < 2) continue;
+        counts[a] = Math.min(2, used + 1); // only zero, once and twice affect the rule
+        const ok = visit(i + 1, a);
+        counts[a] = used;
+        if (ok) return true;
+      }
+      failed.add(key);
+      return false;
+    };
+    return keep(done, visit(0, -1));
   },
 
   /* ---- DIAMONDS: spread ---- */
@@ -209,7 +223,7 @@ const RULES = {
   /* ---- CLUBS: form. These read HOW a page was answered, not who by. ---- */
   // thirteen from thirteen: not "thirteen pages happened", which is what this used to check
   "clean-sheet": (ps, c, done) => keep(done, !ps.some(isMiss)),
-  "off-the-cuff": (ps, c, done) => keep(done, ps.every((p) => p.ms <= 10000)),
+  "off-the-cuff": (ps, c, done) => keep(done, ps.every((p) => !isMiss(p) && p.ms <= 10000)),
   "cold-open": (ps, c, done) => keep(done, ps.every((p) => !p.dropdown)),
   "sing-it-back": (ps, c, done) => {
     const got = ps.filter((p) => p.sung).length;
