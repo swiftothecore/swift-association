@@ -17508,8 +17508,8 @@ function consumeRunCheckpoint(id) {
   clearRunCheckpoint();
   return true;
 }
-function checkpointRunProgress() {
-  if (runFolded || !["classic", "infinite"].includes(gameType) || !roundResults.length) return;
+function checkpointRunProgress(noLog = false) {
+  if (noLog || runFolded || !["classic", "infinite"].includes(gameType) || !roundResults.length) return;
   if (!runProgressId) runProgressId = TAB_ID + ":" + Math.random().toString(36).slice(2);
   const checkpoint = {
     version: 1, id: runProgressId, type: gameType, mode: boardMode(),
@@ -17550,7 +17550,7 @@ function recoverRunProgress() {
 // abandoned run can't set a personal best (countBest = false) or hit the
 // history. Idempotent per run via runFolded.
 function foldRunProgress() {
-  if (runFolded || roundResults.length === 0) return;
+  if (devNoLog || runFolded || roundResults.length === 0) return;
   // Sandboxed modes never fold into difficulty stats. Daily is also skipped: it resumes
   // after a refresh/exit and folds its tally in full at completion (endGame), so folding
   // a partial here would double-count the same rounds once the run is finished.
@@ -26814,7 +26814,7 @@ function submitAnswer(song, isTimeout) {
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
   if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("answer-rain-on-monday");
 
-  checkpointRunProgress();
+  checkpointRunProgress(devNoLog);
 
   // Daily: persist every decided page before showing its verdict. Pages 1-12 resume at the
   // next word; page 13 is marked settled and finalizes from the snapshot after a reload/quit.
@@ -30410,7 +30410,7 @@ function pausesWhenAway() {
 }
 // `force` is the dev panel's, so the touch path can be walked through from a desktop.
 function interruptRun(force = false) {
-  checkpointRunProgress();
+  checkpointRunProgress(devNoLog);
   stampDailyLiveClock();
   if (!liveRunScreen() || runPauseOwners.has("background")) return;
   if (!force && !pausesWhenAway()) return;
@@ -36888,7 +36888,7 @@ function buildDevApi() {
     // The last run taken back out of every store it wrote to (see journalRunStart).
     lastRun: { peek: peekLastRun, undo: undoLastRun },
     recordErase: { set: setDevRecordErase, get: () => devRecordErase },
-    setNoLog: (on) => { devNoLog = !!on; },
+    setNoLog: (on) => { devNoLog = !!on; if (devNoLog) clearRunCheckpoint(); },
     reload: () => location.reload(),
     goStart: () => { $("startContent").style.display = ""; renderStartPickers(); showScreen("start"); },
   };
