@@ -20978,7 +20978,7 @@ function endChallenge() {
   // The challenge's own wax sits to the left of the name, and it answers the RECORD rather
   // than the run: red for a challenge still undefeated, aged taupe once it has been beaten,
   // black-violet once its dark side has, jet once its top side has been won without a miss
-  // (see the topSide note below). The run's own verdict is stamped underneath in
+  // (see playedSideSeals). The run's own verdict is stamped underneath in
   // letters an inch high, so a seal that also swung on win-or-lose would only be saying the
   // same thing twice — and worse, it would disagree with the drawer's copy of itself two
   // clicks later, since that one reports the record. `rec` is read AFTER
@@ -20996,11 +20996,8 @@ function endChallenge() {
   // picks its seal off `challengeDark` for exactly this reason; results now agrees with it.
   // The jet seal follows the same rule: it shows only on a run of the TOP side, the side that
   // perfects the card, so a light run on a perfected card with a dark side keeps the taupe.
-  const topSide = !!c.dark === hasDarkSide(c.id);
   const resultSeal = `<span class="podium-seal" aria-hidden="true">` +
-    sealMarkup((topSide && perfectedChallenge(c.id, rec) ? CHALLENGE_SEALS_JET
-      : c.dark ? CHALLENGE_SEALS_DARK
-      : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS)[c.id]) + `</span>`;
+    sealMarkup(playedSideSeals(c, rec)[c.id]) + `</span>`;
   // Seal and words are wrapped together rather than laid out on .podium-title itself, so the
   // whole arrangement is one node the other end paths' .textContent wipes on the way past.
   // A layout class left on the title element would outlive the challenge that put it there.
@@ -22581,16 +22578,102 @@ function roundCurtainHTML() {
   return null;
 }
 
+// The round-1 briefing for a challenge, set like a margin note rather than a centred poster:
+// the name with a pen underline, the rule in the hand, the terms of the run as typed rows, the
+// target with its number circled, and a rubber stamp to start. The card's own wax seal is
+// pressed on the corner on BOTH sides, the black-violet one only on a dark run.
+//
+// A dark run states itself against the base card rather than repeating it. A term the dark
+// side left alone prints in plain ink; one it changed prints in violet; and the two levers that
+// pair up unambiguously, the clock and the target, also show the base figure pencilled out
+// beside the new one. Everything else in a blurb is free prose, so pairing it would be a guess.
+const BRIEF_CLOCK = /^\d+(?:\.\d+)?s\b/;
+const BRIEF_GOAL = /(\d+(?:\.\d+)?)(\s*\/\s*13)?/;
+// Uneven pen strokes, rolled off the challenge id so a card draws the same marks every time.
+function briefUnderlineSVG(seed) {
+  const r = mulberry32(seed), a = 6 + r() * 1.5, b = 5 + r() * 2, d = 7 + r() * 1.5;
+  return `<svg class="brief-under" viewBox="0 0 260 12" preserveAspectRatio="none" aria-hidden="true">` +
+    `<path d="M3 ${a.toFixed(1)} C70 ${(b - 2).toFixed(1)} 150 ${(d + 1).toFixed(1)} 256 ${b.toFixed(1)}" stroke-width="2.4"/>` +
+    `<path d="M40 ${(d + 2).toFixed(1)} C110 ${(b + 2).toFixed(1)} 190 ${(d + 1).toFixed(1)} 238 ${(d + 1.5).toFixed(1)}" stroke-width="1.1" opacity="0.55"/></svg>`;
+}
+function briefStrikeSVG(seed) {
+  const r = mulberry32(seed), y = () => r().toFixed(2);
+  return `<svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">` +
+    `<path d="M-2 ${6 + +y()} C30 ${5 + +y()} 70 ${4 + +y()} 102 ${3 + +y()}"/></svg>`;
+}
+// A pen loop that never quite closes: start and end overlap by a little.
+function briefLoopSVG(seed) {
+  const r = mulberry32(seed), j = (v) => (v + (r() - 0.5) * 4).toFixed(1);
+  return `<svg viewBox="0 0 100 60" preserveAspectRatio="none" aria-hidden="true"><path d="M${j(62)} ${j(4)} ` +
+    `C${j(92)} ${j(6)} ${j(100)} ${j(44)} ${j(60)} ${j(56)} C${j(24)} ${j(60)} ${j(-2)} ${j(44)} ${j(4)} ${j(24)} ` +
+    `C${j(10)} ${j(6)} ${j(40)} ${j(1)} ${j(74)} ${j(8)}"/></svg>`;
+}
+const briefWas = (text, seed) => `<span class="brief-was">${escapeHtml(text)}${briefStrikeSVG(seed)}</span>`;
+// The start button is a rubber stamp in the ENCORE family. textLength fits the caps to the
+// frame, so a longer label ("make the deal") widens the stamp instead of overrunning it.
+function briefStampHTML(label) {
+  const caps = label.toUpperCase(), w = Math.round(70 + caps.length * 17);
+  return `<button type="button" class="brief-go" aria-label="${escapeHtml(label)}">` +
+    `<svg viewBox="0 0 ${w} 84" style="width:${(w * 0.62).toFixed(0)}px" aria-hidden="true"><g filter="url(#stampInk0)">` +
+    `<rect x="4" y="4" width="${w - 8}" height="76" rx="7" fill="none" stroke="currentColor" stroke-width="4"/>` +
+    `<rect x="12" y="12" width="${w - 24}" height="60" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/>` +
+    `<text x="${w / 2}" y="52" text-anchor="middle" textLength="${w - 64}" lengthAdjust="spacing" fill="currentColor">${escapeHtml(caps)}</text>` +
+    `</g></svg></button>`;
+}
+// The terms of the run, one per row, off the blurb's own separators.
+function briefTermsHTML(c, base, seed) {
+  const split = (b) => String(b || "").split("·").map((t) => t.trim()).filter(Boolean);
+  const terms = split(c.blurb);
+  if (!terms.length) return "";
+  const was = base ? split(base.blurb) : null;
+  const baseClock = was && was.find((t) => BRIEF_CLOCK.test(t));
+  return `<ul class="brief-terms">` + terms.map((t, i) => {
+    if (!was || was.includes(t)) return `<li>${escapeHtml(t)}</li>`;
+    const struck = BRIEF_CLOCK.test(t) && baseClock ? briefWas(baseClock, seed + 11 + i) : "";
+    return `<li class="is-changed">${struck}<span>${escapeHtml(t)}</span></li>`;
+  }).join("") + `</ul>`;
+}
+// The win line with its first figure circled; a dark side that moved it pencils out the old one.
+function briefWinHTML(win, baseWin, seed) {
+  const m = String(win).match(BRIEF_GOAL);
+  if (!m) return escapeHtml(win);
+  const bm = baseWin && String(baseWin).match(BRIEF_GOAL);
+  const struck = bm && bm[0] !== m[0] ? briefWas(bm[0], seed + 3) : "";
+  return escapeHtml(win.slice(0, m.index)) + struck +
+    `<span class="brief-goal">${briefLoopSVG(seed + 5)}${escapeHtml(m[0])}</span>` +
+    escapeHtml(win.slice(m.index + m[0].length));
+}
+// The seal of the side about to be played: the same pick as the results podium, so the wax on
+// the briefing and the wax on the sleeve it ends on are always the same wax.
+function playedSideSeals(c, rec = challengeRecord(c.id)) {
+  const topSide = !!c.dark === hasDarkSide(c.id);
+  return topSide && perfectedChallenge(c.id, rec) ? CHALLENGE_SEALS_JET
+    : c.dark ? CHALLENGE_SEALS_DARK
+    : rec.defeated ? CHALLENGE_SEALS_AGED : CHALLENGE_SEALS;
+}
+// `body` and `win` are trusted HTML (callers escape their pieces); `chall-curtain-card` stays on
+// the card because the curtain player keys its in/out animations and its reuse check off it.
+function briefCardHTML(c, o) {
+  const seed = fnv1a("brief:" + c.id);
+  const col = o.headlineColor ? ` style="color:${o.headlineColor}"` : "";
+  return `<div class="chall-curtain-card brief-card${c.dark ? " is-dark" : ""}">` +
+    `<span class="brief-seal" aria-hidden="true">${sealMarkup(playedSideSeals(c)[c.id])}</span>` +
+    `<div class="brief-kicker">${escapeHtml(o.kicker)}</div>` +
+    `<div class="brief-title"${col}>${escapeHtml(o.headline)}</div>${briefUnderlineSVG(seed)}` +
+    (o.body ? `<p class="brief-body">${o.body}</p>` : "") +
+    briefTermsHTML(c, c.dark ? CHALLENGE_BY_ID[c.id] : null, seed) +
+    `<div class="brief-foot">` + (o.win ? `<p class="brief-win">${o.win}</p>` : "") +
+    briefStampHTML(o.button || "let's go") + `</div></div>`;
+}
+
 // The round-1 intro curtain for a challenge: names it, restates the rule + win condition,
 // and waits for a "let's go" tap before the first word and the clock. A couple of rules
 // carry extra setup that has to be shown up front (the song to smuggle in / the perk forks),
 // so they get bespoke copy; everything else uses the registry's `desc` + `win`.
 function challengeIntroHTML(c) {
-  // The briefing you read immediately before a dark run is otherwise word-for-word the base
-  // challenge's, because the rule genuinely hasn't changed — only its numbers have. So the
-  // marker rides on the kicker (and a card class) instead of duplicating every card's copy.
-  // Note the bespoke branches below read `c.forks`/`c.target` off the RESOLVED entry, so a
-  // dark Devil's Path already announces its four forks without any change here.
+  // The marker rides on the kicker (and the card's is-dark class), and the terms rows carry
+  // what actually moved. Note the bespoke branches below read `c.forks`/`c.target` off the
+  // RESOLVED entry, so a dark Devil's Path already announces its four forks.
   const kick = (k) => (challengeDark ? `${k} · dark side` : k);
   // "4 & 8" reads fine; the dark side's "3 & 6 & 9 & 12" does not, so list them properly.
   const forkList = (fs) => {
@@ -22600,14 +22683,13 @@ function challengeIntroHTML(c) {
   // One Of A Kind — reveal the specific song to slip in on a fitting page.
   if (c.rule === "newsong" && challengeTargetSong) {
     const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
-    return curtainCardHTML({ kicker: kick("one of a kind"), dark: challengeDark, tag: "find this song",
+    return briefCardHTML(c, { kicker: kick("one of a kind"),
       headline: censor(challengeTargetSong.title), headlineColor: col,
-      sub: challengeTargetSong.album
-        ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b>, hiding somewhere in the next 13 pages`
-        : `it's hiding somewhere in the next 13 pages`,
-      terms: c.blurb,
-      cue: `name it on the right page and the run ends there. you get ` +
-        `${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}, and the earlier the page the better`,
+      body: (challengeTargetSong.album
+        ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b>, hiding somewhere in the next 13 pages. `
+        : `it's hiding somewhere in the next 13 pages. `) +
+        `name it on the right page and the run ends there`,
+      win: `you get ${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}, and the earlier the page the better`,
       button: "start the hunt" });
   }
   // Deep Cut's dark side — the album is DEALT rather than chosen, and which album it is decides
@@ -22616,34 +22698,29 @@ function challengeIntroHTML(c) {
   // reason this branch keys off `c.album` rather than off the dark flag.
   if (c.rule === "album5" && c.album) {
     const col = albumColor(c.album) || "var(--ink-soft)";
-    return curtainCardHTML({ kicker: kick("deep cut"), dark: challengeDark, tag: "your album",
-      headline: c.album, headlineColor: col,
-      sub: `name <b>${c.need || 5}</b> songs from it over the next ${TOTAL_ROUNDS} pages. ` +
-        `answers from anywhere else still score the page, but they don't move the tally`,
-      terms: c.blurb, cue: "no swapping it now", button: "let's go" });
+    return briefCardHTML(c, { kicker: kick("deep cut"), headline: c.album, headlineColor: col,
+      body: `answers from anywhere else still score the page, but they don't move the tally. no swapping it now`,
+      win: briefWinHTML(`name ${c.need || 5} songs from it over the next ${TOTAL_ROUNDS} pages`), button: "let's go" });
   }
   // Choose Your Path — explain the perk forks.
   if (c.rule === "path") {
     const forks = forkList(c.forks);
-    return curtainCardHTML({ kicker: kick("choose your path"), dark: challengeDark, tag: "how it works",
-      headline: "forge your own run",
-      sub: `clear pages to reach <b>${c.target}/13</b>` +
-        (forks ? `, and at pages ${forks} you'll pick a perk for the rest of the way` : ""),
-      terms: c.blurb, cue: "choose wisely", button: "let's go" });
+    return briefCardHTML(c, { kicker: kick("choose your path"), headline: "forge your own run",
+      body: forks ? `at pages ${forks} you'll pick a perk for the rest of the way. choose wisely` : "",
+      win: briefWinHTML(c.win), button: "let's go" });
   }
-  // Devil's Path — warn that the forks hand you curses, not perks.
+  // Devil's Path — warn that the forks hand you curses, not perks. Its blurb already names
+  // the fork pages in the terms below, so the body only has to say what a fork is.
   if (c.rule === "devil") {
-    const forks = forkList(c.forks);
-    return curtainCardHTML({ kicker: kick("devil's path"), dark: challengeDark, tag: "the bargain",
-      headline: "choose your curses",
-      sub: `reach <b>${c.target}/13</b>` +
-        (forks ? `, but at pages ${forks} you must take the lesser of two evils` : ""),
-      terms: c.blurb, cue: "no way out but through", button: "make the deal" });
+    return briefCardHTML(c, { kicker: kick("devil's path"), headline: "choose your curses",
+      body: `every fork offers two curses, and you have to take one of them. no way out but through`,
+      win: briefWinHTML(c.win, c.dark ? CHALLENGE_BY_ID[c.id].win : null, fnv1a("brief:" + c.id)),
+      button: "make the deal" });
   }
   // Every other challenge — name it, restate the rule and the win condition.
-  return curtainCardHTML({ kicker: kick("challenge"), dark: challengeDark, tag: "the rule", headline: c.name,
-    sub: `${escapeHtml(c.desc)}<span class="chall-curtain-win">${escapeHtml(c.win)}</span>`,
-    terms: c.blurb, cue: "ready when you are", button: "let's go" });
+  return briefCardHTML(c, { kicker: kick("challenge"), headline: c.name, body: escapeHtml(c.desc),
+    win: briefWinHTML(c.win, c.dark ? CHALLENGE_BY_ID[c.id].win : null, fnv1a("brief:" + c.id)),
+    button: "let's go" });
 }
 
 // How long an auto-lifting curtain card holds, derived from how much there is to read on it.
@@ -22825,7 +22902,7 @@ function beginRoundClock() {
         scheduleCurtainTimer(showCard, 240);
       }
     };
-    const nextBtn = ov.querySelector(".chall-curtain-next");
+    const nextBtn = ov.querySelector(".chall-curtain-next, .brief-go");
     if (nextBtn) {
       // Button-gated cards (every challenge's round-1 intro) wait for an explicit tap — the
       // whole-overlay tap is intentionally NOT wired so a stray click can't skip it unread.
