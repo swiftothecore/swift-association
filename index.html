@@ -3043,7 +3043,6 @@ if (location.pathname.endsWith('/index.html')) {
         </button>
       </div>
       <button id="dailyBtn" class="day"></button>
-      <button id="firstDeskOff" class="btn-link first-desk-off" type="button">show me everything</button>
       <div class="see-also">
         <button id="recordsBtn" class="nav-card" data-era-tint="gold">
           <span class="nav-card-seat">
@@ -3250,6 +3249,9 @@ if (location.pathname.endsWith('/index.html')) {
           <span class="nav-card-title"><span class="nav-hl">bonus games</span></span>
           <span class="nav-card-kicker">quick play</span>
         </button>
+        <!-- The first desk's way out. It lives in the nav row's empty footprint, out of flow,
+             so turning the first desk on or off never moves anything else on the page. -->
+        <button id="firstDeskOff" class="btn-link first-desk-off" type="button">show me everything</button>
       </div>
     </div>
   </section>

@@ -17908,9 +17908,22 @@ body[data-contrast="high"] .run-pause-sheet::before { outline: 2px solid var(--i
 .version-tag[data-state="stale"] { color: #9b2226; border-color: #9b2226; }
 
 /* ---------- THE FIRST DESK ----------
-   Before a "Start me in Relaxed" player's first finished run, the front page keeps only the
-   difficulty row (Relaxed live, the rest greyed), Start writing and the daily. applyFirstDesk
-   (js/app.js) holds the reasoning. */
-#startContent.first-desk :is(.franking, .mode-picker:not(#difficultyRow), .start-podium-col, #randomGear, .see-also) { display: none; }
+   Before a "Start me in Relaxed" player's first finished run, the front page shows only the
+   difficulty row (Relaxed live, the rest greyed), Start writing and the daily. Everything else
+   is made INVISIBLE, never removed: the page keeps its full size and every piece keeps its
+   place, so the stripped desk reads as the same desk with things set aside rather than a
+   different, smaller page. They fade rather than blink, since the welcome closes onto them.
+   applyFirstDesk (js/app.js) holds the reasoning. */
+#startContent :is(.franking, .mode-picker:not(#difficultyRow), .start-podium-col, #randomGear, .see-also > .nav-card) {
+  transition: opacity 0.45s ease, visibility 0s linear 0s;
+}
+#startContent.first-desk :is(.franking, .mode-picker:not(#difficultyRow), .start-podium-col, #randomGear, .see-also > .nav-card) {
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+}
+.see-also { position: relative; }
 .first-desk-off { display: none; }
-#startContent.first-desk .first-desk-off { display: block; margin: 14px auto 0; }
+#startContent.first-desk .first-desk-off {
+  display: block; position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+  white-space: nowrap;
+}
