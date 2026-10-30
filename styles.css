@@ -4263,10 +4263,12 @@
   .chall-diff > .gloss-term { display: flex; align-items: center; }
   .chall-diff .tape-glyph { width: 22px; height: 15px; }
   .chall-diff-word { font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); }
-  /* Caveat's "easy" has only x-height letters above a descending y. Its ink sits lower
-     than the other tier words inside the same line box; lift this word only, in em so
-     the optical correction follows the text-size setting. Ascender words stay put. */
-  .chall-diff-word[data-tier="easy"] { transform: translateY(-0.2em); }
+  /* Centre the visible Caveat ink, not just its shared line box. Descending y/g
+     lower easy, tricky and tough by different amounts; these em offsets match
+     their ink centres to brutal, which already sits correctly. */
+  .chall-diff-word[data-tier="easy"] { transform: translateY(-0.22em); }
+  .chall-diff-word[data-tier="tricky"] { transform: translateY(-0.1em); }
+  .chall-diff-word[data-tier="tough"] { transform: translateY(-0.08em); }
   .chall-sec { margin-bottom: 14px; }
   .chall-sec--beat { border-top: 1px dashed #c7ba9b; padding-top: 11px; }
   .chall-eyebrow { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 5px; }
