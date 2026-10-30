@@ -17171,12 +17171,13 @@ function renderDailyButtonState() {
 let dailyCountdownTimer = null;
 function startResetCountdown() {
   stopResetCountdown();
+  const dateStr = todayKey();
   const tick = () => {
     // both copies of the kicker carry one, and only one of them is ever on screen
     const notes = document.querySelectorAll("#dailyBtn .day-next");
     if (!notes.length) { stopResetCountdown(); return; }
     const ms = msUntilDailyReset();
-    if (ms <= 1000) { renderDailyButtonState(); return; }   // rolled into a new local day → flip to undone
+    if (todayKey() !== dateStr) { renderDailyButtonState(); return; }   // rolled into a new local day → flip to undone
     const text = formatResetCountdown(ms);
     notes.forEach((n) => { n.textContent = text; });
   };
@@ -22831,6 +22832,35 @@ function clearCurtain() {
   if (curtainKeyOff) curtainKeyOff();
   const ov = document.querySelector(".chall-curtain");
   if (ov) ov.remove();
+  unfitCurtain();
+}
+
+// The curtain is pinned to the game page (inset: 0), so it is exactly as tall as whatever
+// round sits beneath it and a card can never push it open. A long briefing (Long Story Long,
+// any dark side's struck terms, a narrow window wrapping the rule) then fills the page edge
+// to edge or spills past it. So the page itself grows while the curtain is up: just enough
+// that the card keeps CURTAIN_MARGIN of ruled paper above and below, and no more, so a short
+// card leaves the page alone. Watched, not measured once, because the card is pre-mounted
+// under the flip sheet before it lays out and later cards in a queue swap in other heights.
+const CURTAIN_MARGIN = 40;
+let curtainFit = null;
+function fitCurtain(ov) {
+  const page = $("screen-game");
+  const fit = () => {
+    const card = ov.querySelector(".chall-curtain-card");
+    if (!card || !ov.isConnected) return;
+    page.style.minHeight = "";
+    const short = card.offsetHeight + CURTAIN_MARGIN * 2 - ov.clientHeight;
+    if (card.offsetHeight && short > 0) page.style.minHeight = `${page.offsetHeight + short}px`;
+  };
+  if (curtainFit) curtainFit.disconnect();
+  curtainFit = typeof ResizeObserver === "function" ? new ResizeObserver(fit) : null;
+  if (curtainFit) ov.querySelectorAll(".chall-curtain-card").forEach((c) => curtainFit.observe(c));
+  fit();
+}
+function unfitCurtain() {
+  if (curtainFit) { curtainFit.disconnect(); curtainFit = null; }
+  $("screen-game").style.minHeight = "";
 }
 
 // Build the challenge curtain over the game card (idempotent — reuses an already mounted
@@ -22845,6 +22875,7 @@ function mountCurtain(innerHTML) {
   ov.className = "chall-curtain";
   ov.innerHTML = innerHTML;
   $("screen-game").appendChild(ov);
+  fitCurtain(ov);
   return ov;
 }
 
@@ -22928,7 +22959,7 @@ function beginRoundClock() {
     let ov = document.querySelector(".chall-curtain");
     if (ov) {
       ov.classList.remove("swapping");
-      if (i > 0 || !ov.querySelector(".chall-curtain-card")) ov.innerHTML = html;
+      if (i > 0 || !ov.querySelector(".chall-curtain-card")) { ov.innerHTML = html; fitCurtain(ov); }
     } else ov = mountCurtain(html);
     let acted = false;
     const next = () => {
