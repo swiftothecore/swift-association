@@ -76,6 +76,7 @@ export function wordVariants(word) {
 // prompt word, not a false friend), and mad/made, bar/bare-as-a-noun and suit/suite, which
 // can't collide because the tail has no bare "e" to reach the other word's base form.
 export const FALSE_FRIENDS = {
+  __proto__: null,
   bar:  ["bared", "bares", "baring", "barer", "barest"],                        // bare
   car:  ["cared", "cares", "caring", "carer", "carers",                         // care
          "carry", "carried", "carries", "carrier"],                             // carry
