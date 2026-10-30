@@ -4259,6 +4259,8 @@
   :root[data-theme="dark"] .chall-detail-dark { color: rgba(208,176,255,0.95); }
   .chall-diff { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
   .chall-diff .chall-eyebrow { margin-bottom: 0; }
+  /* Keep the tooltip wrapper from adding a text descender below the cassette. */
+  .chall-diff > .gloss-term { display: flex; align-items: center; }
   .chall-diff .tape-glyph { width: 22px; height: 15px; }
   .chall-diff-word { font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); }
   .chall-sec { margin-bottom: 14px; }
