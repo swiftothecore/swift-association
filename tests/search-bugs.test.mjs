@@ -78,7 +78,7 @@ function renderHarness() {
   const context = vm.createContext({ ...util, $: get, getRecent: () => [], pushRecent() {},
     state: { grouped: true, section: 'any', pos: 'any', mode: 'stem' },
     SONGS: [], ALBUM_COLORS: { Red: '#a00' }, ALBUM_INDEX: new Map([['Red', 0]]),
-    FAMILY: new Map(), PROMPT_WORDS: new Set(), SHARE_TITLE: '', SHARE_LABEL: '',
+    FAMILY: new Map(), PROMPT_WORDS: new Set(), SHARE_TITLE: '', SHARE_LABEL: '', albumTabInk: () => '#000',
     document: { body: get('body'), querySelectorAll: () => [] },
   });
   vm.runInContext(slice('const plural =', '/* ---------- deep links'), context);
