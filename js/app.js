@@ -19128,6 +19128,21 @@ function renderRuleTerms() {
   const label = ruleTermsLabel(terms);
   if (label) { el.setAttribute("role", "img"); el.setAttribute("aria-label", label); }
   else { el.removeAttribute("role"); el.setAttribute("aria-hidden", "true"); }
+  const name = $("modeLabel");
+  if (name) { name.textContent = runModeName(); name.hidden = !name.textContent; }
+}
+
+// What the round's top row calls this run. A difficulty where the run has one (Album Focus and
+// the guests deal at a chosen difficulty, and the page already says which album or artist),
+// otherwise the run's own name, since a challenge or Custom has no rung on the ladder to show.
+function runModeName() {
+  if (gameType === "challenge") return currentChallenge ? currentChallenge.name + (challengeDark ? " · dark" : "") : "";
+  if (gameType === "infinite") return "infinite";
+  if (gameType === "daily") return "daily";
+  if (gameType === "custom") return "custom";
+  if (gameType === "lineup") return "lineup";
+  if (gameType === "ruthless") return "ruthless";
+  return currentMode && currentMode.label ? currentMode.label : "";
 }
 
 // Confidence Wager: turn the face-down word over. The stake is down, so the word, its lead-in

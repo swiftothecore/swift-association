@@ -3286,6 +3286,10 @@ if (location.pathname.endsWith('/index.html')) {
              right-hand span so the marks land in the dead space space-between was already
              leaving, costing the row no height. -->
         <span class="bracelet-meta-right">
+          <!-- #modeLabel names what you are playing, typed like the close button above it, and
+               heads the marks it sits before: they are that mode's terms. Filled by
+               renderRuleTerms so the two can never describe different runs. -->
+          <span id="modeLabel" class="mode-label" hidden></span>
           <span id="ruleTerms" class="rule-terms"></span>
         </span>
       </div>

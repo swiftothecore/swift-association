@@ -9094,11 +9094,15 @@
      the wrap adds almost nothing of its own: "write a song with" brings its own 12px. */
   .bracelet-wrap { margin-bottom: 4px; }
   .bracelet-meta {
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink-soft);
     margin-bottom: 8px; letter-spacing: 0.5px;
   }
-  .bracelet-meta-right { display: flex; align-items: center; gap: 11px; }
+  /* The right-hand end lines up with the close button's text above it rather than with the
+     card's padding, so the mode label and its marks hang under it as one right-aligned column.
+     The button sits 12px in plus 6px of its own padding, so the offset is 18px less the card's
+     right padding (30px here, 14px on a phone: see the narrow block). */
+  .bracelet-meta-right { display: flex; align-items: center; gap: 11px; margin-right: -12px; }
 
   /* ---- Rule marks: the terms of the page --------------------------------------
      The five marks that say what a round will and will not take. Drawn once as symbols
@@ -9108,6 +9112,16 @@
      the page line beside them is what you are doing. If a term ever out-inks the page
      count, this is the line that did it. */
   .rule-terms { display: inline-flex; align-items: center; gap: 7px; }
+  /* The mode's name, in the close button's own type, heading the marks it sits before. The
+     hairline keeps it from reading as a sixth mark. Ellipsised rather than wrapped: a long
+     challenge name on a phone must never push the marks onto a second line. */
+  .mode-label {
+    font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.6px; text-transform: uppercase;
+    line-height: 14px; padding-right: 11px;
+    border-right: 1px solid color-mix(in srgb, var(--ink-soft) 45%, transparent);
+    max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mode-label[hidden] { display: none; }
   /* Every mark gets the same box, so the spacing between them is even whatever they are drawn
      from — the marks differ in ink width and a slot is what keeps that from showing as ragged
      gaps. A term the page has no opinion about renders NO slot at all and the row closes up;
@@ -17571,6 +17585,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   header.title .tagline-row { margin-top: 18px; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; }
   .tagline-row .tag-heart { margin-inline: 5px; }
   .screen.card, [data-flip-id].card { --rule-x: 17px; padding: 20px 14px 26px 30px; }
+  .bracelet-meta-right { margin-right: 4px; }
   /* The charm plate's bleed is tied to the card's padding (see .ach-plate), so it follows the
      phone padding: -13px still lands its left edge on the moved rule, -14px runs it off the
      paper's right edge instead of 16px past the screen's. */
