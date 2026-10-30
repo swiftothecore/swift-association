@@ -247,6 +247,7 @@ export const DEFAULT_SETTINGS = {
   clock: "12",              // time-of-day format wherever a clock time is shown: "12" (4:31 PM) | "24" (16:31)
   // onboarding / first-run — the shared state every "first impressions" feature hangs off
   firstRunDone: false,      // has the player finished the first-run welcome flow (gates the intro + the ready-for-normal nudge)
+  firstDesk: false,         // took "Start me in Relaxed" and has not finished a run yet: the front page shows only Start writing and the daily
   coverStickerSlots: null,  // null = first 15 earned; otherwise [{ anchor, id }], with null id for an empty spot
   favouriteAlbum: "",       // era chosen in the first-run question ("" = never asked or skipped); surfaced on the profile
   firstMatchDone: false,    // has the player ever landed a correct answer (guards the one-time first-match celebration)

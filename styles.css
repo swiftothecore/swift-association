@@ -3120,6 +3120,9 @@
   }
   .mode-tab:nth-child(even) { transform: translateY(1px) rotate(0.5deg); }
   .mode-tab:hover { color: var(--ink); }
+  /* The first desk's other difficulties: in the row, but not yet to be picked. */
+  .mode-tab.is-later { cursor: default; opacity: 0.38; }
+  .mode-tab.is-later:hover { color: var(--ink-soft); }
   .mode-tab.active {
     color: var(--ink); background: var(--tab-wash, var(--highlighter));
     border-color: var(--tab-edge, rgba(43,39,34,0.32)); transform: translateY(0) rotate(0deg);
@@ -17903,3 +17906,11 @@ body[data-contrast="high"] .run-pause-sheet::before { outline: 2px solid var(--i
   pointer-events: none; user-select: none;
 }
 .version-tag[data-state="stale"] { color: #9b2226; border-color: #9b2226; }
+
+/* ---------- THE FIRST DESK ----------
+   Before a "Start me in Relaxed" player's first finished run, the front page keeps only the
+   difficulty row (Relaxed live, the rest greyed), Start writing and the daily. applyFirstDesk
+   (js/app.js) holds the reasoning. */
+#startContent.first-desk :is(.franking, .mode-picker:not(#difficultyRow), .start-podium-col, #randomGear, .see-also) { display: none; }
+.first-desk-off { display: none; }
+#startContent.first-desk .first-desk-off { display: block; margin: 14px auto 0; }

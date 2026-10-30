@@ -792,6 +792,8 @@ export function initDev(api) {
         btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
     row(btn("era prompt", () => api.onboarding.eraPrompt()),
         btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); })),
+    row(btn("first desk on", () => { api.onboarding.firstDesk(true); toast("front page stripped"); }),
+        btn("first desk off", () => { api.onboarding.firstDesk(false); toast("front page restored"); })),
     row(btn("replay guided round", () => { api.onboarding.guideReplay(); toast("guided-round beats re-armed"); }),
         btn("replay word-forms note", () => { api.onboarding.formsReplay(); toast("word-forms note re-armed"); })),
     row(beatSel, btn("show beat", () => {

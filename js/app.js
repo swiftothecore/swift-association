@@ -3462,6 +3462,7 @@ function markRunBreadth(token, type) {
   // daily deliberately skips the per-mode boards. The bonus shelf still can't earn it, for
   // the same sandbox reason it doesn't call this at all.
   unlock("first-game-finished");
+  endFirstDesk();   // the same "a game, finished" that the charm asks for opens the whole desk
   if (token && hasExploredEverything(markModeSeen(token))) unlock("play-every-required-mode");
   if (type) foldShelfBreadth(type);
   // Noon, so neither the timezone nor a DST shift can roll the parsed date onto its neighbour.
@@ -16655,8 +16656,12 @@ function standTabs(row) {
 function renderModePicker() {
   const tabs = $("modeTabs");
   if (!tabs) return;
+  // On the first desk only Relaxed can be picked. The other rungs stay in the row, greyed, so
+  // the ladder is visibly there to climb once the first game is done.
+  const later = (m) => settings.firstDesk && m !== "relaxed";
   const tab = (m, extra) =>
-    `<button type="button" class="mode-tab${extra || ""}${m === currentMode.id ? " active" : ""}" data-mode="${m}">${MODES[m].label}</button>`;
+    `<button type="button" class="mode-tab${extra || ""}${m === currentMode.id ? " active" : ""}${later(m) ? " is-later" : ""}"` +
+    ` data-mode="${m}"${later(m) ? ' disabled title="opens after your first game"' : ""}>${MODES[m].label}</button>`;
   // The relaxed→ultra ladder is one axis; lyricist is a separate modality, so it sits past a
   // divider with its own "by heart" caption rather than reading as a sixth difficulty rung.
   const ladder = DIFFICULTY_LADDER.map((m) => tab(m)).join("");
@@ -16711,6 +16716,8 @@ function renderStartPickers() {
   currentMode = (settings.defaultDifficulty !== "last" && MODES[settings.defaultDifficulty])
     ? MODES[settings.defaultDifficulty]
     : loadMode();
+  if (settings.firstDesk) { gameType = "classic"; currentMode = MODES.relaxed; }
+  applyFirstDesk();
   renderTypePicker();
   renderVariantPicker();
   applyTypeLayout();
@@ -32056,6 +32063,7 @@ function maybeGuideHint() {
    the established-player guard below and the ?intro=0 testing flag. */
 function silenceFirstImpressions() {
   settings.firstRunDone = true;
+  settings.firstDesk = false;
   saveSettings(settings);
   markCoachmark("askEra");
   markCoachmark("readyForNormal");
@@ -32191,10 +32199,31 @@ function advanceFirstRun() {
 function finishFirstRun() {
   // Honour the recommended path: if they accepted the gentle start, pre-select Classic · Relaxed
   // so the start screen is ready to play. Declining leaves whatever default they had.
+  settings.firstDesk = firstRunMode === "relaxed";   // set first, so setMode draws the greyed row
   if (firstRunMode && MODES[firstRunMode]) { setGameType("classic"); setMode(firstRunMode); }
   settings.firstRunDone = true;
   saveSettings(settings);
+  applyFirstDesk();
   closeFirstRun();
+}
+/* ---------- The first desk ----------
+   A player who takes "Start me in Relaxed" gets a front page with one road on it: Start writing
+   (pinned to Classic, Relaxed, the other difficulties greyed in their row) and the daily. The
+   stamps, mode tabs, empty "your best", dice and nav cards all wait for the first FINISHED run,
+   which markRunBreadth reports, so the daily counts and a quit run does not. Everything comes
+   back at once and unannounced; a slow drip of reveals would read as gatekeeping. The two
+   "I already know this game" paths never see it, and "show me everything" is the way out for
+   anyone who changes their mind. Settings, how to play and the corner links stay throughout. */
+function applyFirstDesk() {
+  const sc = $("startContent");
+  if (sc) sc.classList.toggle("first-desk", !!settings.firstDesk);
+}
+function endFirstDesk() {
+  if (!settings.firstDesk) return;
+  settings.firstDesk = false;
+  saveSettings(settings);
+  applyFirstDesk();
+  renderModePicker();
 }
 // The welcome step: a one-line explanation of the game + the recommended gentle start, with two
 // clear "no thanks" paths for players who already know it. "I already know this game" leaves the
@@ -33108,6 +33137,12 @@ function buildDevApi() {
         seenCoachmarks: { ...(settings.seenCoachmarks || {}) } }),
       replay: () => { settings.firstRunDone = false; saveSettings(settings); openFirstRun(); },
       markDone: () => { settings.firstRunDone = true; saveSettings(settings); },
+      // The stripped first-run front page, on or off, without replaying the welcome.
+      firstDesk: (on) => {
+        if (on) { settings.firstDesk = true; saveSettings(settings); renderStartPickers(); }
+        else endFirstDesk();
+        return settings.firstDesk;
+      },
       // The ?intro=0 testing flag, from the panel: silence every one-time greeting on this
       // notebook and keep it silenced across reloads, or hand the first impressions back.
       quiet: (on) => {
@@ -36951,6 +36986,7 @@ async function init() {
     else startGame();
   });
   $("dailyBtn").addEventListener("click", startDaily);
+  $("firstDeskOff").addEventListener("click", endFirstDesk);
   $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; statsCalendarMonth = null; statsBleedSeq++; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
   $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; statsCalendarMonth = null; statsBleedSeq++; renderStats(score); flipAwayToScreen("stats"); });
   $("statsBackBtn").addEventListener("click", () => backToScreen(statsBackTarget));
