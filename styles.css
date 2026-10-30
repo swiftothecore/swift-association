@@ -7872,7 +7872,6 @@
     border-bottom: 1.5px solid rgba(43,39,34,0.18);
   }
   .guest-detail-name { font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); line-height: 1.05; color: var(--g-pen, var(--ink)); }
-  :root[data-theme="dark"] .guest-detail-name { color: color-mix(in srgb, var(--g-pen, var(--ink)) 35%, var(--ink)); }
   :root body[data-contrast="high"] .guest-detail-name { color: var(--ink); }
   .guest-detail-nums { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); }
   /* the record list, then the rule/goal sections borrowed from a challenge card: the margin
@@ -9492,9 +9491,6 @@
   .word-wrap[data-rarity="scarce"]   .rarity-stamp { color: #c02026; --stamp-op: 0.86; }
   .word-wrap[data-rarity="singular"] .rarity-stamp { color: #4a1f66; --stamp-op: 0.92; }
   .rarity-stamp.show { animation: stamp-in 0.45s cubic-bezier(.2,1.4,.4,1) forwards; }
-  /* The stamp needs its own line above the prompt, including when a long word wraps. */
-  .word-wrap:has(> .rarity-stamp.show) { padding-top: calc(58px + var(--text-size-adjust)); }
-  .word-wrap > .rarity-stamp.show { top: 12px; }
   @keyframes stamp-in {
     0%   { opacity: 0; transform: rotate(7deg) scale(1.6); }
     /* overshoot past the settled weight — the press before the pad lifts */
@@ -10886,7 +10882,7 @@
   .album-tag {
     display: inline-block; margin-left: 8px;
     font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.8px;
-    color: color-mix(in srgb, var(--album-color, var(--ink-soft)) 25%, var(--ink));
+    color: var(--album-color, var(--ink-soft));
     vertical-align: middle; opacity: 0.85; text-transform: uppercase;
   }
   body[data-contrast="high"] .album-tag { color: var(--ink); opacity: 1; }

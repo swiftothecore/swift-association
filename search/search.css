@@ -794,7 +794,7 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
 }
 
 /* One focus treatment for the search actions, matching their red-pen selection ink. */
-.sx-page :is(button, a, select):focus-visible, #q:focus-visible, .sx-back:focus-visible {
+.sx-page :is(button, a, select):focus-visible, .sx-back:focus-visible {
   outline: 2px solid var(--pen); outline-offset: 3px;
 }
 /* Album colour still marks the divider and spine; high contrast uses the page ink to read. */
