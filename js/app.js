@@ -18497,7 +18497,8 @@ function stampDailyLiveClock() {
   const base = saved && saved.startDate === dateStr
     ? saved : { version: DAILY_PROGRESS_VERSION, startDate: dateStr, round: 0, roundResults: [] };
   saveDailyProgress(dateStr, { ...base,
-    live: { round, remaining: Math.max(0, +clock.remaining.toFixed(2)), total: clock.total } });
+    live: { round, remaining: Math.max(0, +clock.remaining.toFixed(2)), total: clock.total,
+      rejects: (roundRejects[round - 1] || []).map((entry) => ({ ...entry })) } });
 }
 // The pinned clock for the page now being dealt, or null for an untouched page.
 function dailyPinnedClock() {
@@ -18539,7 +18540,12 @@ function surrenderDailyRun() {
   stopDailyOwnerBeat();
   notifyNote("daily moved tabs", "Another tab picked today's daily up. Your run is safe there.");
   dailySurrendered = true;
-  try { quitGame(); } finally { dailySurrendered = false; }
+  try {
+    // A backgrounded Daily may still own a pause sheet that makes the whole desk inert.
+    // Release that sheet before quitting so another tab taking the day cannot strand it.
+    dropRunPause();
+    quitGame();
+  } finally { dailySurrendered = false; }
 }
 // Hand the day back. Called wherever a daily run stops being this tab's business: it
 // finished, it was quit, or the page is going away.
@@ -18593,6 +18599,12 @@ function startDaily() {
   if (resuming || settled) {
     restoreDailyProgress(progress);
     if (typeof progress.rngState === "number") dailyRng.seek(progress.rngState);
+  }
+  // The current page is dealt again after a return, but its rejected submissions still
+  // happened. Keep that log even on page one, whose decided-page snapshot is still empty.
+  if (progress && progress.live && progress.live.round === round + 1
+      && Array.isArray(progress.live.rejects)) {
+    roundRejects[round] = progress.live.rejects.map((entry) => ({ ...entry }));
   }
   // A settled page 13 has no page left to replay. Finish its ordinary Daily fold from the
   // saved accumulators; endGame's saved-result guard makes this safe if another path won first.
