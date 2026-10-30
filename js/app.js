@@ -16658,7 +16658,7 @@ function renderModePicker() {
   if (!tabs) return;
   // On the first desk only Relaxed can be picked. The other rungs stay in the row, greyed, so
   // the ladder is visibly there to climb once the first game is done.
-  const later = (m) => settings.firstDesk && m !== "relaxed";
+  const later = (m) => firstDeskOn() && m !== "relaxed";
   const tab = (m, extra) =>
     `<button type="button" class="mode-tab${extra || ""}${m === currentMode.id ? " active" : ""}${later(m) ? " is-later" : ""}"` +
     ` data-mode="${m}"${later(m) ? ' disabled title="opens after your first game"' : ""}>${MODES[m].label}</button>`;
@@ -16716,7 +16716,7 @@ function renderStartPickers() {
   currentMode = (settings.defaultDifficulty !== "last" && MODES[settings.defaultDifficulty])
     ? MODES[settings.defaultDifficulty]
     : loadMode();
-  if (settings.firstDesk) { gameType = "classic"; currentMode = MODES.relaxed; }
+  if (firstDeskOn()) { gameType = "classic"; currentMode = MODES.relaxed; }
   applyFirstDesk();
   renderTypePicker();
   renderVariantPicker();
@@ -32203,7 +32203,9 @@ function finishFirstRun() {
   if (firstRunMode && MODES[firstRunMode]) { setGameType("classic"); setMode(firstRunMode); }
   settings.firstRunDone = true;
   saveSettings(settings);
-  applyFirstDesk();
+  // Redraw from the saved picks: behind the welcome the pickers were pinned to Relaxed for
+  // show, and a player who declined it goes back to whatever they had.
+  renderStartPickers();
   closeFirstRun();
 }
 /* ---------- The first desk ----------
@@ -32214,9 +32216,20 @@ function finishFirstRun() {
    back at once and unannounced; a slow drip of reveals would read as gatekeeping. The two
    "I already know this game" paths never see it, and "show me everything" is the way out for
    anyone who changes their mind. Settings, how to play and the corner links stay throughout. */
+// The desk is ALSO stripped while the welcome is still to come, so the page behind it is
+// already the one a newcomer will get: picking Relaxed keeps it, and either "I already know
+// this game" path fades everything else in. The test mirrors maybeRunFirstRun's own, so an
+// established notebook never sees it, and a boot that went to a route or a ?word= game instead
+// of the welcome stops counting as "to come" (welcomeSkipped).
+let welcomeSkipped = false;
+function welcomeAhead() {
+  if (settings.firstRunDone || welcomeSkipped) return false;
+  return introForced || !(introArmed || loadMetrics().roundsTotal > 0);
+}
+function firstDeskOn() { return !!settings.firstDesk || welcomeAhead(); }
 function applyFirstDesk() {
   const sc = $("startContent");
-  if (sc) sc.classList.toggle("first-desk", !!settings.firstDesk);
+  if (sc) sc.classList.toggle("first-desk", firstDeskOn());
 }
 function endFirstDesk() {
   if (!settings.firstDesk) return;
@@ -37299,6 +37312,9 @@ async function init() {
     // the very boot that arms it and the param never survives into a shared URL.
     introArmed = introSuppressed();
     if (introArmed) silenceFirstImpressions();
+    // The pickers were first drawn before the flag was read, and whether the first desk is
+    // laid (welcomeAhead) depends on it, so draw them again now it is known.
+    renderStartPickers();
     // "Play this word" deep-link from the searcher jumps straight into a round; only greet a
     // fresh player with the first-run welcome when we're not launching into a game.
     const startedFromWord = maybeStartFromWordParam();
@@ -37307,7 +37323,11 @@ async function init() {
     // stops the overlay flashing in mid-layout before it snaps to centre). Someone who followed a
     // link to /records asked for a page, not an introduction, so a deep link silences the welcome
     // the same way a ?word= link does.
-    revealNotebook(startedFromWord ? null : () => { if (!openBootRoute()) maybeRunFirstRun(); });
+    if (startedFromWord) welcomeSkipped = true;
+    revealNotebook(startedFromWord ? null : () => {
+      if (openBootRoute()) { welcomeSkipped = true; applyFirstDesk(); renderModePicker(); }
+      else maybeRunFirstRun();
+    });
   } catch (err) {
     showLoadError(err);
   }
