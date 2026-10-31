@@ -225,10 +225,9 @@ if (location.pathname.endsWith('/index.html')) {
     <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  4 0 0 0 -.62" result="gm"/>
     <feComposite in="SourceGraphic" in2="gm" operator="in"/>
   </filter>
-  <!-- The reward board's three materials (js/rewardboard.js). rwKiss draws a sticker's kiss-cut:
+  <!-- The reward board's two materials (js/rewardboard.js). rwKiss draws a sticker's kiss-cut:
        a hairline ring a few pixels outside the shape, and a ghost of the shape on the backing.
-       rwDeckle tears the edge of the rank II title card. rwGlitter is the gel pen's clear barrel,
-       glitter suspended in it in several colours and never a regular grid. -->
+       rwDeckle tears the edge of the rank II title card. -->
   <filter id="rwKiss" x="-25%" y="-25%" width="150%" height="150%">
     <feMorphology in="SourceAlpha" operator="dilate" radius="4.2" result="o"/>
     <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="i"/>
@@ -241,9 +240,6 @@ if (location.pathname.endsWith('/index.html')) {
     <feTurbulence type="fractalNoise" baseFrequency="0.22" numOctaves="2" seed="4" result="n"/>
     <feDisplacementMap in="SourceGraphic" in2="n" scale="4.5" xChannelSelector="R" yChannelSelector="G"/>
   </filter>
-  <pattern id="rwGlitter" width="9" height="11" patternUnits="userSpaceOnUse"><rect width="9" height="11" fill="#f6efe4"/>
-    <circle cx="1.6" cy="1.8" r=".75" fill="#c8951f"/><circle cx="6.4" cy="3.1" r=".6" fill="#c45a90"/><circle cx="3.9" cy="6.2" r=".5" fill="#5d7fb0"/>
-    <circle cx="7.6" cy="8.4" r=".8" fill="#c8951f"/><circle cx="2.2" cy="9.6" r=".55" fill="#c45a90"/><circle cx="5.2" cy="10.4" r=".35" fill="#2b2722" opacity=".5"/></pattern>
   <!-- Brushed nickel for the guest shelf's hardware: the split ring every pass hangs from
        and the crimp at the foot of its strap. The hard stop mid-gradient is the specular
        band that makes it read as turned metal rather than a grey outline. -->

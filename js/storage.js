@@ -1163,11 +1163,15 @@ export function noteSelfTitledWord(word) {
    the set were later redrawn as different subjects (the daisy as the mirrorball, the bow as the
    champagne coupe), and the same rewrite carries those across. */
 const TRINKET_REWARD_RENAMED = { "trinket-daisy": "trinket-mirrorball", "trinket-bow": "trinket-coupe" };
-function migrateTrinketRewards(unlocked) {
+// The pens left levels 1-3 and the tape prints took their places, rung for rung, so a notebook
+// that had stamped those levels keeps them, under the new ids and on the dates it earned them.
+const PEN_REWARD_RENAMED = { "pen-fountain": "tape-dots", "pen-quill": "tape-gingham", "pen-glitter": "tape-music" };
+function migrateRewardIds(unlocked) {
   const out = {};
   for (const [id, v] of Object.entries(unlocked)) {
     const t = id.startsWith("charm-") ? "trinket-" + id.slice(6) : id;
-    out[TRINKET_REWARD_RENAMED[t] || t] = v;
+    const r = TRINKET_REWARD_RENAMED[t] || PEN_REWARD_RENAMED[t] || t;
+    if (!out[r]) out[r] = v;
   }
   return out;
 }
@@ -1184,7 +1188,7 @@ export function loadMastery() {
           masteryXp: o.masteryXp || 0,
           // New finishes belong to the existing level-8 set, including on older notebooks.
           unlocked: {
-            ...migrateTrinketRewards((o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {}),
+            ...migrateRewardIds((o.unlocked && typeof o.unlocked === "object") ? o.unlocked : {}),
             ...(masteryLevelFromXp(o.masteryXp || 0) >= 8 ? { "btn-gold": true, "btn-seasons": true, "btn-ivy": true } : {}),
           },
         };
@@ -1660,6 +1664,8 @@ export function loadSettings() {
         // The daisy and the bow were redrawn as the mirrorball and the champagne coupe.
         if (o.masteryTrinket === "daisy") o.masteryTrinket = "mirrorball";
         if (o.masteryTrinket === "bow") o.masteryTrinket = "coupe";
+        // The writing pens left Mastery (the pen on the line follows the page's songs now).
+        delete o.masteryPen;
         return { ...DEFAULT_SETTINGS, ...o };
       }
     }

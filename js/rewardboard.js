@@ -7,10 +7,10 @@
 
    One rule ties the objects to the passport above them: each reward wears the stamp that opened
    it. A single-level object carries the passport's real stamp beside its name (passportStamp), a
-   member of a ladder (a pen, a title rank) carries that stamp's outline and number (passportGhost,
+   member of a ladder (a tape roll, a title rank) carries that stamp's outline and number (passportGhost,
    inked), and anything still owed carries the pencil tracing exactly as its passport slot does.
    What the player is wearing is marked by the object itself, never by a mark laid over it: the
-   pen's pocket is satin-stitched in the roll's gold, the stock you write on keeps its place in the
+   tape in use has its end pulled off the roll and hanging, the stock you write on keeps its place in the
    fan and the others swing back off it on the rivet, the charm you wear hangs from a bead on its safety pin, the button is sewn over a square of
    gingham, and the words in use are the one real button among charcoal sketches. (It used to be the editor's red pen looped
    round each one, and a page of red rings read as corrections rather than choices.)
@@ -19,7 +19,8 @@
    its colours at night, the way the start-button finishes do; only what is ink on the page
    follows the theme. The styles are the REWARD BOARD block in styles.css. */
 import { MASTERY_REWARDS, MASTERY_TILE_MARKS, MASTERY_ICONS, MASTERY_TITLES, MASTERY_TIER_ICONS, CTA_LABELS } from "./config.js";
-import { passportStamp, passportGhost, passportTracing, passportStampInk, passportBadge } from "./passport.js";
+import { passportStamp, passportGhost, passportTracing, passportStampInk } from "./passport.js";
+import { TAPE_PRINTS } from "./tapeprints.js";
 import { beadPreviewSVG } from "./bracelet.js";
 import { hangTrinket, trinketHoleY } from "./trinkets.js";
 import { stickerArt } from "./stickers.js";
@@ -80,63 +81,152 @@ function head(name, what, stampHTML = "") {
 const pick = (attr, worn, label) => `${attr} aria-pressed="${worn}" aria-label="${esc(label)}"`;
 
 /* ================================================================
-   PENS: the roll
+   TAPE: rolls on a pencil
    ================================================================ */
-/* The four pens, drawn for the roll at the size they show, one unit a pixel, tip up. Not PEN_SVG
-   scaled: those are 22px glyphs for the answer line and turn to stubs blown up. Each keeps its
-   glyph's identity (a yellow pencil, a gold nib, a feather, a glitter barrel). If a pen's glyph
-   is ever redrawn, redraw it here too. Colours are the object's, so they hold at night. */
-const PEN_ART = {
-  "": `<svg viewBox="0 0 28 184" class="pn"><path class="pn-wood" d="M11.9 13 L16.1 13 L20.5 33 L7.5 33 Z"/><path class="pn-lead" d="M14 4.2 L16.1 13 L11.9 13 Z"/>` +
-    `<path class="pn-yellow" d="M7.5 33 Q9.6 36.6 11.8 33.5 Q14 37.2 16.2 33.5 Q18.4 36.6 20.5 33 L20.5 151 L7.5 151 Z"/>` +
-    `<path class="pn-facet" d="M11.8 35.5 V151 M16.2 35.5 V151"/><rect class="pn-ferrule" x="7" y="151" width="14" height="13" rx="1"/>` +
-    `<path class="pn-ridge" d="M7.4 154.6 H20.6 M7.4 158.2 H20.6 M7.4 161.6 H20.6"/><path class="pn-eraser" d="M7.6 164 H20.4 V173.5 Q20.4 179.6 14 179.6 Q7.6 179.6 7.6 173.5 Z"/></svg>`,
-  fountain: `<svg viewBox="0 0 28 184" class="pn"><path class="pn-nib" d="M14 17 C15.8 21.4 18 27 18.3 34 L18.3 40.4 L9.7 40.4 L9.7 34 C10 27 12.2 21.4 14 17 Z"/>` +
-    `<path class="pn-slit" d="M14 20 V32.4"/><circle class="pn-hole" cx="14" cy="33.6" r="1.5"/><path class="pn-slit" d="M10.3 37.4 H17.7"/>` +
-    `<path class="pn-grip" d="M9.6 40.4 H18.4 L19.1 57 H8.9 Z"/><rect class="pn-gold" x="8.4" y="57" width="11.2" height="3.6" rx=".8"/>` +
-    `<path class="pn-lacquer" d="M8.3 60.6 H19.7 V167 Q19.7 176.4 14 176.4 Q8.3 176.4 8.3 167 Z"/><rect class="pn-gold" x="8.3" y="148" width="11.4" height="3.2"/>` +
-    `<path class="pn-shine" d="M11.2 66 V140"/></svg>`,
-  quill: `<svg viewBox="0 0 28 184" class="pn"><path class="pn-calamus" d="M14.4 182 C14.3 160 14.1 138 13.8 118"/>` +
-    `<path class="pn-vane" d="M12.3 24 C8.2 36 5.6 57 6 80 C6.3 95 8.8 107 13.5 118 L13.4 80 C13.1 57 12.8 40 12.3 24 Z"/>` +
-    `<path class="pn-vane" d="M9.4 5 C16.8 13 22.6 30 22.7 54 C22.8 78 19.8 100 15 121 L13.8 121 C13.6 86 13.2 57 12.6 33 C12.2 21 11 12.6 9.4 5 Z"/>` +
-    `<path class="pn-barb" d="M13 39 L20.4 31.4 M13.2 55 L21.6 48 M13.4 72 L21 66 M13.6 90 L19.4 85 M12.9 47 L7.4 55.4 M13.1 64 L6.6 72.4 M13.3 84 L8 91.6"/>` +
-    `<path class="pn-split" d="M22.6 61 L19.8 59.6 M6.1 69 L8.6 67.6 M21.2 88 L18.6 87"/><path class="pn-rachis" d="M13.8 121 C13.5 86 13.1 57 12.5 33 C12.1 20.6 11 12.4 9.4 5"/></svg>`,
-  glitter: `<svg viewBox="0 0 28 184" class="pn"><path class="pn-metal" d="M14 25.6 L16.1 32 L16.7 40.4 L11.3 40.4 L11.9 32 Z"/><circle class="pn-ball" cx="14" cy="26.2" r="1"/>` +
-    `<path class="pn-rubber" d="M11 40.4 H17 L18.5 66 H9.5 Z"/><path class="pn-grain" d="M10.5 46 H17.5 M10.3 50.5 H17.7 M10.1 55 H17.9 M9.9 59.5 H18.1"/>` +
-    `<rect class="pn-clear" x="9.4" y="66" width="9.2" height="98"/><path class="pn-refill" d="M14 66 V162"/>` +
-    `<path class="pn-rubber" d="M9.4 164 H18.6 V170.4 Q18.6 176.4 14 176.4 Q9.4 176.4 9.4 170.4 Z"/></svg>`,
-};
-const PEN_SHORT = { fountain: "fountain", quill: "quill", glitter: "gel pen" };
+/* One drawing, 300 x 206 units: the board's yellow HB lying across the cell, four rolls of washi
+   hung on it, each card core resting its top on the pencil as it would, so the rolls hang below.
+   A roll is seen from its left: the near face (the stacked tape's edge, its rings and the card
+   core, with the pencil seen through the hole), then the outside of the roll as a band to its
+   right, wearing its print. The roll in use has its end pulled out and hanging; a roll still owed
+   is its pencil tracing. One SVG draws the pencil, and each roll is its own button laid over it in
+   the same units, carrying its own SVG, so a roll can swing on hover while the pencil stays put.
+   The rolls are a material (coloured tissue on card), so they keep their colours at night; the
+   tail hanging on the page is one layer of tape, so it follows the night rule as a strip does.
+   Chosen on scripts/mastery/tape-board.html. */
+const TV_W = 300, TV_H = 206;
+const PY = 50, PR = 6.5;                 // pencil centre and radius
+const RR = 46, RX = 12.4;                // a roll's outer half-height, and its face foreshortened
+const HOLE = 0.54, CORE = 0.64;          // card core: hole and outer edge, as fractions of RR
+const CY = PY - PR + HOLE * RR;          // the hole's top rests on the pencil
+const TW_ROLL = 26;                      // the tape's width on the roll
+const TW_STRIP = 16.5;                   // the same width on a page strip: prints scale by their ratio
+const ROLL_X = [30, 98, 166, 234];       // each roll's face centre
+const ROLL_COL = 68;
+const ROLL_TINT = ["#d6c08a", "#d9a2ae", "#9cb8da", "#b3a4dc"];   // the rolls' own tissue
+const TAPE_SHORT = { "": "plain", dots: "dots", gingham: "gingham", music: "music" };
 
-// Indigo denim laid open, a stitched pocket a pen, gold thread throughout. The pen you write with
-// stands proud of its pocket; a pocket still owed holds nothing but its level, sewn in the dashes
-// the passport uses for a stamp not yet pressed.
-// While the pens are in the workshop (`soon` on their rewards) the roll is a display, not a
-// control: the pencil stands in its pocket, the other three hold only their level and "soon",
-// and nothing on it can be picked.
-function pensRoll(D) {
-  const shop = ofKind("pen").every((r) => r.soon);
-  const slots = [{ id: "", name: "Pencil", short: "pencil", L: 0 }, ...ofKind("pen").map((r) => ({ id: r.payload.pen, name: r.name, short: shop ? "soon" : PEN_SHORT[r.payload.pen] || r.name, L: r.level, rid: r.id }))];
-  const pockets = slots.map((p, i) => {
-    const open = !p.rid || D.has(p.rid);
-    const worn = open && D.wear.pen === p.id;
-    // each pocket wears its passport stamp's outline and mark, sewn; the pencil's is its own
-    const badge = `<span class="pr-tagc ${!p.L || reached(D, p.L) ? "on" : "owed"}">${passportBadge(p.L)}</span>`;
-    const face = `<span class="pr-face"><span class="pr-badge">${badge}</span><span class="pr-nm">${esc(p.short)}</span></span>`;
-    if (shop) return p.rid ? `<div class="pr-pk empty">${face}</div>`
-      : `<div class="pr-pk worn"><span class="pr-pen">${PEN_ART[""]}</span>${face}</div>`;
-    if (!open) return `<div class="pr-pk empty">${face}</div>`;
-    const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="pen"`;
-    return `<button type="button" class="pr-pk${worn ? " worn" : ""}" data-pen="${p.id}" ${pick(attr, worn, p.name)}>` +
-      `<span class="pr-pen">${PEN_ART[p.id] || PEN_ART[""]}</span>${face}</button>`;
+const pf2 = (n, d = 2) => +n.toFixed(d);
+const ell = (cx, cy, rx, ry, cls, extra = "") => `<ellipse class="${cls}" cx="${pf2(cx)}" cy="${pf2(cy)}" rx="${pf2(rx)}" ry="${pf2(ry)}" ${extra}/>`;
+const bandPath = (x0) => `M${x0} ${pf2(CY - RR)} L${x0 + TW_ROLL} ${pf2(CY - RR)} A${RX} ${RR} 0 0 1 ${x0 + TW_ROLL} ${pf2(CY + RR)} L${x0} ${pf2(CY + RR)} A${RX} ${RR} 0 0 0 ${x0} ${pf2(CY - RR)} Z`;
+const bandEdge = (x0, cls) => `<path class="${cls}" d="M${x0} ${pf2(CY - RR)} L${x0 + TW_ROLL} ${pf2(CY - RR)} A${RX} ${RR} 0 0 1 ${x0 + TW_ROLL} ${pf2(CY + RR)} L${x0} ${pf2(CY + RR)}"/>`;
+
+// The print laid along a run of tape: `len` along it, the tape's width across, from (x0, top)
+// down the page. A quarter turn, not a mirror, so nothing reads backwards. A dark ink is
+// multiplied in, exactly as on a page strip.
+function printRun(uid, x0, top, len, layers, ink) {
+  const s = TW_ROLL / TW_STRIP;
+  let defs = "", body = "";
+  layers.forEach((l, i) => {
+    const id = `${uid}p${i}`;
+    const across = /50%$/.test(l.pos) ? (TW_STRIP - l.h) / 2 : 0;   // a "0 50%" layer is centred across the tape
+    const once = l.repeat === "repeat-x";
+    defs += `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${l.w}" height="${l.h}" y="${pf2(across)}">` +
+      `<image href="data:image/svg+xml,${encodeURIComponent(l.svg)}" width="${l.w}" height="${l.h}"/></pattern>`;
+    body += `<rect x="0" y="${once ? pf2(across) : 0}" width="${pf2(len / s)}" height="${once ? l.h : TW_STRIP}" fill="url(#${id})"/>`;
+  });
+  const blend = ink === "dark" ? ` style="mix-blend-mode:multiply"` : "";
+  return { defs, body: `<g transform="matrix(0 ${pf2(s)} ${pf2(-s)} 0 ${x0 + TW_ROLL} ${top})"${blend}>${body}</g>` };
+}
+// The print wrapped round the outside of the roll. Seen from the side, each line across the
+// tape sits RX*cos(t) further right than the face's centre line, and the tape's length bunches
+// up towards the top and bottom where the roll turns away. So the band is cut into thin slices,
+// and each slice gets the run of print that belongs there: shifted along the curve, and squeezed
+// by how much tape that slice of the turn holds.
+function bandPrint(uid, x0, p) {
+  const N = 28;
+  const run = printRun(uid, x0, 0, Math.PI * RR, p.layers, p.ink);
+  let clips = "", body = "";
+  for (let i = 0; i < N; i++) {
+    const ta = -Math.PI / 2 + (i * Math.PI) / N, tb = ta + Math.PI / N, tm = (ta + tb) / 2;
+    const ya = CY + RR * Math.sin(ta), yb = CY + RR * Math.sin(tb);
+    const k = (Math.sin(tb) - Math.sin(ta)) / (tb - ta);
+    clips += `<clipPath id="${uid}s${i}"><rect x="${x0 - RX - 2}" y="${pf2(ya - 0.15)}" width="${TW_ROLL + RX * 2 + 4}" height="${pf2(yb - ya + 0.3)}"/></clipPath>`;
+    body += `<g clip-path="url(#${uid}s${i})"><g transform="translate(${pf2(RX * Math.cos(tm))} ${pf2(ya)}) scale(1 ${pf2(k, 4)}) translate(0 ${pf2(-RR * (ta + Math.PI / 2))})">${run.body}</g></g>`;
+  }
+  return { defs: run.defs + clips, body };
+}
+// The pulled end, hanging from the bottom of the roll and torn off above the label: one
+// translucent layer of tape over the page, so the day and night prints are both drawn and the
+// theme shows one (.tr-day / .tr-night), as the strips' own night rule would.
+function tapeTail(uid, x0, tint, p, seed) {
+  const top = CY, bottom = CY + RR + 43;
+  const k = (n) => settle(seed * 13 + n);
+  const tear = Array.from({ length: 7 }, (_, i) => `${pf2(x0 + (TW_ROLL * i) / 6)} ${pf2(bottom - 1.6 + (k(i) - 0.5) * 4.4 + (i - 3) * 0.55)}`);
+  const outline = `M${x0} ${top} L${x0 + TW_ROLL} ${top} L${tear.slice().reverse().join(" L")} Z`;
+  const runs = p ? ["day", "night"].map((t) => [t, printRun(`${uid}t${t[0]}`, x0, top, bottom - top + 4, t === "day" ? p.layers : p.nightLayers, p.ink)]) : [];
+  const g = p && p.ground;
+  const sheet = (cls) => `<rect class="${cls}" x="${x0 - 2}" y="${top}" width="${TW_ROLL + 4}" height="${bottom - top + 6}"`;
+  return `<g class="tr-tail" transform="rotate(${pf2(1.6 - k(9) * 2.4)} ${x0 + TW_ROLL / 2} ${pf2(CY + RR)})"><clipPath id="${uid}tc"><path d="${outline}"/></clipPath>` +
+    runs.map(([, r]) => r.defs).join("") + `<g clip-path="url(#${uid}tc)" style="isolation:isolate">${sheet("tr-base")}/>` +
+    `${sheet("tr-tint")} fill="${tint}" style="--ka:${g ? g.day[0] / 100 : 0.36};--kn:${g ? g.night[0] / 100 : 0.3}"/>` +
+    runs.map(([t, r]) => `<g class="tr-${t}">${r.body}</g>`).join("") + `</g>` +
+    `<path class="tr-edge" d="M${x0} ${pf2(CY + RR)} L${x0} ${pf2(bottom + 1.4)} M${x0 + TW_ROLL} ${pf2(CY + RR)} L${x0 + TW_ROLL} ${pf2(bottom - 0.6)}"/>` +
+    `<path class="tr-end" d="M${tear.join(" L")}"/></g>`;
+}
+// The shine along the outside of the roll, following its curve.
+function rollShine(x0) {
+  const xc = x0 + TW_ROLL * 0.36, pts = [];
+  for (let t = -1.05; t <= 0.42; t += 0.07) pts.push(`${pf2(xc + RX * Math.cos(t))} ${pf2(CY + RR * Math.sin(t))}`);
+  return `<path class="tr-shine" d="M${pts.join(" L")}"/>`;
+}
+// Where the outer layer ends: a torn line across the outside of a roll not in use.
+function rollEnd(x0, at, seed) {
+  const y = CY + RR * at, half = RX * Math.sqrt(1 - at * at), pts = [];
+  for (let i = 0; i <= 6; i++) pts.push(`${pf2(x0 + half + (TW_ROLL * i) / 6)} ${pf2(y + Math.sin(seed * 7 + i * 2.3) * 0.9 + i * 0.45)}`);
+  return `<path class="tr-end" d="M${pts.join(" L")}"/>`;
+}
+function rollArt(uid, i, p, worn) {
+  const x0 = ROLL_X[i], tint = ROLL_TINT[i];
+  const run = p ? bandPrint(uid + "b", x0, p) : { defs: "", body: "" };
+  const face = ell(x0, CY, RX, RR, "tr-face", `style="--tt:${tint}"`) +
+    [0.93, 0.85, 0.77, 0.7].map((k) => ell(x0, CY, RX * k, RR * k, "tr-ring")).join("") +
+    ell(x0, CY, RX * CORE, RR * CORE, "tr-core") + ell(x0, CY, RX * HOLE, RR * HOLE, "tr-core-in") +
+    `<clipPath id="${uid}h">${ell(x0, CY, RX * HOLE, RR * HOLE, "")}</clipPath>` +
+    // the pencil, seen through the core
+    `<g class="pn-h" clip-path="url(#${uid}h)"><rect class="pn-body" x="${x0 - RX}" y="${PY - PR}" width="${RX * 2}" height="${PR * 2}"/>` +
+    `<path class="pn-facet" d="M${x0 - RX} ${PY - 2.2} H${x0 + RX}"/><path class="pn-line" d="M${x0 - RX} ${PY - PR} H${x0 + RX} M${x0 - RX} ${PY + PR} H${x0 + RX}"/></g>` +
+    ell(x0, CY, RX * HOLE, RR * HOLE, "tr-o") + ell(x0, CY, RX * CORE, RR * CORE, "tr-o") + ell(x0, CY, RX, RR, "tr-o");
+  const band = `<clipPath id="${uid}bc"><path d="${bandPath(x0)}"/></clipPath>${run.defs}` +
+    `<path d="${bandPath(x0)}" fill="${tint}"/><g clip-path="url(#${uid}bc)" style="isolation:isolate"><path d="${bandPath(x0)}" fill="${tint}"/>${run.body}</g>` +
+    (worn ? "" : rollEnd(x0, 0.56 + (i % 2) * 0.12, i)) + rollShine(x0) + bandEdge(x0, "tr-o");
+  return `<g class="tr-swing">${worn ? tapeTail(uid, x0, tint, p, i * 3 + 1) : ""}${band}${face}</g>`;
+}
+// An owed roll is its pencil tracing: the same outlines, dashed, nothing filled.
+const rollTrace = (i) => { const x0 = ROLL_X[i];
+  return `<g filter="url(#pencilLine)">${bandEdge(x0, "tr-trace")}${ell(x0, CY, RX, RR, "tr-trace")}` +
+    `${ell(x0, CY, RX * CORE, RR * CORE, "tr-trace-s")}${ell(x0, CY, RX * HOLE, RR * HOLE, "tr-trace-s")}</g>`; };
+// The pencil: the board's yellow HB lying flat, eraser left and point right.
+const TAPE_PENCIL = `<g class="pn-h">` +
+  `<path class="pn-eraser" d="M4.5 ${PY - PR + 1} Q4.5 ${PY - PR} 6.5 ${PY - PR} H16.5 V${PY + PR} H6.5 Q4.5 ${PY + PR} 4.5 ${PY + PR - 1} Z"/>` +
+  `<rect class="pn-ferrule" x="16.5" y="${PY - PR - 0.6}" width="12" height="${PR * 2 + 1.2}" rx="1"/>` +
+  `<path class="pn-ridge" d="M20.2 ${PY - PR} V${PY + PR} M23.6 ${PY - PR} V${PY + PR}"/>` +
+  `<path class="pn-body" d="M28.5 ${PY - PR} H276 Q279.6 ${PY - 4.3} 276.5 ${PY - 2.2} Q280.2 ${PY} 276.5 ${PY + 2.2} Q279.6 ${PY + 4.3} 276 ${PY + PR} H28.5 Z"/>` +
+  `<path class="pn-facet" d="M30 ${PY - 2.2} H275.4 M30 ${PY + 2.2} H275.4"/>` +
+  `<path class="pn-wood" d="M276 ${PY - PR} L291 ${PY - 1.7} L291 ${PY + 1.7} L276 ${PY + PR} Q279.6 ${PY + 4.3} 276.5 ${PY + 2.2} Q280.2 ${PY} 276.5 ${PY - 2.2} Q279.6 ${PY - 4.3} 276 ${PY - PR} Z"/>` +
+  `<path class="pn-lead" d="M291 ${PY - 1.7} L297.5 ${PY} L291 ${PY + 1.7} Z"/></g>`;
+
+function tapeRolls(D) {
+  const slots = [{ id: "", L: 0 }, ...ofKind("tape").map((r) => ({ id: r.payload.tape, L: r.level, rid: r.id, name: r.name }))];
+  const rolls = slots.map((s, i) => {
+    const open = !s.rid || D.has(s.rid);
+    const worn = open && D.wear.tape === s.id;
+    const uid = `tr${++D.uid}x`;
+    const left = ((ROLL_X[i] + TW_ROLL / 2 - ROLL_COL / 2) / TV_W) * 100, width = (ROLL_COL / TV_W) * 100;
+    const art = open ? rollArt(uid, i, s.id ? TAPE_PRINTS[s.id] : null, worn) : rollTrace(i);
+    const mark = s.L ? tag(D, s.L) : `<span class="tr-plain" aria-hidden="true"></span>`;
+    const nm = TAPE_SHORT[s.id] || s.id;
+    const attr = s.rid ? `data-reward="${s.rid}"` : `data-reward-reset="tape"`;
+    const label = open ? (s.name || "Plain tape") : `${s.name}, opens at Mastery level ${s.L}`;
+    const svg = `<svg viewBox="${ROLL_X[i] + TW_ROLL / 2 - ROLL_COL / 2} 0 ${ROLL_COL} ${TV_H}" aria-hidden="true">${art}</svg>`;
+    const lab = `<span class="tr-lab">${mark}<span class="tr-nm">${esc(nm)}</span></span>`;
+    const pos = `style="left:${pf2(left)}%;width:${pf2(width)}%"`;
+    return open
+      ? `<button type="button" class="tr-roll${worn ? " worn" : ""}" ${pos} data-tape="${s.id}" ${pick(attr, worn, label)}>${svg}${lab}</button>`
+      : `<div class="tr-roll owed" ${pos} role="img" aria-label="${esc(label)}">${svg}${lab}</div>`;
   }).join("");
-  return `<section class="rw-obj rw-pens" style="--o:${T.pens}">` +
-    head("Pens", shop ? "still in the workshop" : "the one resting by your answer line") +
-    `<div class="pr"><div class="pr-roll"><div class="pr-flap"></div><div class="pr-row">${pockets}</div></div>` +
-    `<span class="pr-end"></span><svg class="pr-tie" viewBox="0 0 44 120" aria-hidden="true">` +
-    `<path class="pr-strap" d="M-1 50.4 C6 49.6 14 49.8 24 50.6 V61.6 C14 62.2 6 62.4 -1 61.6 Z"/>` +
-    `<path class="pr-tail" d="M22.6 60 C26.4 70 27.6 84 25.6 101 L22 100.6 C23.6 85 22.6 72.4 19.6 62.8 Z"/>` +
-    `<path class="pr-tail" d="M25 58.4 C31.4 66 33.2 78 31.6 92 L28.4 91.4 C29.4 79 27.8 69 22.6 61.4 Z"/><rect class="pr-knot" x="19" y="49.4" width="8.4" height="14.6" rx="3"/></svg></div></section>`;
+  return `<section class="rw-obj rw-tape" style="--o:${T.tape}">` +
+    head("Washi tape", "the print on the tape that holds the notebook down") +
+    `<div class="tr"><svg class="tr-bed" viewBox="0 0 ${TV_W} ${TV_H}" aria-hidden="true">${TAPE_PENCIL}</svg>${rolls}</div></section>`;
 }
 
 /* ================================================================
@@ -570,13 +660,13 @@ export function titleFileHTML(F) {
 /* ================================================================
    the board
    ================================================================ */
-/* D: { issued, level, dates, has(id), wear: { pen, paper, trinket, button, label }, RANDOM, albumColors,
+/* D: { issued, level, dates, has(id), wear: { tape, paper, trinket, button, label }, RANDOM, albumColors,
         superHard, superHardLevel, brutal: [{ name, beaten }], stickerHints, stickerLevel,
         stickersLeft: [sticker], stickerTotal, secretHints, secretLevel, secretsLeft,
         earned, total, miniButton(finish), nowButton(), arrow } */
 export function rewardBoardHTML(D) {
   D.uid = 0;
-  const cells = [["pens", pensRoll], ["paper", paperFan], ["trinket", trinketPins], ["hard", cassette], ["button", buttonCard],
+  const cells = [["tape", tapeRolls], ["paper", paperFan], ["trinket", trinketPins], ["hard", cassette], ["button", buttonCard],
     ["words", labelTape], ["stick", stickerSheet], ["hint", diary], ["title", titlesShell]]
     .map(([area, fn]) => `<div class="rw-cell" style="grid-area:${area}">${fn(D)}</div>`).join("");
   return `<div class="rw"><div class="rw-head"><span class="mpp-kick">Rewards</span><span class="msc-note">what each stamp opened <i>· ${D.earned} of ${D.total} in hand</i></span></div>` +

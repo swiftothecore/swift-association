@@ -77,6 +77,7 @@ import {
   DAILY_OWNER_KEY, DAILY_OWNER_BEAT_MS,
 } from "./config.js";
 import { SONG_PENS } from "./pens.js";
+import { tapeVars } from "./tapeprints.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { albumDots, hasTone } from "./albumdots.js";
@@ -646,6 +647,11 @@ function applySettings() {
   // mode we drop data-paper entirely and let the dark tokens stand for every stock.
   if (settings.masteryPaper && !dark) body.setAttribute("data-paper", settings.masteryPaper);
   else body.removeAttribute("data-paper");
+  // The tape print (Mastery 1-3) holds in both themes: each print carries its own night layer.
+  // Its tiles live in js/tapeprints.js and arrive as custom properties every strip inherits.
+  for (const [k, v] of Object.entries(tapeVars(settings.masteryTape))) {
+    if (v === null) body.style.removeProperty(k); else body.style.setProperty(k, v);
+  }
   // The masthead ink (the Album Focus reward). ONE attribute: the four painted surfaces that
   // wear it (the wordmark's gold word, the star over the i, the tagline hearts, the closed
   // cover's title) each read --mast-ink with their own fallback, so no attribute means no
@@ -6653,10 +6659,10 @@ function updateMasteryNav() {
 }
 
 // Mastery cosmetic kinds: which setting persists the choice, the payload field holding the
-// value, and the labels for that kind's "reset to default" row. Pens swap the writing hand;
-// papers retint the page surface. New cosmetic kinds (ink colours, etc.) drop in here.
+// value, and the labels for that kind's "reset to default" row. Tape prints the strips that
+// hold the notebook down; papers retint the page surface. New cosmetic kinds drop in here.
 const MASTERY_COSMETICS = {
-  pen:       { setting: "masteryPen",       field: "pen",       resetLabel: "Default pen",    resetMeta: "the everyday hand", resetIcon: "nib" },
+  tape:      { setting: "masteryTape",      field: "tape",      resetLabel: "Plain tape",     resetMeta: "the everyday tape" },
   paper:     { setting: "masteryPaper",     field: "paper",     resetLabel: "Plain paper",    resetMeta: "the everyday page" },
   trinket:   { setting: "masteryTrinket",   field: "trinket",   resetLabel: "Star trinket",   resetMeta: "the everyday trinket" },
   button:    { setting: "masteryButton",    field: "button",    resetLabel: "Seasons",        resetMeta: "turns with the calendar" },
@@ -6784,7 +6790,7 @@ function renderMasteryPage() {
 // What each mastery level introduces, named in the passport's tooltips. Only the levels that
 // unlock something appear.
 const MASTERY_LEVEL_LABEL = {
-  1: "pens, in the workshop", 2: "pens, in the workshop", 3: "pens, in the workshop", 4: "paper stocks", 5: "bracelet trinkets",
+  1: "polka dot tape", 2: "gingham tape", 3: "sheet music tape", 4: "paper stocks", 5: "bracelet trinkets",
   6: "super-hard challenges", 7: "a prestige title", 8: "button finishes",
   9: "sticker hints and a prestige title", 10: "secret hints", 11: "a prestige title",
   12: "words for the start button", 13: "your final title",
@@ -6823,7 +6829,7 @@ function buildRewardBoard(m, mLevel, unlocked) {
   const lv = (id) => (MASTERY_REWARD_BY_ID[id] || {}).level || 0;
   return rewardBoardHTML({
     issued: unlocked, level: mLevel, dates: masteryStampDates(m), has: (id) => !!m.unlocked[id],
-    wear: { pen: settings.masteryPen || "", paper: settings.masteryPaper || "", trinket: settings.masteryTrinket || "",
+    wear: { tape: settings.masteryTape || "", paper: settings.masteryPaper || "", trinket: settings.masteryTrinket || "",
       button: settings.masteryButton || "", label: settings.masteryLabel || "" },
     RANDOM: COSMETIC_RANDOM,
     // the shaken trinket pins hang every charm from a bead in an album's colour, in this palette
@@ -6982,12 +6988,13 @@ function applyMasteryCosmetic(kind, value) {
   if (!cos) return;
   settings[cos.setting] = value;
   saveSettings(settings);
-  if (kind === "pen") setPen(value || null);
-  else applySettings();   // paper + button realised on <body> attributes
+  applySettings();   // tape, paper and button are realised on <body> attributes
   // The signature flourish only lives on the records page — refresh it if it's showing.
   if (kind === "signature" && screens.records.classList.contains("active")) renderRecordsPage();
   renderMasteryPage();
   if (kind === "trinket") swingPins($("masteryBody"));
+  // the roll just picked lets its end drop, the way a new trinket swings in on its pin
+  if (kind === "tape" && value && !motionReduced()) $("masteryBody")?.querySelector(".rw-tape .tr-roll.worn")?.classList.add("fresh");
   checkWardrobeCharms();
 }
 
@@ -33969,7 +33976,9 @@ function buildDevApi() {
       // Re-lock every reward to preview the reward board's locked objects. Drops
       // the mastery level with them, for the same reason unlockRewards raises it.
       lockRewards: () => { const m = loadMastery(); m.unlocked = {}; m.masteryXp = 0; saveMastery(m); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
-      reset: () => { resetMastery(); settings.masteryPen = ""; settings.masteryPaper = ""; settings.masteryTrinket = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masteryLabel = ""; saveSettings(settings); setPen(null); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
+      reset: () => { resetMastery(); settings.masteryTape = ""; settings.masteryPaper = ""; settings.masteryTrinket = ""; settings.masteryTitle = ""; settings.masteryButton = ""; settings.masteryLabel = ""; saveSettings(settings); applySettings(); updateMasteryNav(); if ($("masteryBody")) renderMasteryPage(); },
+      // Preview a tape print without unlocking it: pass an id (dots/gingham/music) or "" for plain.
+      tape: (id) => { settings.masteryTape = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a paper stock without unlocking it: pass an id (manila/parchment/blush/slate/sage) or "" to clear.
       paper: (id) => { settings.masteryPaper = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
       // Preview a bracelet trinket without unlocking it: pass an id (heart/moon/daisy/bow/pick/

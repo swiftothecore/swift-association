@@ -14677,7 +14677,16 @@
      Per-context knobs: --tape-color (any CSS colour) tints the strip; --tape-clip supplies
      the torn outline. Every tear is irregular and neither end mirrors the other, because
      scissored zigzags read as pinking shears; the set was rolled once on
-     scripts/ui/washi-tape.html and baked, so a page never re-tears itself between visits. */
+     scripts/ui/washi-tape.html and baked, so a page never re-tears itself between visits.
+
+     The Mastery tape prints (levels 1-3) are the one layer the player chooses: --tape-print,
+     between the sheen and the tint, set on <body> by applySettings from js/tapeprints.js, which
+     also sets the ink's blend and ground. A print is ink on the strip, never a new strip, so
+     every context keeps its own tint and tear under it.
+
+     The selectors are listed plainly, never wrapped in :is(). :is() cannot hold a
+     pseudo-element and drops one without a word, which is how the four ::before/::after strips
+     once missed the whole night rule and kept their bright day tape on the dark page. */
   .nav-tape,
   .pol-tape,
   .day-tape-strip,
@@ -14692,12 +14701,18 @@
       linear-gradient(102deg,
         rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.30) 40%, rgba(255, 255, 255, 0) 52%,
         rgba(43, 39, 34, 0.05) 66%, rgba(255, 255, 255, 0.14) 78%, rgba(255, 255, 255, 0) 90%),
-      /* the tint (color-mix so any plain colour can drive it, e.g. the tile's accent) */
+      /* the chosen print, if any (Mastery levels 1-3) */
+      var(--tape-print, linear-gradient(transparent, transparent)),
+      /* the tint (color-mix so any plain colour can drive it, e.g. the tile's accent). A white
+         print raises both strengths, because white ink needs a solid colour to stand on */
       linear-gradient(
-        color-mix(in srgb, var(--tape-color, #c9b27a) 37%, transparent),
-        color-mix(in srgb, var(--tape-color, #c9b27a) 29%, transparent)),
+        color-mix(in srgb, var(--tape-color, #c9b27a) var(--tape-k, 37%), transparent),
+        color-mix(in srgb, var(--tape-color, #c9b27a) var(--tape-k2, 29%), transparent)),
       /* frosted translucent base (lets the page show through, but still clearly present) */
       rgba(252, 248, 238, 0.62);
+    /* a dark print is multiplied into the strip, so it lands as a deeper shade of whatever
+       tint it is given; printed flat, the same ink went grey-brown on every colour */
+    background-blend-mode: normal, var(--tape-blend, normal), normal, normal;
     box-shadow:
       inset 0 0.5px 0 rgba(255, 255, 255, 0.22),
       inset 0 -0.5px 0.5px rgba(43, 39, 34, 0.05);
@@ -14717,19 +14732,31 @@
      is what keeps a strip recognisable as the same piece of tape it was by day. The edge goes
      quieter still than by day, for the same reason: any bright hairline on a dark strip is
      just a bright line. */
-  :root[data-theme="dark"] :is(.nav-tape, .pol-tape, .day-tape-strip, .run-pause-tape, .stp-tape,
-                               .pb-tile::before, .bg-back::before, .dropdown::before, .dropdown::after) {
+  :root[data-theme="dark"] .nav-tape, :root[data-theme="dark"] .pol-tape,
+  :root[data-theme="dark"] .day-tape-strip, :root[data-theme="dark"] .run-pause-tape,
+  :root[data-theme="dark"] .stp-tape, :root[data-theme="dark"] .pb-tile::before,
+  :root[data-theme="dark"] .bg-back::before, :root[data-theme="dark"] .dropdown::before,
+  :root[data-theme="dark"] .dropdown::after {
     background:
       linear-gradient(102deg,
         rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0) 52%,
         rgba(0, 0, 0, 0.10) 66%, rgba(255, 255, 255, 0.05) 78%, rgba(255, 255, 255, 0) 90%),
+      /* the print comes down with the base, as the sheen does: day-strength white ink would
+         be the brightest thing on the night page */
+      var(--tape-print-n, linear-gradient(transparent, transparent)),
       linear-gradient(
-        color-mix(in srgb, var(--tape-color, #c9b27a) 30%, transparent),
-        color-mix(in srgb, var(--tape-color, #c9b27a) 23%, transparent)),
+        color-mix(in srgb, var(--tape-color, #c9b27a) var(--tape-kn, 30%), transparent),
+        color-mix(in srgb, var(--tape-color, #c9b27a) var(--tape-kn2, 23%), transparent)),
       rgba(236, 229, 214, 0.13);
     box-shadow:
       inset 0 0.5px 0 rgba(255, 255, 255, 0.06),
       inset 0 -0.5px 0.5px rgba(0, 0, 0, 0.2);
+  }
+  /* The dated note is written ON its strip, so a print there would sit under the handwriting.
+     That one strip stays plain whatever the tape wears. */
+  .day-tape-strip {
+    --tape-print: linear-gradient(transparent, transparent); --tape-print-n: linear-gradient(transparent, transparent);
+    --tape-blend: normal; --tape-k: 37%; --tape-k2: 29%; --tape-kn: 30%; --tape-kn2: 23%;
   }
   /* Preset hand-torn outlines, cycled so neighbouring tiles differ. */
   .pb-tile:nth-child(3n+2)::before {
@@ -15241,10 +15268,10 @@
      under the hand-lettered note rather than after it. */
   .rw-head .msc-note i { font-style: normal; font-family: var(--type); font-weight: 400; font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); letter-spacing: .02em; white-space: nowrap; }
   .rw-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 38px 26px;
-    grid-template-areas: "pens paper" "trinket hard" "button button" "words words" "stick hint" "title title"; }
+    grid-template-areas: "tape paper" "trinket hard" "button button" "words words" "stick hint" "title title"; }
   @container rw (max-width: 440px) {
     .rw-grid { grid-template-columns: minmax(0, 1fr); gap: 34px;
-      grid-template-areas: "pens" "paper" "trinket" "hard" "button" "words" "stick" "hint" "title"; }
+      grid-template-areas: "tape" "paper" "trinket" "hard" "button" "words" "stick" "hint" "title"; }
   }
   .rw-cell { min-width: 0; }
 
@@ -15319,69 +15346,56 @@
     letter-spacing: .14em; text-transform: uppercase; color: var(--ink) !important; }
   .rw-door:hover { background: var(--ink) !important; color: var(--paper) !important; }
 
-  /* ================= PENS: the roll =================
-     Denim, gold thread and four pens: an object, so its colours hold at night and only its outline
-     follows the page's ink. */
-  .rw-pens { --dn: #3a5684; --dn-dark: #2e466d; --dn-pk: #42608f; --thread: #e0b25a; }
-  .pr { position: relative; padding-right: 34px; }
-  .pr-roll { position: relative; border: 2px solid var(--ink); border-radius: 8px 4px 4px 8px; padding: 0 8px 8px; background-color: var(--dn);
-    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 3.4px); }
-  .pr-roll::after { content: ""; position: absolute; inset: 5px; border: 1.4px dashed var(--thread); border-radius: 5px 2px 2px 5px; opacity: .8; pointer-events: none; }
-  .pr-flap { position: relative; height: 22px; margin: 0 -8px; border-bottom: 2px solid #22201d; border-radius: 6px 2px 0 0; background-color: var(--dn-dark);
-    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .06) 0 1px, transparent 1px 3.4px); }
-  .pr-flap::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: 4px; border-top: 1.4px dashed var(--thread); opacity: .8; }
-  .pr-row { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: 190px; }
-  .pr-pk { position: relative; display: block; height: 100%; }
-  .pr-pen { position: absolute; left: 50%; bottom: 0; width: 28px; height: 184px; margin-left: -14px; z-index: 1; pointer-events: none;
-    transition: transform .28s cubic-bezier(.3, 1.4, .5, 1); }
-  .pr-pk.worn .pr-pen { transform: translateY(-30px); }
-  .pr-pk:not(.worn):not(.empty):hover .pr-pen { transform: translateY(-9px); }
-  .pn { display: block; width: 100%; height: 100%; overflow: visible; }
-  .pn path, .pn rect, .pn circle { stroke: #2b2722; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
-  .pn-lead { fill: #3b3631; } .pn-wood { fill: #ead3a6; } .pn-yellow { fill: #e8b53f; }
-  .pn .pn-facet { fill: none; stroke: #b5852a; stroke-width: 1; }
-  .pn-ferrule { fill: #cdb98a; } .pn .pn-ridge { fill: none; stroke-width: .9; opacity: .55; } .pn-eraser { fill: #e5978f; }
-  .pn-nib { fill: #ddb04a; } .pn .pn-slit { fill: none; stroke-width: 1; } .pn .pn-hole { fill: #2b2722; stroke: none; }
-  .pn-grip { fill: #2b2722; } .pn-gold { fill: #ddb04a; } .pn-lacquer { fill: #7c2c3b; }
-  .pn .pn-shine { fill: none; stroke: rgba(255, 236, 226, .35); stroke-width: 1.6; }
-  .pn-vane { fill: #f4ecdc; } .pn .pn-barb { fill: none; stroke-width: .9; opacity: .55; } .pn .pn-split { fill: none; stroke-width: 1; }
-  .pn .pn-rachis { fill: none; stroke-width: 1.5; } .pn .pn-calamus { fill: none; stroke-width: 2.6; }
-  .pn-metal { fill: #c9c1b3; } .pn .pn-ball { fill: #2b2722; stroke: none; } .pn-rubber { fill: #e38db3; }
-  .pn .pn-grain { fill: none; stroke: #b15485; stroke-width: .9; }
-  .pn-clear { fill: url(#rwGlitter); } .pn .pn-refill { fill: none; stroke: #c45a90; stroke-width: 1.6; opacity: .7; }
-  .pr-face { position: absolute; left: 0; right: 0; bottom: 0; height: 74px; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    gap: 3px; padding-bottom: 7px; border-top: 2px solid #22201d; background-color: var(--dn-pk);
-    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 3.4px); }
-  .pr-face::before { content: ""; position: absolute; left: 3px; right: 3px; top: 4px; border-top: 1.4px dashed var(--thread); opacity: .85; }
-  .pr-pk + .pr-pk .pr-face { border-left: 1.4px dashed var(--thread); }
-  .pr-badge { display: flex; align-items: center; justify-content: center; height: 34px; }
-  .pr .pr-tagc { display: block; width: 36px; height: 36px; color: var(--thread); }
-  .pr .pr-tagc .mpp-stamp { width: 100%; height: 100%; mix-blend-mode: normal; }
-  /* the passport stamp, sewn: a satin outline and its mark in gold once earned, the passport's
-     dashes and a faint mark in pale thread while owed. The marks' paper knockouts show denim. */
-  .pr .mpp-badge-fr { fill: none; stroke: currentColor; stroke-width: 4.4; }
-  .pr .mpp-badge [fill="var(--paper)"] { fill: var(--dn-pk); }
-  .pr .pr-tagc.owed { color: #c9d3e6; }
-  .pr .pr-tagc.owed .mpp-badge-fr { stroke-width: 2.6; stroke-dasharray: 5 6.4; opacity: .6; }
-  .pr .pr-tagc.owed .mpp-gl { opacity: .45; }
-  .pr-nm { font-family: var(--type); font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: .06em; text-transform: uppercase; color: var(--thread); white-space: nowrap; }
-  .pr-pk.empty .pr-nm { color: #c9d3e6; opacity: .7; font-weight: 400; }
-  /* the pocket in use is satin-stitched solid in the roll's gold thread, its name and stamp in
-     denim: the roll's own material marks it, and like the rest of the roll it holds at night */
-  .pr-pk.worn .pr-face { background-color: var(--thread);
-    background-image: repeating-linear-gradient(-58deg, rgba(255, 248, 228, .3) 0 1px, transparent 1px 2.4px),
-      repeating-linear-gradient(-58deg, rgba(120, 80, 20, .16) 1.2px 1.8px, transparent 1.8px 2.4px); }
-  .pr-pk.worn .pr-face::before { border-top-color: var(--dn-dark); opacity: .75; }
-  .pr .pr-pk.worn .pr-nm { color: #24385a; }
-  .pr .pr-pk.worn .pr-tagc { color: #24385a; }
-  .pr .pr-pk.worn .mpp-badge [fill="var(--paper)"] { fill: var(--thread); }
-  .pr-end { position: absolute; right: 9px; top: 0; bottom: 0; width: 27px; border: 2px solid var(--ink); border-radius: 13px; background-color: var(--dn);
-    background-image: repeating-linear-gradient(-58deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 3.4px); }
-  .pr-end::before, .pr-end::after { content: ""; position: absolute; top: 6px; bottom: 6px; border-left: 1.4px dashed var(--thread); opacity: .8; }
-  .pr-end::before { left: 5px; } .pr-end::after { right: 5px; }
-  .pr-tie { position: absolute; right: -4px; top: 50%; width: 44px; height: 120px; margin-top: -60px; overflow: visible; }
-  .pr-strap, .pr-tail { fill: #b98a55; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
-  .pr-knot { fill: #a3764a; stroke: var(--ink); stroke-width: 1.5; }
+  /* ================= TAPE: rolls on a pencil =================
+     Drawn by tapeRolls (js/rewardboard.js). The pencil is one SVG across the cell; each roll is a
+     button laid over it in the same units with its own SVG. Rolls and pencil are materials, so
+     their colours hold at night; the tail hanging on the page is one layer of tape, so its base
+     and print follow the night rule exactly as a strip's do. */
+  .tr { position: relative; width: 100%; max-width: 340px; aspect-ratio: 300 / 206; }
+  .tr-bed { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .tr-roll { position: absolute; top: 0; height: 100%; display: block; padding: 0; margin: 0; border: 0; background: none;
+    color: inherit; font: inherit; cursor: pointer; }
+  .tr-roll.owed { cursor: default; }
+  .tr-roll > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .tr-swing { transform-box: view-box; transform-origin: 50% 24.3%; transition: transform .28s cubic-bezier(.3, 1.4, .5, 1); }
+  .tr-roll:not(.owed):not(.worn):is(:hover, :focus-visible) .tr-swing { transform: rotate(-4deg); }
+  .tr-roll:focus-visible { outline: none; }
+  .tr-roll:focus-visible .tr-lab { outline: 1.5px dashed var(--ink); outline-offset: 3px; }
+  .tr-roll.fresh .tr-tail { animation: trDrop .5s cubic-bezier(.25, 1.3, .5, 1) both; }
+  @keyframes trDrop { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+  body[data-reduce-motion="on"] .tr-swing { transition: none; }
+  body[data-reduce-motion="on"] .tr-roll.fresh .tr-tail { animation: none; }
+  .tr-lab { position: absolute; left: 0; right: 0; bottom: 0; height: 24%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px; }
+  .tr-lab .rw-tag { width: 30px; height: 30px; }
+  .tr-plain { display: block; width: 30px; height: 30px; }
+  .tr-nm { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ink-soft); white-space: nowrap; line-height: 1.25; }
+  .tr-roll.worn .tr-nm { color: var(--ink); font-weight: 700; }
+  .tr-roll.owed .tr-nm { opacity: .7; }
+  .tr svg .tr-o { fill: none; stroke: #2b2722; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+  .tr svg .tr-face { fill: color-mix(in srgb, var(--tt) 80%, #6b5a46); }
+  .tr svg .tr-ring { fill: none; stroke: rgba(43, 39, 34, .22); stroke-width: .6; }
+  .tr svg .tr-core { fill: #cfae7c; }
+  .tr svg .tr-core-in { fill: #a3814f; }
+  .tr svg .tr-shine { fill: none; stroke: rgba(255, 255, 255, .34); stroke-width: 1.6; stroke-linecap: round; }
+  .tr svg .tr-end { fill: none; stroke: rgba(43, 39, 34, .5); stroke-width: .8; stroke-linejoin: round; }
+  .tr svg .tr-edge { fill: none; stroke: rgba(43, 39, 34, .28); stroke-width: .7; }
+  .tr svg .tr-base { fill: rgba(252, 248, 238, .62); }
+  .tr svg .tr-tint { opacity: var(--ka); }
+  .tr svg .tr-night { display: none; }
+  :root[data-theme="dark"] .tr svg .tr-base { fill: rgba(236, 229, 214, .13); }
+  :root[data-theme="dark"] .tr svg .tr-tint { opacity: var(--kn); }
+  :root[data-theme="dark"] .tr svg .tr-day { display: none; }
+  :root[data-theme="dark"] .tr svg .tr-night { display: inline; }
+  :root[data-theme="dark"] .tr svg .tr-edge { stroke: rgba(236, 229, 214, .2); }
+  .tr svg .tr-trace { fill: none; stroke: var(--ink-soft); stroke-width: 1.3; stroke-dasharray: 3.2 3.4; stroke-linecap: round; }
+  .tr svg .tr-trace-s { fill: none; stroke: var(--ink-soft); stroke-width: .8; opacity: .7; }
+  .tr .pn-h :is(path, rect) { stroke: #2b2722; stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+  .tr .pn-h .pn-body { fill: #e8b53f; } .tr .pn-h .pn-wood { fill: #ead3a6; } .tr .pn-h .pn-lead { fill: #3b3631; }
+  .tr .pn-h .pn-ferrule { fill: #cdb98a; } .tr .pn-h .pn-eraser { fill: #e5978f; }
+  .tr .pn-h .pn-facet { fill: none; stroke: #b5852a; stroke-width: 1; }
+  .tr .pn-h .pn-ridge { fill: none; stroke-width: .9; opacity: .55; }
+  .tr .pn-h .pn-line { fill: none; }
 
   /* ================= PAPER: the fan deck ================= */
   .pf { position: relative; height: 248px; }

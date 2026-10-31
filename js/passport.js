@@ -33,9 +33,9 @@ import { skillMarkHTML } from "./skillmarks.js";
 const rewardMark = (id) => ["mi", MASTERY_REWARD_BY_ID[id].icon];
 const tierMark = (i) => ["mi", MASTERY_TIER_ICONS[i]];
 const STAMPS = {
-  1: { shape: "circle", glyph: rewardMark("pen-fountain"), word: "FOUNTAIN PEN", tile: "pens", caption: "Fountain pen" },
-  2: { shape: "oval", glyph: rewardMark("pen-quill"), word: "QUILL", tile: "pens", caption: "Feather quill", short: "Quill" },
-  3: { shape: "rect", glyph: rewardMark("pen-glitter"), word: "GEL PEN", tile: "pens", caption: "Gel pen" },
+  1: { shape: "circle", glyph: rewardMark("tape-dots"), word: "POLKA DOTS", tile: "tape", caption: "Polka dot tape", short: "Polka dots" },
+  2: { shape: "oval", glyph: rewardMark("tape-gingham"), word: "GINGHAM", tile: "tape", caption: "Gingham tape", short: "Gingham" },
+  3: { shape: "rect", glyph: rewardMark("tape-music"), word: "SHEET MUSIC", tile: "tape", caption: "Sheet music tape", short: "Sheet music" },
   4: { shape: "notch", glyph: ["rw", "paper"], word: "PAPER", tile: "paper", caption: "Paper stocks" },
   5: { shape: "scallop", glyph: ["rw", "trinket"], word: "TRINKETS", tile: "trinket", caption: "Trinkets" },
   6: { shape: "shield", glyph: rewardMark("hardmode-unlock"), word: "SUPER-HARD", tile: "hard", caption: "Super-hard" },
@@ -246,18 +246,6 @@ export const passportGhost = (L) => ghostSVG(L);
 export const passportTracing = (L, frac = null, pre = "lvt") => tracingSVG(L, frac, pre);
 export const passportCaption = (L) => STAMPS[L] ? STAMPS[L].caption : "";
 export const passportStampInk = (L) => STAMPS[L] ? tileInk(STAMPS[L].tile) : tileInk("title");
-
-/* A ladder member's stamp cut down to a badge: the stamp's own outline at the angle it lands
-   and its mark in the middle, with no rubber type, for a pocket too small to letter. Level 0 is
-   the pencil every notebook starts with, which no stamp opened, so it borrows the fountain pen's
-   ring. Drawn in currentColor; the caller says whether it is sewn solid or still owed. */
-const BADGE_PENCIL = { shape: "circle", glyph: ["mi", "hbpencil"] };
-export function passportBadge(L) {
-  const sp = L ? STAMPS[L] : BADGE_PENCIL;
-  const at = `rotate(${tilt(L || 7).toFixed(1)})`;
-  return `<svg class="mpp-stamp mpp-badge" viewBox="-41 -41 82 82" aria-hidden="true" focusable="false"><g transform="${at}">` +
-    outline(sp.shape, `class="mpp-badge-fr"`) + glyph(sp.glyph, 44) + `</g></svg>`;
-}
 
 /* ISSUED, pressed the way NOT YET ISSUED is (one office, two verdicts), in the laurel green of the
    title tile, for the one level-up spread that has no stamp of its own yet: the unlock. */

@@ -262,7 +262,7 @@ export const DEFAULT_SETTINGS = {
   lastGameType: "classic",  // runtime memory backing defaultGameType: "last" — the last type clicked (not shown in UI)
   playerName: "",           // notebook signature — set once, reused on every personal record
   avatar: "",               // profile polaroid — a center-cropped data-URL, stays on this device
-  masteryPen: "",           // chosen writing pen, unlocked via Mastery ("" = the default random egg)
+  masteryTape: "",          // chosen washi tape print, unlocked via Mastery ("" = the plain tape)
   masteryPaper: "",         // chosen paper stock, unlocked via Mastery ("" = the default cream page)
   titleInk: "",             // chosen masthead ink, unlocked by beating that album in Album Focus
                             // (a MAST_INKS slug; "" = the house brand gold). See MAST_INKS.
@@ -2444,18 +2444,22 @@ export function prideStripes(finish) {
 // renders/applies it; `payload` is kind-specific. The ladder runs 1–13 (pens, papers,
 // trinkets, the super-hard unlock, then prestige titles) and 13 is the Mastery cap.
 // `icon` (a MASTERY_ICONS key) is only carried by the kinds that actually draw a mark:
-// pens, the two `unlock` milestones, and titles. The set kinds draw the thing itself
+// tape, the two `unlock` milestones, and titles. The set kinds draw the thing itself
 // instead — paper draws its stock as a swatch, trinkets the trinket, buttons a real start
 // button in miniature, label words a real button wearing them — so they carry no icon at all.
 // `soon` marks a rung whose reward is still being workshopped: it is still unlocked and dated
-// in the ledger, so the passport keeps its stamp, but it grants nothing, the reward board shows
-// its object as in the workshop, and it is left out of the earned count. The pens went soon on
-// 2026-10-31, when the pen on the writing line stopped being a choice and became a fact about
-// the page's songs (js/pens.js): a pen you could pin would hide the very clue it now carries.
+// in the ledger, so the passport keeps its stamp, but it grants nothing, the level-up never
+// announces it, and it is left out of the earned count; its object on the reward board has to
+// say so itself. The pens sat at levels 1-3 as `soon` from the day the pen on the writing line
+// became a fact about the page's songs (js/pens.js) until the tape prints took their rungs.
 export const MASTERY_REWARDS = [
-  { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "fountainpen", desc: "Always write with a fountain pen.", payload: { pen: "fountain" }, soon: true },
-  { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" }, soon: true },
-  { level: 3, id: "pen-glitter",  kind: "pen",  name: "Glitter gel pen",  icon: "gelpen",  desc: "A glitter gel pen, for the sparkle.", payload: { pen: "glitter" }, soon: true },
+  // Washi tape prints, one a level. A print is ink laid on every strip of tape that holds the
+  // notebook's things down (styles.css body[data-tape]); each strip keeps its own tint and tear.
+  // These ids replaced the three pens (pen-fountain/-quill/-glitter), which left when the pen on
+  // the writing line began following the page's songs; storage.js renames the old ids on load.
+  { level: 1, id: "tape-dots",    kind: "tape", name: "Polka dot tape",   icon: "tapedots",    desc: "White polka dots on every strip of tape.", payload: { tape: "dots" } },
+  { level: 2, id: "tape-gingham", kind: "tape", name: "Gingham tape",     icon: "tapegingham", desc: "A picnic-blanket check on every strip of tape.", payload: { tape: "gingham" } },
+  { level: 3, id: "tape-music",   kind: "tape", name: "Sheet music tape", icon: "tapemusic",   desc: "A staff and a phrase of notes on every strip of tape.", payload: { tape: "music" } },
   // Paper stocks — a set unlocked together at level 4. Each retints the page surface
   // (CSS body[data-paper="…"]); the swatch chip + apply path live in app.js.
   { level: 4,  id: "paper-manila",    kind: "paper", name: "Manila pad",     desc: "Warm kraft tan, like a legal pad.",   payload: { paper: "manila" } },
@@ -2565,7 +2569,7 @@ export const MASTERY_TIER_ICONS = ["laurel", "bridge", "chair", "plumes"];
    very different promises. Notebook hues only, in the register ACH_GROUP_COLORS uses — nothing
    here is allowed to be brighter than the ink it sits next to. */
 export const MASTERY_TILE_MARKS = {
-  pens:   "#3f5d8a",   // ink blue: the writing hand
+  tape:   "#3f5d8a",   // ink blue, the hue the pens wore before the tape took their levels
   trinket: "#a8577a",  // friendship-bracelet rose
   paper:  "#8a6d3f",   // kraft tan, the colour of the stock itself
   hard:   "#8a3b2f",   // brick, for the brutal tier
@@ -3977,18 +3981,24 @@ export const ACH_ICONS = {
    `ink` stroke. And the size that decides everything is the small one: 15px on the ascent
    track, 12px in the mobile query. */
 // Marks the mastery board draws itself, because nothing in ACH_ICONS means what they mean.
+// The tape roll the three tape marks share: a roll, and its end pulled out to the right and torn.
+// The strip's left edge IS the roll's edge (an arc of the same circle), so it never crosses it.
+const TAPE_ROLL = `<path class="ink-fill" d="M15.8 9.4 H21.4 L22.2 10.7 L21.5 11.9 L22.4 13.2 L21.6 14.6 L22.3 16.2 H9 A6.8 6.8 0 0 0 15.8 9.4 Z"/><circle class="ink-fill" cx="9" cy="9.4" r="6.8"/>`;
+const TAPE_HOLE = `<circle class="ink" stroke-width="1.3" fill="var(--paper)" cx="9" cy="9.4" r="2.6"/>`;
 // Objects dropped or pressed on a desk, tilted off square, not symbols set straight.
 const MASTERY_OWN_ICONS = {
-  /* The three pens (levels 1–3) are one family: the same 45° lay across the page, the same
-     barrel depth, the same cap band and clip, nib end at the bottom left. `feather` (the
-     quill, level 2) sets the diagonal they both follow. Only the writing end differs — a
-     slit nib, a plume, a gel cone — which is the whole point of the ladder. */
-  fountainpen: `<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><path class="ink-fill" d="M1.2 12 L8.6 9.5 L8.6 14.5 Z"/><circle cx="7" cy="12" r="0.8" fill="var(--paper)"/><path class="ink" stroke-width="0.9" d="M2 12 H5.8"/><rect class="ink-fill" x="8.4" y="9.9" width="2.2" height="4.2" rx="0.6"/><rect class="ink-fill" x="10.4" y="9.2" width="12" height="5.6" rx="1.7"/><path class="ink" stroke-width="1" d="M13.8 9.6 V14.4"/><path class="ink" stroke-width="1.1" d="M20.9 10.6 H17.6 V12.4"/></g></svg>`,
-  // the glitter gel pen: same pen, a fine plastic cone instead of a nib, throwing sparkle
-  gelpen: `<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><path class="ink-fill" d="M1.6 12 L7 10.1 L7 13.9 Z"/><rect class="ink-fill" x="6.6" y="9.9" width="2.2" height="4.2" rx="0.6"/><rect class="ink-fill" x="8.6" y="9.2" width="13.8" height="5.6" rx="1.7"/><path class="ink" stroke-width="1" d="M11.8 9.6 V14.4"/><path class="ink" stroke-width="1.1" d="M20.9 10.6 H17.6 V12.4"/></g><g class="ink-fill"><path d="M6 3.4 C6.4 6 7.2 6.8 9.8 7.2 C7.2 7.6 6.4 8.4 6 11 C5.6 8.4 4.8 7.6 2.2 7.2 C4.8 6.8 5.6 6 6 3.4 Z"/><path d="M11.4 1.6 C11.6 3.2 12 3.6 13.6 3.8 C12 4 11.6 4.4 11.4 6 C11.2 4.4 10.8 4 9.2 3.8 C10.8 3.6 11.2 3.2 11.4 1.6 Z"/></g></svg>`,
-  // the pencil every notebook starts with (the pen roll's HB pocket): the same pen again, a
-  // sharpened wood cone with its lead point, a ferrule band and an eraser where the cap sits
-  hbpencil: `<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><path class="ink-fill" d="M1.2 12 L3.6 11.2 L3.6 12.8 Z"/><path class="ink" stroke-width="1.1" d="M1.6 12 L7.8 9.6 M1.6 12 L7.8 14.4"/><rect class="ink-fill" x="7.8" y="9.2" width="10.4" height="5.6" rx="0.4"/><path class="ink" stroke-width="1" d="M18.6 9.4 V14.6 M20 9.4 V14.6"/><rect class="ink-fill" x="20.4" y="9.6" width="2.4" height="4.8" rx="1.1"/></g></svg>`,
+  /* The three tape rolls (levels 1-3) are one family: the same roll, its end pulled out to the
+     right and torn, the strip sharing the roll's own edge so nothing overlaps in outline. Only the
+     print on the strip differs, which is the whole point of the ladder. Each print is drawn
+     twice: as ink lines, which show when the mark is an outline, and as paper knockouts laid
+     over them, which show when a stamp fills it solid. */
+  tapedots: `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 12)">${TAPE_ROLL}<g class="ink" stroke-width="0.9"><circle cx="17.4" cy="11.9" r="1.25"/><circle cx="20.4" cy="14.4" r="1.15"/><circle cx="16.6" cy="15.1" r="1.1"/></g>` +
+    `<g fill="var(--paper)"><circle cx="17.4" cy="11.9" r="0.95"/><circle cx="20.4" cy="14.4" r="0.85"/><circle cx="16.6" cy="15.1" r="0.8"/></g>${TAPE_HOLE}</g></svg>`,
+  tapegingham: `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 12)">${TAPE_ROLL}<path class="ink" stroke-width="0.9" d="M16.4 11.6 H21.4 M15.2 14.1 H21.6 M17.6 9.4 V16.2 M20 9.4 V16.2"/>` +
+    `<g fill="var(--paper)"><rect x="17.9" y="9.7" width="1.8" height="1.7"/><rect x="15.6" y="11.9" width="1.8" height="1.9"/><rect x="20.3" y="11.9" width="1.4" height="1.9"/><rect x="17.9" y="14.4" width="1.8" height="1.6"/></g>${TAPE_HOLE}</g></svg>`,
+  tapemusic: `<svg viewBox="0 0 24 24"><g transform="rotate(-9 12 12)">${TAPE_ROLL}<path class="ink" stroke-width="0.8" d="M16.6 11.3 H21.6 M15.6 13.2 H21.8 M14.6 15 H21.6"/>` +
+    `<path fill="none" stroke="var(--paper)" stroke-width="0.7" d="M16.6 11.3 H21.6 M15.6 13.2 H21.8 M14.6 15 H21.6"/>${TAPE_HOLE}</g>` +
+    `<ellipse class="ink-fill" cx="18.4" cy="6.2" rx="1.75" ry="1.25" transform="rotate(-22 18.4 6.2)"/><path class="ink" stroke-width="1.3" d="M19.9 5.6 V1.4 C21 2.2 22.2 2.8 22.6 4.4"/></svg>`,
   /* The super-hard seal (level 6): two hilted blades crossed off square, the under one
      passing behind. The depth is a HOLE IN THE GEOMETRY, not a knockout: the under
      sword's blade is two closed paths with a real 6.4-unit gap between them, so the
@@ -4032,7 +4042,7 @@ const MASTERY_OWN_ICONS = {
 };
 
 export const MASTERY_ICONS = Object.assign(Object.fromEntries([
-  // the quill (level 2) — the one pen of the three that ACH_ICONS already draws right
+  // the quill, worn by the Poet titles
   "feather", "sparkle", "key",
   // marks worn by prestige titles alongside the ones below
   "nib", "book", "gem",
@@ -4980,7 +4990,7 @@ export const ACHIEVEMENTS = [
      timed classic run with a sung line, a streak held and answers reaching across albums. */
   { id: "earn-ink-in-all-five-skills-one-run", name: "None Of It Accidental", desc: "Earn ink in all five skills in a single run", tier: 2, secret: false, icon: "inkedhand" },
   /* The wardrobe. Around forty cosmetics come off that ladder and nothing rewarded wearing them. */
-  { id: "wear-every-mastery-cosmetic-at-once", name: "Style", desc: "Wear a chosen pen, paper, trinket, button finish and button words all at once", tier: 3, secret: false, icon: "dressednotebook" },
+  { id: "wear-every-mastery-cosmetic-at-once", name: "Style", desc: "Wear a chosen tape, paper, trinket, button finish and button words all at once", tier: 3, secret: false, icon: "dressednotebook" },
   { id: "wear-blank-start-button", name: "The Quiet One", desc: "Wear the blank start button", secret: true, icon: "restbar" },
   { id: "set-every-cosmetic-to-random", name: "Hands Of Fate", desc: "Hand your trinket, button finish and button words all to chance at once", secret: true, icon: "fortuneteller" },
   { id: "find-every-polaroid-keepsake", name: "You Took A Polaroid Of Us", desc: "Find every polaroid keepsake", tier: 3, secret: true, icon: "polaroid" },
