@@ -787,7 +787,7 @@ function inflects(stem, tail) {
   if (tail === "d") return last === "e";
   if (tail === "n") return last === "e" || last === "w";
   if (tail === "g") return stem.endsWith("in");                       // gettin -> getting
-  if (tail.length === 3 && tail[0] === last && /^[^aeiou]$/.test(last)) return /^(ed|in)$/.test(tail.slice(1));
+  if ((tail.length === 3 || tail.length === 4) && tail[0] === last && /^[^aeiou]$/.test(last)) return /^(ed|in|ing)$/.test(tail.slice(1));
   return false;
 }
 
@@ -800,12 +800,13 @@ export function judgeBlank(typed, puzzle, vocab = null) {
 
   const short = got.length <= want.length ? got : want;
   const long = got.length <= want.length ? want : got;
-  // A shared stem: one is the other plus up to three letters. When what was typed is itself a
+  // A shared stem: one is the other plus a short suffix. When what was typed is itself a
   // catalogue word, those letters have to be an inflection, or the rule takes a different word
   // for the right one, and some of them are opposites ("could" for "couldn't", "with" for
   // "without", "hear" for "heart"). A string the catalogue never sings keeps the plain prefix
   // rule, since that is a clipped or half-typed word rather than a second answer.
-  if (short.length >= 4 && long.startsWith(short) && long.length - short.length <= 3 &&
+  if (short.length >= 4 && long.startsWith(short) &&
+      (long.length - short.length <= 3 || inflects(short, long.slice(short.length))) &&
       (!(vocab && vocab.has(got)) || inflects(short, long.slice(short.length)))) return true;
 
   if (got.length >= 4 && Math.abs(got.length - want.length) <= 1 &&
