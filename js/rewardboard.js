@@ -111,21 +111,27 @@ const PEN_SHORT = { fountain: "fountain", quill: "quill", glitter: "gel pen" };
 // Indigo denim laid open, a stitched pocket a pen, gold thread throughout. The pen you write with
 // stands proud of its pocket; a pocket still owed holds nothing but its level, sewn in the dashes
 // the passport uses for a stamp not yet pressed.
+// While the pens are in the workshop (`soon` on their rewards) the roll is a display, not a
+// control: the pencil stands in its pocket, the other three hold only their level and "soon",
+// and nothing on it can be picked.
 function pensRoll(D) {
-  const slots = [{ id: "", name: "Pencil", short: "pencil", L: 0 }, ...ofKind("pen").map((r) => ({ id: r.payload.pen, name: r.name, short: PEN_SHORT[r.payload.pen] || r.name, L: r.level, rid: r.id }))];
+  const shop = ofKind("pen").every((r) => r.soon);
+  const slots = [{ id: "", name: "Pencil", short: "pencil", L: 0 }, ...ofKind("pen").map((r) => ({ id: r.payload.pen, name: r.name, short: shop ? "soon" : PEN_SHORT[r.payload.pen] || r.name, L: r.level, rid: r.id }))];
   const pockets = slots.map((p, i) => {
     const open = !p.rid || D.has(p.rid);
     const worn = open && D.wear.pen === p.id;
     // each pocket wears its passport stamp's outline and mark, sewn; the pencil's is its own
     const badge = `<span class="pr-tagc ${!p.L || reached(D, p.L) ? "on" : "owed"}">${passportBadge(p.L)}</span>`;
     const face = `<span class="pr-face"><span class="pr-badge">${badge}</span><span class="pr-nm">${esc(p.short)}</span></span>`;
+    if (shop) return p.rid ? `<div class="pr-pk empty">${face}</div>`
+      : `<div class="pr-pk worn"><span class="pr-pen">${PEN_ART[""]}</span>${face}</div>`;
     if (!open) return `<div class="pr-pk empty">${face}</div>`;
     const attr = p.rid ? `data-reward="${p.rid}"` : `data-reward-reset="pen"`;
     return `<button type="button" class="pr-pk${worn ? " worn" : ""}" data-pen="${p.id}" ${pick(attr, worn, p.name)}>` +
       `<span class="pr-pen">${PEN_ART[p.id] || PEN_ART[""]}</span>${face}</button>`;
   }).join("");
   return `<section class="rw-obj rw-pens" style="--o:${T.pens}">` +
-    head("Pens", "the one resting by your answer line") +
+    head("Pens", shop ? "still in the workshop" : "the one resting by your answer line") +
     `<div class="pr"><div class="pr-roll"><div class="pr-flap"></div><div class="pr-row">${pockets}</div></div>` +
     `<span class="pr-end"></span><svg class="pr-tie" viewBox="0 0 44 120" aria-hidden="true">` +
     `<path class="pr-strap" d="M-1 50.4 C6 49.6 14 49.8 24 50.6 V61.6 C14 62.2 6 62.4 -1 61.6 Z"/>` +

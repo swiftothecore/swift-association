@@ -76,6 +76,7 @@ import {
   STREAK_THROW, STREAK_DROP, STREAK_SPIN, STREAK_MS, STREAK_SIZE, STREAK_CONE,
   DAILY_OWNER_KEY, DAILY_OWNER_BEAT_MS,
 } from "./config.js";
+import { SONG_PENS } from "./pens.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { albumDots, hasTone } from "./albumdots.js";
@@ -4171,7 +4172,9 @@ function celebrateMastery(res, host) {
   const dates = masteryStampDates(m);
   const today = (() => { const d = new Date(); return `${String(d.getDate()).padStart(2, "0")} ${STAMP_MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`; })();
   const pg = (n) => String(n).padStart(2, "0");
-  const rewards = (res.newUnlocks || []).map((id) => MASTERY_REWARD_BY_ID[id]).filter(Boolean);
+  const opened = (res.newUnlocks || []).map((id) => MASTERY_REWARD_BY_ID[id]).filter(Boolean);
+  // a rung still in the workshop grants nothing, so it is never announced as if it did
+  const rewards = opened.filter((r) => !r.soon);
 
   // the two pages
   const page = (side, no, body, cap2 = "") => `<div class="lvu-pg ${side}"><span class="lvu-no">${no}</span>${body}${cap2 ? `<span class="lvu-ct">${escapeHtml(cap2)}</span>` : ""}</div>`;
@@ -4199,6 +4202,7 @@ function celebrateMastery(res, host) {
   // what it opened: names while there are one or two, the stamp's own caption past that
   const caption = issued ? "" : passportCaption(lvl);
   const what = issued ? "every skill now feeds it"
+    : !rewards.length && opened.length ? "its reward is still in the workshop"
     : rewards.length > 2 ? `<b>${escapeHtml(caption)}</b> · ${rewards.length} new`
     : rewards.map((r) => `<b>${escapeHtml(r.name)}</b>`).join(" + ");
   let next;
@@ -6780,7 +6784,7 @@ function renderMasteryPage() {
 // What each mastery level introduces, named in the passport's tooltips. Only the levels that
 // unlock something appear.
 const MASTERY_LEVEL_LABEL = {
-  1: "a new pen", 2: "a new pen", 3: "a new pen", 4: "paper stocks", 5: "bracelet trinkets",
+  1: "pens, in the workshop", 2: "pens, in the workshop", 3: "pens, in the workshop", 4: "paper stocks", 5: "bracelet trinkets",
   6: "super-hard challenges", 7: "a prestige title", 8: "button finishes",
   9: "sticker hints and a prestige title", 10: "secret hints", 11: "a prestige title",
   12: "words for the start button", 13: "your final title",
@@ -6815,7 +6819,7 @@ function masteryStampDates(m) {
 // ledger and settings, and hands over the two start-button renderers so every preview of a
 // button is still the real .play-cta wearing the real finish.
 function buildRewardBoard(m, mLevel, unlocked) {
-  const all = MASTERY_REWARDS.filter((r) => r.kind !== "title");
+  const all = MASTERY_REWARDS.filter((r) => r.kind !== "title" && !r.soon);
   const lv = (id) => (MASTERY_REWARD_BY_ID[id] || {}).level || 0;
   return rewardBoardHTML({
     issued: unlocked, level: mLevel, dates: masteryStampDates(m), has: (id) => !!m.unlocked[id],
@@ -6936,7 +6940,7 @@ function ctaPreviewHTML(labelId, finish) {
 function chooseMasteryCosmetic(rewardId, variant) {
   const r = MASTERY_REWARD_BY_ID[rewardId];
   const cos = r && MASTERY_COSMETICS[r.kind];
-  if (!cos || !loadMastery().unlocked[rewardId]) return;   // guard: must be an unlocked cosmetic
+  if (!cos || r.soon || !loadMastery().unlocked[rewardId]) return;   // guard: must be an unlocked, finished cosmetic
   const owned = variant && (r.variants || []).some((v) => v.id === variant);
   applyMasteryCosmetic(r.kind, (owned ? variant : (r.payload && r.payload[cos.field])) || "");
 }
@@ -28868,13 +28872,24 @@ function runRoundEggs() {
   if (!document.querySelector(".whale-egg") && !document.querySelector(".bottle-egg") &&
       chance(1 / 450)) surfaceBottle();
 
-  // A Mastery-chosen pen is the persistent default each round; otherwise the rare random swap.
-  if (settings.masteryPen) {
-    setPen(settings.masteryPen);
-  } else if (chance(0.12)) {
-    const pens = ["quill", "fountain", "glitter"];
-    setPen(pens[Math.floor(Math.random() * pens.length)]);
+  // The rare pen swap. Which pen is not chance: it is the one most of this page's answers were
+  // written with (js/pens.js), so a quill on the line is a quiet nod toward the folklore shelf.
+  if (chance(0.12)) setPen(pagePen(currentSongs.filter(roundAcceptsSong)));
+}
+
+// The pen most of these songs were written with, a tie split by chance; null when none of them
+// has one (a guest's catalogue, a cover, a song written for someone else), so the pencil stays.
+const PEN_BY_SONG = new Map(Object.entries(SONG_PENS).flatMap(([album, pens]) =>
+  Object.entries(pens).flatMap(([pen, titles]) => titles.map((t) => [album + "\n" + t, pen]))));
+function pagePen(songs) {
+  const n = {};
+  for (const s of songs) {
+    const pen = PEN_BY_SONG.get(s.album + "\n" + s.title);
+    if (pen) n[pen] = (n[pen] || 0) + 1;
   }
+  const top = Math.max(0, ...Object.values(n));
+  const tied = Object.keys(n).filter((p) => n[p] === top);
+  return tied.length ? tied[Math.floor(Math.random() * tied.length)] : null;
 }
 
 function handleTypingEggs(val) {
@@ -36891,7 +36906,14 @@ function buildDevApi() {
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },
             leaves: (on) => { devForceLeaves = on === undefined ? !devForceLeaves : !!on; refreshLeaves(); return devForceLeaves; },
-            pen: (p) => setPen(p || null) },
+            pen: (p) => setPen(p || null),
+            // what this page's pen would be, from which of its answers, and any js/pens.js
+            // title that no longer names a song in the corpus (a rename leaves it silently unrated)
+            pagePen: () => {
+              const songs = currentSongs.filter(roundAcceptsSong);
+              return { pen: pagePen(songs), songs: songs.map((s) => `${s.title}: ${PEN_BY_SONG.get(s.album + "\n" + s.title) || "none"}`) };
+            },
+            penAudit: () => [...PEN_BY_SONG.keys()].filter((k) => !allSongs.some((s) => s.album + "\n" + s.title === k)) },
     // The corner guest stamp's ink, which is otherwise a once-per-load roll: this is
     // how you see all ten plates without reloading ten times.
     stamp: {

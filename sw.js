@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v668";
+const CACHE = "stta-v669";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -131,6 +131,7 @@ const ASSETS = [
   // ...and the tone maps it prints from, generated from the covers by
   // scripts/albumfocus/covertone.py. Useless without each other, so they cache together.
   "js/albumtone.js",
+  "js/pens.js",
   // Word Cloud's ink-mask packing (pure; see js/cloud.js). app.js imports it at load.
   "js/cloud.js",
   // The lineup's goal deck: what the cards say, what a hand of them costs, the line art on

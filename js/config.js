@@ -2447,10 +2447,15 @@ export function prideStripes(finish) {
 // pens, the two `unlock` milestones, and titles. The set kinds draw the thing itself
 // instead — paper draws its stock as a swatch, trinkets the trinket, buttons a real start
 // button in miniature, label words a real button wearing them — so they carry no icon at all.
+// `soon` marks a rung whose reward is still being workshopped: it is still unlocked and dated
+// in the ledger, so the passport keeps its stamp, but it grants nothing, the reward board shows
+// its object as in the workshop, and it is left out of the earned count. The pens went soon on
+// 2026-10-31, when the pen on the writing line stopped being a choice and became a fact about
+// the page's songs (js/pens.js): a pen you could pin would hide the very clue it now carries.
 export const MASTERY_REWARDS = [
-  { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "fountainpen", desc: "Always write with a fountain pen.", payload: { pen: "fountain" } },
-  { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" } },
-  { level: 3, id: "pen-glitter",  kind: "pen",  name: "Glitter gel pen",  icon: "gelpen",  desc: "A glitter gel pen, for the sparkle.", payload: { pen: "glitter" } },
+  { level: 1, id: "pen-fountain", kind: "pen",  name: "Fountain pen",     icon: "fountainpen", desc: "Always write with a fountain pen.", payload: { pen: "fountain" }, soon: true },
+  { level: 2, id: "pen-quill",    kind: "pen",  name: "Feather quill",    icon: "feather", desc: "Trade your pen for a feather quill.", payload: { pen: "quill" }, soon: true },
+  { level: 3, id: "pen-glitter",  kind: "pen",  name: "Glitter gel pen",  icon: "gelpen",  desc: "A glitter gel pen, for the sparkle.", payload: { pen: "glitter" }, soon: true },
   // Paper stocks — a set unlocked together at level 4. Each retints the page surface
   // (CSS body[data-paper="…"]); the swatch chip + apply path live in app.js.
   { level: 4,  id: "paper-manila",    kind: "paper", name: "Manila pad",     desc: "Warm kraft tan, like a legal pad.",   payload: { paper: "manila" } },
