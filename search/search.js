@@ -14,7 +14,7 @@ import {
   variantBody,
 } from "../js/match.js";
 import { ALBUM_COLORS, CB_ALBUM_COLORS, SEARCH_KEY, SETTINGS_KEY } from "../js/config.js";
-import { canShare, shareOrCopy } from "../js/share.js";
+import { canShare, shareOrCopy, SITE_URL } from "../js/share.js";
 
 let notebookSettings = readNotebookSettings();
 function readNotebookSettings() {
@@ -777,7 +777,7 @@ function buildShareURL() {
   if (state.section !== "any") p.set("section", state.section);
   if (state.pos !== "any") p.set("pos", state.pos);
   const hash = p.toString();
-  return location.origin + location.pathname + (hash ? "#" + hash : "");
+  return SITE_URL + "/search/" + (hash ? "#" + hash : "");
 }
 
 // A one-line description of the current search, for the share sheet's `text`. The link
