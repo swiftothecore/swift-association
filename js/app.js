@@ -7807,23 +7807,24 @@ function bonusSeconds() {
 function buildBonusPuzzle() {
   const indexes = bonusIndexes();
   const songs = bonusSongs();
+  const fresh = songs.filter((s) => !bonusRecentSongs.includes(s.title));
   if (isSlipGame(bonusGame))
     return buildSlipPuzzle(songs, slipSwaps, indexes.lineIndex, Math.random, new Set(bonusRecentSongs),
                            new Set(bonusRecentFakes), slipDealt);
   if (bonusGame.id === "sing-it-back")
-    return buildBlankPuzzle(songs, indexes.ctx, Math.random, 120, new Set(bonusRecentSongs));
+    return buildBlankPuzzle(fresh, indexes.ctx, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "redacted")
-    return buildRedactedPuzzle(songs, indexes.ctx, indexes.lineIndex, Math.random, 120, new Set(bonusRecentSongs));
+    return buildRedactedPuzzle(fresh, indexes.ctx, indexes.lineIndex, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "only-here")
     // The run's ramp: the early pages deal a wide hand with an obvious outlier, the later ones
     // a compressed one where the answer is a judgement rather than a read.
-    return buildOnlyHerePuzzle(songs, indexes.wordIndex, Math.random, 120,
+    return buildOnlyHerePuzzle(fresh, indexes.wordIndex, Math.random, 120,
                                new Set(bonusRecentSongs),
                                { tight: bonusRound > ONLY_WIDE_PAGES, words: onlyDealt });
   if (bonusGame.id === "then-what")
     // The run's own ramp: the early pages keep the chain inside one section, the later ones
     // ask for a chain that crosses a section boundary.
-    return buildChainPuzzle(songs, Math.random, 120, new Set(bonusRecentSongs),
+    return buildChainPuzzle(fresh, Math.random, 120, new Set(bonusRecentSongs),
                             { cross: bonusRound > CHAIN_EASY_PAGES });
   if (bonusGame.id === "running-order")
     return buildTrackPuzzle(songs, indexes.trackIndex, Math.random, 120,
@@ -7831,7 +7832,7 @@ function buildBonusPuzzle() {
   if (bonusGame.id === "word-cloud")
     // The run's ramp, and its only one: the first pages deal a wide cloud and the rest a spare
     // one, so the page gives you less of the song to go on as the run goes on.
-    return buildCloudPuzzle(songs, indexes.wordIndex, Math.random, 120,
+    return buildCloudPuzzle(fresh, indexes.wordIndex, Math.random, 120,
                             new Set(bonusRecentSongs),
                             { words: bonusRound > CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
   if (bonusGame.id === "aaron-or-jack")

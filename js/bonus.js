@@ -1917,6 +1917,7 @@ function cloudSpellings(song) {
    single rule changing under the player. The ramp lives in the caller (see CLOUD_WIDE_PAGES)
    because it is a property of the RUN, not of the song. */
 export function buildCloudPuzzle(songs, wordIndex, rng = Math.random, tries = 120, avoid = null, opts = {}) {
+  if (!songs.length) return null;
   const want = Math.max(CLOUD_MIN_WORDS, opts.words || 25);
   const pickSong = (fussy) => {
     for (let t = 0; t < tries; t++) {
