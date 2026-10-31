@@ -3264,24 +3264,34 @@
   :is(.mode-picker > .mode-tabs, .mode-tabs--shelf) > .mode-tab:not(.active) { border-color: var(--tab-pencil); }
   /* A shelf is inked in the picked tab's edge colour. */
   .mode-tabs--shelf { --tab-shelf: var(--tab-edge); }
-  /* The shelf. The box is measured from the tab's padding edge, which sits inside its 1.5px side
-     border, hence -5px: 1.5 of border and 3.5 of gap. It hangs just below the tab's foot. */
+  /* The shelf is a BORDER, never a filled strip, and so is the band it lies in. Chromium floors
+     every border to a whole CSS pixel (a 1.5px side is drawn 1px, at any density) while a box's
+     height is kept exact, so a 1.5px strip under 1px sides printed two weights that missed each
+     other by half a pixel at the join. WebKit keeps the 1.5. Borders on both sides of the joint
+     round the same way in every engine, so they meet in all of them.
+     Every tab on a shelf owns a transparent bottom border as deep as the line (the margin pays
+     it back, so the row's height never moves), and the shelf is laid along that band from the
+     tab's foot. It is measured from the padding edge, inside the side border, hence -5px: the
+     side and 3.5 of gap. */
+  .mode-tabs--shelf > .mode-tab,
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.is-back {
+    border-bottom: 1.5px solid transparent; margin-bottom: -1.5px;
+  }
   .mode-tabs--shelf > .mode-tab::after,
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.is-back::after {
-    content: ""; position: absolute; left: -5px; right: -5px; bottom: -1.5px; height: 1.5px;
-    background: var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
+    content: ""; position: absolute; left: -5px; right: -5px; top: 100%; height: 0;
+    border-top: 1.5px solid var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
   }
-  /* In front of the shelf: the tab reaches down through the line's depth (the padding pays back
-     the margin, so picking never shifts the row), its sides run to the line's foot, and only its
-     own 3.5px either side of the shelf is kept, level with its neighbours'. */
+  /* In front of the shelf: the tab's wash runs on down through the band (the background is
+     laid from the border edge, so the gradient does not restart there), and only its own stubs
+     of shelf are kept, each running in under the tab's side so the corner closes whatever weight
+     the side was drawn at, level with its neighbours'. */
   .mode-tabs--shelf > .mode-tab.active,
-  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back {
-    margin-bottom: -1.5px; padding-bottom: calc(var(--tab-foot) + 1.5px);
-  }
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back { background-origin: border-box; }
   .mode-tabs--shelf > .mode-tab.active::after,
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back::after {
-    bottom: 0;
-    background: linear-gradient(to right, var(--tab-shelf, var(--tab-pencil)) 3.5px, transparent 3.5px calc(100% - 3.5px), var(--tab-shelf, var(--tab-pencil)) calc(100% - 3.5px));
+    -webkit-mask: linear-gradient(to right, #000 5px, transparent 5px calc(100% - 5px), #000 calc(100% - 5px));
+            mask: linear-gradient(to right, #000 5px, transparent 5px calc(100% - 5px), #000 calc(100% - 5px));
   }
   /* The page. Opaque, because it is a sheet laid over the notebook rather than ink on it. Its
      padding is set so one line of terms stands 39px inside the rim, room for exactly three rows of 13s:
@@ -3338,17 +3348,23 @@
      stands on its shelf like the rows above; it still wears the page's colour, so the two read
      as a pair across the line between them. */
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back { border-color: var(--tab-rim); background: var(--tab-grain), var(--tab-grad), var(--paper); }
+  /* A picked tab on a shelf is open at the foot: the band it reaches down through is the
+     shelf's, and only its stubs are inked. After the edge colours above, which set all four. */
+  .mode-tabs--shelf > .mode-tab.active,
+  :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active.is-back { border-bottom-color: transparent; }
   :is(#difficultyRow, [data-flip-id="difficultyRow"]) .blurb-clause { white-space: nowrap; }
   /* Lyricist's divider stands in the gap between tabs, not on the page: held off the strip by
      the same margin it keeps from the tabs' tops, so it reads as a mark between two tabs rather
      than a crease running into the sheet. */
   :is(#modeTabs, [data-flip-id="modeTabs"], .mode-tabs--shelf) > .mode-tab-sep { height: 22px; margin-bottom: 6px; }
   /* On a shelf the divider stands in a 22px gap the tabs' own shelves don't reach across, so it
-     carries the line over it: dropped the 6px it is lifted by, plus the shelf's own hang. */
-  .mode-tabs--shelf > .mode-tab-sep { position: relative; }
+     carries the line over it, dropped the 6px it is lifted by plus the 1.5 the tabs' feet hang
+     past the row. It wears the same transparent foot they do, so the drop is measured from
+     inside a border rounded the same way theirs is, and its line starts where theirs do. */
+  .mode-tabs--shelf > .mode-tab-sep { position: relative; border-bottom: 1.5px solid transparent; }
   .mode-tabs--shelf > .mode-tab-sep::after {
-    content: ""; position: absolute; left: -12px; right: -11px; bottom: -7.5px; height: 1.5px;
-    background: var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
+    content: ""; position: absolute; left: -12px; right: -11px; top: calc(100% + 7.5px); height: 0;
+    border-top: 1.5px solid var(--tab-shelf, var(--tab-pencil)); pointer-events: none;
   }
   :is(#modeTabs, [data-flip-id="modeTabs"]) { z-index: 1; }
   /* Its tab is the top of the same sheet: dropped 1.5px over the page's top edge in the page's own
