@@ -232,7 +232,7 @@ function highlightTerms(line, query) {
   return markRanges(line, [...line.matchAll(rx)].map((m) => ({ start: m.index, len: m[0].length })));
 }
 
-const WORD_TOKEN_RE = /[\p{L}\p{M}]+(?:['’‘][\p{L}\p{M}]+)*/gu;
+const WORD_TOKEN_RE = /[\p{L}\p{M}\p{N}]+(?:['’‘][\p{L}\p{M}\p{N}]+)*/gu;
 const comparableToken = (text) => canonicalMatchText(text).toLowerCase();
 
 // Only catalogue lines enter this cache; arbitrary queries cannot grow it.
