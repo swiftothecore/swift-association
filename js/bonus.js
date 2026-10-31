@@ -427,7 +427,7 @@ export function buildRedactedPuzzle(songs, ctx, lineIndex, rng = Math.random, tr
     // rule, for the same reason).
     if (avoid && avoid.has(song.title) && t < tries * 0.7) continue;
 
-    const titleKey = normalizeLyric(song.title);
+    const titleKey = normalizeLyric(versionFamily(song.title));
     // Keyed the way each token is (wordKey) as well, splitting on an ellipsis between letters:
     // the lyric key reads "Come Back...Be Here" as "come backbe here", which left "back"
     // uncovered on that song's own page.
