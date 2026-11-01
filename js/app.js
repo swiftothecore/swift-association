@@ -5040,9 +5040,9 @@ const SB_LOUPE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
   `<path d="M15.2 15.3l5.6 5.4" stroke-width="2.8"/></svg>`;
 
 /* What is still hiding, under the capsule (catalogueDots in js/countdots.js): one dot per
-   unnamed song, a block per album, nothing once the book is complete. Measured once it is on the page, so the
-   blocks take as many rows as the book's width needs. An album's block carries its own count
-   in the bubble, and a click turns to that album's page of the list below. */
+   unnamed song, a block per album, nothing once the book is complete. Each dot names its song
+   in the bubble. Measured once it is on the page, so the blocks take as many rows as the book's
+   width needs. A click turns to that album's page of the list below. */
 let songbookGlanceWatch = null;
 function fillSongbookGlance(found) {
   const box = $("songbookGlance");
@@ -5062,7 +5062,7 @@ function layOutSongbookGlance(box, found) {
   box.innerHTML = catalogueDots(missing, allSongs, {
     width: box.clientWidth,
     colour: (album) => albumColor(album) || "var(--ink-soft)",
-    tip: (g) => escapeHtml(`${g.album} · ${g.songs.length} still hiding · ${g.all.length - g.songs.length} / ${g.all.length} found`),
+    tip: (s, g) => escapeHtml(`${censor(s.title)} · ${g.album} · ${g.songs.length} still hiding here`),
     seed: "songbook",
     label: "The songs still hiding, one dot each, grouped by album",
   });

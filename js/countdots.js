@@ -155,9 +155,9 @@ export function tipOutCountDots(svg, seed) {
    The count's dots turned on the player: one dot per song they have never named, in its
    album's colour, grouped into a block per album in discography order. The meter above
    already shows what was found, so only the gaps are drawn and a finished album drops out.
-   A dot is small to hover on its own, so each ALBUM carries the bubble and the click: a
-   transparent rect behind its block holds `data-tip` and `data-album`. A few songs make one
-   row; more take rows until the blocks fit `width`. */
+   Every dot carries its own bubble (`tip(song, group)`), widened for the pointer by a clear
+   stroke, and its album's block carries the click: a transparent rect behind the block holds
+   `data-album`. A few songs make one row; more take rows until the blocks fit `width`. */
 const GL_R = 3, GL_P = 8.4, GL_GAP = 9, GL_ROWS_MAX = 14;
 const glanceWidth = (groups, rows) =>
   groups.reduce((w, g) => w + Math.ceil(g.songs.length / rows) * GL_P + GL_GAP, -GL_GAP);
@@ -180,9 +180,9 @@ export function catalogueDots(missing, corpus, { width, colour, tip, seed, label
     g.songs.forEach((s, i) => {
       const cx = x + Math.floor(i / rows) * GL_P + GL_P / 2;
       const cy = (i % rows) * GL_P + GL_P / 2;
-      dots += `<circle cx="${(cx + j(0.5)).toFixed(2)}" cy="${(cy + j(0.6)).toFixed(2)}" r="${(GL_R * (1 + j(0.1))).toFixed(2)}" fill="${ink}"/>`;
+      dots += `<circle cx="${(cx + j(0.5)).toFixed(2)}" cy="${(cy + j(0.6)).toFixed(2)}" r="${(GL_R * (1 + j(0.1))).toFixed(2)}" fill="${ink}" data-tip="${tip(s, g)}"/>`;
     });
-    out += `<g class="cg-album" data-album="${g.album.replace(/"/g, "&quot;")}" data-tip="${tip(g)}">` +
+    out += `<g class="cg-album" data-album="${g.album.replace(/"/g, "&quot;")}">` +
       `<rect class="cg-hit" x="${x - GL_GAP / 2}" y="-3" width="${cols * GL_P + GL_GAP}" height="${h + 6}"/>${dots}</g>`;
     x += cols * GL_P + GL_GAP;
   }

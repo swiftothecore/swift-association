@@ -14071,6 +14071,9 @@
   .cat-glance .cg-hit { fill: transparent; }
   .cat-glance .cg-album { cursor: pointer; transition: opacity .15s; }
   .cat-glance:hover .cg-album:not(:hover) { opacity: 0.4; }
+  /* a clear stroke widens each dot for the pointer without drawing anything */
+  .cat-glance circle { stroke: transparent; stroke-width: 3; transform-box: fill-box; transform-origin: center; transition: transform .12s; }
+  .cat-glance circle:hover { transform: scale(1.35); }
   .sb-album { margin-bottom: 18px; }
   .sb-album-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
   .sb-spine { width: 5px; height: 19px; border-radius: 2px; flex: none; }
