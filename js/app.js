@@ -96,7 +96,7 @@ import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordC
 import { buildLyricReveal, revealSections } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
-import { countDots, tipOutCountDots } from "./countdots.js";
+import { countDots, tipOutCountDots, catalogueDots } from "./countdots.js";
 import { handFrom } from "./penfill.js";
 import * as F13 from "./form13.js";
 import { postmarkSVG, postmarkDate } from "./postmark.js";
@@ -4994,14 +4994,17 @@ function renderSongbook() {
   for (const s of allSongs) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
 
   const sub = complete
-    ? "every song found: the whole catalogue, by heart"
-    : remaining + " song" + (remaining === 1 ? "" : "s") + " still hiding from you";
+    ? "every song found"
+    : remaining + " song" + (remaining === 1 ? "" : "s") + " still hiding";
 
+  // The count sits in a typed capsule led by a little mark: a magnifier while songs are still
+  // out there, the songbook's own gold star once they are all in.
   let html = `<div class="sb-meter${complete ? " done" : ""}">
       <div class="cat-meter-head"><span>songs named correctly</span><span>${pct}%</span></div>
       <div class="cat-meter-num"><b>${discovered}</b> / ${total} songs</div>
       <div class="cat-bar">${albumRainbowSegs(byAlbum, total)}</div>
-      <div class="sb-sub">${sub}</div>
+      <div class="sb-sub"><span class="sb-sub-mark" aria-hidden="true">${complete ? STAR_SVG : SB_LOUPE}</span>${sub}</div>
+      <div class="sb-glance" id="songbookGlance"></div>
     </div>`;
 
   // Album order = first appearance in allSongs (the catalogue order).
@@ -5029,6 +5032,48 @@ function renderSongbook() {
   }).join("");
 
   $("songbookBody").innerHTML = html;
+  fillSongbookGlance(found);
+}
+
+const SB_LOUPE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">` +
+  `<path d="M10.3 3.6c3.6-.2 6.5 2.6 6.6 6.2.1 3.7-2.8 6.6-6.4 6.7-3.6.1-6.6-2.8-6.7-6.3C3.7 6.7 6.6 3.8 10.3 3.6z" stroke-width="2.1"/>` +
+  `<path d="M15.2 15.3l5.6 5.4" stroke-width="2.8"/></svg>`;
+
+/* The catalogue at a glance under the capsule (catalogueDots in js/countdots.js): one block per
+   album, found songs inked and hiding ones hollow. Measured once it is on the page, so the
+   blocks take as many rows as the book's width needs. An album's block carries its own count
+   in the bubble, and a click turns to that album's page of the list below. */
+let songbookGlanceWatch = null;
+function fillSongbookGlance(found) {
+  const box = $("songbookGlance");
+  if (!box) return;
+  // The book is rendered before its page turns in, while it still has no width, so the blocks
+  // are laid out when the box first gets one and again whenever it changes.
+  songbookGlanceWatch?.disconnect();
+  let laidAt = -1;
+  songbookGlanceWatch = new ResizeObserver(() => {
+    const w = box.clientWidth;
+    if (w > 0 && w !== laidAt) { laidAt = w; layOutSongbookGlance(box, found); }
+  });
+  songbookGlanceWatch.observe(box);
+}
+function layOutSongbookGlance(box, found) {
+  const left = (g) => g.songs.filter((s) => !found[s.title]).length;
+  box.innerHTML = catalogueDots(allSongs, {
+    width: box.clientWidth,
+    colour: (album) => albumColor(album) || "var(--ink-soft)",
+    has: (s) => !!found[s.title],
+    tip: (g) => {
+      const n = left(g), got = g.songs.length - n;
+      return escapeHtml(`${g.album} · ${got} / ${g.songs.length} · ${n ? n + " still hiding" : "all found"}`);
+    },
+    seed: "songbook",
+    label: "Each album's songs, the ones you've named filled in",
+  });
+  box.querySelectorAll(".cg-album").forEach((g) => g.addEventListener("click", () => {
+    const sec = [...document.querySelectorAll("#songbookBody .sb-album")].find((x) => x.dataset.album === g.dataset.album);
+    if (sec) sec.scrollIntoView({ behavior: motionReduced() ? "auto" : "smooth", block: "start" });
+  }));
 }
 
 /* ---------- Personal records (your own best runs, per mode) ---------- */

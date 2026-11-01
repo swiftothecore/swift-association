@@ -150,3 +150,43 @@ export function tipOutCountDots(svg, seed) {
     ], { delay: r() * 170, duration: 935 + r() * 255, fill: "both", easing: "cubic-bezier(.35,0,.25,1)" });
   }
 }
+
+/* ---------- The whole catalogue at a glance (the Songbook) ----------
+   The tracklist shape above, turned on the player instead of a word: every album prints its
+   whole running order as one block, the songs they have named inked in the era colour and the
+   ones still hiding left as hollow rings, so where the gaps are reads before any title does.
+   Unlike a count's dots, nothing is filtered out: an album already finished still prints, as a
+   solid block, because the point is the shape of what is left against the whole shelf.
+   A dot is too small to hover on its own, so each ALBUM carries the bubble and the click: a
+   transparent rect behind its block holds `data-tip` and `data-album`. Laid out to `width` the
+   same way the tracklists are, more rows when the page is narrow. */
+const GL_R = 2.5, GL_P = 6.6, GL_GAP = 7, GL_ROWS_MIN = 3, GL_ROWS_MAX = 14;
+const glanceWidth = (groups, rows) =>
+  groups.reduce((w, g) => w + Math.ceil(g.songs.length / rows) * GL_P + GL_GAP, -GL_GAP);
+
+export function catalogueDots(corpus, { width, colour, has, tip, seed, label }) {
+  if (!corpus.length) return "";
+  const groups = albumsOf(corpus);
+  const j = hand(seed);
+  let rows = GL_ROWS_MIN;
+  while (rows < GL_ROWS_MAX && glanceWidth(groups, rows) > width) rows++;
+  const h = Math.ceil(rows * GL_P);
+  let x = 0, out = "";
+  for (const g of groups) {
+    const cols = Math.ceil(g.songs.length / rows);
+    const ink = colour(g.album);
+    let dots = "";
+    g.songs.forEach((s, i) => {
+      const cx = x + Math.floor(i / rows) * GL_P + GL_P / 2;
+      const cy = (i % rows) * GL_P + GL_P / 2;
+      dots += has(s)
+        ? `<circle cx="${(cx + j(0.5)).toFixed(2)}" cy="${(cy + j(0.6)).toFixed(2)}" r="${(GL_R * (1 + j(0.1))).toFixed(2)}" fill="${ink}"/>`
+        : `<circle class="cg-miss" cx="${cx}" cy="${cy}" r="${GL_R - 0.5}"/>`;
+    });
+    out += `<g class="cg-album" data-album="${g.album.replace(/"/g, "&quot;")}" data-tip="${tip(g)}">` +
+      `<rect class="cg-hit" x="${x - GL_GAP / 2}" y="-2" width="${cols * GL_P + GL_GAP}" height="${h + 4}"/>${dots}</g>`;
+    x += cols * GL_P + GL_GAP;
+  }
+  const w = Math.ceil(x - GL_GAP);
+  return `<svg class="cat-glance" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${out}</svg>`;
+}

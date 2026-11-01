@@ -14051,8 +14051,27 @@
   /* --margin is the RULE down the page, an alpha tuned to be seen through; --red-pen is the
      token for red you have to read. This line is a sentence, so it takes the pen. The two are
      close enough by day that the swap barely shows; at night the rule was 1.8:1. */
-  .sb-sub { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--red-pen); margin-top: 9px; line-height: 1; }
-  .sb-meter.done .sb-sub { color: var(--ink-accent); }
+  /* the count as a typed capsule, its mark sat in a filled cap at the left end */
+  .sb-sub {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
+    padding: 3px 13px 3px 3px; border: 1.5px solid var(--red-pen); border-radius: 999px;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1.4px;
+    text-transform: uppercase; color: var(--red-pen); line-height: 1;
+  }
+  .sb-sub-mark {
+    display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; flex: none;
+    background: var(--red-pen); color: var(--paper);
+  }
+  .sb-sub-mark svg { width: 12px; height: 12px; display: block; }
+  .sb-meter.done .sb-sub { color: var(--ink-accent); border-color: var(--bead); }
+  .sb-meter.done .sb-sub-mark { background: var(--bead); }
+  /* the catalogue at a glance (catalogueDots in js/countdots.js): one block per album */
+  .sb-glance { margin-top: 12px; }
+  .cat-glance { display: block; max-width: 100%; overflow: visible; }
+  .cat-glance .cg-miss { fill: none; stroke: var(--red-pen); stroke-width: 0.9; stroke-opacity: 0.55; }
+  .cat-glance .cg-hit { fill: transparent; }
+  .cat-glance .cg-album { cursor: pointer; transition: opacity .15s; }
+  .cat-glance:hover .cg-album:not(:hover) { opacity: 0.4; }
   .sb-album { margin-bottom: 18px; }
   .sb-album-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
   .sb-spine { width: 5px; height: 19px; border-radius: 2px; flex: none; }
