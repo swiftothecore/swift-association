@@ -55,7 +55,7 @@ export const INFLECT = "(?:ing|in|ins|ings|ed|er|ers|es|y|ies|ied|ier|iest|able)
 export function wordVariants(word) {
   const w = canonicalMatchText(word).toLowerCase();
   const alts = [exactWordBody(w) + STEM_TAIL];   // base: word + one bounded suffix
-  if (w.length >= 5 && w.endsWith("ing")) alts.push(exactWordBody(w.slice(0, -1)) + APOSTROPHE_PATTERN + "?");
+  if (w.endsWith("ing") && /[aeiouy]/.test(w.slice(0, -3))) alts.push(exactWordBody(w.slice(0, -1)) + APOSTROPHE_PATTERN + "?");
   // Length 3, not 4: the three-letter -e words are exactly the ones the missing bare "d"
   // would otherwise strand (die→died, lie→lied, eye→eyed, ice→icy), and shortening it here
   // adds nothing else on the catalogue.
