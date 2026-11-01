@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import * as util from '../js/util.js';
 import * as match from '../js/match.js';
 import * as config from '../js/config.js';
+import { referenceTypoFragments } from './helpers/lyric-typo-reference.mjs';
 
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -47,6 +48,80 @@ function summerHarness(extra = []) {
   h.setWord('summer');
   return h;
 }
+
+test('prepared typo searches preserve all catalogue hits after reuse and an abandoned first hit', (t) => {
+  const h = harness();
+  let checked = 0;
+  const compare = (np, readings) => {
+    const query = h.context.prepareTypoLyricQuery(np);
+    for (const lyrics of readings) {
+      const expected = [...referenceTypoFragments(np, lyrics, h.context.lyricTokenTypoApart)];
+      // A title probe can stop at its first hit. The next sheet must still start at zero.
+      if (expected.length) assert.equal(JSON.stringify(h.context.typoLyricFragments(query, lyrics).next().value), JSON.stringify(expected[0]));
+      const actual = [...h.context.typoLyricFragments(query, lyrics)];
+      assert.equal(JSON.stringify(actual), JSON.stringify(expected), np);
+      checked++;
+    }
+  };
+  const songs = h.context.allSongs;
+  songs.forEach((song, i) => {
+    const raw = song.lyrics.split('\n').find((line) => util.normalizeLyric(line).split(' ').length >= 4);
+    if (!raw) return;
+    const tokens = util.normalizeLyric(raw).split(' ').slice(0, 10);
+    const at = tokens.findIndex((word) => word.length >= 4);
+    if (at < 0) return;
+    const word = tokens[at];
+    for (const changed of [word, word.slice(0, 2) + 'x' + word.slice(2),
+      word.slice(0, 1) + word.slice(2), word.slice(0, 2) + 'x' + word.slice(3),
+      word[1] + word[0] + word.slice(2)]) {
+      const typed = [...tokens]; typed[at] = changed;
+      compare(typed.join(' '), [song._normTitleLyric, songs[(i + 1) % songs.length]._normLyrics,
+        song._normLyrics, song._normLyricsBare, song._normLyrics]);
+    }
+  });
+  compare('summer retruns summer', ['summer returns summer returns summer', 'summer returns summer']);
+  compare('the summer retruns to our gard', ['the summer returns to our garden', 'nothing here']);
+  compare('a? sumemr [garden]', ['a? summer [garden]', 'a summer garden']);
+  for (const line of ['the summer returns to our garden in moonlight',
+    'café déjà vu a thousand nights beside you', 'the summer is dancing in our garden']) {
+    const tokens = util.normalizeLyric(line).split(' ');
+    tokens.forEach((word, i) => {
+      const typed = [...tokens]; typed[i] = word.slice(0, 1) + 'x' + word.slice(1);
+      compare(typed.join(' '), [tokens.join(' '), tokens.join(' ') + ' ' + tokens.join(' ')]);
+      typed[typed.length - 1] = typed.at(-1).slice(0, -1);
+      compare(typed.join(' '), [tokens.join(' ')]);
+    });
+  }
+  assert.ok(checked > 6000);
+  t.diagnostic(`Compared ${checked} phrase/sheet readings with the unprepared search`);
+});
+
+test('phrase preparation leaves the live meter identical throughout typed lines and verses', (t) => {
+  const prepared = harness(), original = harness();
+  original.context.prepareTypoLyricQuery = (np) => np;
+  original.context.typoLyricFragments = (np, lyrics) => referenceTypoFragments(np, lyrics, original.context.lyricTokenTypoApart);
+  const verdict = (h, text) => {
+    const result = h.context.matchLyricLine(text);
+    return result && { ...result, song: [result.song.album, result.song.title] };
+  };
+  let checked = 0;
+  for (const [word, text] of [
+    ['love', 'I love you aint that the wrst thing you ever heard'],
+    ['young', 'We were both young when I first saw you I close my eyes and the flashbak starts Im standing there On a balcony in summer air'],
+    ['summer', 'The lantern flikcers softly beside the garden in summer'],
+    ['well', 'I remember it all too wlel'],
+    ['love', 'this is a line that does not exist anywhere in the songs'],
+  ]) {
+    for (const h of [prepared, original]) { h.context.strict = false; h.setWord(word); }
+    for (let i = 1; i <= text.length; i++) {
+      const typed = text.slice(0, i);
+      assert.equal(prepared.context.verseProgress(typed), original.context.verseProgress(typed), `${word}: ${typed}`);
+      checked++;
+    }
+    assert.equal(JSON.stringify(verdict(prepared, text)), JSON.stringify(verdict(original, text)));
+  }
+  t.diagnostic(`Compared ${checked} consecutive meter states with the unprepared search`);
+});
 
 test('the meter preserves full-line rewards for one insertion, deletion, substitution or swap', () => {
   const h = summerHarness();

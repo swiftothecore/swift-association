@@ -46,6 +46,34 @@ test('fuzzy early exit preserves acceptance, exact accepted scores and boundary 
   }
 });
 
+test('one-edit substring shortcut preserves exact scores, window edges and threshold ties', () => {
+  const strings = [''];
+  for (let length = 1; length <= 5; length++) {
+    for (let bits = 0; bits < 2 ** length; bits++) strings.push(bits.toString(2).padStart(length, '0').replace(/0/g, 'a').replace(/1/g, 'b'));
+  }
+  const cases = strings.flatMap((pattern) => strings.map((text) => [pattern, text]));
+  for (const pattern of ['a b a', 'café', '😀ab', 'word '.repeat(8).trim(), 'a'.repeat(30)]) {
+    for (let at = 0; at <= pattern.length; at++) {
+      for (const changed of [pattern.slice(0, at) + 'x' + pattern.slice(at),
+        pattern.slice(0, at) + pattern.slice(at + 1),
+        pattern.slice(0, at) + 'x' + pattern.slice(at + 1)]) {
+        for (const padding of ['', 'zz ']) cases.push([pattern, padding + changed + padding]);
+      }
+    }
+  }
+  cases.push(['a'.repeat(100) + 'bbb', 'a'.repeat(5000)],
+    ['a'.repeat(100) + 'bbb', 'a'.repeat(5000) + 'abb']);
+  for (const [pattern, text] of cases) {
+    const exact = fullRatio(pattern, text), size = pattern.length || 1;
+    for (const minimum of [1, 1 + Number.EPSILON, 1 - 1 / size,
+      1 - 1 / size + Number.EPSILON, 1 - 2 / size, 1 - 2 / size + Number.EPSILON]) {
+      const actual = util.fuzzySubstringRatio(pattern, text, minimum);
+      assert.equal(actual >= minimum, exact >= minimum, `${pattern} / ${text} >= ${minimum}`);
+      if (exact >= minimum) assert.equal(actual, exact);
+    }
+  }
+});
+
 test('bonus pages build only their required indexes and restore the right corpus cache', () => {
   const calls = [];
   const builders = {

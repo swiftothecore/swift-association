@@ -25781,20 +25781,41 @@ function lyricTokenTypoApart(typed, source) {
   return unfolded !== source && normalizeLyric(unfolded) === source && oneTypoApart(typed, unfolded);
 }
 
-function* typoLyricFragments(np, lyrics) {
-  const words = np.split(" ");
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    // The pattern below needs the rest of the phrase verbatim on both sides of the slip, so
-    // a song missing either side cannot match it, and no pattern is built. On a long line
-    // that is nearly every word, which is what keeps this cheap enough to run per keystroke.
-    if (i && !lyrics.includes(words.slice(0, i).join(" ") + " ")) continue;
-    if (i < words.length - 1 && !lyrics.includes(" " + words.slice(i + 1).join(" "))) continue;
-    const before = i ? escapeRegExp(words.slice(0, i).join(" ") + " ") : "";
-    const after = i < words.length - 1 ? escapeRegExp(" " + words.slice(i + 1).join(" ")) : "";
-    for (const length of [word.length, word.length - 1, word.length + 1, word.length - 2]) {
-      if (length < 1) continue;
-      const rx = new RegExp(`(?:^| )${before}(\\S{${length}})${after}`, "g");
+// Prepared only for this typed phrase, shared by the title guard and both readings of
+// every song. A single-token slip can touch only one half, so the other half must occur
+// verbatim. This is a rejection pre-check only; the ordinary typo tests still judge hits.
+function prepareTypoLyricQuery(np) {
+  const words = np.split(" "), mid = Math.ceil(words.length / 2);
+  return {
+    head: words.slice(0, mid).join(" "),
+    tail: words.slice(mid).join(" "),
+    parts: words.map((word, i) => ({
+      word,
+      before: i ? words.slice(0, i).join(" ") + " " : "",
+      after: i < words.length - 1 ? " " + words.slice(i + 1).join(" ") : "",
+      patterns: null,
+    })),
+  };
+}
+
+function* typoLyricFragments(query, lyrics) {
+  if (!lyrics.includes(query.head) && !lyrics.includes(query.tail)) return;
+  for (const part of query.parts) {
+    const { word, before, after } = part;
+    // A song missing either verbatim side cannot match. Build this token's patterns only
+    // after a sheet passes, then reuse them for the remaining sheets in the same query.
+    if (before && !lyrics.includes(before)) continue;
+    if (after && !lyrics.includes(after)) continue;
+    if (!part.patterns) {
+      const head = escapeRegExp(before), tail = escapeRegExp(after);
+      part.patterns = [word.length, word.length - 1, word.length + 1, word.length - 2]
+        .filter((length) => length >= 1)
+        .map((length) => new RegExp(`(?:^| )${head}(\\S{${length}})${tail}`, "g"));
+    }
+    for (const rx of part.patterns) {
+      // A caller may stop after one hit (the title guard does). Never carry that cursor
+      // into the next title, song, or bracket-free reading.
+      rx.lastIndex = 0;
       let hit;
       while ((hit = rx.exec(lyrics))) {
         const at = hit.index + (hit[0].startsWith(" ") ? 1 : 0);
@@ -25811,18 +25832,19 @@ function verseTypoProgress(np, raw) {
   const count = np.split(" ").length;
   if (count < MIN_LYRIC_WORDS &&
       !(count >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS)) return null;
+  const query = prepareTypoLyricQuery(np);
   // A misspelled title must be as uninformative as a correctly spelled one. This reads
   // ALL titles, including songs that cannot answer the page, just like isTitleFragment.
   // A slip changes a token's length by two letters at most, so a title more than two letters
   // shorter than the phrase cannot hold it, and is skipped before any pattern is built. Once
   // a line is longer than every title, that is all of them.
   if (allSongs.some((s) => s._normTitleLyric.length >= np.length - 2 &&
-      !typoLyricFragments(np, s._normTitleLyric).next().done)) return null;
+      !typoLyricFragments(query, s._normTitleLyric).next().done)) return null;
   // Each song is read with its bracketed ad-libs and, when it has any, without them.
   const reads = currentSongs.flatMap((s) => s._normLyricsBare === s._normLyrics
     ? [{ s, bare: false }] : [{ s, bare: false }, { s, bare: true }]);
   for (const { s, bare } of reads) {
-    for (const hit of typoLyricFragments(np, bare ? s._normLyricsBare : s._normLyrics)) {
+    for (const hit of typoLyricFragments(query, bare ? s._normLyricsBare : s._normLyrics)) {
       if (isTitleFragment(hit.phrase) || !nearPromptWord(s, hit.at, hit.phrase, bare)) continue;
       const { text: line, lines } = recoverLyricLine(s, hit.phrase);
       const { tier } = gradeLyricRecall(np, line, lines);

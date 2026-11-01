@@ -190,6 +190,18 @@ export function swappedNeighbours(a, b) {
 export function fuzzySubstringRatio(pattern, text, minimum = 0) {
   if (!pattern.length) return 0;
   if (!text.length) return 0;
+  // A strong first match often leaves only one edit available to every other song.
+  // One edit can touch only one half of the pattern: find the unchanged half, then
+  // check the few adjacent windows. Keep the ratio comparisons literal so an exact
+  // threshold tie cannot be lost to rounding an integer edit budget.
+  if (minimum > 1) return 0;
+  if (minimum > 0 && 1 - 2 / pattern.length < minimum) {
+    if (text.includes(pattern)) return 1;
+    const oneEdit = 1 - 1 / pattern.length;
+    if (oneEdit < minimum) return 0;
+    const found = oneEditSubstring(pattern, text);
+    if (found !== null) return found ? oneEdit : 0;
+  }
   let prev = new Array(text.length + 1).fill(0);
   let curr = new Array(text.length + 1);
   for (let i = 1; i <= pattern.length; i++) {
@@ -208,6 +220,37 @@ export function fuzzySubstringRatio(pattern, text, minimum = 0) {
   let best = Infinity;
   for (let j = 0; j <= text.length; j++) if (prev[j] < best) best = prev[j];
   return Math.max(0, 1 - best / pattern.length);
+}
+
+function oneEditSubstring(pattern, text) {
+  // A positive one-edit score requires at least two code units, so neither half is empty.
+  const size = pattern.length, mid = Math.floor(size / 2);
+  let windows = 0;
+  for (const offset of [0, mid]) {
+    const anchor = offset ? pattern.slice(mid) : pattern.slice(0, mid);
+    for (let at = text.indexOf(anchor); at >= 0; at = text.indexOf(anchor, at + 1)) {
+      // An insertion or deletion before the anchor shifts the window start by one.
+      for (let start = at - offset - 1; start <= at - offset + 1; start++) {
+        if (start < 0) continue;
+        for (let length = size - 1; length <= size + 1; length++) {
+          const end = start + length;
+          if (end > text.length) continue;
+          // Repetitive anchors can produce many windows. Bound the shortcut's work,
+          // then let the ordinary DP judge the whole text instead of walking them all.
+          if (++windows > 64) return null;
+          let i = 0, j = start, edits = 0;
+          while (i < size && j < end) {
+            if (pattern[i] === text[j]) { i++; j++; continue; }
+            if (++edits > 1) break;
+            if (size >= length) i++;
+            if (length >= size) j++;
+          }
+          if (edits + size - i + end - j <= 1) return true;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 // Mulberry32 — a fast, small seeded PRNG. Returns a factory that produces
