@@ -269,12 +269,12 @@ function prepareSearch(terms, mode) {
       if (mode === "fuzzy" || mode === "contains") {
         return { ql, minimum: ql.length === 4 ? FUZZY_FOUR_MIN : FUZZY_MIN, scores: new Map() };
       }
-      const rx = wordRegex(term, mode === "exact");
-      const exactBody = exactWordBody(term);
+      const rx = wordRegex(ql, mode === "exact");
+      const exactBody = exactWordBody(ql);
       return {
         rangeRx: new RegExp(rx.source, rx.flags.includes("g") ? rx.flags : rx.flags + "g"),
         exactBody, exactRx: new RegExp(boundedWordBody(exactBody), "iu"),
-        variantBody: mode === "exact" ? exactBody : variantBody(term),
+        variantBody: mode === "exact" ? exactBody : variantBody(ql),
       };
     }),
   };
