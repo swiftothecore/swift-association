@@ -18380,7 +18380,7 @@ function maybeStartFromWordParam() {
     params.delete("word");
     const qs = params.toString();
     history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
-    if (word && word.trim()) { startFromWord(word); return true; }
+    if (word && word.trim()) return startFromWord(word);
   } catch (e) { /* malformed URL — ignore */ }
   return false;
 }
