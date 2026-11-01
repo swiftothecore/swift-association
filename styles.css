@@ -14065,10 +14065,9 @@
   .sb-sub-mark svg { width: 12px; height: 12px; display: block; }
   .sb-meter.done .sb-sub { color: var(--ink-accent); border-color: var(--bead); }
   .sb-meter.done .sb-sub-mark { background: var(--bead); }
-  /* the catalogue at a glance (catalogueDots in js/countdots.js): one block per album */
+  /* the songs still hiding (catalogueDots in js/countdots.js): one block per album */
   .sb-glance { margin-top: 12px; }
   .cat-glance { display: block; max-width: 100%; overflow: visible; }
-  .cat-glance .cg-miss { fill: none; stroke: var(--red-pen); stroke-width: 0.9; stroke-opacity: 0.55; }
   .cat-glance .cg-hit { fill: transparent; }
   .cat-glance .cg-album { cursor: pointer; transition: opacity .15s; }
   .cat-glance:hover .cg-album:not(:hover) { opacity: 0.4; }

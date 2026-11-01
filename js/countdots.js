@@ -151,24 +151,25 @@ export function tipOutCountDots(svg, seed) {
   }
 }
 
-/* ---------- The whole catalogue at a glance (the Songbook) ----------
-   The tracklist shape above, turned on the player instead of a word: every album prints its
-   whole running order as one block, the songs they have named inked in the era colour and the
-   ones still hiding left as hollow rings, so where the gaps are reads before any title does.
-   Unlike a count's dots, nothing is filtered out: an album already finished still prints, as a
-   solid block, because the point is the shape of what is left against the whole shelf.
-   A dot is too small to hover on its own, so each ALBUM carries the bubble and the click: a
-   transparent rect behind its block holds `data-tip` and `data-album`. Laid out to `width` the
-   same way the tracklists are, more rows when the page is narrow. */
-const GL_R = 2.5, GL_P = 6.6, GL_GAP = 7, GL_ROWS_MIN = 3, GL_ROWS_MAX = 14;
+/* ---------- What is still hiding (the Songbook) ----------
+   The count's dots turned on the player: one dot per song they have never named, in its
+   album's colour, grouped into a block per album in discography order. The meter above
+   already shows what was found, so only the gaps are drawn and a finished album drops out.
+   A dot is small to hover on its own, so each ALBUM carries the bubble and the click: a
+   transparent rect behind its block holds `data-tip` and `data-album`. A few songs make one
+   row; more take rows until the blocks fit `width`. */
+const GL_R = 3, GL_P = 8.4, GL_GAP = 9, GL_ROWS_MAX = 14;
 const glanceWidth = (groups, rows) =>
   groups.reduce((w, g) => w + Math.ceil(g.songs.length / rows) * GL_P + GL_GAP, -GL_GAP);
 
-export function catalogueDots(corpus, { width, colour, has, tip, seed, label }) {
-  if (!corpus.length) return "";
-  const groups = albumsOf(corpus);
+export function catalogueDots(missing, corpus, { width, colour, tip, seed, label }) {
+  const held = new Set(missing);
+  const groups = albumsOf(corpus)
+    .map((g) => ({ album: g.album, all: g.songs, songs: g.songs.filter((s) => held.has(s)) }))
+    .filter((g) => g.songs.length);
+  if (!groups.length) return "";
   const j = hand(seed);
-  let rows = GL_ROWS_MIN;
+  let rows = 1;
   while (rows < GL_ROWS_MAX && glanceWidth(groups, rows) > width) rows++;
   const h = Math.ceil(rows * GL_P);
   let x = 0, out = "";
@@ -179,12 +180,10 @@ export function catalogueDots(corpus, { width, colour, has, tip, seed, label }) 
     g.songs.forEach((s, i) => {
       const cx = x + Math.floor(i / rows) * GL_P + GL_P / 2;
       const cy = (i % rows) * GL_P + GL_P / 2;
-      dots += has(s)
-        ? `<circle cx="${(cx + j(0.5)).toFixed(2)}" cy="${(cy + j(0.6)).toFixed(2)}" r="${(GL_R * (1 + j(0.1))).toFixed(2)}" fill="${ink}"/>`
-        : `<circle class="cg-miss" cx="${cx}" cy="${cy}" r="${GL_R - 0.5}"/>`;
+      dots += `<circle cx="${(cx + j(0.5)).toFixed(2)}" cy="${(cy + j(0.6)).toFixed(2)}" r="${(GL_R * (1 + j(0.1))).toFixed(2)}" fill="${ink}"/>`;
     });
     out += `<g class="cg-album" data-album="${g.album.replace(/"/g, "&quot;")}" data-tip="${tip(g)}">` +
-      `<rect class="cg-hit" x="${x - GL_GAP / 2}" y="-2" width="${cols * GL_P + GL_GAP}" height="${h + 4}"/>${dots}</g>`;
+      `<rect class="cg-hit" x="${x - GL_GAP / 2}" y="-3" width="${cols * GL_P + GL_GAP}" height="${h + 6}"/>${dots}</g>`;
     x += cols * GL_P + GL_GAP;
   }
   const w = Math.ceil(x - GL_GAP);
