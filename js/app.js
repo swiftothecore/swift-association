@@ -1321,8 +1321,8 @@ function copyFlipRuntimeState(src, flip) {
     }
     copy.scrollTop = node.scrollTop;
     copy.scrollLeft = node.scrollLeft;
-    syncFlipAnimations(node, copy);
   });
+  syncFlipAnimations(sources, copies);
 }
 
 // A cloned node is a NEW element, so every CSS animation on it starts again from its first
@@ -1331,18 +1331,36 @@ function copyFlipRuntimeState(src, flip) {
 // away. Wind each of the copy's animations to wherever its twin on the live page has got to
 // (an entrance that has long finished lands on its last frame, a loop carries on in step).
 // One with no live twin had already run out on the page, so it is finished on the copy too.
-function syncFlipAnimations(node, copy) {
-  if (!copy.getAnimations || copy.classList.contains("flip-shade")) return;
-  const own = (el) => el.getAnimations({ subtree: true }).filter((a) => a.effect && a.effect.target === el);
-  const live = own(node);
-  own(copy).forEach((anim) => {
-    if (copy.classList.contains("page-flip-sheet") && !anim.effect.pseudoElement) return;   // the turn itself
-    const twin = live.find((a) => a.animationName === anim.animationName
-      && (a.effect.pseudoElement || null) === (anim.effect.pseudoElement || null));
-    try {
-      if (twin && twin.currentTime != null) anim.currentTime = twin.currentTime;
-      else anim.finish();
-    } catch (_) {}   // finish() throws on an infinite loop with no live twin; leave it running
+function syncFlipAnimations(sources, copies) {
+  // Query each sheet once. Asking every node for its whole subtree repeatedly walks the
+  // same descendants. Keep subtree:true here: some browsers only report ::before/::after
+  // animations that way, even though their effect.target is the element itself.
+  const byTarget = (root) => {
+    const grouped = new Map();
+    for (const anim of root.getAnimations?.({ subtree: true }) || []) {
+      const target = anim.effect?.target;
+      if (!target) continue;
+      if (!grouped.has(target)) grouped.set(target, []);
+      grouped.get(target).push(anim);
+    }
+    return grouped;
+  };
+  const live = byTarget(sources[0]);
+  const cloned = byTarget(copies[0]);
+  sources.forEach((node, i) => {
+    const copy = copies[i];
+    const animations = cloned.get(copy);
+    if (!animations || copy.classList.contains("flip-shade")) return;
+    const originals = live.get(node) || [];
+    animations.forEach((anim) => {
+      if (copy.classList.contains("page-flip-sheet") && !anim.effect.pseudoElement) return;   // the turn itself
+      const twin = originals.find((a) => a.animationName === anim.animationName
+        && (a.effect.pseudoElement || null) === (anim.effect.pseudoElement || null));
+      try {
+        if (twin && twin.currentTime != null) anim.currentTime = twin.currentTime;
+        else anim.finish();
+      } catch (_) {}   // finish() throws on an infinite loop with no live twin; leave it running
+    });
   });
 }
 

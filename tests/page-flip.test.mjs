@@ -1,12 +1,58 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import vm from "node:vm";
 
 const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const dev = readFileSync(new URL("../js/dev.js", import.meta.url), "utf8");
 
 const occurrences = (source, needle) => source.split(needle).length - 1;
+
+test("one animation snapshot per sheet preserves element and pseudo-element timing", () => {
+  const start = app.indexOf("function syncFlipAnimations(");
+  const context = vm.createContext({});
+  vm.runInContext(app.slice(start, app.indexOf("\n}", start) + 2), context);
+  const node = (...classes) => ({ classList: { contains: (name) => classes.includes(name) } });
+  const src = node(), child = node(), flip = node("page-flip-sheet"), copy = node();
+  const shade = node("flip-shade"), shadeCopy = node("flip-shade");
+  const animation = (target, name, time, pseudo = null, infinite = false) => ({
+    effect: { target, pseudoElement: pseudo }, animationName: name, currentTime: time,
+    finished: false,
+    finish() { if (infinite) throw Error("infinite animation"); this.finished = true; },
+  });
+  const live = [animation(src, "glint", 725, "::after"),
+    animation(child, "ink", 300), animation(child, "ink", 450, "::before")];
+  const turn = animation(flip, "pageFlip", 13);
+  const glint = animation(flip, "glint", 0, "::after");
+  const ink = animation(copy, "ink", 0), pseudo = animation(copy, "ink", 0, "::before");
+  const missing = animation(copy, "spent", 0), endless = animation(copy, "loop", 17, null, true);
+  const afterEndless = animation(copy, "settled", 0), shadow = animation(shadeCopy, "shade", 22);
+  const cloned = [turn, glint, ink, pseudo, missing, endless, afterEndless, shadow, { effect: null }];
+  let reads = 0;
+  for (const [root, animations] of [[src, live], [flip, cloned]]) {
+    root.getAnimations = (options) => {
+      reads++;
+      assert.equal(options.subtree, true, "include pseudo-elements in the snapshot");
+      return animations;
+    };
+  }
+  for (const descendant of [child, copy, shade, shadeCopy]) {
+    descendant.getAnimations = () => { throw Error("queried a descendant subtree"); };
+  }
+  context.syncFlipAnimations([src, child, shade], [flip, copy, shadeCopy]);
+  assert.equal(reads, 2);
+  assert.equal(turn.currentTime, 13, "the page turn keeps its own clock");
+  assert.equal(glint.currentTime, 725);
+  assert.equal(ink.currentTime, 300);
+  assert.equal(pseudo.currentTime, 450, "match by pseudo-element as well as animation name");
+  assert.equal(missing.finished, true);
+  assert.equal(endless.currentTime, 17);
+  assert.equal(afterEndless.finished, true, "an unfinishable loop cannot stop later animations");
+  assert.equal(shadow.finished, false, "leave the page-turn shade alone");
+  assert.equal(shadow.currentTime, 22);
+  assert.doesNotThrow(() => context.syncFlipAnimations([node()], [node()]));
+});
 
 test("every visual page clone is collision-free, inert, and palette-stable", () => {
   assert.match(app, /el\.setAttribute\("data-flip-id", old\)/);
