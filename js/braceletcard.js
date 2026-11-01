@@ -162,6 +162,17 @@ export const TAPE_DEFS =
     `<rect width="1" height="10" fill="rgba(74,62,42,0.06)"/>` +
   `</pattern>`;
 
+// The perfect headline's gold foil: the results page's foilShift stops (styles.css,
+// .card.perfect .final-score .big) caught mid-sweep, a shade deeper at every stop because the
+// page version sits on a glow and this one sits on bare paper, where the pale centre washed
+// the 13's slash out. Bounding-box units, so each number catches its own light.
+const FOIL_DEF =
+  `<linearGradient id="cardFoil" x1="0" y1="0" x2="1" y2="0.18">` +
+    `<stop offset="0" stop-color="#93670f"/><stop offset=".3" stop-color="#c99a2e"/>` +
+    `<stop offset=".47" stop-color="#ebcf7c"/><stop offset=".62" stop-color="#c99a2e"/>` +
+    `<stop offset="1" stop-color="#93670f"/>` +
+  `</linearGradient>`;
+
 export function buildCardSVG(meta, fontCss) {
   const v = meta.vars;
   const W = 760;
@@ -221,7 +232,14 @@ export function buildCardSVG(meta, fontCss) {
   // a name clipped to "Vanishing W…" fails at the one job the chip has. So the ink shrinks
   // to fit its column first, to two thirds of its size, and only a value still too long after
   // that is trimmed. Numbers, which fit at full size, are untouched.
-  const chip = (s, cx, y, colW, full, dy) => {
+  // The values are written in the house ink, the title's pen, whatever the page was washed in:
+  // they used to wear the era accent, and endGame rolls a random finale era, so the same score
+  // came out gold one run and navy the next. Gold now means one thing. A perfect run's headline
+  // is pressed in foil, a still frame of the shimmer on the results page's 13/13, and the
+  // smaller chips beneath it stay in ink so the foil is the card's one bright thing.
+  const ink = v.ink;
+  const headInk = meta.perfect ? "url(#cardFoil)" : ink;
+  const chip = (s, cx, y, colW, full, dy, fill = ink) => {
     const raw = s.v == null ? "" : String(s.v);
     const floor = Math.round(full * 0.66);
     let size = full;
@@ -230,13 +248,13 @@ export function buildCardSVG(meta, fontCss) {
     const label = fitText(String(s.l == null ? "" : s.l).toUpperCase(),
       '11.5px "Courier Prime", monospace', colW - 12, 1.6);
     const vx = +(cx + inkCentreShift(value, `700 ${size}px Caveat, cursive`)).toFixed(1);
-    return `<text x="${vx}" y="${y}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${v.inkAccent}">${esc(value)}</text>` +
+    return `<text x="${vx}" y="${y}" text-anchor="middle" font-family="Caveat" font-weight="700" font-size="${size}" fill="${fill}">${esc(value)}</text>` +
       `<text x="${cx}" y="${y + dy}" text-anchor="middle" font-family="Courier Prime" font-size="11.5" letter-spacing="1.6" fill="${v.inkSoft}">${esc(label)}</text>`;
   };
   let statSvg = "";
   headline.forEach((s, col) => {
     const colW = contentW / headline.length;
-    statSvg += chip(s, +(contentL + colW * (col + 0.5)).toFixed(1), heroY, colW, 76, 26);
+    statSvg += chip(s, +(contentL + colW * (col + 0.5)).toFixed(1), heroY, colW, 76, 26, headInk);
   });
   let statIndex = 0;
   rowSizes.forEach((rowSize, rowIndex) => {
@@ -251,8 +269,8 @@ export function buildCardSVG(meta, fontCss) {
     : "";
 
   // Signature + footer along the bottom. The signature is always inked in the house
-  // gold (with the heart-hands emblem), a fixed brand mark — the stats above wear the
-  // era's accent, but the name stays gold in every era.
+  // gold (with the heart-hands emblem), a fixed brand mark — the stats above are in
+  // ink (or foil, on a perfect run), and the name stays gold in every era.
   const GOLD = "#a9791f";
   const sigY = H - 46;
   const hw = 46, hh = 37;
@@ -322,7 +340,7 @@ export function buildCardSVG(meta, fontCss) {
       `.b-skull-line{fill:none;stroke:var(--ink-soft);stroke-linecap:round;opacity:.75}` +
     `</style>` +
     // washi-tape surface bits, mirroring styles.css .nav-tape (sheen + fibre + torn-edge shadow)
-    TAPE_DEFS + `</defs>` +
+    TAPE_DEFS + (meta.perfect ? FOIL_DEF : "") + `</defs>` +
     `<rect width="${W}" height="${H}" fill="${v.paper}"/>` +
     rules +
     `<line x1="${marginX}" y1="0" x2="${marginX}" y2="${H}" stroke="${v.margin}" stroke-width="2"/>` +

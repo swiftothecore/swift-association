@@ -14492,7 +14492,7 @@ function renderFinishedBracelet(results, albums, opts = {}) {
 // The finished strand on screen is a bare SVG; on its own it exports as a lonely
 // sliver. buildCardMeta gathers everything the export needs to frame it as a torn
 // notebook page: the run's headline + stat chips, the live colour tokens (so the
-// card matches whatever era/paper/colour-blind palette is active), and the exact
+// card matches whatever paper and palette is active), and the exact
 // strand markup already on the results screen — reused verbatim so the keepsake is
 // pixel-identical to what the player just saw.
 function cardVars() {
@@ -14501,7 +14501,6 @@ function cardVars() {
   return {
     ink:       g("--ink", "#2b2722"),
     inkSoft:   g("--ink-soft", "#6f675a"),
-    inkAccent: g("--ink-accent", "#a9791f"),
     paper:     g("--paper", "#f5efe1"),
     paperEdge: g("--paper-edge", "#efe7d4"),
     bead:      g("--bead", "#c8951f"),
@@ -14731,7 +14730,12 @@ function buildCardMeta() {
   let footer = dateLabel + " · " + timeLabel + " · swiftassociation.com";
   let title = "Classic Game";
   let darkRun = false;            // a dark side signs the card in its own violet ink
-  const strung = (n, of) => ({ v: n + "/" + of, l: n === of ? "perfect" : "strung" });
+  // A card that prints a full strand is a perfect card, and its headline is pressed in foil.
+  let perfect = false;
+  const strung = (n, of) => {
+    if (n === of) perfect = true;
+    return { v: n + "/" + of, l: n === of ? "perfect" : "strung" };
+  };
   const clock = runTime != null ? { v: fmtTime(runTime), l: "on the clock" } : null;
 
   if (gameType === "infinite") {
@@ -14842,6 +14846,7 @@ function buildCardMeta() {
     footer,
     filename: "swift-bracelet-" + dateKey + ".png",
     heartHands: HEART_HANDS_SVG,   // the notebook's own emblem, re-tinted on the card
+    perfect,
     vars: cardVars(),
   };
 }
