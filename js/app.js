@@ -25913,8 +25913,9 @@ function verseTypoProgress(np, raw) {
 // up and rebuilding it on every keystroke would mean a regex per token per valid song.
 let wordSpotCache = new Map();
 function wordSpots(song, bare = false) {
-  const key = bare ? song.title + "\u0000bare" : song.title;
-  if (wordSpotCache.has(key)) return wordSpotCache.get(key);
+  if (!wordSpotCache.has(song)) wordSpotCache.set(song, new Map());
+  const cache = wordSpotCache.get(song);
+  if (cache.has(bare)) return cache.get(bare);
   // Judged on a window the length of the word, not on the single token at that index, since a
   // prompt word can be two words ("New York") and would otherwise be sung nowhere at all.
   const needs = lyricRequiredWords().map((w) => ({ rx: promptWordRegex(w), span: normalizeLyric(w).split(" ").length }));
@@ -25928,7 +25929,7 @@ function wordSpots(song, bare = false) {
     if (needs.some((n) => n.rx.test(n.span > 1 ? toks.slice(i, i + n.span).join(" ") : t) ||
         n.rx.test(n.span > 1 ? spelled.slice(i, i + n.span).join(" ") : spelled[i]))) spots.push(i);
   });
-  wordSpotCache.set(key, spots);
+  cache.set(bare, spots);
   return spots;
 }
 
