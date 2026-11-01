@@ -2324,6 +2324,7 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
   // "classic" is a tier-1 selector, not a real view — resolve it to a difficulty.
   if (viewMode === "classic") viewMode = lastStatsDifficulty || currentMode.id;
+  if (viewMode !== "all" && viewMode !== "infinite" && !MODES[viewMode]) viewMode = loadMode().id;
   const isAll = viewMode === "all";
   const isInf = viewMode === "infinite";
   const isClassic = !isAll && !isInf;   // a difficulty mode id
