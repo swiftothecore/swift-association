@@ -1450,7 +1450,13 @@ function beginPageTurn(anchor) {
   app.style.height = appRect.height + "px";
   app.style.minHeight = appRect.height + "px";
   app.style.maxHeight = appRect.height + "px";
-  app.style.overflow = "clip";
+  /* Vertical only. The lock exists to hide a taller destination below the old height, and a
+     clip on x as well cut off everything the table layer holds out in the gutters: the message
+     in a bottle lives in .app beside the card, so mid-turn all but its first 58px vanished and
+     the desk calendar showed through where it had been. `clip` (unlike `hidden`) pairs with
+     `visible` on the other axis, so this stays a plain clip and never a scroll container. */
+  app.style.overflowX = "visible";
+  app.style.overflowY = "clip";
   /* The clip has to stand off the paper's edge, or it cuts the page's own drop shadow off for
      the length of the turn. A screen is a direct child of .app, its shadow is painted outside
      its border box, and `overflow: clip` clips a descendant's ink as readily as its content: the
