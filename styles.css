@@ -2570,7 +2570,8 @@
      record's day is: the seven guests' birthdays (Wicked's opening night and Hannah Montana's
      premiere standing in for the two that are not people) and the two names announced on the
      shelf. Every id is anv-guest-<guest id>, and each guest keeps to its own class prefix: hs-
-     Harry, or- Olivia, hm- Hannah, ag- Ariana, by- Beyoncé, wk- Wicked, mc- Miley, be- Billie.
+     Harry, or- Olivia, hm- Hannah, sc- Sabrina, ag- Ariana, by- Beyoncé, wk- Wicked, mc- Miley,
+     be- Billie.
      Each starts from the guest's souvenir sticker or record and brings a line of the guest's own
      for the words. Designed on scripts/cta/guest-days-board.html, with the rejected candidates
      beside them; a change belongs there first. */
@@ -2671,6 +2672,42 @@
   @keyframes hmTwinkle { 0%, 100% { opacity:0; transform:scale(.3) rotate(0); } 50% { opacity:1; transform:scale(1) rotate(45deg); } }
   @keyframes hmStar { from { transform:scale(1) rotate(0); } to { transform:scale(1.12) rotate(8deg); } }
   body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-tw { opacity:1; transform:scale(.8); }
+
+  /* ============ Sabrina Carpenter: Pulling a shot ============
+     Espresso, made: a sixties café counter, candy-stripe paper on the wall, and at the right a
+     baby-blue lever machine with the sticker's cup under its group head, lipstick on the side. On
+     hover the lever is pulled, the pressure comes up on the gauge, the shot runs into the cup, the
+     lever rises back as it pours, and steam comes off the full cup. */
+  .play-cta[data-startbtn="anv-guest-sabrina-carpenter"] { --cta-fill:#f4d6d2; --cta-text:#3b2418; --cta-hover-text:#3b2418;
+    --sc-wall:#f5d8d4; --sc-stripe:#fbe9e5; --sc-blue0:#bcd8f0; --sc-blue1:#7fa8d3; --sc-blue2:#5f8cbc; --sc-front0:#a9c9e7; --sc-front1:#7ea9d4;
+    --sc-marble:#f8f4ee; --sc-cream:#fdf9f2; --sc-cream2:#e4dccd; --sc-pink:#efb0be; --sc-cherry:#c4212f; --sc-brass:#c9a24a;
+    background-image:linear-gradient(168deg, #ffffff40 0%, #ffffff00 46%, #3b24181a 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-sabrina-carpenter"] { --cta-fill:#bc9b97; --cta-text:#2a160d; --cta-hover-text:#2a160d;
+    --sc-wall:#c09e9a; --sc-stripe:#caaaa6; --sc-blue0:#94b3cf; --sc-blue1:#6487b0; --sc-blue2:#4b6e97; --sc-front0:#86a6c4; --sc-front1:#6587ad;
+    --sc-marble:#d8d3cc; --sc-cream:#e3ddd2; --sc-cream2:#c3baab; --sc-pink:#cf8e9c; --sc-brass:#a8853a;
+    background-image:linear-gradient(168deg, #ffffff18 0%, #ffffff00 46%, #00000026 100%); }
+  .sc-wall { fill:var(--sc-wall); } .sc-stripe { fill:var(--sc-stripe); } .sc-marble { fill:var(--sc-marble); } .sc-cream { fill:var(--sc-cream); } .sc-cream2 { fill:var(--sc-cream2); }
+  .sc-pink { fill:var(--sc-pink); } .sc-cherry { fill:var(--sc-cherry); } .sc-brass { fill:var(--sc-brass); } .sc-brass-s { fill:none; stroke:var(--sc-brass); stroke-linecap:round; }
+  .sc-b0 { stop-color:var(--sc-blue0); } .sc-b1 { stop-color:var(--sc-blue1); } .sc-b2 { stop-color:var(--sc-blue2); } .sc-f0 { stop-color:var(--sc-front0); } .sc-f1 { stop-color:var(--sc-front1); }
+  .sc-lever { transform-origin:436px 21.4px; transform:rotate(-12deg); }
+  .sc-needle { transform-origin:482px 27px; transform:rotate(-58deg); transition:transform .5s ease-in; }
+  .sc-pour { transform-origin:436px 35.8px; transform:scaleY(0); stroke-dasharray:.7 .5; }
+  .sc-full { opacity:0; transition:opacity .3s; }
+  .sc-wisp { opacity:0; fill:none; stroke:#fff; stroke-width:.9; stroke-linecap:round; }
+  .sc-puff { opacity:0; transform-box:fill-box; transform-origin:center; }
+  .play-cta[data-startbtn="anv-guest-sabrina-carpenter"]:is(:hover, :focus-visible) .sc-lever { animation:scLever 2.9s .05s both; }
+  .play-cta[data-startbtn="anv-guest-sabrina-carpenter"]:is(:hover, :focus-visible) .sc-needle { transform:rotate(64deg); transition:transform .9s .35s cubic-bezier(.3,1.45,.55,1); }
+  .play-cta[data-startbtn="anv-guest-sabrina-carpenter"]:is(:hover, :focus-visible) .sc-pour { animation:scPour 2.1s .6s linear both, scFlow .35s .6s linear 6; }
+  .play-cta[data-startbtn="anv-guest-sabrina-carpenter"]:is(:hover, :focus-visible) .sc-full { opacity:1; transition:opacity 1.6s .75s ease-in; }
+  .play-cta[data-startbtn="anv-guest-sabrina-carpenter"]:is(:hover, :focus-visible) .sc-wisp { animation:scWisp 2.6s calc(2.2s + var(--d)) ease-out infinite; }
+  .play-cta[data-startbtn="anv-guest-sabrina-carpenter"]:is(:hover, :focus-visible) .sc-puff { animation:scPuff 1.4s .5s ease-out both; }
+  @keyframes scLever { 0% { transform:rotate(-12deg); animation-timing-function:cubic-bezier(.5,0,.6,1); } 16% { transform:rotate(86deg); animation-timing-function:linear; }
+    24% { transform:rotate(82deg); animation-timing-function:cubic-bezier(.4,0,.5,1); } 100% { transform:rotate(-12deg); } }
+  @keyframes scPour { 0% { transform:scaleY(0); opacity:1; } 9% { transform:scaleY(1); } 82% { transform:scaleY(1); opacity:1; } 100% { transform:scaleY(1) translateY(1px); opacity:0; } }
+  @keyframes scFlow { from { stroke-dashoffset:0; } to { stroke-dashoffset:-1.2; } }
+  @keyframes scWisp { 0% { opacity:0; transform:translateY(0); } 25% { opacity:.75; } 100% { opacity:0; transform:translateY(-9px); } }
+  @keyframes scPuff { 0% { opacity:0; transform:scale(.3); } 25% { opacity:.8; } 100% { opacity:0; transform:scale(1.6) translate(2px, -3px); } }
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-guest-sabrina-carpenter"]:is(:hover, :focus-visible) .sc-wisp { opacity:.55; }
 
   /* ============ Ariana Grande: petal ============
      This year's record as its covers have it: black and white, sixties, petals. A grey film still

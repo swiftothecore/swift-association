@@ -1154,6 +1154,79 @@ function closet() {
   return { fx: strip('hm-closet', `<defs>${defs}</defs>${room}${doorL}${doorR}<path d="M300 -6V66" stroke="#0004" stroke-width=".5"/>`) };
 }
 
+/* ---- Sabrina Carpenter: Pulling a shot ---- */
+// A lipstick kiss, about eighteen across, the middle of the lips at the origin.
+const LIPS = 'M-9 .2C-6.4 -1.4 -4.6 -4.2 -2.4 -4.4C-1.2 -4.5 -.5 -3.6 0 -3C.5 -3.6 1.2 -4.5 2.4 -4.4C4.6 -4.2 6.4 -1.4 9 .2C6 .6 3 .2 0 .5C-3 .2 -6 .6 -9 .2ZM-9 .6C-6 1 -3 .9 0 1.1C3 .9 6 1 9 .6C7 3.6 4.4 5.2 0 5.3C-4.4 5.2 -7 3.6 -9 .6Z';
+function shot() {
+  const id = `scS${++serial}`, rand = R(1999);
+  // The café: candy-stripe paper, a pool of light on it, and the counter along the bottom, a
+  // marble top on a fluted baby-blue front.
+  let stripes = '';
+  for (let x = -6; x < 610; x += 11) stripes += `M${x} -6h4.6V47h-4.6Z`;
+  let veins = '', flutes = '';
+  for (let k = 0; k < 14; k++) { const x = rand() * 600; veins += `M${f(x)} ${f(46.6 + rand() * 1.4)}q${f(4 + rand() * 6)} ${f((rand() - .5) * 1.2)} ${f(10 + rand() * 12)} ${f((rand() - .5) * .8)}`; }
+  for (let x = -4; x < 606; x += 3.6) flutes += `M${f(x)} 50.6V62`;
+  const room = `<rect class="sc-wall" x="-6" y="-6" width="612" height="54"/><path class="sc-stripe" d="${stripes}" opacity=".6"/><ellipse cx="300" cy="18" rx="250" ry="40" fill="url(#${id}l)"/>` +
+    `<rect class="sc-marble" x="-6" y="45.8" width="612" height="3.4"/><path d="${veins}" stroke="#b9b2aa" stroke-width=".3" fill="none" opacity=".55"/>` +
+    `<rect x="-6" y="49.2" width="612" height="1" fill="url(#${id}c)"/><rect x="-6" y="50.2" width="612" height="12" fill="url(#${id}f)"/>` +
+    `<path d="${flutes}" stroke="#ffffff" stroke-width=".7" opacity=".28"/><path d="${flutes}" stroke="#2c4f7a" stroke-width=".5" opacity=".18" transform="translate(1.2 0)"/>`;
+  // A cup and saucer, the sticker's, with lipstick on the side.
+  const cup = (x, y, kiss, heart) => `<ellipse cx="${x}" cy="${f(y + 6.8)}" rx="9.2" ry="1.5" fill="#3b2418" opacity=".16"/><ellipse class="sc-cream" cx="${x}" cy="${f(y + 6.4)}" rx="9" ry="1.5"/>` +
+    `<ellipse cx="${x}" cy="${f(y + 6.4)}" rx="9" ry="1.5" fill="none" stroke="#cfc5b4" stroke-width=".3"/>` +
+    `<path d="M${f(x + 5.6)} ${f(y + 1.4)}c2.8 -.6 3.6 2.8 .4 3.4" fill="none" stroke="var(--sc-cream2)" stroke-width="1.1"/>` +
+    `<path d="M${f(x - 6)} ${y}C${f(x - 6)} ${f(y + 4.2)} ${f(x - 4.4)} ${f(y + 6.2)} ${x} ${f(y + 6.2)}C${f(x + 4.4)} ${f(y + 6.2)} ${f(x + 6)} ${f(y + 4.2)} ${f(x + 6)} ${y}Z" fill="url(#${id}u)"/>` +
+    `<path d="M${f(x - 5.8)} ${f(y + .9)}H${f(x + 5.8)}" stroke="var(--sc-brass)" stroke-width=".35" opacity=".8"/>` +
+    (kiss ? `<g transform="translate(${f(x - .8)} ${f(y + 3.4)}) rotate(-8) scale(.3)"><path class="sc-cherry" d="${LIPS}"/></g>` : '') +
+    (heart ? `<path class="sc-cherry" transform="translate(${f(x - .4)} ${f(y + 3.4)}) scale(.17)" d="M0 7C-9 1 -8.6 -6.6 -3.6 -6.8C-1.6 -6.9 -.4 -5.6 0 -4.4C.4 -5.6 1.6 -6.9 3.6 -6.8C8.6 -6.6 9 1 0 7Z"/>` : '') +
+    `<ellipse class="sc-cream" cx="${x}" cy="${y}" rx="6" ry="1.25"/><ellipse cx="${x}" cy="${f(y + .1)}" rx="5.3" ry=".95" fill="#ebe3d6"/>`;
+  // At the right, the machine: baby-blue enamel and chrome, a gauge, a plaque, cups warming on
+  // top, and the group head standing out from its side with the lever on it and the cup beneath.
+  let warmers = '';
+  [468, 484, 500, 516, 532, 550, 568].forEach((x) => { warmers += `<path class="sc-cream" d="M${x - 4} 11.4L${x - 3.2} 7.2Q${x} 6.4 ${x + 3.2} 7.2L${x + 4} 11.4Z"/><path d="M${x - 3.4} 8.2H${x + 3.4}" stroke="var(--sc-brass)" stroke-width=".3" opacity=".7"/>`; });
+  let ticks = '';
+  for (let k = 0; k <= 8; k++) { const a = (-135 + k * 33.75) * DEG; ticks += `M${f(482 + Math.sin(a) * 4.4)} ${f(27 - Math.cos(a) * 4.4)}L${f(482 + Math.sin(a) * 5.3)} ${f(27 - Math.cos(a) * 5.3)}`; }
+  const machine = `<path d="M447 46V17.6Q447 11.6 453 11.6H612V46Z" fill="url(#${id}e)"/><rect x="447" y="11.6" width="165" height="2.6" fill="url(#${id}c)"/>${warmers}` +
+    `<rect x="455" y="17" width="160" height="22.6" rx="2.4" fill="var(--sc-blue2)" opacity=".38"/><path d="M455.6 18H612" stroke="#fff" stroke-width=".5" opacity=".5"/>` +
+    `<rect x="447" y="41.4" width="165" height="4.6" fill="url(#${id}c)"/><path d="M447 43.6H612" stroke="#7d8790" stroke-width=".3"/>` +
+    `<circle cx="482" cy="27" r="7.2" fill="url(#${id}r)"/><circle cx="482" cy="27" r="5.9" fill="#fbf7ee"/><path d="${ticks}" stroke="#3b2418" stroke-width=".35"/>` +
+    `<path d="M478.4 30.6A5 5 0 0 1 477.6 26" stroke="#4f9a5a" stroke-width=".8" fill="none"/><path d="M486.4 26A5 5 0 0 1 485.6 30.6" stroke="#c4212f" stroke-width=".8" fill="none"/>` +
+    `<g class="sc-needle"><path d="M482 27L482 22.4" stroke="#c4212f" stroke-width=".55" stroke-linecap="round"/></g><circle cx="482" cy="27" r=".8" fill="#3b2418"/>` +
+    `<rect class="sc-pink" x="500" y="23.4" width="26" height="7.4" rx="3.7"/><path d="M505 28.6c1 -3 2.2 -3 1.8 0s1.6 -2.8 2.6 -.4s1.8 -1.6 2.6 -.2s2 -1.4 3 0s4 -.2 7 -.6" stroke="#fff" stroke-width=".6" fill="none" stroke-linecap="round"/>` +
+    `<circle cx="540" cy="27" r="3.2" fill="url(#${id}r)"/><circle cx="552" cy="27" r="3.2" fill="url(#${id}r)"/><circle cx="540" cy="27" r="1.2" fill="#2a2d31"/><circle cx="552" cy="27" r="1.2" fill="#2a2d31"/>` +
+    `<path d="M588 20V36Q588 40 592 40" stroke="url(#${id}c)" stroke-width="1.6" fill="none"/><ellipse class="sc-puff" cx="594" cy="38" rx="5" ry="3.4" fill="#fff"/>`;
+  const head = `<rect x="439" y="18.6" width="9" height="7.6" fill="url(#${id}c)"/><path d="M429.6 23.6H442.4V31Q436 33 429.6 31Z" fill="url(#${id}c)"/>` +
+    `<path d="M430.4 31.2H441.6V33.4Q436 34.6 430.4 33.4Z" fill="#3e434a"/><path d="M430.6 32.2L425.6 33Q424.6 33.5 425.6 34.1L430.6 34Z" fill="#1d1a1c"/>` +
+    `<path d="M433 34.2h1.4v1.6h-1.4ZM437.6 34.2h1.4v1.6h-1.4Z" fill="#6b7178"/>` +
+    `<g class="sc-lever"><rect x="435.3" y="4.6" width="1.4" height="17" rx=".7" fill="url(#${id}c)"/><ellipse cx="436" cy="4.4" rx="2.2" ry="2.7" fill="#1d1a1c"/><ellipse cx="435.3" cy="3.4" rx=".6" ry=".9" fill="#fff" opacity=".4"/></g>` +
+    `<circle cx="436" cy="21.4" r="1.8" fill="url(#${id}r)"/>`;
+  // The shot: two thin streams from the spouts into the cup, which fills, crema on top, and steams.
+  const pour = `<path class="sc-pour" d="M433.7 35.8V38.6M438.3 35.8V38.6" stroke="#5a2e12" stroke-width=".75"/>`;
+  const full = `<ellipse class="sc-full" cx="436" cy="38.7" rx="5.3" ry=".95" fill="url(#${id}m)"/>`;
+  const wisps = [[433.4, 0, 'M0 0C-1.4 -2 1.2 -3.6 -.2 -5.8S1 -8.6 .2 -10'], [437, .8, 'M0 0C1.4 -2 -1.2 -3.8 .2 -6S-1 -8.8 0 -10.6'], [439.6, 1.5, 'M0 0C-1 -1.8 1.2 -3.2 0 -5S.8 -7.6 0 -9']]
+    .map(([x, d, p]) => `<g transform="translate(${x} 37.6)"><path class="sc-wisp" d="${p}" style="--d:${d}s"/></g>`).join('');
+  // At the left, saucers and cups stacked ready, a sugar jar, a cake under a cherry, and a
+  // starburst clock on the wall.
+  const stack = cup(168, 38.6, false, true) + `<g transform="translate(0 -7.6)">${cup(168, 38.6, false, true)}</g>` + `<ellipse class="sc-cream" cx="168" cy="23.2" rx="9" ry="1.5"/><ellipse cx="168" cy="23.2" rx="9" ry="1.5" fill="none" stroke="#cfc5b4" stroke-width=".3"/>`;
+  let burst = '';
+  for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, l = k % 2 ? 7 : 10.5; burst += `M${f(84 + Math.cos(a) * 3.6)} ${f(17 + Math.sin(a) * 3.6)}L${f(84 + Math.cos(a) * l)} ${f(17 + Math.sin(a) * l)}`; }
+  const clock = `<path class="sc-brass-s" d="${burst}" stroke-width=".7"/><circle class="sc-brass" cx="84" cy="17" r="3.8"/><circle cx="84" cy="17" r="3" fill="#fbf7ee"/><path d="M84 17V14.8M84 17L85.6 17.8" stroke="#3b2418" stroke-width=".4" stroke-linecap="round"/>`;
+  const cake = `<ellipse cx="44" cy="45.8" rx="7" ry="1.2" fill="#3b2418" opacity=".15"/><path class="sc-pink" d="M40.6 45.6L42.4 38H45.6L47.4 45.6Z"/><ellipse class="sc-pink" cx="44" cy="37.6" rx="14" ry="1.8"/>` +
+    `<rect class="sc-cream" x="34" y="28.4" width="20" height="8.6" rx="1.4"/><path class="sc-pink" d="M34 30.6V29.6Q34 28.2 35.6 28.2H52.4Q54 28.2 54 29.6V30.6C53 32.8 52 30.8 51 32.6C50 34.4 49 31 48 32C47 33 45.6 31 44.4 32.4C43.2 33.6 42 31.4 41 32.2C40 33 38.6 30.6 37.6 32C36.6 33.4 35 31.4 34 30.6Z"/>` +
+    `<circle class="sc-cherry" cx="44.4" cy="26.4" r="1.9"/><path d="M44.6 24.6Q45.4 22.4 47.6 21.6" stroke="#4a6a2a" stroke-width=".4" fill="none"/><circle cx="43.8" cy="25.8" r=".5" fill="#fff" opacity=".6"/>`;
+  let cubes = '';
+  for (let k = 0; k < 7; k++) cubes += `<rect x="${f(103.4 + (k % 3) * 3.4 + (k > 2 ? 1.4 : 0))}" y="${f(41 - Math.floor(k / 3) * 3.2)}" width="2.9" height="2.9" rx=".5" fill="#fff" opacity=".95"/>`;
+  const jar = `<rect x="102" y="33" width="12.4" height="12.8" rx="2.4" fill="#eaf4f8" opacity=".45" stroke="#c8d6dc" stroke-width=".4"/>${cubes}<rect x="101.4" y="31" width="13.6" height="2.6" rx="1" fill="url(#${id}c)"/><path d="M103.6 34.4V43.6" stroke="#fff" stroke-width=".7" opacity=".7"/>`;
+  const defs = `<radialGradient id="${id}l" cx=".5" cy=".3" r=".6"><stop offset="0" stop-color="#fff8f0" stop-opacity=".55"/><stop offset="1" stop-color="#fff8f0" stop-opacity="0"/></radialGradient>` +
+    `<linearGradient id="${id}c" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f6f8fa"/><stop offset=".45" stop-color="#b9c1ca"/><stop offset=".55" stop-color="#8d97a2"/><stop offset="1" stop-color="#dfe4e9"/></linearGradient>` +
+    `<radialGradient id="${id}r" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#b3bcc6"/><stop offset="1" stop-color="#6c7682"/></radialGradient>` +
+    `<linearGradient id="${id}e" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="sc-b0"/><stop offset=".6" class="sc-b1"/><stop offset="1" class="sc-b2"/></linearGradient>` +
+    `<linearGradient id="${id}f" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="sc-f0"/><stop offset="1" class="sc-f1"/></linearGradient>` +
+    `<linearGradient id="${id}u" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#e2d9ca"/><stop offset=".35" stop-color="#ffffff"/><stop offset="1" stop-color="#d9cfbf"/></linearGradient>` +
+    `<radialGradient id="${id}m" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#d9a066"/><stop offset=".7" stop-color="#a8622c"/><stop offset="1" stop-color="#5a2e12"/></radialGradient>`;
+  return { fx: strip('sc-cafe', `<defs>${defs}</defs>${room}${clock}${cake}${jar}${stack}${machine}<rect x="423" y="45.4" width="25" height="1.2" fill="url(#${id}c)"/>` +
+    `${cup(436, 38.7, true, false)}${full}${head}${pour}${wisps}`) };
+}
+
 /* ---- Ariana Grande: petal ---- */
 function petal() {
   const id = `agF${++serial}`, rand = R(817);
@@ -1410,6 +1483,7 @@ const GUEST_FINISHES = {
   "harry-styles": ["anv-guest-harry-styles", melon, "Sounds just like a song"],     // Watermelon Sugar
   "olivia-rodrigo": ["anv-guest-olivia-rodrigo", licence, "Start a new life"],       // brutal
   "hannah-montana": ["anv-guest-hannah-montana", closet, "Let’s do this"],           // Let's Do This
+  "sabrina-carpenter": ["anv-guest-sabrina-carpenter", shot, "Brewed it for ya"],   // Espresso
   "ariana-grande": ["anv-guest-ariana-grande", petal, "To write again"],             // petal
   "beyonce": ["anv-guest-beyonce", hive, "Let’s get in formation"],                  // Formation
   "wicked-soundtrack": ["anv-guest-wicked-soundtrack", gravity, "Defying gravity"],  // Defying Gravity
