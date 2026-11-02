@@ -14016,7 +14016,7 @@
     font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.5px;
     text-transform: uppercase; color: var(--ink-accent);
   }
-  .ach-quest-name { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); color: var(--ink); line-height: 0.98; margin: 2px 0 1px; }
+  .ach-quest-name { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); color: var(--ink); line-height: 0.98; margin: 2px 0 8px; }
   .ach-quest-desc { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); }
   .ach-quest-meterhead {
     display: flex; justify-content: space-between; align-items: baseline; margin-top: 11px;
