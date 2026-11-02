@@ -14074,13 +14074,67 @@
   /* a clear stroke widens each dot for the pointer without drawing anything */
   .cat-glance circle { stroke: transparent; stroke-width: 3; transform-box: fill-box; transform-origin: center; transition: transform .12s; }
   .cat-glance circle:hover { transform: scale(1.35); }
-  .sb-album { margin-bottom: 18px; }
-  .sb-album-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
-  .sb-spine { width: 5px; height: 19px; border-radius: 2px; flex: none; }
-  .sb-album-name { font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink); font-weight: 700; }
-  .sb-album-count { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--ink-soft); margin-left: auto; }
-  .sb-done-tag { color: var(--ink-accent); font-weight: 700; }
-  .sb-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; }
+  /* each segment of the songbook's bar is a door to its album's page */
+  .sb-bar .cat-seg { border: 0; padding: 0; margin: 0; cursor: pointer; transition: filter .12s, transform .12s; transform-origin: center bottom; }
+  .sb-bar:hover .cat-seg:not(:hover) { filter: saturate(.55) opacity(.6); }
+  .sb-bar .cat-seg:hover, .sb-bar .cat-seg:focus-visible { transform: scaleY(1.35); }
+  .sb-bar .cat-seg:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 2px; }
+  /* the track the found share sits in, drawn off --ink so it is still there on the night page */
+  .sb-bar { overflow: visible; background: color-mix(in srgb, var(--ink) 10%, transparent); }
+  .sb-bar .cat-seg:first-child { border-radius: 6px 0 0 6px; }
+  .sb-meter-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin-top: 12px; }
+  .sb-meter-foot .sb-sub { margin-top: 0; }
+  .sb-shelf-count {
+    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  /* the one view switch, set as a checklist line of its own */
+  .sb-tools { display: flex; justify-content: flex-end; margin: -6px 0 14px; }
+  .sb-hide {
+    display: inline-flex; align-items: center; gap: 7px; padding: 4px 2px; border: 0; background: none; cursor: pointer;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: .6px; color: var(--ink-soft);
+    --alb: var(--ink-accent);
+  }
+  .sb-hide:hover, .sb-hide.on { color: var(--ink); }
+  .sb-hide:focus-visible { outline: 1.5px solid var(--ink-accent); outline-offset: 3px; }
+
+  .sb-album { margin-bottom: 20px; scroll-margin-top: 14px; }
+  /* The album's band runs the full width of the page and is its progress bar: the album's
+     colour is laid in up to --fill, the share of its songs found, and the rest is a faint
+     wash of the same colour. Flat fills only, ink on paper. */
+  .sb-band {
+    display: flex; align-items: center; gap: 12px; margin: 0 0 8px; padding: 7px 12px 7px 11px;
+    border-left: 5px solid var(--alb); border-radius: 2px;
+    background:
+      linear-gradient(to right, color-mix(in srgb, var(--alb) 26%, transparent) var(--fill), color-mix(in srgb, var(--alb) 8%, transparent) var(--fill));
+    font: inherit;
+  }
+  .sb-album-name {
+    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
+    text-transform: uppercase; color: var(--ink); font-weight: 700; min-width: 0;
+  }
+  .sb-album-count {
+    margin-left: auto; flex: none; white-space: nowrap; display: flex; align-items: center; gap: .5ch;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: .6px; color: var(--ink-soft);
+  }
+  .sb-album-count b { color: var(--ink); font-weight: 700; }
+  .sb-done-tag { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  /* the tick hangs over the band's padding rather than standing in its line, so a finished
+     album's band is exactly as tall as an unfinished one */
+  .sb-done-mark { width: 16px; height: 16px; display: block; margin: -6px 0; }
+  .sb-done-mark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  /* a fully found album folded down to its band, when only the missing are shown */
+  .sb-album.folded { margin-bottom: 8px; }
+  .sb-album.folded .sb-band { margin-bottom: 0; }
+  /* landing from the bar or the dots: the band blinks once */
+  .sb-album.sb-arrive .sb-band { animation: sbArrive 1.1s ease-out .25s; }
+  @keyframes sbArrive {
+    0%, 100% { box-shadow: 0 0 0 0 transparent; }
+    30% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--alb) 45%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) { .sb-album.sb-arrive .sb-band { animation: none; } }
+
+  .sb-list { list-style: none; margin: 0; padding: 0 0 0 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; }
   .sb-song { display: flex; align-items: flex-start; gap: 9px; padding: 3px 0; min-width: 0; }
   .sb-title {
     /* A song you have not found yet is the ink faded, so it is written as a mix of --ink and
@@ -14089,9 +14143,12 @@
     font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1; color: color-mix(in srgb, var(--ink) 42%, transparent); min-width: 0;
   }
   .sb-song.got .sb-title { color: var(--ink); }
-  .sb-hollow { width: 13px; height: 13px; border: 1.6px solid rgba(43,39,34,0.3); border-radius: 50%; flex: none; margin-top: 4px; }
-  .sb-tick { width: 15px; height: 15px; flex: none; color: var(--bead); margin-top: 3px; }
-  .sb-tick svg { width: 100%; height: 100%; display: block; }
+  /* the checklist box: a pencil square, ticked in the album's own ink */
+  .sb-box { width: 17px; height: 17px; flex: none; margin-top: 2px; display: block; }
+  .sb-box svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .sb-box-edge { stroke: color-mix(in srgb, var(--ink) 34%, transparent); stroke-width: 1.4; }
+  .sb-box-tick { stroke: var(--alb); stroke-width: 2.4; }
+  .sb-done-mark .sb-box-edge { stroke: color-mix(in srgb, var(--ink) 55%, transparent); }
 
   @media (max-width: 560px) {
     .ach-head-row { grid-template-columns: 1fr; }

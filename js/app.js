@@ -4768,12 +4768,17 @@ function renderAchievementsPage() {
 
 // Shared album-rainbow segments for a {album: discoveredCount} split out of total.
 // Drawn in the order albums first appear in allSongs (the catalogue rainbow).
-function albumRainbowSegs(byAlbum, total) {
+// `jump` makes each segment a door to that album's page of the Songbook (the Songbook's own
+// bar); the charms page's copy of the bar sits inside a button already, so it stays plain.
+function albumRainbowSegs(byAlbum, total, jump) {
   const order = [];
   for (const s of allSongs) if (s.album && !order.includes(s.album)) order.push(s.album);
-  return order.filter((a) => byAlbum[a]).map((a) =>
-    `<div class="cat-seg" style="width:${(byAlbum[a] / total) * 100}%;background:${albumColor(a) || "var(--ink-soft)"}" title="${escapeHtml(a)}: ${byAlbum[a]}"></div>`
-  ).join("");
+  return order.filter((a) => byAlbum[a]).map((a) => {
+    const style = `width:${(byAlbum[a] / total) * 100}%;background:${albumColor(a) || "var(--ink-soft)"}`;
+    return jump
+      ? `<button type="button" class="cat-seg" style="${style}" data-sb-jump="${escapeHtml(a)}" data-tip="${escapeHtml(a)}: ${byAlbum[a]} found" aria-label="${escapeHtml(a)}, ${byAlbum[a]} found"></button>`
+      : `<div class="cat-seg" style="${style}" title="${escapeHtml(a)}: ${byAlbum[a]}"></div>`;
+  }).join("");
 }
 
 /* ---------- The pinned goal — one charm to actually go and get ----------
@@ -4981,8 +4986,13 @@ function openSongbook(from, album) {
   flipAwayToScreen("songbook", album ? () => revealAfterFlip(() => [...document.querySelectorAll("#songbookBody .sb-album")]
     .find((sec) => sec.dataset.album === album), { pad: 18 }) : undefined);
 }
-// A full per-album checklist of the catalogue: which songs you've named (gold star) and
-// which are still missing (hollow). Reads the lifetime tally, so it spans every mode.
+// A full per-album checklist of the catalogue: which songs you've named (ticked off in the
+// album's own ink) and which are still missing (an empty box). Reads the lifetime tally, so it
+// spans every mode.
+// The one view preference: hide what's already ticked, so the page reads as a to-do list.
+// Browser storage is a convenience here; the book renders whole without it.
+const SB_HIDE_KEY = "swiftSongAssociation.songbookHideFound";
+function sbHideFound() { try { return localStorage.getItem(SB_HIDE_KEY) === "1"; } catch { return false; } }
 function renderSongbook() {
   const found = (loadSongTally().songs) || {};
   const total = allSongs.length || 1;
@@ -4990,6 +5000,7 @@ function renderSongbook() {
   const remaining = total - discovered;
   const complete = remaining <= 0;
   const pct = Math.floor((discovered / total) * 100);
+  const hide = !complete && sbHideFound();
 
   const byAlbum = {};
   for (const s of allSongs) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
@@ -4998,42 +5009,86 @@ function renderSongbook() {
     ? "every song found"
     : remaining + " song" + (remaining === 1 ? "" : "s") + " still hiding";
 
+  // Album order = first appearance in allSongs (the catalogue order).
+  const order = [];
+  for (const s of allSongs) if (s.album && !order.includes(s.album)) order.push(s.album);
+  const albumsDone = order.filter((a) => allSongs.every((s) => s.album !== a || found[s.title])).length;
+
   // The count sits in a typed capsule led by a little mark: a magnifier while songs are still
   // out there, the songbook's own gold star once they are all in.
   let html = `<div class="sb-meter${complete ? " done" : ""}">
       <div class="cat-meter-head"><span>songs named correctly</span><span>${pct}%</span></div>
       <div class="cat-meter-num"><b>${discovered}</b> / ${total} songs</div>
-      <div class="cat-bar">${albumRainbowSegs(byAlbum, total)}</div>
-      <div class="sb-sub"><span class="sb-sub-mark" aria-hidden="true">${complete ? STAR_SVG : SB_LOUPE}</span>${sub}</div>
+      <div class="cat-bar sb-bar">${albumRainbowSegs(byAlbum, total, true)}</div>
+      <div class="sb-meter-foot">
+        <div class="sb-sub"><span class="sb-sub-mark" aria-hidden="true">${complete ? STAR_SVG : SB_LOUPE}</span>${sub}</div>
+        <span class="sb-shelf-count">${albumsDone} of ${order.length} albums complete</span>
+      </div>
       ${complete ? "" : `<div class="sb-glance" id="songbookGlance"></div>`}
     </div>`;
 
-  // Album order = first appearance in allSongs (the catalogue order).
-  const order = [];
-  for (const s of allSongs) if (s.album && !order.includes(s.album)) order.push(s.album);
+  if (!complete) html += `<div class="sb-tools">
+      <button type="button" class="sb-hide${hide ? " on" : ""}" id="songbookHide" aria-pressed="${hide}">` +
+        `<span class="sb-box" aria-hidden="true">${sbBox(hide)}</span>only show what's still hiding</button>
+    </div>`;
+
   html += order.map((album) => {
     const songs = allSongs.filter((s) => s.album === album);
     const got = songs.filter((s) => found[s.title]).length;
     const albDone = got === songs.length;
     const col = albumColor(album) || "var(--ink-soft)";
-    const items = songs.map((s) => {
+    const shown = hide ? songs.filter((s) => !found[s.title]) : songs;
+    const items = shown.map((s) => {
       const has = !!found[s.title];
       return `<li class="sb-song${has ? " got" : ""}">` +
-        (has ? `<span class="sb-tick">${STAR_SVG}</span>` : `<span class="sb-hollow" aria-hidden="true"></span>`) +
-        `<span class="sb-title">${escapeHtml(censor(s.title))}</span></li>`;
+        `<span class="sb-box" aria-hidden="true">${sbBox(has)}</span>` +
+        `<span class="sb-title">${escapeHtml(censor(s.title))}</span>` +
+        `<span class="sr-only">${has ? ", found" : ", not found yet"}</span></li>`;
     }).join("");
-    return `<section class="sb-album${albDone ? " done" : ""}" data-album="${escapeHtml(album)}">
-      <div class="sb-album-head">
-        <span class="sb-spine" style="background:${col}"></span>
+    // The album's band runs the width of the page and IS its progress bar: the tinted part is
+    // the share of its songs found, so a nearly-done album reads as nearly full before the
+    // count is read.
+    const fill = Math.round((got / songs.length) * 1000) / 10;
+    const count = albDone
+      ? `<span class="sb-done-tag"><span class="sb-done-mark" aria-hidden="true">${sbBox(true)}</span>all ${songs.length} found</span>`
+      : `<b>${got}</b> of ${songs.length}`;
+    return `<section class="sb-album${albDone ? " done" : ""}${hide && albDone ? " folded" : ""}" data-album="${escapeHtml(album)}" style="--alb:${col};--fill:${fill}%">
+      <h3 class="sb-band">
         <span class="sb-album-name">${escapeHtml(album)}</span>
-        <span class="sb-album-count">${albDone ? `<span class="sb-done-tag">all found ✓</span>` : got + " / " + songs.length}</span>
-      </div>
-      <ul class="sb-list">${items}</ul>
+        <span class="sb-album-count">${count}</span>
+      </h3>
+      ${items ? `<ul class="sb-list">${items}</ul>` : ""}
     </section>`;
   }).join("");
 
   $("songbookBody").innerHTML = html;
+  $("songbookBody").querySelectorAll("[data-sb-jump]").forEach((b) =>
+    b.addEventListener("click", () => songbookJump(b.dataset.sbJump)));
+  $("songbookHide")?.addEventListener("click", () => {
+    try { localStorage.setItem(SB_HIDE_KEY, sbHideFound() ? "0" : "1"); } catch { /* the toggle just won't stick */ }
+    renderSongbook();
+  });
   fillSongbookGlance(found);
+}
+
+// The checklist box, drawn by hand: a slightly crooked square, and once the song is found a
+// tick in the album's ink that overshoots the box's corner the way a quick pen does.
+function sbBox(ticked) {
+  return `<svg viewBox="0 0 18 18" fill="none" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path class="sb-box-edge" d="M2.6 4.1c3.6-.3 7.2-.4 10.6-.2.3 3.5.3 7.1.1 10.6-3.5.2-7.1.3-10.6.1-.3-3.4-.4-7-.1-10.5z"/>` +
+    (ticked ? `<path class="sb-box-tick" d="M4.9 9.6c1.1.9 2 2 2.8 3.3 2-4.2 4.7-7.9 8.6-11.2"/>` : "") +
+    `</svg>`;
+}
+
+// Turn to one album's page of the book, from the bar or from the dots, and let its band
+// blink once so the eye lands on the right one when several are in view.
+function songbookJump(album) {
+  const sec = [...document.querySelectorAll("#songbookBody .sb-album")].find((x) => x.dataset.album === album);
+  if (!sec) return;
+  sec.scrollIntoView({ behavior: motionReduced() ? "auto" : "smooth", block: "start" });
+  sec.classList.remove("sb-arrive");
+  void sec.offsetWidth;
+  sec.classList.add("sb-arrive");
 }
 
 const SB_LOUPE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round">` +
@@ -5067,10 +5122,7 @@ function layOutSongbookGlance(box, found) {
     seed: "songbook",
     label: "The songs still hiding, one dot each, grouped by album",
   });
-  box.querySelectorAll(".cg-album").forEach((g) => g.addEventListener("click", () => {
-    const sec = [...document.querySelectorAll("#songbookBody .sb-album")].find((x) => x.dataset.album === g.dataset.album);
-    if (sec) sec.scrollIntoView({ behavior: motionReduced() ? "auto" : "smooth", block: "start" });
-  }));
+  box.querySelectorAll(".cg-album").forEach((g) => g.addEventListener("click", () => songbookJump(g.dataset.album)));
 }
 
 /* ---------- Personal records (your own best runs, per mode) ---------- */
