@@ -92,6 +92,7 @@ import { exportBraceletCard, copyBraceletCard, buildCardSVG, fontFaceCss } from 
 import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
 import { sfx } from "./sound.js";
 import { faviconBlobUrl, faviconSVG } from "./favicon.js";
+import { watchInkEdges } from "./inkedge.js";
 import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex, siblingForm } from "./match.js";
 import { buildLyricReveal, revealSections } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
@@ -37225,6 +37226,7 @@ function seatLoadTag() {
 }
 
 async function init() {
+  watchInkEdges();
   initCtaInteractions();
   // Strikes the way home's postmark before anything can reach the results screen.
   applyAgainBtnLabel();

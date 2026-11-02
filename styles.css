@@ -11776,6 +11776,12 @@
      (ID specificity) and leave a bare strip below the closed cover. */
   :is(#screen-start, [data-flip-id="screen-start"]).card:not(.is-booting) { padding-bottom: 40px; }
 
+  /* js/inkedge.js pulls a handwritten block's first letter back onto its left edge with an
+     inline text-indent. Text-indent inherits, so stop it at the element it was measured for:
+     a nested block or inline-block would otherwise shift its own first letter by the parent's
+     letter's amount. */
+  [data-ink-edge] * { text-indent: 0; }
+
   /* ---------- Stats page ---------- */
   :is(#screen-stats, [data-flip-id="screen-stats"]).card { padding-top: 16px; }
   .stats-nav {
@@ -11826,11 +11832,19 @@
      one of these properties (fill, stroke, stroke-width, the two line styles) is
      an inherited SVG property, which is why the indirection works at all. */
   .stats-nav .title-group, .settings-nav .title-group { display: flex; align-items: baseline; gap: 10px; }
+  /* The mark sits on the title's baseline and is then lifted so its middle lands on the word's
+     optical middle. That is not the box's middle, nor the capital's: a title is mostly lowercase,
+     so the eye weighs it toward the x-height. Measured off Caveat 700, the cap-height's middle is
+     0.34em above the baseline and the x-height's 0.18em; the mark centres between them, 0.26em.
+     Centring on the capitals alone (where this used to sit) read as the word hanging low. */
+  .stats-nav .title-group { --title-fs: calc(26px + var(--text-size-adjust)); }
+  .settings-nav .title-group { --title-fs: calc(28px + var(--text-size-adjust)); }
   .page-mark {
+    --mark-h: 26px;
     position: relative; isolation: isolate;
     display: inline-flex; flex: none;
-    width: 39px; height: 26px;
-    transform: rotate(1.2deg) translateY(3px);
+    width: 39px; height: var(--mark-h);
+    transform: rotate(1.2deg) translateY(calc(var(--mark-h) / 2 - 0.26 * var(--title-fs, 26px)));
     color: color-mix(in srgb, var(--mark-tint) var(--mark-tone, 70%), var(--ink));
   }
   .page-mark svg {
@@ -11949,7 +11963,7 @@
      there. Do not simply widen the gap budget instead: the row has no wrap. */
   @media (max-width: 480px) {
     .stats-nav .title-group, .settings-nav .title-group { gap: 7px; }
-    .page-mark { width: 30px; height: 20px; }
+    .page-mark { width: 30px; --mark-h: 20px; }
   }
   .btn-link {
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1px;
