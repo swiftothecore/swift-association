@@ -1423,14 +1423,9 @@ export function initDev(api) {
           const bad = [...m.noDay.map((n) => n + ": no day"), ...m.noPass.map((n) => n + ": no pass")];
           toast(bad.length ? bad.join(", ") : "every guest has a birthday");
         }, (() => { const m = api.guestday.missing(); return m.noDay.length || m.noPass.length ? "warn" : ""; })()),
-        btn("jump to next", () => {
-          // shift(0), not date.set(): it reports the day the page is CURRENTLY showing,
-          // override included, where set() with no argument would clear the override first.
-          const today = api.date.shift(0) || "";
-          const keys = api.guestday.dates().map((s) => s.slice(0, 10)).sort();
-          const next = keys.find((k) => k >= today) || keys[0];
-          api.date.set(next); toast("date → " + next);
-        }))));
+        // The next guest day on or after the day the page is showing, and the Start writing
+        // finish it forces there.
+        btn("jump to next", () => { const r = api.guestday.button(); showDate(r.date); toast(`${r.date}: ${r.guest}, ${r.finish}`); }))));
 
   // ---- Custom mode / breadth -------------------------------------------------
   // The calendar row is the one that can't be waited out: a seven-day streak is a real week and

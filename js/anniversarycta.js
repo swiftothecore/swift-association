@@ -1,7 +1,7 @@
 // The dated Start writing button: sixteen finishes, one per studio album and one per Taylor's
 // Version, each with its own lyric for the words, and the rule that puts each on the button on its record's release day; one for her
-// birthday, Iced for her; one for Christmas Day, Fresh off the baler; and one more, Thirteen
-// marks, for the 13th of every month.
+// birthday, Iced for her; one for Christmas Day, Fresh off the baler; one more, Thirteen
+// marks, for the 13th of every month; and one for each day the guest shelf keeps in the margin.
 //
 // THE FINISH IS FORCED, AND THAT IS THE POINT. On each album's anniversary the button wears
 // that album's finish over whatever the player has chosen: Seasons, the gold marker, any
@@ -10,16 +10,17 @@
 // off would only be a theme. It lasts the one day and hands the button straight back, and it
 // never touches the stored choice, so nothing is lost by it. Her birthday is forced the same way,
 // and so is Christmas Day, for the tree farm she grew up on, and so is the 13th, for her lucky
-// number, on the 13th only.
+// number, on the 13th only. So is each guest's day, the notebook being generous about somebody
+// else on the one day the margin already marks for them.
 //
 // Every finish is drawn on a 600 x 60 strip cropped from the middle, never stretched, exactly as
 // js/cta.js draws its own (the 13th's count and the birthday's candles are the exceptions, and
 // say why). The twelve were
 // designed on scripts/cta/chosen-board.html, the four Taylor's Versions on scripts/cta/tv-board.html,
-// the birthday on scripts/cta/birthday-board.html, Christmas on scripts/cta/christmas-board.html
-// and the 13th on scripts/cta/thirteenth-board.html;
+// the birthday on scripts/cta/birthday-board.html, Christmas on scripts/cta/christmas-board.html,
+// the 13th on scripts/cta/thirteenth-board.html and the guests' on scripts/cta/guest-days-board.html;
 // change a finish there first and carry it across, so the board and the button do not drift apart.
-import { TS_MILESTONES, ALBUM_COLORS } from "./config.js";
+import { TS_MILESTONES, ALBUM_COLORS, GUEST_DAYS } from "./config.js";
 
 const R = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -1017,6 +1018,356 @@ function layTag(btn) {
 const CHRISTMAS = TS_MILESTONES.find((m) => m.kind === "songday" && m.md === "12-25");
 export const christmasFinishFor = (dateKey) => dateKey?.slice(5) === CHRISTMAS.md ? "anv-christmas" : "";
 
+/* ---------- the guest shelf's days ----------
+   One finish for each day GUEST_DAYS keeps: the seven guests' birthdays, Wicked's opening night
+   and Hannah Montana's premiere standing in for the two that are not people, and the two names
+   announced on the shelf. Each starts from the guest's souvenir sticker or a record, and each
+   guest keeps to its own class prefix in styles.css. Designed on scripts/cta/guest-days-board.html,
+   with the rejected candidates beside them. */
+// A four-point glint, for anything that catches the light.
+const GLINT = 'M0 -1.9C.15 -.5 .5 -.15 1.9 0C.5 .15 .15 .5 0 1.9C-.15 .5 -.5 .15 -1.9 0C-.5 -.15 -.15 -.5 0 -1.9Z';
+
+// Two notes in their own units, the head at the origin: a quaver, and a beamed pair.
+const QUAVER = `<ellipse rx="2.1" ry="1.45" transform="rotate(-22)"/><rect x="1.4" y="-9.6" width=".75" height="9.5"/><path d="M2.15 -9.6C2.5 -7.6 5.1 -6.9 4.5 -3.7C4.3 -5.7 3.3 -6.3 2.15 -6.7Z"/>`;
+const PAIR = `<ellipse rx="2.1" ry="1.45" transform="rotate(-22)"/><ellipse cx="6" cy="-1.3" rx="2.1" ry="1.45" transform="rotate(-22 6 -1.3)"/><rect x="1.4" y="-9.6" width=".75" height="9.5"/><rect x="7.4" y="-10.9" width=".75" height="9.6"/><path d="M1.4 -9.6L8.15 -10.9V-9.1L1.4 -7.8Z"/>`;
+
+/* ---- Harry Styles: Watermelon sugar ---- */
+function melon() {
+  const id = `hsM${++serial}`, rand = R(201);
+  // The flesh's grain: short juicy flecks, lighter and darker, all running roughly upright.
+  let grain = '', grainDk = '';
+  for (let k = 0; k < 420; k++) {
+    const x = rand() * 600, y = 1 + rand() * 48, a = 70 + rand() * 40, s = `cx="${f(x)}" cy="${f(y)}" rx="${f(.5 + rand() * 1)}" ry="${f(.28 + rand() * .3)}" transform="rotate(${f(a)} ${f(x)} ${f(y)})" opacity="${f(.05 + rand() * .13)}"`;
+    if (rand() < .72) grain += `<ellipse ${s}/>`; else grainDk += `<ellipse ${s}/>`;
+  }
+  // The rind: the white, then a pale green, then the dark skin with its stripes, each edge wavering.
+  const edge = (y0, amp, k) => { let d = `M-6 62L-6 ${f(y0)}`; for (let x = -6; x <= 606; x += 6) d += `L${x} ${f(y0 + amp * Math.sin(x / 23 + k) + amp * .6 * Math.sin(x / 9.3 + k * 2))}`; return d + 'L606 62Z'; };
+  let stripes = '';
+  for (let x = -4; x < 606; x += 6 + rand() * 7) { const w = 1.4 + rand() * 2.6, j = (rand() - .5) * 1.6; stripes += `M${f(x)} 62L${f(x + j)} ${f(56.4 + rand())}C${f(x + w * .3)} ${f(55.6)} ${f(x + w * .7)} ${f(55.8)} ${f(x + w + j)} ${f(56.6 + rand())}L${f(x + w)} 62Z`; }
+  const rind = `<path class="hs-r0" d="${edge(50.2, .5, 1)}"/><path class="hs-r1" d="${edge(53.2, .45, 2)}"/><path class="hs-r2" d="${edge(55.4, .4, 3)}"/><path class="hs-r3" d="${stripes}"/>`;
+  // The seeds lie in a ring: a row across either side of the words and a sparser one above it.
+  // Under the words there are only a few of the pale, soft ones that never ripened.
+  const SEED = 'M0 -3.4C1.4 -1.6 2 .3 1.75 1.5C1.45 2.8 -1.45 2.8 -1.75 1.5C-2 .3 -1.4 -1.6 0 -3.4Z';
+  const spots = [];
+  for (let x = 9; x < 594; x += 13 + rand() * 9) { if (x > 190 && x < 410) continue; spots.push([x, 32 + Math.sin(x / 41) * 4.5 + (rand() - .5) * 5]); }
+  for (let x = 22; x < 590; x += 28 + rand() * 16) { if (x > 178 && x < 422) continue; spots.push([x, 13 + rand() * 7]); }
+  let pits = '', seeds = '', notes = '', pale = '';
+  spots.forEach(([x, y]) => {
+    // The ones nearest the words go first, and the song spreads out to the ends.
+    const rot = (rand() - .5) * 56, s = .9 + rand() * .32, d = (Math.abs(x - 300) - 100) / 200 * .55 + rand() * .06;
+    pits += `<path transform="translate(${f(x)} ${f(y + .3)}) rotate(${f(rot)}) scale(${f(s * 1.12)})" d="${SEED}"/>`;
+    seeds += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)}) scale(${f(s)})"><g class="hs-seed" style="--d:${f(d)}s"><path d="${SEED}" fill="url(#${id}s)"/><ellipse class="hs-seed-hi" cx="-.6" cy="-.2" rx=".42" ry="1.15"/></g></g>`;
+    const ty = 9 + rand() * 9 - y, tx = (rand() - .5) * 12;
+    notes += `<g transform="translate(${f(x)} ${f(y + 3)})"><g class="hs-note" style="--d:${f(d)}s;--nx:${f(tx)}px;--ny:${f(ty)}px;--nr:${f((rand() - .5) * 26)}deg"><g class="hs-bob" style="--b:${f(-rand() * 2.6)}s"><g transform="scale(${f(.82 + rand() * .22)})">${rand() < .3 ? PAIR : QUAVER}</g></g></g></g>`;
+  });
+  for (let k = 0; k < 16; k++) { const x = 206 + rand() * 188, y = 25 + rand() * 13; pale += `<path transform="translate(${f(x)} ${f(y)}) rotate(${f((rand() - .5) * 50)}) scale(${f(.5 + rand() * .2)})" d="${SEED}"/>`; }
+  const defs = `<linearGradient id="${id}f" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="hs-f0"/><stop offset=".5" class="hs-f1"/><stop offset=".78" class="hs-f2"/><stop offset=".86" class="hs-f3"/></linearGradient>` +
+    `<radialGradient id="${id}s" cx=".38" cy=".32" r=".85"><stop offset="0" stop-color="#55301e"/><stop offset=".55" stop-color="#221009"/><stop offset="1" stop-color="#0b0402"/></radialGradient>`;
+  return { fx: strip('hs-melon', `<defs>${defs}</defs><rect x="-6" y="-6" width="612" height="72" fill="url(#${id}f)"/><g class="hs-grain">${grain}</g><g class="hs-grain-dk">${grainDk}</g>` +
+    `<g class="hs-pale">${pale}</g><g class="hs-pits">${pits}</g>${rind}${seeds}${notes}`) + `<i class="hs-sheen"></i>` };
+}
+
+// The butterfly from her sticker, about eighteen across, the body at the origin.
+const WING_HI = 'M-.6 -.4C-2.6 -5.2 -7.6 -8.1 -9 -5.2C-10 -2.6 -6.2 -.8 -.6 -.4ZM-.6 .4C-3.8 .6 -7.2 2.8 -6.3 5.5C-5.5 7.4 -2.1 5.9 -.6 1.8Z';
+const WING_LO = 'M-1.6 -1.3C-3.2 -4.4 -6.5 -6.2 -7.4 -4.6C-8 -3.1 -5.6 -1.8 -1.6 -1.3ZM-1.6 1.2C-3.9 1.6 -5.8 3.2 -5.2 4.6C-4.6 5.6 -2.6 4.4 -1.6 2.2Z';
+const butterfly = (flap = true) => {
+  const wing = (sx) => `<g transform="scale(${sx} 1)"><g class="${flap ? 'or-flap' : ''}"><path class="or-wing" d="${WING_HI}"/><path class="or-wing2" d="${WING_LO}"/></g></g>`;
+  return wing(1) + wing(-1) + `<path class="or-body" stroke-width="1.1" d="M0 -3.4V4.2"/><path class="or-body" stroke-width=".35" d="M-.2 -3.4C-.8 -5.4 -1.6 -6.4 -2.6 -6.8M.2 -3.4C.8 -5.4 1.6 -6.4 2.6 -6.8"/>`;
+};
+
+/* ---- Olivia Rodrigo: Licence ---- */
+function licence() {
+  const id = `orL${++serial}`, rand = R(220);
+  // Guilloche: long interlaced waves across the whole card, each with its own swell.
+  let gu1 = '', gu2 = '';
+  for (let k = 0; k < 9; k++) {
+    const A = 5 + k * 2.4, L = 16 + k * 2.7, ph = rand() * 6, cy = 30 + (rand() - .5) * 5;
+    let d = '';
+    for (let x = -6; x <= 606; x += 2) d += `${x === -6 ? 'M' : 'L'}${x} ${f(cy + A * Math.sin(x / L + ph) * (.72 + .28 * Math.sin(x / 97 + k)))}`;
+    if (k % 2) gu2 += d; else gu1 += d;
+  }
+  // A security rosette at the far left, and a ghost of the photo beside it.
+  const rosette = (x0, y0, R0, a, n) => { let d = ''; for (let t = 0; t <= 2 * Math.PI + .01; t += .02) { const rr = R0 + a * Math.cos(n * t); d += `${t ? 'L' : 'M'}${f(x0 + rr * Math.cos(t))} ${f(y0 + rr * Math.sin(t) * .92)}`; } return d; };
+  const rose = rosette(70, 30, 15, 4.2, 11) + rosette(70, 30, 10, 3, 9) + rosette(70, 30, 19, 2, 17);
+  // The fields: printed bars, the licence number in red, and the signature over the bottom.
+  const bars = [[422, 10.4, 20, 1], [446, 10.4, 44, 1, 1], [422, 15.6, 13, 0], [439, 15.6, 60, 1], [422, 20.8, 26, 0], [452, 20.8, 34, 1], [422, 26, 17, 0], [443, 26, 22, 1], [470, 26, 30, 1],
+    [500, 31.2, 40, 1], [500, 36.4, 26, 0], [530, 36.4, 32, 1], [520, 10.4, 24, 0], [548, 15.6, 22, 0]]
+    .map(([x, y, w, dark, red]) => `<rect class="${red ? 'or-red' : 'or-ink'}" x="${x}" y="${y}" width="${w}" height="${dark ? 1.7 : 1.2}" rx=".5" opacity="${dark ? .62 : .38}"/>`).join('');
+  const sig = 'M447 47.6C449.4 41.2 452 39.6 451.6 44.2C451.2 48.4 449.4 49.6 450.6 46.4C452 43 454.4 44.8 455.4 46.6C456.2 48 457.8 45.2 458.8 43.6C459.4 46.4 460.6 48 462.6 45.6C464.6 43.4 466 44 466.4 46.2C466.8 48.4 468.8 47.4 470.4 45.2C471.6 43.6 472.4 39.4 471.6 38.6C470.8 39.4 471 44.6 472.6 47C474.4 49 477 46 478.6 44.2C480 46 481.6 47.6 484 45.6C486.4 43.6 492 44.4 506 43.2';
+  const photo = (x, y, w, h, ghost) => `<g${ghost ? ' opacity=".26"' : ''}><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.2" fill="url(#${id}p)"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.2" fill="none" class="or-ink" style="fill:none;stroke:var(--or-ink);stroke-width:.4;opacity:.6"/>` +
+    `<g transform="translate(${f(x + w / 2)} ${f(y + h * .46)}) scale(${f(w / 22)})">${butterfly(!ghost)}</g></g>`;
+  const seal = `<g class="or-seal"><g class="or-seal-in"><circle cx="436" cy="41" r="7" fill="url(#${id}h)"/><circle cx="436" cy="41" r="7" fill="none" stroke="#fff" stroke-width=".4" opacity=".7"/>` +
+    `<path transform="translate(436 41) scale(1.9)" d="${GLINT}" fill="#fff" opacity=".8"/></g></g>`;
+  let micro = '';
+  for (let x = 2; x < 600; x += 2.4) micro += `M${f(x)} 2.6h1.2M${f(x + 1.2)} 57.4h1.2`;
+  const defs = `<linearGradient id="${id}p" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="or-p0"/><stop offset="1" class="or-p1"/></linearGradient>` +
+    `<linearGradient id="${id}h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ad8"/><stop offset=".35" stop-color="#9ff3ff"/><stop offset=".65" stop-color="#fff6a8"/><stop offset="1" stop-color="#c3a0ff"/></linearGradient>`;
+  return { fx: strip('or-licence', `<defs>${defs}</defs><path class="or-gu1" d="${gu1}"/><path class="or-gu2" d="${gu2}"/><path class="or-rose" d="${rose}"/>` +
+    `<rect class="or-band" x="-6" y="-6" width="612" height="10.4"/><rect class="or-band" x="-6" y="55.6" width="612" height="10"/><path d="${micro}" stroke="#fff" stroke-width=".5" opacity=".45"/>` +
+    photo(112, 15, 18, 28, true) + photo(151, 10.5, 26, 38, false) + bars + `<path class="or-sig" d="${sig}"/>${seal}`) + `<i class="or-lam"></i><i class="or-holo"></i>` };
+}
+
+const STAR5 = (r, k = .42) => Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * k : r; return `${i ? 'L' : 'M'}${f(Math.cos(a) * rr)} ${f(Math.sin(a) * rr)}`; }).join('') + 'Z';
+
+/* ---- Hannah Montana: The secret closet ---- */
+function closet() {
+  const id = `hmC${++serial}`, rand = R(324);
+  // Behind the doors: the other closet. A brass rail of sequinned stage clothes, the wig on its
+  // stand in the left gutter and the star on the back wall in the right one.
+  const TONES = ['#e889b8', '#c9ccd8', '#9a6cc0', '#f0c443', '#6cc4d8', '#f2a3c6', '#b8bcc8'];
+  let clothes = '';
+  [12, 38, 64, 92, 120, 146, 210, 238, 268, 300, 332, 362, 392, 466, 494, 522, 550, 578].forEach((x, i) => {
+    const w = 18 + rand() * 7, len = 38 + rand() * 12, c = TONES[(i * 3 + 1) % TONES.length], jacket = i % 5 === 2;
+    const hang = `<path class="hm-hook" d="M${f(x)} 7.6q1.6 -.2 1.4 -1.6q-.2 -1.3 -1.6 -1M${f(x - w * .34)} 12.2L${f(x)} 8.6L${f(x + w * .34)} 12.2"/>`;
+    const body = jacket
+      ? `M${f(x - w * .36)} 12L${f(x + w * .36)} 12L${f(x + w * .5)} 22L${f(x + w * .44)} ${f(len * .78)}L${f(x - w * .44)} ${f(len * .78)}L${f(x - w * .5)} 22Z`
+      : `M${f(x - w * .3)} 12L${f(x + w * .3)} 12L${f(x + w * .2)} 25C${f(x + w * .28)} 31 ${f(x + w * .5)} ${f(len - 6)} ${f(x + w * .52)} ${f(len)}Q${f(x)} ${f(len + 2)} ${f(x - w * .52)} ${f(len)}C${f(x - w * .5)} ${f(len - 6)} ${f(x - w * .28)} 31 ${f(x - w * .2)} 25Z`;
+    clothes += `${hang}<path d="${body}" fill="${c}" opacity="${x > 190 && x < 410 ? .55 : .95}"/><path d="${body}" fill="url(#${id}q)" opacity=".75"/>` +
+      `<path d="M${f(x - w * .12)} 13V${f(len - 2)}" stroke="#0003" stroke-width="1.6"/>`;
+  });
+  // The wig on a stand, as on the sticker.
+  const wig = `<g transform="translate(166 0)"><rect x="-.8" y="40" width="1.6" height="16" fill="#9a8f84"/><ellipse cx="0" cy="57" rx="6" ry="1.6" fill="#7a6f66"/>` +
+    `<ellipse cx="0" cy="30" rx="5.6" ry="7.4" fill="#ece5da"/>` +
+    `<path d="M-7.6 47C-8.2 38 -8.4 28 -7 22.6C-5.6 17.6 5.6 17.6 7 22.6C8.4 28 8.2 38 7.6 47L4.4 47L4.6 27.8H-4.6L-4.4 47Z" fill="#e7c473"/>` +
+    `<path d="M-6.2 27.6H6.2" stroke="#c99a45" stroke-width=".6"/><path d="M-6 24C-3 20.6 3 20.6 6 24M-6.4 32V45M6.4 32V45M-5.4 33V45M5.4 33V45" stroke="#fff1c0" stroke-width=".45" fill="none" opacity=".8"/></g>`;
+  const star = `<g transform="translate(434 29)"><g class="hm-starp"><path class="hm-star2" transform="translate(.8 .9)" d="${STAR5(10.5)}"/><path class="hm-star" d="${STAR5(10.5)}"/>` +
+    `<path d="${STAR5(5)}" fill="#fff6c4" opacity=".55"/></g></g>`;
+  let tw = '';
+  for (let k = 0; k < 22; k++) { let x = 6 + rand() * 588; if (x > 200 && x < 400) x = rand() < .5 ? 150 + rand() * 50 : 400 + rand() * 50; const y = 12 + rand() * 40;
+    tw += `<g transform="translate(${f(x)} ${f(y)}) scale(${f(.7 + rand() * .7)})"><path class="hm-tw" d="${GLINT}" fill="${rand() < .5 ? '#fff' : '#fff2b8'}" style="--d:${f(rand() * 1.4)}s;--t:${f(1 + rand() * .8)}s"/></g>`; }
+  const room = `<rect x="-6" y="-6" width="612" height="72" fill="url(#${id}r)"/><ellipse class="hm-glow" cx="300" cy="30" rx="300" ry="50" fill="url(#${id}g)"/>` +
+    `<path class="hm-rail" d="M-6 7.4H606"/><path d="M-6 6.9H606" stroke="#fff4c4" stroke-width=".35" opacity=".7"/>${clothes}${wig}${star}${tw}`;
+  // The doors: two bifold pairs, louvred, meeting under the words, with a brass knob each side of
+  // the meeting stiles, low, below the lettering.
+  const leaf = (x0, x1) => {
+    let slats = '', hi = '';
+    for (let y = 7.2; y < 53; y += 2.5) { slats += `M${f(x0 + 6)} ${f(y)}H${f(x1 - 6)}`; hi += `M${f(x0 + 6)} ${f(y + .7)}H${f(x1 - 6)}`; }
+    return `<rect class="hm-door" x="${f(x0)}" y="-6" width="${f(x1 - x0)}" height="72"/><rect class="hm-door2" x="${f(x0 + 5)}" y="5.4" width="${f(x1 - x0 - 10)}" height="49.2"/>` +
+      `<path class="hm-slat" d="${slats}"/><path class="hm-slat-hi" d="${hi}"/><rect class="hm-frame" x="${f(x0 + 5)}" y="5.4" width="${f(x1 - x0 - 10)}" height="49.2"/>` +
+      `<path d="M${f(x1 - .3)} -6V66" stroke="#0000002a" stroke-width=".6"/>`;
+  };
+  const doorL = `<g class="hm-door-l">${leaf(-6, 147)}${leaf(147, 300)}<rect class="hm-shut" x="-6" y="-6" width="306" height="72"/><circle class="hm-knob" cx="292" cy="47.6" r="1.6"/><circle cx="291.6" cy="47.1" r=".55" fill="#fff6d0"/></g>`;
+  const doorR = `<g class="hm-door-r">${leaf(300, 453)}${leaf(453, 606)}<rect class="hm-shut" x="300" y="-6" width="306" height="72"/><circle class="hm-knob" cx="308" cy="47.6" r="1.6"/><circle cx="307.6" cy="47.1" r=".55" fill="#fff6d0"/></g>`;
+  const defs = `<linearGradient id="${id}r" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="hm-r0"/><stop offset="1" class="hm-r1"/></linearGradient>` +
+    `<radialGradient id="${id}g"><stop offset="0" stop-color="#ff9ad0" stop-opacity=".45"/><stop offset="1" stop-color="#ff9ad0" stop-opacity="0"/></radialGradient>` +
+    `<pattern id="${id}q" width="2.4" height="2.2" patternUnits="userSpaceOnUse"><circle cx=".6" cy=".6" r=".55" fill="#fff" opacity=".45"/><circle cx="1.8" cy="1.7" r=".55" fill="#000" opacity=".12"/></pattern>`;
+  return { fx: strip('hm-closet', `<defs>${defs}</defs>${room}${doorL}${doorR}<path d="M300 -6V66" stroke="#0004" stroke-width=".5"/>`) };
+}
+
+/* ---- Ariana Grande: petal ---- */
+function petal() {
+  const id = `agF${++serial}`, rand = R(817);
+  const PETAL = 'M0 4.4C-1.1 3.6 -2.8 .8 -2.8 -1.5C-2.8 -3.4 -1.6 -4.5 -.5 -4.1L0 -3.2L.5 -4.1C1.6 -4.5 2.8 -3.4 2.8 -1.5C2.8 .8 1.1 3.6 0 4.4Z';
+  const RAY = 'M0 -4.2C2.3 -3.4 2.9 .8 1.5 3.4C.9 4.3 -.9 4.3 -1.5 3.4C-2.9 .8 -2.3 -3.4 0 -4.2Z';
+  // One petal, wrapped so the breeze can carry it: a move, a turn and a flutter, each on its own
+  // element so none of them fights the drawing's own transform.
+  const one = (x, y, s, r, tone, cls, d, dx, dy, rr) => `<g transform="translate(${f(x)} ${f(y)})"><g class="${cls}" style="--dx:${f(dx)}px;--dy:${f(dy)}px;--rr:${f(rr)}deg;--d:${f(d)}s">` +
+    `<g transform="rotate(${f(r)}) scale(${f(s)})"><g class="ag-flut" style="--d:${f(d)}s"><path d="${PETAL}" fill="url(#${id}p${tone})"/><path d="M0 -3.3V3" stroke="#000" stroke-width=".2" opacity=".22"/></g></g></g></g>`;
+  let ps = '';
+  for (let k = 0; k < 36; k++) {
+    let x = rand() * 600, y = 4 + rand() * 52;
+    if (x > 192 && x < 408 && y > 13 && y < 47) y = rand() < .5 ? 3 + rand() * 9 : 49 + rand() * 9;
+    ps += one(x, y, .8 + rand() * .7, rand() * 360, Math.floor(rand() * 3), 'ag-pf', x / 600 * .7 + rand() * .2, 40 + rand() * 120, (rand() - .5) * 26, (rand() < .5 ? -1 : 1) * (180 + rand() * 360));
+  }
+  // More come in on the breeze from off the left.
+  for (let k = 0; k < 12; k++) ps += one(-10 - rand() * 60, 5 + rand() * 50, .8 + rand() * .6, rand() * 360, Math.floor(rand() * 3), 'ag-in', rand() * .4, 120 + rand() * 230, (rand() - .5) * 20, 300 + rand() * 300);
+  // Daisies: one in the right gutter, small ones at the far ends. A few of the gutter one's
+  // petals go with the breeze.
+  const daisy = (cx, cy, R0, n, loose) => {
+    let g = '';
+    for (let i = 0; i < n; i++) {
+      const a = i / n * 360 + rand() * 6, flies = loose && i % 3 === 1;
+      const pet = `<g transform="rotate(${f(a)}) translate(0 ${f(-R0 * .62)}) scale(${f(R0 / 7)} ${f(R0 / 5.4)})"><path d="${RAY}" fill="url(#${id}p${i % 3})"/></g>`;
+      g += flies ? `<g class="ag-pf" style="--dx:${f(30 + rand() * 60)}px;--dy:${f(-8 - rand() * 14)}px;--rr:${f(200 + rand() * 200)}deg;--d:${f(.5 + rand() * .3)}s">${pet}</g>` : pet;
+    }
+    return `<g transform="translate(${cx} ${cy})">${g}<circle r="${f(R0 * .3)}" fill="#6a6a6c"/><circle r="${f(R0 * .3)}" fill="url(#${id}d)"/></g>`;
+  };
+  const defs = ['#fbfbfa|#cfd2d6', '#e9ebee|#a9aeb4', '#ffffff|#dcdee1'].map((p, k) => { const [a, b] = p.split('|');
+      return `<linearGradient id="${id}p${k}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`; }).join('') +
+    `<radialGradient id="${id}d"><stop offset="0" stop-color="#8b8b8d"/><stop offset="1" stop-color="#3c3c3e"/></radialGradient>` +
+    `<radialGradient id="${id}v" cx=".5" cy=".5" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>` +
+    `<radialGradient id="${id}k" cx=".08" cy="0" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>` +
+    `<filter id="${id}g" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="1" seed="3"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 -2.2 0 1.25"/></filter>`;
+  return { fx: strip('ag-film', `<defs>${defs}</defs><rect x="-6" y="-6" width="612" height="72" fill="url(#${id}k)"/>${daisy(434, 45, 9, 13, true)}${daisy(28, 12, 6, 11, false)}${daisy(574, 50, 7, 12, false)}${daisy(162, 54, 4.6, 10, false)}${ps}` +
+    `<rect x="-6" y="-6" width="612" height="72" fill="url(#${id}v)"/><path class="ag-scr" d="M233 -6V66" stroke="#fff" stroke-width=".35" style="--d:.2s"/><path class="ag-scr" d="M371 -6L372 66" stroke="#fff" stroke-width=".25" style="--d:.55s"/>` +
+    `<g class="ag-grain"><rect x="-6" y="-6" width="620" height="76" filter="url(#${id}g)"/></g>`) + `<i class="ag-flick"></i>` };
+}
+
+// A bee from above, facing up the page: wings over the thorax, a striped abdomen. The queen is
+// longer, and wears the sticker's crown.
+const bee = (queen) => {
+  const wing = (s) => `<g transform="rotate(${s * 28} ${s * 2.3} -1.2)"><ellipse class="by-wing" cx="${s * 2.3}" cy="-1.2" rx="2.7" ry="1.3"/></g>`;
+  return `<ellipse cx="0" cy="${queen ? 2.7 : 2}" rx="2.1" ry="${queen ? 3.9 : 3}" fill="#f2c230"/>` +
+    `<path d="M-2 1.2Q0 1.9 2 1.2L2.1 2.2Q0 2.9 -2.1 2.2ZM-1.9 3.4Q0 4.1 1.9 3.4L1.6 4.4Q0 5 -1.6 4.4Z${queen ? 'M-1.4 5.4Q0 6 1.4 5.4L1 6.2Q0 6.6 -1 6.2Z' : ''}" fill="#1b1209"/>` +
+    `<circle cy="-.9" r="1.6" fill="#3a2a12"/>${wing(-1)}${wing(1)}<circle cy="-2.85" r="1.05" fill="#1b1209"/>` +
+    `<path d="M-.4 -3.6Q-1 -4.8 -1.9 -5.2M.4 -3.6Q1 -4.8 1.9 -5.2" fill="none" stroke="#1b1209" stroke-width=".3"/>` +
+    (queen ? `<path d="M-1.5 -3.4L-1.8 -5.8L-.8 -4.6L0 -6.3L.8 -4.6L1.8 -5.8L1.5 -3.4Z" fill="#f4c542" stroke="#9a6a10" stroke-width=".22"/><circle cy="-6.4" r=".35" fill="#fff6c4"/>` : '');
+};
+
+/* ---- Beyoncé: The hive ---- */
+function hive() {
+  const id = `byH${++serial}`, rand = R(904), r = 5.2, w = Math.sqrt(3) * r;
+  const hex = (cx, cy, rr) => Array.from({ length: 6 }, (_, k) => { const a = (60 * k - 90) * DEG; return `${k ? 'L' : 'M'}${f(cx + rr * Math.cos(a))} ${f(cy + rr * Math.sin(a))}`; }).join('') + 'Z';
+  // The comb: honey in most cells, a few capped with wax, a few empty and dark. Under the words it
+  // is all deep honey, so the lettering sits on one tone.
+  let cells = '', walls = '', gloss = '';
+  for (let row = 0; row < 10; row++) for (let col = -1; col < 72; col++) {
+    const cx = col * w + (row % 2 ? w / 2 : 0), cy = -1.5 + row * 7.8, core = cx > 186 && cx < 414 && cy > 10 && cy < 50, roll = rand();
+    walls += hex(cx, cy, r);
+    const kind = core ? (roll < .9 ? 'h' : 'd') : roll < .56 ? 'h' : roll < .84 ? 'c' : 'e';
+    cells += `<use href="#${id}cell" x="${f(cx)}" y="${f(cy)}" fill="url(#${id}${kind})"/>`;
+    if (kind === 'h' && !core && rand() < .75) gloss += `M${f(cx - 2.4)} ${f(cy - .6)}q.6 -2 2.6 -2.4`;
+  }
+  // Honey letting go of the top edge on hover.
+  const DRIP = 'M-1.7 0H1.7V4.6C1.7 6.8 2.5 8.2 2.5 9.6C2.5 11.2 1.3 12.3 0 12.3C-1.3 12.3 -2.5 11.2 -2.5 9.6C-2.5 8.2 -1.7 6.8 -1.7 4.6Z';
+  const drips = [[60, .2, 1.1], [157, 0, .9], [189, .5, .7], [411, .3, .8], [452, .1, 1], [534, .6, 1.2]]
+    .map(([x, d, s]) => `<g transform="translate(${x} -1) scale(${s})"><g class="by-drip" style="--d:${d}s"><path d="${DRIP}" fill="url(#${id}dr)"/><path d="M-.7 1V7.4" stroke="#fff6cc" stroke-width=".5" opacity=".7"/></g></g>`).join('');
+  // The bees at work, and where each flies to on hover: a V across the top with the queen at its
+  // point, outer bees to the outer places so no two paths cross the words.
+  const rest = [[16, 50, 100], [40, 30, 40], [88, 12, -70], [122, 46, 150], [168, 20, 30], [418, 46, 120], [500, 40, -140], [540, 14, 60], [574, 34, -30], [588, 52, 160]];
+  const slots = [[150, 17.6], [180, 15.2], [210, 12.8], [240, 10.4], [270, 8], [330, 8], [360, 10.4], [390, 12.8], [420, 15.2], [450, 17.6]];
+  const order = [0, 1, 2, 3, 4, 9, 8, 7, 6, 5];
+  let bees = '';
+  rest.forEach(([x, y, r0], i) => { const [sx, sy] = slots[order[i]];
+    bees += `<g class="by-fly" style="--fx:${f(sx - x)}px;--fy:${f(sy - y)}px;--d:${f(.05 + rand() * .45)}s"><g transform="translate(${x} ${y}) scale(1.45)"><g class="by-turn" style="--r0:${r0}deg;--d:${f(.05 + rand() * .3)}s"><g class="by-bob" style="--b:${f(-rand())}s">${bee(false)}</g></g></g></g>`; });
+  bees += `<g class="by-fly" style="--fx:-146px;--fy:-9.6px;--d:.55s"><g transform="translate(446 15.2) scale(1.65)"><g class="by-turn" style="--r0:-20deg;--d:.5s"><g class="by-bob" style="--b:-.3s">${bee(true)}</g></g></g></g>`;
+  const defs = `<path id="${id}cell" d="${hex(0, 0, r - .6)}"/>` +
+    `<radialGradient id="${id}h" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#ffd463"/><stop offset=".55" stop-color="#eaa12a"/><stop offset="1" stop-color="#b8670c"/></radialGradient>` +
+    `<radialGradient id="${id}d" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#d98e1e"/><stop offset="1" stop-color="#9a530a"/></radialGradient>` +
+    `<radialGradient id="${id}c" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#fbeab0"/><stop offset=".7" stop-color="#ecc96f"/><stop offset="1" stop-color="#cf9f45"/></radialGradient>` +
+    `<radialGradient id="${id}e" cx=".5" cy=".5" r=".7"><stop offset="0" stop-color="#5a3206"/><stop offset="1" stop-color="#8a5414"/></radialGradient>` +
+    `<linearGradient id="${id}dr" x1="0" x2="1"><stop offset="0" stop-color="#c97a10"/><stop offset=".4" stop-color="#ffcf55"/><stop offset="1" stop-color="#b8670c"/></linearGradient>` +
+    `<radialGradient id="${id}v" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3a1c00" stop-opacity=".38"/><stop offset="1" stop-color="#3a1c00" stop-opacity="0"/></radialGradient>`;
+  return { fx: strip('by-comb', `<defs>${defs}</defs><rect x="-6" y="-6" width="612" height="72" fill="#7a440a"/>${cells}<path class="by-walls" d="${walls}"/><path class="by-walls2" d="${walls}" transform="translate(.5 .6)"/>` +
+    `<path class="by-gloss" d="${gloss}"/><ellipse cx="300" cy="30" rx="150" ry="34" fill="url(#${id}v)"/>${drips}${bees}`) };
+}
+
+// Elphaba on her broom, in silhouette, facing right, about eighteen across.
+const WITCH = `<path class="wk-witch-s" stroke-width="1" d="M-11.4 3.4L10.4 -1.3"/>` +
+  `<path class="wk-witch" d="M-10.6 2.7L-16.8 .4L-17.6 3.6L-17 6.8ZM-3.8 1.6C-5 3.6 -6 5.6 -8.8 6.4C-5.6 6.8 -2.6 5.2 -.4 1.4Z` +
+  `M-1.2 -3.6C-4.8 -4.4 -9.4 -2.8 -13.6 -4.6C-11 -1.6 -6.8 .6 -1.2 1ZM-1.9 1.2L-.3 -4.6L1.7 -4.4L1.5 1.4Z"/>` +
+  `<circle class="wk-witch" cx=".7" cy="-5.7" r="1.2"/><path class="wk-witch-s" stroke-width=".9" d="M1 -2.6L4.6 -.3M-3 -6.1Q.9 -5.2 4.4 -6.7"/>` +
+  `<path class="wk-witch" d="M-1.4 -6.4L2 -6.7Q.4 -9 -.4 -11.2Q-1.4 -12.6 -3 -12.4Q-1.6 -11 -1.4 -6.4Z"/>`;
+
+/* ---- Wicked: Defying gravity ---- */
+function gravity() {
+  const id = `wkG${++serial}`, rand = R(1030);
+  let stars = '';
+  for (let k = 0; k < 50; k++) { const x = rand() * 600, y = 1 + rand() * 30; if (x > 196 && x < 404 && y > 8) continue; stars += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.2 + rand() * .45)}" fill="#e9f7df" opacity="${f(.25 + rand() * .55)}"/>`; }
+  // The Emerald City: green glass spires, each lit down its left face, with a few windows lit.
+  const spire = (x, w, h, base = 61) => { const top = base - h, tip = top - w * 1.7;
+    return [`M${f(x - w / 2)} ${base}L${f(x - w * .4)} ${f(top)}L${f(x)} ${f(tip)}L${f(x + w * .4)} ${f(top)}L${f(x + w / 2)} ${base}Z`,
+      `M${f(x - w / 2)} ${base}L${f(x - w * .4)} ${f(top)}L${f(x)} ${f(tip)}L${f(x - w * .05)} ${base}Z`]; };
+  let far = '', body = '', facet = '', lit = '';
+  for (let x = -4; x < 608; x += 6 + rand() * 6) { const c = Math.abs(x - 300); if (c < 100 && rand() < .7) continue; far += spire(x, 3 + rand() * 4, 8 + 26 * smooth(90, 280, c) + rand() * 8, 62)[0]; }
+  [[14, 6, 28], [36, 10, 40], [60, 6, 26], [86, 8, 34], [104, 5, 24], [122, 7, 30], [138, 5, 22], [154, 9, 38], [170, 6, 27], [184, 4.5, 17],
+    [416, 4.5, 17], [430, 7, 29], [462, 10, 41], [482, 6, 27], [502, 8, 34], [522, 5, 22], [546, 9, 38], [570, 6, 26], [590, 8, 32]].forEach(([x, w, h]) => {
+    const [b, fc] = spire(x, w, h); body += b; facet += fc;
+    for (let y = 61 - h + 4; y < 58; y += 3.4 + rand() * 3) if (rand() < .55) lit += `<rect x="${f(x - w * .25 + rand() * w * .4)}" y="${f(y)}" width=".9" height="1.3"/>`;
+  });
+  // Under the words only the low walls and domes of the city, glowing.
+  let low = 'M186 62V56';
+  for (let x = 186; x <= 414; x += 12) low += `L${x} 56Q${x + 6} ${f(51.5 - rand() * 2)} ${x + 12} 56`;
+  low += 'L414 62Z';
+  const moon = `<circle cx="444" cy="13" r="15" fill="url(#${id}m)"/><circle class="wk-moon" cx="444" cy="13" r="7.8"/><circle cx="441.6" cy="11.4" r="1.4" fill="#cfdcbc" opacity=".55"/><circle cx="446.8" cy="15.6" r="1" fill="#cfdcbc" opacity=".45"/>`;
+  // Glinda's bubble, low in the left gutter, rising on hover.
+  const bubble = `<g transform="translate(170 46)"><g class="wk-bub"><circle r="6.4" fill="url(#${id}b)"/><circle r="6.4" fill="none" stroke="#ffe6f3" stroke-width=".45" opacity=".8"/>` +
+    `<path d="M-4.2 -2.6A5 5 0 0 1 -.6 -5.2" stroke="#fff" stroke-width=".9" fill="none" stroke-linecap="round" opacity=".9"/><path d="M3.6 3.8A5.6 5.6 0 0 1 .8 5.6" stroke="#b8f0ff" stroke-width=".6" fill="none" opacity=".7"/>` +
+    `<path transform="translate(1.2 1) scale(.7)" d="${GLINT}" fill="#fff"/></g></g>`;
+  // The witch, waiting low in the right gutter; on hover she goes up across the moon. A trail of
+  // green sparks marks the way she went.
+  const trail = [[412, 37, .15], [417, 33, .3], [423, 28, .45], [429, 23, .6], [435, 19, .75], [440, 16, .9]]
+    .map(([x, y, d]) => `<g transform="translate(${x} ${y})"><path class="wk-trail" d="${GLINT}" fill="#9dffbf" style="--d:${d}s"/></g>`).join('');
+  const witch = `<g transform="translate(414 40) scale(.92)"><g class="wk-fly">${WITCH}</g></g>`;
+  const defs = `<linearGradient id="${id}s" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="wk-s0"/><stop offset="1" class="wk-s1"/></linearGradient>` +
+    `<radialGradient id="${id}m"><stop offset="0" stop-color="#f4ffe6" stop-opacity=".5"/><stop offset="1" stop-color="#f4ffe6" stop-opacity="0"/></radialGradient>` +
+    `<radialGradient id="${id}g" cx=".5" cy="1" r=".7"><stop offset="0" stop-color="#7dffb0" stop-opacity=".45"/><stop offset="1" stop-color="#7dffb0" stop-opacity="0"/></radialGradient>` +
+    `<radialGradient id="${id}b" cx=".38" cy=".34" r=".7"><stop offset="0" stop-color="#ffd6ec" stop-opacity=".35"/><stop offset=".65" stop-color="#f07ab4" stop-opacity=".6"/><stop offset="1" stop-color="#ffb3da" stop-opacity=".95"/></radialGradient>`;
+  return { fx: strip('wk-oz', `<defs>${defs}</defs>${stars}${moon}<rect class="wk-glow" x="-6" y="10" width="612" height="56" fill="url(#${id}g)"/><path class="wk-far" d="${far}" opacity=".7"/>` +
+    `<path d="${body}" fill="url(#${id}s)"/><path d="${facet}" fill="#b6ffd2" opacity=".22"/><path class="wk-far" d="${low}"/><g class="wk-lit">${lit}</g>${bubble}${trail}${witch}`) };
+}
+
+/* ---- Miley: Wrecking ball ---- */
+function wrecking() {
+  const id = `mcW${++serial}`, rand = R(1123), bx = 434, by = 30, br = 11.4;
+  // Board-formed concrete: the panel joints, the tie holes, the grain of the boards it was cast in.
+  let boards = '';
+  for (let y = 3; y < 60; y += 4.6 + rand() * 1.6) boards += `M-6 ${f(y)}H606`;
+  let holes = '';
+  [30, 96, 156, 444, 504, 570].forEach((x) => [12, 48].forEach((y) => { holes += `<circle cx="${x}" cy="${y}" r="1.7" fill="#fff" opacity=".35"/><circle class="mc-hole" cx="${x}" cy="${y}" r="1.15"/><circle cx="${f(x + .3)}" cy="${f(y + .3)}" r=".6" fill="#000" opacity=".35"/>`; }));
+  const seams = `<path class="mc-seam" d="M126 -6V66M474 -6V66"/><path d="M127 -6V66M475 -6V66" stroke="#fff" stroke-width=".5" opacity=".4"/>`;
+  // The cracks, out from behind the ball, each jagged and its own length, drawn on at the moment
+  // it hits; the ring where the face has spalled off; the chunks and the dust.
+  let cracks = '';
+  for (let k = 0; k < 11; k++) {
+    let a = k / 11 * Math.PI * 2 + rand() * .4, x = bx + Math.cos(a) * 6, y = by + Math.sin(a) * 6, d = `M${f(x)} ${f(y)}`;
+    const len = 12 + rand() * 34;
+    for (let s = 0; s < len; s += 3 + rand() * 3) { a += (rand() - .5) * .7; x += Math.cos(a) * 3.4; y += Math.sin(a) * 3.4; d += `L${f(x)} ${f(y)}`;
+      if (rand() < .18) d += `M${f(x)} ${f(y)}l${f(Math.cos(a + 1) * 4)} ${f(Math.sin(a + 1) * 4)}M${f(x)} ${f(y)}`; }
+    cracks += `<path class="mc-crack" pathLength="1" d="${d}" style="--d:${f(rand() * .12)}s"/>`;
+  }
+  let bits = '', dust = '';
+  for (let k = 0; k < 12; k++) { const x = bx + (rand() - .5) * 18, y = by + (rand() - .5) * 14, s = .8 + rand() * 1.6;
+    bits += `<path class="mc-chunk mc-bit" d="M${f(x)} ${f(y - s)}L${f(x + s)} ${f(y - s * .2)}L${f(x + s * .5)} ${f(y + s)}L${f(x - s * .8)} ${f(y + s * .6)}Z" style="--d:${f(rand() * .1)}s;--t:${f(.55 + rand() * .3)}s;--fx:${f((rand() - .5) * 26)}px;--fy:${f(58.5 - y - s * .4)}px;--fr:${f((rand() - .5) * 400)}deg"/>`; }
+  for (let k = 0; k < 7; k++) { const a = rand() * Math.PI * 2; dust += `<circle class="mc-dust" cx="${f(bx + Math.cos(a) * 9)}" cy="${f(by + Math.sin(a) * 8)}" r="${f(4 + rand() * 4)}" fill="url(#${id}d)" style="--d:${f(rand() * .15)}s"/>`; }
+  // The ball, hung on its chain from somewhere above the top of the button.
+  let chain = '';
+  for (let y = -8, k = 0; y < by - br - 1.6; y += 3.4, k++) chain += k % 2 ? `<rect x="${bx - .55}" y="${f(y)}" width="1.1" height="4.2" rx=".5" fill="#2c2d31"/>` : `<ellipse cx="${bx}" cy="${f(y + 2.1)}" rx="1.6" ry="2.4" fill="none" stroke="#3a3b40" stroke-width="1"/>`;
+  const ball = `<g class="mc-swing">${chain}<rect x="${bx - 2.6}" y="${f(by - br - 2.4)}" width="5.2" height="3.4" rx="1" fill="#2a2b2f"/>` +
+    `<circle cx="${bx}" cy="${by}" r="${br}" fill="url(#${id}b)"/><ellipse cx="${bx - 3.8}" cy="${by - 4.4}" rx="3.2" ry="2" fill="#fff" opacity=".22" transform="rotate(-30 ${bx - 3.8} ${by - 4.4})"/>` +
+    `<path d="M${bx + 2} ${by + 5}l3 -1M${bx - 5} ${by + 2}l1.6 2.2M${bx + 5} ${by - 3}l1 2" stroke="#9a9ca2" stroke-width=".35" opacity=".6"/>` +
+    `<circle cx="${bx + 3.6}" cy="${by + 6.4}" r=".7" fill="#7a4a2a" opacity=".6"/><circle cx="${bx - 6}" cy="${by - 1}" r=".5" fill="#7a4a2a" opacity=".5"/></g>`;
+  const defs = `<linearGradient id="${id}c" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="mc-c0"/><stop offset="1" class="mc-c1"/></linearGradient>` +
+    `<radialGradient id="${id}b" cx=".36" cy=".32" r=".75"><stop offset="0" stop-color="#8d9096"/><stop offset=".45" stop-color="#45474c"/><stop offset="1" stop-color="#141518"/></radialGradient>` +
+    `<radialGradient id="${id}sp"><stop offset="0" stop-color="#5a554d" stop-opacity=".7"/><stop offset=".6" stop-color="#8a847a" stop-opacity=".35"/><stop offset="1" stop-color="#8a847a" stop-opacity="0"/></radialGradient>` +
+    `<radialGradient id="${id}d"><stop offset="0" stop-color="#e8e3da" stop-opacity=".9"/><stop offset="1" stop-color="#e8e3da" stop-opacity="0"/></radialGradient>` +
+    `<filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="21"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .28  0 0 0 0 .25  0 0 -1.8 0 1"/></filter>` +
+    `<filter id="${id}m" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".012 .04" numOctaves="3" seed="5"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .32  0 0 0 0 .28  0 0 -2 0 1"/></filter>` +
+    `<filter id="${id}s" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.2"/></filter>`;
+  return { fx: strip('mc-wall', `<defs>${defs}</defs><rect x="-6" y="-6" width="612" height="72" fill="url(#${id}c)"/><rect x="0" y="0" width="600" height="60" filter="url(#${id}m)" opacity=".35"/>` +
+    `<rect x="0" y="0" width="600" height="60" filter="url(#${id}n)" opacity=".22"/><path d="${boards}" stroke="#fff" stroke-width=".4" opacity=".22"/><path d="${boards}" stroke="#000" stroke-width=".3" opacity=".06" transform="translate(0 .5)"/>${seams}${holes}` +
+    `<ellipse class="mc-spall" cx="${bx}" cy="${by}" rx="15" ry="14" fill="url(#${id}sp)"/>${cracks}` +
+    `<g class="mc-shadow"><circle cx="${bx}" cy="${by}" r="${br}" fill="#1f1c18" filter="url(#${id}s)" opacity=".9"/></g>${ball}${bits}${dust}`) };
+}
+
+/* ---- Billie Eilish: Green roots ---- */
+function roots() {
+  const id = `beR${++serial}`, rand = R(1218);
+  // Her hair, in locks: each lock a bundle of strands following one sway, so it falls like hair
+  // rather than standing like grass. Every strand is dyed green at the root and black below, and
+  // each lock catches the light in a band partway down.
+  let side = '', mid = '', bleed = '';
+  for (let X = -8; X < 610; X += 4 + rand() * 5) {
+    const A = 1.2 + rand() * 3, ph = rand() * 6, drift = (rand() - .5) * 5, n = 5 + Math.floor(rand() * 5), core = X > 196 && X < 404;
+    const at = (y, o) => X + o + A * Math.sin(y / 60 * Math.PI * 1.3 + ph) + drift * y / 60;
+    // Some locks took the dye further down than others.
+    const bled = rand() < .45 ? 16 + rand() * 16 : 0;
+    for (let k = 0; k < n; k++) {
+      const o = (k - n / 2) * (.55 + rand() * .2);
+      let d = '', b = '';
+      for (let y = -4; y <= 64; y += 4) { const pt = `${y === -4 ? 'M' : 'L'}${f(at(y, o))} ${y}`; d += pt; if (y <= bled) b += pt; }
+      if (core) mid += d; else side += d;
+      bleed += b;
+    }
+  }
+  // The spider, let down from above in the right gutter on hover, its thread running off the top.
+  const legs = [[-1, -1.8, -4.2, -4.4, -5.6, -1.2], [-1.1, -1.2, -5, -2.2, -6, 1.2], [-1.1, -.7, -4.6, .6, -5.4, 3.6], [-1, -.3, -3.4, 2, -3.8, 5.2]];
+  const leg = legs.map(([x0, y0, cx, cy, x1, y1]) => `M${x0} ${y0}Q${cx} ${cy} ${x1} ${y1}M${-x0} ${y0}Q${-cx} ${cy} ${-x1} ${y1}`).join('');
+  const spider = `<g transform="translate(438 0) scale(1.7)"><g class="be-spider"><path d="M0 -90V-2" stroke="#e8f0e8" stroke-width=".22" opacity=".8"/>` +
+    `<g class="be-legs"><path d="${leg}" stroke="#b6d62b" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".35"/><path d="${leg}" stroke="#050605" stroke-width=".65" fill="none" stroke-linecap="round"/></g>` +
+    `<ellipse cy="1.6" rx="2.8" ry="3.3" fill="#b6d62b" opacity=".3"/><circle cy="-1.5" r="1.9" fill="#b6d62b" opacity=".3"/>` +
+    `<ellipse cy="1.6" rx="2.3" ry="2.8" fill="#070908"/><circle cy="-1.5" r="1.45" fill="#0b0d0c"/><ellipse cx="-.7" cy=".6" rx=".6" ry="1.1" fill="#fff" opacity=".22"/>` +
+    `<circle cx="-.5" cy="-2.2" r=".28" fill="#b6d62b"/><circle cx=".5" cy="-2.2" r=".28" fill="#b6d62b"/></g></g>`;
+  const defs = `<linearGradient id="${id}h" x1="0" x2="0" y1="0" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" class="be-g0"/><stop offset=".18" class="be-g1"/><stop offset=".33" class="be-g2"/><stop offset=".44" class="be-k0"/><stop offset="1" class="be-k1"/></linearGradient>` +
+    `<linearGradient id="${id}b" x1="0" x2="0" y1="0" y2="34" gradientUnits="userSpaceOnUse"><stop offset="0" class="be-g0"/><stop offset=".5" class="be-g1"/><stop offset="1" class="be-g1" stop-opacity="0"/></linearGradient>` +
+    `<linearGradient id="${id}l" x1="0" x2="0" y1="27" y2="47" gradientUnits="userSpaceOnUse"><stop offset="0" class="be-sh" stop-opacity="0"/><stop offset=".5" class="be-sh" stop-opacity=".55"/><stop offset="1" class="be-sh" stop-opacity="0"/></linearGradient>` +
+    `<linearGradient id="${id}n" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d4f53a" stop-opacity=".9"/><stop offset="1" stop-color="#d4f53a" stop-opacity="0"/></linearGradient>`;
+  return { fx: strip('be-hair', `<defs>${defs}</defs><rect x="-6" y="-6" width="612" height="72" fill="url(#${id}h)"/><path d="${side}" stroke="url(#${id}h)" stroke-width=".55" fill="none" opacity=".95"/>` +
+    `<path d="${side}" stroke="#000" stroke-width=".3" fill="none" opacity=".35" transform="translate(.35 0)"/><path d="${mid}" stroke="url(#${id}h)" stroke-width=".5" fill="none" opacity=".5"/>` +
+    `<path d="${bleed}" stroke="url(#${id}b)" stroke-width=".6" fill="none"/><path d="${side}${mid}" stroke="url(#${id}l)" stroke-width=".6" fill="none"/><rect class="be-neon" x="-6" y="-6" width="612" height="22" fill="url(#${id}n)"/>${spider}`) };
+}
+
+
 /* ---------- which finish, on which day ---------- */
 // Keyed by the TS_MILESTONES album name, so the release dates live in one table and a date fix
 // there moves the button with the margin note.
@@ -1050,10 +1401,25 @@ const TV_FINISHES = {
   "1989": ["anv-1989-tv", n1989TV, "More than a chapter"],                // Suburban Legends
 };
 const BY_KIND = { album: ANNIVERSARY_FINISHES, tv: TV_FINISHES };
+// The guest shelf's days, keyed by the GUEST_DAYS guest id, so a day lives in one table and the
+// button and the margin note cannot disagree about it. The rows have the records' shape, and the
+// words are a line of the guest's own: from the catalogue the shelf deals, or for an announced
+// name, from the record the line is famous from. A guest with no row keeps the player's own
+// button on its day.
+const GUEST_FINISHES = {
+  "harry-styles": ["anv-guest-harry-styles", melon, "Sounds just like a song"],     // Watermelon Sugar
+  "olivia-rodrigo": ["anv-guest-olivia-rodrigo", licence, "Start a new life"],       // brutal
+  "hannah-montana": ["anv-guest-hannah-montana", closet, "Let’s do this"],           // Let's Do This
+  "ariana-grande": ["anv-guest-ariana-grande", petal, "To write again"],             // petal
+  "beyonce": ["anv-guest-beyonce", hive, "Let’s get in formation"],                  // Formation
+  "wicked-soundtrack": ["anv-guest-wicked-soundtrack", gravity, "Defying gravity"],  // Defying Gravity
+  "miley-cyrus": ["anv-guest-miley-cyrus", wrecking, "We can’t stop"],               // We Can't Stop
+  "billie-eilish": ["anv-guest-billie-eilish", roots, "Come out and play"],          // come out and play
+};
 const finishOf = (m) => BY_KIND[m.kind]?.[m.album]?.[0] || "";
-const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake], ["anv-christmas", balerTree]]
+const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ...Object.values(GUEST_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake], ["anv-christmas", balerTree]]
   .map(([id, draw]) => [id, draw]));
-const WORDS = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES)].map(([id, , words]) => [id, words]));
+const WORDS = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ...Object.values(GUEST_FINISHES)].map(([id, , words]) => [id, words]));
 
 // The finish the button is forced into on `dateKey` (YYYY-MM-DD, the player's own day), or "" on
 // every other day. Every studio album's release day counts, and so does every Taylor's Version's.
@@ -1071,6 +1437,18 @@ export function anniversaryFinishFor(dateKey) {
   return release ? finishOf(release) : "";
 }
 
+// The finish the button is forced into on a guest's day, or "". The day comes off the guest's row
+// in GUEST_DAYS, the row the margin note reads, and a year before the day existed (Wicked before
+// 2003, only reachable with the dev date) is not its day. paintStartButton asks it after a release
+// day, her birthday and Christmas and before the 13th, the order dayNote resolves the margin in;
+// none of the nine shares a day with any of those yet.
+export function guestDayFinishFor(dateKey) {
+  if (!dateKey || dateKey.length < 10) return "";
+  const md = dateKey.slice(5), year = +dateKey.slice(0, 4);
+  const day = GUEST_DAYS.find((g) => g.md === md && year >= g.year);
+  return day ? GUEST_FINISHES[day.guest]?.[0] || "" : "";
+}
+
 // Every record with a finish, with its release day, for the dev tools.
 export const anniversaryFinishList = () => TS_MILESTONES.filter(finishOf)
   .map((m) => ({ album: m.album, title: m.title, finish: finishOf(m), md: m.md, year: m.year }));
@@ -1084,8 +1462,8 @@ export function anniversaryArt(finish, dateKey = "") {
   return draw ? draw(dateKey) : null;
 }
 
-// The lyric a record's finish puts on the button in place of the player's words, or "" for every
-// other finish (her birthday, Christmas and the 13th leave the words alone).
+// The lyric a record's or a guest's finish puts on the button in place of the player's words, or ""
+// for every other finish (her birthday, Christmas and the 13th leave the words alone).
 export const anniversaryWords = (finish) => WORDS[finish] || "";
 
 // A record's lyric runs longer than "Start writing", and on a phone the button shares its row

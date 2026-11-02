@@ -4,7 +4,7 @@ import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
-import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, christmasFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
+import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, christmasFinishFor, guestDayFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
 import { dayTrinket } from "./dicetrinkets.js";
 import { seasonOn, SEASONS, southernSeasons } from "./season.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
@@ -565,14 +565,15 @@ function paintStartButton() {
   // Except on an album's release day, when the album's own finish is FORCED over all of that,
   // Mastery pick and random roll included, to show support for the album on its anniversary
   // (the reasoning is at the top of js/anniversarycta.js), on her birthday, which wears Iced for
-  // her the same way, on Christmas Day, which wears Fresh off the baler, and on the 13th of every
-  // month, which wears Thirteen marks. They are asked in that order: her birthday is always a
-  // 13th, so it has to come first to be seen at all, and a release day would outrank all three,
-  // though no record has come out on any of them yet. Only this
+  // her the same way, on Christmas Day, which wears Fresh off the baler, on each guest's day in
+  // GUEST_DAYS, which wears that guest's own finish, and on the 13th of every month, which wears
+  // Thirteen marks. They are asked in that order: her birthday is always a 13th, so it has to come
+  // first to be seen at all, a guest's day outranks the 13th as it does in the margin, and a
+  // release day would outrank all of them, though no record has come out on any of them yet. Only this
   // button wears any of them: the Mastery board still previews the player's own choice, which is
   // untouched and comes back the next day.
   const day = todayKey();
-  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || christmasFinishFor(day) || thirteenthFinishFor(day) || wornFinish(activeButtonFinish());
+  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || christmasFinishFor(day) || guestDayFinishFor(day) || thirteenthFinishFor(day) || wornFinish(activeButtonFinish());
   if (finish) playCta.setAttribute("data-startbtn", finish);
   else playCta.removeAttribute("data-startbtn");
   // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
@@ -33975,7 +33976,8 @@ function buildDevApi() {
           const tail = ink ? ink.accent
             : state === "announced" ? "announced (hollow crown, no pass yet)"
             : "⚠ NO PASS: check the guest id against GUESTS";
-          return `${yr}-${g.md}  ${g.name}${g.arrived ? " (" + g.arrived + ")" : ""}  ${tail}`;
+          const button = guestDayFinishFor(`${yr}-${g.md}`);
+          return `${yr}-${g.md}  ${g.name}${g.arrived ? " (" + g.arrived + ")" : ""}  ${tail}${button ? `  button: ${button}` : ""}`;
         }).sort();
       },
       preview: (dateKey) => {
@@ -33984,6 +33986,19 @@ function buildDevApi() {
         // dayNote, not guestDayNote: what a guest day actually shows is what survives her
         // milestones, and this is the only place that difference is visible.
         return dayNote(window.__devDate);
+      },
+      // A guest's Start writing finish (js/anniversarycta.js). Moves the dev date to that guest's
+      // day this year, by id or name ("billie-eilish", "Wicked"), or with no argument to the next
+      // guest day on or after the day the page is showing, and says what the button wears there.
+      button: (which) => {
+        const shown = window.__devDate || todayKey(), yr = shown.slice(0, 4), want = String(which || "").toLowerCase();
+        const days = [...GUEST_DAYS].sort((a, b) => a.md.localeCompare(b.md));
+        const hit = want ? days.find((g) => g.guest === want || g.name.toLowerCase() === want)
+          : days.find((g) => g.md >= shown.slice(5)) || days[0];
+        if (!hit) return `No guest called "${which}".`;
+        window.__devDate = `${!want && hit.md < shown.slice(5) ? +yr + 1 : yr}-${hit.md}`;
+        refreshDateSurfaces();
+        return { date: window.__devDate, guest: hit.name, finish: guestDayFinishFor(window.__devDate) || "(none: the player's own)" };
       },
       // Both halves of the one mistake a new guest makes: a playable guest with no birthday
       // (the shelf gains a hanger and the margin never mentions it, which nothing on screen
@@ -34021,7 +34036,7 @@ function buildDevApi() {
             if (!tn) continue;
             const shadowed = anniversaryNote(key, TS_MILESTONES) ? "milestone"
               : guestDayNote(key, GUEST_DAYS) ? "guest day" : "";
-            const button = anniversaryFinishFor(key) || birthdayFinishFor(key) || christmasFinishFor(key) || thirteenthFinishFor(key);
+            const button = anniversaryFinishFor(key) || birthdayFinishFor(key) || christmasFinishFor(key) || guestDayFinishFor(key) || thirteenthFinishFor(key);
             out.push(`${key}  ${tn.caption}${shadowed ? `  (shadowed by ${shadowed})` : ""}${button ? `  button: ${button}` : ""}`);
           }
         }

@@ -35,7 +35,7 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
 - Titles of three words or more answer to their initials, the way fans write them (wanegbt)
-- A start button that changes with the seasons, album release days, her birthday, Christmas and the 13th of every month
+- A start button that changes with the seasons, album release days, her birthday, Christmas, the 13th of every month and the guest shelf's birthdays
 - Stats kept as a scrapbook, down to a tabloid headline about the word that keeps beating you
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
 - A companion lyric searcher, [Swift to the Lyric](https://swiftassociation.com/search), for searching every line of every song

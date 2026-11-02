@@ -1940,7 +1940,8 @@
      and designed on birthday-board.html, then the 13th of every month's, anv-13th (ch-
      classes), forced by thirteenthFinishFor and designed on thirteenth-board.html, and last
      Christmas Day's, anv-christmas (nt- classes), forced by christmasFinishFor and designed on
-     christmas-board.html. */
+     christmas-board.html. The guest shelf's days follow at the end, anv-guest-<id>, forced by
+     guestDayFinishFor and designed on guest-days-board.html. */
   .btn-primary.play-cta[data-startbtn^="anv-"]::after { content:none; }
   .anv-out { position:absolute; inset:0; z-index:2; pointer-events:none; }
   .anv-out > * { position:absolute; }
@@ -2563,6 +2564,251 @@
   @keyframes ntSwing { 0% { transform:rotate(var(--nt-tilt, -2.4deg)); } 18% { transform:rotate(calc(var(--nt-tilt, -2.4deg) + 5deg)); }
     40% { transform:rotate(calc(var(--nt-tilt, -2.4deg) - 3deg)); } 62% { transform:rotate(calc(var(--nt-tilt, -2.4deg) + 1.6deg)); }
     82% { transform:rotate(calc(var(--nt-tilt, -2.4deg) - .6deg)); } 100% { transform:rotate(var(--nt-tilt, -2.4deg)); } }
+
+  /* ---------- The guest shelf's days ----------
+     One finish for each day GUEST_DAYS keeps in the margin, forced by guestDayFinishFor the way a
+     record's day is: the seven guests' birthdays (Wicked's opening night and Hannah Montana's
+     premiere standing in for the two that are not people) and the two names announced on the
+     shelf. Every id is anv-guest-<guest id>, and each guest keeps to its own class prefix: hs-
+     Harry, or- Olivia, hm- Hannah, ag- Ariana, by- Beyoncé, wk- Wicked, mc- Miley, be- Billie.
+     Each starts from the guest's souvenir sticker or record and brings a line of the guest's own
+     for the words. Designed on scripts/cta/guest-days-board.html, with the rejected candidates
+     beside them; a change belongs there first. */
+
+  /* ============ Harry Styles: Watermelon sugar ============
+     A long slice of watermelon on its side: the flesh deepest red at the top, where the middle of
+     the fruit was, paling to the white of the rind and the two greens of the skin along the bottom.
+     The seeds lie in their ring either side of the words. On hover each seed lifts out of its pit
+     and turns into a note on the way up, and the slice sounds just like a song. */
+  .play-cta[data-startbtn="anv-guest-harry-styles"] { --cta-fill:#e6506a; --cta-text:#fff8f1; --cta-hover-text:#fff8f1;
+    --hs-f0:#d9364f; --hs-f1:#e8516a; --hs-f2:#f2848f; --hs-f3:#f8c7bd; --hs-r0:#efe8c4; --hs-r1:#a9c76a; --hs-r2:#4b893c; --hs-r3:#2b5926;
+    --hs-pit:#b2283f; --hs-ink:#26110c; --hs-pale:#fbe4d8;
+    background-image:linear-gradient(168deg, #ffffff26 0%, #ffffff00 46%, #00000024 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-harry-styles"] { --cta-fill:#a8344b; --cta-text:#fff1ea; --cta-hover-text:#fff1ea;
+    --hs-f0:#9c2840; --hs-f1:#b2364d; --hs-f2:#c4606d; --hs-f3:#d39a91; --hs-r0:#cbc4a1; --hs-r1:#829f52; --hs-r2:#356629; --hs-r3:#1d401a; --hs-pit:#7d1a2e; --hs-ink:#1a0a07; --hs-pale:#e0c2b6;
+    background-image:linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #00000030 100%); }
+  .play-cta[data-startbtn="anv-guest-harry-styles"] .cta-label { text-shadow:0 1px 0 #8f1d33, 0 0 8px #9b1f3a99; }
+  .hs-f0 { stop-color:var(--hs-f0); } .hs-f1 { stop-color:var(--hs-f1); } .hs-f2 { stop-color:var(--hs-f2); } .hs-f3 { stop-color:var(--hs-f3); }
+  .hs-grain { fill:#fff; } .hs-grain-dk { fill:#7d0f25; }
+  .hs-r0 { fill:var(--hs-r0); } .hs-r1 { fill:var(--hs-r1); } .hs-r2 { fill:var(--hs-r2); } .hs-r3 { fill:var(--hs-r3); }
+  .hs-pits { fill:var(--hs-pit); opacity:.6; }
+  .hs-pale { fill:var(--hs-pale); opacity:.55; }
+  .hs-seed-hi { fill:#fff; opacity:.4; }
+  .hs-seed { transition:transform .32s var(--d) cubic-bezier(.5,0,.75,.2), opacity .3s calc(var(--d) + .05s); }
+  .hs-note { fill:var(--hs-ink); opacity:0; transform:scale(.3);
+    transition:transform 1s calc(var(--d) + .12s) cubic-bezier(.2,.85,.3,1), opacity .35s calc(var(--d) + .12s); }
+  .hs-bob { animation:hsBob 2.6s var(--b) ease-in-out infinite alternate paused; }
+  .hs-sheen { inset:0; background:linear-gradient(100deg, #fff0 34%, #ffffff3d 47%, #fff0 60%); transform:translateX(-110%); }
+  .play-cta[data-startbtn="anv-guest-harry-styles"]:is(:hover, :focus-visible) .hs-seed { transform:translateY(-2.5px) scale(.15); opacity:0; }
+  .play-cta[data-startbtn="anv-guest-harry-styles"]:is(:hover, :focus-visible) .hs-note { opacity:1; transform:translate(var(--nx), var(--ny)) rotate(var(--nr)); }
+  .play-cta[data-startbtn="anv-guest-harry-styles"]:is(:hover, :focus-visible) .hs-bob { animation-play-state:running; }
+  .play-cta[data-startbtn="anv-guest-harry-styles"]:is(:hover, :focus-visible) .hs-sheen { transform:translateX(110%); transition:transform 1.2s .1s ease-in-out; }
+  @keyframes hsBob { from { transform:translateY(0) rotate(0); } to { transform:translateY(-1.6px) rotate(6deg); } }
+
+  /* ============ Olivia Rodrigo: Licence ============
+     The sticker, as the button: a laminated lilac card printed in guilloche, her butterfly in the
+     photo window, the fields and the signature off to the right with the hologram over them. On
+     hover the card is tilted to the light, a band of hologram runs across it, the seal turns through
+     its colours and the butterfly in the photo opens its wings. */
+  .play-cta[data-startbtn="anv-guest-olivia-rodrigo"] { --cta-fill:#c8b5e6; --cta-text:#33195a; --cta-hover-text:#33195a;
+    --cta-art:linear-gradient(180deg, #ddd0f2 0%, #cab7ea 55%, #b9a3df 100%);
+    --or-band:#8b6cc2; --or-ink:#5b3c88; --or-red:#a8326a; --or-g1:#ffffff; --or-g2:#7a55b0; --or-photo0:#f4effb; --or-photo1:#dccff1; --or-wing:#7a55b0; --or-wing2:#b99ee6; --or-body:#2f1c47;
+    background-image:linear-gradient(168deg, #ffffff40 0%, #ffffff00 46%, #3b215a1f 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-olivia-rodrigo"] { --cta-fill:#5b4880; --cta-text:#f3ecff; --cta-hover-text:#f3ecff;
+    --cta-art:linear-gradient(180deg, #6c5893 0%, #5a467e 55%, #4a386b 100%);
+    --or-band:#3b285e; --or-ink:#d9cbf5; --or-red:#f08bb8; --or-g1:#e7dcff; --or-g2:#2f1c47; --or-photo0:#cfc2e6; --or-photo1:#ab9bc9; --or-wing:#5b3c88; --or-wing2:#9c80cc; --or-body:#1d1030;
+    background-image:linear-gradient(168deg, #ffffff16 0%, #ffffff00 46%, #00000030 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-olivia-rodrigo"] .cta-label { text-shadow:0 1px 2px #1d103099; }
+  .or-band { fill:var(--or-band); } .or-ink { fill:var(--or-ink); } .or-red { fill:var(--or-red); }
+  .or-gu1 { fill:none; stroke:var(--or-g1); stroke-width:.4; opacity:.5; } .or-gu2 { fill:none; stroke:var(--or-g2); stroke-width:.3; opacity:.2; }
+  .or-rose { fill:none; stroke:var(--or-g2); stroke-width:.35; opacity:.28; }
+  .or-p0 { stop-color:var(--or-photo0); } .or-p1 { stop-color:var(--or-photo1); }
+  .or-wing { fill:var(--or-wing); } .or-wing2 { fill:var(--or-wing2); } .or-body { fill:none; stroke:var(--or-body); stroke-linecap:round; }
+  .or-sig { fill:none; stroke:var(--or-ink); stroke-width:.55; stroke-linecap:round; stroke-linejoin:round; opacity:.85; }
+  .or-seal { opacity:.55; transition:opacity .4s; }
+  .or-seal-in { animation:orHue 2.6s linear infinite paused; }
+  .or-flap { animation:orFlap .42s ease-in-out 4 alternate paused; }
+  .or-lam { inset:0; background:linear-gradient(112deg, #fff0 52%, #ffffff2e 60%, #fff0 66%); }
+  .or-holo { top:-30%; bottom:-30%; left:0; width:58%; background:linear-gradient(100deg, #fff0 4%, #ff9ad8aa 22%, #9ff3ffaa 38%, #fff6a8aa 52%, #c3a0ffaa 68%, #fff0 90%);
+    mix-blend-mode:soft-light; transform:translateX(-120%) skewX(-14deg); }
+  .play-cta[data-startbtn="anv-guest-olivia-rodrigo"]:is(:hover, :focus-visible) .or-holo { transform:translateX(205%) skewX(-14deg); transition:transform 1.4s .05s cubic-bezier(.45,.05,.4,1); }
+  .play-cta[data-startbtn="anv-guest-olivia-rodrigo"]:is(:hover, :focus-visible) .or-seal { opacity:.95; }
+  .play-cta[data-startbtn="anv-guest-olivia-rodrigo"]:is(:hover, :focus-visible) :is(.or-seal-in, .or-flap) { animation-play-state:running; }
+  @keyframes orHue { to { filter:hue-rotate(360deg); } }
+  @keyframes orFlap { from { transform:scaleX(1); } to { transform:scaleX(.28); } }
+
+  /* ============ Hannah Montana: The secret closet ============
+     Miley's bedroom closet in Malibu: two pairs of white louvred bifold doors meeting under the
+     words. On hover they fold back to the walls, and behind them is the other closet, the one the
+     show turned on: a rail of sequins, the blonde wig on its stand, and the star. */
+  .play-cta[data-startbtn="anv-guest-hannah-montana"] { --cta-fill:#f2eee4; --cta-text:#2f2a33; --cta-hover-text:#fff4d6;
+    --hm-door:#f6f3ec; --hm-door2:#e9e4d8; --hm-slat:#bfb49d; --hm-hi:#ffffff; --hm-knob:#c9a24a;
+    --hm-room0:#2c1a40; --hm-room1:#4e2e6c; --hm-rail:#d8b55e; --hm-star:#f0c443; --hm-star2:#c88f22;
+    background-image:linear-gradient(168deg, #ffffff40 0%, #ffffff00 46%, #2b27221a 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-hannah-montana"] { --cta-fill:#cfc8b9; --cta-text:#2a2530;
+    --hm-door:#d9d3c6; --hm-door2:#c9c2b2; --hm-slat:#a89f8c; --hm-hi:#f2eee6; --hm-room0:#1f1230; --hm-room1:#3c2354;
+    background-image:linear-gradient(168deg, #ffffff20 0%, #ffffff00 46%, #00000024 100%); }
+  /* The ink turns to stage gold only once the doors are half open, or it would go pale on white. */
+  .play-cta[data-startbtn="anv-guest-hannah-montana"] { transition:background-color .45s ease, color .35s .3s ease, transform .2s, box-shadow .2s; }
+  .play-cta[data-startbtn="anv-guest-hannah-montana"] .cta-label { transition:text-shadow .4s .3s; }
+  .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .cta-label { text-shadow:0 1px 2px #1c0d2c, 0 0 10px #3a1d5a; }
+  .hm-r0 { stop-color:var(--hm-room0); } .hm-r1 { stop-color:var(--hm-room1); }
+  .hm-rail { stroke:var(--hm-rail); stroke-width:1.1; } .hm-hook { fill:none; stroke:#cfd2da; stroke-width:.4; }
+  .hm-door { fill:var(--hm-door); } .hm-door2 { fill:var(--hm-door2); } .hm-slat { stroke:var(--hm-slat); stroke-width:.75; } .hm-slat-hi { stroke:var(--hm-hi); stroke-width:.45; opacity:.9; }
+  .hm-frame { fill:none; stroke:var(--hm-slat); stroke-width:.6; } .hm-knob { fill:var(--hm-knob); }
+  .hm-star { fill:var(--hm-star); } .hm-star2 { fill:var(--hm-star2); }
+  .hm-door-l { transform-origin:-6px 30px; transition:transform .7s cubic-bezier(.5,0,.3,1); }
+  .hm-door-r { transform-origin:606px 30px; transition:transform .7s cubic-bezier(.5,0,.3,1); }
+  .hm-shut { fill:#2b2722; opacity:0; transition:opacity .7s; }
+  .hm-glow { opacity:.25; transition:opacity .9s .25s; }
+  .hm-tw { opacity:0; transform:scale(.3); transition:opacity .3s, transform .3s; }
+  .hm-starp { transform-origin:0 0; }
+  .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-door-l, .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-door-r { transform:scaleX(.075); }
+  .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-shut { opacity:.35; }
+  .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-glow { opacity:1; }
+  .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-tw { animation:hmTwinkle var(--t) var(--d) ease-in-out infinite; }
+  .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-starp { animation:hmStar 1.6s .5s ease-in-out infinite alternate; }
+  @keyframes hmTwinkle { 0%, 100% { opacity:0; transform:scale(.3) rotate(0); } 50% { opacity:1; transform:scale(1) rotate(45deg); } }
+  @keyframes hmStar { from { transform:scale(1) rotate(0); } to { transform:scale(1.12) rotate(8deg); } }
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-guest-hannah-montana"]:is(:hover, :focus-visible) .hm-tw { opacity:1; transform:scale(.8); }
+
+  /* ============ Ariana Grande: petal ============
+     This year's record as its covers have it: black and white, sixties, petals. A grey film still
+     with grain and a soft light leak, white petals lying at the ends and a daisy where a phone still
+     shows it. On hover a breeze comes through left to right, the petals go with it turning over,
+     the daisy loses a few, and the film flickers. */
+  .play-cta[data-startbtn="anv-guest-ariana-grande"] { --cta-fill:#2a2a2c; --cta-text:#f5f5f2; --cta-hover-text:#f5f5f2;
+    --cta-art:linear-gradient(180deg, #424245 0%, #2b2b2d 62%, #1e1e1f 100%);
+    background-image:linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #0000002e 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-ariana-grande"] { --cta-fill:#1f1f21; --cta-art:linear-gradient(180deg, #333336 0%, #222224 62%, #161617 100%); }
+  .play-cta[data-startbtn="anv-guest-ariana-grande"] .cta-label { text-shadow:0 1px 2px #000, 0 0 10px #00000088; }
+  .ag-grain { opacity:.13; }
+  .ag-pf { transition:transform 2.1s var(--d) cubic-bezier(.32,.08,.28,1); }
+  .ag-in { opacity:0; transition:transform 2.1s var(--d) cubic-bezier(.32,.08,.28,1), opacity .3s var(--d); }
+  .ag-scr { opacity:0; }
+  .play-cta[data-startbtn="anv-guest-ariana-grande"]:is(:hover, :focus-visible) .ag-pf { transform:translate(var(--dx), var(--dy)) rotate(var(--rr)); }
+  .play-cta[data-startbtn="anv-guest-ariana-grande"]:is(:hover, :focus-visible) .ag-in { opacity:1; transform:translate(var(--dx), var(--dy)) rotate(var(--rr)); }
+  .play-cta[data-startbtn="anv-guest-ariana-grande"]:is(:hover, :focus-visible) .ag-flut { animation:agFlut .38s var(--d) ease-in-out 5 alternate; }
+  .play-cta[data-startbtn="anv-guest-ariana-grande"]:is(:hover, :focus-visible) .ag-grain { animation:agGrain .16s steps(2) infinite; }
+  .play-cta[data-startbtn="anv-guest-ariana-grande"]:is(:hover, :focus-visible) .ag-scr { animation:agScratch 1.3s var(--d) steps(4) 2; }
+  .play-cta[data-startbtn="anv-guest-ariana-grande"]:is(:hover, :focus-visible) .ag-flick { animation:agFlick 1.4s .05s ease-out both; }
+  .ag-flick { inset:0; background:#fff; opacity:0; mix-blend-mode:overlay; }
+  @keyframes agFlut { from { transform:scaleY(1); } to { transform:scaleY(.25); } }
+  @keyframes agGrain { from { transform:translate(0, 0); } to { transform:translate(-3px, 2px); } }
+  @keyframes agScratch { 0%, 100% { opacity:0; } 25% { opacity:.5; } 50% { opacity:.1; } 75% { opacity:.4; } }
+  @keyframes agFlick { 0%, 100% { opacity:0; } 6% { opacity:.4; } 12% { opacity:.05; } 18% { opacity:.3; } 30% { opacity:0; } }
+
+  /* ============ Beyoncé: The hive ============
+     The sticker's queen at home: the whole button is comb, honey in most of the cells, a few
+     capped, a few empty, darker under the words. Bees work it at the ends and the queen sits in
+     the right gutter in her crown. On hover honey runs from the top, the bees lift off, and they
+     fly into a V across the top with the queen at its point. */
+  .play-cta[data-startbtn="anv-guest-beyonce"] { --cta-fill:#b9741a; --cta-text:#fff6d8; --cta-hover-text:#fff6d8; --by-wall:#e9b54c; --by-wall2:#a8670e;
+    background-image:linear-gradient(168deg, #ffffff26 0%, #ffffff00 46%, #00000026 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-beyonce"] { --cta-fill:#8a520f; --by-wall:#c6923a; --by-wall2:#7d4a08;
+    background-image:linear-gradient(168deg, #ffffff10 0%, #ffffff00 46%, #00000036 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-beyonce"] .cta-fx svg { filter:brightness(.82); }
+  .play-cta[data-startbtn="anv-guest-beyonce"] .cta-label { text-shadow:0 1px 2px #4a2600, 0 0 10px #5a2e0099; }
+  .by-walls { fill:none; stroke:var(--by-wall); stroke-width:1.15; } .by-walls2 { fill:none; stroke:var(--by-wall2); stroke-width:.4; opacity:.6; }
+  .by-gloss { fill:none; stroke:#fffbe8; stroke-width:.55; stroke-linecap:round; opacity:.55; }
+  .by-wing { fill:#ffffff; opacity:.7; stroke:#c9d4dc; stroke-width:.2; transform-box:fill-box; transform-origin:center; }
+  .by-fly { transition:transform 1.25s var(--d) cubic-bezier(.45,0,.2,1); }
+  .by-turn { transform:rotate(var(--r0)); transition:transform .6s var(--d) ease-in-out; }
+  .by-bob { animation:byBob .5s var(--b) ease-in-out infinite alternate paused; }
+  .by-drip { transform:scaleY(0); transform-origin:0 0; transition:transform .2s; }
+  .play-cta[data-startbtn="anv-guest-beyonce"]:is(:hover, :focus-visible) .by-fly { transform:translate(var(--fx), var(--fy)); }
+  .play-cta[data-startbtn="anv-guest-beyonce"]:is(:hover, :focus-visible) .by-turn { transform:rotate(0); }
+  .play-cta[data-startbtn="anv-guest-beyonce"]:is(:hover, :focus-visible) .by-bob { animation-play-state:running; }
+  .play-cta[data-startbtn="anv-guest-beyonce"]:is(:hover, :focus-visible) .by-wing { animation:byFlap .07s linear infinite alternate; }
+  .play-cta[data-startbtn="anv-guest-beyonce"]:is(:hover, :focus-visible) .by-drip { transform:scaleY(1); transition:transform 2.4s var(--d) cubic-bezier(.5,0,.6,1); }
+  @keyframes byBob { from { transform:translate(0, -.5px); } to { transform:translate(.3px, .6px); } }
+  @keyframes byFlap { from { transform:scale(1, 1); opacity:.75; } to { transform:scale(.8, .55); opacity:.4; } }
+
+  /* ============ Wicked: Defying gravity ============
+     The end of the first act: the Emerald City's green glass spires either side of the words under
+     a full moon, Glinda's pink bubble low in the left gutter and Elphaba on her broom in the right.
+     On hover the bubble rises, and the broom swoops up and across the face of the moon, where it
+     holds, the way the curtain comes down on it. */
+  .play-cta[data-startbtn="anv-guest-wicked-soundtrack"] { --cta-fill:#173a2f; --cta-text:#eef8e6; --cta-hover-text:#eef8e6;
+    --wk-sp0:#4fc082; --wk-sp1:#1f6e48; --wk-far:#2d6a4c; --wk-lit:#d6ffd2; --wk-moon:#eef6dc; --wk-witch:#08110d;
+    --cta-art:linear-gradient(180deg, #0d2620 0%, #17392e 48%, #2a6247 82%, #3f8f63 100%);
+    background-image:linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #0000002a 100%), var(--cta-art); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-wicked-soundtrack"] { --cta-fill:#0f2a22;
+    --wk-sp0:#3a9d68; --wk-sp1:#175538; --wk-far:#214f39; --wk-moon:#d9e4c6;
+    --cta-art:linear-gradient(180deg, #091c17 0%, #112c23 48%, #1f4c37 82%, #2f6e4c 100%); }
+  .play-cta[data-startbtn="anv-guest-wicked-soundtrack"] .cta-label { text-shadow:0 1px 2px #04140e, 0 0 10px #06201699; }
+  .wk-s0 { stop-color:var(--wk-sp0); } .wk-s1 { stop-color:var(--wk-sp1); }
+  .wk-far { fill:var(--wk-far); } .wk-lit { fill:var(--wk-lit); } .wk-moon { fill:var(--wk-moon); } .wk-witch { fill:var(--wk-witch); } .wk-witch-s { fill:none; stroke:var(--wk-witch); stroke-linecap:round; }
+  .wk-fly { transform-origin:0 0; }
+  .wk-bub { transition:transform 2.4s .1s cubic-bezier(.4,0,.3,1); }
+  .wk-trail { opacity:0; transform-box:fill-box; transform-origin:center; }
+  .wk-glow { opacity:.55; transition:opacity 1s; }
+  .play-cta[data-startbtn="anv-guest-wicked-soundtrack"]:is(:hover, :focus-visible) .wk-fly { animation:wkFly 1.7s .1s cubic-bezier(.45,0,.3,1) both; }
+  .play-cta[data-startbtn="anv-guest-wicked-soundtrack"]:is(:hover, :focus-visible) .wk-bub { transform:translate(-3px, -17px) scale(1.25); }
+  .play-cta[data-startbtn="anv-guest-wicked-soundtrack"]:is(:hover, :focus-visible) .wk-trail { animation:wkTrail 1.1s var(--d) ease-out both; }
+  .play-cta[data-startbtn="anv-guest-wicked-soundtrack"]:is(:hover, :focus-visible) .wk-glow { opacity:1; }
+  @keyframes wkFly { 0% { transform:translate(0, 0) rotate(0); } 22% { transform:translate(-7px, 3px) rotate(6deg); } 62% { transform:translate(14px, -20px) rotate(-24deg); } 100% { transform:translate(30px, -26.5px) rotate(-10deg); } }
+  @keyframes wkTrail { 0% { opacity:0; transform:scale(.2); } 30% { opacity:1; transform:scale(1.2); } 100% { opacity:.25; transform:scale(.5); } }
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-guest-wicked-soundtrack"]:is(:hover, :focus-visible) .wk-fly { transform:translate(30px, -26.5px) rotate(-10deg); }
+
+  /* ============ Miley: Wrecking ball ============
+     The sticker, in the bare studio of the video: a wall of board-formed concrete with its tie
+     holes, and the ball hanging still in the right gutter. On hover it is drawn back toward you,
+     let go into the wall, and the concrete cracks out from behind it; chunks fall to the floor, the
+     dust goes up, and the words take the knock. */
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"] { --cta-fill:#d4cfc6; --cta-text:#2b2722; --cta-hover-text:#2b2722;
+    --mc-c0:#dcd8d0; --mc-c1:#c6c0b5; --mc-seam:#9c958a; --mc-hole:#6d685f; --mc-crack:#3c3833; --mc-chunk:#bdb6aa;
+    background-image:linear-gradient(168deg, #ffffff40 0%, #ffffff00 46%, #2b27221f 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-miley-cyrus"] { --cta-fill:#8f8a82; --cta-text:#f4f1ec; --cta-hover-text:#f4f1ec;
+    --mc-c0:#96918a; --mc-c1:#7f7a72; --mc-seam:#5e5952; --mc-hole:#3e3a35; --mc-crack:#24211e; --mc-chunk:#8a847a;
+    background-image:linear-gradient(168deg, #ffffff18 0%, #ffffff00 46%, #00000030 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-miley-cyrus"] .cta-label { text-shadow:0 1px 2px #1f1c1999; }
+  .mc-c0 { stop-color:var(--mc-c0); } .mc-c1 { stop-color:var(--mc-c1); }
+  .mc-seam { stroke:var(--mc-seam); stroke-width:.6; } .mc-hole { fill:var(--mc-hole); }
+  .mc-crack { fill:none; stroke:var(--mc-crack); stroke-width:.75; stroke-linejoin:round; stroke-dasharray:1; stroke-dashoffset:1; }
+  .mc-chunk { fill:var(--mc-chunk); stroke:#00000033; stroke-width:.3; }
+  .mc-swing { transform-origin:434px -6px; }
+  .mc-shadow { transform-origin:434px 30px; }
+  .mc-spall { opacity:0; }
+  .mc-bit { opacity:0; }
+  .mc-dust { opacity:0; transform-box:fill-box; transform-origin:center; }
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .mc-swing { animation:mcSwing 1.7s cubic-bezier(.45,0,.4,1) both; }
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .mc-shadow { animation:mcShadow 1.7s cubic-bezier(.45,0,.4,1) both; }
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .mc-crack { stroke-dashoffset:0; transition:stroke-dashoffset .28s calc(1.06s + var(--d)) ease-out; }
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .mc-spall { opacity:.55; transition:opacity .2s 1.05s; }
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .mc-bit { animation:mcFall var(--t) calc(1.06s + var(--d)) cubic-bezier(.5,0,.85,.55) both; }
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .mc-dust { animation:mcDust 1.4s calc(1.06s + var(--d)) ease-out both; }
+  .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .cta-label { animation:mcJolt .42s 1.06s ease-out both; }
+  @keyframes mcSwing { 0% { transform:none; } 34% { transform:translate(8px, 0) scale(1.24); } 44% { transform:translate(8.5px, 0) scale(1.26); }
+    62% { transform:scale(.84); } 70% { transform:scale(.86); } 84% { transform:scale(1.04); } 100% { transform:scale(1); } }
+  @keyframes mcShadow { 0% { transform:translate(6px, 5px); opacity:.2; } 40% { transform:translate(16px, 11px) scale(1.25); opacity:.08; } 62% { transform:translate(1px, 1px) scale(.86); opacity:.32; } 100% { transform:translate(6px, 5px); opacity:.2; } }
+  @keyframes mcFall { 0% { opacity:1; transform:translate(0, 0) rotate(0); } 100% { opacity:1; transform:translate(var(--fx), var(--fy)) rotate(var(--fr)); } }
+  @keyframes mcDust { 0% { opacity:0; transform:scale(.3); } 20% { opacity:.55; } 100% { opacity:0; transform:scale(2.2) translateY(-3px); } }
+  @keyframes mcJolt { 0%, 100% { transform:none; } 20% { transform:translate(-2px, .5px) rotate(-.6deg); } 45% { transform:translate(1.4px, -.4px) rotate(.4deg); } 70% { transform:translate(-.6px, 0); } }
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-guest-miley-cyrus"]:is(:hover, :focus-visible) .mc-bit { opacity:1; transform:translate(var(--fx), var(--fy)) rotate(var(--fr)); }
+
+  /* ============ Billie Eilish: Green roots ============
+     The sticker, close up: the whole button is her hair, near-black, with the acid green at the
+     roots along the top bleeding down into it. On hover the green lights up and a black spider lets
+     itself down on a thread in the right gutter, bounces once and hangs there. */
+  .play-cta[data-startbtn="anv-guest-billie-eilish"] { --cta-fill:#121614; --cta-text:#d6f058; --cta-hover-text:#e2fb6a;
+    --be-g0:#c8e63c; --be-g1:#9fbf26; --be-g2:#2c3a1a; --be-k0:#1c221f; --be-k1:#0d100f; --be-sheen:#8a9890;
+    background-image:linear-gradient(168deg, #ffffff10 0%, #ffffff00 46%, #00000030 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-guest-billie-eilish"] { --cta-fill:#0c0f0d; --be-g0:#aecb2e; --be-g1:#86a31c; --be-k0:#151a17; --be-k1:#080a09; --be-sheen:#3a443f; }
+  .play-cta[data-startbtn="anv-guest-billie-eilish"] .cta-label { text-shadow:0 1px 2px #000, 0 0 10px #8fb52255; }
+  .play-cta[data-startbtn="anv-guest-billie-eilish"]:is(:hover, :focus-visible) .cta-label { text-shadow:0 1px 2px #000, 0 0 12px #b6d62b99; }
+  .be-g0 { stop-color:var(--be-g0); } .be-g1 { stop-color:var(--be-g1); } .be-g2 { stop-color:var(--be-g2); } .be-k0 { stop-color:var(--be-k0); } .be-k1 { stop-color:var(--be-k1); }
+  .be-sh { stop-color:var(--be-sheen); }
+  .be-neon { opacity:0; transition:opacity .6s; mix-blend-mode:screen; }
+  .be-spider { transform:translateY(-10px); }
+  .be-legs { animation:beLegs .22s ease-in-out infinite alternate paused; transform-box:fill-box; transform-origin:center; }
+  .play-cta[data-startbtn="anv-guest-billie-eilish"]:is(:hover, :focus-visible) .be-neon { opacity:.55; }
+  .play-cta[data-startbtn="anv-guest-billie-eilish"]:is(:hover, :focus-visible) .be-spider { animation:beDrop 1.5s .15s cubic-bezier(.45,0,.4,1) both, beHang 2.4s 1.65s ease-in-out infinite alternate; }
+  .play-cta[data-startbtn="anv-guest-billie-eilish"]:is(:hover, :focus-visible) .be-legs { animation-play-state:running; }
+  @keyframes beDrop { 0% { transform:translateY(-10px); } 58% { transform:translateY(11.5px); } 72% { transform:translateY(7.5px); } 86% { transform:translateY(10px); } 100% { transform:translateY(9.4px); } }
+  @keyframes beHang { from { transform:translateY(9.4px) rotate(0); } to { transform:translateY(10.2px) rotate(5deg); } }
+  @keyframes beLegs { from { transform:scaleX(1); } to { transform:scaleX(.9); } }
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-guest-billie-eilish"]:is(:hover, :focus-visible) .be-spider { transform:translateY(9.4px); }
 
   @media (prefers-reduced-motion: no-preference) {
     .btn-primary.play-cta { animation: playBob 2.8s ease-in-out infinite; }
