@@ -6046,6 +6046,11 @@ function openKeepsakes() {
   m.classList.add("open");
   m.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
+  // The wall was rendered while the modal was still display:none, so its first hang found no
+  // width and bailed. Hang it now, before the first paint, rather than leave the twine to the
+  // ResizeObserver, whose rAF puts it a whole (heavy) frame behind the pegs and prints.
+  const wall = $("keepsakesBody")?.querySelector(".keep-wall");
+  if (wall) hangKeepsakeWall(wall);
   const close = $("keepsakesCloseBtn");
   if (close) { try { close.focus({ preventScroll: true }); } catch (_) { close.focus(); } }
 }
