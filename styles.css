@@ -9095,7 +9095,7 @@
     break-inside: avoid; -webkit-column-break-inside: avoid;
   }
   .chall-curtain-terms > li::before {
-    content: ""; position: absolute; left: 0; top: 0.32em; width: 0.86em; height: 0.86em;
+    content: ""; position: absolute; left: 0.05em; top: 0.33em; width: 0.68em; height: 0.68em;
     background: #b23a3a; opacity: 0.75;
     -webkit-mask: var(--mark-tick) center / contain no-repeat; mask: var(--mark-tick) center / contain no-repeat;
   }
@@ -12288,17 +12288,18 @@
   .btn-link.btn-close, .btn-link.btn-close:is(:hover, :focus-visible) { text-decoration: none; }
   /* The drawn cross, and the pencil tick beside it, for the places a typed ✕ or ✓ used to sit.
      Neither face has those characters, so the browser borrowed them from a system symbol
-     font and every OS set them in its own dingbat. Two strokes each, of two lengths and two
-     weights, painted through a mask so they take the button's own ink in every theme. The
-     cross is the close mark only: a verdict's cross is js/verdictmark.js's felt tip. */
+     font and every OS set them in its own dingbat. Painted through a mask so they take the
+     button's own ink in every theme. The cross is deliberately a neat one, two straight even
+     strokes a hair off true: a wobbly hand-drawn version read as messy on a control. It is the
+     close mark only; a verdict's cross is js/verdictmark.js's felt tip. */
   :root {
-    --mark-cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M2.3 2.4Q6.4 6 9.8 10.2' stroke-width='1.6'/%3E%3Cpath d='M9.5 1.9Q5.6 5.7 2.7 9.7' stroke-width='1.3'/%3E%3C/svg%3E");
+    --mark-cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M2.5 2.5L9.5 9.55' stroke-width='1.45'/%3E%3Cpath d='M9.5 2.45L2.5 9.5' stroke-width='1.45'/%3E%3C/svg%3E");
     --mark-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M1.7 6.5Q3.3 7.7 4.5 10.1' stroke-width='1.5'/%3E%3Cpath d='M4.5 10.1Q6.6 5.3 10.6 1.6' stroke-width='1.2'/%3E%3C/svg%3E");
     --mark-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 9' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.6 2.3Q4.5 5.3 6.3 7Q8.7 4.4 11.5 1.7' stroke-width='1.5'/%3E%3C/svg%3E");
   }
   .btn-close::before, .quit-btn::before {
-    content: ""; display: inline-block; width: 0.82em; height: 0.82em;
-    margin-right: 0.5em; vertical-align: -0.06em; background: currentColor;
+    content: ""; display: inline-block; width: 0.66em; height: 0.66em;
+    margin-right: 0.55em; vertical-align: 0.01em; background: currentColor;
     -webkit-mask: var(--mark-cross) center / contain no-repeat; mask: var(--mark-cross) center / contain no-repeat;
   }
   /* ---------- Stats, taped in ----------
@@ -13126,9 +13127,11 @@
     font-family: var(--hand); font-weight: 700; font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-accent);
     white-space: nowrap; opacity: 0; pointer-events: none; animation: secret13 2.6s ease forwards;
   }
-  .s13-heart { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; margin: 0 0.24em;
+  /* The 13 is measured into the middle, not spaced evenly: Caveat's digits lean and their ink
+     starts well inside the advance, so equal margins left it sitting near the right heart. */
+  .s13-heart { display: inline-block; width: 1em; height: 1em; vertical-align: -0.12em; margin: 0 0.12em 0 0;
     fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
-  .s13-heart--r { width: 0.88em; height: 0.88em; vertical-align: -0.06em; }
+  .s13-heart--r { width: 0.88em; height: 0.88em; vertical-align: -0.06em; margin: 0 0 0 0.36em; }
   @keyframes secret13 {
     0% { opacity: 0; transform: translate(-50%, 6px); }
     18% { opacity: 1; transform: translate(-50%, -6px); }

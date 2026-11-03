@@ -3151,7 +3151,7 @@ export const STAR_PATH = "M11.6 2.0 L15.0 8.2 L21.6 9.4 L16.5 13.9 L18.1 20.3 L1
 /* ---------- Achievements ---------- */
 export const ACH_ICONS = {
   // hung trinkets: filled bead bodies (ink-fill) with inked detail (ink)
-  star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" d="${STAR_PATH}"/><path class="ink" stroke-width="0.9" opacity="0.7" d="M12 6.4 L13.1 9.2 L16 9.5"/></svg>`,
+  star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" d="${STAR_PATH}"/></svg>`,
   // the whole set found: three polaroids fanned out of the shoebox, the top one face up.
   // Each card is paper-filled rather than class="ink-fill" so the front of the fan masks
   // the ones behind it instead of the outlines piling into a blot.
