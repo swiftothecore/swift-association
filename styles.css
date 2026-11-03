@@ -524,6 +524,19 @@
      page never paints a selection over them. Stamps are matched by name because
      there are thirty-odd kinds and each new one should inherit this unasked. */
   .desk-items, .b-cube-text, [class*="stamp"] { -webkit-user-select: none; user-select: none; }
+  /* The front page is the same case wholesale: mode pickers, nav cards, the
+     daily stub, the podium and the corner links are controls, not reading, and
+     a stray drag turning a card pink reads as the notebook breaking. So it is
+     unselectable by default and selection is handed back by exception, rather
+     than opted out one object at a time. The exceptions are what someone could
+     want to keep: the dated note (a real date they might look up) and any field
+     they type into, which Safari makes awkward to edit under a none ancestor.
+     Front page only: lyrics, results, panels and the searcher stay selectable,
+     because there the text is the point. */
+  :is(#screen-start, .corner-links, .tagline-row) { -webkit-user-select: none; user-select: none; }
+  :is(#screen-start, .corner-links, .tagline-row) :is(.anniversary-note, input, textarea, [contenteditable]) {
+    -webkit-user-select: text; user-select: text;
+  }
   body[data-desk-density="quiet"] :is(.di-glasses, .di-mug, .di-cassette, .di-crumple) { display: none; }
   body[data-desk-density="bare"] .desk-items { display: none !important; }
   /* December snowfall: full-viewport decorative canvas, above the notebook but
