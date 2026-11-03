@@ -127,7 +127,7 @@ import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
 import {
   loadRecords, saveRecords, insertRecord, migrateRecordsFromStats, getPlayerName, setPlayerName,
   getAvatar, setAvatar,
-  loadHistory, appendHistory, saveHistory,
+  loadHistory, appendHistory, saveHistory, loadTakes, saveTakes, cmpRecords,
   loadStats, saveStats, updateStats, totalPlayed,
   loadAchievements, saveAchievements,
   loadKeepsakes, saveKeepsakes, resetKeepsakes,
@@ -5315,11 +5315,25 @@ function renderBestLine(el, mode, opts = {}) {
     `${rec.date ? " · " + recordDateLabel(rec.date) : ""}</span></div>`;
 }
 
-/* ---------- Records page (personal-best tiles + run history) ---------- */
-const HISTORY_PAGE = 20;          // history rows revealed per "load more"
-let historyShown = 0;             // rows currently rendered
+/* ---------- Records page: the pressings and the take sheet ----------
+   The page takes its name literally. Every run in the history log is a TAKE, numbered from the
+   first one ever played (loadTakes, not the log's own length: the log is capped). The take that
+   still holds a record is circled in red pen, the way an engineer circles the keeper. Each
+   difficulty's best is pressed to vinyl in that mode's own colour, and a difficulty never played
+   is the empty paper sleeve it will go in, the page showing through its hole. Everything else
+   that keeps a best (Infinite, the daily, verse bonus, dark sides, Ruthless, Track by Track) is
+   one printed tracklist, the B-sides, rather than a stack of tiles per mode. The calendar is the
+   sessions grid printed at the head of the take sheet and filled in by pencil.
+
+   The records, the sleeve notes, the B-sides and the take sheet are vinyl and paper in fixed
+   stock, written in fixed inks and taken down a stop at night, exactly as the Stats page's
+   objects are; the captions written ON the page stay in the page's own ink. */
+const TAKES_PER_SHEET = 20;       // takes written on each sheet; the next sheet peeks out below
+let takesShown = 0;               // takes currently on the page
 let recordsBackTarget = "start";  // where ← back returns to
-let _pbByMode = {};               // per-mode best, for crowning history rows
+let _recOpen = null;              // the record whose sleeve notes are open (a MODE_ORDER id), or null
+let _sessView = null;             // "y1" | "ytd" | "m1" | "wk"; null until the adaptive default is picked
+let _recWired = false;            // the page's delegated listeners, attached to #recordsBody once
 
 // Best daily score ever (daily runs don't live in the per-mode records store).
 function dailyBest() {
@@ -5336,124 +5350,14 @@ function dailyBest() {
   }
   return Math.min(best, opened);
 }
-// Accent colour for a record tile — classic mode, infinite token (borrows its
-// difficulty), or daily (the red margin rule).
-// The accent a personal-best tile is written in. Returned as a custom property with the
-// MODE_COLORS value as its FALLBACK rather than as the value itself, so the day palette
-// still lives in config.js and dark mode only has to supply the night column (the
-// --mode-* block in styles.css). Written inline on the tile, so a plain hex here could
-// not be themed at all: an inline custom property beats every stylesheet rule.
-function modeAccent(token) {
-  if (token === "daily") return "var(--mode-daily, #b23a3a)";
-  const base = isInfiniteToken(token) ? token.split("-")[2] : token;
-  return MODE_COLORS[base] ? `var(--mode-${base}, ${MODE_COLORS[base]})` : "var(--ink-accent)";
-}
-function pbTile(mode, opts = {}) {
-  const rec = opts.score != null ? { score: opts.score, date: null } : loadRecords(mode)[0];
-  const empty = !rec || rec.score == null;
-  const isInf = isInfiniteToken(mode);
-  const unit = isInf ? "" : "/" + TOTAL_ROUNDS;
-  // Infinite tiles split the label into a small variant kicker + the difficulty;
-  // the sudden-death variant gets a distinct tape tint so the two read apart.
-  let kicker = "", label = opts.label || modeLabel(mode), sudden = false;
-  if (isInf) {
-    const parts = mode.split("-");                 // ["inf", variant, modeid]
-    kicker = VARIANT_LABELS[parts[1]] || parts[1];
-    label = MODES[parts[2]] ? MODES[parts[2]].label : parts[2];
-    sudden = parts[1] === "sudden";
-  }
-  let sub = opts.sub;
-  if (!sub) {
-    if (!rec) sub = "no runs yet";
-    else {
-      const parts = [];
-      if (isInf) parts.push("rounds");
-      if (rec.time != null) parts.push(fmtTime(rec.time));
-      if (rec.hints) parts.push(hintCountLabel(rec.hints));
-      if (rec.date) parts.push(recordDateLabel(rec.date));
-      sub = parts.length ? parts.join(" · ") : "—";
-    }
-  }
-  const cls = "pb-tile" + (empty ? " pb-empty" : "") + (isInf ? " pb-inf" : "") +
-    (sudden ? " pb-sudden" : "") + (mode === "daily" ? " pb-daily" : "");
-  return `<div class="${cls}" style="--pb-accent:${modeAccent(mode)}">` +
-    (!empty && opts.score == null ? recEraseX("rec:" + mode) : "") +
-    (kicker ? `<span class="pb-kicker">${escapeHtml(kicker)}</span>` : "") +
-    `<span class="pb-mode">${escapeHtml(label)}</span>` +
-    `<span class="pb-score">${empty ? "—" : rec.score + (unit ? `<span class="pb-unit">${unit}</span>` : "")}</span>` +
-    `<span class="pb-sub">${escapeHtml(sub)}</span></div>`;
-}
-// Day and time are separate runs so a phone's narrow date column can stack them (the
-// separator hides there) instead of wrapping after the dot and leaving it dangling.
-function histDateLabel(iso) {
-  const d = new Date(iso);
-  return `<span class="hist-day">${d.toLocaleDateString("en-US", { day: "numeric", month: "short" })}</span>` +
-         `<span class="hist-sep"> · </span><span class="hist-clock">${fmtClock(d)}</span>`;
-}
-function appendHistoryRows(hist) {
-  const rowsEl = $("histRows");
-  if (!rowsEl) return;
-  const next = hist.slice(historyShown, historyShown + HISTORY_PAGE);
-  rowsEl.insertAdjacentHTML("beforeend", next.map((h, i) => {
-    // A Ruthless row is the one whose score is not out of thirteen: it counts the pages NAMED
-    // out of the ten the run dealt, and its RECORD is the time in the next column over.
-    const ruthless = isRuthlessToken(h.m);
-    // Fixed runs carry their own target in `n`. That is usually thirteen, but Thirty-One and
-    // future variable-length runs must not be written back as though they used the classic count.
-    const historicChallenge = h.t === "challenge" && typeof h.m === "string"
-      ? CHALLENGE_BY_ID[h.m.replace(/^chl-/, "")] : null;
-    let fixedTotal = Number.isFinite(Number(h.n)) && Number(h.n) > 0
-      ? Number(h.n) : (ruthless ? BONUS_ROUNDS : TOTAL_ROUNDS);
-    // Older early-ending challenges stored pages reached rather than the card's denominator.
-    if (historicChallenge)
-      fixedTotal = historicChallenge.rule === "survive" ? surviveTarget(historicChallenge) : TOTAL_ROUNDS;
-    const unit = isInfiniteToken(h.m) ? "" : "/" + fixedTotal;
-    const scoreText = "" + h.s;
-    // ...so the crown has to be won on the time, and won LOW. Crowning ten-out-of-ten would
-    // crown most rows of a lens and say nothing about which run was the good one.
-    const isPB = ruthless
-      ? h.tm != null && h.tm === ruthlessRecord(h.m.slice(3)).best
-      : h.s > 0 && h.s === _pbByMode[h.m];
-    return `<div class="hist-row${isPB ? " hist-pb" : ""}">` +
-      recEraseX("hist:" + (historyShown + i)) +
-      `<span class="hist-score">${isPB ? `<span class="hist-crown" aria-hidden="true">${ACH_ICONS.crown}</span>` : ""}${scoreText}${unit ? `<span class="hist-unit">${unit}</span>` : ""}</span>` +
-      `<span class="hist-time">${h.tm != null ? (ruthless ? fmtTimeFine(h.tm) : fmtTime(h.tm)) : "—"}</span>` +
-      `<span class="hist-verse">${h.v > 0 ? `<span class="hist-verse-nib" aria-hidden="true">${trinketPreviewSVG("nib")}</span>+${h.v}` : "—"}</span>` +
-      // `dk` marks a challenge run played on its dark side. It rides as a violet eclipse
-      // rather than a word because modeLabel is deliberately token-only (the dark flag is
-      // not a token suffix — see the appendHistory call in endChallenge) and because the
-      // mode column is the tightest one in the row.
-      `<span class="hist-mode">${escapeHtml(modeLabel(h.m))}` +
-        `${h.dk ? `<span class="hist-dark" title="dark side" aria-label="dark side">${CHALL_ECLIPSE}</span>` : ""}` +
-        // A hinted run rides as a pencil stub rather than a count: rows logged before hints
-        // could set a record only ever stored the fact, not the number (see appendHistory).
-        `${h.h ? `<span class="hist-hinted" title="hint used" aria-label="hint used">${HINT_STUB}</span>` : ""}</span>` +
-      `<span class="hist-date">${histDateLabel(h.d)}</span></div>`;
-  }).join(""));
-  historyShown += next.length;
-  // The tab says how many runs are still folded away, not how many the next pull brings.
-  const more = $("histMore");
-  const left = hist.length - historyShown;
-  if (more && left <= 0) more.parentElement.style.display = "none";
-  else if (more) more.textContent = `${left} older run${left === 1 ? "" : "s"} ↓`;
+// A daily row whose day has not been opened yet. The take sheet writes its pages as "?", for
+// the same reason dailyBest caps itself: the log would otherwise say what the seal is hiding.
+function dailyRowSealed(h) {
+  return h.t === "daily" && settings.hideDailyScore && loadDailyResult(localDayKeyOf(h.d))?.revealed !== true;
 }
 
-/* ---------- Records calendar heatmap (games played per day / per hour) ----------
-   A GitHub-style contribution grid. Data comes entirely from the run history log —
-   each entry's ISO datetime, bucketed by the player's active timezone so squares land
-   on their local calendar day/hour (consistent with the daily challenge). Gold "ink
-   density" = games played: faint = none, deepening to solid for a heavy day. The grid
-   fills the full content width (JS sizes the cells from the measured width so they stay
-   square and the day labels line up exactly with the rows). */
-const HEAT_GAP = 3;                          // px gap between squares
-const HEAT_FILL = ["rgba(43,39,34,0.09)", "rgba(200,149,31,0.30)", "rgba(200,149,31,0.56)", "rgba(200,149,31,0.80)", "#a9791f"];
-const MON_ABBR = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-const WD_ABBR = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];   // indexed by getUTCDay
-const HEAT_HOURS = { 0: "12a", 6: "6a", 12: "12p", 18: "6p", 23: "11p" };
-let _heatView = null;            // "y1" | "ytd" | "m1" | "wk"; null until the adaptive default is picked
-let _heatResizeWired = false;    // window-resize listener attached once
-
-// An ISO datetime → the player's local calendar-day key / hour, in the active zone.
+/* Day and hour arithmetic, in the player's active zone (consistent with the daily). Day keys are
+   "YYYY-MM-DD" and the maths runs on a UTC anchor, so nothing drifts across a DST change. */
 function localDayKeyOf(iso) {
   try { return new Date(iso).toLocaleDateString("en-CA", { timeZone: activeTimeZone() }); }
   catch (e) { return String(iso).slice(0, 10); }
@@ -5464,246 +5368,439 @@ function localHourOf(iso) {
     return (+(p.find((x) => x.type === "hour")?.value) || 0) % 24;
   } catch (e) { return new Date(iso).getHours(); }
 }
-// Pure date-string math on a UTC anchor — stable, no zone drift (keys are "YYYY-MM-DD").
 function keyPlus(key, n) { const d = new Date(key + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
 function keyMinus(key, n) { return keyPlus(key, -n); }
 function keyDiff(a, b) { return Math.round((new Date(a + "T00:00:00Z") - new Date(b + "T00:00:00Z")) / 864e5); }
 function keyDow(key) { return new Date(key + "T00:00:00Z").getUTCDay(); }      // 0=Sun..6=Sat
 function keyMonth(key) { return new Date(key + "T00:00:00Z").getUTCMonth(); }
-function heatPrettyDate(key) {
-  try { return new Date(key + "T00:00:00Z").toLocaleDateString("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }); }
-  catch (e) { return key; }
-}
-function hourLabel(h) { const ap = h < 12 ? "am" : "pm"; let hr = h % 12; if (hr === 0) hr = 12; return hr + ap; }
-
-// Mon-start (default) puts Monday on row 0; Sun-start puts Sunday on row 0.
-function heatRow(key) { const d = keyDow(key); return settings.weekStart === "sun" ? d : (d + 6) % 7; }
-function dowLabels() { return settings.weekStart === "sun" ? ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] : ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]; }
-// Games played per local day, across the whole history log.
-function heatDayCounts() {
-  const m = Object.create(null);
-  for (const h of loadHistory()) { const k = localDayKeyOf(h.d); m[k] = (m[k] || 0) + 1; }
-  return m;
-}
-function heatLevel(c, max) { if (c <= 0) return 0; if (max <= 4) return Math.min(4, c); return Math.min(4, Math.ceil(c / (max / 4))); }
-// >1 month of history → default to the year; otherwise the compact 30-day view.
-function heatDefaultView() {
-  const hist = loadHistory();
-  if (!hist.length) return "m1";
-  return keyDiff(todayKey(), localDayKeyOf(hist[hist.length - 1].d)) > 30 ? "y1" : "m1";
+const MON_ABBR = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+const WD_ABBR = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];   // indexed by getUTCDay
+// "tue nov 3", the way a session is headed on the take sheet (set in caps by its stock).
+function sessionDayLabel(key) { return `${WD_ABBR[keyDow(key)]} ${MON_ABBR[keyMonth(key)]} ${+key.slice(8)}`; }
+// "Sunday, Nov 1", for a sentence.
+function longDayLabel(key) {
+  return new Date(key + "T00:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-function heatSectionHTML() {
-  const opts = [["y1", "last 12 months"], ["ytd", todayKey().slice(0, 4)], ["m1", "last 30 days"], ["wk", "last 7 days · by hour"]];
-  const optHTML = opts.map(([v, l]) => `<option value="${v}"${v === _heatView ? " selected" : ""}>${escapeHtml(l)}</option>`).join("");
-  const legend = [0, 1, 2, 3, 4].map((l) => `<i style="background:${HEAT_FILL[l]}"></i>`).join("");
-  return `<p class="rec-group-label">calendar: games played</p>` +
-    `<div class="heat-wrap">` +
-      `<div class="heat-controls">` +
-        `<span class="sel-wrap"><select id="heatRange" class="heat-select" aria-label="calendar timeframe">${optHTML}</select></span>` +
-        `<div class="heat-legend"><span>less</span>${legend}<span>more</span></div>` +
-      `</div>` +
-      `<div id="heatBody"></div>` +
-      `<div id="heatFoot" class="heat-foot"></div>` +
-    `</div>`;
+/* ---------- The pressings ----------
+   Vinyl does not change colour at night, so a record is pressed in the day palette
+   (MODE_COLORS) and the whole object comes down a stop with the rest of the stock. The print
+   on its label, and a mode's name written on the take sheet, is that colour pushed toward the
+   pen so it still reads on cream. */
+const RECORD_PRINT = Object.fromEntries(MODE_ORDER.map((m) => [m, mixHex(MODE_COLORS[m], "#2b2722", 0.32)]));
+const ringPath = (r) => `M${-r} 0a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
+// A coloured-vinyl pressing. The label is a white test-pressing label with the mode printed on
+// it and the score written in by hand. One honest picture in it: the grooves come in one band
+// per page named, so a 9/13 is a nine-track record. A perfect at gold pace is pressed with a
+// gold-foil label and the leaf the pace ink already wears. The label sits at a tilt seeded off
+// the mode, so each record lies the same way every time the page opens.
+function recordDiscSVG(mode, rec) {
+  const R = 96, LR = 56, IN = 61, OUT = 92, HOLE = 3.4;
+  const n = Math.max(1, rec.score), w = (OUT - IN) / n;
+  let grooves = "", gaps = "";
+  for (let k = 0; k < n; k++) {
+    for (let r = IN + k * w + 0.9; r <= IN + (k + 1) * w - 0.89; r += 1.55) grooves += `<circle r="${r.toFixed(2)}"/>`;
+    if (k) gaps += `<circle r="${(IN + k * w).toFixed(2)}"/>`;
+  }
+  const gold = paceTier(mode, rec) === "gold";
+  const label = gold ? "#e3bd52" : "#f6f0df", print = gold ? "#5e420d" : RECORD_PRINT[mode];
+  const tilt = ((mulberry32(fnv1a("record:" + mode))() - 0.5) * 18).toFixed(1);
+  const type = `font-family="Courier Prime, Courier New, monospace"`;
+  return `<svg class="rec-disc" viewBox="-100 -100 200 200" aria-hidden="true"><g class="rec-spin"><g transform="rotate(${tilt})">` +
+    `<path d="${ringPath(R)}${ringPath(HOLE)}" fill-rule="evenodd" fill="${MODE_COLORS[mode]}" stroke="#2b2722" stroke-opacity="0.85" stroke-width="1.2"/>` +
+    `<circle r="${R - 2.6}" fill="none" stroke="#000" stroke-opacity="0.16" stroke-width="0.8"/>` +
+    `<g fill="none" stroke="#1b140c" stroke-opacity="0.17" stroke-width="0.5">${grooves}</g>` +
+    `<g fill="none" stroke="#fff" stroke-opacity="0.16" stroke-width="1.1">${gaps}</g>` +
+    `<circle r="${IN - 1.6}" fill="none" stroke="#000" stroke-opacity="0.14" stroke-width="0.6"/>` +
+    `<path d="${ringPath(LR)}${ringPath(HOLE)}" fill-rule="evenodd" fill="${label}" stroke="#2b2722" stroke-opacity="0.25" stroke-width="0.6"/>` +
+    `<circle r="${LR - 3.6}" fill="none" stroke="${print}" stroke-width="0.9"/>` +
+    `<text y="-21" text-anchor="middle" ${type} font-weight="700" font-size="13.5" letter-spacing="1.5" fill="${print}">${MODES[mode].label.toUpperCase()}</text>` +
+    `<text x="-29" y="4" text-anchor="middle" ${type} font-size="7.5" letter-spacing="0.6" fill="${print}" opacity="0.8">SIDE A</text>` +
+    `<text x="29" y="4" text-anchor="middle" ${type} font-size="7.5" letter-spacing="0.4" fill="${print}" opacity="0.8">33⅓</text>` +
+    `<path d="M-26 43 H26" stroke="${print}" stroke-width="0.6" opacity="0.55"/>` +
+    `<text y="40.5" text-anchor="middle" font-family="Caveat, cursive" font-weight="700" fill="#2b2722"><tspan font-size="43">${rec.score}</tspan>` +
+      `<tspan font-size="22" font-weight="400" fill="#5a5247">/${TOTAL_ROUNDS}</tspan></text>` +
+    (gold ? `<path transform="translate(34 -32) scale(0.66) translate(-12 -12)" d="M12.2 1.4 Q13.1 9.4 22.4 12.1 Q13.4 14.6 11.3 22.5 Q10.2 14.8 1.7 11.7 Q10.6 9.7 12.2 1.4 Z" fill="#fff6d2" stroke="#7a5512" stroke-width="0.8"/>` : "") +
+    `</g></g></svg>`;
+}
+// A difficulty with no record yet: the plain paper inner sleeve it will go in, the ruled page
+// showing through its die-cut hole, the mode's name pencilled in the corner.
+function recordSleeveSVG(mode) {
+  const s = 92;
+  return `<svg class="rec-disc" viewBox="-100 -100 200 200" aria-hidden="true">` +
+    `<path d="M${-s} ${-s + 2}q0 -2 2 -2h${2 * s - 4}q2 0 2 2v${2 * s - 4}q0 2 -2 2h${-(2 * s - 4)}q-2 0 -2 -2Z${ringPath(50)}" fill-rule="evenodd" fill="#efe7d3" stroke="#2b2722" stroke-opacity="0.32" stroke-width="1"/>` +
+    `<circle r="50" fill="none" stroke="#2b2722" stroke-opacity="0.22" stroke-width="0.8"/>` +
+    `<path d="M${-s + 10} ${-s + 9} H${s - 54}" stroke="#2b2722" stroke-opacity="0.1" stroke-width="0.8"/>` +
+    `<text x="${s - 12}" y="${s - 12}" text-anchor="end" font-family="Caveat, cursive" font-size="27" fill="#6f675a" transform="rotate(-4 ${s - 12} ${s - 12})">${MODES[mode].label}</text>` +
+    `</svg>`;
+}
+function recordSlotHTML(mode) {
+  const rec = loadRecords(mode)[0];
+  const name = MODES[mode].label;
+  if (!rec) {
+    return `<div class="rec-slot"><div class="rec-press" data-empty>${recordSleeveSVG(mode)}` +
+      `<span class="rec-cap"><span class="rec-cap-none">not pressed yet</span></span></div></div>`;
+  }
+  const bits = [];
+  if (rec.time != null) bits.push(paceTimeHTML(mode, rec));
+  if (rec.hints) bits.push(hintCountLabel(rec.hints));
+  bits.push(rec.date ? recordDateLabel(rec.date) : "best so far");
+  return `<div class="rec-slot">${recEraseX("rec:" + mode)}` +
+    `<button type="button" class="rec-press" data-mode="${mode}" aria-expanded="false" aria-controls="recNotes" ` +
+    `aria-label="${name}: ${rec.score} of ${TOTAL_ROUNDS}. Open its top five">${recordDiscSVG(mode, rec)}` +
+    `<span class="rec-cap">${bits.join(`<span class="rec-cap-dot">·</span>`)}</span></button></div>`;
 }
 
-function setHeatFoot(view, total, days) {
-  const f = $("heatFoot"); if (!f) return;
-  const g = (n) => `${n} game${n === 1 ? "" : "s"}`;
-  let msg;
-  if (total === 0) msg = view === "m1" ? `no games yet this month. <b>play to start filling your calendar</b>` : `nothing logged here yet. <b>play a round to begin</b>`;
-  else if (view === "y1") msg = `<b>${g(total)}</b> across <b>${days} day${days === 1 ? "" : "s"}</b>, darker means more games`;
-  else if (view === "ytd") msg = `<b>${g(total)}</b> so far in ${todayKey().slice(0, 4)}`;
-  else msg = `<b>${g(total)}</b> over the last 30 days`;
-  f.innerHTML = msg;
+/* ---------- Sleeve notes: a record's top five, and how it moved ----------
+   The top five is the board insertRecord has always kept and nothing ever showed. How the record
+   moved is walked out of the log oldest first with storage's own cmpRecords, so a record that
+   moved on the clock alone (13 in 1:04, then 13 in 0:58) is a move here exactly as it is on the
+   board. The board can hold a best the log no longer does (a capped log, or the dateless "best so
+   far" an old notebook was seeded with): then it is the last word, with no take beside it. */
+function recordMoves(mode, hist, takes) {
+  const timed = MODES[mode].seconds > 0;
+  const top = loadRecords(mode)[0];
+  const moves = [];
+  for (let i = hist.length - 1; i >= 0; i--) {
+    const h = hist[i];
+    if (h.m !== mode) continue;
+    const e = { score: h.s, time: timed ? (h.tm ?? null) : null, verse: h.v || 0,
+      hints: typeof h.h === "number" ? h.h : (h.h ? 1 : 0), date: localDayKeyOf(h.d), take: takes.n - i };
+    // The board is the record. A row that would rank above it is one the board no longer holds
+    // (a best erased from the board, never from the log), and must not be shown as the record.
+    if (top && cmpRecords(e, top) < 0) continue;
+    const cur = moves[moves.length - 1];
+    if (!cur || cmpRecords(e, cur) < 0) moves.push(e);
+  }
+  const last = moves[moves.length - 1];
+  if (top && (!last || cmpRecords(top, last) < 0)) moves.push({ ...top, date: top.date ? storedDayKey(top.date) : null, take: null });
+  return moves;
+}
+function sleeveNotesHTML(mode) {
+  const hist = loadHistory(), takes = loadTakes(hist);
+  const list = loadRecords(mode);
+  const top = [];
+  for (let k = 0; k < 5; k++) {
+    const e = list[k];
+    if (!e) { top.push(`<li class="rec-t5-none"><span class="rk">${k + 1}</span><span class="sc">–</span><span></span><span></span></li>`); continue; }
+    const how = [e.time != null ? paceTimeHTML(mode, e) : "", e.hints ? hintCountLabel(e.hints) : ""].filter(Boolean).join(" · ");
+    top.push(`<li><span class="rk">${k + 1}</span><span class="sc">${e.score}<small>/${TOTAL_ROUNDS}</small></span>` +
+      `<span class="tm">${how}</span><span class="dt">${e.date ? recordDateLabel(e.date) : "–"}</span></li>`);
+  }
+  // Main-game times print in whole seconds; a record that moved by a fraction of one would show
+  // the same time twice, so a pair like that is written to the hundredth.
+  const mv = recordMoves(mode, hist, takes);
+  const fine = new Set();
+  for (let k = 1; k < mv.length; k++) {
+    const a = mv[k - 1], b = mv[k];
+    if (a.score === b.score && a.time != null && b.time != null && fmtTime(a.time) === fmtTime(b.time)) { fine.add(a); fine.add(b); }
+  }
+  const SHOW = 5;
+  const shown = mv.length > SHOW ? [mv[0], null, ...mv.slice(-(SHOW - 1))] : mv;
+  const moved = shown.map((m) => {
+    if (!m) return `<span class="rec-mv-gap" aria-hidden="true">…</span>`;
+    const now = m === mv[mv.length - 1];
+    const onClock = m.time != null && mv.some((o) => o !== m && o.score === m.score);
+    const t = onClock ? `<small>${fine.has(m) ? fmtTimeFine(m.time) : fmtTime(m.time)}</small>` : "";
+    const when = [m.take ? `take ${m.take}` : "", m.date ? recordDateLabel(m.date) : "best so far"].filter(Boolean).join("<br>");
+    return `<span class="rec-mv${now ? " now" : ""}"><b>${m.score}${t}${now ? "" : briefStrikeSVG(fnv1a(mode + ":" + (m.take || 0)))}</b><span>${when}</span></span>`;
+  }).join("");
+  const first = mv[0], last = mv[mv.length - 1];
+  const line = !first ? ""
+    : mv.length === 1 ? (first.take ? `Set on take ${first.take}, and it has held ever since.` : `Set before the take sheet was kept, and it has held ever since.`)
+    : `Broken <em>${mv.length - 1} ${mv.length === 2 ? "time" : "times"}</em>${first.take ? ` since take ${first.take}` : ""}.` +
+      (last.date ? ` The last time was ${longDayLabel(last.date)}.` : "");
+  const played = hist.filter((h) => h.m === mode).length;
+  // The strip sits outside the card: the card is dimmed at night and no filter may reach tape.
+  return `<span class="stp-tape" aria-hidden="true" style="left:50%;top:-10px;width:58px;transform:translateX(-50%) rotate(-2deg);clip-path:${TORN_EDGES[1]}"></span>` +
+    `<div class="rec-notes-card rec-stock" style="--nk:${RECORD_PRINT[mode]}">` +
+    `<div class="rec-notes-hd"><b>${MODES[mode].label}</b><span>${played} ${played === 1 ? "take" : "takes"}</span>` +
+      `<button type="button" class="rec-notes-x" aria-label="close the sleeve notes">×</button></div>` +
+    `<div class="rec-notes-grid">` +
+      `<div><p class="rec-sub">your top five</p><ol class="rec-t5">${top.join("")}</ol></div>` +
+      `<div><p class="rec-sub">how the record moved</p><div class="rec-moved">${moved}</div><p class="rec-moved-line">${line}</p></div>` +
+    `</div></div>`;
 }
 
-function renderDailyHeat(body, view) {
+/* ---------- The B-sides: every other best, as one tracklist ----------
+   Only what has been played gets a track, the rule the old tiles kept: each mode's own sheet is
+   where its unplayed rows live with dashes, and this page is a record of what has been done.
+   Infinite counts rounds survived; Ruthless and Track by Track are times and LOW WINS, said once
+   in each group's heading rather than on every line. */
+function bSidesHTML() {
+  const groups = [];
+  let no = 0;
+  const tr = (erase, name, value, sub, swatch) => `<div class="rec-tr">${erase}<span class="no">${++no}.</span>` +
+    `<span class="nm">${swatch ? `<i class="sw" style="--sw:${swatch}"></i>` : ""}${escapeHtml(name)}</span><span class="ld"></span>` +
+    `<span class="vl">${value}</span>${sub ? `<span class="sb">${sub}</span>` : ""}</div>`;
+  const inf = [];
+  for (const v of ["3lives", "sudden"]) for (const m of MODE_ORDER) {
+    const tok = "inf-" + v + "-" + m, rec = loadRecords(tok)[0];
+    if (!rec) continue;
+    const runs = loadStats(tok).played;
+    inf.push(tr(recEraseX("rec:" + tok), `${VARIANT_LABELS[v] || v} · ${MODES[m].label}`, `${rec.score}`,
+      [runs ? `${runs} ${runs === 1 ? "run" : "runs"}` : "", rec.date ? recordDateLabel(rec.date) : "best so far"].filter(Boolean).join(" · "), MODE_COLORS[m]));
+  }
+  if (inf.length) groups.push(`<h4>Infinite · rounds survived</h4>` + inf.join(""));
+  const db = dailyBest(), streak = effectiveDailyStreak(todayKey());
+  if (db > 0 || streak.best > 0) groups.push(`<h4>The daily</h4>` +
+    (db > 0 ? tr("", "Best daily", `${db}<small>/${TOTAL_ROUNDS}</small>`, "") : "") +
+    (streak.best > 0 ? tr("", "Streak", `${streak.current}<small class="u">${streak.current === 1 ? "day" : "days"}</small>`, `longest ${streak.best}`) : ""));
+  const vm = loadMetrics();
+  if (vm.bestVerseBonus > 0) groups.push(`<h4>Verse bonus</h4>` + tr("", "Best in a game", `+${vm.bestVerseBonus}`,
+    `${vm.versePerfect} word-perfect · ${vm.wholeVerses} whole verse${vm.wholeVerses === 1 ? "" : "s"}`));
+  // Counted off DARK_SIDE_IDS, so the "of N" re-targets itself as more dark sides are authored,
+  // and read from the dark fields alone: a base win says nothing about the dark side.
+  const darkBeaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
+  if (darkBeaten > 0) groups.push(`<h4>Dark sides</h4>` + tr("", "Beaten", `${darkBeaten}<small class="u">of ${DARK_SIDE_IDS.length}</small>`, ""));
+  // How a Ruthless time was got rides under it: two runs can post the same seconds with a
+  // different number of pages handed back, and that is the more interesting half.
+  const lenses = RUTHLESS_RUNNING_ORDER.map((id) => ruthlessLens(id)).filter(Boolean).filter((l) => ruthlessRecord(l.id).plays);
+  if (lenses.length) groups.push(`<h4>Ruthless Game · lowest wins</h4>` + lenses.map((l) => {
+    const rec = ruthlessRecord(l.id);
+    return tr(recEraseX("rl:" + l.id), l.label, fmtTimeFine(rec.best),
+      `${rec.bestGaveUp ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`} · ${recordDateLabel(rec.date)}`);
+  }).join(""));
+  // No combined line and there must not be one: see the storage note on why a sum runs
+  // backwards on a low-wins board and an average pays you to bank the shortest albums.
+  const tbt = loadTracks();
+  const albums = STUDIO_ALBUMS.filter((a) => tbt[a] && tbt[a].plays);
+  if (albums.length) groups.push(`<h4>Track by Track · lowest wins</h4>` + albums.map((a) =>
+    tr(recEraseX("tbt:" + a), a, fmtTimeFine(tbt[a].best), `played ${tbt[a].plays} · ${recordDateLabel(tbt[a].date)}`, albumColor(a) || "#999")).join(""));
+  if (!groups.length) return "";
+  return `<section class="rec-sec"><div class="rec-head"><p class="rec-group-label">everything else</p><span class="rec-aside">every other best you hold</span></div>` +
+    `<div class="rec-taped"><div class="rec-bs rec-stock"><div class="rec-bs-hd"><b>B-SIDES</b><span>${no} ${no === 1 ? "track" : "tracks"}</span></div>` +
+    `<div class="rec-bs-cols">${groups.map((g) => `<div class="rec-bs-grp">${g}</div>`).join("")}</div></div>` +
+    `<span class="stp-tape" aria-hidden="true" style="left:50%;top:-9px;width:60px;transform:translateX(-50%) rotate(2deg);clip-path:${TORN_EDGES[4]}"></span></div></section>`;
+}
+
+/* ---------- Sessions: the bookings grid at the head of the take sheet ----------
+   Takes per local day (or per hour, for the week), from the run log, in the active zone. Each
+   box is printed on the form and filled in by pencil: one stroke for a take, two for two, a
+   cross for three or four, solid for five or more. The grid is one SVG at the sheet's width,
+   so it needs no measuring: the twelve months shrink their boxes on a phone rather than run
+   off the page, and a sparse range caps its boxes rather than ballooning them. */
+const sessLevel = (c) => (c <= 0 ? 0 : c === 1 ? 1 : c === 2 ? 2 : c <= 4 ? 3 : 4);
+function sessHatch(x, y, s, lvl, seed) {
+  if (!lvl) return "";
+  if (lvl >= 4) return `<rect class="solid" x="${(x + 0.9).toFixed(2)}" y="${(y + 0.9).toFixed(2)}" width="${(s - 1.8).toFixed(2)}" height="${(s - 1.8).toFixed(2)}" rx="0.4"/>`;
+  const r = mulberry32(seed), j = () => (r() - 0.5) * s * 0.12;
+  const w = Math.max(0.7, s * 0.09).toFixed(2), p = s * 0.16, q = s - p;
+  const ln = (x1, y1, x2, y2) => `<path class="ht" stroke-width="${w}" d="M${(x + x1 + j()).toFixed(2)} ${(y + y1 + j()).toFixed(2)} L${(x + x2 + j()).toFixed(2)} ${(y + y2 + j()).toFixed(2)}"/>`;
+  let out = ln(p, q, q, p);
+  if (lvl >= 2) out += ln(p, s * 0.55, s * 0.55, p) + ln(s * 0.45, q, q, s * 0.45);
+  if (lvl >= 3) out += ln(p, p, q, q) + ln(p, s * 0.45, s * 0.55, q) + ln(s * 0.45, p, q, s * 0.55);
+  return out;
+}
+function sessDefaultView() {
+  const t = loadTakes();
+  return t.since && keyDiff(todayKey(), localDayKeyOf(t.since)) > 30 ? "y1" : "m1";
+}
+function sessionsHTML(hist) {
+  const view = _sessView;
   const today = todayKey();
-  const counts = heatDayCounts();
-  let rangeStart;
-  if (view === "y1") rangeStart = keyMinus(today, 364);
-  else rangeStart = today.slice(0, 4) + "-01-01";                       // ytd: counts up from 1 Jan
-  const gridStart = keyMinus(rangeStart, heatRow(rangeStart));          // back up to the week-start boundary
-  const weeks = Math.floor(keyDiff(today, gridStart) / 7) + 1;
-
-  let max = 0, total = 0, daysPlayed = 0;
-  for (let w = 0; w < weeks; w++) for (let r = 0; r < 7; r++) {
-    const key = keyPlus(gridStart, w * 7 + r);
-    if (keyDiff(today, key) < 0 || keyDiff(key, rangeStart) < 0) continue;   // future / before range
-    const c = counts[key] || 0;
-    if (c > max) max = c;
-    if (c > 0) { total += c; daysPlayed++; }
-  }
-
-  const cells = [], months = []; let lastMonth = -1;
-  for (let w = 0; w < weeks; w++) {
-    const topKey = keyPlus(gridStart, w * 7);
-    const repKey = keyDiff(topKey, rangeStart) < 0 ? rangeStart : topKey;     // don't label a pre-range month
-    const m = keyMonth(repKey);
-    if (m !== lastMonth) { months.push(`<span style="left:${(w / weeks * 100).toFixed(3)}%">${MON_ABBR[m]}</span>`); lastMonth = m; }
-    for (let r = 0; r < 7; r++) {
-      const key = keyPlus(gridStart, w * 7 + r);
-      if (keyDiff(today, key) < 0 || keyDiff(key, rangeStart) < 0) { cells.push(`<div class="heat-cell" style="background:transparent"></div>`); continue; }
-      const c = counts[key] || 0;
-      cells.push(`<div class="heat-cell" title="${c} game${c === 1 ? "" : "s"} · ${heatPrettyDate(key)}" style="background:${HEAT_FILL[heatLevel(c, max)]};border:0.5px solid rgba(43,39,34,0.10)"></div>`);
-    }
-  }
-
-  const labels = dowLabels();
-  const dayLabelHTML = [0, 2, 4].map((r) => `<span style="grid-row:${r + 1}">${labels[r]}</span>`).join("");
-  const prov = 11;                                                       // provisional cell px until fitHeatGrid measures
-  body.innerHTML =
-    `<div class="heat-row">` +
-      `<div class="heat-side"><div class="heat-corner" style="height:15px"></div>` +
-        `<div class="heat-days" id="heatDays" style="grid-template-rows:repeat(7,${prov}px)">${dayLabelHTML}</div></div>` +
-      `<div class="heat-main">` +
-        `<div class="heat-months" style="height:15px">${months.join("")}</div>` +
-        `<div class="heat-grid" id="heatGrid" data-view="${view}" data-weeks="${weeks}" style="grid-auto-flow:column;grid-template-columns:repeat(${weeks},1fr);grid-template-rows:repeat(7,${prov}px)">${cells.join("")}</div>` +
-      `</div>` +
-    `</div>`;
-  setHeatFoot(view, total, daysPlayed);
-  fitHeatGrid();
-}
-
-// The 30-day view renders as a single full-width strip (one row of 30 days, today on the
-// right) rather than a 7×5 calendar block — 5 calendar columns capped to square cells left a
-// lot of empty space on the right. Month markers ride the top where the month changes; the
-// weekday axis is dropped (thin at this range). fitHeatGrid sizes the row to keep cells square.
-function renderMonthStrip(body) {
-  const today = todayKey();
-  const counts = heatDayCounts();
-  const DAYS = 30;
-  const start = keyMinus(today, DAYS - 1);
-  let max = 0, total = 0, daysPlayed = 0;
-  for (let i = 0; i < DAYS; i++) {
-    const c = counts[keyPlus(start, i)] || 0;
-    if (c > max) max = c;
-    if (c > 0) { total += c; daysPlayed++; }
-  }
-  const months = [], cells = []; let lastMonth = -1;
-  for (let i = 0; i < DAYS; i++) {
-    const key = keyPlus(start, i);
-    const m = keyMonth(key);
-    if (m !== lastMonth) { months.push(`<span style="left:${(i / DAYS * 100).toFixed(3)}%">${MON_ABBR[m]}</span>`); lastMonth = m; }
-    const c = counts[key] || 0;
-    cells.push(`<div class="heat-cell" title="${c} game${c === 1 ? "" : "s"} · ${heatPrettyDate(key)}" style="background:${HEAT_FILL[heatLevel(c, max)]};border:0.5px solid rgba(43,39,34,0.10)"></div>`);
-  }
-  body.innerHTML =
-    `<div class="heat-strip">` +
-      `<div class="heat-months" style="height:15px">${months.join("")}</div>` +
-      `<div class="heat-grid" id="heatGrid" data-view="m1" data-strip="1" data-days="${DAYS}" style="grid-auto-flow:column;grid-template-columns:repeat(${DAYS},1fr);grid-template-rows:11px">${cells.join("")}</div>` +
-      `<div class="heat-strip-ends"><span>${heatPrettyDate(start)}</span><span>today</span></div>` +
-    `</div>`;
-  setHeatFoot("m1", total, daysPlayed);
-  fitHeatGrid();
-}
-
-function renderWeekHeat(body) {
-  const today = todayKey();
-  const nowHour = localHourOf(new Date().toISOString());
   const counts = Object.create(null);
-  for (const h of loadHistory()) {
-    const dk = localDayKeyOf(h.d);
-    if (keyDiff(today, dk) > 6 || keyDiff(today, dk) < 0) continue;     // outside the rolling 7-day window
-    const k = dk + "|" + localHourOf(h.d); counts[k] = (counts[k] || 0) + 1;
-  }
-  let max = 0, total = 0;
-  for (let d = 0; d < 7; d++) { const dk = keyMinus(today, 6 - d); for (let h = 0; h < 24; h++) { if (dk === today && h > nowHour) continue; const c = counts[dk + "|" + h] || 0; if (c > max) max = c; total += c; } }
-
-  const colLabels = [];
-  for (let d = 0; d < 7; d++) colLabels.push(`<span>${WD_ABBR[keyDow(keyMinus(today, 6 - d))]}</span>`);
-  const hourLabelHTML = [0, 6, 12, 18, 23].map((h) => `<span style="grid-row:${h + 1}">${HEAT_HOURS[h]}</span>`).join("");
-  const cells = [];
-  for (let d = 0; d < 7; d++) {
-    const dk = keyMinus(today, 6 - d);
-    for (let h = 0; h < 24; h++) {
-      if (dk === today && h > nowHour) { cells.push(`<div class="heat-cell" style="background:transparent"></div>`); continue; }
-      const c = counts[dk + "|" + h] || 0;
-      cells.push(`<div class="heat-cell" title="${c} game${c === 1 ? "" : "s"} · ${heatPrettyDate(dk)} ${hourLabel(h)}" style="background:${HEAT_FILL[heatLevel(c, max)]};border:0.5px solid rgba(43,39,34,0.10)"></div>`);
+  for (const h of hist) { const k = localDayKeyOf(h.d); counts[k] = (counts[k] || 0) + 1; }
+  const sunFirst = settings.weekStart === "sun";
+  const rowOf = (key) => (sunFirst ? keyDow(key) : (keyDow(key) + 6) % 7);
+  const box = (x, y, s, c, tip, seed, out = false) =>
+    `<rect class="box${out ? " out" : ""}" x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${s}" height="${s}" rx="0.5"><title>${tip}</title></rect>` + sessHatch(x, y, s, sessLevel(c), seed);
+  const takesWord = (c) => `${c} ${c === 1 ? "take" : "takes"}`;
+  let svg = "", months = [], side = "", total = 0, days = 0, cap = "";
+  if (view === "y1" || view === "ytd") {
+    const start = view === "y1" ? keyMinus(today, 364) : today.slice(0, 4) + "-01-01";
+    const gridStart = keyMinus(start, rowOf(start));
+    const weeks = Math.floor(keyDiff(today, gridStart) / 7) + 1;
+    const cell = 8.6, gap = 1.6, pitch = cell + gap;
+    let body = "", lastM = -1;
+    for (let w = 0; w < weeks; w++) {
+      const topKey = keyPlus(gridStart, w * 7);
+      const m = keyMonth(keyDiff(topKey, start) < 0 ? start : topKey);
+      if (m !== lastM) { months.push([w / weeks * 100, MON_ABBR[m]]); lastM = m; }
+      for (let d = 0; d < 7; d++) {
+        const k = keyPlus(gridStart, w * 7 + d);
+        if (keyDiff(today, k) < 0) continue;
+        const out = keyDiff(k, start) < 0, c = out ? 0 : counts[k] || 0;
+        if (c) { total += c; days++; }
+        body += box(w * pitch, d * pitch, cell, c, `${takesWord(c)} · ${sessionDayLabel(k)}`, w * 7 + d, out);
+        if (k === today) body += `<rect class="today" x="${(w * pitch - 1.2).toFixed(2)}" y="${(d * pitch - 1.2).toFixed(2)}" width="${cell + 2.4}" height="${cell + 2.4}" rx="1.2"/>`;
+      }
     }
+    const W = weeks * pitch - gap, H = 7 * pitch - gap;
+    // A range of a few weeks (early in the year) caps its boxes at the size the year draws them.
+    cap = view === "ytd" ? ` style="max-width:${Math.max(120, weeks * 15)}px"` : "";
+    svg = `<svg class="rec-bk-svg" viewBox="-1.5 -1.5 ${(W + 3).toFixed(1)} ${(H + 3).toFixed(1)}"${cap} role="img" aria-label="takes per day">${body}</svg>`;
+    const lab = sunFirst ? ["sun", "", "tue", "", "thu", "", ""] : ["mon", "", "wed", "", "fri", "", ""];
+    side = `<div class="rec-bk-days">${lab.map((l) => `<span>${l}</span>`).join("")}</div>`;
+  } else if (view === "m1") {
+    const N = 30, start = keyMinus(today, N - 1), cell = 17, gap = 2.4, pitch = cell + gap;
+    let body = "", lastM = -1;
+    for (let i = 0; i < N; i++) {
+      const k = keyPlus(start, i), m = keyMonth(k), c = counts[k] || 0;
+      if (m !== lastM) { months.push([i / N * 100, MON_ABBR[m]]); lastM = m; }
+      if (c) { total += c; days++; }
+      body += box(i * pitch, 0, cell, c, `${takesWord(c)} · ${sessionDayLabel(k)}`, 900 + i) +
+        `<text x="${(i * pitch + cell / 2).toFixed(2)}" y="${cell + 9}" font-size="7" text-anchor="middle">${+k.slice(8)}</text>`;
+      if (k === today) body += `<rect class="today" x="${(i * pitch - 1.6).toFixed(2)}" y="-1.6" width="${cell + 3.2}" height="${cell + 3.2}" rx="1.4"/>`;
+    }
+    svg = `<svg class="rec-bk-svg" viewBox="-2 -2 ${(N * pitch - gap + 4).toFixed(1)} ${cell + 14}" role="img" aria-label="takes per day, last thirty days">${body}</svg>`;
+  } else {
+    // The last seven days by hour: a row per day, a column per hour, the hours still to come
+    // today left off the form.
+    const nowHour = localHourOf(new Date().toISOString());
+    const byHour = Object.create(null);
+    for (const h of hist) {
+      const dk = localDayKeyOf(h.d);
+      if (keyDiff(today, dk) > 6 || keyDiff(today, dk) < 0) continue;
+      const k = dk + "|" + localHourOf(h.d); byHour[k] = (byHour[k] || 0) + 1;
+    }
+    const cell = 13, gap = 2, pitch = cell + gap;
+    let body = "";
+    for (let d = 0; d < 7; d++) {
+      const dk = keyMinus(today, 6 - d);
+      for (let hr = 0; hr < 24; hr++) {
+        if (dk === today && hr > nowHour) continue;
+        const c = byHour[dk + "|" + hr] || 0;
+        if (c) { total += c; days++; }
+        body += box(hr * pitch, d * pitch, cell, c, `${takesWord(c)} · ${sessionDayLabel(dk)}, ${hr % 12 || 12}${hr < 12 ? "am" : "pm"}`, 500 + d * 24 + hr);
+      }
+    }
+    for (const [hr, l] of [[0, "12a"], [6, "6a"], [12, "12p"], [18, "6p"]]) months.push([hr / 24 * 100, l]);
+    svg = `<svg class="rec-bk-svg" viewBox="-1.5 -1.5 ${(24 * pitch - gap + 3).toFixed(1)} ${(7 * pitch - gap + 3).toFixed(1)}" role="img" aria-label="takes per hour, last seven days">${body}</svg>`;
+    side = `<div class="rec-bk-days">${[6, 5, 4, 3, 2, 1, 0].map((n) => `<span>${WD_ABBR[keyDow(keyMinus(today, n))]}</span>`).join("")}</div>`;
   }
-  const CH = 12;
-  body.innerHTML =
-    `<div class="heat-row">` +
-      `<div class="heat-side"><div class="heat-corner" style="height:16px"></div>` +
-        `<div class="heat-hours" style="grid-template-rows:repeat(24,${CH}px);gap:${HEAT_GAP}px">${hourLabelHTML}</div></div>` +
-      `<div class="heat-main">` +
-        `<div class="heat-cols" style="grid-template-columns:repeat(7,1fr);gap:${HEAT_GAP}px;height:16px">${colLabels.join("")}</div>` +
-        `<div class="heat-grid" id="heatGrid" data-view="wk" style="grid-auto-flow:column;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(24,${CH}px);gap:${HEAT_GAP}px">${cells.join("")}</div>` +
-      `</div>` +
-    `</div>`;
-  const f = $("heatFoot");
-  if (f) f.innerHTML = total ? `<b>${total} game${total === 1 ? "" : "s"}</b> in the last 7 days (busiest hours are darkest)` : `nothing in the last 7 days. <b>play to light up your week</b>`;
+  const opts = [["y1", "12 months"], ["ytd", today.slice(0, 4)], ["m1", "30 days"], ["wk", "this week"]];
+  const rng = `<div class="rec-rng" role="group" aria-label="sessions range">${opts.map(([v, l], i) =>
+    `<button type="button" data-sess="${v}" aria-pressed="${v === view}">${escapeHtml(l)}${v === view ? briefLoopSVG(41 + i) : ""}</button>`).join("")}</div>`;
+  const key = [1, 2, 3, 5].map((c, i) => `<rect class="box" x="${i * 19 + 0.5}" y="0.5" width="11" height="11" rx="0.5"/>${sessHatch(i * 19 + 0.5, 0.5, 11, sessLevel(c), 70 + i)}`).join("");
+  const span = { y1: "the last twelve months", ytd: "so far this year", m1: "the last thirty days", wk: "the last seven days" }[view];
+  const foot = !hist.length ? "No sessions booked yet."
+    : !total ? `Nothing in ${span}.`
+    : view === "y1" ? `${takesWord(total)} across ${days} ${days === 1 ? "session" : "sessions"}`
+    : `${takesWord(total)} ${view === "ytd" ? span : "in " + span}`;
+  return `<div class="rec-bk"><div class="rec-bk-hd"><span>sessions</span>${rng}</div>` +
+    `<div class="rec-bk-body${side ? "" : " bare"}">${side}<div class="rec-bk-main"${cap}>` +
+      `<div class="rec-bk-mo">${months.map(([l, t]) => `<span style="left:${l.toFixed(2)}%">${t}</span>`).join("")}</div>${svg}</div></div>` +
+    `<div class="rec-bk-foot"><p>${foot}</p><span class="rec-bk-key">1<svg viewBox="0 0 80 12" aria-hidden="true">${key}</svg>5+ takes</span></div></div>`;
 }
 
-function renderHeatBody() {
-  const body = $("heatBody"); if (!body) return;
-  if (_heatView === "wk") renderWeekHeat(body);
-  else if (_heatView === "m1") renderMonthStrip(body);
-  else renderDailyHeat(body, _heatView);
-  const sel = $("heatRange"); if (sel) sel.value = _heatView;
-}
-// Size the daily grid to the full content width: square cells + matching day-label rows.
-// Dense ranges (12 months, year) fill the width with small cells. The 30-day view is a single
-// full-width strip (data-strip) — its one row is sized square from the column width. Any range
-// wide enough to exceed HEAT_CELL_MAX is capped+left-aligned so squares don't balloon. The
-// month-label strip is pinned to the grid's actual width either way so labels stay aligned.
-// Retries on rAF while the width reads 0 (the records screen is hidden during the initial
-// render, so the first measurement after showScreen can still be mid-layout).
-// The calendar never scrolls sideways: a whole year on a phone shrinks its cells and closes up
-// the gaps rather than running off the page.
-const HEAT_CELL_MAX = 30;   // sparse ranges cap here (left-aligned)
-function fitHeatGrid(retries = 10) {
-  const grid = $("heatGrid"); if (!grid || grid.dataset.view === "wk") return;
-  const w = grid.clientWidth;
-  if (!w) { if (retries > 0) requestAnimationFrame(() => fitHeatGrid(retries - 1)); return; }
-  if (grid.dataset.strip) {                                            // 30-day strip: square the single row to the 1fr column width
-    const days = +grid.dataset.days || 30;
-    grid.style.gridTemplateRows = `${(w - (days - 1) * HEAT_GAP) / days}px`;
-    fitHeatMonths(grid.parentElement.querySelector(".heat-months"));
-    return;
+/* ---------- The take sheet ---------- */
+// Which rows still hold a record, so the sheet can circle exactly those takes. A classic or
+// infinite best is the board's own top entry matched back to the row that set it (an exact
+// tie goes to the earlier row, as cmpRecords gives it to the earlier date); the daily's is the
+// first day to post the best score; a Ruthless lens's is the run that posted its time.
+function recordHolderRows(hist) {
+  const held = new Set();
+  const days = (h) => [localDayKeyOf(h.d), String(h.d).slice(0, 10)];
+  const oldestMatch = (pred) => { for (let i = hist.length - 1; i >= 0; i--) if (pred(hist[i])) return hist[i]; return null; };
+  const tokens = new Set(hist.map((h) => h.m).filter((m) => typeof m === "string" && (MODES[m] || isInfiniteToken(m))));
+  for (const tok of tokens) {
+    const top = loadRecords(tok)[0];
+    if (!top || !top.date) continue;
+    const row = oldestMatch((h) => h.m === tok && h.s === top.score && days(h).includes(top.date)
+      && (top.time == null || h.tm === top.time));
+    if (row) held.add(row);
   }
-  const weeks = +grid.dataset.weeks || 1;
-  // A narrow screen thins the gap before the squares get too small to read: below a 12px pitch
-  // the gap is a fifth of it (never under 1px), so a cell keeps most of what little room there is.
-  const pitch = (w + HEAT_GAP) / weeks;
-  const gap = pitch >= 12 ? HEAT_GAP : Math.max(1, Math.round(pitch / 5));
-  const full = (w - (weeks - 1) * gap) / weeks;
-  // Sparse ranges cap big and sit left-aligned; everything else fills the width exactly with
-  // 1fr columns. Fixed-width keeps capped cells square.
-  const fixed = full > HEAT_CELL_MAX;
-  const cell = fixed ? HEAT_CELL_MAX : full;
-  grid.style.gap = `${gap}px`;
-  grid.style.gridTemplateColumns = fixed ? `repeat(${weeks},${cell}px)` : `repeat(${weeks},1fr)`;
-  grid.style.gridTemplateRows = `repeat(7,${cell}px)`;
-  const days = $("heatDays");
-  if (days) { days.style.gridTemplateRows = `repeat(7,${cell}px)`; days.style.gap = `${gap}px`; }
-  const months = grid.parentElement.querySelector(".heat-months");
-  if (months) months.style.width = fixed ? `${weeks * cell + (weeks - 1) * gap}px` : "";
-  fitHeatMonths(months);
+  const db = dailyBest();
+  if (db > 0) { const row = oldestMatch((h) => h.t === "daily" && h.s === db && !dailyRowSealed(h)); if (row) held.add(row); }
+  for (const id of RUTHLESS_RUNNING_ORDER) {
+    const rec = ruthlessRecord(id);
+    if (!rec.plays) continue;
+    const row = oldestMatch((h) => h.m === "rl-" + id && h.tm != null && h.tm === rec.best);
+    if (row) held.add(row);
+  }
+  return held;
 }
-// A month label sits where its first column starts, so a month that began in the last week or
-// two runs its word past the right edge of the grid. Pull that one back inside the edge, and
-// drop whichever label it then lands on: the partial month at the far left goes first, since the
-// month just begun is the one the player is living in.
-function fitHeatMonths(row) {
-  if (!row) return;
-  const spans = [...row.children], W = row.clientWidth;
-  if (!W) return;
-  for (const s of spans) { s.style.display = ""; s.style.left = s.dataset.left || (s.dataset.left = s.style.left); }
-  const last = spans[spans.length - 1];
-  if (last && last.offsetLeft + last.offsetWidth > W) last.style.left = `${W - last.offsetWidth}px`;
-  let prev = null;
-  spans.forEach((s, i) => {
-    if (prev && prev.offsetLeft + prev.offsetWidth + 4 > s.offsetLeft) {
-      const dropPrev = prev === spans[0] || s === last;
-      (dropPrev ? prev : s).style.display = "none";
-      if (!dropPrev) return;
+// One take. A mode with a pressing is written in its print ink; the daily in the red pen;
+// everything else in the pen, with its family typed small after the name. The quiet columns
+// (notes, the time of day) fold under the name on a phone, so the row carries them twice and
+// the stylesheet shows one copy.
+function takeRowHTML(h, take, index, held) {
+  const tok = typeof h.m === "string" ? h.m : "";
+  const inf = isInfiniteToken(tok), ruth = isRuthlessToken(tok);
+  const base = MODES[tok] ? tok : inf ? tok.split("-")[2] : null;
+  const ink = base && RECORD_PRINT[base] ? RECORD_PRINT[base] : tok === "daily" ? "#a8322e" : null;
+  let name = modeLabel(tok), kind = "";
+  if (tok.startsWith("chl-")) { const c = CHALLENGE_BY_ID[tok.slice(4)]; name = c ? c.name : "Challenge"; kind = h.dk ? "dark side" : "challenge"; }
+  else if (tok.startsWith("af-")) { name = tok.slice(3); kind = "album focus"; }
+  else if (ruth) { const l = ruthlessLens(tok.slice(3)); name = l ? l.label : "Ruthless Game"; kind = "ruthless"; }
+  // Fixed runs carry their own target in `n`. Older early-ending challenges stored pages reached
+  // rather than the card's denominator, so a challenge row is re-read off the card itself.
+  const card = tok.startsWith("chl-") ? CHALLENGE_BY_ID[tok.slice(4)] : null;
+  let total = Number.isFinite(Number(h.n)) && Number(h.n) > 0 ? Number(h.n) : (ruth ? BONUS_ROUNDS : TOTAL_ROUNDS);
+  if (card) total = card.rule === "survive" ? surviveTarget(card) : TOTAL_ROUNDS;
+  const sealed = dailyRowSealed(h);
+  const pages = inf ? `${h.s}<small> rounds</small>` : `${sealed ? "?" : h.s}<small>/${total}</small>`;
+  const time = h.tm != null ? (ruth ? fmtTimeFine(h.tm) : fmtTime(h.tm)) : null;
+  const notes = [];
+  if (h.v > 0) notes.push(`<i class="nib" title="verse bonus">${trinketPreviewSVG("nib")}+${h.v}</i>`);
+  // A hinted run rides as a pencil stub rather than a count: rows logged before hints could set
+  // a record only ever stored the fact, not the number (see appendHistory).
+  if (h.h) notes.push(`<i title="${typeof h.h === "number" && h.h > 1 ? `${h.h} hints` : "hint used"}">${HINT_STUB}</i>`);
+  if (h.dk) notes.push(`<i class="dk" title="dark side">${CHALL_ECLIPSE}</i>`);
+  const nt = notes.join("");
+  const at = fmtClock(new Date(h.d));
+  const isHeld = held.has(h) && !sealed;
+  return `<div class="rec-take${isHeld ? " held" : ""}">${recEraseX("hist:" + index)}` +
+    `<span class="no">${take > 0 ? take : ""}${isHeld ? briefLoopSVG(take) : ""}</span>` +
+    `<span class="rc"${ink ? ` style="--pk:${ink}"` : ""}>${escapeHtml(name)}${kind ? `<small>${kind}</small>` : ""}</span>` +
+    `<span class="pg">${pages}</span>` +
+    `<span class="tm${time ? "" : " none"}">${time || "–"}</span>` +
+    `<span class="nt${nt ? "" : " none"}">${nt || "–"}</span>` +
+    `<span class="at">${at}</span>` +
+    `<span class="fold">${nt ? `<span class="nt">${nt}</span>` : ""}<span class="at">${at}</span></span></div>`;
+}
+function takesHTML(hist, from, to) {
+  const takes = loadTakes(hist), held = recordHolderRows(hist);
+  const perDay = Object.create(null);
+  for (const h of hist) { const k = localDayKeyOf(h.d); perDay[k] = (perDay[k] || 0) + 1; }
+  let out = "", lastKey = from > 0 ? localDayKeyOf(hist[from - 1].d) : null;
+  for (let i = from; i < Math.min(to, hist.length); i++) {
+    const h = hist[i], k = localDayKeyOf(h.d);
+    if (k !== lastKey) {
+      const n = perDay[k];
+      out += `<div class="rec-sess"><span>${sessionDayLabel(k)}</span><span>${n} ${n === 1 ? "take" : "takes"}</span></div>`;
+      lastKey = k;
     }
-    prev = s;
-  });
+    out += takeRowHTML(h, takes.n - i, i, held);
+  }
+  return out;
+}
+function takeSheetHTML(hist) {
+  const name = getPlayerName();
+  const sheets = Math.max(1, Math.ceil(hist.length / TAKES_PER_SHEET));
+  const body = hist.length
+    ? `<div class="rec-take-head"><span>take</span><span>recording</span><span>pages</span><span>time</span><span>notes</span><span>at</span></div><div id="recTakes"></div>`
+    : `<p class="rec-ts-empty">No takes yet. Your first run goes down here as take one.</p>`;
+  const key = hist.length
+    ? `<div class="rec-ts-key"><i>${briefLoopSVG(7)}circled · still the record</i><i>${trinketPreviewSVG("nib")}verse bonus</i>` +
+      `<i>${HINT_STUB}hint</i><i class="dk">${CHALL_ECLIPSE}<span>dark side</span></i></div>`
+    : "";
+  return `<section class="rec-sec"><div class="rec-head taped"><p class="rec-group-label">history</p><span class="rec-aside">every run you have played, newest first</span></div>` +
+    `<div class="rec-taped rec-ts-pile"><div class="rec-ts rec-stock">` +
+      `<div class="rec-ts-top"><span class="rec-ts-title">TAKE SHEET</span><span class="rec-ts-sub">swift to the song association · studio copy</span>` +
+        `<div class="rec-ts-fields"><span>artist</span><b>${name ? escapeHtml(name) : "&nbsp;"}</b><span>sheet</span><b id="recSheetNo">1 <small>of</small> ${sheets}</b></div></div>` +
+      `<div id="recSessions">${sessionsHTML(hist)}</div>` + body + key + `</div>` +
+      `<span class="stp-tape" aria-hidden="true" style="left:-9px;top:-7px;width:54px;transform:rotate(-36deg);clip-path:${TORN_EDGES[0]}"></span>` +
+      `<span class="stp-tape" aria-hidden="true" style="right:-9px;top:-6px;width:52px;transform:rotate(33deg);clip-path:${TORN_EDGES[3]}"></span></div>` +
+    (hist.length > TAKES_PER_SHEET ? `<button type="button" class="rec-ts-next rec-stock" id="recNextSheet"></button>` : "") +
+    (hist.length ? "" : playCTA()) + `</section>`;
+}
+// Write the next sheet's worth of takes onto the page, and relabel the sheet under it.
+function appendTakes(hist) {
+  const host = $("recTakes");
+  if (!host) return;
+  const from = takesShown, to = Math.min(hist.length, from + TAKES_PER_SHEET);
+  host.insertAdjacentHTML("beforeend", takesHTML(hist, from, to));
+  takesShown = to;
+  const sheets = Math.max(1, Math.ceil(hist.length / TAKES_PER_SHEET)), on = Math.ceil(takesShown / TAKES_PER_SHEET);
+  const no = $("recSheetNo");
+  if (no) no.innerHTML = `${on} <small>of</small> ${sheets}`;
+  const next = $("recNextSheet");
+  if (!next) return;
+  const left = hist.length - takesShown;
+  if (left <= 0) { next.remove(); return; }
+  next.innerHTML = `<span>sheet ${on + 1}</span><b>${left} older ${left === 1 ? "take" : "takes"}</b><span aria-hidden="true">↓</span>`;
 }
 
 /* ---------- Profile polaroid (a photo tucked into the notebook) ---------- */
@@ -6570,125 +6667,35 @@ function applyAvatar(url) {
 }
 
 function renderRecordsPage(keepShown = 0) {
-  if (_heatView === null) _heatView = heatDefaultView();
+  if (_sessView === null) _sessView = sessDefaultView();
   const name = getPlayerName();
   const avatar = getAvatar();
   const title = wornTitleName();
+  const hist = loadHistory();
+  const takes = loadTakes(hist);
   const titleHTML = (name && title) ? `<span class="rec-sig-title">${escapeHtml(title)}</span>` : "";
+  // The catalogue line: every take, and the day the first one went down.
+  const since = takes.since
+    ? new Date(localDayKeyOf(takes.since) + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+    : "";
+  const cat = `<span class="rec-sig-sub">${takes.n ? `<b>${takes.n}</b> ${takes.n === 1 ? "take" : "takes"}${since ? ` since ${since}` : ""}` : "no takes yet"}</span>`;
+  // Unsigned, the notebook is an unsigned artist, and the pen lies at the end of the line.
   const sigText = name
-    ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span><span class="rec-sig-sub">best scores &amp; history</span>${titleHTML}`
-    : `<div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" /><button id="recSignSave" class="sign-pen"><i class="sign-pen-clip" aria-hidden="true"></i>sign</button></div>`;
+    ? `<span class="rec-sig-name">${escapeHtml(name)}’s notebook</span>${titleHTML}${cat}`
+    : `<span class="rec-sig-kick">unsigned artist</span><div class="rec-sign-row"><input id="recSignInput" class="set-text" maxlength="20" placeholder="sign your notebook" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-bwignore="true" data-protonpass-ignore="true" data-dashlane-ignore="true" data-form-type="other" /><button id="recSignSave" class="sign-pen"><i class="sign-pen-clip" aria-hidden="true"></i>sign</button></div>${cat}`;
   const sig =
     `<button type="button" id="recPolBtn" class="rec-pol-btn" aria-label="${avatar ? "change your photo" : "add a photo"}">${polaroidHTML(avatar, name)}</button>` +
     `<div class="rec-sig-text">${sigText}</div>`;
 
-  // Personal bests — classic difficulties always shown; infinite/daily only if played.
-  const classicTiles = MODE_ORDER.map((m) => pbTile(m)).join("");
-  const infTokens = [];
-  for (const v of ["3lives", "sudden"]) for (const m of MODE_ORDER) {
-    const tok = "inf-" + v + "-" + m;
-    if (loadRecords(tok).length) infTokens.push(tok);
-  }
-  const infBlock = infTokens.length
-    ? `<p class="rec-group-label">infinite · rounds survived</p><div class="pb-grid pb-grid-inf">${infTokens.map((t) => pbTile(t)).join("")}</div>`
-    : "";
-  const db = dailyBest();
-  const streak = effectiveDailyStreak(todayKey());
-  const dailyBlock = (db > 0 || streak.best > 0)
-    ? `<p class="rec-group-label">daily</p><div class="pb-grid">` +
-        pbTile("daily", { label: "Daily best", score: db, sub: `${streak.current} day streak · best ${streak.best}` }) +
-      `</div>`
-    : "";
-
-  // Verse bonus — the prestige metric's lifetime keepsake (best run + word-perfect totals).
-  const vm = loadMetrics();
-  const verseBlock = vm.bestVerseBonus > 0
-    ? `<p class="rec-group-label">verse bonus</p><div class="pb-grid">` +
-        `<div class="pb-tile pb-verse" style="--pb-accent:var(--bead)">` +
-          `<span class="pb-mode">Best in a game</span>` +
-          `<span class="pb-score">+${vm.bestVerseBonus}</span>` +
-          `<span class="pb-sub">${vm.versePerfect} word-perfect · ${vm.wholeVerses} whole verse${vm.wholeVerses === 1 ? "" : "s"}</span>` +
-        `</div></div>`
-    : "";
-
-  // Dark sides — hidden until one is beaten, so a fresh notebook stays clean. Counts
-  // DARK_SIDE_IDS, so the "of N" re-targets itself as more dark sides get authored.
-  const darkBeaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
-  const darkBlock = darkBeaten > 0
-    ? `<p class="rec-group-label">dark sides</p><div class="pb-grid">` +
-        `<div class="pb-tile" style="--pb-accent:var(--mode-darkside, #7a4bb0)">` +
-          `<span class="pb-mode">Dark sides beaten</span>` +
-          `<span class="pb-score">${darkBeaten}</span>` +
-          `<span class="pb-sub">of ${DARK_SIDE_IDS.length}</span>` +
-        `</div></div>`
-    : "";
-
-  // Ruthless — six lenses, six low-wins times. Only the lenses actually played get a tile: the
-  // mode's own sheet is where all six live with dashes against the unplayed ones, and this page
-  // is a record of what has been done. LOW WINS is said in the group label rather than on every
-  // tile, because six tiles each carrying "seconds, lower is better" is the same sentence six
-  // times on a page whose other tiles all count upwards.
-  const rlPlayed = RUTHLESS_RUNNING_ORDER
-    .map((id) => ruthlessLens(id)).filter(Boolean)
-    .filter((lens) => ruthlessRecord(lens.id).plays);
-  const ruthlessBlock = rlPlayed.length
-    ? `<p class="rec-group-label">ruthless game · fastest run, lowest wins</p><div class="pb-grid">` +
-      rlPlayed.map((lens) => {
-        const rec = ruthlessRecord(lens.id);
-        // How the time was got and when, in that order: two runs can post the same seconds with
-        // a different number of pages handed back, and that is the more interesting half.
-        const how = rec.bestGaveUp
-          ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`;
-        return `<div class="pb-tile pb-ruthless" style="--pb-accent:var(--mode-ruthless, #8c4a34)">` +
-          recEraseX("rl:" + lens.id) +
-          `<span class="pb-mode">${escapeHtml(lens.label)}</span>` +
-          `<span class="pb-score">${fmtTimeFine(rec.best)}</span>` +
-          `<span class="pb-sub">${escapeHtml(how)} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +
-        `</div>`;
-      }).join("") + `</div>`
-    : "";
-
-  /* Track by Track — one tile per album actually written out, low wins. Only the played ones,
-     which is the Ruthless group's rule for the Ruthless group's reason: the game's OWN picker is
-     where all twelve live with dashes against the ones still blank, and this page is a record of
-     what has been done rather than a list of what has not. There is no combined tile and there
-     must not be one — see the storage note on why a sum runs backwards on a low-wins board and
-     an average pays you to bank the four shortest records. */
-  const tbtBoard = loadTracks();
-  const tbtPlayed = STUDIO_ALBUMS.filter((a) => tbtBoard[a] && tbtBoard[a].plays);
-  const tracksBlock = tbtPlayed.length
-    ? `<p class="rec-group-label">track by track · fastest record, lowest wins</p><div class="pb-grid">` +
-      tbtPlayed.map((album) => {
-        const rec = tbtBoard[album];
-        return `<div class="pb-tile" style="--pb-accent:${albumColor(album) || "#999"}">` +
-          recEraseX("tbt:" + album) +
-          `<span class="pb-mode">${escapeHtml(album)}</span>` +
-          `<span class="pb-score">${fmtTimeFine(rec.best)}</span>` +
-          `<span class="pb-sub">played ${rec.plays} · ${escapeHtml(recordDateLabel(rec.date))}</span>` +
-        `</div>`;
-      }).join("") + `</div>`
-    : "";
-
-  const hist = loadHistory();
-  _pbByMode = {};
-  for (const h of hist) if (!(h.m in _pbByMode)) _pbByMode[h.m] = h.m === "daily" ? db : (loadRecords(h.m)[0] ? loadRecords(h.m)[0].score : -1);
-  const histBlock = hist.length
-    ? `<p class="rec-group-label">history · ${hist.length} run${hist.length === 1 ? "" : "s"}</p>` +
-      `<div class="hist-head"><span>score</span><span>time</span><span>verse</span><span>mode</span><span>date</span></div>` +
-      `<div id="histRows" class="hist-rows"></div>` +
-      (hist.length > HISTORY_PAGE ? `<div class="hist-more-row"><button id="histMore" class="hist-more"></button></div>` : "")
-    : `<p class="rec-group-label">history</p><p class="stats-empty">no runs yet. finish a game to start your log.</p>${playCTA()}`;
-
+  const pressed = MODE_ORDER.some((m) => loadRecords(m).length);
   $("recordsBody").classList.toggle("rec-erasing", devRecordErase);
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
-    `<p class="rec-group-label">personal bests</p><div class="pb-grid">${classicTiles}</div>` +
-    infBlock + dailyBlock + verseBlock + ruthlessBlock + tracksBlock + darkBlock + heatSectionHTML() + histBlock;
-
-  renderHeatBody();
-  const heatSel = $("heatRange");
-  if (heatSel) heatSel.addEventListener("change", () => { _heatView = heatSel.value; renderHeatBody(); });
-  if (!_heatResizeWired) { _heatResizeWired = true; window.addEventListener("resize", () => { if ($("heatGrid")) fitHeatGrid(); }); }
+    `<section class="rec-sec"><div class="rec-head"><p class="rec-group-label">personal bests</p>` +
+      `<span class="rec-aside">${pressed ? `tap a record for its top five<span class="rec-aside-down">${CTA_ARROW}</span>` : "one record for each difficulty"}</span></div>` +
+      `<div class="rec-crate">${MODE_ORDER.map(recordSlotHTML).join("")}<div class="rec-notes" id="recNotes" hidden></div></div></section>` +
+    bSidesHTML() + takeSheetHTML(hist);
+  placeSleeveNotes();
 
   const saveBtn = $("recSignSave");
   if (saveBtn) saveBtn.addEventListener("click", () => {
@@ -6701,19 +6708,58 @@ function renderRecordsPage(keepShown = 0) {
   const polBtn = $("recPolBtn");
   if (polBtn) polBtn.addEventListener("click", () => chooseAvatar((url) => applyAvatar(url)));
 
-  historyShown = 0;
-  if (hist.length) appendHistoryRows(hist);
-  while (hist.length && historyShown < keepShown) appendHistoryRows(hist);
-  const more = $("histMore");
-  if (more) more.addEventListener("click", () => appendHistoryRows(hist));
+  takesShown = 0;
+  if (hist.length) appendTakes(hist);
+  while (hist.length && takesShown < keepShown) appendTakes(hist);
+
+  // One delegated listener for the page, attached once: #recordsBody outlives every render.
+  if (!_recWired) {
+    _recWired = true;
+    $("recordsBody").addEventListener("click", (e) => {
+      const rec = e.target.closest(".rec-press[data-mode]");
+      if (rec) { _recOpen = _recOpen === rec.dataset.mode ? null : rec.dataset.mode; placeSleeveNotes(); return; }
+      if (e.target.closest(".rec-notes-x")) {
+        const was = _recOpen;
+        _recOpen = null; placeSleeveNotes();
+        document.querySelector(`#recordsBody .rec-press[data-mode="${was}"]`)?.focus();
+        return;
+      }
+      const sess = e.target.closest("[data-sess]");
+      if (sess) { _sessView = sess.dataset.sess; $("recSessions").innerHTML = sessionsHTML(loadHistory()); return; }
+      if (e.target.closest("#recNextSheet")) appendTakes(loadHistory());
+    });
+    window.addEventListener("resize", () => { if (screens.records.classList.contains("active")) placeSleeveNotes(); });
+  }
+}
+// The sleeve notes drop in under the row their record sits in, pointing up at it. The row is
+// read off the laid-out records rather than the grid's template, so it holds at any width.
+function placeSleeveNotes() {
+  const crate = document.querySelector("#recordsBody .rec-crate");
+  const notes = $("recNotes");
+  if (!crate || !notes) return;
+  const slots = [...crate.querySelectorAll(".rec-slot")];
+  const open = _recOpen && loadRecords(_recOpen).length ? _recOpen : null;
+  crate.querySelectorAll(".rec-press[data-mode]").forEach((b) => b.setAttribute("aria-expanded", String(b.dataset.mode === open)));
+  if (!open) { notes.hidden = true; notes.innerHTML = ""; delete notes.dataset.mode; slots.forEach((s, i) => (s.style.order = i)); return; }
+  slots.forEach((s, i) => (s.style.order = i));
+  const top0 = slots[0].offsetTop;
+  const cols = Math.max(1, slots.filter((s) => s.offsetTop === top0).length);
+  const idx = MODE_ORDER.indexOf(open);
+  const rowEnd = Math.min(slots.length - 1, (Math.floor(idx / cols) + 1) * cols - 1);
+  slots.forEach((s, i) => (s.style.order = i <= rowEnd ? i : i + 1));
+  notes.style.order = rowEnd + 1;
+  if (notes.dataset.mode !== open) { notes.innerHTML = sleeveNotesHTML(open); notes.dataset.mode = open; }
+  notes.hidden = false;
+  const cr = crate.getBoundingClientRect(), br = slots[idx].getBoundingClientRect();
+  notes.querySelector(".rec-notes-card")?.style.setProperty("--px", `${br.left + br.width / 2 - cr.left}px`);
 }
 
 /* ---------- Dev: erase a record from the records page ----------
-   Behind the dev panel's "✕ on records" toggle, every personal-best tile and history row gets
-   a cross that takes it out of storage. A best tile drops its top entry, so the next one up
-   takes the tile (and the mode's stats best follows it, or the startup migration would seed
-   the erased score straight back as a dateless "best so far"). A history row takes its
-   matching top-five entry with it, so a junk run can't leave its crown behind. */
+   Behind the dev panel's "✕ on records" toggle, every record, B-side and take gets a cross
+   that takes it out of storage. A record drops its top entry, so the next one up is pressed in
+   its place (and the mode's stats best follows it, or the startup migration would seed the
+   erased score straight back as a dateless "best so far"). A take takes its matching top-five
+   entry with it, so a junk run can't leave its record behind, and the take count drops by one. */
 let devRecordErase = false;
 function recEraseX(key) {
   return devRecordErase
@@ -6739,8 +6785,10 @@ function eraseRecord(key) {
     const hist = loadHistory();
     const h = hist[+id];
     if (!h) return;
+    const takes = loadTakes(hist);
     hist.splice(+id, 1);
     saveHistory(hist);
+    saveTakes({ n: takes.n - 1, since: takes.since });
     if (typeof h.m === "string") {
       const days = [localDayKeyOf(h.d), String(h.d).slice(0, 10)];
       dropRecordEntry(h.m, (r) => r.score === h.s && (r.time ?? null) === (h.tm ?? null) && days.includes(r.date));
@@ -6749,7 +6797,7 @@ function eraseRecord(key) {
 }
 function setDevRecordErase(on) {
   devRecordErase = !!on;
-  if (screens.records.classList.contains("active")) renderRecordsPage();
+  if (screens.records.classList.contains("active")) renderRecordsPage(takesShown);
   return devRecordErase;
 }
 document.addEventListener("click", (e) => {
@@ -6757,15 +6805,14 @@ document.addEventListener("click", (e) => {
   if (!x || !devRecordErase) return;
   e.preventDefault(); e.stopPropagation();
   eraseRecord(x.dataset.erase);
-  renderRecordsPage(historyShown);
+  renderRecordsPage(takesShown);
 });
 function openRecords(from) {
   recordsBackTarget = from;
+  _recOpen = null;                                 // the page always opens with every sleeve shut
   routeTo("records", from);
   renderRecordsPage();
   flipAwayToScreen("records");
-  fitHeatGrid();                                   // now visible (display:block) → size to the real width
-  requestAnimationFrame(() => fitHeatGrid());      // and again next frame, in case layout wasn't flushed
 }
 let achievementsBackTarget = "start";  // where the Charm Collection's ← back returns to
 // `focus` is the one place a caller can ask to land somewhere other than the top of the charm
@@ -6849,9 +6896,9 @@ function renderMasteryPage() {
   });
 
   // Skills — one stamp card each, printed in the skill's own ink. The ink is handed over as a
-  // custom property with the config.js triplet as its FALLBACK, not as the triplet itself, for
-  // the same reason modeAccent does it: an inline custom property cannot be overridden by any
-  // stylesheet rule, and the night column lives in the --skill-* block in styles.css. A maxed
+  // custom property with the config.js triplet as its FALLBACK, not as the triplet itself,
+  // because an inline custom property cannot be overridden by any stylesheet rule, and the
+  // night column lives in the --skill-* block in styles.css. A maxed
   // skill's card turns to dyed stock mixed from the plain day triplet, which is why that goes too.
   const skillData = SKILLS.map((sk) => {
     const xp = m.skills[sk.id] || 0;
@@ -31706,7 +31753,7 @@ const GLOSS_PLATES = [
 ];
 // The words with nothing on a plate to point at. "page mark" is defined here but labelled on
 // the page's own header.
-const GLOSS_LOOSE = ["era", "lens", "page-mark"];
+const GLOSS_LOOSE = ["era", "lens", "page-mark", "take"];
 
 function glossDefRow(g) {
   // Cross-links only point at terms the reader can currently see. A "see also: dark side" on a
@@ -33118,7 +33165,9 @@ function devSeedRecords() {
 function devSeedHistory(n = 25) {
   const modes = ["easy", "medium", "hard", "ultra", "lyricist"];
   const now = Date.now();
-  for (let i = 0; i < n; i++) {
+  // Oldest first, as real runs arrive: the log is newest-first and the take sheet numbers and
+  // groups it by that order, so a seed written backwards would number its oldest run highest.
+  for (let i = n - 1; i >= 0; i--) {
     const m = modes[Math.floor(Math.random() * modes.length)];
     const c = Math.floor(Math.random() * (TOTAL_ROUNDS + 1));
     appendHistory({ s: c, c, n: TOTAL_ROUNDS, m, t: "classic",

@@ -131,6 +131,11 @@ export const PANEL_ROUTES = {
 export const HS_KEY = "swiftSongAssociation.highscores";        // legacy fake-celebrity board (dormant; kept for old backups)
 export const RECORDS_KEY = "swiftSongAssociation.records";      // personal best runs per mode — { score, date }[]
 export const HISTORY_KEY = "swiftSongAssociation.history";      // chronological log of every finished run (capped)
+// The take count: { n, since }, how many runs have ever gone into the history log and the ISO
+// time of the first. The records page numbers every run as a take, and it cannot count the log
+// itself, because the log is capped and numbering from its oldest row would renumber every take
+// the day rows start falling off the end. Seeded from the log the first time it is read.
+export const TAKES_KEY = "swiftSongAssociation.takes";
 export const STATS_KEY = "swiftSongAssociation.stats";
 export const ACH_KEY = "swiftSongAssociation.achievements";
 export const DIFF_KEY = "swiftSongAssociation.difficulty";
@@ -5582,7 +5587,7 @@ export const GLOSSARY = [
     defn: "A photograph pegged up inside the keepsakes drawer. It develops when you find it, not when you score well." },
   { term: "rule mark", slug: "rule-mark", seen: "always", also: ["page-mark", "challenge"],
     defn: "The five small icons that set out a page's terms before you play: the clock, suggestions, hints, which words can come up, and how you're allowed to answer. A crossed-out mark means that one is off here." },
-  { term: "run", slug: "run", seen: "always", also: ["page"],
+  { term: "run", slug: "run", seen: "always", also: ["page", "take"],
     defn: "One whole game, from the first page to the results." },
   { term: "skill", slug: "skill", seen: "always", also: ["mastery"],
     defn: "One of five kinds of progress that grow from how you play rather than what you score: Instinct, Quick Pen, By Heart, The Long Game and Discography. Together they feed Mastery." },
@@ -5590,6 +5595,8 @@ export const GLOSSARY = [
     defn: "A die-cut collectible, stuck to the closed cover of the notebook. Charms are for doing well; stickers are for noticing things, and none is ever earned by a score. Once stuck, a sticker never moves." },
   { term: "suggestion", slug: "suggestion", seen: "always", also: ["hint"],
     defn: "The list of matching titles that drops down as you type, on the modes that allow it. It costs nothing and you never ask for it, which is what makes it not a hint." },
+  { term: "take", slug: "take", seen: "always", also: ["run"],
+    defn: "One finished run, as the records page writes it down. Every take is numbered from your very first, and the one that still holds a record is circled in red." },
   { term: "tape", slug: "tape", seen: "always", also: ["challenge"],
     defn: "How hard a challenge is, from one tape to four. A challenge that hasn't been rated yet shows a single faded tape." },
   { term: "token", slug: "token", seen: "always", also: ["challenge"],

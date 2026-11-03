@@ -2,7 +2,7 @@
 // All functions are pure of app state — the active mode and the earned-
 // achievements map are passed in explicitly rather than closed over.
 import {
-  HS_KEY, RECORDS_KEY, HISTORY_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
+  HS_KEY, RECORDS_KEY, HISTORY_KEY, TAKES_KEY, STATS_KEY, ACH_KEY, DIFF_KEY,
   DAILY_KEY, DAILY_PROGRESS_KEY, DAILY_BOARD_KEY, DAILY_STREAK_KEY, TYPES_KEY, TALLY_KEY,
   DAILY_OWNER_KEY, DAILY_OWNER_TTL_MS,
   BREADTH_KEY, WEEKDAYS_KEY, DATES_KEY, EXPLORER_TOKENS, RANDOM_KEY, GOAL_KEY, ACH_FOLD_KEY,
@@ -1301,7 +1301,9 @@ export function saveRecords(list, mode) {
 // genuine dead heat and nothing else. A hinted run is not marked down a place for the help
 // it took — a bigger number is a bigger number — it just loses the coin toss to a clean run
 // that matched it exactly.
-function cmpRecords(a, b) {
+// Exported for the records page, which walks the history log with it to show how a record
+// moved: a progression ranked by any other rule would disagree with the board it explains.
+export function cmpRecords(a, b) {
   if (b.score !== a.score) return b.score - a.score;
   const at = a.time, bt = b.time;
   if (at != null && bt != null && at !== bt) return at - bt;   // faster wins
@@ -1355,10 +1357,28 @@ export function saveHistory(list) {
 }
 export function appendHistory(entry) {
   const list = loadHistory();
+  const takes = loadTakes(list);
   list.unshift(entry);                       // newest first
   if (list.length > HISTORY_CAP) list.length = HISTORY_CAP;
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) { /* ignore */ }
+  saveTakes({ n: takes.n + 1, since: takes.since || entry.d || null });
   return list;
+}
+
+/* ---------- The take count (every run ever logged, numbered from one) ----------
+   The newest row of the log is take `n`, the one under it `n - 1`, and so on down. A notebook
+   from before the count existed is seeded from its own log, which is exact for any log that has
+   never reached the cap. `since` is the first take's ISO time, kept here for the same reason:
+   the oldest row of a capped log is not the first run. */
+export function loadTakes(hist = loadHistory()) {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(TAKES_KEY) || "null"); } catch (e) { /* ignore */ }
+  const n = Math.max(o && Number.isFinite(o.n) ? o.n : 0, hist.length);
+  const oldest = hist.length ? hist[hist.length - 1].d : null;
+  return { n, since: (o && o.since) || oldest || null };
+}
+export function saveTakes(t) {
+  try { localStorage.setItem(TAKES_KEY, JSON.stringify({ n: Math.max(0, t.n | 0), since: t.since || null })); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Notebook signature (set once, reused on every record) ---------- */
@@ -1735,6 +1755,7 @@ export function resetRecords() {
   // the next load silently recreates every erased best from those untouched stats.
   try { localStorage.setItem(RECORDS_MIGRATED_KEY, "1"); } catch (e) { /* ignore */ }
   try { localStorage.removeItem(HISTORY_KEY); } catch (e) { /* ignore */ }
+  try { localStorage.removeItem(TAKES_KEY); } catch (e) { /* ignore */ }   // the takes start again at one with the log
   removeByPrefix(HS_KEY);
 }
 export function resetStatsAll()   { removeByPrefix(STATS_KEY); try { localStorage.removeItem(METRICS_KEY); } catch (e) { /* ignore */ } }

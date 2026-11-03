@@ -4101,83 +4101,6 @@
     color: var(--ink-soft); text-transform: uppercase; margin: 24px 0 10px;
   }
 
-  /* Personal-best tiles — taped index cards scattered on the page. Each card is a
-     near-opaque paper patch over the ruled lines, a washi-tape strip pinning the top,
-     a tiny static tilt, and a per-mode accent (--pb-accent, set inline in pbTile). */
-  .pb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); gap: 18px 14px; padding-top: 8px; }
-  .pb-grid-inf { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 16px 12px; }
-  .pb-tile {
-    --pb-accent: var(--ink-accent);
-    position: relative; border: 1px solid rgba(43,39,34,0.16); border-radius: 3px;
-    padding: 16px 13px 13px; background: rgba(251,247,234,0.93);
-    box-shadow: 0 1px 0 rgba(43,39,34,0.06);
-    display: flex; flex-direction: column; gap: 3px;
-  }
-  /* washi tape pinning the card (realistic surface from the shared .nav-tape rule);
-     tinted to match the tile's difficulty-accent text (--pb-accent). */
-  .pb-tile::before {
-    content: ""; position: absolute; top: -8px; left: 50%; width: 44px; height: 16px;
-    transform: translateX(-50%) rotate(-3deg);
-    --tape-color: var(--pb-accent);
-  }
-  /* subtle static scatter — deterministic per slot, not animated */
-  .pb-grid .pb-tile:nth-child(4n+1) { transform: rotate(-1.4deg); }
-  .pb-grid .pb-tile:nth-child(4n+2) { transform: rotate(1deg); }
-  .pb-grid .pb-tile:nth-child(4n+3) { transform: rotate(-0.6deg); }
-  .pb-grid .pb-tile:nth-child(4n)   { transform: rotate(1.5deg); }
-  .pb-grid .pb-tile:nth-child(even)::before { transform: translateX(-50%) rotate(3.5deg); }
-  .pb-tile.pb-empty { opacity: 0.5; }
-  /* Personal-best tiles at night. Not a filter, and not left alone: the tile is the one
-     shape on the page that mixes both kinds of colour. Its card and its per-mode accent are
-     hardcoded, which argues for a brightness filter — but its SCORE reads var(--ink), which
-     flips to cream with the theme, and a cream number on a 0.93 cream card is invisible. That
-     was the actual state of this panel: every personal best you had set was a blank tile with
-     a "/13" floating in it. So the card is repainted to a dark stock and the accents are given
-     a night column, which is the only combination that leaves all three legible.
-
-     The card sits barely above the page (1.22:1) and that is correct, not an oversight: by day
-     it is cream on cream at a similar remove, and it is the border and the shadow that say
-     "card", not the value. Going darker to buy separation would make it a hole in the page
-     rather than an index card lying on it — the mistake the snapshot board already made once.
-     --ink still clears 10:1 on it, which is what the score needed. */
-  :root[data-theme="dark"] .pb-tile {
-    background: #3a3226;
-    border-color: rgba(236, 229, 214, 0.14);
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
-  }
-  /* The night column for the tile accents. Six of these are verbatim the dark ERA accent for
-     the hue the light value was already named after in config.js ("denim", "green", "gold",
-     "coral-red", "graphite", "lavender"), so the tiles cannot drift away from the palette the
-     rest of the night page is painted in. Ultra is the exception: dark graphite (#bcbcbc) is a
-     pure neutral, and this one has always leaned violet, so it is lifted by hand keeping that
-     lean. Daily takes the page's own --red-pen, which sits deeper than hard's coral and holds
-     the pair apart exactly as #b23a3a and #bb5640 do by day.
-
-     Defined on :root and NOT on .pb-tile, because the tile's --pb-accent is written inline by
-     pbTile and an inline custom property beats any rule that tries to set it here. These are
-     the values that inline var() falls through to, which is the only way in. */
-  :root[data-theme="dark"] {
-    --mode-relaxed:  #74abe1;   /* dark denim */
-    --mode-easy:     #74c48b;   /* green, debut's old night accent; easy kept it when debut went teal */
-    --mode-medium:   #e6ad3d;   /* dark gold */
-    --mode-hard:     #eb6a66;   /* dark red */
-    --mode-ultra:    #aeadbd;   /* graphite, lifted, violet lean kept */
-    --mode-lyricist: #bca6f0;   /* dark lavender */
-    --mode-daily:    #df6b64;   /* --red-pen */
-    --mode-darkside: #c49af0;   /* the dark sides' own violet, already in this file */
-    --mode-ruthless: #d9856a;   /* rust, lifted */
-  }
-  .pb-kicker { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-soft); }
-  .pb-mode { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--pb-accent); }
-  .pb-score { font-family: var(--hand); font-weight: 700; font-size: calc(40px + var(--text-size-adjust)); line-height: 0.95; color: var(--ink); margin: 2px 0 1px; }
-  .pb-inf .pb-score { font-size: calc(34px + var(--text-size-adjust)); }
-  .pb-empty .pb-score { color: var(--ink-soft); }
-  .pb-unit { font-size: calc(17px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .pb-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft); }
-  @media (prefers-reduced-motion: reduce) {
-    .pb-grid .pb-tile, .pb-grid .pb-tile::before { transform: none; }
-    .pb-grid .pb-tile::before { left: 50%; margin-left: -21px; }
-  }
 
   /* ---------- Challenges page — a master/detail entry in the notebook ----------
      Left: a contents list of challenges (gold tick / hollow ring / lock marks; the
@@ -9322,98 +9245,268 @@
      same hand-drawn angle instead of straightening up. */
   .word-wrap[data-flip] .word { transform: rotate(178.8deg); }
 
-  .hist-head, .hist-row {
-    display: grid; grid-template-columns: 1fr 0.8fr 0.8fr 1.9fr 1.3fr;
-    align-items: baseline; gap: 10px;
+  /* ---------- Records page: the pressings and the take sheet ----------
+     See renderRecordsPage. Every number is on the object it would really be on: a difficulty's
+     best is a coloured-vinyl pressing, everything else with a best is a printed tracklist (the
+     B-sides), and the run log is a studio take sheet with its sessions grid printed at the head.
+     The page lays itself out by its OWN width (a container query on #recordsBody), not the
+     window's, so the records drop to two a row wherever the card gets narrow.
+
+     The vinyl and the paper are fixed stock in fixed inks (--rec-*), and at night they are taken
+     down a stop with a filter, exactly as the Stats page's objects are; the writing ON the page
+     (the captions, the asides) stays in the page's own ink. Tape always sits outside a dimmed
+     element, because no filter may reach a strip (see the shared washi rule). */
+  #recordsBody {
+    container: records / inline-size;
+    --rec-pen: #2b2722; --rec-soft: #6f675a; --rec-red: #a8322e;
+    --rec-form: #4c6680; --rec-form-soft: #8197ad; --rec-stock: #fbf9f2;
   }
-  .hist-head > span, .hist-row > span { min-width: 0; }
-  .hist-head {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase;
-    color: var(--ink-soft); padding: 0 7px 6px; border-bottom: 1px solid rgba(43,39,34,0.12);
+  .rec-sec { margin-top: 30px; }
+  .rec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .rec-head .rec-group-label { margin: 0; }
+  .rec-head.taped { margin-bottom: 20px; }   /* the sheet's corner strips reach up past its edge */
+  .rec-aside { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1; color: var(--ink-soft); }
+  .rec-aside-down .cta-arrow { width: 15px; height: 8px; margin-left: 4px; vertical-align: 1px; transform: rotate(90deg); }
+  .rec-taped { position: relative; }
+  .rec-stock {
+    position: relative; background: var(--rec-stock); color: var(--rec-pen);
+    border: 1px solid rgba(43, 39, 34, 0.15); box-shadow: 1px 1.5px 0 rgba(43, 39, 34, 0.13);
   }
-  .hist-rows { margin-top: 2px; }
-  .hist-row { padding: 7px; border-bottom: 1px solid rgba(43,39,34,0.07); }
+  /* At night the stock keeps its day inks, because the pace ladder written ON a card is the day
+     ladder: the lifted night gold and era pen would vanish into the cream. */
+  :root[data-theme="dark"] .rec-stock {
+    filter: brightness(0.8) saturate(0.94);
+    --ink: #2b2722; --brand-gold: #a9791f; --leaf: #e0b23c;
+  }
+  :root[data-theme="dark"] .rec-stock .pace-time[data-pace="pen"] { color: color-mix(in srgb, var(--ink-accent) 50%, #2b2722); }
+  :root[data-theme="dark"] :is(.rec-ts, .rec-ts-next) { filter: brightness(0.74) saturate(0.94); }
+
+  /* the header: the polaroid and signature (.rec-sig, above), and the catalogue line */
+  .rec-sig-kick { display: block; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 4px; }
+  .rec-sig .rec-sig-sub { margin-top: 9px; }
+  .rec-sig-sub b { color: var(--ink); font-weight: 700; }
+  /* The worn title is plum by day and had no night value at all: dark plum on the dark sheet. */
+  :root[data-theme="dark"] .rec-sig-title { color: #d79ab9; border-color: rgba(215, 154, 185, 0.35); }
+
+  /* the pressings: three a row, two on a narrow page */
+  .rec-crate { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 26px; align-items: start; }
+  .rec-slot { position: relative; min-width: 0; }
+  .rec-press {
+    display: flex; flex-direction: column; align-items: center; gap: 9px; width: 100%;
+    background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .rec-press[data-mode] { cursor: pointer; }
+  .rec-press:focus-visible { outline: none; }
+  .rec-press:focus-visible .rec-disc { outline: 2px solid var(--ink-accent); outline-offset: 5px; border-radius: 50%; }
+  .rec-disc { display: block; width: 100%; max-width: 168px; aspect-ratio: 1; overflow: visible; }
+  .rec-press[data-mode] .rec-disc { filter: drop-shadow(1px 1.6px 0 rgba(43, 39, 34, 0.16)); transition: transform 0.16s ease; }
+  .rec-press[aria-expanded="true"] .rec-disc { transform: translateY(-3px); }
+  :root[data-theme="dark"] .rec-press[data-mode] .rec-disc { filter: drop-shadow(1px 1.6px 0 rgba(0, 0, 0, 0.45)) brightness(0.8) saturate(0.94); }
+  :root[data-theme="dark"] .rec-press[data-empty] .rec-disc { filter: brightness(0.62); }
+  /* Hovered, a record gives one slow turn, label and all, and comes to rest the way it lay. */
+  .rec-spin { transform-box: fill-box; transform-origin: center; }
+  @media (hover: hover) {
+    body[data-reduce-motion="off"] .rec-press[data-mode]:hover .rec-spin { animation: recSpin 1.8s cubic-bezier(0.32, 0.08, 0.18, 1); }
+  }
+  @keyframes recSpin { to { transform: rotate(360deg); } }
+  .rec-cap {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 6px; text-align: center;
+    font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.35; color: var(--ink-soft);
+  }
+  .rec-press[aria-expanded="true"] .rec-cap { color: var(--ink); }
+  .rec-cap-dot { opacity: 0.6; }
+  .rec-cap-none { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1; }
+
+  /* sleeve notes: dropped in under the record's row, pointing up at it (--px, set by JS) */
+  .rec-notes { grid-column: 1 / -1; position: relative; margin: 4px 0 6px; }
+  .rec-notes[hidden] { display: none; }
+  .rec-notes-card { padding: 16px 20px; }
+  .rec-notes-card::before {
+    content: ""; position: absolute; top: -8px; left: var(--px, 50%); width: 14px; height: 14px; margin-left: -7px;
+    background: var(--rec-stock); border-left: 1px solid rgba(43, 39, 34, 0.15); border-top: 1px solid rgba(43, 39, 34, 0.15); transform: rotate(45deg);
+  }
+  .rec-notes-hd { display: flex; align-items: baseline; gap: 12px; padding-bottom: 9px; margin-bottom: 12px; border-bottom: 1.5px solid var(--nk, var(--rec-pen)); }
+  .rec-notes-hd b { font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 2.4px; text-transform: uppercase; color: var(--nk); }
+  .rec-notes-hd span { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--rec-soft); }
+  .rec-notes-x { margin-left: auto; background: none; border: 0; padding: 0 2px; font-family: var(--type); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); line-height: 1; color: var(--rec-soft); cursor: pointer; }
+  .rec-notes-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 18px 30px; }
+  .rec-sub { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.2; letter-spacing: 1.4px; text-transform: uppercase; color: var(--rec-soft); margin: 0 0 8px; }
+  .rec-t5 { list-style: none; margin: 0; padding: 0; }
+  .rec-t5 li { display: grid; grid-template-columns: 16px 58px 1fr auto; align-items: baseline; gap: 8px; padding: 3px 0 4px; border-bottom: 1px dotted rgba(43, 39, 34, 0.22); }
+  .rec-t5 li:last-child { border-bottom: 0; }
+  .rec-t5 .rk, .rec-t5 .dt { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--rec-soft); white-space: nowrap; }
+  .rec-t5 .sc { font-family: var(--hand); font-weight: 700; font-size: calc(22px + var(--text-size-adjust)); line-height: 1; }
+  .rec-t5 .sc small { font-size: 0.62em; font-weight: 400; color: var(--rec-soft); }
+  .rec-t5 .tm { font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); color: var(--rec-soft); white-space: nowrap; }
+  .rec-t5 .rec-t5-none .sc { color: rgba(43, 39, 34, 0.28); font-weight: 400; }
+  .rec-moved { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 16px; margin: 4px 0 12px; }
+  .rec-mv { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .rec-mv b { position: relative; font-family: var(--hand); font-weight: 700; font-size: calc(30px + var(--text-size-adjust)); line-height: 0.9; color: rgba(43, 39, 34, 0.5); }
+  .rec-mv b small { font-size: 0.5em; font-weight: 400; margin-left: 2px; }
+  .rec-mv.now b { color: var(--nk); }
+  /* An old best is struck through in red pen (the briefing's own strike). */
+  .rec-mv b svg { position: absolute; left: -5px; top: 38%; width: calc(100% + 10px); height: 12px; overflow: visible; }
+  .rec-mv b svg path { fill: none; stroke: var(--rec-red); stroke-width: 2; stroke-linecap: round; }
+  .rec-mv > span { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.15; color: var(--rec-soft); text-align: center; white-space: nowrap; }
+  .rec-mv-gap { font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); line-height: 1; color: var(--rec-soft); align-self: center; margin-bottom: 14px; }
+  .rec-moved-line { margin: 0; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); line-height: 1.25; color: var(--rec-pen); }
+  .rec-moved-line em { font-style: normal; color: var(--rec-red); }
+
+  /* the B-sides: one tracklist, in two columns where there is room */
+  .rec-bs { padding: 18px 22px 14px; }
+  .rec-bs-hd { display: flex; align-items: baseline; gap: 12px; padding-bottom: 8px; margin-bottom: 4px; border-bottom: 3px double rgba(43, 39, 34, 0.55); }
+  .rec-bs-hd b { font-family: var(--type); font-weight: 700; font-size: calc(15px + var(--text-size-adjust)); letter-spacing: 4px; }
+  .rec-bs-hd span { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase; color: var(--rec-soft); }
+  .rec-bs-cols { columns: 2; column-gap: 34px; }
+  .rec-bs-grp { break-inside: avoid; padding-top: 10px; }
+  .rec-bs-grp h4 { margin: 0 0 3px; font-family: var(--type); font-weight: 400; font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.3; letter-spacing: 1.5px; text-transform: uppercase; color: var(--rec-soft); }
+  .rec-tr { position: relative; display: grid; grid-template-columns: 22px auto 1fr auto; align-items: baseline; column-gap: 6px; padding: 2px 0; }
+  .rec-tr .no { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--rec-soft); }
+  .rec-tr .nm { font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); line-height: 1.2; }
+  .rec-tr .ld { border-bottom: 1.5px dotted rgba(43, 39, 34, 0.32); transform: translateY(-3px); min-width: 12px; }
+  .rec-tr .vl { font-family: var(--hand); font-weight: 700; font-size: calc(21px + var(--text-size-adjust)); line-height: 1; white-space: nowrap; }
+  .rec-tr .vl small { font-family: var(--type); font-weight: 400; font-size: calc(11px + var(--text-size-adjust)); color: var(--rec-soft); }
+  .rec-tr .vl small.u { margin-left: 4px; }
+  .rec-tr .sb { grid-column: 2 / -1; margin-top: -1px; font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.25; color: var(--rec-soft); }
+  .rec-tr .sw { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--sw); margin-right: 5px; vertical-align: 1px; }
+
+  /* the take sheet: a studio form, printed in one blue, written in by hand */
+  .rec-ts-pile { z-index: 1; }
+  .rec-ts { padding: 18px 18px 6px; border-color: rgba(43, 39, 34, 0.16); }
+  .rec-ts-top { display: grid; grid-template-columns: 1fr auto; gap: 4px 20px; align-items: end; padding-bottom: 10px; border-bottom: 2px solid var(--rec-form); }
+  .rec-ts-title { font-family: var(--type); font-weight: 700; font-size: calc(17px + var(--text-size-adjust)); line-height: 1; letter-spacing: 5px; color: var(--rec-form); }
+  .rec-ts-sub { grid-column: 1; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.3; letter-spacing: 1.4px; text-transform: uppercase; color: var(--rec-form-soft); }
+  .rec-ts-fields { grid-column: 2; grid-row: 1 / span 2; display: grid; grid-template-columns: auto auto; column-gap: 8px; row-gap: 2px; align-items: baseline; }
+  .rec-ts-fields span { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1; letter-spacing: 1.4px; text-transform: uppercase; color: var(--rec-form-soft); text-align: right; }
+  .rec-ts-fields b { min-width: 90px; padding: 0 4px 1px; border-bottom: 1px solid var(--rec-form-soft); font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1; }
+  .rec-ts-fields b small { font-size: 0.7em; font-weight: 400; }
+  .rec-ts-empty { margin: 0; padding: 18px 4px 14px; text-align: center; font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); line-height: 1.3; color: var(--rec-soft); }
+  .rec-sec > .empty-cta { margin-top: 16px; }
+
+  /* sessions: the bookings grid at the head of the form, boxes printed, filled in by pencil */
+  .rec-bk { padding: 12px 0 14px; border-bottom: 1px solid var(--rec-form-soft); }
+  .rec-bk-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  .rec-bk-hd > span { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; color: var(--rec-form); }
+  .rec-rng { display: flex; flex-wrap: wrap; gap: 2px 4px; }
+  .rec-rng button { position: relative; background: none; border: 0; padding: 3px 8px; cursor: pointer; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1; color: var(--rec-form-soft); }
+  .rec-rng button[aria-pressed="true"] { color: var(--rec-pen); font-weight: 700; }
+  .rec-rng button:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
+  .rec-rng button svg { position: absolute; inset: -4px -3px; width: calc(100% + 6px); height: calc(100% + 8px); overflow: visible; pointer-events: none; }
+  .rec-rng button svg path { fill: none; stroke: var(--rec-pen); stroke-width: 1.3; stroke-linecap: round; opacity: 0.75; }
+  .rec-bk-body { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; }
+  .rec-bk-body.bare { grid-template-columns: minmax(0, 1fr); }
+  .rec-bk-days { display: grid; grid-template-rows: repeat(7, 1fr); padding-top: 13px; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); color: var(--rec-form-soft); align-items: center; }
+  .rec-bk-mo { position: relative; height: 13px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: var(--rec-form-soft); }
+  .rec-bk-mo span { position: absolute; top: 0; white-space: nowrap; }
+  .rec-bk-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .rec-bk-svg .box { fill: none; stroke: var(--rec-form-soft); stroke-width: 0.6; opacity: 0.75; }
+  .rec-bk-svg .box.out { opacity: 0.22; }
+  .rec-bk-svg .ht { fill: none; stroke: var(--rec-pen); stroke-linecap: round; }
+  .rec-bk-svg .solid { fill: var(--rec-pen); opacity: 0.82; }
+  .rec-bk-svg .today { fill: none; stroke: var(--rec-red); stroke-width: 1.1; }
+  .rec-bk-svg text { font-family: var(--type); fill: var(--rec-form-soft); }
+  .rec-bk-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; margin-top: 8px; }
+  .rec-bk-foot p { margin: 0; font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1.1; }
+  .rec-bk-key { display: flex; align-items: center; gap: 4px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); color: var(--rec-form-soft); }
+  .rec-bk-key svg { width: 76px; height: 12px; overflow: visible; }
+  .rec-bk-key .box { fill: none; stroke: var(--rec-form-soft); stroke-width: 0.6; }
+  .rec-bk-key .ht { fill: none; stroke: var(--rec-pen); stroke-linecap: round; }
+  .rec-bk-key .solid { fill: var(--rec-pen); opacity: 0.82; }
+
+  /* the takes */
+  .rec-take-head, .rec-take { display: grid; grid-template-columns: 52px minmax(0, 1fr) 66px 66px 74px 58px; column-gap: 8px; align-items: baseline; }
+  .rec-take-head { padding: 9px 0 7px; border-bottom: 1px solid var(--rec-form-soft); }
+  .rec-take-head span { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); line-height: 1; letter-spacing: 1.4px; text-transform: uppercase; color: var(--rec-form); }
+  .rec-take-head span:first-child, .rec-take .no { text-align: center; }
+  .rec-sess {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 8px -18px 0; padding: 5px 18px 4px;
+    background: color-mix(in srgb, var(--rec-form) 9%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--rec-form) 32%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--rec-form) 32%, transparent);
+  }
+  .rec-sess span { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2; letter-spacing: 1.4px; text-transform: uppercase; color: var(--rec-form); }
+  .rec-sess span + span { color: var(--rec-form-soft); white-space: nowrap; }
+  .rec-take { position: relative; min-height: 31px; padding: 5px 0 3px; border-bottom: 1px solid color-mix(in srgb, var(--rec-form) 18%, transparent); }
+  .rec-take > span { min-width: 0; }
+  .rec-take .no { position: relative; font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1; color: var(--rec-soft); }
+  /* The keeper: the take that still holds its record, circled in red pen (the briefing's loop). */
+  .rec-take .no svg { position: absolute; left: 50%; top: 50%; width: 46px; height: 28px; margin: -15px 0 0 -23px; overflow: visible; pointer-events: none; }
+  .rec-take .no svg path { fill: none; stroke: var(--rec-red); stroke-width: 1.6; stroke-linecap: round; }
+  .rec-take.held .no { color: var(--rec-red); font-weight: 700; }
+  .rec-take .rc { font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); line-height: 1.05; color: var(--pk, var(--rec-pen)); overflow-wrap: anywhere; }
+  .rec-take .rc small { margin-left: 6px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); line-height: 1; letter-spacing: 1px; text-transform: uppercase; color: var(--rec-soft); white-space: nowrap; }
+  .rec-take .pg { font-family: var(--hand); font-weight: 700; font-size: calc(20px + var(--text-size-adjust)); line-height: 1; white-space: nowrap; }
+  .rec-take .pg small { font-size: 0.66em; font-weight: 400; color: var(--rec-soft); }
+  .rec-take .tm { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); line-height: 1; white-space: nowrap; }
+  .rec-take .none { color: rgba(43, 39, 34, 0.3); }
+  .rec-take .nt { display: flex; align-items: center; gap: 5px; font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1; white-space: nowrap; }
+  .rec-take .nt i { display: inline-flex; align-items: center; font-style: normal; color: var(--rec-soft); }
+  .rec-take .nt svg { width: 15px; height: 15px; }
+  .rec-take .nt .nib { color: var(--rec-pen); }
+  .rec-take .nt .nib svg { width: 16px; height: 16px; }
+  .rec-take .nt .dk, .rec-ts-key .dk { color: #7a4bb0; }
+  .rec-take .at { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1; color: var(--rec-soft); white-space: nowrap; }
+  .rec-take .fold { display: none; }
+  .rec-ts-key {
+    display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 9px 0 10px; margin-top: 2px; border-top: 1px solid var(--rec-form-soft);
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2; letter-spacing: 0.8px; text-transform: uppercase; color: var(--rec-form-soft);
+  }
+  .rec-ts-key i { display: inline-flex; align-items: center; gap: 5px; font-style: normal; }
+  .rec-ts-key svg { width: 13px; height: 13px; }
+  .rec-ts-key i:first-child svg { width: 22px; height: 14px; }
+  .rec-ts-key i:first-child svg path { fill: none; stroke: var(--rec-red); stroke-width: 1.5; stroke-linecap: round; }
+  .rec-ts-key .dk span { color: var(--rec-form-soft); }
+  /* The next sheet down the pile, peeking out from under this one: pull it for twenty more. */
+  .rec-ts-next {
+    z-index: 0; display: flex; align-items: baseline; justify-content: center; gap: 14px;
+    width: calc(100% - 22px); margin: -10px auto 0; padding: 20px 14px 9px; cursor: pointer;
+    transform: rotate(-0.45deg); transition: transform 0.16s ease, padding 0.16s ease;
+    font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1; letter-spacing: 1.4px; text-transform: uppercase; color: var(--rec-form-soft);
+  }
+  .rec-ts-next b { font-family: var(--type); font-weight: 700; font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.6px; text-transform: none; color: var(--rec-form); }
+  .rec-ts-next:hover, .rec-ts-next:focus-visible { padding-top: 25px; transform: rotate(-0.45deg) translateY(1px); }
+  .rec-ts-next:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 3px; }
+
   /* Dev only: the record eraser's cross (js/dev.js "✕ on records"). */
-  .rec-erasing .hist-row { position: relative; }
   .rec-erase {
     position: absolute; top: 2px; right: 2px; z-index: 3;
     width: 20px; height: 20px; padding: 0; border: 1px solid #b23a3a; border-radius: 50%;
     background: #fbf7ea; color: #b23a3a; font: 700 11px/18px var(--type); cursor: pointer;
   }
-  .hist-row .rec-erase { top: 50%; right: -24px; transform: translateY(-50%); }
-  @media (max-width: 600px) { .hist-row .rec-erase { right: 0; } }
   .rec-erase:hover { background: #b23a3a; color: #fbf7ea; }
-  .hist-row.hist-pb { background: var(--highlighter); border-radius: 4px; border-bottom-color: transparent; }
-  .hist-score { font-family: var(--hand); font-size: calc(22px + var(--text-size-adjust)); color: var(--ink); line-height: 1; }
-  .hist-unit { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .hist-time { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .hist-verse { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: var(--ink-soft); }
-  /* The pen nib, the trinket a sung page hangs on the strand, so the column wears the verse
-     bonus's own mark. It takes the era's bead colour like the nib on the bracelet. */
-  .hist-verse { white-space: nowrap; }
-  .hist-verse-nib { display: inline-block; width: 16px; height: 16px; vertical-align: -3px; margin-right: 1px; }
-  .hist-verse-nib svg { display: block; width: 100%; height: 100%; }
-  .hist-mode, .hist-date { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); }
-  .hist-day, .hist-clock { white-space: nowrap; }
-  /* The score column is about 35px on a 320px phone, and a best run's crown plus "12/13" is
-     about 59px, so the score wrapped under its crown and sat a line below the rest of its row.
-     Here the crown is lifted out of the line and stands over the score in the row's own head
-     room, and the header's tracking eases so "verse" stops running into "mode". */
-  @media (max-width: 600px) {
-    .hist-sep { display: none; }
-    .hist-day, .hist-clock { display: block; }
-    .hist-score { position: relative; white-space: nowrap; }
-    .hist-row:has(.hist-crown) { padding-top: 19px; }
-    .hist-row .hist-crown { position: absolute; left: 0; bottom: 100%; width: 13px; height: 13px; margin: 0 0 3px; }
-    .hist-head { letter-spacing: 0.4px; }
-  }
-  /* PB crown — the same SVG as the achievement charm, sized to sit on the score baseline. */
-  .hist-crown { display: inline-block; width: 15px; height: 15px; margin-right: 4px; vertical-align: -2px; }
-  .hist-crown svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .hist-crown .ink { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .hist-crown .ink-fill { fill: var(--ink); stroke: none; }
-  /* dark-side mark — the same violet eclipse the in-run tagline and the challenge seal use,
-     shrunk to sit inside the mode label without stealing width from an already tight column. */
-  .hist-dark { display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: -1px; color: #7a4bb0; }
-  .hist-dark .chall-mark-svg { width: 100%; height: 100%; display: block; color: currentColor; }
-  /* Hint stub — graphite, not an accent: the row is noting how the run went, not flagging it. */
-  .hist-hinted { display: inline-block; width: 11px; height: 11px; margin-left: 5px; vertical-align: -1px; color: var(--ink-soft); opacity: 0.75; }
-  .hist-hinted .hint-mark-svg { width: 100%; height: 100%; display: block; }
-  /* More history is a tab hanging off the log's bottom rule, highlighted, saying how many
-     older runs are still folded away. Pulling it (hover) draws it down a little. */
-  .hist-more-row { margin-top: 12px; border-top: 1.5px solid var(--ink); text-align: center; }
-  .hist-more {
-    margin-top: -1.5px; padding: 6px 20px 7px;
-    font-size: calc(12px + var(--text-size-adjust)); font-weight: 700; letter-spacing: 1px; color: var(--ink);
-    background: linear-gradient(var(--highlighter), var(--highlighter)), var(--paper);
-    border: 1.5px solid var(--ink); border-top: 0; border-radius: 0 0 9px 9px;
-    transition: padding-top 0.14s ease;
-  }
-  .hist-more:hover, .hist-more:focus-visible { padding-top: 11px; }
+  .rec-slot .rec-erase { top: 0; right: 6px; }
+  .rec-tr .rec-erase { top: 1px; right: -26px; }
+  .rec-take .rec-erase { top: 50%; right: -16px; transform: translateY(-50%); }
 
-  /* ---------- Records calendar heatmap (games played per day / per hour) ----------
-     A contribution-grid in the notebook's gold "ink density". The grid spans the full
-     content width: columns are 1fr (so they fill exactly, no right-edge remainder) and
-     JS sets the row heights in px to keep the squares square; the day-label column
-     shares those exact row heights so the labels line up with the rows. */
-  .heat-wrap { margin-bottom: 4px; }
-  .heat-controls {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 14px; flex-wrap: wrap; margin-bottom: 14px;
+  /* A narrow page: two records a row, the sleeve notes in one column, the tracklist in one, and
+     the take sheet folds its quiet columns (notes, the time of day) under the recording. */
+  @container records (max-width: 470px) {
+    .rec-crate { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 18px; }
+    .rec-disc { max-width: 150px; }
+    .rec-notes-card { padding: 14px; }
+    .rec-notes-grid { grid-template-columns: 1fr; }
+    .rec-bs { padding: 16px 14px 12px; }
+    .rec-bs-cols { columns: 1; }
+    .rec-tr .rec-erase { right: -4px; }
+    .rec-ts { padding: 14px 12px 4px; }
+    .rec-ts-top { grid-template-columns: 1fr; }
+    .rec-ts-fields { grid-column: 1; grid-row: auto; justify-content: start; margin-top: 8px; }
+    .rec-ts-fields span { text-align: left; }
+    .rec-sess { margin: 8px -12px 0; padding: 5px 12px 4px; }
+    .rec-take-head, .rec-take { grid-template-columns: 40px minmax(0, 1fr) 54px 50px; column-gap: 6px; }
+    .rec-take-head span:nth-child(5), .rec-take-head span:nth-child(6) { display: none; }
+    .rec-take { grid-template-areas: "no rc pg tm" "no fold pg tm"; row-gap: 2px; }
+    .rec-take .no { grid-area: no; } .rec-take .rc { grid-area: rc; } .rec-take .pg { grid-area: pg; } .rec-take .tm { grid-area: tm; }
+    .rec-take > .nt, .rec-take > .at { display: none; }
+    .rec-take .fold { grid-area: fold; display: flex; gap: 8px; align-items: center; }
+    .rec-take .no svg { width: 40px; height: 26px; margin: -14px 0 0 -20px; }
+    .rec-take .rec-erase { right: 0; }
   }
-  /* timeframe dropdown — typewriter-styled; the right padding reserves room for the
-     native arrow so the longest label ("last 7 days · by hour") never sits under it. */
-  .heat-select {
-    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); color: var(--ink);
-    background: var(--page-wash, #efe7d2);
-    border: 1.5px solid var(--ink-soft); border-radius: 2px;
-    padding: 6px 32px 6px 12px; outline: none; cursor: pointer; line-height: 1.2;
-    -webkit-appearance: none; appearance: none;
-  }
-  .heat-select:focus { border-color: var(--ink-accent); }
+  @media (prefers-reduced-motion: reduce) { .rec-disc, .rec-ts-next { transition: none; } }
+
   /* A <select> is a replaced element with no ::after of its own, so the drawn chevron that
      stands in for the browser's arrow hangs off this wrapper instead, masked so it is the
-     faded-pencil ink in every theme. The settings selects wear it too. */
+     faded-pencil ink in every theme. The settings selects wear it. */
   .sel-wrap { position: relative; display: inline-block; vertical-align: middle; max-width: 100%; }
   .sel-wrap--full { display: block; width: 100%; max-width: 400px; }
   .sel-wrap::after {
@@ -9421,31 +9514,6 @@
     background: var(--ink-soft); pointer-events: none;
     -webkit-mask: var(--mark-chev) center / contain no-repeat; mask: var(--mark-chev) center / contain no-repeat;
   }
-  .heat-legend { display: flex; align-items: center; gap: 6px; font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; color: var(--ink-soft); }
-  .heat-legend i { width: 11px; height: 11px; border-radius: 2px; border: 0.5px solid rgba(43,39,34,0.14); }
-
-  .heat-row { display: flex; align-items: flex-start; gap: 6px; padding-bottom: 2px; }
-  .heat-side { display: flex; flex-direction: column; flex: none; }
-  .heat-days, .heat-hours {
-    display: grid; gap: 3px; font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: var(--ink-soft);
-  }
-  .heat-days span, .heat-hours span { align-self: center; line-height: 1; white-space: nowrap; padding-right: 4px; }
-  .heat-main { flex: 1; min-width: 0; }
-  .heat-months, .heat-cols { font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.5px; color: var(--ink-soft); }
-  .heat-months { position: relative; }
-  .heat-months span { position: absolute; top: 0; white-space: nowrap; }
-  .heat-cols { display: grid; }
-  .heat-cols span { text-align: center; line-height: calc(16px + var(--text-size-adjust)); }
-  .heat-grid { display: grid; gap: 3px; width: 100%; }
-  .heat-cell { border-radius: 2px; }
-  /* 30-day strip: one full-width row of days, with start/end date captions for orientation */
-  .heat-strip { width: 100%; }
-  .heat-strip-ends {
-    display: flex; justify-content: space-between;
-    font-family: var(--type); font-size: calc(9px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 5px;
-  }
-  .heat-foot { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 12px; transform: rotate(-0.4deg); }
-  .heat-foot b { color: var(--ink-accent); font-weight: 700; }
 
   /* ---------- Bracelet (round progress + score) ---------- */
   /* The strip's SVG already keeps room under the beads for the longest dangling trinket, so
@@ -10919,7 +10987,7 @@
   .hint-line mark { background: var(--highlighter); color: var(--ink); padding: 0 3px; font-weight: 700; }
   @media (prefers-reduced-motion: reduce) {
     .hint-btn.urge { animation: none; }
-    .hint-btn, .flag-btn, .path-skip-btn, .cover-strip, .hist-more, .date-stamp,
+    .hint-btn, .flag-btn, .path-skip-btn, .cover-strip, .date-stamp,
     .sign-pen, .giveup-ticket, .env-btn, .env-sheet, .set-cover-sticker { transition: none; }
     .feedback .sticker { animation: none; }
   }
@@ -12835,10 +12903,6 @@
   .histogram-label {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink-soft); text-transform: uppercase; margin-bottom: 10px;
-  }
-  .stats-empty {
-    font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); color: var(--ink-soft);
-    text-align: center; padding: 24px 0 8px; font-style: italic;
   }
   /* Shared "start writing →" action on any zero-data screen: a centred typewriter link (functional
      UI stays typewriter) in accent ink so it reads as the next step. */
@@ -15123,9 +15187,8 @@
   .see-also:not(.see-also--row) > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
   /* ===== Shared washi-tape surface ==============================================
      One look, reused everywhere the site shows sticky tape: the nav keepsake cards
-     (.nav-tape, injected by app.js), the Stats page's taped-in pieces (.stp-tape), the Records
-     page personal-best tiles
-     (.pb-tile::before), the bonus-run sleeve (.bg-back::before), the pause card, the
+     (.nav-tape, injected by app.js), the Stats and Records pages' taped-in pieces (.stp-tape),
+     the bonus-run sleeve (.bg-back::before), the pause card, the
      polaroids, the milestone sticky and the two corner strips holding the suggestion card
      (.dropdown::before/::after). It is deliberately PLAIN: a frosted translucent base with a
      half-strength tint (so the ruled paper reads faintly through), one soft diagonal sheen,
@@ -15160,7 +15223,6 @@
   .day-tape-strip,
   .run-pause-tape,
   .stp-tape,
-  .pb-tile::before,
   .bg-back::before,
   .dropdown::before,
   .dropdown::after {
@@ -15202,7 +15264,7 @@
      just a bright line. */
   :root[data-theme="dark"] .nav-tape, :root[data-theme="dark"] .pol-tape,
   :root[data-theme="dark"] .day-tape-strip, :root[data-theme="dark"] .run-pause-tape,
-  :root[data-theme="dark"] .stp-tape, :root[data-theme="dark"] .pb-tile::before,
+  :root[data-theme="dark"] .stp-tape,
   :root[data-theme="dark"] .bg-back::before, :root[data-theme="dark"] .dropdown::before,
   :root[data-theme="dark"] .dropdown::after {
     background:
@@ -15225,13 +15287,6 @@
   .day-tape-strip {
     --tape-print: linear-gradient(transparent, transparent); --tape-print-n: linear-gradient(transparent, transparent);
     --tape-blend: normal; --tape-k: 37%; --tape-k2: 29%; --tape-kn: 30%; --tape-kn2: 23%;
-  }
-  /* Preset hand-torn outlines, cycled so neighbouring tiles differ. */
-  .pb-tile:nth-child(3n+2)::before {
-    --tape-clip: polygon(3.7% 0%, 95.9% 0%, 93.6% 21%, 92.6% 29.1%, 92.9% 44.8%, 94.6% 63.7%, 91.8% 83%, 91.1% 100%, 9% 100%, 9.3% 78.3%, 5.7% 58.9%, 5.5% 39.4%, 6.9% 24.4%);
-  }
-  .pb-tile:nth-child(3n)::before {
-    --tape-clip: polygon(6.8% 0%, 95.3% 0%, 98.2% 15.7%, 94.2% 32%, 95.3% 44.4%, 92.8% 61%, 93.5% 69.6%, 91.3% 83%, 92.6% 100%, 6.8% 100%, 5.5% 84.8%, 6.4% 66.7%, 6.2% 61.3%, 7.1% 45.7%, 6.8% 26.8%, 4.5% 12.9%);
   }
   /* Geometry + tint for the nav-card strips (size/transform/clip are overridden inline). */
   .nav-tape {
@@ -15467,19 +15522,14 @@
     --skill-range:     188, 166, 240;   /* dark lavender */
   }
 
-  /* High contrast on the night page needs its own column for both palettes, for the reason the
+  /* High contrast on the night page needs its own column for the skill inks, for the reason the
      dark high-contrast block further down spells out at length: :root[data-theme="dark"] (0,2,0)
      outranks body[data-contrast="high"] (0,1,1), so without these the setting would leave the
-     tiles and the skill rows exactly as ordinary dark mode left them — an accessibility control
-     that silently does nothing, which is the bug that block exists to have fixed once already.
+     skill rows exactly as ordinary dark mode left them: an accessibility control that silently
+     does nothing, which is the bug that block exists to have fixed once already.
 
-     Both columns are the HIGH-CONTRAST dark ERA accents, the same mapping ordinary dark mode
-     uses one step quieter, so nothing here is a fourth hand-picked palette. The card drops with
-     the paper (the HC page takes its sheet down to #17130d to buy ink contrast, and a card that
-     stayed put would stop reading as a card lying on it) and white ink clears 15:1 on it. */
-  :root[data-theme="dark"] body[data-contrast="high"] .pb-tile {
-    background: #2b2519; border-color: rgba(255, 255, 255, 0.22);
-  }
+     The column is the HIGH-CONTRAST dark ERA accents, the same mapping ordinary dark mode uses
+     one step quieter, so nothing here is a fourth hand-picked palette. */
   :root[data-theme="dark"] body[data-contrast="high"] {
     /* The red and green pens and the five family hues, lifted one more step for the same
        reason everything else in this block is: the dark rule outranks the contrast rule, so
@@ -15510,15 +15560,6 @@
     --ach-th-longhaul: #88ab7c;
     --ach-th-margins: #c19a7d;
     --ach-th-mastery: #bc9e55;
-    --mode-relaxed:  #8fc4ff;
-    --mode-easy:     #8ee0a6;
-    --mode-medium:   #ffc94a;
-    --mode-hard:     #ff8480;
-    --mode-ultra:    #d8d7e6;   /* graphite, violet lean kept, as in ordinary dark */
-    --mode-lyricist: #d3bcff;
-    --mode-daily:    #ffa9a2;   /* still a touch off hard's coral, as by day */
-    --mode-darkside: #dcc2ff;
-    --mode-ruthless: #f0a184;
     --skill-resolve:   159, 180, 255;
     --skill-tempo:     255, 132, 128;
     --skill-lyricist:  255, 170, 211;
@@ -18227,7 +18268,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   /* iOS zooms the whole page in on any form control set under 16px the moment it takes focus,
      and leaves it zoomed after the picker closes. The calendar's timeframe (12px) and the
      settings selects (13px) did that on every tap; the searcher's filter already floors at 16. */
-  .heat-select, .set-select { font-size: max(16px, calc(13px + var(--text-size-adjust))); }
+  .set-select { font-size: max(16px, calc(13px + var(--text-size-adjust))); }
   /* "close the notebook" is 10px type in a 20px-tall button, the smallest target on the game
      page. A finger aiming for it caught the page line instead (and missed the second, arming
      tap). The hit area grows invisibly up and out from the word, so the corner it sits in does
