@@ -2268,7 +2268,8 @@ function recentScores(viewMode, cap = 12) {
 // The gist card's "mostly": the narrowest run of scores that holds at least 60% of every game
 // in this view, read off the same per-score counts the graph draws, so "mostly" is always
 // literally true. A tie on width goes to the run holding more games. null under four games,
-// where a range says nothing a single score doesn't.
+// where a range says nothing a single score doesn't, and when the run is wider than five scores:
+// "mostly 1–9" is most of the scale, which narrows nothing.
 function statsMostlyRange(counts, played) {
   if (played < 4) return null;
   let best = null;
@@ -2281,7 +2282,7 @@ function statsMostlyRange(counts, played) {
       break;
     }
   }
-  return best;
+  return best && best.hi - best.lo <= 4 ? best : null;
 }
 // The gist's trend marks, drawn in the hand of the page's other arrows rather than a font's.
 const STATS_TREND = {
@@ -2294,9 +2295,12 @@ const STATS_TREND = {
 let lastStatsDifficulty = null;
 // A zero-data screen's teaching copy tells the player to go play; this small ghost-button lets
 // them do it, landing on the start screen's "Start writing" launchpad in one tap. Shared by every
-// empty state so the affordance reads the same everywhere.
-function playCTA(label = "start writing") {
-  return `<button type="button" class="empty-cta" data-go-play>${label} ${CTA_ARROW}</button>`;
+// empty state so the affordance reads the same everywhere. An empty state that names a game type
+// or difficulty passes it as `go`, so the front page opens with that one selected rather than
+// whatever was picked last.
+function playCTA(label = "start writing", go = {}) {
+  return `<button type="button" class="empty-cta" data-go-play${go.type ? ` data-go-type="${go.type}"` : ""}` +
+    `${go.mode ? ` data-go-mode="${go.mode}"` : ""}>${label} ${CTA_ARROW}</button>`;
 }
 // The hand-drawn arrow on the two catalogue buttons (the Stats blotter and the charm quest), which
 // both open the songbook. Drawn rather than typed so it sits on the type line's middle instead
@@ -2405,10 +2409,10 @@ function albumOfTitle(title) {
    number is stuck into the notebook on the object it would really be written on, and each
    object says something about its number:
      the best score       a ticket stub, kept; its serial is how many games that took
-     the gist             an index card: average, lately, and the range most games land in
+     the gist             an index card: average, lately, the range most games land in, best streak
      the last twelve      a line graph on a torn strip of staff paper, a dot a game
      the distribution     pencil-hatched bars on a graph-paper scrap
-     the nemesis          a tabloid clipping: the word in the headline (a sticky of perfects, where there is none)
+     the nemesis          a tabloid clipping: the word in the headline (with none, the graph takes the width)
      the home album       its record sleeve (Track by Track's), the most-sung song on a slip
      the quick numbers    four postage stamps
      songs found          a sheet of blotting paper, an album a drop of ink bled out as far as you've found
@@ -2440,12 +2444,15 @@ function statsTape(key) {
     `<span class="stp-tape" aria-hidden="true" style="${s.left ? `left:${s.left};` : ""}${s.right ? `right:${s.right};` : ""}` +
     `top:${s.top};width:${s.w}px;transform:translateX(${s.tx || "0"}) rotate(${s.rot}deg);clip-path:${TORN_EDGES[s.tear]}"></span>`).join("");
 }
-// Short names for the blotter, where a full album title would not fit under a drop.
+// Short names for the blotter, where a full album title would not fit under a drop. A record
+// takes the name its sleeve is lettered with (sleeveName), so the home album's sleeve and its
+// drop on the blotter never call one album two things; only the catalogue's pseudo-albums,
+// which have no sleeve, are shortened here.
 const STATS_ALBUM_SHORT = {
-  "The Tortured Poets Department": "TTPD", "The Life of a Showgirl": "Showgirl",
   "Holiday Collection": "Holiday", "Songs From Movies": "Films",
   "Written for Others": "For others", "Collaborations": "Collabs",
 };
+const statsAlbumName = (a) => STATS_ALBUM_SHORT[a] || sleeveName(a);
 
 /* ---------- Songs found: the blotter ----------
    A sheet of blotting paper with one drop of ink per album, bled out as far as the songs you've
@@ -2490,6 +2497,15 @@ function blotSparkle(x, y, size, rnd) {
   }
   return d + "Z";
 }
+// The name under a drop. One that is longer than "TAYLOR SWIFT" would run into its neighbours, so
+// it is set on two lines in the same room, its count staying level with the rest of the row.
+function statsBlotName(name, cx, y0) {
+  const at = (dy) => `x="${blotF(cx)}" y="${blotF(y0 + dy)}" text-anchor="middle"`;
+  const sp = name.length > 12 ? name.lastIndexOf(" ") : -1;
+  if (sp < 0) return `<text class="stp-bl-nm" ${at(19)}>${escapeHtml(name)}</text>`;
+  return `<text class="stp-bl-nm" ${at(14)}>${escapeHtml(name.slice(0, sp))}</text>` +
+    `<text class="stp-bl-nm" ${at(23.5)}>${escapeHtml(name.slice(sp + 1))}</text>`;
+}
 function statsBlotterHTML(order, found, total, W, phone) {
   const uid = ++statsBlotUid;
   const VW = Math.max(260, Math.round(W - 24)), perRow = phone ? 4 : 8, colW = VW / perRow;
@@ -2524,7 +2540,7 @@ function statsBlotterHTML(order, found, total, W, phone) {
       (full ? "" : crumbs.map((c) => `<circle class="stp-bl-crumb" cx="${blotF(c.x)}" cy="${blotF(c.y)}" r="${blotF(c.s)}"/>`).join("")) + `</g>` +
       (full ? crumbs.map((c) => `<path class="stp-bl-spark" style="transform-origin:${blotF(c.x)}px ${blotF(c.y)}px" d="${blotSparkle(c.x, c.y, c.s, rnd)}"/>`).join("") : "") +
       `<circle class="stp-bl-hit" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(R + 6)}" data-tip="${escapeHtml(a)}: ${f} of ${n}" data-open-songbook="stats" data-songbook-album="${escapeHtml(a)}"/>` +
-      `<text class="stp-bl-nm" x="${blotF(cx)}" y="${blotF(cy + R + 19)}" text-anchor="middle">${escapeHtml((STATS_ALBUM_SHORT[a] || a).toUpperCase())}</text>` +
+      statsBlotName(statsAlbumName(a).toUpperCase(), cx, cy + R) +
       `<text class="stp-bl-ct" x="${blotF(cx)}" y="${blotF(cy + R + 36)}" text-anchor="middle">${f}/${n}</text></g>`;
   });
   return `<svg class="stp-blot-svg" viewBox="0 0 ${VW} ${H}" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
@@ -2605,30 +2621,22 @@ function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip, 
   return `<div class="stp-item stp-w4 stp-o0" style="--r:-1.2deg">${statsTape("ticket")}` +
     `<div class="stp-ticket-lift"><div class="stp-ticket"${tip ? ` role="img" aria-label="${tip}"` : ""}>` +
     `<div class="stp-ticket-main"><span class="stp-ticket-frame" aria-hidden="true"></span><div class="stp-ticket-copy">` +
-    `<div class="stp-adm">ADMIT ONE${kicker ? ` · ${kicker}` : ""}</div>` +
+    `<div class="stp-adm">${kicker ? `<span class="stp-adm-admit">ADMIT ONE · </span>${kicker}` : "ADMIT ONE"}</div>` +
     `<div class="stp-ticket-big"><b>${value}</b><span>${unit}</span></div><div class="stp-ticket-line">${line}</div></div>${date}</div>` +
     `<div class="stp-ticket-stub"><span class="stp-ticket-frame" aria-hidden="true"></span><span class="stp-stub-no">NO.</span>` +
     `<b style="--digits:${String(serial).length}">${serial}</b><span>${serialLabel}</span></div></div></div></div>`;
 }
-// Caveat's digits start well right of their advance, so the ticket's numeral is pulled back
-// onto the typed edge by its measured ink, and the date's numeral centred the same way
-// (centreDayNumerals does this for the daily ticket). CSS holds a median until it runs.
+// Caveat's digits start well right of their advance, so the date's numeral is centred on its
+// measured ink (centreDayNumerals does this for the daily ticket). CSS holds a median until it
+// runs. The big numeral needs nothing here: the ink edge pulls it onto the typed edge.
 async function alignStatsTicket(root) {
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
   const cx = document.createElement("canvas").getContext("2d");
-  const measure = (el) => {
+  root.querySelectorAll(".stp-ticket-date .n").forEach((el) => {
     const cs = getComputedStyle(el);
     cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     const m = cx.measureText(el.textContent.trim());
-    return "actualBoundingBoxLeft" in m ? m : null;
-  };
-  root.querySelectorAll(".stp-ticket-big b").forEach((el) => {
-    const m = measure(el);
-    if (m) el.style.setProperty("--n-nudge", m.actualBoundingBoxLeft.toFixed(2) + "px");
-  });
-  root.querySelectorAll(".stp-ticket-date .n").forEach((el) => {
-    const m = measure(el);
-    if (m) el.style.setProperty("--d-nudge", (m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2).toFixed(2) + "px");
+    if ("actualBoundingBoxLeft" in m) el.style.setProperty("--d-nudge", (m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2).toFixed(2) + "px");
   });
 }
 
@@ -2638,8 +2646,9 @@ async function alignStatsTicket(root) {
    it took a legend to read; a line graph needs none, and the paper keeps the strip's character.
    The scale is 6px a score, and the five lines fall on 2, 4, 6, 8 and 10, so they are the
    graph's own rule as well as a stave: a dot on a line is an even score, between two the odd
-   one between them, and each line's score is typed in the margin as its axis. Nothing marks the last game: the heading says these are the last twelve,
-   and a graph reads left to right. */
+   one between them, and each line's score is typed in the margin as its axis. A score off the
+   stave gets a ledger line, as a note would. Nothing marks the last game: the heading says these
+   are the last twelve, and a graph reads left to right. */
 // Caveat's figures at the strip's size, measured off the real ink (canvas measureText): how
 // far each one's ink sits right of its text-anchor middle, and how far it reaches above and
 // below the baseline, in em. Centring on the anchor left every figure 1 to 2px right of its
@@ -2663,6 +2672,15 @@ function statsStaffSVG(recent, W) {
   // the strip is as tall as what is drawn on it: the scale is fixed, so a notebook whose
   // games all sit above 5 would otherwise carry a band of empty stave beneath them
   let top = y(10) - 6, bot = y(2) + 6;
+  // Off the stave, a score is written the way music writes a note off it: a short ledger line at
+  // 12 for a 12 or a 13 (an 11 sits in the space just above the top line and needs none), and at
+  // 0 for a 0. Without them everything over 10, a good player's usual scores, floated in the air.
+  recent.forEach((s, i) => {
+    const at = s >= 12 ? 12 : s <= 0 ? 0 : null;
+    if (at == null) return;
+    const hw = s === TOTAL_ROUNDS ? 9 : 6.5;
+    out += `<line class="stp-sl" x1="${(xs[i] - hw).toFixed(1)}" x2="${(xs[i] + hw).toFixed(1)}" y1="${y(at)}" y2="${y(at)}"/>`;
+  });
   if (n > 1) {
     // a pen line, not a ruler's: each stretch bows a fraction off the straight, seeded off the
     // scores so the same twelve always draw the same line
@@ -2801,7 +2819,7 @@ function statsClippingHTML(word, count) {
     `</div></div>`;
 }
 
-// The pieces every view shares: ticket, the gist, the stave, the graph and a sticky note.
+// The pieces every view shares: ticket, the gist, the stave and the graph (and the nemesis on All).
 function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   const avg = s.totalScore / s.played;
   const perfect = s.scoreCounts[TOTAL_ROUNDS] || 0;
@@ -2823,23 +2841,24 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   out.push(`<div class="stp-item stp-w2 stp-o1" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx"><div class="stp-lab">the gist</div>` +
     `<p>avg <b>${avg.toFixed(1)}</b></p>` +
     (lately != null ? `<p>lately <b>${lately.toFixed(1)}</b>${lead > 0.3 ? `<span class="stp-up" title="up on your average">${STATS_TREND.up}</span>` : lead < -0.3 ? `<span class="stp-down" title="down on your average">${STATS_TREND.down}</span>` : ""}</p>` : "") +
-    (mostly ? `<p title="${Math.round(mostly.n / s.played * 100)}% of your games">mostly <b>${mostly.lo === mostly.hi ? `${mostly.lo}s` : `${mostly.lo}–${mostly.hi}`}</b></p>` : "") + `</div></div>`);
+    (mostly ? `<p title="${Math.round(mostly.n / s.played * 100)}% of your games">mostly <b>${mostly.lo === mostly.hi ? `${mostly.lo}s` : `${mostly.lo}–${mostly.hi}`}</b></p>` : "") +
+    `<p title="the most pages right in a row">best streak <b>${s.bestInRow || 0}</b></p></div></div>`);
   // headed in the gist's word, since the gist's lately is these twelve; on a notebook with no
   // games outside them it is simply every game
   out.push(`<div class="stp-item stp-w6 stp-o3" style="--r:-.4deg">${statsTape("staff")}` +
     `<div class="stp-staff" role="img" aria-label="${s.played > recent.length ? `Last ${recent.length} scores` : "Every score so far"}, oldest first: ${recent.join(", ")}.">` +
     `<div class="stp-lab">${s.played > recent.length ? `lately · my last ${recent.length} games` : "every game so far"}</div>` +
     statsStaffSVG(recent, Math.round(Math.max(260, W - 30))) + `</div></div>`);
+  // The nemesis sits beside the graph. Without one the graph takes the whole width: the sticky of
+  // perfect games that used to fill the gap only repeated the ticket's own line, under a label
+  // ("perfect pages") that miscounted it.
   const youScore = (isAll || viewMode === currentMode.id) ? lastScore : null;
-  out.push(`<div class="stp-item stp-w4 stp-o3" style="--r:.7deg">${statsTape("graph")}` +
-    `<div class="stp-graph" role="img" aria-label="Games at each score: ${s.scoreCounts.map((c, i) => `${i}: ${c}`).join(", ")}">` +
-    `<div class="stp-lab">every game, by score</div>${statsGraphSVG(Array.from({ length: TOTAL_ROUNDS + 1 }, (_, i) => s.scoreCounts[i] || 0), youScore, Math.round(phone ? W - 26 : W * 4 / 6 - 30))}</div></div>`);
   const nemesis = isAll ? topTallyEntry(loadSongTally().misses) : null;
-  if (nemesis && nemesis.count > 1) out.push(statsClippingHTML(nemesis.key, nemesis.count));
-  else {
-    out.push(`<div class="stp-item stp-w2 stp-o2" style="--r:-2deg"><div class="stp-sticky"><div class="stp-lab">perfect pages</div>` +
-      `<div class="stp-nem stp-nem--gold">${perfect}</div><p>${perfect ? "and counting" : "one day"}</p></div></div>`);
-  }
+  const clip = nemesis && nemesis.count > 1;
+  out.push(`<div class="stp-item ${clip ? "stp-w4" : "stp-w6"} stp-o3" style="--r:.7deg">${statsTape("graph")}` +
+    `<div class="stp-graph" role="img" aria-label="Games at each score: ${s.scoreCounts.map((c, i) => `${i}: ${c}`).join(", ")}">` +
+    `<div class="stp-lab">every game, by score</div>${statsGraphSVG(Array.from({ length: TOTAL_ROUNDS + 1 }, (_, i) => s.scoreCounts[i] || 0), youScore, Math.round(phone || !clip ? W - 26 : W * 4 / 6 - 30))}</div></div>`);
+  if (clip) out.push(statsClippingHTML(nemesis.key, nemesis.count));
   return out.join("");
 }
 
@@ -2852,9 +2871,11 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
    The picture on each stamp is that number's own diagram, so it reads before a word does, and
    none of it is decoration: twenty marks in the proportion you get right, a stopwatch whose face
    is the longest clock any page has, a lyric sheet with the word-perfect share highlighted, and
-   a box with a dot for every playable word, coloured in from the bottom for the ones you've got
+   a box of dots for the playable words, coloured in from the bottom for the ones you've got
    right. Printed in the stamp's one ink, with the red pen as a second ink where a drawing uses it.
-   A fact with nothing behind it yet (no timed page, no sung line) has no stamp. */
+   A fact with nothing behind it yet (no timed page, no sung line) has no stamp: its place is a
+   stamp album's empty mount, its caption printed in the box and the way to fill it under that.
+   Three stamps and a hole read as a stamp gone missing; a mount reads as one still to collect. */
 const STATS_DIAL = 20;   // seconds round the stopwatch: Lyricist and the slow challenges' clock, so every page's answer fits
 function statsTicksSVG(frac) {
   const r = mulberry32(11), n = Math.round(frac * 20);
@@ -2896,10 +2917,15 @@ function statsSheetSVG(frac) {
   return `<svg viewBox="0 -1 58 49" aria-hidden="true"><path class="stp-ps-hl" d="${hl}"/>` +
     `<g filter="url(#charmWobble)"><path class="stp-ps-ink stp-ps-thin" d="${ln}"/></g></svg>`;
 }
+/* A dot stands for about one ninetieth of the words, ten of them on today's list, rather than one
+   word each: at one a word a box of 857 is a grain of rice a dot, and the hundred a player has
+   after weeks of play was a one-pixel strip along the bottom that read as an empty box. Any word
+   at all lights a dot, and the last one waits for the last word, so the box is never full early. */
 function statsWordBoxSVG(n, of) {
-  const cols = 30, cell = 1.78, H = Math.ceil(of / cols) * cell, W = cols * cell + 4.8, B = H + 4.8, f = (v) => v.toFixed(1);
+  const per = Math.max(1, Math.round(of / 90)), cells = Math.ceil(of / per), lit = n >= of ? cells : Math.min(cells - 1, Math.ceil(n / per));
+  const cols = 10, cell = 5.34, H = Math.ceil(cells / cols) * cell, W = cols * cell + 4.8, B = H + 4.8, f = (v) => v.toFixed(1);
   let on = "";
-  for (let i = 0; i < Math.min(n, of); i++) on += `M${f(2.4 + (i % cols + .5) * cell)} ${f(2.4 + H - ((i / cols | 0) + .5) * cell)}h.01`;
+  for (let i = 0; i < lit; i++) on += `M${f(2.4 + (i % cols + .5) * cell)} ${f(2.4 + H - ((i / cols | 0) + .5) * cell)}h.01`;
   return `<svg viewBox="0 0 ${f(W)} ${f(B)}" aria-hidden="true"><path class="stp-ps-word" d="${on}"/>` +
     `<g filter="url(#charmWobble)"><path class="stp-ps-ink" d="M1 1.4 Q${f(W / 2)} .6 ${f(W - 1)} 1 Q${f(W - .4)} ${f(B / 2)} ${f(W - 1)} ${f(B - 1)} Q${f(W / 2)} ${f(B - .4)} 1.2 ${f(B - 1)} Q.6 ${f(B / 2)} 1 1.4 Z"/></g></svg>`;
 }
@@ -2911,16 +2937,18 @@ function statsStampsHTML(m, t, beside) {
   if (m.answerN) {
     const usual = m.answerSumMs / m.answerN / 1000, quick = m.fastestMs == null ? null : m.fastestMs / 1000;
     stamps.push({ ink: 1, big: usual.toFixed(1), unit: "s", cap: "usual answer", det: quick == null ? "" : `quickest ${sec(m.fastestMs)}s`, art: statsWatchSVG(usual, quick) });
-  }
+  } else stamps.push({ mount: true, cap: "usual answer", how: "answer a page against the clock" });
   if (m.lyricLines) {
     const perfect = m.versePerfect || 0;
     stamps.push({ ink: 2, big: fmtN(m.lyricLines), unit: "", cap: "lines by heart", det: `${fmtN(perfect)} word-perfect`, art: statsSheetSVG(perfect / m.lyricLines) });
-  }
+  } else stamps.push({ mount: true, cap: "lines by heart", how: "sing a lyric line as your answer" });
   const got = Object.keys(t.words || {}).length;
   stamps.push({ ink: 3, big: fmtN(got), unit: "", cap: "words cracked", det: `of ${fmtN(playableWords.length)}`, art: statsWordBoxSVG(got, playableWords.length) });
   const tilt = [-1.6, 1.2, .9, -1.3];
   return `<div class="stp-item ${beside ? "stp-w4" : "stp-w6"} stp-o5"><div class="stp-lab">first class</div><div class="stp-ps">` +
-    stamps.map((s, i) => `<div class="stp-ps-lift" style="--r:${tilt[i]}deg"><div class="stp-ps-st stp-ps--${s.ink}" role="img" aria-label="${s.big}${s.unit} ${s.cap}${s.det ? `, ${s.det}` : ""}">` +
+    stamps.map((s, i) => s.mount
+      ? `<div class="stp-ps-mount"><span class="stp-ps-cap">${s.cap}</span><span class="stp-ps-how">${s.how}</span></div>`
+      : `<div class="stp-ps-lift" style="--r:${tilt[i]}deg"><div class="stp-ps-st stp-ps--${s.ink}" role="img" aria-label="${s.big}${s.unit} ${s.cap}${s.det ? `, ${s.det}` : ""}">` +
       `<div class="stp-ps-in"><b class="stp-ps-val">${s.big}${s.unit ? `<small>${s.unit}</small>` : ""}</b><span class="stp-ps-pic">${s.art}</span>` +
       `<span class="stp-ps-foot"><span class="stp-ps-cap">${s.cap}</span><span class="stp-ps-det">${s.det}</span></span></div></div></div>`).join("") +
     `</div></div>`;
@@ -2945,7 +2973,7 @@ function statsLifetimeHTML(W) {
   if (favSong && favAlbum) {
     const songAlbum = albumOfTitle(favSong.key);
     const off = songAlbum && songAlbum !== favAlbum.key
-      ? ` · <i style="--era:${albumColor(songAlbum) || "#6f675a"}">off ${escapeHtml(STATS_ALBUM_SHORT[songAlbum] || songAlbum)}</i>` : "";
+      ? ` · <i style="--era:${albumColor(songAlbum) || "#6f675a"}">off ${escapeHtml(statsAlbumName(songAlbum))}</i>` : "";
     out.push(`<div class="stp-item stp-w2 stp-o4${phone ? " stp-solo" : ""}" style="--r:1.6deg"><div class="stp-lab">home album</div>` +
       `<div class="stp-pair">${statsTape("sleeve")}` +
       `<div class="stp-sleeve">${albumSleeve(favAlbum.key, albumColor(favAlbum.key) || "#8a7f6b", null, undefined, "stp-sleeve-art")}</div>` +
@@ -2982,7 +3010,8 @@ function statsBoardHTML(s, viewMode, isAll, lastScore) {
   else {
     items += statsTicketHTML({ kicker: "", value: "–", unit: `/${TOTAL_ROUNDS}`,
       line: `your first game goes here${isAll ? "" : `, in ${MODES[viewMode].label}`}`, serial: "000", serialLabel: "GAMES<br>PLAYED" });
-    items += `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">Nothing stuck in yet. Every game you finish leaves something to keep.</p>${playCTA()}</div>`;
+    items += `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">Nothing stuck in yet. Every game you finish leaves something to keep.</p>` +
+      `${playCTA("start writing", isAll ? {} : { type: "classic", mode: viewMode })}</div>`;
   }
   if (isAll) items += statsLifetimeHTML(W);
   return `<div class="stp">${items}</div>`;
@@ -3166,9 +3195,12 @@ function infiniteTabHTML() {
       if (st.played > 0) entries.push({ variant, mode: m, best: st.best, played: st.played, total: st.totalScore || 0 });
     }
   }
+  // No runs yet: the same blank ticket and note the Classic tabs leave, not a different empty page.
   if (!entries.length) {
-    return `<div class="stats-empty inf-empty"><p>No infinite runs yet. Infinite mode deals pages until your lives run out, ` +
-      `and every round you survive strings one more bead.</p>${playCTA("play infinite")}</div>`;
+    return `<div class="stp">` + statsTicketHTML({ kicker: "", value: "–", unit: "pages",
+      line: "your longest run goes here", serial: "000", serialLabel: "INFINITE<br>RUNS" }) +
+      `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">No infinite runs yet. Infinite deals pages until your lives run out, ` +
+      `and every page you survive strings one more bead.</p>${playCTA("play infinite", { type: "infinite" })}</div></div>`;
   }
   // headline = the single longest run across every combo; the whole tab scales to it
   let top = entries[0], games = 0, rounds = 0;
@@ -37317,7 +37349,10 @@ async function init() {
   // player straight to the start screen's launchpad (same page-flip as a back tap). Delegated once
   // since the buttons live inside re-rendered bodies.
   document.addEventListener("click", (e) => {
-    if (!e.target.closest("[data-go-play]")) return;
+    const go = e.target.closest("[data-go-play]");
+    if (!go) return;
+    if (go.dataset.goType) setGameType(go.dataset.goType);
+    if (go.dataset.goMode) setMode(go.dataset.goMode);
     backToScreen("start");
   });
   $("recordsBtn").addEventListener("click", () => openRecords("start"));

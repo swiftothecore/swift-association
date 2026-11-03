@@ -14,7 +14,7 @@
    exactly where they were, and it only ever touches the first line.
 
    Skipped on purpose: inline elements (text-indent does not apply to them), centred and
-   right-aligned text (their edge is not a left edge), and blocks whose first line opens on
+   right-aligned text and items a flex column centres (their edge is not a left edge), and blocks whose first line opens on
    something other than text, such as an icon, an image or a ::before marker.
 
    THE TABLES. Measured, not eyeballed: for each glyph, canvas measureText(ch).actualBoundingBoxLeft
@@ -105,6 +105,17 @@ function hasLeadingMarker(el) {
   return before.position !== "absolute" && before.position !== "fixed";
 }
 
+/* A flex column that centres its items places each by its middle, so like centred text it has no
+   left edge to pull the ink onto. The ticket date compartments are the case: their numerals are
+   centred on their own measured ink, and a text-indent on top of that pushed them off centre. */
+function centredInColumn(el, cs) {
+  const p = el.parentElement;
+  if (!p) return false;
+  const ps = getComputedStyle(p);
+  if (!/flex$/.test(ps.display) || !ps.flexDirection.startsWith("column")) return false;
+  return (cs.alignSelf === "auto" || cs.alignSelf === "normal" ? ps.alignItems : cs.alignSelf) === "center";
+}
+
 function settle(el) {
   // SVG text has no text-indent; its x is the drawing's business.
   if (el.namespaceURI !== "http://www.w3.org/1999/xhtml" || el.isContentEditable) return;
@@ -112,7 +123,7 @@ function settle(el) {
   let em = 0;
   const family = FACE.exec(cs.fontFamily)?.[1];
   if (family && BLOCKISH.test(cs.display) &&
-      !/^(center|right|end)$/.test(cs.textAlign) && !hasLeadingMarker(el)) {
+      !/^(center|right|end)$/.test(cs.textAlign) && !centredInColumn(el, cs) && !hasLeadingMarker(el)) {
     const ch = firstInkChar(el);
     if (ch) em = inkSidebearing(ch, family, cs.fontWeight, cs.fontStyle !== "normal");
     if (Math.abs(em) * parseFloat(cs.fontSize) < MIN_PX) em = 0;

@@ -12267,7 +12267,7 @@
      A scrapbook spread rather than a dashboard: every number is stuck in on the object it
      would be written on (statsBoardHTML in app.js has the cast list and the why). Six tracks
      on a desk, each piece spanning two, four or six of them; two on a phone, where the small
-     pieces pair up and the ticket, the gist and the sticky note come first.
+     pieces pair up and the ticket and the gist come first.
 
      THE TAPE IS THE HOME SCREEN'S: .stp-tape is on the shared washi rule (surface, night
      treatment, tears), and this block only sizes it. It wears the rule's own kraft default:
@@ -12300,7 +12300,7 @@
     .stp > .stp-o0 { order: 0; } .stp > .stp-o1 { order: 1; } .stp > .stp-o2 { order: 2; }
     .stp > .stp-solo { grid-column: span 2; justify-self: center; width: 64%; }
   }
-  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-sticky, .stp-clip, .stp-slip, .stp-blot, .stp-ps-st) {
+  :root[data-theme="dark"] :is(.stp-ticket, .stp-idx, .stp-staff, .stp-graph, .stp-clip, .stp-slip, .stp-blot, .stp-ps-st) {
     filter: brightness(0.78) saturate(0.94);
   }
 
@@ -12340,11 +12340,14 @@
   }
   .stp-ticket-stub .stp-ticket-frame { left: 7px; right: 6px; }
   .stp-adm { font-family: var(--type); font-weight: 700; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 2.2px; }
+  /* a phone's ticket has no room for the whole kicker beside the date, and wrapped it stranded
+     the last word; what the ticket is for outranks the ADMIT ONE that dresses it */
+  @media (max-width: 459px) { .stp-adm-admit { display: none; } }
   .stp-ticket-big { display: flex; align-items: baseline; gap: 6px; margin: 9px 0 4px; }
-  /* Caveat's digits sit 6 to 11px right of their advance at this size, which set the numeral
-     visibly in from the typed lines above and below it. --n-nudge is measured off the real
-     ink (alignStatsTicket); -.16em is the median, for before the script has run. */
-  .stp-ticket-big b { font-family: var(--hand); font-weight: 700; font-size: calc(64px + var(--text-size-adjust)); line-height: .85; margin-left: var(--n-nudge, -0.16em); }
+  /* Caveat's digits sit 6 to 11px right of their advance at this size. The ink edge (js/inkedge.js)
+     pulls the numeral back onto the typed edge like any other handwriting; it must not be
+     nudged here as well, which is how it once landed on the printed frame. */
+  .stp-ticket-big b { font-family: var(--hand); font-weight: 700; font-size: calc(64px + var(--text-size-adjust)); line-height: .85; }
   .stp-ticket-big span { font-family: var(--hand); font-size: calc(26px + var(--text-size-adjust)); opacity: .72; }
   .stp-ticket-line { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.4; }
   /* the day the best was set, as the daily ticket prints its date */
@@ -12464,16 +12467,6 @@
   .stp-ct { font-family: var(--hand); font-size: 13px; fill: #4a4846; }
   .stp-ct.is-you { fill: var(--stp-red); font-weight: 700; }
 
-  /* the perfects, where there is no nemesis: a sticky note, which needs no tape */
-  .stp-sticky {
-    min-height: 140px; padding: 14px 12px 12px; color: var(--stp-pen); background-color: #f7e27c;
-    background-image: linear-gradient(rgba(43,39,34,.06), rgba(43,39,34,.06)); background-size: 100% 16px; background-repeat: no-repeat;
-    box-shadow: 0 1px 0 rgba(43,39,34,.08);
-  }
-  .stp-sticky .stp-lab { color: #6b5a1e; }
-  .stp-nem { display: inline-block; margin: 10px 0 4px; font-family: var(--hand); font-weight: 700; font-size: calc(36px + var(--text-size-adjust)); line-height: 1; }
-  .stp-nem--gold { color: #8a6418; }
-  .stp-sticky p { margin: 0; font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); line-height: 1.25; }
 
   /* The nemesis: a tabloid clipping (statsClippingHTML has the why). Sized in container units off
      the cutting's own width, so the masthead and headline keep their proportions from a phone's
@@ -12536,8 +12529,16 @@
      included: --ink is re-pointed at the stamp's ink inside it, and the red pen is the second ink. */
   .stp-ps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; padding: 2px 2px 6px; }
   .stp-ps-lift { min-width: 0; filter: drop-shadow(1px 1.5px 0 rgba(43, 39, 34, .18)); transform: rotate(var(--r, 0deg)); }
-  /* three stamps (no sung line yet): the odd one centred under the pair, not left with a hole beside it */
-  .stp-ps-lift:last-child:nth-child(odd) { grid-column: span 2; justify-self: center; width: calc(50% - 7px); }
+  /* a stamp not earned yet: the album's printed mount for it, its caption in the box and how to
+     fill it underneath. Printed on the page, so page ink, flat, untilted and unperforated: it is
+     the space a stamp goes, not a stamp. It stretches to its row so it is exactly a stamp's size. */
+  .stp-ps-mount {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+    min-height: 78px; padding: 8px 10px; box-sizing: border-box; text-align: center; color: var(--ink-soft);
+    border: 1px solid color-mix(in srgb, var(--ink-soft) 45%, transparent);
+  }
+  .stp-ps-mount .stp-ps-cap { opacity: .8; }
+  .stp-ps-how { font-family: var(--hand); font-size: calc(15px + var(--text-size-adjust)); line-height: 1.15; }
   .stp-ps-st {
     --k: #23406b; --pr: 3px; padding: 6px; background: #fcfaf3;
     -webkit-mask: radial-gradient(circle at center, #0000 var(--pr), #000 calc(var(--pr) + .4px)) calc(-1 * var(--pr) - 1px) calc(-1 * var(--pr) - 1px) / 8.5px 8.5px round,
@@ -12569,10 +12570,9 @@
   .stp-ps-dot { fill: var(--k); }
   .stp-ps-wash { fill: var(--k); fill-opacity: .2; }
   .stp-ps-hl { fill: none; stroke: var(--highlighter); stroke-width: 5.2; }
-  .stp-ps-word { stroke: var(--k); stroke-width: 1.62; stroke-linecap: round; }
+  .stp-ps-word { stroke: var(--k); stroke-width: 3.5; stroke-linecap: round; }
   @media (max-width: 389px) {
     .stp-ps { grid-template-columns: minmax(0, 1fr); }
-    .stp-ps-lift:last-child:nth-child(odd) { grid-column: auto; width: 100%; }
   }
 
   /* songs found: a sheet of blotting paper, an album a drop of ink bled out as far as you've
@@ -12872,7 +12872,6 @@
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink-soft);
     margin: 12px 0 4px; text-align: right;
   }
-  .inf-empty p { margin: 0 0 12px; }
   /* Narrow: a strand squeezed into a third of a phone's width stops reading as beads and
      starts reading as a thread, so it drops to its own line under the label and gets the
      whole page width. The scale is still shared, so the comparison survives the reflow. */
