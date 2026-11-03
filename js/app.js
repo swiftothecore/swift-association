@@ -58,7 +58,7 @@ import {
   CUSTOM_PRESET_SHELF, CUSTOM_ENDLESS_MILESTONE, MEAN_GRUDGE,
   CUSTOM_ROUNDS_MIN, CUSTOM_ROUNDS_MAX, CUSTOM_ROUNDS_TYPED_MAX,
   CUSTOM_LIVES_MIN, CUSTOM_LIVES_MAX, CUSTOM_LIVES_TYPED_MAX, CUSTOM_ANSWER_MODES, CUSTOM_STOCKS,
-  PEN_SVG, STAR_SVG, SPARKLE_SVG,
+  PEN_SVG, STAR_SVG, STAR_PATH, SPARKLE_SVG, SPARKLE_PATH,
   WHALE_SURFACE_MS, WHALE_TAIL_SVG, WHALE_SPLASH_SVG,
   BOTTLE_SURFACE_MS, BOTTLE_SVG, BOTTLE_WAVE_SVG,
   SKILLS, SKILL_IDS, SKILL_BY_ID,
@@ -2682,9 +2682,10 @@ function statsStaffSVG(recent, W) {
   recent.forEach((s, i) => {
     const cx = xs[i], cy = ys[i], star = s === TOTAL_ROUNDS;
     if (star) {
-      let d = "";
-      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? 2.7 : 6.2; d += (k ? "L" : "M") + (cx + Math.cos(a) * rr).toFixed(1) + " " + (cy + Math.sin(a) * rr).toFixed(1); }
-      out += `<path class="stp-star" d="${d}Z"/>`;
+      // THE star (STAR_PATH), scaled onto the dot and each one turned its own few degrees, so
+      // a run of perfect games is a row of hand-drawn stars rather than one stamp repeated.
+      const tilt = ((i * 37) % 25) - 12;
+      out += `<path class="stp-star" vector-effect="non-scaling-stroke" d="${STAR_PATH}" transform="translate(${cx.toFixed(1)} ${cy}) rotate(${tilt}) scale(0.64) translate(-12 -12)"/>`;
     } else out += `<circle class="stp-dot" cx="${cx.toFixed(1)}" cy="${cy}" r="${DOT}"/>`;
     // the figure goes on the open side of its dot: above a peak, below a dip, and where the
     // line runs through, on the side of the neighbour it is further from
@@ -5499,7 +5500,7 @@ function heatSectionHTML() {
   return `<p class="rec-group-label">calendar: games played</p>` +
     `<div class="heat-wrap">` +
       `<div class="heat-controls">` +
-        `<select id="heatRange" class="heat-select" aria-label="calendar timeframe">${optHTML}</select>` +
+        `<span class="sel-wrap"><select id="heatRange" class="heat-select" aria-label="calendar timeframe">${optHTML}</select></span>` +
         `<div class="heat-legend"><span>less</span>${legend}<span>more</span></div>` +
       `</div>` +
       `<div id="heatBody"></div>` +
@@ -7414,6 +7415,12 @@ function openBonus(from) {
    play screen and the keepsake all draw the one cover. An unwritten game gets a blank kraft
    cover with its name pencilled on: an object that exists, for a game that does not. */
 function bonusCover(g, extra = "") { return zineCover(g, extra); }
+// The sparkle the cover throws off when it bows: three twinkles, each its own drawing and size,
+// where the dance used to throw a typed ✧ and two text-shadow copies of it.
+const BONUS_COVER_TWINKLES = `<svg viewBox="0 0 24 24" overflow="visible">` +
+  `<path d="${SPARKLE_PATH}"/>` +
+  `<path transform="translate(-42 18) scale(0.8)" d="M11 3.4 Q12.8 9.6 20.2 10.6 Q13 12.8 12.6 20.6 Q10.4 13.6 3.6 12.8 Q9.8 10.4 11 3.4 Z"/>` +
+  `<path transform="translate(6 43) scale(0.62)" d="M12.8 2.8 Q12.6 10 21.4 12.4 Q12.8 13.4 11.2 21.4 Q11 14.2 2.8 11.2 Q11.2 9.8 12.8 2.8 Z"/></svg>`;
 // Either side of the Spot the Slip zine. Everything about the PAGE (the deal, the tappable line,
 // the reveal, the card) is the same on both, and asks this; only the records, the clock after
 // the find and the score ask for the side by id.
@@ -7912,7 +7919,7 @@ function startBonusGame(g, lensId = null, opts = {}) {
   screens.bonusplay.dataset.bonusGame = lens ? "ruthless" : g.id;
   $("bonusPlayTitle").innerHTML = `<button type="button" class="bonus-cover-play" aria-label="Make the ${escapeHtml(g.name)} cover dance" title="a little encore">` +
     `<span class="bonus-cover-stack" aria-hidden="true">${bonusCover(g, "bonus-cover-sm")}</span>` +
-    `<span class="bonus-cover-stars" aria-hidden="true">✧</span></button><span class="bonus-title-label">${escapeHtml(title)}</span>`;
+    `<span class="bonus-cover-stars" aria-hidden="true">${BONUS_COVER_TWINKLES}</span></button><span class="bonus-title-label">${escapeHtml(title)}</span>`;
   /* Track by Track is not a run of pages, so it never enters the page loop. This is the same
      hand-over the Ruthless Game makes at the other end of a run, and for the same reason: the
      screen, the clock and the chrome are the shelf's, the pages are not, and nothing in
@@ -11443,7 +11450,7 @@ function perfectedChallenge(id, rec = challengeRecord(id)) {
 }
 const CHALL_RING = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="#b6a98d" stroke-width="1.6"/></svg>`;
 const CHALL_LOCK = `<svg viewBox="0 0 20 20" class="chall-mark-svg" aria-hidden="true"><rect x="4.5" y="9" width="11" height="8" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.8 9 V6.7 a3.2 3.2 0 0 1 6.4 0 V9" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`;
-const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="#e0a32f" stroke="#b9821f" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+const CHALL_STAR = `<svg viewBox="0 0 24 24" class="chall-star-svg" aria-hidden="true"><path d="${STAR_PATH}" fill="#e0a32f" stroke="#b9821f" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 // The token itself: an admission ticket with a notch bitten out of the top and bottom of its
 // stub line, the same object the wallet and the unlock button are already built from in CSS.
 // Drawn rather than set as 🎟 because every other mark on these cards is drawn: the emoji
@@ -12611,7 +12618,7 @@ function renderTrackPicker() {
     mark.innerHTML = `<button type="button" class="bonus-cover-play"` +
       ` aria-label="Make the ${escapeHtml(g.name)} cover dance" title="a little encore">` +
       `<span class="bonus-cover-stack" aria-hidden="true">${bonusCover(g, "bonus-cover-sm")}</span>` +
-      `<span class="bonus-cover-stars" aria-hidden="true">✧</span></button>`;
+      `<span class="bonus-cover-stars" aria-hidden="true">${BONUS_COVER_TWINKLES}</span></button>`;
   }
   const albums = trackAlbums(index);
   const board = loadTracks();
@@ -15049,8 +15056,6 @@ function keepsakeLabel(btn) {
   return label ? label.textContent : btn.textContent;
 }
 function setKeepsakeLabel(btn, text, state) {
-  // A button that draws its own tick when kept doesn't also need one in its words.
-  if (state === "kept" && btn.querySelector(".keepsake-ic--kept")) text = text.replace(/\s*✓$/, "");
   const label = btn.querySelector("[data-keepsake-label]") || btn.querySelector(".sr-only");
   if (!label) { btn.textContent = text; return; }
   label.textContent = text;
@@ -15071,7 +15076,7 @@ async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept, int
     if (wantDownload) await download(meta());
     else await copy(meta());
     kept = true;
-    if (btn) setKeepsakeLabel(btn, wantDownload ? "Saved ✓" : "Copied ✓", "kept");
+    if (btn) setKeepsakeLabel(btn, wantDownload ? "Saved" : "Copied", "kept");
   } catch (e2) {
     console.warn(noun + " PNG export failed:", e2);
     if (!wantDownload) {
@@ -15079,7 +15084,7 @@ async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept, int
       try {
         await download(meta());
         kept = true;
-        if (btn) setKeepsakeLabel(btn, "Saved ✓", "kept");
+        if (btn) setKeepsakeLabel(btn, "Saved", "kept");
       } catch (e3) {
         console.warn(noun + " PNG download fallback failed:", e3);
         if (btn) setKeepsakeLabel(btn, "Couldn’t save", "failed");
@@ -20113,13 +20118,16 @@ function renderSurviveBanner() {
 }
 // Impostor: run progress. Deliberately says nothing about THIS page — only the tally of real
 // words named (toward target) and impostors caught so far, so it never gives the round away.
+// The impostor's own flag (the #impostor-flag drawing the "call its bluff" button carries),
+// inline on the banner and the verdict instead of the 🚩 emoji they used to print.
+const IMPOSTOR_FLAG = `<svg class="flag-flag flag-flag--inl" viewBox="0 0 24 24" aria-hidden="true"><use href="#impostor-flag"/></svg>`;
 function renderImpostorBanner() {
   if (!impostorRuleActive()) return;
   const el = ensureChallBanner();
   // The score bundles caught fakes AND real answers; the target is real words only, so
   // show real words named (score minus flags) against it — never the padded raw score.
   el.innerHTML =
-    `<span class="chall-prog-name">🚩 ${impostorFlagged} caught</span>` +
+    `<span class="chall-prog-name">${IMPOSTOR_FLAG}${impostorFlagged} caught</span>` +
     `<span class="chall-prog-count">${score - impostorFlagged} / ${currentChallenge.target || 7}</span>`;
 }
 // The Smallest Song: render the prompt word tiny, faint, tilted, and dropped
@@ -20575,7 +20583,7 @@ function renderNewSongBanner() {
     `</span>`;
   el.innerHTML = got
     ? `<span class="chall-banner-tag" style="border-color:${col};color:${col}">found</span> ` +
-      `<span style="text-decoration:line-through;opacity:0.7">${escapeHtml(censor(challengeTargetSong.title))}</span> ✓`
+      `<span style="text-decoration:line-through;opacity:0.7">${escapeHtml(censor(challengeTargetSong.title))}</span> ${verdictMark("good", "inl")}`
     : `<span class="chall-banner-tag">find</span> ` +
       `<span class="chall-prog-name" style="color:${col}">${escapeHtml(censor(challengeTargetSong.title))}</span>` +
       livesPips;
@@ -23872,6 +23880,43 @@ const INSURE_KEY_LABEL = "ctrl / ⌘ + I";
 /* ---------- The between-pages offer ---------- */
 // Press Your Luck and Double Or Nothing both stop between the answered page and the next
 // one to ask the same shape of question (take the pot, or let it ride onto the next page).
+// The risk offers' marks, drawn in the perk marks' four layers (see PERK_MARKS) so the risk
+// overlay's cards are the same stock as the path's. Beads ARE the score on these rules, so each
+// card is a thing done with beads: bank it screws the lid on a jar of them, ride on piles them
+// higher than they will stand (the top one already going), take it pulls a pouch shut on them,
+// and double or nothing is one bead strung beside the dashed ghost of the one it could become.
+// They used to be a typed tick, an arrow and "x2".
+const RISK_MARKS = {
+  bank: `<path class="pk-spot" d="M9.4,14 C8.6,18 8.4,27 9.2,32.8 C9.6,35 11.4,35.6 20,35.6 C28.4,35.6 30.4,35 30.8,32.8 C31.6,27 31.4,18 30.6,14 Z"/>` +
+    `<path class="pk-pen" stroke-width="2" d="M9.4,14 C8.6,18 8.4,27 9.2,32.8 C9.6,35 11.4,35.6 20,35.6 C28.4,35.6 30.4,35 30.8,32.8 C31.6,27 31.4,18 30.6,14"/>` +
+    `<circle class="pk-pen" stroke-width="1.5" cx="14.2" cy="31.2" r="2.5"/><circle class="pk-pen" stroke-width="1.5" cx="19.8" cy="31.8" r="2.4"/>` +
+    `<circle class="pk-pen" stroke-width="1.5" cx="25.6" cy="30.9" r="2.6"/><circle class="pk-pen" stroke-width="1.5" cx="16.9" cy="26.3" r="2.4"/>` +
+    `<circle class="pk-pen" stroke-width="1.5" cx="22.8" cy="25.9" r="2.5"/><circle class="pk-pen" stroke-width="1.5" cx="19.5" cy="21.2" r="2.3"/>` +
+    `<g transform="rotate(-7 20 10)"><path class="pk-knock" d="M8.2,7.6 L31.6,7.2 L31.8,12.6 L8.4,13 Z"/>` +
+    `<path class="pk-pen" stroke-width="1.9" d="M8.2,7.6 L31.6,7.2 L31.8,12.6 L8.4,13 Z"/>` +
+    `<path class="pk-pen" stroke-width="1" d="M12.4,7.6 L12.5,12.9 M16.6,7.5 L16.6,12.8 M20.8,7.4 L20.9,12.8 M25,7.4 L25.1,12.7 M29,7.3 L29.1,12.7"/></g>`,
+  ride: `<path class="pk-pen" stroke-width="1" d="M4.4,35.8 C14,35.3 25,35.7 35.6,35.2"/>` +
+    `<circle class="pk-spot" cx="15.6" cy="29.4" r="6"/><circle class="pk-pen" stroke-width="2.1" cx="15.6" cy="29.4" r="6"/><circle class="pk-pen" stroke-width="1" cx="15.299999999999999" cy="29.2" r="1.2"/>` +
+    `<circle class="pk-knock" cx="17.8" cy="18.2" r="5.4"/><circle class="pk-pen" stroke-width="2" cx="17.8" cy="18.2" r="5.4"/><circle class="pk-pen" stroke-width="1" cx="18.0" cy="17.9" r="1.0"/>` +
+    `<circle class="pk-spot" cx="21.2" cy="8.4" r="4.8"/><circle class="pk-pen" stroke-width="1.9" cx="21.2" cy="8.4" r="4.8"/><circle class="pk-pen" stroke-width="1" cx="21.5" cy="8.200000000000001" r="0.9"/>` +
+    `<circle class="pk-knock" cx="31.6" cy="6.8" r="4.0"/><circle class="pk-pen" stroke-width="1.8" cx="31.6" cy="6.8" r="4.0"/><circle class="pk-pen" stroke-width="1" cx="32.0" cy="6.8999999999999995" r="0.8"/>`,
+  take: `<path class="pk-spot" d="M11.2,17.2 C6,22 6.4,33.2 12.6,34.8 C17,36 23,36 27.4,34.8 C33.6,33.2 34,22 28.8,17.2 Z"/>` +
+    `<path class="pk-pen" stroke-width="2" d="M11.2,17.2 C6,22 6.4,33.2 12.6,34.8 C17,36 23,36 27.4,34.8 C33.6,33.2 34,22 28.8,17.2"/>` +
+    `<path class="pk-pen" stroke-width="1.9" d="M11.2,17.2 C14.2,15.6 25.8,15.6 28.8,17.2"/>` +
+    `<path class="pk-pen" stroke-width="1.6" d="M13.4,16 C11.8,12.6 13.6,9.6 15.6,11.2 C16.4,8.2 18.8,8 20,10.6 C21.4,8 23.8,8.8 24.4,11.4 C26.6,10.2 28.2,12.8 26.6,16"/>` +
+    `<path class="pk-pen" stroke-width="1" d="M15.2,19.6 C14.2,24 14.4,29 15.6,33.2 M20.2,19.2 C19.8,24.4 20,29 20.4,34 M25.4,19.8 C26.6,24.4 26.4,29.2 25,33.4"/>` +
+    `<path class="pk-pen" stroke-width="1.3" d="M28.2,16.8 C31.4,18.4 32.8,21.4 32.4,25.8 M28.6,16.9 C33,16.8 35.4,19 36.2,22.4"/>` +
+    `<circle class="pk-blot" cx="32.3" cy="27" r="1.5"/><circle class="pk-blot" cx="36.3" cy="23.6" r="1.3"/>`,
+  double: `<path class="pk-pen" stroke-width="1" d="M1.8,23.6 C10,22.2 27,22.4 38.4,20.8"/>` +
+    `<circle class="pk-knock" cx="12.4" cy="21.6" r="8.6"/><circle class="pk-spot" cx="12.4" cy="21.6" r="8.6"/>` +
+    `<circle class="pk-pen" stroke-width="2.2" cx="12.4" cy="21.6" r="8.6"/><ellipse class="pk-pen" stroke-width="1.3" cx="12.2" cy="21.9" rx="1.9" ry="1.5"/>` +
+    `<circle class="pk-knock" cx="29" cy="20.2" r="8.1"/>` +
+    `<circle class="pk-pen" stroke-width="1.8" stroke-dasharray="3 2.5" cx="29" cy="20.2" r="8.1"/><ellipse class="pk-pen" stroke-width="1" stroke-dasharray="1.3 1.2" cx="29.2" cy="20.4" rx="1.8" ry="1.4"/>`,
+};
+function riskMark(id) {
+  return `<svg class="cpc-mark" viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#navInk)">${RISK_MARKS[id]}</g></svg>`;
+}
+
 // That is structurally a fork, so it hooks nextRound the same way Choose Your Path does, and
 // wears the same overlay.
 function riskOverlay(o, onPick) {
@@ -23884,7 +23929,7 @@ function riskOverlay(o, onPick) {
     `<p class="chall-path-sub">${o.sub}</p>` +
     `<div class="chall-path-cards">` +
     o.cards.map((c, i) =>
-      `<button class="chall-path-card" data-i="${i}"><span class="cpc-icon">${escapeHtml(c.icon)}</span>` +
+      `<button class="chall-path-card" data-i="${i}"><span class="cpc-icon">${riskMark(c.mark)}</span>` +
       `<span class="cpc-name">${escapeHtml(c.name)}</span><span class="cpc-desc">${escapeHtml(c.desc)}</span></button>`).join("") +
     `</div></div>`;
   $("screen-game").appendChild(ov);
@@ -23910,8 +23955,8 @@ function showRiskDecision() {
       title: "press your luck",
       sub: `page ${round} cleared, <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"} riding on the next one`,
       cards: [
-        { icon: "✓", name: "bank it", desc: `take the ${beadPot} into your total and start a fresh pot` },
-        { icon: "↑", name: "ride on", desc: `the next page you clear is worth ${(beadRide + 1) * PRESS_RIDE_STEP}, but a miss wipes the pot` },
+        { mark: "bank", name: "bank it", desc: `take the ${beadPot} into your total and start a fresh pot` },
+        { mark: "ride", name: "ride on", desc: `the next page you clear is worth ${(beadRide + 1) * PRESS_RIDE_STEP}, but a miss wipes the pot` },
       ],
     }, (i) => {
       if (i === 0) bankPot();
@@ -23928,10 +23973,10 @@ function showRiskDecision() {
       title: "double or nothing",
       sub: `page ${round} cleared: the chain is worth <b>${beadPot}</b> bead${beadPot === 1 ? "" : "s"}`,
       cards: [
-        { icon: "✓", name: "take it", desc: beadPot === 1
+        { mark: "take", name: "take it", desc: beadPot === 1
           ? "keep the bead and start the next chain at one"
           : `keep all ${beadPot} beads and start the next chain at one` },
-        { icon: "×2", name: "double or nothing", desc: `clear page ${round + 1} and the chain is worth ${beadPot * 2}. ` +
+        { mark: "double", name: "double or nothing", desc: `clear page ${round + 1} and the chain is worth ${beadPot * 2}. ` +
           (beadPot === 1 ? "Miss it and the bead goes with it." : `Miss it and all ${beadPot} go with it.`) },
       ],
     }, (i) => {
@@ -26192,7 +26237,7 @@ function flagImpostor() {
   celebrateCorrect(1, 0);
   const fb = $("feedback");
   fb.innerHTML = verdictMarkup(
-    `<div class="fb-head"><div class="banner good">🚩 impostor caught</div></div>`,
+    `<div class="fb-head"><div class="banner good">${IMPOSTOR_FLAG}impostor caught</div></div>`,
     `<div class="impostor-caught">“<b>${escapeHtml(currentWord)}</b>” appears in no Taylor song. Good instinct.</div>`,
     turnSlip("continueBtn"));
   playSound("correct");
@@ -26707,7 +26752,7 @@ function submitAnswer(song, isTimeout) {
     roundNamed.push(song.title);
     renderMultiBanner();
     if (roundNamed.length < need) {
-      softRejectFlash(`✓ ${roundNamed.length} of ${need} · name another song with the word`);
+      softRejectFlash(`${verdictMark("good", "inl")}${roundNamed.length} of ${need} · name another song with the word`);
       return;
     }
     // `need` reached — fall through with this final song to resolve the page correct.
@@ -29365,12 +29410,18 @@ function celebrateCorrect(streak, boost = 0) {
   }
 }
 
+// Two hearts drawn either side of the 13, two drawings rather than one twice: the left one
+// leans and pinches deeper, the right one is rounder and a size down.
+const SECRET_13_HEARTS = [
+  `<svg class="s13-heart" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13.6 C5 11.4 1.6 8.8 1.8 5.4 C2 3 4.2 1.8 5.8 2.2 C7 2.5 7.8 3.6 8.1 4.8 C8.6 3.2 9.8 2.1 11.3 2.2 C13.4 2.4 14.6 4.4 14.1 6.6 C13.4 9.6 10.6 11.6 8 13.6 Z" transform="rotate(-9 8 8)"/></svg>`,
+  `<svg class="s13-heart s13-heart--r" viewBox="0 0 16 16" aria-hidden="true"><path d="M7.7 13.8 C5 11.9 1.7 9.6 1.9 6.2 C2.1 3.7 3.9 2.4 5.6 2.6 C6.8 2.8 7.5 3.8 7.9 5.2 C8.4 3.6 9.7 2.6 11.3 2.7 C13.5 2.9 14.5 4.8 14 7 C13.3 10 10.4 12.1 7.7 13.8 Z" transform="rotate(7 8 8)"/></svg>`,
+];
 function revealSecret13() {
   const h = document.querySelector("header.title");
   if (!h || h.querySelector(".secret-13")) return;
   const s = document.createElement("div");
   s.className = "secret-13"; s.setAttribute("aria-hidden", "true");
-  s.textContent = "♡ 13 ♡";
+  s.innerHTML = `${SECRET_13_HEARTS[0]}13${SECRET_13_HEARTS[1]}`;
   h.appendChild(s);
   setTimeout(() => s.remove(), 2600);
 }
@@ -29767,7 +29818,7 @@ function setSelectHTML(key, name, desc, options) {
   // the control column would ellipsis them down to nothing useful.
   return `<div class="set-row set-row--stack"><div class="set-label"><span class="set-name">${setIco(key)}${name}</span>` +
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
-    `<div class="set-control"><select class="set-select" id="set-${key}" data-select="${key}" aria-label="${name}">${opts}</select></div></div>`;
+    `<div class="set-control"><span class="sel-wrap sel-wrap--full"><select class="set-select" id="set-${key}" data-select="${key}" aria-label="${name}">${opts}</select></span></div></div>`;
 }
 function setSliderHTML() {
   return `<div class="set-row"><div class="set-label"><span class="set-name">${setIco("countdownSecs")}Countdown length</span>` +
@@ -30819,7 +30870,9 @@ function containDialogBackground(modal) {
   Array.from(document.body.children).forEach((el) => {
     // The hidden import picker is activated programmatically from Settings. It is already out
     // of layout and the accessibility tree, and making it inert can block its file chooser.
-    if (!(el instanceof HTMLElement) || el === modal || el.id === "importFile"
+    // The toast layer is a live region with nothing focusable in it, and Settings' own Restore
+    // reports through it, so an inert layer would be a report nobody's screen reader hears.
+    if (!(el instanceof HTMLElement) || el === modal || el.id === "importFile" || el.id === "toastLayer"
         || el.tagName === "SCRIPT" || el.hasAttribute("inert")) return;
     el.setAttribute("inert", "");
     contained.push(el);
@@ -37622,9 +37675,14 @@ async function init() {
     reader.onload = () => {
       let n = 0;
       try { n = importData(JSON.parse(reader.result)); }
-      catch (err) { alert("Couldn't restore that backup. Check the file and available browser storage."); return; }
-      if (n > 0) { alert("Restored " + n + " item(s). Reloading…"); location.reload(); }
-      else alert("Nothing to restore from that file.");
+      // Told on the notebook's own toast, never a browser alert(): the grey system box was the
+      // one thing in the whole game that wasn't paper.
+      catch (err) { notifyNote("couldn’t restore that backup", "check the file, and that the browser has room to store it"); return; }
+      if (n > 0) {
+        notifyNote("backup restored", `${n} thing${n === 1 ? "" : "s"} back in the notebook · reopening it`);
+        setTimeout(() => location.reload(), 1600);
+      }
+      else notifyNote("nothing to restore", "that file had nothing from this notebook in it");
     };
     reader.readAsText(file);
   });

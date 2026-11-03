@@ -336,6 +336,18 @@ body.sx-scrolled .dx-book { transform: translate(46%, 54%) rotate(-6deg); }
   background: #f1ead9; border: 1px solid #cbbfa8; border-radius: 4px; padding: 8px; min-height: 44px; max-width: 100%; cursor: pointer;
 }
 .sx-filter select:hover { border-color: var(--ink-soft); }
+/* The browser's own arrow off, and a drawn chevron in its place, hung off the label because a
+   <select> has no ::after. Masked, so it follows the select's ink, red pen included. */
+.sx-filter { position: relative; }
+.sx-filter select { -webkit-appearance: none; appearance: none; padding-right: 30px; }
+.sx-filter::after {
+  content: ""; position: absolute; right: 11px; top: 50%; width: 12px; height: 8px; margin-top: -4px;
+  background: var(--ink-soft); pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 9' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.6 2.3Q4.5 5.3 6.3 7Q8.7 4.4 11.5 1.7' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 9' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.6 2.3Q4.5 5.3 6.3 7Q8.7 4.4 11.5 1.7' stroke-width='1.5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.sx-filter:has(select.active)::after { background: #7a2f24; }
+:root[data-theme="dark"] .sx-filter:has(select.active)::after { background: #f0b3a6; }
 .sx-filter select.active { color: #7a2f24; border-color: #c08274; background: #f3e2dc; }
 
 /* a plain-English read of the current match/layout combination — teaches the controls by

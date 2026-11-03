@@ -3140,10 +3140,18 @@ export const TITLE_ALIASES = {
   "I Heart ?": ["i heart question mark"],
 };
 
+// THE star: one plump five-pointer, cut by hand, and every star on the site is this drawing
+// (STAR_SVG, ACH_ICONS.star, CHALL_STAR, the notebook cover's, the Stats graph's perfect
+// games), so they read as one family and only the finish differs. It used to be a regular
+// pentagram plotted from a compass, which beside handwriting read as a printed dingbat. Now
+// no two arms are the same length, the notches don't sit on one circle and the whole thing
+// leans a little: the irregularity is the drawing, so don't tidy it.
+export const STAR_PATH = "M11.6 2.0 L15.0 8.2 L21.6 9.4 L16.5 13.9 L18.1 20.3 L12.1 16.6 L5.9 19.4 L7.5 13.3 L2.6 8.6 L9.0 7.7 Z";
+
 /* ---------- Achievements ---------- */
 export const ACH_ICONS = {
   // hung trinkets: filled bead bodies (ink-fill) with inked detail (ink)
-  star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z"/><path class="ink" stroke-width="0.9" opacity="0.7" d="M12 6.4 L13.1 9.2 L16 9.5"/></svg>`,
+  star:    `<svg viewBox="0 0 24 24"><path class="ink-fill" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round" d="${STAR_PATH}"/><path class="ink" stroke-width="0.9" opacity="0.7" d="M12 6.4 L13.1 9.2 L16 9.5"/></svg>`,
   // the whole set found: three polaroids fanned out of the shoebox, the top one face up.
   // Each card is paper-filled rather than class="ink-fill" so the front of the fan masks
   // the ones behind it instead of the outlines piling into a blot.
@@ -5384,13 +5392,11 @@ export const PEN_SVG = {
   glitter: `<svg viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><path class="barrel" d="M8 10 H20 Q22 10 22 12 Q22 14 20 14 H8 Z"/><rect class="grip" x="6" y="10.2" width="2.4" height="3.6" rx="0.4"/><path class="tip" d="M6 10.4 L3 11.6 Q2.3 12 3 12.4 L6 13.6 Z"/><circle class="glitter-spark" cx="2.7" cy="12" r="0.6"/><rect class="band" x="19" y="10" width="1.6" height="4" rx="0.6"/></g><g class="glitter-spark"><path d="M5 6 l0.5 1.4 1.4 0.5 -1.4 0.5 -0.5 1.4 -0.5 -1.4 -1.4 -0.5 1.4 -0.5 z"/><path d="M18 17 l0.4 1.1 1.1 0.4 -1.1 0.4 -0.4 1.1 -0.4 -1.1 -1.1 -0.4 1.1 -0.4 z"/><circle cx="11" cy="5.5" r="0.7"/><circle cx="16" cy="19" r="0.6"/></g></svg>`,
 };
 
-// A plump five-point star (inner/outer radius ~0.52, up from the spiky ~0.35) with a
-// same-colour rounded-join/cap stroke that rounds the points right off — friendlier and a
-// touch hand-drawn, away from the machined look. The plump geometry is shared by
-// ACH_ICONS.star and CHALL_STAR so every star on the site reads as one family (only the
-// finish differs).
-export const STAR_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2.3 L14.94 7.96 L21.22 9 L16.76 13.55 L17.7 19.85 L12 17 L6.3 19.85 L7.24 13.55 L2.78 9 L9.06 7.96 Z" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
-export const SPARKLE_SVG = `<svg viewBox="0 0 24 24"><path d="M12 1 C13 8 16 11 23 12 C16 13 13 16 12 23 C11 16 8 13 1 12 C8 11 11 8 12 1 Z" fill="currentColor"/></svg>`;
+export const STAR_SVG = `<svg viewBox="0 0 24 24"><path d="${STAR_PATH}" fill="currentColor" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+// The twinkle, likewise one drawing: four arms of four lengths, pinched off-centre, never the
+// mirror-perfect compass rose it used to be.
+export const SPARKLE_PATH = "M12.4 1.2 Q13.4 9.4 22.6 11.4 Q13.8 13.2 11.6 22.8 Q10.6 14 1.6 12.6 Q10.8 10.2 12.4 1.2 Z";
+export const SPARKLE_SVG = `<svg viewBox="0 0 24 24"><path d="${SPARKLE_PATH}" fill="currentColor"/></svg>`;
 
 // Yes, whale! — a whale's tail surfacing from behind the top edge of the notebook
 // (see surfaceWhale in app.js): a thick stalk leaning out of the water and two long
