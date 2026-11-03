@@ -187,13 +187,12 @@ export const ACH_FOLD_KEY = "swiftSongAssociation.charmFolds";         // [secti
 // A polaroid develops like real instant film: solid black on unlock, the photo fading
 // in POLAROID_DEVELOP_MS later. "developed" is derived from unlock+this at render time,
 // never a running timer, so it survives reloads and self-heals. POLAROID_TOTAL is the
-// counter denominator. It was a Taylor number (22) that the set grew toward, and it MUST go
-// back to 22 the day the retired "i'm not asleep" polaroid is rebuilt (PLAN.md holds its art
-// and its trigger). It sits at the true count meanwhile because You Took A Polaroid Of Us
-// fires off POLAROIDS.length: a denominator running ahead of the set would hand the player
-// "every polaroid found" over a counter reading 21 / 22.
+// counter denominator, and it sits at the true count of the drawn set because You Took A
+// Polaroid Of Us fires off POLAROIDS.length: a denominator running ahead of the set would hand
+// the player "every polaroid found" over a short count. It goes up by one with every polaroid
+// added, including one that hangs without a trigger yet.
 export const POLAROID_DEVELOP_MS = 13 * 60 * 1000;   // 13 real minutes
-export const POLAROID_TOTAL = 21;
+export const POLAROID_TOTAL = 24;
 
 // Stickers, the die-cut vinyl set (objects + SVGs live in js/stickers.js). A second
 // collectible beside the polaroids, never mixed into their grid: polaroids develop, stickers
