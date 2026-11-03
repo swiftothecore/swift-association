@@ -14431,7 +14431,7 @@
   @media (prefers-reduced-motion: reduce) { .sb-album.sb-arrive .sb-band { animation: none; } }
 
   .sb-list { list-style: none; margin: 0; padding: 0 0 0 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; }
-  .sb-song { display: flex; align-items: flex-start; gap: 9px; padding: 3px 0; min-width: 0; }
+  .sb-song { display: flex; padding: 3px 0; min-width: 0; }
   .sb-title {
     /* A song you have not found yet is the ink faded, so it is written as a mix of --ink and
        follows the theme. As a literal it was the LIGHT ink, which put every unfound title on
@@ -14439,6 +14439,16 @@
     font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 1.1; color: color-mix(in srgb, var(--ink) 42%, transparent); min-width: 0;
   }
   .sb-song.got .sb-title { color: var(--ink); }
+  /* The row is the door to the song's lyrics, but it must still read as a checklist line, so
+     no underline or arrow: the title just takes on the album's ink under the pointer. */
+  .sb-song-open {
+    display: flex; align-items: flex-start; gap: 9px; min-width: 0; width: 100%;
+    margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit;
+    text-align: left; cursor: pointer;
+  }
+  .sb-song-open .sb-title { transition: color .15s ease; }
+  .sb-song-open:hover .sb-title { color: color-mix(in srgb, var(--alb) 70%, var(--ink)); }
+  .sb-song-open:focus-visible { outline: 2px solid color-mix(in srgb, var(--alb) 60%, var(--ink)); outline-offset: 2px; border-radius: 3px; }
   /* the checklist box: a pencil square, ticked in the album's own ink */
   .sb-box { width: 17px; height: 17px; flex: none; margin-top: 2px; display: block; }
   .sb-box svg { width: 100%; height: 100%; display: block; overflow: visible; }

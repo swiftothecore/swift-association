@@ -5070,10 +5070,12 @@ function renderSongbook() {
     const shown = hide ? songs.filter((s) => !found[s.title]) : songs;
     const items = shown.map((s) => {
       const has = !!found[s.title];
-      return `<li class="sb-song${has ? " got" : ""}">` +
+      // Every title opens its lyrics, found or not: the titles are already on the page and the
+      // searcher prints any song whole, so a lock here would guard nothing. The tick is the reward.
+      return `<li class="sb-song${has ? " got" : ""}"><button type="button" class="sb-song-open" data-sb-song="${escapeHtml(s.title)}">` +
         `<span class="sb-box" aria-hidden="true">${sbBox(has)}</span>` +
         `<span class="sb-title">${escapeHtml(censor(s.title))}</span>` +
-        `<span class="sr-only">${has ? ", found" : ", not found yet"}</span></li>`;
+        `<span class="sr-only">${has ? ", found" : ", not found yet"}, open lyrics</span></button></li>`;
     }).join("");
     // The album's band runs the width of the page and IS its progress bar: the tinted part is
     // the share of its songs found, so a nearly-done album reads as nearly full before the
@@ -5094,6 +5096,8 @@ function renderSongbook() {
   $("songbookBody").innerHTML = html;
   $("songbookBody").querySelectorAll("[data-sb-jump]").forEach((b) =>
     b.addEventListener("click", () => songbookJump(b.dataset.sbJump)));
+  $("songbookBody").querySelectorAll("[data-sb-song]").forEach((b) =>
+    b.addEventListener("click", () => openFullSong(b.dataset.sbSong)));
   $("songbookHide")?.addEventListener("click", () => {
     try { localStorage.setItem(SB_HIDE_KEY, sbHideFound() ? "0" : "1"); } catch { /* the toggle just won't stick */ }
     renderSongbook();
