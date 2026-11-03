@@ -12263,6 +12263,9 @@
      keyboard focus so it still answers like a link. Armed is a warning, so it keeps its line. */
   .btn-link:has(.back-arrow):not(.armed) { text-decoration: none; }
   .btn-link:has(.back-arrow):not(.armed):is(:hover, :focus-visible) .ctl-lab { text-decoration: underline; text-underline-offset: 3px; }
+  /* A panel's "✕ close" wears no line either, hovered or not: the cross already says what it
+     does, and a typed rule under it read as a cheap web link sitting on the dashed header rule. */
+  .btn-link.btn-close, .btn-link.btn-close:is(:hover, :focus-visible) { text-decoration: none; }
   /* ---------- Stats, taped in ----------
      A scrapbook spread rather than a dashboard: every number is stuck in on the object it
      would be written on (statsBoardHTML in app.js has the cast list and the why). Six tracks
@@ -12499,7 +12502,11 @@
     line-height: 1.1; text-decoration: none; white-space: nowrap; transform: rotate(-2deg); transform-origin: left;
   }
   .stp-pen-note .cta-arrow { width: 1.6em; height: .8em; }
-  .stp-pen-note:is(:hover, :focus-visible) { outline: none; text-decoration: underline; text-underline-offset: 3px; }
+  /* The handwritten doors answer a hover by pushing their drawn arrow on, never with a typed
+     underline: a browser rule under Caveat looks like a web link pasted onto the clipping. */
+  :is(.stp-pen-note, .stp-door) .cta-arrow { transition: transform .18s ease-out; }
+  .stp-pen-note:is(:hover, :focus-visible) { outline: none; }
+  :is(.stp-pen-note, .stp-door):is(:hover, :focus-visible) .cta-arrow { transform: translateX(4px); }
 
   /* the home album: its record sleeve (Track by Track's own art, which brings its own torn
      edges and dark ground, so it takes no night dim), with a slip tucked under it. The slip
@@ -12587,7 +12594,7 @@
   .stp-blot-hd b { font-family: var(--hand); font-weight: 700; font-size: calc(32px + var(--text-size-adjust)); line-height: 1; }
   .stp-blot-hd span { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); color: var(--stp-soft); }
   .stp-door { border: 0; background: none; padding: 2px 0; cursor: pointer; color: var(--stp-red); font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); }
-  .stp-door:is(:hover, :focus-visible) { text-decoration: underline; text-underline-offset: 3px; outline: none; }
+  .stp-door:is(:hover, :focus-visible) { outline: none; }
   .stp-door .cta-arrow { width: 1.4em; height: .7em; vertical-align: -0.05em; }
   .stp-blot-svg { display: block; width: 100%; height: auto; overflow: visible; }
   .stp-bl-ring { fill: none; stroke: #7d776c; stroke-opacity: .62; stroke-width: .85; stroke-linecap: round; }
