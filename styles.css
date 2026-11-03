@@ -12295,6 +12295,8 @@
   :root {
     --mark-cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M2.5 2.5L9.5 9.55' stroke-width='1.45'/%3E%3Cpath d='M9.5 2.45L2.5 9.5' stroke-width='1.45'/%3E%3C/svg%3E");
     --mark-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M1.7 6.5Q3.3 7.7 4.5 10.1' stroke-width='1.5'/%3E%3Cpath d='M4.5 10.1Q6.6 5.3 10.6 1.6' stroke-width='1.2'/%3E%3C/svg%3E");
+    /* the pencil ring "circle one" draws round a chosen number: one loop that overshoots its start */
+    --mark-ring: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 34' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M27.6 4.6C21 1.8 9.4 3 5.2 9.8C1.4 16 4.2 26.6 13.4 30.2C21.8 33.4 33.4 29.8 36 21.6C38.4 14 33 6.4 23.4 4.2C20.4 3.6 17.2 3.8 14.6 4.6' stroke-width='2'/%3E%3C/svg%3E");
     --mark-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 9' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.6 2.3Q4.5 5.3 6.3 7Q8.7 4.4 11.5 1.7' stroke-width='1.5'/%3E%3C/svg%3E");
   }
   .btn-close::before, .quit-btn::before {
@@ -17434,50 +17436,20 @@
   }
   .set-select:focus { border-color: var(--ink-accent); }
 
-  /* countdown slider */
-  .set-slider-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
-  /* A bead on a pencil line, with a tick for each whole second it can stop on (3 to 8, so six),
-     rather than the browser's own slider. The thumb is flat ink with its hole drilled through
-     in paper, the same bead the bracelet strings. Tick spacing is fixed px because the slider
-     is: 130px wide, an 18px bead, so the stops sit 9px in from each end and 22.4px apart. */
-  .set-slider {
-    -webkit-appearance: none; appearance: none; width: 130px; height: 22px; margin: 0;
-    background: transparent; cursor: pointer; color: var(--ink-soft);
+  /* countdown length, "circle one": the chosen number ringed in pencil (setCountdownHTML) */
+  .set-circle { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+  .set-circle-opt {
+    position: relative; font: 700 calc(22px + var(--text-size-adjust)) var(--hand); line-height: 1;
+    color: var(--ink-soft); background: none; border: 0; padding: 3px 7px; cursor: pointer;
   }
-  .set-slider::-webkit-slider-runnable-track {
-    height: 9px; border: 0;
-    background:
-      linear-gradient(currentColor, currentColor) 0 50% / 100% 1.5px no-repeat,
-      linear-gradient(currentColor, currentColor) 8.3px 0 / 1.4px 100% no-repeat,
-      linear-gradient(currentColor, currentColor) 30.7px 1.5px / 1.2px 6px no-repeat,
-      linear-gradient(currentColor, currentColor) 53.1px 1px / 1.2px 7px no-repeat,
-      linear-gradient(currentColor, currentColor) 75.5px 1.5px / 1.2px 6px no-repeat,
-      linear-gradient(currentColor, currentColor) 97.9px 1px / 1.2px 7px no-repeat,
-      linear-gradient(currentColor, currentColor) 120.3px 0 / 1.4px 100% no-repeat;
+  .set-circle-opt:hover { color: var(--ink); }
+  .set-circle-opt.on { color: var(--ink); }
+  .set-circle-opt.on::after {
+    content: ""; position: absolute; inset: -2px -3px -2px -4px; background: var(--ink-accent); pointer-events: none;
+    -webkit-mask: var(--mark-ring) center / 100% 100% no-repeat; mask: var(--mark-ring) center / 100% 100% no-repeat;
   }
-  .set-slider::-moz-range-track {
-    height: 9px; border: 0;
-    background:
-      linear-gradient(currentColor, currentColor) 0 50% / 100% 1.5px no-repeat,
-      linear-gradient(currentColor, currentColor) 8.3px 0 / 1.4px 100% no-repeat,
-      linear-gradient(currentColor, currentColor) 30.7px 1.5px / 1.2px 6px no-repeat,
-      linear-gradient(currentColor, currentColor) 53.1px 1px / 1.2px 7px no-repeat,
-      linear-gradient(currentColor, currentColor) 75.5px 1.5px / 1.2px 6px no-repeat,
-      linear-gradient(currentColor, currentColor) 97.9px 1px / 1.2px 7px no-repeat,
-      linear-gradient(currentColor, currentColor) 120.3px 0 / 1.4px 100% no-repeat;
-  }
-  .set-slider::-webkit-slider-thumb {
-    -webkit-appearance: none; appearance: none; width: 18px; height: 16px; margin-top: -3.5px;
-    border: 1.6px solid var(--ink); border-radius: 48% 52% 50% 50% / 54% 50% 50% 46%;
-    background: radial-gradient(circle at 50% 50%, var(--paper) 0 2.3px, var(--ink-accent) 2.6px);
-  }
-  .set-slider::-moz-range-thumb {
-    width: 18px; height: 16px; box-sizing: border-box;
-    border: 1.6px solid var(--ink); border-radius: 48% 52% 50% 50% / 54% 50% 50% 46%;
-    background: radial-gradient(circle at 50% 50%, var(--paper) 0 2.3px, var(--ink-accent) 2.6px);
-  }
-  .set-slider:focus-visible { outline: 1.5px dashed var(--ink-accent); outline-offset: 3px; }
-  .set-slider-val { font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); color: var(--ink-accent); min-width: 26px; text-align: right; }
+  .set-circle-opt:focus-visible { outline: 1.5px dashed var(--ink-accent); outline-offset: 1px; border-radius: 3px; }
+  .set-circle-unit { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-left: 5px; }
 
   .set-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .env-btn {

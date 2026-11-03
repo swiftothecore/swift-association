@@ -23882,10 +23882,11 @@ const INSURE_KEY_LABEL = "ctrl / ⌘ + I";
 // one to ask the same shape of question (take the pot, or let it ride onto the next page).
 // The risk offers' marks, drawn in the perk marks' four layers (see PERK_MARKS) so the risk
 // overlay's cards are the same stock as the path's. Beads ARE the score on these rules, so each
-// card is a thing done with beads: bank it screws the lid on a jar of them, ride on piles them
-// higher than they will stand (the top one already going), take it pulls a pouch shut on them,
-// and double or nothing is one bead strung beside the dashed ghost of the one it could become.
-// They used to be a typed tick, an arrow and "x2".
+// card is a thing done with beads: bank it screws the lid on a jar of them, ride on sails them
+// off in a paper boat, take it pulls a pouch shut on them, and double or nothing hangs them on
+// a pair of scales against an empty pan. They used to be a typed tick, an arrow and "x2". The
+// candidates that lost (growing stacks, a rollercoaster, a coin toss, a shell-game cup) are on
+// the board scripts/ui/glyph-audit.html.
 const RISK_MARKS = {
   bank: `<path class="pk-spot" d="M9.4,14 C8.6,18 8.4,27 9.2,32.8 C9.6,35 11.4,35.6 20,35.6 C28.4,35.6 30.4,35 30.8,32.8 C31.6,27 31.4,18 30.6,14 Z"/>` +
     `<path class="pk-pen" stroke-width="2" d="M9.4,14 C8.6,18 8.4,27 9.2,32.8 C9.6,35 11.4,35.6 20,35.6 C28.4,35.6 30.4,35 30.8,32.8 C31.6,27 31.4,18 30.6,14"/>` +
@@ -23895,11 +23896,13 @@ const RISK_MARKS = {
     `<g transform="rotate(-7 20 10)"><path class="pk-knock" d="M8.2,7.6 L31.6,7.2 L31.8,12.6 L8.4,13 Z"/>` +
     `<path class="pk-pen" stroke-width="1.9" d="M8.2,7.6 L31.6,7.2 L31.8,12.6 L8.4,13 Z"/>` +
     `<path class="pk-pen" stroke-width="1" d="M12.4,7.6 L12.5,12.9 M16.6,7.5 L16.6,12.8 M20.8,7.4 L20.9,12.8 M25,7.4 L25.1,12.7 M29,7.3 L29.1,12.7"/></g>`,
-  ride: `<path class="pk-pen" stroke-width="1" d="M4.4,35.8 C14,35.3 25,35.7 35.6,35.2"/>` +
-    `<circle class="pk-spot" cx="15.6" cy="29.4" r="6"/><circle class="pk-pen" stroke-width="2.1" cx="15.6" cy="29.4" r="6"/><circle class="pk-pen" stroke-width="1" cx="15.299999999999999" cy="29.2" r="1.2"/>` +
-    `<circle class="pk-knock" cx="17.8" cy="18.2" r="5.4"/><circle class="pk-pen" stroke-width="2" cx="17.8" cy="18.2" r="5.4"/><circle class="pk-pen" stroke-width="1" cx="18.0" cy="17.9" r="1.0"/>` +
-    `<circle class="pk-spot" cx="21.2" cy="8.4" r="4.8"/><circle class="pk-pen" stroke-width="1.9" cx="21.2" cy="8.4" r="4.8"/><circle class="pk-pen" stroke-width="1" cx="21.5" cy="8.200000000000001" r="0.9"/>` +
-    `<circle class="pk-knock" cx="31.6" cy="6.8" r="4.0"/><circle class="pk-pen" stroke-width="1.8" cx="31.6" cy="6.8" r="4.0"/><circle class="pk-pen" stroke-width="1" cx="32.0" cy="6.8999999999999995" r="0.8"/>`,
+  ride: `<path class="pk-spot" d="M4.6,23.4 L35.4,23.4 L30.2,30.6 C24,31.8 16,31.8 9.8,30.6 Z"/><circle class="pk-knock" cx="10.6" cy="20.8" r="2.7"/><circle class="pk-spot" cx="10.6" cy="20.8" r="2.7"/>` +
+    `<circle class="pk-pen" stroke-width="1.5" cx="10.6" cy="20.8" r="2.7"/><circle class="pk-pen" stroke-width="0.9" cx="10.6" cy="20.8" r="0.6"/><circle class="pk-knock" cx="15.6" cy="20.2" r="2.9"/>` +
+    `<circle class="pk-pen" stroke-width="1.5" cx="15.6" cy="20.2" r="2.9"/><circle class="pk-pen" stroke-width="0.9" cx="15.6" cy="20.2" r="0.6"/><circle class="pk-knock" cx="12.8" cy="16.2" r="2.6"/>` +
+    `<circle class="pk-spot" cx="12.8" cy="16.2" r="2.6"/><circle class="pk-pen" stroke-width="1.5" cx="12.8" cy="16.2" r="2.6"/><circle class="pk-pen" stroke-width="0.9" cx="12.8" cy="16.2" r="0.55"/>` +
+    `<path class="pk-knock" d="M20.4,23.2 L22.2,5.6 L33,23.2 Z"/><path class="pk-spot" d="M22.2,5.6 L33,23.2 L26.2,23.2 Z"/><path class="pk-pen" stroke-width="1.8" d="M20.4,23.2 L22.2,5.6 L33,23.2"/>` +
+    `<path class="pk-pen" stroke-width="1" d="M22.2,5.6 L26.2,23.2"/><path class="pk-pen" stroke-width="2" d="M4.6,23.4 L35.4,23.4 L30.2,30.6 C24,31.8 16,31.8 9.8,30.6 Z"/>` +
+    `<path class="pk-pen" stroke-width="1.5" d="M2.4,35 C5.8,32.6 8.8,37 12.4,34.8 C15.8,32.6 18.8,37 22.4,34.8 C25.8,32.6 28.8,37 32.4,34.8 C34.4,33.6 36,33.8 37.6,34.6"/>`,
   take: `<path class="pk-spot" d="M11.2,17.2 C6,22 6.4,33.2 12.6,34.8 C17,36 23,36 27.4,34.8 C33.6,33.2 34,22 28.8,17.2 Z"/>` +
     `<path class="pk-pen" stroke-width="2" d="M11.2,17.2 C6,22 6.4,33.2 12.6,34.8 C17,36 23,36 27.4,34.8 C33.6,33.2 34,22 28.8,17.2"/>` +
     `<path class="pk-pen" stroke-width="1.9" d="M11.2,17.2 C14.2,15.6 25.8,15.6 28.8,17.2"/>` +
@@ -23907,11 +23910,13 @@ const RISK_MARKS = {
     `<path class="pk-pen" stroke-width="1" d="M15.2,19.6 C14.2,24 14.4,29 15.6,33.2 M20.2,19.2 C19.8,24.4 20,29 20.4,34 M25.4,19.8 C26.6,24.4 26.4,29.2 25,33.4"/>` +
     `<path class="pk-pen" stroke-width="1.3" d="M28.2,16.8 C31.4,18.4 32.8,21.4 32.4,25.8 M28.6,16.9 C33,16.8 35.4,19 36.2,22.4"/>` +
     `<circle class="pk-blot" cx="32.3" cy="27" r="1.5"/><circle class="pk-blot" cx="36.3" cy="23.6" r="1.3"/>`,
-  double: `<path class="pk-pen" stroke-width="1" d="M1.8,23.6 C10,22.2 27,22.4 38.4,20.8"/>` +
-    `<circle class="pk-knock" cx="12.4" cy="21.6" r="8.6"/><circle class="pk-spot" cx="12.4" cy="21.6" r="8.6"/>` +
-    `<circle class="pk-pen" stroke-width="2.2" cx="12.4" cy="21.6" r="8.6"/><ellipse class="pk-pen" stroke-width="1.3" cx="12.2" cy="21.9" rx="1.9" ry="1.5"/>` +
-    `<circle class="pk-knock" cx="29" cy="20.2" r="8.1"/>` +
-    `<circle class="pk-pen" stroke-width="1.8" stroke-dasharray="3 2.5" cx="29" cy="20.2" r="8.1"/><ellipse class="pk-pen" stroke-width="1" stroke-dasharray="1.3 1.2" cx="29.2" cy="20.4" rx="1.8" ry="1.4"/>`,
+  double: `<path class="pk-pen" stroke-width="2" d="M20.2,10.8 L19.8,34.6"/><path class="pk-pen" stroke-width="2" d="M13,35.2 C17.6,34.8 22.4,34.8 27.2,35.2"/>` +
+    `<path class="pk-pen" stroke-width="2" d="M5.4,14.6 L34.8,8"/><circle class="pk-knock" cx="20.1" cy="11.3" r="1.9"/><circle class="pk-pen" stroke-width="1.5" cx="20.1" cy="11.3" r="1.9"/>` +
+    `<path class="pk-pen" stroke-width="1" d="M5.4,14.6 L1.8,25.4 M5.4,14.6 L9.4,25.4 M34.8,8 L31.2,18.4 M34.8,8 L38.4,18.4"/><circle class="pk-knock" cx="3.4" cy="23" r="2.4"/>` +
+    `<circle class="pk-spot" cx="3.4" cy="23" r="2.4"/><circle class="pk-pen" stroke-width="1.5" cx="3.4" cy="23" r="2.4"/><circle class="pk-knock" cx="8" cy="23.1" r="2.4"/>` +
+    `<circle class="pk-pen" stroke-width="1.5" cx="8" cy="23.1" r="2.4"/><circle class="pk-knock" cx="5.8" cy="19.2" r="2.4"/><circle class="pk-spot" cx="5.8" cy="19.2" r="2.4"/>` +
+    `<circle class="pk-pen" stroke-width="1.5" cx="5.8" cy="19.2" r="2.4"/><path class="pk-spot" d="M0.8,25.2 C2.6,28.6 8.6,28.6 10.4,25.2 Z"/>` +
+    `<path class="pk-pen" stroke-width="1.8" d="M0.8,25.2 C2.6,28.6 8.6,28.6 10.4,25.2 Z"/><path class="pk-pen" stroke-width="1.8" d="M30.2,18.2 C32,21.6 37.8,21.6 39.4,18.2 Z"/>`,
 };
 function riskMark(id) {
   return `<svg class="cpc-mark" viewBox="0 0 40 40" aria-hidden="true"><g filter="url(#navInk)">${RISK_MARKS[id]}</g></svg>`;
@@ -29820,12 +29825,17 @@ function setSelectHTML(key, name, desc, options) {
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
     `<div class="set-control"><span class="sel-wrap sel-wrap--full"><select class="set-select" id="set-${key}" data-select="${key}" aria-label="${name}">${opts}</select></span></div></div>`;
 }
-function setSliderHTML() {
+// "Circle one": the six lengths written out in hand and the chosen one ringed in pencil, the
+// way you'd fill in a form. It replaced the browser's own range slider, the one stock widget
+// left in Settings; six stops is a choice to circle, not a range to drag along.
+function setCountdownHTML() {
+  const n = settings.countdownSecs;
+  const opts = [3, 4, 5, 6, 7, 8].map((s) =>
+    `<button type="button" class="set-circle-opt${s === n ? " on" : ""}" data-countdown="${s}" ` +
+      `aria-pressed="${s === n}" aria-label="${s} seconds">${s}</button>`).join("");
   return `<div class="set-row"><div class="set-label"><span class="set-name">${setIco("countdownSecs")}Countdown length</span>` +
     `<span class="set-desc">seconds before the next page auto-turns</span></div>` +
-    `<div class="set-control set-slider-row"><input type="range" id="countdownSlider" class="set-slider" min="3" max="8" step="1" ` +
-      `value="${settings.countdownSecs}" aria-label="Countdown length in seconds" aria-valuetext="${settings.countdownSecs} seconds">` +
-    `<span class="set-slider-val" id="countdownVal">${settings.countdownSecs}s</span></div></div>`;
+    `<div class="set-control set-circle" role="group" aria-label="Countdown length">${opts}<span class="set-circle-unit" aria-hidden="true">seconds</span></div></div>`;
 }
 // Heart-hands gesture (the fan motif) — a line-art icon that caps the signature
 // line. fill:currentColor so it era-tints with --ink-accent (set in CSS).
@@ -30246,7 +30256,7 @@ function renderSettingsBody() {
         ...(phoneViewport() ? [setCheckHTML("openKeyboard", "Open keyboard each round", "focus the answer line as a new page opens")] : []),
         setCheckHTML("confirmLeave", "Confirm before leaving a run", "requires a second tap before giving up"),
       ]) +
-      setSliderHTML() +
+      setCountdownHTML() +
       setChoiceHTML("defaultGameType", "Default game type", "on launch", [{ val: "last", label: "Last" }, { val: "classic", label: "Classic" }, { val: "infinite", label: "Infinite" }, { val: "custom", label: "Custom" }]) +
       setChoiceHTML("defaultDifficulty", "Default difficulty", "on launch", diffOpts) +
       setChoiceHTML("defaultStatsTab", "Default stats tab", "which tab opens first", statsOpts)
@@ -30346,7 +30356,7 @@ function renderSettingsBody() {
     : d.choice ? `[data-choice="${CSS.escape(d.choice)}"][data-val="${CSS.escape(d.val)}"]`
     : d.eraPick !== undefined ? `[data-era-pick="${CSS.escape(d.eraPick)}"]`
     : d.select ? `[data-select="${CSS.escape(d.select)}"]`
-    : was && was.id === "countdownSlider" ? "#countdownSlider"
+    : d.countdown ? `[data-countdown="${CSS.escape(d.countdown)}"]`
     : null;
   $("settingsBody").innerHTML = settingsPanels().map((p) =>
     `<div class="set-panel" id="set-panel-${p.id}" role="tabpanel" aria-labelledby="set-tab-${p.id}"` +
@@ -30431,14 +30441,15 @@ function wireSettingsBody() {
     refreshDateSurfaces();   // the reset zone dates the desk and seasonal art too
     renderSettingsBody();       // refresh the "today here is…" note
   }));
-  const slider = $("countdownSlider");
-  if (slider) {
-    slider.addEventListener("input", () => {
-      $("countdownVal").textContent = slider.value + "s";
-      slider.setAttribute("aria-valuetext", slider.value + " seconds");
+  $("settingsBody").querySelectorAll("[data-countdown]").forEach((b) => b.addEventListener("click", () => {
+    settings.countdownSecs = parseInt(b.dataset.countdown, 10) || 5;
+    saveSettings(settings);
+    b.parentElement.querySelectorAll("[data-countdown]").forEach((x) => {
+      const on = x === b;
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-pressed", String(on));
     });
-    slider.addEventListener("change", () => { settings.countdownSecs = parseInt(slider.value, 10) || 5; saveSettings(settings); });
-  }
+  }));
   const nameField = $("set-playerName");
   if (nameField) {
     nameField.addEventListener("input", () => fitNameField(nameField));
