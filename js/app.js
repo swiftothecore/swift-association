@@ -29544,21 +29544,27 @@ function wireInput() {
     advanceFromBonusFeedback();
   });
 
-  // Redacted leaves its title line unfocused so a phone keyboard never lands over the verse
-  // before it has been read, and a peeled strip keeps focus on its button. Typing a letter
-  // anywhere on a live page is still plainly an answer, so it goes to the title line rather
-  // than nowhere: focusing during keydown lets the same keystroke land in the field. Space is
-  // left alone (it peels a focused strip, and no title starts with one).
+  // Type anywhere: focus wanders off the answer line all the time (a click on the paper, a
+  // context fold, a peeled Redacted strip, which leaves its title line unfocused on purpose so
+  // a phone keyboard never lands over the verse unread). Typing on a live page is still plainly
+  // an answer, so it goes to the line rather than nowhere: focusing during keydown lets the same
+  // keystroke land in the field, with the caret after whatever was already written. Space,
+  // Enter and Tab are left alone, since on a focused control they press it or move on, and no
+  // title starts with a space. Keyed rather than clicked, so it never opens a phone keyboard
+  // that the player didn't ask for by typing.
   document.addEventListener("keydown", (e) => {
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
-    if (e.key.length !== 1 || e.key === " ") return;
-    if (!screens.bonusplay.classList.contains("active") || !bonusGame || bonusGame.id !== "redacted") return;
-    if (bonusLocked || bonusEnded || settingsPauseActive) return;
+    if ((e.key.length !== 1 || e.key === " ") && e.key !== "Backspace") return;
+    if (settingsPauseActive || curtainUp()) return;
     if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
     if (document.body.classList.contains("modal-open") || $("songModal").classList.contains("open")) return;
-    const input = $("bonusInput");
-    if (!input || input.disabled) return;
+    let input = null;
+    if (screens.game.classList.contains("active") && !roundLocked) input = $("songInput");
+    else if (screens.bonusplay.classList.contains("active") && !bonusLocked && !bonusEnded) input = $("bonusInput");
+    if (!input || input.disabled || !input.getClientRects().length) return;
     input.focus({ preventScroll: true });
+    const end = input.value.length;
+    try { input.setSelectionRange(end, end); } catch (_) {}
   });
 
   // Result controls live inside rebuilt feedback blocks, so delegate from the two stable hosts.
