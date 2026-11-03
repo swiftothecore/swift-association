@@ -2444,15 +2444,14 @@ function statsTape(key) {
     `<span class="stp-tape" aria-hidden="true" style="${s.left ? `left:${s.left};` : ""}${s.right ? `right:${s.right};` : ""}` +
     `top:${s.top};width:${s.w}px;transform:translateX(${s.tx || "0"}) rotate(${s.rot}deg);clip-path:${TORN_EDGES[s.tear]}"></span>`).join("");
 }
-// Short names for the blotter, where a full album title would not fit under a drop. A record
-// takes the name its sleeve is lettered with (sleeveName), so the home album's sleeve and its
-// drop on the blotter never call one album two things; only the catalogue's pseudo-albums,
-// which have no sleeve, are shortened here.
+// Short names for the blotter, where a full album title would not fit under a drop. TTPD is
+// TTPD here even though its sleeve is lettered "Tortured Poets": the blotter is a typed index
+// and every name on it holds to one line, and the fans' own initials read at once.
 const STATS_ALBUM_SHORT = {
+  "The Tortured Poets Department": "TTPD", "The Life of a Showgirl": "Showgirl",
   "Holiday Collection": "Holiday", "Songs From Movies": "Films",
   "Written for Others": "For others", "Collaborations": "Collabs",
 };
-const statsAlbumName = (a) => STATS_ALBUM_SHORT[a] || sleeveName(a);
 
 /* ---------- Songs found: the blotter ----------
    A sheet of blotting paper with one drop of ink per album, bled out as far as the songs you've
@@ -2497,15 +2496,6 @@ function blotSparkle(x, y, size, rnd) {
   }
   return d + "Z";
 }
-// The name under a drop. One that is longer than "TAYLOR SWIFT" would run into its neighbours, so
-// it is set on two lines in the same room, its count staying level with the rest of the row.
-function statsBlotName(name, cx, y0) {
-  const at = (dy) => `x="${blotF(cx)}" y="${blotF(y0 + dy)}" text-anchor="middle"`;
-  const sp = name.length > 12 ? name.lastIndexOf(" ") : -1;
-  if (sp < 0) return `<text class="stp-bl-nm" ${at(19)}>${escapeHtml(name)}</text>`;
-  return `<text class="stp-bl-nm" ${at(14)}>${escapeHtml(name.slice(0, sp))}</text>` +
-    `<text class="stp-bl-nm" ${at(23.5)}>${escapeHtml(name.slice(sp + 1))}</text>`;
-}
 function statsBlotterHTML(order, found, total, W, phone) {
   const uid = ++statsBlotUid;
   const VW = Math.max(260, Math.round(W - 24)), perRow = phone ? 4 : 8, colW = VW / perRow;
@@ -2540,7 +2530,7 @@ function statsBlotterHTML(order, found, total, W, phone) {
       (full ? "" : crumbs.map((c) => `<circle class="stp-bl-crumb" cx="${blotF(c.x)}" cy="${blotF(c.y)}" r="${blotF(c.s)}"/>`).join("")) + `</g>` +
       (full ? crumbs.map((c) => `<path class="stp-bl-spark" style="transform-origin:${blotF(c.x)}px ${blotF(c.y)}px" d="${blotSparkle(c.x, c.y, c.s, rnd)}"/>`).join("") : "") +
       `<circle class="stp-bl-hit" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(R + 6)}" data-tip="${escapeHtml(a)}: ${f} of ${n}" data-open-songbook="stats" data-songbook-album="${escapeHtml(a)}"/>` +
-      statsBlotName(statsAlbumName(a).toUpperCase(), cx, cy + R) +
+      `<text class="stp-bl-nm" x="${blotF(cx)}" y="${blotF(cy + R + 19)}" text-anchor="middle">${escapeHtml((STATS_ALBUM_SHORT[a] || a).toUpperCase())}</text>` +
       `<text class="stp-bl-ct" x="${blotF(cx)}" y="${blotF(cy + R + 36)}" text-anchor="middle">${f}/${n}</text></g>`;
   });
   return `<svg class="stp-blot-svg" viewBox="0 0 ${VW} ${H}" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
@@ -2973,7 +2963,7 @@ function statsLifetimeHTML(W) {
   if (favSong && favAlbum) {
     const songAlbum = albumOfTitle(favSong.key);
     const off = songAlbum && songAlbum !== favAlbum.key
-      ? ` · <i style="--era:${albumColor(songAlbum) || "#6f675a"}">off ${escapeHtml(statsAlbumName(songAlbum))}</i>` : "";
+      ? ` · <i style="--era:${albumColor(songAlbum) || "#6f675a"}">off ${escapeHtml(STATS_ALBUM_SHORT[songAlbum] || songAlbum)}</i>` : "";
     out.push(`<div class="stp-item stp-w2 stp-o4${phone ? " stp-solo" : ""}" style="--r:1.6deg"><div class="stp-lab">home album</div>` +
       `<div class="stp-pair">${statsTape("sleeve")}` +
       `<div class="stp-sleeve">${albumSleeve(favAlbum.key, albumColor(favAlbum.key) || "#8a7f6b", null, undefined, "stp-sleeve-art")}</div>` +
