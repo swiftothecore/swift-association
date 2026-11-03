@@ -895,6 +895,11 @@
        its "g" crook. Split onto .mast-line (brown lift) and .mast-gold (gold
        lift) so the gold word never has a brown shadow cast behind it. */
     transform: rotate(-1.4deg);
+    /* A wordmark, not a sentence. Its letters are aria-hidden spans (the name
+       is the aria-label), so a selection painted a pink slab over the ink and
+       copied "Swıft" with the dotless i the star sits on. */
+    -webkit-user-select: none;
+    user-select: none;
   }
   /* On a sub-page the masthead is a way back to the notebook. Keep it quiet: the ink
      itself never changes colour (the same restraint the section-heading marks learned),
