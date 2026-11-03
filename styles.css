@@ -519,6 +519,11 @@
   /* Player-facing decoration density. Quiet keeps the desk's working story but removes the
      largest edge objects. */
   .desk-items { --text-size-adjust: 0px; }
+  /* Objects, not writing: the pencil's imprint, a bead's letter, the cassette's
+     insert and every stamp's type are part of the thing, so a drag across the
+     page never paints a selection over them. Stamps are matched by name because
+     there are thirty-odd kinds and each new one should inherit this unasked. */
+  .desk-items, .b-cube-text, [class*="stamp"] { -webkit-user-select: none; user-select: none; }
   body[data-desk-density="quiet"] :is(.di-glasses, .di-mug, .di-cassette, .di-crumple) { display: none; }
   body[data-desk-density="bare"] .desk-items { display: none !important; }
   /* December snowfall: full-viewport decorative canvas, above the notebook but
