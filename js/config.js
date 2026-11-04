@@ -1519,7 +1519,7 @@ export const CHALLENGES = [
     // long passage of. Both figures are a first re-tune off three pages of evidence, so they
     // are expected to move again once a full thirteen-page run has been measured.
     hard: { ink: 1500,
-      desc: "The same page, a third as much again to fill, and not a second more to do it in. A title banked here is a page thrown away: on this side only the lines will do, and the long ones at that.",
+      desc: "More ink on the same clock. Titles still count, but long lyric passages are what will fill this page.",
       win: "Write 1500 characters across 13 pages." },
     blurb: "20s · suggestions · all words · title words allowed",
     // Pencilled beside the goal on the card (renderChallengeDetail; *stars* mark the highlighter
@@ -1529,7 +1529,7 @@ export const CHALLENGES = [
     // phone keyboard's mic and the OS's own dictation already type into the answer box, and the
     // ink count runs on normalized text, so dictation's stray capitals and commas cost nothing.
     aside: "Can't type that fast? Tap the mic on your keyboard and *say the line* instead.",
-    desc: "Every page is scored by how much you WRITE. Sing the line around the word and keep going as far as you can: every character of it counts. Naming the song banks its title instead, quick and small. Submit before the clock dies, or the page banks nothing.",
+    desc: "Write the lyric around the word: every character counts. A song title banks only its own length. Submit before time runs out or bank nothing.",
     win: "Write 1100 characters across 13 pages." },
   { id: "wrapped-chain", name: "Wrapped Like A Chain", rule: "chain", mode: "medium",
     tagline: "a chain of {target} songs",
@@ -1799,10 +1799,10 @@ export const CHALLENGES = [
     // it a typing race instead.
     hard: { need: 4, target: 5, noTitle: true, minSongs: 12,
       blurb: "30s · suggestions · FOUR different songs a page · never in the title · a wrong song costs 5s",
-      desc: "Three wasn't enough. Four different songs for the one word, every page, in the same half minute, and the titles no longer count, so every one of them has to sing it.",
+      desc: "Four songs for one word, on the same clock. The word must be sung in each song; titles no longer count.",
       win: "Clear 5 pages, naming four different songs each." },
     blurb: "30s · suggestions · name THREE different songs a page · a wrong song costs 5s",
-    desc: "One word, and three different songs that sing it. Anyone can name one. Three means you really know the catalogue. Songs with the word in the title count here, and a song that doesn't sing it costs you five seconds rather than the page.",
+    desc: "Three songs for one word. Titles count here; a wrong song costs time rather than the page.",
     win: "Clear 8 pages, naming three different songs each." },
   // ---- Risk batch. Four challenges over one shared bead economy: answering is ordinary,
   //      the difficulty is the DECISION you make around each answer. The currency is beads
@@ -1865,10 +1865,10 @@ export const CHALLENGES = [
     // the arithmetic is safe, which is the page this challenge is named after. Base + 10.
     hard: { startBeads: 1, maxStake: 4, target: 30, wagerTeaseSelf: true,
       blurb: "12s · suggestions · one bead to start · stake up to four, on nothing but your own record",
-      desc: "The word is face down and this time the card tells you nothing about it. All you have is your own history with it, and one bead to build from. Stake up to four, answer it and the stake pays back double, miss it and it is gone.",
+      desc: "Only your record to guide the bet this time. A hit returns double plus one bead; a miss loses the stake.",
       win: "Finish the run on 30 beads." },
     blurb: "12s · suggestions · stake beads on a word you haven't seen yet",
-    desc: "The word is face down. All you get is how widely it is sung and your own record with it, and on that you stake up to three beads. Turn it over and the clock runs: answer it and the stake pays back double, miss it and the stake is gone. A correct answer is always worth its own bead on top.",
+    desc: "Stake up to three beads on a face-down word, guided by its rarity and your record. A hit returns double plus a bead; a miss loses the stake.",
     win: "Finish the run on 20 beads." },
   /* SHELVED (2026-07-28, second time) — Double Or Nothing is off the roster because it and Press
      Your Luck have converged into one challenge. They share the pot, the bank-or-ride offer, the

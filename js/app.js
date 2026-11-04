@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets, wordTaken } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, paperTextInk, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets, wordTaken } from "./util.js";
 import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
@@ -672,6 +672,7 @@ function applySettings() {
   refreshSnow();   // December snowfall follows the reduce-motion setting live
   refreshLeaves(); // autumn leaves follow the reduce-motion setting live too
   paintCoverRibbon();  // the bookmark wears the player's era, once they have named one
+  document.querySelectorAll(".chall-curtain-card").forEach(settleCurtainCard);
   window.dispatchEvent(new CustomEvent("desk:refresh"));
 }
 
@@ -22926,12 +22927,17 @@ function curtainTermsHTML(blurb) {
   return `<ul class="chall-curtain-terms">` +
     terms.map((t) => `<li>${escapeHtml(t)}</li>`).join("") + `</ul>`;
 }
+function curtainKickerHTML(kicker, dark) {
+  return escapeHtml(kicker) + (dark ? ` <span class="curtain-side">· dark side</span>` : "");
+}
+function curtainAlbumAttr(album) {
+  return album ? ` data-curtain-album="${escapeHtml(album)}"` : "";
+}
 function curtainCardHTML(o) {
-  const ruleStyle = o.headlineColor ? ` style="color:${o.headlineColor}"` : "";
-  return `<div class="chall-curtain-card${o.dark ? " is-dark" : ""}">` +
-    `<div class="chall-curtain-kicker">${escapeHtml(o.kicker)}</div>` +
+  return `<div class="chall-curtain-card${o.dark ? " is-dark" : ""}${o.album ? " has-album" : ""}"${curtainAlbumAttr(o.album)}>` +
+    `<div class="chall-curtain-kicker">${curtainKickerHTML(o.kicker, o.dark)}</div>` +
     `<div class="chall-curtain-tag">${escapeHtml(o.tag)}</div>` +
-    `<div class="chall-curtain-rule"${ruleStyle}>${escapeHtml(o.headline)}</div>` +
+    `<div class="chall-curtain-rule">${escapeHtml(o.headline)}</div>` +
     (o.sub ? `<div class="chall-curtain-sub">${o.sub}</div>` : "") +
     (o.terms ? curtainTermsHTML(o.terms) : "") +
     `<div class="chall-curtain-cue">${escapeHtml(o.cue || "the word is coming…")}</div>` +
@@ -22953,7 +22959,7 @@ function switchPageCardHTML() {
 // every page (and, on round 1, right after the rules intro).
 function wildcardPageCardHTML() {
   return curtainCardHTML({ kicker: `page ${round} · wildcard`, tag: "the rule",
-    headline: roundWildcard.label });
+    headline: roundWildcard.label, dark: challengeDark });
 }
 
 // The curtain content for THIS round: null for no curtain, a single card's HTML, or an
@@ -22983,10 +22989,9 @@ function roundCurtainHTML() {
   // On Tour! — every page announces tonight's album (the only acceptable source).
   if (c.rule === "setlist") {
     const album = tourSetlist[round - 1] || "";
-    const col = (album && albumColor(album)) || "var(--ink-soft)";
     return curtainCardHTML({ kicker: `stop ${Math.min(round, TOTAL_ROUNDS)} / ${TOTAL_ROUNDS} · on tour`,
-      tag: "tonight's album", headline: album || "any album", headlineColor: col,
-      sub: album ? `name a song from <b style="color:${col}">${escapeHtml(album)}</b>` : "" });
+      tag: "tonight's album", headline: album || "any album", album, dark: challengeDark,
+      sub: album ? `name a song from <b class="curtain-album-name">${escapeHtml(album)}</b>` : "" });
   }
   return null;
 }
@@ -23012,7 +23017,7 @@ function briefUnderlineSVG(seed) {
 function briefStrikeSVG(seed) {
   const r = mulberry32(seed), y = () => r().toFixed(2);
   return `<svg viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">` +
-    `<path d="M-2 ${6 + +y()} C30 ${5 + +y()} 70 ${4 + +y()} 102 ${3 + +y()}"/></svg>`;
+    `<path d="M2 ${6 + +y()} C30 ${5 + +y()} 70 ${4 + +y()} 98 ${3 + +y()}"/></svg>`;
 }
 // A pen loop that never quite closes: it starts left of top centre, goes once round an
 // ellipse even on both sides of the figure, and overshoots its start a little. The jitter is
@@ -23050,13 +23055,16 @@ function briefTermsHTML(c, base, seed) {
   }).join("") + `</ul>`;
 }
 // The win line with its first figure circled; a dark side that moved it pencils out the old one.
-function briefWinHTML(win, baseWin, seed) {
+function briefWinHTML(win, baseWin, seed = 0) {
   const m = String(win).match(BRIEF_GOAL);
   if (!m) return escapeHtml(win);
   const bm = baseWin && String(baseWin).match(BRIEF_GOAL);
-  const struck = bm && bm[0] !== m[0] ? briefWas(bm[0], seed + 3) : "";
-  return escapeHtml(win.slice(0, m.index)) + struck +
-    `<span class="brief-goal">${briefLoopSVG(seed + 5)}${escapeHtml(m[0])}</span>` +
+  // The denominator has not changed. Crossing out just the old target keeps the
+  // correction readable in one group on a phone without repeating "/ 13" twice.
+  const old = bm && bm[2] && m[2] ? bm[1] : bm && bm[0];
+  const struck = bm && bm[0] !== m[0] ? briefWas(old, seed + 3) : "";
+  return escapeHtml(win.slice(0, m.index)) + `<span class="brief-change">${struck}` +
+    `<span class="brief-goal">${briefLoopSVG(seed + 5)}<span class="brief-goal-ink">${escapeHtml(m[0])}</span></span></span>` +
     escapeHtml(win.slice(m.index + m[0].length));
 }
 // The seal of the side about to be played: the same pick as the results podium, so the wax on
@@ -23071,11 +23079,10 @@ function playedSideSeals(c, rec = challengeRecord(c.id)) {
 // the card because the curtain player keys its in/out animations and its reuse check off it.
 function briefCardHTML(c, o) {
   const seed = fnv1a("brief:" + c.id);
-  const col = o.headlineColor ? ` style="color:${o.headlineColor}"` : "";
-  return `<div class="chall-curtain-card brief-card${c.dark ? " is-dark" : ""}">` +
+  return `<div class="chall-curtain-card brief-card${c.dark ? " is-dark" : ""}${o.album ? " has-album" : ""}"${curtainAlbumAttr(o.album)}>` +
     `<span class="brief-seal" aria-hidden="true">${sealMarkup(playedSideSeals(c)[c.id])}</span>` +
-    `<div class="brief-kicker">${escapeHtml(o.kicker)}</div>` +
-    `<div class="brief-title"${col}>${escapeHtml(o.headline)}</div>${briefUnderlineSVG(seed)}` +
+    `<div class="brief-kicker">${curtainKickerHTML(o.kicker, c.dark)}</div>` +
+    `<div class="brief-heading"><div class="brief-title">${escapeHtml(o.headline)}</div>${briefUnderlineSVG(seed)}</div>` +
     (o.body ? `<p class="brief-body">${o.body}</p>` : "") +
     briefTermsHTML(c, c.dark ? CHALLENGE_BY_ID[c.id] : null, seed) +
     `<div class="brief-foot">` + (o.win ? `<p class="brief-win">${o.win}</p>` : "") +
@@ -23090,7 +23097,6 @@ function challengeIntroHTML(c) {
   // The marker rides on the kicker (and the card's is-dark class), and the terms rows carry
   // what actually moved. Note the bespoke branches below read `c.forks`/`c.target` off the
   // RESOLVED entry, so a dark Devil's Path already announces its four forks.
-  const kick = (k) => (challengeDark ? `${k} · dark side` : k);
   // "4 & 8" reads fine; the dark side's "3 & 6 & 9 & 12" does not, so list them properly.
   const forkList = (fs) => {
     const b = (fs || []).map((f) => `<b>${f}</b>`);
@@ -23098,11 +23104,10 @@ function challengeIntroHTML(c) {
   };
   // One Of A Kind — reveal the specific song to slip in on a fitting page.
   if (c.rule === "newsong" && challengeTargetSong) {
-    const col = albumColor(challengeTargetSong.album) || "var(--ink-soft)";
-    return briefCardHTML(c, { kicker: kick("one of a kind"),
-      headline: censor(challengeTargetSong.title), headlineColor: col,
+    return briefCardHTML(c, { kicker: "one of a kind",
+      headline: censor(challengeTargetSong.title), album: challengeTargetSong.album,
       body: (challengeTargetSong.album
-        ? `from <b style="color:${col}">${escapeHtml(challengeTargetSong.album)}</b>, hiding somewhere in the next 13 pages. `
+        ? `from <b class="curtain-album-name">${escapeHtml(challengeTargetSong.album)}</b>, hiding somewhere in the next 13 pages. `
         : `it's hiding somewhere in the next 13 pages. `) +
         `name it on the right page and the run ends there`,
       win: `you get ${newSongLivesMax} guess${newSongLivesMax === 1 ? "" : "es"}, and the earlier the page the better`,
@@ -23113,28 +23118,27 @@ function challengeIntroHTML(c) {
   // player's own answers pick one out, which is the difference between the two sides and the
   // reason this branch keys off `c.album` rather than off the dark flag.
   if (c.rule === "album5" && c.album) {
-    const col = albumColor(c.album) || "var(--ink-soft)";
-    return briefCardHTML(c, { kicker: kick("deep cut"), headline: c.album, headlineColor: col,
+    return briefCardHTML(c, { kicker: "deep cut", headline: c.album, album: c.album,
       body: `answers from anywhere else still score the page, but they don't move the tally. no swapping it now`,
       win: briefWinHTML(`name ${c.need || 5} songs from it over the next ${TOTAL_ROUNDS} pages`), button: "let's go" });
   }
   // Choose Your Path — explain the perk forks.
   if (c.rule === "path") {
     const forks = forkList(c.forks);
-    return briefCardHTML(c, { kicker: kick("choose your path"), headline: "forge your own run",
+    return briefCardHTML(c, { kicker: "choose your path", headline: "forge your own run",
       body: forks ? `at pages ${forks} you'll pick a perk for the rest of the way. choose wisely` : "",
       win: briefWinHTML(c.win), button: "let's go" });
   }
   // Devil's Path — warn that the forks hand you curses, not perks. Its blurb already names
   // the fork pages in the terms below, so the body only has to say what a fork is.
   if (c.rule === "devil") {
-    return briefCardHTML(c, { kicker: kick("devil's path"), headline: "choose your curses",
+    return briefCardHTML(c, { kicker: "devil's path", headline: "choose your curses",
       body: `every fork offers two curses, and you have to take one of them. no way out but through`,
       win: briefWinHTML(c.win, c.dark ? CHALLENGE_BY_ID[c.id].win : null, fnv1a("brief:" + c.id)),
       button: "make the deal" });
   }
   // Every other challenge — name it, restate the rule and the win condition.
-  return briefCardHTML(c, { kicker: kick("challenge"), headline: c.name, body: escapeHtml(c.desc),
+  return briefCardHTML(c, { kicker: "challenge", headline: c.name, body: escapeHtml(c.desc),
     win: briefWinHTML(c.win, c.dark ? CHALLENGE_BY_ID[c.id].win : null, fnv1a("brief:" + c.id)),
     button: "let's go" });
 }
@@ -23212,11 +23216,44 @@ function clearCurtain() {
 // under the flip sheet before it lays out and later cards in a queue swap in other heights.
 const CURTAIN_MARGIN = 40;
 let curtainFit = null;
+// The loop contains the whole line box, but the digits are centred on their painted ink.
+// Equal CSS padding alone leaves slanted Caveat figures leaning to the right. Font metrics
+// also supply the baseline correction, so this holds for a single digit, a ratio and 1500.
+function settleCurtainCard(card) {
+  const set = (el, name, value) => {
+    if (el.style.getPropertyValue(name) !== value) el.style.setProperty(name, value);
+  };
+  if (card.dataset.curtainAlbum) {
+    const cs = getComputedStyle(card);
+    const ink = cs.getPropertyValue("--ink").trim();
+    const paper = cs.getPropertyValue("--paper").trim();
+    set(card, "--curtain-album-ink", paperTextInk(albumColor(card.dataset.curtainAlbum), paper, ink,
+      settings.highContrast ? 7 : 4.5));
+  }
+  const digits = card.querySelectorAll(".brief-goal-ink");
+  if (!digits.length) return;
+  const cx = document.createElement("canvas").getContext("2d");
+  if (!cx) return;
+  digits.forEach((el) => {
+    const cs = getComputedStyle(el);
+    cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const m = cx.measureText(el.textContent.trim());
+    if (!Number.isFinite(m.actualBoundingBoxLeft)) return;
+    const x = (m.width + m.actualBoundingBoxLeft - m.actualBoundingBoxRight) / 2;
+    set(el, "--goal-x", `${x.toFixed(2)}px`);
+    if (Number.isFinite(m.fontBoundingBoxAscent) && Number.isFinite(m.actualBoundingBoxAscent)) {
+      const y = (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent
+        - m.fontBoundingBoxAscent + m.fontBoundingBoxDescent) / 2;
+      set(el, "--goal-y", `${y.toFixed(2)}px`);
+    }
+  });
+}
 function fitCurtain(ov) {
   const page = $("screen-game");
   const fit = () => {
     const card = ov.querySelector(".chall-curtain-card");
     if (!card || !ov.isConnected) return;
+    settleCurtainCard(card);
     page.style.minHeight = "";
     const short = card.offsetHeight + CURTAIN_MARGIN * 2 - ov.clientHeight;
     if (card.offsetHeight && short > 0) page.style.minHeight = `${page.offsetHeight + short}px`;
@@ -23225,6 +23262,7 @@ function fitCurtain(ov) {
   curtainFit = typeof ResizeObserver === "function" ? new ResizeObserver(fit) : null;
   if (curtainFit) ov.querySelectorAll(".chall-curtain-card").forEach((c) => curtainFit.observe(c));
   fit();
+  if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(fit);
 }
 function unfitCurtain() {
   if (curtainFit) { curtainFit.disconnect(); curtainFit = null; }
@@ -23330,7 +23368,10 @@ function beginRoundClock() {
       if (i > 0 || !ov.querySelector(".chall-curtain-card")) { ov.innerHTML = html; fitCurtain(ov); }
     } else ov = mountCurtain(html);
     let acted = false;
-    const next = () => {
+    const next = (event) => {
+      // Reduced motion mounts the next notice synchronously. This acknowledgement must
+      // not bubble into the new notice's skip listener and spend two cards on one click.
+      if (event) event.stopPropagation();
       if (acted) return;
       acted = true;
       // This card is done with the keyboard: drop its Enter listener now, so it can't also

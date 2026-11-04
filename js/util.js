@@ -21,6 +21,33 @@ export function shuffle(arr) {
 
 export function chance(p) { return Math.random() < p; }
 
+// Keep an album hue as close to its original as the paper allows. Only text uses this;
+// beads and other coloured objects keep their own palette. The caller supplies the live
+// paper and ink, so alternate stocks, night and high contrast all use the same rule.
+export function paperTextInk(color, paper, ink, minimum = 4.5) {
+  const rgb = (hex) => /^#[\da-f]{6}$/i.test(hex || "")
+    ? [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) : null;
+  const source = rgb(color), stock = rgb(paper), pen = rgb(ink);
+  if (!source || !stock || !pen) return ink;
+  const light = (channels) => channels.reduce((sum, channel, i) => {
+    const n = channel / 255;
+    return sum + (n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4) * [0.2126, 0.7152, 0.0722][i];
+  }, 0);
+  const background = light(stock);
+  const readable = (channels) => {
+    const foreground = light(channels);
+    return (Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05) >= minimum;
+  };
+  if (readable(source)) return color;
+  let lo = 0, hi = 1, best = pen;
+  for (let i = 0; i < 12; i++) {
+    const mix = (lo + hi) / 2;
+    const candidate = source.map((n, j) => Math.round(n + (pen[j] - n) * mix));
+    if (readable(candidate)) { hi = mix; best = candidate; } else lo = mix;
+  }
+  return "#" + best.map((n) => n.toString(16).padStart(2, "0")).join("");
+}
+
 // True when one prompt word is the other's plural (hand/hands, fence/fences, lady/ladies). The
 // pools hold both halves of a dozen such pairs, and a run that deals "hands" on page 2 and
 // "hand" on page 12 reads as a game that has run out of words, so a run treats them as one.
