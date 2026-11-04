@@ -4176,14 +4176,25 @@
     letter-spacing: 0; text-transform: none; color: var(--ink); line-height: 0.85; margin-bottom: 1px;
   }
   .chall-beaten-perf { display: block; margin-top: 2px; color: #9a7a2e; }
-  /* ---- the tally: how many of the roster are beaten, said once, at the top ---- */
-  .mx-tally { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-  .mx-tally b { font-family: var(--hand); font-weight: 700; font-size: calc(44px + var(--text-size-adjust)); line-height: 0.8; color: var(--ink); }
+  /* ---- the tally: how many of the roster are beaten, said once, at the top ----
+     The deck's counter over the shelf (tallyCounterSVG in app.js), on the tapes' own .mx-shell,
+     .mx-deep, .mx-win and .mx-shadow, so it is the same plastic and ink by construction. Its
+     shell is neutral graphite because it belongs to no tier. Beside it the label is printed and
+     the loop is written in the hand, the game's two voices. */
+  .mx-tally { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .mx-ctr { --tc: #5b534a; --edge: #2b2722; --lab: #f4ecd8; display: block; flex: none; overflow: visible; }
+  .mx-wheel { fill: var(--lab); }
+  .mx-fig { font-family: var(--type); font-weight: 700; font-size: 26px; fill: #2b2722; text-anchor: middle; }
+  /* the figures either side, half turned out of the window: the ink taken toward the wheel */
+  .mx-fig-by { fill: color-mix(in srgb, #2b2722 42%, var(--lab)); }
+  .mx-tally-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .mx-tally-of {
-    font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--ink-soft); line-height: 1.5;
+    font-family: var(--type); font-weight: 700; font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1.8px;
+    text-transform: uppercase; color: var(--ink); line-height: 1.2;
   }
-  .mx-tally-sub { display: block; opacity: 0.72; }
+  .mx-tally-note { font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); line-height: 1.05; color: var(--ink-soft); }
+  /* lifted at night, as the pinned tape's shell is, so the plate keeps an edge on the dark sheet */
+  :root[data-theme="dark"] .mx-ctr { --tc: #6c6358; --edge: #14110d; --lab: #e2d7bd; }
 
   /* ---- the shelf: a cassette per difficulty (see mixtapeSVG in app.js for the rules) ----
      Flat colour and ink edges like the tape glyphs they grew out of, and like the Play
@@ -4805,12 +4816,15 @@
       background: rgba(39,69,96,0.05);
     }
     :root[data-theme="dark"] .mx-tracks > .chall-detail { background: rgba(116,171,225,0.06); }
-    .mx-tally b { font-size: calc(38px + var(--text-size-adjust)); }
-    .mx-tally-of { letter-spacing: 1px; }
-    /* Each half is held whole, but the line may break between them: held as one nowrap run,
-       "defeat the rule" ran under the token wallet on a 320px phone and printed through it. */
-    .mx-tally-sub { font-size: calc(9px + var(--text-size-adjust)); letter-spacing: 0.6px; }
-    .mx-tally-sub > span { white-space: nowrap; }
+    /* When the wallet leaves the words less than they need beside the counter (a 320px phone),
+       they drop under it whole rather than stacking a word to a line. */
+    .mx-tally { flex-wrap: wrap; gap: 6px 10px; }
+    .mx-tally-txt { flex: 1 1 108px; }
+    .mx-ctr { width: 84px; height: auto; }
+    .mx-tally-of { letter-spacing: 1.2px; font-size: calc(10px + var(--text-size-adjust)); }
+    /* The note wraps word by word. Never hold it as one nowrap run: the motto it replaced was
+       held that way and, on a 320px phone, ran under the token wallet and printed through it. */
+    .mx-tally-note { font-size: calc(15px + var(--text-size-adjust)); }
   }
   @media (prefers-reduced-motion: reduce) {
     .mx-tape, .mx-tape::after { transition: none; }

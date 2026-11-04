@@ -12100,6 +12100,41 @@ function mixtapeSVG(key, word, done, total, { wrapped = false, wind } = {}) {
     `</svg>`;
 }
 
+// The tally is the deck's counter over the shelf, because the total of four cassettes is what a
+// deck shows. It is drawn in the tapes' own stock by the rules above: a shell (neutral graphite,
+// since it belongs to no tier), the one ink edge, screws taken toward that ink, the flat shadow.
+// Each wheel shows its figure whole and a sliver of the figures either side, which is the whole
+// difference between a rolling counter and a printed number, and no two wheels ever stop level.
+// A clear shelf rolls to 032 and, like a finished tape, takes no colour of its own. The label
+// runs straight off the wheels: the replay stamp once carried numbering wheels nobody could tell
+// from a score, and a counter with "of 32 defeated" beside it can't be read as anything else.
+const TALLY_WHEEL = { w: 21, h: 33, gap: 2.4, padX: 4, padY: 3.4, sideX: 15, sideY: 7, pitch: 20.5, fig: 26 };
+const TALLY_WHEEL_REST = [0.7, -0.8, 1.2];
+function tallyCounterSVG(count) {
+  const n = ++mixtapeSeq, c = TALLY_WHEEL, f = (v) => +v.toFixed(2);
+  const ww = c.padX * 2 + c.w * 3 + c.gap * 2, wh = c.padY * 2 + c.h;
+  const pw = c.sideX * 2 + ww, ph = c.sideY * 2 + wh;
+  let clips = "", wheels = "";
+  String(Math.min(999, count)).padStart(3, "0").split("").map(Number).forEach((d, i) => {
+    const x = c.sideX + c.padX + i * (c.w + c.gap), y = c.sideY + c.padY;
+    const cx = f(x + c.w / 2), cy = y + c.h / 2 + TALLY_WHEEL_REST[i];
+    // Courier Prime's figures are optically centred with the baseline 0.31em below the middle
+    const fig = (k, cls) => `<text class="${cls}" x="${cx}" y="${f(cy + k * c.pitch + c.fig * 0.31)}">${(d + 10 + k) % 10}</text>`;
+    clips += `<clipPath id="mxw${n}-${i}"><rect x="${x}" y="${y}" width="${c.w}" height="${c.h}" rx="1.6"/></clipPath>`;
+    wheels += `<rect class="mx-wheel" x="${x}" y="${y}" width="${c.w}" height="${c.h}" rx="1.6"/>` +
+      `<g clip-path="url(#mxw${n}-${i})">${fig(-1, "mx-fig mx-fig-by")}${fig(0, "mx-fig")}${fig(1, "mx-fig mx-fig-by")}</g>`;
+  });
+  const screw = (x, y, a) => `<circle class="mx-deep" cx="${f(x)}" cy="${f(y)}" r="2.6"/>` +
+    `<path class="mx-screw-slot" d="M${f(x - 1.6)} ${f(y)} L${f(x + 1.6)} ${f(y)}" transform="rotate(${a} ${f(x)} ${f(y)})"/>`;
+  return `<svg class="mx-ctr" viewBox="0 0 ${f(pw + 3)} ${f(ph + 4)}" width="${f(pw + 3)}" height="${f(ph + 4)}" aria-hidden="true">` +
+    `<defs>${clips}</defs>` +
+    `<rect class="mx-shadow" x="3" y="4" width="${f(pw - 1)}" height="${f(ph - 1)}" rx="6"/>` +
+    `<rect class="mx-shell" x="1" y="1" width="${f(pw - 1)}" height="${f(ph - 1)}" rx="6"/>` +
+    screw(c.sideX / 2 + 0.6, ph / 2 + 0.5, 28) + screw(pw - c.sideX / 2 - 0.4, ph / 2 - 0.3, -52) +
+    `<rect class="mx-win" x="${c.sideX}" y="${c.sideY}" width="${f(ww)}" height="${f(wh)}" rx="3"/>` +
+    wheels + `</svg>`;
+}
+
 function renderChallengesPage() {
   checkChallengeBoardCharms();   // mastery-gated locks fall with no purchase to notice them
   const wallet = loadChallengeTokens();
@@ -12111,6 +12146,7 @@ function renderChallengesPage() {
   const shelf = byShelf(CHALLENGES);
   const pinned = shelf.filter((c) => records.get(c.id).pinned && unlocked.get(c.id));
   const defeated = CHALLENGES.filter((c) => records.get(c.id).defeated).length;
+  const full = defeated === CHALLENGES.length;
 
   // The tapes on the shelf, in tier order; unrated only while something is waiting on a
   // rating, and the pinned mix last, only while there is something on it. Pins deliberately
@@ -12211,8 +12247,11 @@ function renderChallengesPage() {
 
   const html =
     `<div class="chall-head">` +
-      `<div class="mx-tally"><b>${defeated}</b><span class="mx-tally-of">of ${CHALLENGES.length} defeated` +
-        `<span class="mx-tally-sub"><span>spend a token\u00a0·</span> <span>defeat the rule</span></span></span></div>` +
+      // The note says the whole loop: a first defeat mints the token that opens the next rule
+      // (markChallengeDefeated). A clear shelf has nothing left to spend one on, so it goes.
+      `<div class="mx-tally">${full ? "" : `<span class="sr-only">${defeated}</span>`}${tallyCounterSVG(defeated)}` +
+        `<span class="mx-tally-txt"><span class="mx-tally-of">${full ? "all" : "of"} ${CHALLENGES.length} defeated</span>` +
+        (full ? "" : `<span class="mx-tally-note">spend a token, defeat the rule, earn another</span>`) + `</span></div>` +
       `<span class="chall-wallet${tk === 0 ? " is-empty" : ""}" data-gloss="token" title="${escapeHtml("token: " + glossaryDefn("token"))}">` +
         `<span class="chall-wallet-stubs" aria-hidden="true">${walletStubs(tk)}</span>` +
         `<span class="chall-wallet-cnt"><b>${tk}</b>token${tk === 1 ? "" : "s"}</span></span>` +
