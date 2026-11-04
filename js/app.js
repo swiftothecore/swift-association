@@ -120,7 +120,7 @@ import { buildLineIndex, buildWordFreq, buildSlipPuzzle, readSlipSwaps, slipDeal
          buildCloudPuzzle, cloudWords,
          judgeBlank, blankExact, blankSungOnce } from "./bonus.js";
 import { passportHTML, stampCardsHTML, passportStamp, passportTracing, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
-import { rewardBoardHTML, titleFileHTML } from "./rewardboard.js";
+import { rewardBoardHTML, titleFileHTML, pinWire } from "./rewardboard.js";
 import { skillMarkHTML } from "./skillmarks.js";
 import { ruleSlotsMarkup, ruleTermsMarkup, ruleTermsLabel, ruleLegendMarkup,
          ruleTermsFrom, ruleShapeFor } from "./rulemarks.js";
@@ -2359,10 +2359,9 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
     : "";
   const tabs = tier1 + tier2;
 
-  // Infinite is its own game type, with its own ticket and strands, not the 0–13 distribution.
+  // Infinite is its own game type, with its own bibs, not the 0–13 distribution.
   if (isInf) {
     el.innerHTML = tabs + infiniteTabHTML();
-    alignStatsTicket(el);
     el.querySelectorAll("[data-statmode]").forEach((b) =>
       b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
     return;
@@ -2602,8 +2601,8 @@ function statsBestSetDate(tokens, best) {
   return first;
 }
 const STATS_MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-// tint is the view the ticket is kept for (a difficulty id or "infinite"), printed on that
-// tab's stock; All has none and keeps the plain buff.
+// tint is the difficulty the ticket is kept for, printed on that tab's stock; All has none and
+// keeps the plain buff. (Infinite keeps bibs, not a ticket: infiniteTabHTML.)
 function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip, set, tint }) {
   let date = "";
   if (set) {
@@ -2813,6 +2812,18 @@ function statsClippingHTML(word, count) {
     `</div></div>`;
 }
 
+// The gist: an index card of a view's few plain numbers, one line each. Classic views and
+// Infinite write their own lines; `cls` adds to the card's place in the grid.
+function statsGistHTML(lines, cls = "") {
+  return `<div class="stp-item stp-w2 stp-o1${cls}" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx">` +
+    `<div class="stp-lab">the gist</div>${lines.join("")}</div></div>`;
+}
+// "lately", with its trend arrow once it sits clear of the average. Nothing until there is one.
+function statsLatelyLine(lately, lead) {
+  if (lately == null) return "";
+  return `<p>lately <b>${lately.toFixed(1)}</b>${lead > 0.3 ? `<span class="stp-up" title="up on your average">${STATS_TREND.up}</span>` : lead < -0.3 ? `<span class="stp-down" title="down on your average">${STATS_TREND.down}</span>` : ""}</p>`;
+}
+
 // The pieces every view shares: ticket, the gist, the stave and the graph (and the nemesis on All).
 function statsGameHTML(s, viewMode, isAll, lastScore, W) {
   const avg = s.totalScore / s.played;
@@ -2833,11 +2844,12 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
     set: s.best > 0 ? statsBestSetDate(isAll ? MODE_ORDER : [viewMode], s.best) : null,
     tint: isAll ? null : viewMode,
   }));
-  out.push(`<div class="stp-item stp-w2 stp-o1" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx"><div class="stp-lab">the gist</div>` +
-    `<p>avg <b>${avg.toFixed(1)}</b></p>` +
-    (lately != null ? `<p>lately <b>${lately.toFixed(1)}</b>${lead > 0.3 ? `<span class="stp-up" title="up on your average">${STATS_TREND.up}</span>` : lead < -0.3 ? `<span class="stp-down" title="down on your average">${STATS_TREND.down}</span>` : ""}</p>` : "") +
-    (mostly ? `<p title="${Math.round(mostly.n / s.played * 100)}% of your games">mostly <b>${mostly.lo === mostly.hi ? `${mostly.lo}s` : `${mostly.lo}–${mostly.hi}`}</b></p>` : "") +
-    `<p title="the most pages right in a row">best streak <b>${s.bestInRow || 0}</b></p></div></div>`);
+  out.push(statsGistHTML([
+    `<p>avg <b>${avg.toFixed(1)}</b></p>`,
+    statsLatelyLine(lately, lead),
+    mostly ? `<p title="${Math.round(mostly.n / s.played * 100)}% of your games">mostly <b>${mostly.lo === mostly.hi ? `${mostly.lo}s` : `${mostly.lo}–${mostly.hi}`}</b></p>` : "",
+    `<p title="the most pages right in a row">best streak <b>${s.bestInRow || 0}</b></p>`,
+  ]));
   // headed in the gist's word, since the gist's lately is these twelve; on a notebook with no
   // games outside them it is simply every game
   out.push(`<div class="stp-item stp-w6 stp-o3" style="--r:-.4deg">${statsTape("staff")}` +
@@ -3115,126 +3127,121 @@ function statsDailyPassHTML(streak) {
     `<div class="stp-dp-stub">${stub}</div></div></div></div>`;
 }
 
-// Infinite runs aren't comparable to the 13-round game (scores can exceed 13 and the
-// 0-13 histogram is meaningless), so the Infinite tab gets its own body. What a run IS
-// in this mode is a length: you kept going until you didn't. So the tab draws lengths.
-// Each played combo is a STRAND — one bead per round survived, threaded on a hand-drawn
-// cord and tied off with its number — and every strand on the tab shares one scale, so
-// the longest run fills the track and the rest read against it at a glance. That makes
-// the honest comparison the picture instead of a caption: sudden death really is short.
-//
-// It replaced a variant x difficulty table, and the reason is worth writing down. Twelve
-// cells for two variants across six difficulties is mostly holes on any real notebook
-// (nobody grinds infinite Ultra), so the old grid spent a third of its height printing
-// dashes, and its numbers all had the same weight whether they were 7 or 41. Strands
-// only exist where something was played; the untried difficulties collapse to one faint
-// line per group that says what is left to try.
-//
-// Gold for the forgiving 3-lives variant, danger-red for sudden death, matching the
-// beads in each group's heading. `beads` is how many that variant gives you.
-const INF_VARIANT_STYLE = {
-  "3lives": { color: "#c08a2e", beads: 3, label: "three lives" },
-  sudden:   { color: "#b23a3a", beads: 1, label: "sudden death" },
-};
-// Track the strands are drawn on, in SVG units. The svg scales to its column, so this is
-// a ratio budget rather than a pixel count.
-const INF_TRACK = 320;
-// One bead per round, pitched so the tab's best run just fills the track — but never so
-// tight the beads merge, and never so loose a 3-round strand looks like an achievement.
-function infPitch(max) { return Math.max(5.2, Math.min(13, INF_TRACK / Math.max(1, max))); }
-// A strand of `rounds` beads at the shared pitch. Over the track's capacity the cord runs
-// off the right edge unfinished (no knot, no number tied on) — the same "this kept going"
-// idiom the daily streak strand uses when a run outgrows its space.
-function infStrandHTML(rounds, color, pitch) {
-  // A first-page miss is a valid Infinite run. It has no beads to thread, but it
-  // still needs a short empty cord so opening Stats cannot fall through to an
-  // undefined final point before the tab is rendered.
-  if (rounds <= 0) {
-    return `<svg class="inf-strand" viewBox="0 0 ${INF_TRACK} 22" preserveAspectRatio="xMinYMid meet" aria-hidden="true">` +
-      `<path d="M0 11 Q9 8.5 18 11" fill="none" stroke="#8a7f6b" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+/* ---------- Infinite: race bibs ----------
+   Infinite runs aren't comparable to the 13-round game (a run can pass 13 and the 0-13 graph
+   means nothing), so the tab has its own body. Infinite is the long-distance event, so every
+   difficulty you've run it on keeps its bib, pinned into the notebook the way runners keep
+   theirs. The number on the bib is the furthest you've got on it. The band across the top says
+   which race (three lives or sudden death) in the difficulty's colour, the Records page's own
+   (RECORD_PRINT, MODE_COLORS pushed toward the pen so white lettering reads on all six). The
+   tear-off strip carries the rest. The furthest bib is the big one, beside the gist, and the
+   rest follow, furthest first; a difficulty never run simply has no bib.
+
+   A RUN LEFT PART-WAY IS A DNF. foldRunProgress counts a run you close mid-way toward games and
+   pages but never lets it set a best, and it never reaches the run log. The strands this
+   replaced could only draw that as a 0 after two games, and their totals (the old footnote)
+   couldn't be made to add up under the bests. So the strip counts DNFs, and a difficulty with
+   nothing but DNFs keeps its bib with the furthest it got printed faint under a DNF stamp.
+   Finished runs are the log's (t "infinite", m the token); DNFs are the games the log doesn't
+   hold. Once the log has reached its cap that difference can't be trusted, so the count is left
+   off rather than guessed.
+
+   Picked from scripts/stats/infinite/board.html over postcards from the furthest page and a
+   piano roll of every page. It replaced one strand of beads per difficulty in a ruled table,
+   under the ticket. */
+// A small safety pin, built the way the Mastery board's big ones are (pinWire, js/rewardboard.js):
+// the coil, the bar, the shaft down through the bib and back up, and the hooded head.
+const STATS_BIB_PIN = (() => {
+  const yb = 11.2, yt = 6.2, cx = 6.2, cy = 8.4, rc = 3.6;
+  const coil = `M${cx + 6} ${yb} C${cx + 2.4} ${yb} ${cx + 1} ${cy + rc} ${cx} ${cy + rc} C${cx - 2} ${cy + rc} ${cx - rc} ${cy + 2} ${cx - rc} ${cy}` +
+    ` C${cx - rc} ${cy - 2} ${cx - 2} ${cy - rc} ${cx} ${cy - rc} C${cx + 2.4} ${cy - rc} ${cx + 4} ${yt + 0.1} ${cx + 7} ${yt}`;
+  const bar = `M${cx + 5} ${yb} C${cx + 18} ${yb + 0.25} 36 ${yb + 0.2} 49.5 ${yb - 0.1}`;
+  const a = 19, b = 39;
+  const shaftA = `M${cx + 6.5} ${yt} C${cx + 9} ${yt - 0.1} ${a - 4} ${yt + 0.15} ${a} ${yt + 0.05}`;
+  const shaftB = `M${b} ${yt + 0.1} C${b + 4} ${yt} 46 ${yt - 0.15} 50 ${yt + 0.1}`;
+  const hole = (x) => `<ellipse class="stp-bib-hole" cx="${x}" cy="${yt + 0.1}" rx="0.95" ry="1.7"/>`;
+  const head = `M49 ${yt - 3.1} L55.6 ${yt - 3.2} Q58.4 ${yt - 3.2} 58.4 ${yt} L58.4 ${yb} Q58.4 ${yb + 2.8} 55.6 ${yb + 2.8} L49 ${yb + 2.7}` +
+    ` Q47.6 ${yb + 2.7} 47.6 ${yb + 1.2} L47.7 ${yt - 1.6} Q47.7 ${yt - 3.1} 49 ${yt - 3.1} Z`;
+  const w = (d, x) => pinWire(d, x, "stp-bib", 1.9);
+  return `<svg viewBox="0 0 60 16" aria-hidden="true">` +
+    w(shaftA, 1.25) + hole(a) + w(shaftB, 1.25) + hole(b) + w(coil, 1.3) + w(bar, 1.4) +
+    `<path class="stp-bib-head" d="${head}"/><path class="stp-bib-fold" d="M49.4 ${(yt + yb) / 2 + 0.3} C52 ${(yt + yb) / 2} 55 ${(yt + yb) / 2 - 0.2} 57.6 ${(yt + yb) / 2 + 0.1}"/></svg>`;
+})();
+// One pin through each corner, each at its own angle (never a mirrored pair). The lower two sit
+// just above the tear-off strip so they never land on its print.
+const STATS_BIB_PINS = [
+  "left:1.5cqi;top:4.6cqi;--rot:-24deg", "right:1.2cqi;top:5.4cqi;--rot:21deg",
+  "left:2.2cqi;bottom:18cqi;--rot:17deg", "right:1.8cqi;bottom:18.6cqi;--rot:-19deg",
+].map((at) => `<span class="stp-bib-pin" style="${at}">${STATS_BIB_PIN}</span>`).join("");
+const STATS_BIB_RACE = { "3lives": { name: "THREE LIVES", lives: 3 }, sudden: { name: "SUDDEN DEATH", lives: 1 } };
+// The DNF stamp, struck in the postmark's speckled ink (#pmInk, index.html's shared defs).
+const STATS_BIB_DNF = `<span class="stp-bib-dnf" aria-hidden="true"><svg viewBox="0 0 100 44"><g filter="url(#pmInk)">` +
+  `<rect x="3" y="3" width="94" height="38" rx="4"/><text x="50" y="33.5">DNF</text></g></svg></span>`;
+
+function statsBibHTML(e, hero, tilt) {
+  const race = STATS_BIB_RACE[e.variant];
+  const finished = e.best > 0;   // a finished run lasts at least a page, so a best of 0 is all DNF
+  const number = finished ? e.best : e.furthest;
+  const usual = hero && e.finished.length >= 3 ? e.finished.slice().sort((a, b) => a - b)[Math.floor((e.finished.length - 1) / 2)] : null;
+  const strip = [`${e.played} ${e.played === 1 ? "RUN" : "RUNS"}`];
+  if (usual != null) strip.push(`USUALLY ${usual}`);
+  if (e.dnf) strip.push(`${e.dnf} DNF`);
+  if (finished && e.set) {
+    const [y, m, d] = e.set.split("-");
+    strip.push(hero ? `SET ${+d} ${STATS_MONTHS[+m - 1]} ${y}` : `${+d} ${STATS_MONTHS[+m - 1]}`);
   }
-  const r = Math.max(2.3, pitch * 0.42);
-  const x0 = 3 + r;
-  const room = Math.max(1, Math.floor((INF_TRACK - x0 - 10) / pitch) + 1);
-  const shown = Math.min(rounds, room);
-  const over = rounds > room;
-  const seed = color.charCodeAt(1) + rounds;
-  const pts = [];
-  for (let i = 0; i < shown; i++) {
-    // Hand-threaded, so the cord wanders: a small deterministic wobble off the centre
-    // line, different for every strand (the colour seeds it) and never a clean repeat.
-    const w = Math.sin(i * 1.9 + seed) * 1.05 + Math.sin(i * 0.77 + seed * 2) * 0.85;
-    pts.push({ x: x0 + i * pitch, y: 11 + w });
-  }
-  const last = pts[pts.length - 1];
-  const endX = over ? INF_TRACK : last.x + Math.max(7, pitch * 0.8);
-  let d = `M0 ${(pts[0].y + 0.6).toFixed(1)}`;
-  pts.forEach((p, i) => {
-    const prev = i === 0 ? { x: 0, y: pts[0].y } : pts[i - 1];
-    d += ` Q${((prev.x + p.x) / 2).toFixed(1)} ${(p.y + (i % 2 ? -2.2 : 2.2)).toFixed(1)} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
-  });
-  d += ` Q${(endX - 4).toFixed(1)} ${(last.y - 2).toFixed(1)} ${endX.toFixed(1)} ${last.y.toFixed(1)}`;
-  const beads = pts.map((p, i) =>
-    `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(r * (i % 4 === 1 ? 0.94 : 1)).toFixed(2)}" fill="${color}"/>`
-  ).join("");
-  const knot = over ? "" :
-    `<circle cx="${endX.toFixed(1)}" cy="${last.y.toFixed(1)}" r="${Math.max(1.6, r * 0.55).toFixed(2)}" fill="#8a7f6b" stroke="none"/>`;
-  return `<svg class="inf-strand" viewBox="0 0 ${INF_TRACK} 22" preserveAspectRatio="xMinYMid meet" aria-hidden="true">` +
-    `<path d="${d}" fill="none" stroke="#8a7f6b" stroke-width="1.4" stroke-linecap="round"/>` +
-    `<g stroke="#2b2722" stroke-width="0.9">${beads}${knot}</g></svg>`;
+  const mode = MODES[e.mode].label;
+  const said = `${mode}, ${race.name.toLowerCase()}: ` + (finished ? `furthest ${e.best} ${e.best === 1 ? "page" : "pages"}` : `furthest ${number} pages, never finished`) +
+    `, ${e.played} ${e.played === 1 ? "run" : "runs"}${e.dnf ? `, ${e.dnf} left part-way` : ""}`;
+  return `<div class="stp-item ${hero ? "stp-w4 stp-o0" : "stp-w2 stp-o2"}" style="--r:${tilt}deg">` +
+    `<div class="stp-bib${hero ? " is-hero" : ""}${finished ? "" : " is-dnf"}" style="--bib:${RECORD_PRINT[e.mode]}" role="img" aria-label="${said}">` +
+    `<div class="stp-bib-band"><span class="stp-bib-lives">${"<i></i>".repeat(race.lives)}</span>${race.name}</div>` +
+    `<div class="stp-bib-num">${number}</div><div class="stp-bib-mode">${mode.toUpperCase()}</div>` +
+    `<div class="stp-bib-strip">${strip.join(" · ")}</div>${finished ? "" : STATS_BIB_DNF}${STATS_BIB_PINS}</div></div>`;
 }
+
 function infiniteTabHTML() {
+  const hist = loadHistory();
+  const capped = loadTakes(hist).n > hist.length;
   const entries = [];
   for (const variant of ["3lives", "sudden"]) {
     for (const m of MODE_ORDER) {
-      const st = loadStats("inf-" + variant + "-" + m);
-      if (st.played > 0) entries.push({ variant, mode: m, best: st.best, played: st.played, total: st.totalScore || 0 });
+      const token = "inf-" + variant + "-" + m;
+      const st = loadStats(token);
+      if (!st.played) continue;
+      const finished = hist.filter((h) => h && h.t === "infinite" && h.m === token).map((h) => h.s);
+      let furthest = 0;
+      (st.scoreCounts || []).forEach((c, n) => { if (c) furthest = n; });
+      entries.push({ variant, mode: m, best: st.best, played: st.played, total: st.totalScore || 0, bestInRow: st.bestInRow || 0,
+        finished, furthest, dnf: capped ? 0 : Math.max(0, st.played - finished.length),
+        set: st.best > 0 ? statsBestSetDate([token], st.best) : null });
     }
   }
-  // No runs yet: the same blank ticket and note the Classic tabs leave, not a different empty page.
+  // No runs yet: one blank bib, the race still to be run.
   if (!entries.length) {
-    return `<div class="stp">` + statsTicketHTML({ kicker: "", value: "–", unit: "pages",
-      line: "your longest run goes here", serial: "000", serialLabel: "INFINITE<br>RUNS", tint: "infinite" }) +
-      `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">No infinite runs yet. Infinite deals pages until your lives run out, ` +
-      `and every page you survive strings one more bead.</p>${playCTA("play infinite", { type: "infinite" })}</div></div>`;
+    return `<div class="stp"><div class="stp-item stp-w4 stp-o0" style="--r:-1deg"><div class="stp-bib is-hero is-blank">` +
+      `<div class="stp-bib-band">INFINITE</div><div class="stp-bib-num">–</div><div class="stp-bib-mode">&nbsp;</div>` +
+      `<div class="stp-bib-strip">NO RUNS YET</div>${STATS_BIB_PINS}</div></div>` +
+      `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">No infinite runs yet. Every difficulty you run keeps its bib, ` +
+      `with the furthest page you got to as its number.</p>${playCTA("play infinite", { type: "infinite" })}</div></div>`;
   }
-  // headline = the single longest run across every combo; the whole tab scales to it
-  let top = entries[0], games = 0, rounds = 0;
-  for (const e of entries) { games += e.played; rounds += e.total; if (e.best > top.best) top = e; }
-  const pitch = infPitch(top.best);
-  // The longest run is kept the way the best score is on the other tabs: a ticket stub.
-  const hero = `<div class="stp stp--hero">` + statsTicketHTML({
-    kicker: "LONGEST RUN", value: top.best, unit: top.best === 1 ? "page" : "pages",
-    line: `${VARIANT_LABELS[top.variant]} · ${MODES[top.mode].label}`,
-    serial: pad3(games), serialLabel: `INFINITE<br>${games === 1 ? "RUN" : "RUNS"}`,
-    tip: `Longest infinite run ${top.best} ${top.best === 1 ? "page" : "pages"}, ${VARIANT_LABELS[top.variant]}, ${MODES[top.mode].label}`,
-    set: statsBestSetDate([`inf-${top.variant}-${top.mode}`], top.best),
-    tint: "infinite",
-  }) + `</div>`;
-  const group = (variant) => {
-    const sty = INF_VARIANT_STYLE[variant];
-    const mine = MODE_ORDER.map((m) => entries.find((e) => e.variant === variant && e.mode === m)).filter(Boolean);
-    const beads = Array.from({ length: sty.beads }, () => `<i style="background:${sty.color}"></i>`).join("");
-    const head = `<div class="inf-group-h"><span class="inf-th-beads">${beads}</span>${sty.label}</div>`;
-    if (!mine.length) {
-      return `<section class="inf-group">${head}<p class="inf-untried">nothing strung here yet; ${sty.label} is still an empty page</p></section>`;
-    }
-    const rows = mine.map((e) =>
-      `<div class="inf-row">` +
-        `<span class="inf-row-h">${MODES[e.mode].label}</span>` +
-        `<span class="inf-row-strand">${infStrandHTML(e.best, sty.color, pitch)}</span>` +
-        `<span class="inf-row-num" style="color:${sty.color}">${e.best}</span>` +
-        `<span class="inf-row-games">${e.played} game${e.played === 1 ? "" : "s"}</span>` +
-      `</div>`
-    ).join("");
-    const left = MODE_ORDER.filter((m) => !mine.some((e) => e.mode === m)).map((m) => MODES[m].label);
-    const untried = left.length ? `<p class="inf-untried">not strung yet · ${left.join(" · ")}</p>` : "";
-    return `<section class="inf-group">${head}${rows}${untried}</section>`;
-  };
-  const avg = (rounds / games).toFixed(1);
-  return hero + group("3lives") + group("sudden") +
-    `<p class="inf-foot">${games} infinite game${games === 1 ? "" : "s"} · ` +
-    `${rounds} round${rounds === 1 ? "" : "s"} survived in total · ${avg} a run</p>`;
+  // furthest first, and a difficulty that has only ever been left part-way after every finished one
+  const order = entries.slice().sort((a, b) => ((b.best > 0) - (a.best > 0)) || b.best - a.best || b.played - a.played);
+  let games = 0, pages = 0, bestInRow = 0;
+  for (const e of entries) { games += e.played; pages += e.total; bestInRow = Math.max(bestInRow, e.bestInRow); }
+  const avg = pages / games;
+  // lately is the last twelve finished runs, from the log, as the classic gist reads its own
+  const recent = hist.filter((h) => h && h.t === "infinite").slice(0, 12).map((h) => h.s);
+  const lately = recent.length >= 3 && games > recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
+  const gist = statsGistHTML([
+    `<p title="pages a run, on average">avg <b>${avg.toFixed(1)}</b></p>`,
+    statsLatelyLine(lately, lately == null ? 0 : lately - avg),
+    `<p title="the most pages right in a row, in any run">best streak <b>${bestInRow}</b></p>`,
+    `<p title="every page survived, across every run"><b>${pages}</b> ${pages === 1 ? "page" : "pages"} in all</p>`,
+  ], " stp-solo");
+  const tilt = [1.3, -1.6, 0.8, -0.9, 1.7, -1.2];
+  return `<div class="stp stp-bibs">` + statsBibHTML(order[0], true, -1) + gist +
+    order.slice(1).map((e, i) => statsBibHTML(e, false, tilt[i % tilt.length])).join("") + `</div>`;
 }
 
 /* ---------- Achievements ---------- */
@@ -33304,18 +33311,26 @@ function devSeedHistory(n = 25) {
       ...(i % 4 === 0 ? { h: 1 + (i % 3) } : {}) });   // every fourth row wears the pencil stub
   }
 }
-// Infinite runs, spread over both variants so the stats tab's strands have something to
-// scale against. Runs get shorter as the difficulty climbs and sudden death is punished
-// hardest, which is the shape a real notebook has — a flat seed would make every strand
-// the same length and hide exactly the comparison the tab exists to draw.
+// Infinite runs, spread over both variants so the stats tab's bibs have something to show.
+// Runs get shorter as the difficulty climbs and sudden death is punished hardest, which is
+// the shape a real notebook has. A finished run is logged and recorded the way endGame does
+// it; about one in eight is left part-way, which only folds into the stats (foldRunProgress),
+// so the bibs' DNF counts and stamp have something to show too.
 function devSeedInfinite(games = 30) {
   const modes = ["relaxed", "easy", "medium", "hard"];
+  const now = Date.now();
   for (let g = 0; g < games; g++) {
     const variant = Math.random() < 0.62 ? "3lives" : "sudden";
     const mi = Math.floor(Math.random() * modes.length);
+    const token = "inf-" + variant + "-" + modes[mi];
     const ceiling = (variant === "sudden" ? 14 : 38) - mi * (variant === "sudden" ? 2.5 : 6);
-    const rounds = Math.max(1, Math.round(ceiling * (0.35 + Math.random() * 0.65)));
-    updateStats(rounds, "inf-" + variant + "-" + modes[mi], rounds);
+    const rounds = Math.max(variant === "sudden" ? 1 : 3, Math.round(ceiling * (0.35 + Math.random() * 0.65)));
+    if (Math.random() < 0.125) { updateStats(rounds, token, Math.max(0, rounds - 2), false); continue; }
+    const d = new Date(now - (games - g) * 9 * 3600 * 1000);
+    const right = rounds - (variant === "sudden" ? 1 : 3);
+    appendHistory({ s: rounds, c: right, n: rounds, m: token, t: "infinite", d: d.toISOString(), tm: null });
+    updateStats(rounds, token, Math.max(1, right - 2));
+    insertRecord(token, rounds, d.toISOString().slice(0, 10));
   }
 }
 function devSeedTally(games = 6) {

@@ -303,10 +303,11 @@ const PINS = [
 const PIN_ALBUMS = ["Lover", "1989", "Fearless", "Speak Now", "folklore", "Red", "Midnights", "Taylor Swift", "evermore"];
 const pf = (v) => +(+v).toFixed(2);
 // A steel wire: the page's ink round it, the steel, and a glint along its top. Steel is a material,
-// so it holds at night; only the edge follows the page.
-function pinWire(d, w) {
-  return `<path class="sp-w-o" d="${d}" style="stroke-width:${pf(w + 2.6)}"/><path class="sp-w" d="${d}" style="stroke-width:${pf(w)}"/>` +
-    `<path class="sp-w-h" d="${d}" style="stroke-width:${pf(w * 0.34)}" transform="translate(0 -${pf(w * 0.28)})"/>`;
+// so it holds at night; only the edge follows the page. Shared with the Stats page's race bibs
+// (statsBibPin in app.js), whose small pins pass their own class prefix `k` and a thinner `edge`.
+export function pinWire(d, w, k = "sp", edge = 2.6) {
+  return `<path class="${k}-w-o" d="${d}" style="stroke-width:${pf(w + edge)}"/><path class="${k}-w" d="${d}" style="stroke-width:${pf(w)}"/>` +
+    `<path class="${k}-w-h" d="${d}" style="stroke-width:${pf(w * 0.34)}" transform="translate(0 -${pf(w * 0.28)})"/>`;
 }
 // One pin, lying flat: the coil a turn and a half (drawn as two passes so the second crosses over
 // the first), the bar from the coil to the head, the shaft in two pieces either side of where it
