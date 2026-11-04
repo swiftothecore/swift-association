@@ -32176,40 +32176,43 @@ const HOWTO_PAGES = [
     label: "the whole game",
     title: "One word at a time",
     body: `Each page of the notebook gives you a single word. Name a Taylor Swift song with that ` +
-      `word somewhere in its lyrics, and you've taken the page. That really is the whole game.`,
-    note: `A run is ${TOTAL_ROUNDS} pages long. Difficulty decides how much help you get and ` +
-      `whether there's a clock running.`,
+      `word somewhere in its lyrics, and the page is yours. That really is the whole game.`,
+    note: `A run is ${TOTAL_ROUNDS} pages, or as long as you last in Infinite. Your difficulty ` +
+      `sets the clock, how rare the words are and how much help you get.`,
   },
   {
     label: "answering",
     title: "More than one way in",
-    body: `Type a song title and the notebook will meet you halfway: it forgives near-misses and ` +
-      `offers matching titles as you go. Stuck on a name but sure of the song? Sing it instead: ` +
-      `type a line of lyrics containing the word and that counts too. Not every page takes all ` +
-      `of that, though, and the marks in the corner of the page say which:`,
+    body: `Type a song title and the notebook meets you halfway: it forgives a small typo, offers ` +
+      `matching titles as you type, and takes a long title's initials. Know the song but not its ` +
+      `name? Sing it instead: type the line the word is in, which takes the page and earns a ` +
+      `bonus. Not every page allows all of this, and the marks at the top of the page tell you ` +
+      `what it takes:`,
     // The one place the marks are TAUGHT. They are drawn on the difficulty and challenge cards
     // beside the words they stand for, which is where most players will meet them; this is
     // where someone who wants the whole vocabulary in one place can find it.
     legend: true,
-    note: `Stuck properly? {HINT} spends a hint, in the modes that carry them. Every page has more ` +
-      `than one right answer, so the one you half-remember may well be one of them.`,
+    // "Most", not "every": Ultra deals words held by as few as one song, and Normal's tail
+    // draws from them now and then (see indexPlayableWords).
+    note: `Really stuck? Relaxed carries hints: press {HINT} under the answer line for a clue. ` +
+      `Most pages have more than one right answer, so the song you half-remember may well be one.`,
   },
   {
     label: "when you're ready",
     title: "The desk has drawers",
-    body: `Beyond the difficulties there's a daily page everyone plays the same, a stack of ` +
+    body: `Beyond the difficulties there's a daily page that everyone plays the same, a stack of ` +
       `rule-bending challenges, quick games on the bonus shelf, single-album runs, other ` +
-      `artists' catalogues, and a mode you write the rules for yourself.`,
-    note: `Nothing there needs learning first. If you'd rather not choose, the dice in the ` +
-      `corner will deal you something.`,
+      `artists' catalogues, and a mode where you write the rules yourself.`,
+    note: `Nothing there needs learning first. If you'd rather not choose, the dice beside the ` +
+      `start button will deal you something.`,
   },
   {
     label: "what you keep",
     title: "It all goes in the notebook",
-    body: `Finished runs leave something behind: trinkets on the bracelet, records and streaks, ` +
-      `and experience across five skills that unlocks as it climbs. None of it is spent by ` +
-      `playing badly, so there's no wrong way to start.`,
-    note: `Everything lives on this device alone. There's no account, and nothing to sign up for.`,
+    body: `Finished runs leave something behind: beads on the bracelet, charms, records, and ` +
+      `experience in five skills that unlocks rewards as it climbs. A bad run never takes ` +
+      `any of it away, so there's no wrong way to start.`,
+    note: `Everything is saved on this device. There's no account, and nothing to sign up for.`,
     // The one card that sends you somewhere, and it sends you two places. The notebook invents a
     // lot of nouns, and this is where a reader who noticed that gets told where they are defined.
     // The graveyard hangs off the same card because it wants the same reader: someone who has
@@ -32234,7 +32237,7 @@ function renderHowTo() {
   howToIndex = Math.max(0, Math.min(total - 1, howToIndex));
   const page = HOWTO_PAGES[howToIndex];
   const last = howToIndex === total - 1;
-  const note = page.note.replace("{HINT}", "the hint button");
+  const note = page.note.replace("{HINT}", "<b>need a hint?</b>");
   el.innerHTML =
     `<div class="howto-card" data-howto-card>` +
       `<div class="howto-view" data-howto-view aria-live="polite">` +
