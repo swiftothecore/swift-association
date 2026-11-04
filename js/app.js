@@ -12048,9 +12048,16 @@ function toggleChallengePin(id) {
    right-hand panel. Brutal arrives still in its cellophane while Mastery holds every track on
    it shut. Pins get a tape of their own, a home-made one in blue pencil, so a shortlist never
    reads as a fifth difficulty. */
-// The J-card wears its tape's colour (the shells themselves are coloured in styles.css).
-const MIXTAPE_INK = { 0: "#9a9077", 1: "#4f7a45", 2: "#cd8a2c", 3: "#b23a3a", 4: "#5c1a1a", pinned: "#3d5f80" };
-let mixtapeSeq = 0;   // every render scopes its clip and pattern ids, as sealMarkup does for seals
+// ONE PLASTIC, ONE INK. Every part of a tape answers to one rule, so the four read as one object
+// in four colours rather than four objects:
+//   colour  lives in the shell and nowhere else on the tape (the --tier-N ramp in styles.css);
+//   line    every edge is the same ink;
+//   shade   screws and foot are the shell's own colour taken toward that ink by one fixed amount,
+//           never a translucent black, which turned a different colour on every shell;
+//   label   plain cream, the tier word handwritten and the count printed, the game's two voices;
+//   reels   whole circles in a squared window, on the desk cassette's hubs (teeth pointing IN).
+// A finished tier is said by its count and a reel wound right across, with no colour of its own.
+let mixtapeSeq = 0;   // every render scopes its pattern ids, as sealMarkup does for seals
 
 // One cassette in a 150 x 98 box. `done` of `total` is printed on the label and, unless `wind`
 // says otherwise, wound onto the take-up reel; `wrapped` lays the cellophane over it. The pinned
@@ -12058,37 +12065,35 @@ let mixtapeSeq = 0;   // every render scopes its clip and pattern ids, as sealMa
 // its rating.
 // The reels run from a bare hub to a pack that fills the window's height. A narrower range was
 // tried first and two tapes at 0 and 7 of 10 looked the same at shelf size, which left the
-// number doing all the work the reels were drawn to do.
+// number doing all the work the reels were drawn to do. The window is squared off and 30 tall so
+// the fullest pack (r 14.2) is still a whole circle: the old stadium window clipped a full reel
+// into a capsule with its hub off-centre. The two radii always sum to 21, so the packs never meet.
 function mixtapeSVG(key, word, done, total, { wrapped = false, wind } = {}) {
   const n = ++mixtapeSeq;
-  const p = wind != null ? wind : total ? done / total : 0, rMin = 7.6, rMax = 20.8;
+  const p = wind != null ? wind : total ? done / total : 0, rMin = 6.8, rMax = 14.2;
   const rl = rMin + (1 - p) * (rMax - rMin), rr = rMin + p * (rMax - rMin);
   // The two reels never sit at the same turn, so the hubs are not a mirrored pair.
-  const hub = (cx, turn) => `<circle class="mx-hub" cx="${cx}" cy="61" r="6.6"/>` +
-    [0, 60, 120, 180, 240, 300].map((a) => {
+  const hub = (cx, turn) => `<circle class="mx-hub" cx="${cx}" cy="60" r="6.3"/><circle class="mx-spindle" cx="${cx}" cy="60" r="3.3"/>` +
+    `<path class="mx-tooth" d="${[0, 60, 120, 180, 240, 300].map((a) => {
       const r = (a + turn) * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
-      return `<path class="mx-tooth" d="M${(cx + c * 2.9).toFixed(2)} ${(61 + s * 2.9).toFixed(2)} L${(cx + c * 5.1).toFixed(2)} ${(61 + s * 5.1).toFixed(2)}"/>`;
-    }).join("");
-  const screw = (x, y, a) => `<circle class="mx-screw" cx="${x}" cy="${y}" r="2.3"/>` +
+      return `M${(cx + c * 3.4).toFixed(2)} ${(60 + s * 3.4).toFixed(2)} L${(cx + c * 2).toFixed(2)} ${(60 + s * 2).toFixed(2)}`;
+    }).join(" ")}"/>`;
+  const screw = (x, y, a) => `<circle class="mx-deep" cx="${x}" cy="${y}" r="2.4"/>` +
     `<path class="mx-screw-slot" d="M${x - 1.5} ${y} L${x + 1.5} ${y}" transform="rotate(${a} ${x} ${y})"/>`;
   return `<svg class="mx-cass" viewBox="0 0 150 98" aria-hidden="true">` +
-    `<defs><clipPath id="mxw${n}"><rect x="31" y="47" width="88" height="28" rx="13.5"/></clipPath>` +
-    (wrapped ? `<pattern id="mxc${n}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">` +
-      `<rect width="6" height="6" class="mx-cello-wash"/><path d="M0 0 V6" class="mx-cello-line"/></pattern>` : "") +
-    `</defs>` +
-    `<rect class="mx-shadow" x="4.5" y="5.5" width="146" height="94" rx="7"/>` +
+    (wrapped ? `<defs><pattern id="mxc${n}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">` +
+      `<rect width="6" height="6" class="mx-cello-wash"/><path d="M0 0 V6" class="mx-cello-line"/></pattern></defs>` : "") +
+    `<rect class="mx-shadow" x="4" y="5" width="146" height="94" rx="7"/>` +
     `<rect class="mx-shell" x="2" y="2" width="146" height="94" rx="7"/>` +
     screw(9, 9, 20) + screw(141, 9, -35) + screw(9, 89, 60) + screw(141, 89, 5) +
-    `<rect class="mx-label" x="14" y="8" width="122" height="68" rx="3"/>` +
-    `<path class="mx-band" d="M14 42 H136 V73 a3 3 0 0 1 -3 3 H17 a3 3 0 0 1 -3 -3 Z"/>` +
-    `<path class="mx-rule" d="M21 36.5 H129"/>` +
-    `<text class="mx-word" x="21" y="30">${escapeHtml(word)}</text>` +
-    `<text class="mx-num" x="129" y="30" text-anchor="end">${done}<tspan class="mx-of"> / ${total}</tspan></text>` +
-    `<rect class="mx-win" x="31" y="47" width="88" height="28" rx="13.5"/>` +
-    `<g clip-path="url(#mxw${n})"><circle class="mx-pack" cx="52" cy="61" r="${rl.toFixed(1)}"/>` +
-      `<circle class="mx-pack" cx="98" cy="61" r="${rr.toFixed(1)}"/></g>` +
+    `<rect class="mx-label" x="14" y="8" width="122" height="71" rx="3"/>` +
+    `<path class="mx-rule" d="M21 37 H129"/>` +
+    `<text class="mx-word" x="21" y="31">${escapeHtml(word)}</text>` +
+    `<text class="mx-num" x="129" y="30" text-anchor="end">${done}<tspan class="mx-of">/${total}</tspan></text>` +
+    `<rect class="mx-win" x="29" y="45" width="92" height="30" rx="3.5"/>` +
+    `<circle class="mx-pack" cx="52" cy="60" r="${rl.toFixed(1)}"/><circle class="mx-pack" cx="98" cy="60" r="${rr.toFixed(1)}"/>` +
     hub(52, 14) + hub(98, 41) +
-    `<path class="mx-foot" d="M35 96 L41 83.5 H109 L115 96"/>` +
+    `<path class="mx-deep" d="M35 96 L41 83.5 H109 L115 96"/>` +
     `<circle class="mx-hole" cx="54" cy="90" r="2.1"/><circle class="mx-hole" cx="96" cy="90" r="2.1"/>` +
     (wrapped ? `<rect class="mx-cello" x="0.5" y="0.5" width="149" height="97" rx="8" fill="url(#mxc${n})"/>` +
       `<path class="mx-glare" d="M8 31 L37 4 M113 95 L146 64 M120 95 L146 71"/>` : "") +
@@ -12143,8 +12148,7 @@ function renderChallengesPage() {
       : `${t.word} challenges, ${done} of ${t.list.length} defeated${wrapped ? `, unlocks at Mastery level ${t.list[0].mastery}` : ""}`;
     // The pinned mix is a shortlist, not a tier to finish, so its label counts pins against the
     // limit and its reels stay where a fresh blank sits.
-    return `<button type="button" class="mx-tape mx-tape--${isPin ? "pin" : "t" + t.key}${isOpen ? " is-open" : ""}` +
-        `${!isPin && done === t.list.length ? " is-full" : ""}"` +
+    return `<button type="button" class="mx-tape mx-tape--${isPin ? "pin" : "t" + t.key}${isOpen ? " is-open" : ""}"` +
         ` data-tape="${t.key}" aria-pressed="${isOpen}" aria-label="${escapeHtml(label)}">` +
       (isPin ? mixtapeSVG(t.key, t.word, t.list.length, CHALLENGE_PIN_LIMIT, { wind: 0 })
         : mixtapeSVG(t.key, t.word, done, t.list.length, { wrapped })) +
@@ -12214,7 +12218,7 @@ function renderChallengesPage() {
         `<span class="chall-wallet-cnt"><b>${tk}</b>token${tk === 1 ? "" : "s"}</span></span>` +
     `</div>` +
     `<div class="mx-shelf${tapes.length > 4 ? " mx-shelf--many" : ""}" style="--n:${tapes.length}" role="group" aria-label="Challenge tapes by difficulty">${tapes.map(tapeBtn).join("")}</div>` +
-    `<div class="mx-jcard mx-jcard--${open.key === "pinned" ? "pin" : "t" + open.key}" style="--tc:${MIXTAPE_INK[open.key]}">` +
+    `<div class="mx-jcard mx-jcard--${open.key === "pinned" ? "pin" : "t" + open.key}">` +
       `<div class="mx-spine"><span class="mx-spine-word">${open.key === "pinned" ? `${CHALL_PIN}pinned` : escapeHtml(open.word)}</span>` +
         `<span class="mx-spine-count">${spineNote}</span></div>` +
       `<div class="mx-jcard-body" style="--rows:${maxRows};--heads:${maxRows >= SIDES_FROM ? 2 : 0}">` +

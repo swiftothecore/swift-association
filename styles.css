@@ -82,6 +82,17 @@
     /* The third pencil in the tin. Blue is what the shelf pins a shortlist in, deliberately
        not a difficulty colour, and it was the darkest of the three at 1.54:1 after dark. */
     --blue-pencil: #274560;
+    /* Challenge difficulty: the one ramp every tape in the game is coloured from (the shelf's
+       cassettes, the J-card spines, the little tape glyphs). It walks one value scale, lighter
+       to darker as the tier gets harder (OKLCH lightness 0.73, 0.665, 0.53, 0.40), so the row
+       reads as a scale and not four unrelated colours. The split falls where the J-card's small
+       caps need it: ink clears 4.5:1 on the two light tiers, cream on the two dark ones. A tape
+       is an object, not ink, so the ramp stays put at night. */
+    --tier-0: #b3a584;
+    --tier-1: #8ab680;
+    --tier-2: #c88136;
+    --tier-3: #ae4636;
+    --tier-4: #742d2e;
 
     /* The charm collection's five family hues, one per index tab and the heading above it.
        Tokens rather than the hexes they used to be in ACH_FAMILY_COLORS, because that object
@@ -4159,18 +4170,19 @@
   }
   .mx-tally-sub { display: block; opacity: 0.72; }
 
-  /* ---- the shelf: a cassette per difficulty (see mixtapeSVG in app.js) ----
+  /* ---- the shelf: a cassette per difficulty (see mixtapeSVG in app.js for the rules) ----
      Flat colour and ink edges like the tape glyphs they grew out of, and like the Play
      sticker, a flat offset shadow rather than a blurred one: these are stationery objects
      on the page, not rendered ones. Each tape leans its own way; the open one is lifted
-     off the shelf with its tier's colour laid under it, which is what ties it to the
-     J-card below. */
+     off the shelf on a deeper shadow, and the J-card below wears its colour. Nothing else
+     marks it: a colour bar under the open tape read as a tab bar, and fading the others
+     turned their plastic a different colour from the open one's. */
   .mx-shelf {
     display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 16px;
     padding: 12px 6px 0; margin: 0 0 6px;
   }
   .mx-tape {
-    --tc: #2b2722; --lab: #f4ecd8;
+    --tc: #2b2722; --lab: #f4ecd8; --edge: #2b2722;
     position: relative; display: block; padding: 0 0 13px; margin: 0; background: none; border: 0;
     color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
     transform: rotate(var(--lean, 0deg));
@@ -4185,49 +4197,38 @@
   .mx-tape.is-open { transform: translateY(-9px) rotate(calc(var(--lean) * 0.4)); cursor: default; }
   .mx-tape:focus-visible { outline: none; }
   .mx-tape:focus-visible .mx-cass { outline: 1.5px dashed var(--ink); outline-offset: 4px; border-radius: 9px; }
-  /* the open tape's mark: its colour laid on the page under it, the J-card's spine in miniature */
-  .mx-tape::after {
-    content: ""; position: absolute; left: 22%; right: 22%; bottom: 0; height: 5px; border-radius: 3px;
-    background: var(--tc); opacity: 0; transform: scaleX(0.4); transition: opacity 0.2s, transform 0.24s ease;
-  }
-  .mx-tape.is-open::after { opacity: 0.8; transform: scaleX(1); }
-  /* The tapes not playing step back a little, so which one the J-card belongs to is said by the
-     whole shelf and not only by a lift of a few pixels. Hover brings one forward again. */
-  .mx-tape .mx-cass { transition: opacity 0.2s; }
-  .mx-tape:not(.is-open):not(:hover):not(:focus-visible) .mx-cass { opacity: 0.8; }
-  .mx-tape--t1 { --tc: #4f7a45; }
-  .mx-tape--t2 { --tc: #cd8a2c; }
-  .mx-tape--t3 { --tc: #b23a3a; }
-  .mx-tape--t4 { --tc: #5c1a1a; }
-  .mx-tape--t0 { --tc: #b3a584; }
-  .mx-tape--pin { --tc: var(--blue-pencil); }
+  .mx-tape--t1 { --tc: var(--tier-1); }
+  .mx-tape--t2 { --tc: var(--tier-2); }
+  .mx-tape--t3 { --tc: var(--tier-3); }
+  .mx-tape--t4 { --tc: var(--tier-4); }
+  .mx-tape--t0 { --tc: var(--tier-0); }
+  .mx-tape--pin { --tc: #e6dcc4; }
 
   .mx-cass { display: block; width: 100%; height: auto; overflow: visible; }
   .mx-cass text { font-family: var(--hand); }
-  .mx-shell { fill: var(--tc); stroke: #2b2722; stroke-width: 1.6; }
-  .mx-label { fill: var(--lab); stroke: rgba(43,39,34,0.45); stroke-width: 1; }
-  .mx-band { fill: color-mix(in srgb, var(--tc) 30%, var(--lab)); }
-  .mx-rule { fill: none; stroke: rgba(43,39,34,0.2); stroke-width: 0.8; }
+  .mx-shell { fill: var(--tc); stroke: var(--edge); stroke-width: 1.7; }
+  /* the screws and the foot: the shell's own plastic taken toward the ink, the same amount on every tier */
+  .mx-deep { fill: color-mix(in srgb, var(--tc) 72%, var(--edge)); stroke: var(--edge); stroke-width: 1.1; stroke-linejoin: round; }
+  .mx-screw-slot { fill: none; stroke: var(--edge); stroke-width: 1; stroke-linecap: round; }
+  .mx-hole { fill: var(--edge); }
+  .mx-label { fill: var(--lab); stroke: var(--edge); stroke-width: 1.2; }
+  .mx-rule { fill: none; stroke: #cfc3a6; stroke-width: 1; }
   .mx-word { font-size: 24px; font-weight: 700; fill: #2b2722; }
-  .mx-num { font-size: 24px; font-weight: 700; fill: #2b2722; }
-  .mx-of { font-size: 15px; font-weight: 400; fill: #6b6457; }
-  .mx-tape.is-full .mx-num, .mx-tape.is-full .mx-of { fill: #9a7a2e; }
-  .mx-win { fill: #2b2722; stroke: #1d1a17; stroke-width: 1.2; }
-  .mx-pack { fill: #9a6a46; stroke: #5e3d28; stroke-width: 0.8; }
-  .mx-hub { fill: var(--lab); stroke: #1d1a17; stroke-width: 1; }
-  .mx-tooth { fill: none; stroke: #2b2722; stroke-width: 1.4; stroke-linecap: round; }
-  .mx-screw { fill: rgba(0,0,0,0.14); stroke: rgba(0,0,0,0.42); stroke-width: 0.9; }
-  .mx-screw-slot { fill: none; stroke: rgba(0,0,0,0.5); stroke-width: 0.9; stroke-linecap: round; }
-  .mx-foot { fill: rgba(0,0,0,0.15); stroke: rgba(0,0,0,0.38); stroke-width: 1; stroke-linejoin: round; }
-  .mx-hole { fill: rgba(0,0,0,0.42); }
-  .mx-shadow { fill: rgba(43,39,34,0.17); }
+  /* the count is information, so it is printed, not written */
+  .mx-num { font-family: var(--type); font-size: 17px; font-weight: 700; letter-spacing: 0.3px; fill: #2b2722; }
+  .mx-of { font-weight: 400; fill: #7a7160; }
+  .mx-win { fill: #2b2722; }
+  .mx-pack { fill: #97714f; }
+  .mx-hub { fill: var(--lab); stroke: var(--edge); stroke-width: 1; }
+  .mx-spindle { fill: #2b2722; }
+  .mx-tooth { fill: none; stroke: var(--lab); stroke-width: 1.1; stroke-linecap: round; }
+  .mx-shadow { fill: rgba(43,39,34,0.16); transition: transform 0.24s ease; }
+  .mx-tape.is-open .mx-shadow { transform: translate(1.5px, 3px); fill: rgba(43,39,34,0.22); }
   /* the pinned mix: a home-made tape, cream shell and blue pencil, never a difficulty colour */
-  .mx-tape--pin .mx-shell { fill: #e6dcc4; }
-  .mx-tape--pin .mx-band { fill: color-mix(in srgb, var(--blue-pencil) 16%, var(--lab)); }
   .mx-tape--pin .mx-word { fill: var(--blue-pencil); }
   /* unrated: a blank shell in dashed pencil, the same ghost the unrated tape glyph is */
-  .mx-tape--t0 .mx-shell { fill: color-mix(in srgb, var(--paper) 70%, #d3c7a8); stroke: #b3a584; stroke-dasharray: 4 3; }
-  .mx-tape--t0 .mx-word { font-style: italic; fill: #8d8468; }
+  .mx-tape--t0 .mx-shell { fill: color-mix(in srgb, var(--paper) 60%, #d9cfb6); stroke-dasharray: 4 3; }
+  .mx-tape--t0 .mx-word { fill: #8d8468; }
   /* the cellophane over a tape Mastery still holds shut */
   .mx-cello { stroke: rgba(255,255,255,0.55); stroke-width: 1; }
   .mx-cello-wash { fill: rgba(255,255,255,0.13); }
@@ -4240,13 +4241,12 @@
     text-transform: uppercase; padding: 3px 7px 2px; color: #2b2722; background: #efb73e;
     border: 1.5px solid #2b2722; border-radius: 2px; box-shadow: 2px 2px 0 rgba(43,39,34,0.2);
   }
-  :root[data-theme="dark"] .mx-tape { --lab: #d2c6ab; }
-  :root[data-theme="dark"] .mx-shell { stroke: #14110d; }
-  :root[data-theme="dark"] .mx-shadow { fill: rgba(0,0,0,0.38); }
-  :root[data-theme="dark"] .mx-tape--pin .mx-shell { fill: #9c9179; }
+  :root[data-theme="dark"] .mx-tape { --edge: #14110d; --lab: #e2d7bd; }
+  :root[data-theme="dark"] .mx-shadow { fill: rgba(0,0,0,0.4); }
+  :root[data-theme="dark"] .mx-tape.is-open .mx-shadow { fill: rgba(0,0,0,0.5); }
+  :root[data-theme="dark"] .mx-tape--pin { --tc: #a89c82; }
   :root[data-theme="dark"] .mx-tape--pin .mx-word { fill: #274560; }
-  :root[data-theme="dark"] .mx-tape--pin .mx-band { fill: color-mix(in srgb, #274560 16%, var(--lab)); }
-  :root[data-theme="dark"] .mx-tape--t0 .mx-shell { fill: color-mix(in srgb, var(--paper) 80%, #b3a584); stroke: #8d8468; }
+  :root[data-theme="dark"] .mx-tape--t0 .mx-shell { fill: color-mix(in srgb, var(--paper) 70%, #8d8468); stroke: #8d8468; }
   :root[data-theme="dark"] .mx-sticker { background: #e0a83a; box-shadow: 2px 2px 0 rgba(0,0,0,0.35); }
 
   /* ---- the J-card: the open tape's insert, folded out under the shelf ----
@@ -4255,7 +4255,7 @@
      faintest wash of the tier so the two read as one object. Nothing inside scrolls: a tier
      is at most thirteen tracks, and the page grows to hold them. */
   .mx-jcard {
-    --tc: #4f7a45;
+    --tc: var(--tier-1);
     position: relative; margin: 6px 0 6px; transform-origin: 50% 0;
     background: color-mix(in srgb, var(--tc) 6%, var(--paper));
     border: 1.5px solid color-mix(in srgb, var(--ink) 55%, transparent); border-radius: 3px;
@@ -4270,9 +4270,15 @@
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); font-weight: 700;
     letter-spacing: 2px; text-transform: uppercase; line-height: 1.2;
   }
-  /* Cream lettering clears 4.5:1 on green, red and oxblood but not on the orange or the unrated
-     khaki, which take ink instead. */
-  .mx-jcard--t2 .mx-spine, .mx-jcard--t0 .mx-spine { color: #2b2722; }
+  .mx-jcard--t0 { --tc: var(--tier-0); }
+  .mx-jcard--t1 { --tc: var(--tier-1); }
+  .mx-jcard--t2 { --tc: var(--tier-2); }
+  .mx-jcard--t3 { --tc: var(--tier-3); }
+  .mx-jcard--t4 { --tc: var(--tier-4); }
+  .mx-jcard--pin { --tc: #3d5f80; }
+  /* The ramp is split so the two light tiers (and the unrated khaki) take ink lettering and the
+     two dark ones cream, each clearing 4.5:1. */
+  .mx-jcard--t0 .mx-spine, .mx-jcard--t1 .mx-spine, .mx-jcard--t2 .mx-spine { color: #2b2722; }
   .mx-spine-word { display: inline-flex; align-items: center; gap: 6px; }
   .mx-spine-word .chall-pin-svg { width: 13px; height: 13px; }
   .mx-spine-count { margin-left: auto; font-weight: 400; letter-spacing: 1px; text-transform: none; opacity: 0.92; }
@@ -4374,13 +4380,12 @@
   .tape-glyph .tape-shell { fill: #2b2722; stroke: #211f1c; stroke-width: 1; }
   .tape-glyph .tape-label { fill: #efe7d4; }
   .tape-glyph .tape-reel  { fill: none; stroke: #efe7d4; stroke-width: 1.1; }
-  .chall-tapes.t1 .tape-shell { fill: #4f7a45; stroke: #38602f; }
-  .chall-tapes.t2 .tape-shell { fill: #cd8a2c; stroke: #9c6418; }
-  .chall-tapes.t3 .tape-shell { fill: #b23a3a; stroke: #872a2a; }
-  /* tier 4 "brutal" — oxblood. Shell is dark, so label/reel stay light (paper tone). */
-  .chall-tapes.t4 .tape-shell { fill: #5c1a1a; stroke: #3f1010; }
-  .chall-tapes.t4 .tape-label { fill: #efe7d4; }
-  .chall-tapes.t4 .tape-reel  { stroke: #efe7d4; }
+  /* the shelf's ramp, edged by the same rule as the shelf's screws: the shell taken toward ink */
+  .chall-tapes.t1 { --tc: var(--tier-1); }
+  .chall-tapes.t2 { --tc: var(--tier-2); }
+  .chall-tapes.t3 { --tc: var(--tier-3); }
+  .chall-tapes.t4 { --tc: var(--tier-4); }
+  .chall-tapes:is(.t1, .t2, .t3, .t4) .tape-shell { fill: var(--tc); stroke: color-mix(in srgb, var(--tc) 60%, #2b2722); }
 
   /* tier 0 "unrated" — placeholder while a freshly-built challenge's real difficulty is
      decided. A single ghosted, dashed cassette; the group sits last in the list. */
