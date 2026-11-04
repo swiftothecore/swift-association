@@ -170,6 +170,7 @@ export const SEARCH_KEY = "swiftSongAssociation.search";                // Swift
 export const MASTERY_KEY = "swiftSongAssociation.mastery";              // skills + mastery progression — { skills:{...xp}, masteryXp, unlocked:{[rewardId]:isoDate} }
 export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player-authored modes: { v:2, draft, from, saved:[{id,name,mode}] } (see storage.js)
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
+export const WOODS_KEY = "swiftSongAssociation.woodsRun";            // out of the woods polaroid: how many games in a row have answered with Out of the Woods (a bare count)
 export const STICKERS_KEY = "swiftSongAssociation.stickers";           // earned stickers: { [stickerId]: isoDate }, same shape as the keepsakes store
 // What the player has actually looked at in the keepsakes drawer — { polaroids:{[id]:true},
 // stickers:{[id]:true} }. Deliberately a set of ids rather than a count: the count can go down

@@ -14,7 +14,7 @@ import {
   GUEST_KEY, GUEST_TARGET, LINEUP_KEY,
   BONUS_KEY, RUTHLESS_KEY, TRACKS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE, CUSTOM_STOCKS,
-  KEEPSAKES_KEY,
+  KEEPSAKES_KEY, WOODS_KEY,
   STICKERS_KEY,
   KEEPSAKES_SEEN_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
@@ -119,7 +119,17 @@ export function saveKeepsakes(earned) {
   try { localStorage.setItem(KEEPSAKES_KEY, JSON.stringify(earned)); } catch (e) { /* ignore */ }
 }
 export function resetKeepsakes() {
-  try { localStorage.removeItem(KEEPSAKES_KEY); } catch (e) { /* ignore */ }
+  try { localStorage.removeItem(KEEPSAKES_KEY); localStorage.removeItem(WOODS_KEY); } catch (e) { /* ignore */ }
+}
+
+// The out of the woods polaroid's run: how many games in a row have been answered with Out Of
+// The Woods at least once. A bare count, cleared with the keepsakes it serves.
+export function loadWoodsRun() {
+  try { const n = +localStorage.getItem(WOODS_KEY); return Number.isFinite(n) && n > 0 ? n : 0; }
+  catch (e) { return 0; }
+}
+export function saveWoodsRun(n) {
+  try { localStorage.setItem(WOODS_KEY, String(n)); } catch (e) { /* ignore */ }
 }
 
 /* ---------- Stickers (the die-cut vinyl set) ---------- */

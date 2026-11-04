@@ -130,7 +130,7 @@ import {
   loadHistory, appendHistory, saveHistory, loadTakes, saveTakes, cmpRecords,
   loadStats, saveStats, updateStats, totalPlayed,
   loadAchievements, saveAchievements,
-  loadKeepsakes, saveKeepsakes, resetKeepsakes,
+  loadKeepsakes, saveKeepsakes, resetKeepsakes, loadWoodsRun, saveWoodsRun,
   loadStickers, saveStickers, resetStickers,
   loadKeepsakesSeen, saveKeepsakesSeen, resetKeepsakesSeen,
   loadMode,
@@ -5980,6 +5980,25 @@ function checkSongKeepsakes(tally) {
   // Getting Married — every song with "love" in its title discovered.
   const love = allSongs.filter((s) => /\blove\b/i.test(s.title));
   if (love.length && love.every((s) => found[s.title])) earnPolaroid("getting-married");
+  // The folklore cabin — every song on folklore discovered, the lakes included.
+  const folklore = allSongs.filter((s) => s.album === "folklore");
+  if (folklore.length && folklore.every((s) => found[s.title])) earnPolaroid("folklore-cabin");
+  noteWoodsGame();
+}
+
+// Out of the woods — answered with Out Of The Woods in four games in a row, one game for each
+// time the chorus asks. Counted across games rather than pages because the page word is dealt,
+// not chosen: four Out Of The Woods pages in a row in one game came out near 1 in 30,000
+// (1 in 1,400 even in 1989 Album Focus), while a game with at least one page it answers is
+// about 43% (72% in 1989 Album Focus). Only a game that folds into Taylor's catalogue counts
+// or breaks the run; custom, guest, lineup and bonus runs leave it where it is, as does a quit.
+// Called once per finished game, from checkSongKeepsakes, which all three end paths share.
+function noteWoodsGame() {
+  if (devNoLog || !foldsCatalogue()) return;
+  const sang = roundSongs.some((t) => t && t.toLowerCase() === "out of the woods");
+  const run = sang ? loadWoodsRun() + 1 : 0;
+  saveWoodsRun(run);
+  if (run >= 4) earnPolaroid("out-of-the-woods");
 }
 
 // How many polaroids the player has earned (any develop state counts as "found").
@@ -21080,6 +21099,10 @@ function endChallenge() {
   // keeps them repeatable: a dark side beaten a second time still earns the queen.
   if (!devNoLog) {
     if (won && challengeDark) earnSticker("chess-queen");
+    // Blood moonlit — a dark side beaten after midnight, before five. The eclipse is the dark
+    // side's own mark, and the small hours are Glitch's. Read off THIS run, so any dark side,
+    // won again, still earns it.
+    if (won && challengeDark && new Date().getHours() < 5) earnPolaroid("blood-moon");
     // Champagne coupe — one page short of this card's own best. The dark side keeps its own.
     // Long Story Long sits this out: its record is a character count, so "one short" would be
     // one CHARACTER short of a stored 400-odd, which is neither a near miss anybody would feel
