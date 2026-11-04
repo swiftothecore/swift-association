@@ -2258,13 +2258,11 @@ function defaultStatsView() {
   if (d && d !== "last" && MODES[d]) return d;
   return currentMode.id;
 }
-// Recent run scores for the Stats page's staff-paper strip (oldest→newest, capped).
-// All tab = every classic run; a mode tab = that mode's runs. Daily/Infinite use
-// different score scales, so they're excluded — the same scope as the All
-// distribution, which sums only the classic difficulty boards.
+// Finished Classic scores in the retained run log, oldest first. Partial runs belong to
+// the lifetime distribution but cannot be compared with these thirteen-page finishes.
 function recentScores(viewMode, cap = 12) {
   const picked = loadHistory().filter((e) =>
-    viewMode === "all" ? e.t === "classic" : e.m === viewMode);
+    e.t === "classic" && (viewMode === "all" || e.m === viewMode));
   return picked.slice(0, cap).map((e) => e.s).reverse();
 }
 // The gist card's "mostly": the narrowest run of scores that holds at least 60% of every game
@@ -2334,6 +2332,7 @@ const MORE_CHEV = `<svg class="more-chev" viewBox="0 0 10 7" aria-hidden="true">
   `<path d="M0.9 1.5C2.3 2.9 3.5 4.3 4.9 5.9" stroke-width="1.6"/>` +
   `<path d="M4.6 5.7C6 4.4 7.3 2.8 9.1 1.1" stroke-width="1.35"/></svg>`;
 
+let statsView = null, statsLayoutWidth = 0, statsResizeFrame = null;
 function renderStats(lastScore, viewMode = defaultStatsView()) {
   const el = $("statsBody");
   // "classic" is a tier-1 selector, not a real view — resolve it to a difficulty.
@@ -2342,20 +2341,22 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   const isAll = viewMode === "all";
   const isInf = viewMode === "infinite";
   const isClassic = !isAll && !isInf;   // a difficulty mode id
+  statsView = { lastScore, viewMode };
+  statsLayoutWidth = el.clientWidth || 0;
   if (isClassic) lastStatsDifficulty = viewMode;
   // Two-tier tabs (mirrors the start screen). Tier 1 = view / game type:
   // All · Classic · Infinite. Tier 2 = difficulty, shown only under Classic.
   // Each tab also carries the front page's data-type / data-mode so it wears the same
   // highlighter wash there (hard is coral, Infinite teal, and so on).
   const tier1 = `<div class="mode-tabs mode-tabs--shelf stats-tabs">` +
-    `<button type="button" class="mode-tab${isAll ? " active" : ""}" data-statmode="all" data-type="all">All</button>` +
-    `<button type="button" class="mode-tab${isClassic ? " active" : ""}" data-statmode="classic" data-type="classic">Classic</button>` +
-    `<button type="button" class="mode-tab${isInf ? " active" : ""}" data-statmode="infinite" data-type="infinite">${INF_GLYPH}Infinite</button>` +
+    `<button type="button" class="mode-tab${isAll ? " active" : ""}" aria-pressed="${isAll}" data-statmode="all" data-type="all">All</button>` +
+    `<button type="button" class="mode-tab${isClassic ? " active" : ""}" aria-pressed="${isClassic}" data-statmode="classic" data-type="classic">Classic</button>` +
+    `<button type="button" class="mode-tab${isInf ? " active" : ""}" aria-pressed="${isInf}" data-statmode="infinite" data-type="infinite">${INF_GLYPH}Infinite</button>` +
     `</div>`;
   const tier2 = isClassic
     ? `<div class="mode-tabs mode-tabs--shelf stats-subtabs">` + MODE_ORDER.map((m) =>
         `<button type="button" class="mode-tab${MODALITY_MODES.includes(m) ? " mode-tab--modality" : ""}` +
-        `${m === viewMode ? " active" : ""}" data-statmode="${m}" data-mode="${m}">${MODES[m].label}</button>`
+        `${m === viewMode ? " active" : ""}" aria-pressed="${m === viewMode}" data-statmode="${m}" data-mode="${m}">${MODES[m].label}</button>`
       ).join("") + `</div>`
     : "";
   const tabs = tier1 + tier2;
@@ -2377,8 +2378,14 @@ function renderStats(lastScore, viewMode = defaultStatsView()) {
   el.querySelectorAll("[data-statmode]").forEach((b) =>
     b.addEventListener("click", () => renderStats(lastScore, b.dataset.statmode)));
   // the "to go" door opens the songbook at the top; a blot opens it at that album's page
-  el.querySelectorAll("[data-open-songbook]").forEach((b) =>
-    b.addEventListener("click", () => openSongbook(b.dataset.openSongbook, b.dataset.songbookAlbum)));
+  el.querySelectorAll("[data-open-songbook]").forEach((b) => {
+    b.addEventListener("click", () => openSongbook(b.dataset.openSongbook, b.dataset.songbookAlbum));
+    if (b.getAttribute("role") === "button") b.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      openSongbook(b.dataset.openSongbook, b.dataset.songbookAlbum);
+    });
+  });
   el.querySelectorAll("[data-daily-date]").forEach((b) =>
     b.addEventListener("click", () => openArchivedDaily(b.dataset.dailyDate)));
   el.querySelector(".stp-dp-nav-prev")?.addEventListener("click", () => {
@@ -2396,6 +2403,33 @@ function topTallyEntry(obj) {
   let bestK = null, bestV = 0;
   for (const k in obj) if (obj[k] > bestV) { bestV = obj[k]; bestK = k; }
   return bestK === null ? null : { key: bestK, count: bestV };
+}
+// The drawings depend on the page's width as well as CSS. Rebuild after a resize or
+// settings change, keeping the selected view, calendar month and keyboard position.
+function refreshStatsLayout(force = false) {
+  const el = $("statsBody");
+  if (!statsView || !screens.stats.classList.contains("active") || !el.clientWidth) return;
+  if (!force && el.clientWidth === statsLayoutWidth) return;
+  const focused = document.activeElement;
+  const control = el.contains(focused) ? {
+    mode: focused.dataset.statmode, album: focused.dataset.songbookAlbum,
+    date: focused.dataset.dailyDate,
+  } : null;
+  renderStats(statsView.lastScore, statsView.viewMode);
+  if (control) {
+    const next = [...el.querySelectorAll("[data-statmode], [data-songbook-album], [data-daily-date]")].find((b) =>
+      control.mode ? b.dataset.statmode === control.mode : control.album
+        ? b.dataset.songbookAlbum === control.album : control.date && b.dataset.dailyDate === control.date);
+    next?.focus({ preventScroll: true });
+  }
+}
+function scheduleStatsLayout() {
+  cancelAnimationFrame(statsResizeFrame);
+  statsResizeFrame = requestAnimationFrame(() => refreshStatsLayout());
+}
+function statsSealedDailyDates() {
+  if (!settings.hideDailyScore) return [];
+  return Object.keys(dailyPlayedDates()).filter((key) => loadDailyResult(key)?.revealed !== true).sort().reverse();
 }
 // Exact-title → album lookup for the lifetime tally (tally keys are song.title).
 function albumOfTitle(title) {
@@ -2471,7 +2505,7 @@ const STATS_ALBUM_SHORT = {
    The markup is written at rest. bleedStatsBlotter() runs the drops in when the card comes
    into view, once per opening of the Stats screen (statsBleedSeq), so switching tabs or months
    redraws it still. */
-let statsBlotUid = 0, statsBleedSeq = 0, statsBledSeq = -1;
+let statsBlotUid = 0, statsBleedSeq = 0, statsBledSeq = -1, statsBlotWatch = null;
 const blotF = (v) => (+v).toFixed(1);
 function blotPencilRing(cx, cy, r, rnd) {
   const a0 = rnd() * Math.PI * 2, sweep = Math.PI * 2 * (1.04 + rnd() * 0.06), pts = [];
@@ -2499,7 +2533,9 @@ function blotSparkle(x, y, size, rnd) {
 }
 function statsBlotterHTML(order, found, total, W, phone) {
   const uid = ++statsBlotUid;
-  const VW = Math.max(260, Math.round(W - 24)), perRow = phone ? 4 : 8, colW = VW / perRow;
+  const VW = Math.max(180, Math.round(W - 26));
+  const perRow = Math.max(2, Math.min(phone ? 4 : 8, Math.floor(VW / (settings.textSize === "large" ? 82 : 64))));
+  const colW = VW / perRow;
   const R = Math.min(25, colW * 0.36), rowH = R * 2 + 52, H = Math.ceil(order.length / perRow) * rowH;
   let defs = "", body = "";
   order.forEach((a, i) => {
@@ -2525,23 +2561,26 @@ function statsBlotterHTML(order, found, total, W, phone) {
       return { x: cx + Math.cos(ang) * dd, y: cy + Math.sin(ang) * dd, s: full ? 3 + rnd() * 1.6 : 0.7 + rnd() * 1.3 };
     });
     const ring = full ? "" : `<path class="stp-bl-ring" d="${blotPencilRing(cx, cy, R + 1.6, rnd)}"/>`;
-    body += `<g class="stp-bl-d" style="--c:${albumColor(a) || "#8a7f6b"}" data-r="${blotF(rr)}">${ring}` +
+    body += `<g class="stp-bl-d" style="--c:${albumColor(a) || "#8a7f6b"}" data-r="${blotF(rr)}" role="button" tabindex="0" ` +
+      `aria-label="${escapeHtml(a)}: ${f} of ${n} songs found. Open album in songbook" data-open-songbook="stats" data-songbook-album="${escapeHtml(a)}">${ring}` +
       `<g filter="url(#${id})"><circle class="stp-bl-ink" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(rr)}"/>` +
       `<circle class="stp-bl-tide" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(Math.max(0, rr - 0.6))}"/>` +
       (full ? "" : crumbs.map((c) => `<circle class="stp-bl-crumb" cx="${blotF(c.x)}" cy="${blotF(c.y)}" r="${blotF(c.s)}"/>`).join("")) + `</g>` +
       (full ? crumbs.map((c) => `<path class="stp-bl-spark" style="transform-origin:${blotF(c.x)}px ${blotF(c.y)}px" d="${blotSparkle(c.x, c.y, c.s, rnd)}"/>`).join("") : "") +
-      `<circle class="stp-bl-hit" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(R + 6)}" data-tip="${escapeHtml(a)}: ${f} of ${n}" data-open-songbook="stats" data-songbook-album="${escapeHtml(a)}"/>` +
+      `<circle class="stp-bl-hit" cx="${blotF(cx)}" cy="${blotF(cy)}" r="${blotF(R + 6)}" data-tip="${escapeHtml(a)}: ${f} of ${n}"/>` +
       `<text class="stp-bl-nm" x="${blotF(cx)}" y="${blotF(cy + R + 19)}" text-anchor="middle">${escapeHtml((STATS_ALBUM_SHORT[a] || a).toUpperCase())}</text>` +
       `<text class="stp-bl-ct" x="${blotF(cx)}" y="${blotF(cy + R + 36)}" text-anchor="middle">${f}/${n}</text></g>`;
   });
-  return `<svg class="stp-blot-svg" viewBox="0 0 ${VW} ${H}" aria-hidden="true"><defs>${defs}</defs>${body}</svg>`;
+  return `<svg class="stp-blot-svg" viewBox="0 0 ${VW} ${H}" data-columns="${perRow}" role="group" aria-label="Songs found by album"><defs>${defs}</defs>${body}</svg>`;
 }
 /* The drops land one at a time and wick out through the sheet, fast and then slower, the ink
    thinning as it spreads; a finished album's sparkles come out once its ink has stopped. */
 function bleedStatsBlotter(root) {
+  statsBlotWatch?.disconnect();
+  statsBlotWatch = null;
   const svg = root.querySelector(".stp-blot-svg");
   if (!svg || statsBledSeq === statsBleedSeq || motionReduced() || animInstant()) return;
-  statsBledSeq = statsBleedSeq;
+  const seq = statsBleedSeq;
   const drops = [...svg.querySelectorAll(".stp-bl-d")].map((g, k) => ({
     g, k, rr: +g.dataset.r, ink: g.querySelector(".stp-bl-ink"), tide: g.querySelector(".stp-bl-tide"),
     disp: svg.querySelector(`${g.querySelector("[filter]").getAttribute("filter").slice(4, -1)} feDisplacementMap`),
@@ -2561,6 +2600,10 @@ function bleedStatsBlotter(root) {
   const io = new IntersectionObserver((es) => {
     if (!es.some((e) => e.isIntersecting)) return;
     io.disconnect();
+    statsBlotWatch = null;
+    // A width correction before the sheet is seen must not spend its one bleed.
+    if (!svg.isConnected) return;
+    statsBledSeq = seq;
     const scale = animScale() || 1, t0 = performance.now();
     const step = (now) => {
       const s = (now - t0) / 1000 / scale;
@@ -2574,6 +2617,7 @@ function bleedStatsBlotter(root) {
     };
     requestAnimationFrame(step);
   }, { threshold: 0.35 });
+  statsBlotWatch = io;
   io.observe(svg);
 }
 // The page's inner width, for sizing the drawn pieces before the screen is shown (it is
@@ -2820,20 +2864,21 @@ function statsGistHTML(lines, cls = "") {
     `<div class="stp-lab">the gist</div>${lines.join("")}</div></div>`;
 }
 // "lately", with its trend arrow once it sits clear of the average. Nothing until there is one.
-function statsLatelyLine(lately, lead) {
+function statsLatelyLine(lately, lead, baseline = "your average") {
   if (lately == null) return "";
-  return `<p>lately <b>${lately.toFixed(1)}</b>${lead > 0.3 ? `<span class="stp-up" title="up on your average">${STATS_TREND.up}</span>` : lead < -0.3 ? `<span class="stp-down" title="down on your average">${STATS_TREND.down}</span>` : ""}</p>`;
+  return `<p>lately <b>${lately.toFixed(1)}</b>${lead > 0.3 ? `<span class="stp-up" title="up on ${baseline}">${STATS_TREND.up}</span>` : lead < -0.3 ? `<span class="stp-down" title="down on ${baseline}">${STATS_TREND.down}</span>` : ""}</p>`;
 }
 
 // The pieces every view shares: ticket, the gist, the stave and the graph (and the nemesis on All).
-function statsGameHTML(s, viewMode, isAll, lastScore, W) {
+function statsGameHTML(s, viewMode, isAll, lastScore, W, sealedDaily = false) {
   const avg = s.totalScore / s.played;
   const perfect = s.scoreCounts[TOTAL_ROUNDS] || 0;
-  const recent = recentScores(viewMode);
-  // "lately" is the staff's own twelve, so the notes drawn below it add up to it. It waits
-  // until there are games outside that window: before then it is the average again.
-  const lately = recent.length >= 3 && s.played > recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
-  const lead = lately == null ? 0 : lately - avg;
+  const finished = recentScores(viewMode, Infinity), recent = finished.slice(-12);
+  // Both sides of the trend use finished games in the retained log. The lifetime average
+  // also includes abandoned runs, which would make merely finishing look like improvement.
+  const lately = finished.length > recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : null;
+  const finishedAvg = finished.length ? finished.reduce((a, b) => a + b, 0) / finished.length : 0;
+  const lead = lately == null ? 0 : lately - finishedAvg;
   const mostly = statsMostlyRange(s.scoreCounts, s.played);
   const phone = W < 520;
   const out = [];
@@ -2846,26 +2891,24 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
     tint: isAll ? null : viewMode,
   }));
   out.push(statsGistHTML([
-    `<p>avg <b>${avg.toFixed(1)}</b></p>`,
-    statsLatelyLine(lately, lead),
+    `<p title="Average across Classic runs, including runs left unfinished">avg <b>${avg.toFixed(1)}</b></p>`,
+    statsLatelyLine(lately, lead, "finished games in your run log"),
     mostly ? `<p title="${Math.round(mostly.n / s.played * 100)}% of your games">mostly <b>${mostly.lo === mostly.hi ? `${mostly.lo}s` : `${mostly.lo}–${mostly.hi}`}</b></p>` : "",
     `<p title="the most pages right in a row">best streak <b>${s.bestInRow || 0}</b></p>`,
   ]));
-  // headed in the gist's word, since the gist's lately is these twelve; on a notebook with no
-  // games outside them it is simply every game
-  out.push(`<div class="stp-item stp-w6 stp-o3" style="--r:-.4deg">${statsTape("staff")}` +
-    `<div class="stp-staff" role="img" aria-label="${s.played > recent.length ? `Last ${recent.length} scores` : "Every score so far"}, oldest first: ${recent.join(", ")}.">` +
-    `<div class="stp-lab">${s.played > recent.length ? `lately · my last ${recent.length} games` : "every game so far"}</div>` +
+  if (recent.length) out.push(`<div class="stp-item stp-w6 stp-o3" style="--r:-.4deg">${statsTape("staff")}` +
+    `<div class="stp-staff" role="img" aria-label="Last ${recent.length} finished Classic scores, oldest first: ${recent.join(", ")}.">` +
+    `<div class="stp-lab">last ${recent.length} finished ${recent.length === 1 ? "game" : "games"}</div>` +
     statsStaffSVG(recent, Math.round(Math.max(260, W - 30))) + `</div></div>`);
   // The nemesis sits beside the graph. Without one the graph takes the whole width: the sticky of
   // perfect games that used to fill the gap only repeated the ticket's own line, under a label
   // ("perfect pages") that miscounted it.
-  const youScore = (isAll || viewMode === currentMode.id) ? lastScore : null;
-  const nemesis = isAll ? topTallyEntry(loadSongTally().misses) : null;
+  const youScore = gameType === "classic" && (isAll || viewMode === currentMode.id) ? lastScore : null;
+  const nemesis = isAll && !sealedDaily ? topTallyEntry(loadSongTally().misses) : null;
   const clip = nemesis && nemesis.count > 1;
   out.push(`<div class="stp-item ${clip ? "stp-w4" : "stp-w6"} stp-o3" style="--r:.7deg">${statsTape("graph")}` +
     `<div class="stp-graph" role="img" aria-label="Games at each score: ${s.scoreCounts.map((c, i) => `${i}: ${c}`).join(", ")}">` +
-    `<div class="stp-lab">every game, by score</div>${statsGraphSVG(Array.from({ length: TOTAL_ROUNDS + 1 }, (_, i) => s.scoreCounts[i] || 0), youScore, Math.round(phone || !clip ? W - 26 : W * 4 / 6 - 30))}</div></div>`);
+    `<div class="stp-lab">all runs, by score</div>${statsGraphSVG(Array.from({ length: TOTAL_ROUNDS + 1 }, (_, i) => s.scoreCounts[i] || 0), youScore, Math.round(phone || !clip ? W - 26 : W * 4 / 6 - 30))}</div></div>`);
   if (clip) out.push(statsClippingHTML(nemesis.key, nemesis.count));
   return out.join("");
 }
@@ -2944,7 +2987,8 @@ function statsStampsHTML(m, t, beside) {
   stamps.push({ ink: 0, big: Math.round(right * 100), unit: "%", cap: "pages right", det: `${fmtN(m.roundsCorrect)} of ${fmtN(m.roundsTotal)}`, art: statsTicksSVG(right) });
   if (m.answerN) {
     const usual = m.answerSumMs / m.answerN / 1000, quick = m.fastestMs == null ? null : m.fastestMs / 1000;
-    stamps.push({ ink: 1, big: usual.toFixed(1), unit: "s", cap: "usual answer", det: quick == null ? "" : `quickest ${sec(m.fastestMs)}s`, art: statsWatchSVG(usual, quick) });
+    stamps.push({ ink: 1, big: usual.toFixed(1), unit: "s", cap: "usual answer", det: quick == null ? "" : `quickest ${sec(m.fastestMs)}s`,
+      tip: "Average time across all timed pages, including wrong answers and timeouts. Quickest counts correct answers only.", art: statsWatchSVG(usual, quick) });
   } else stamps.push({ mount: true, cap: "usual answer", how: "answer a page against the clock" });
   if (m.lyricLines) {
     const perfect = m.versePerfect || 0;
@@ -2956,19 +3000,23 @@ function statsStampsHTML(m, t, beside) {
   return `<div class="stp-item ${beside ? "stp-w4" : "stp-w6"} stp-o5"><div class="stp-lab">first class</div><div class="stp-ps">` +
     stamps.map((s, i) => s.mount
       ? `<div class="stp-ps-mount"><span class="stp-ps-cap">${s.cap}</span><span class="stp-ps-how">${s.how}</span></div>`
-      : `<div class="stp-ps-lift" style="--r:${tilt[i]}deg"><div class="stp-ps-st stp-ps--${s.ink}" role="img" aria-label="${s.big}${s.unit} ${s.cap}${s.det ? `, ${s.det}` : ""}">` +
+      : `<div class="stp-ps-lift" style="--r:${tilt[i]}deg"><div class="stp-ps-st stp-ps--${s.ink}"${s.tip ? ` tabindex="0" data-tip="${s.tip}"` : ""} role="img" aria-label="${s.big}${s.unit} ${s.cap}${s.det ? `, ${s.det}` : ""}${s.tip ? `. ${s.tip}` : ""}">` +
       `<div class="stp-ps-in"><b class="stp-ps-val">${s.big}${s.unit ? `<small>${s.unit}</small>` : ""}</b><span class="stp-ps-pic">${s.art}</span>` +
       `<span class="stp-ps-foot"><span class="stp-ps-cap">${s.cap}</span><span class="stp-ps-det">${s.det}</span></span></div></div></div>`).join("") +
     `</div></div>`;
 }
 
 // The All view's lifetime pieces: the sleeve, stamps, blotter and the daily's pass.
-function statsLifetimeHTML(W) {
+function statsLifetimeHTML(W, sealedDates = []) {
   const phone = W < 520;
   const m = loadMetrics();
   const t = loadSongTally();
   const d = effectiveDailyStreak(todayKey());
   const out = [];
+  // A change in accuracy, favourite-song count, discoveries or misses can give away a
+  // sealed Daily as surely as its star punch. Cover the lifetime spread until it is opened.
+  if (sealedDates.length) return `<div class="stp-item stp-w6 stp-o4"><p class="stp-empty">Lifetime totals are covered while a Daily is sealed.</p>` +
+    `<button type="button" class="stp-door" data-daily-date="${sealedDates[0]}">open a sealed Daily ${CTA_ARROW}</button></div>` + statsDailyPassHTML(d, sealedDates);
   const favSong = topTallyEntry(t.songs), favAlbum = topTallyEntry(t.albums);
   // The home album is its record: the Track by Track shelf's own sleeve for it (js/sleeves.js),
   // hand-made per album in its era colour and derived from nothing on the real cover, with a
@@ -3007,23 +3055,24 @@ function statsLifetimeHTML(W) {
       statsBlotterHTML(order, found, total, W, phone) + `</div></div>`);
   }
   // The daily: its monthly pass, a box a day, punched through for every daily finished.
-  out.push(statsDailyPassHTML(d));
+  out.push(statsDailyPassHTML(d, sealedDates));
   return out.join("");
 }
 
 function statsBoardHTML(s, viewMode, isAll, lastScore) {
   const W = statsInnerWidth();
+  const sealedDates = isAll ? statsSealedDailyDates() : [];
   let items = "";
-  if (s.played) items += statsGameHTML(s, viewMode, isAll, lastScore, W);
+  if (s.played) items += statsGameHTML(s, viewMode, isAll, lastScore, W, !!sealedDates.length);
   else {
     items += statsTicketHTML({ kicker: "", value: "–", unit: `/${TOTAL_ROUNDS}`,
-      line: `your first game goes here${isAll ? "" : `, in ${MODES[viewMode].label}`}`, serial: "000", serialLabel: "GAMES<br>PLAYED",
+      line: `your first Classic game goes here${isAll ? "" : `, in ${MODES[viewMode].label}`}`, serial: "000", serialLabel: "GAMES<br>PLAYED",
       tint: isAll ? null : viewMode });
-    items += `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">Nothing stuck in yet. Every game you finish leaves something to keep.</p>` +
-      `${playCTA("start writing", isAll ? {} : { type: "classic", mode: viewMode })}</div>`;
+    items += `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">Your Classic scores start with your first run.</p>` +
+      `${playCTA("start writing", { type: "classic", ...(isAll ? {} : { mode: viewMode }) })}</div>`;
   }
-  if (isAll) items += statsLifetimeHTML(W);
-  return `<div class="stp">${items}</div>`;
+  if (isAll) items += statsLifetimeHTML(W, sealedDates);
+  return `<div class="stp-scope">Classic scores <span>· all runs, including unfinished</span></div><div class="stp">${items}</div>`;
 }
 
 const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
@@ -3080,7 +3129,7 @@ function dailyPunchSVG(star, key) {
     `<path class="sh" d="${d}"/><path class="pg" d="${d}" transform="translate(1.25 1.4)" clip-path="url(#${id})"/><path class="cut" d="${d}"/></svg>`;
 }
 // ‹ › stop at the earliest Daily on record and at the current month.
-function statsDailyPassHTML(streak) {
+function statsDailyPassHTML(streak, sealedDates = statsSealedDailyDates()) {
   const today = todayKey();
   const currentKey = today.slice(0, 7);
   const viewKey = statsCalendarMonth || currentKey;
@@ -3118,7 +3167,7 @@ function statsDailyPassHTML(streak) {
   const stub = streak.lastPlayed
     ? `<div class="stp-dp-big"><b>${streak.current}</b><span>${streak.current === 1 ? "day" : "days"}<br>running</span></div>` +
       `<dl class="stp-dp-fields"><div><dt>longest</dt><dd>${streak.best}</dd></div><div><dt>punched</dt><dd>${totals.played}</dd></div>` +
-      `<div><dt>star punch</dt><dd>${totals.perfect}</dd></div></dl>`
+      `<div><dt>star punch</dt><dd${sealedDates.length ? ` aria-label="covered until all sealed Dailies are opened"` : ""}>${sealedDates.length ? "?" : totals.perfect}</dd></div></dl>`
     : `<div class="stp-dp-big is-none"><span>first<br>punch<br>today</span></div>`;
   return `<div class="stp-item stp-w6 stp-o7" style="--r:-.45deg">${statsTape("pass")}<div class="stp-dp-lift"><div class="stp-dp">` +
     `<div class="stp-dp-main"><div class="stp-dp-head"><span class="stp-dp-title">DAILY CHALLENGE</span><span class="stp-dp-kind">monthly pass</span>` +
@@ -31262,6 +31311,7 @@ function closeSettings() {
   releaseDialogBackground(m);
   disarmBookplateTitle();   // an armed bookplate door must never survive the modal closing
   resumeFromSettings();
+  refreshStatsLayout(true);
   // Restore focus to wherever it was before opening (falls back to the gear).
   const back = lastFocusedBeforeSettings;
   lastFocusedBeforeSettings = null;
@@ -37638,6 +37688,7 @@ async function init() {
   $("firstDeskOff").addEventListener("click", endFirstDesk);
   $("statsBtn").addEventListener("click", () => { statsBackTarget = "start"; statsCalendarMonth = null; statsBleedSeq++; routeTo("stats", "start"); renderStats(null); flipAwayToScreen("stats"); });
   $("resultsStatsBtn").addEventListener("click", () => { statsBackTarget = "results"; statsCalendarMonth = null; statsBleedSeq++; renderStats(score); flipAwayToScreen("stats"); });
+  if (typeof ResizeObserver === "function") new ResizeObserver(scheduleStatsLayout).observe($("statsBody"));
   $("statsBackBtn").addEventListener("click", () => backToScreen(statsBackTarget));
   // The daily pass's stub is a way into Stats. A day reopened from the Stats calendar already
   // came from there, so it turns back to that calendar the way the page's own way home does.
@@ -37832,6 +37883,7 @@ async function init() {
       backToScreen("stats", () => {
         archivedDailyDate = null;
         applyAgainBtnLabel();
+        refreshStatsLayout(true);
       });
       return;
     }
