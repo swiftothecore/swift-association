@@ -82,7 +82,7 @@ import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { albumDots, hasTone } from "./albumdots.js";
 import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
-import { showCover, placeCoverStickers } from "./stickercover.js";
+import { showCover, placeCoverStickers, sweepStickerHolo } from "./stickercover.js";
 import { coverStickerSlots, toggleCoverSticker } from "./stickerselection.js";
 import {
   BRACELET_ROW_CAP, buildBraceletSVG, braceletFinish, braceletLayout, braceletTrinketId,
@@ -131,7 +131,7 @@ import {
   loadStats, saveStats, updateStats, totalPlayed,
   loadAchievements, saveAchievements,
   loadKeepsakes, saveKeepsakes, resetKeepsakes, loadWoodsRun, saveWoodsRun,
-  loadStickers, saveStickers, resetStickers,
+  loadStickers, saveStickers, resetStickers, loadStickerHolo,
   loadKeepsakesSeen, saveKeepsakesSeen, resetKeepsakesSeen,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
@@ -1919,6 +1919,7 @@ function openCoverAdmire(back) {
   document.addEventListener("keydown", coverAdmireKey, true);
   if (tab) { tab.hidden = false; tab.focus(); }
   window.scrollTo({ top: 0, behavior: motionReduced() ? "auto" : "smooth" });
+  sweepHolo();
   return true;
 }
 
@@ -6196,11 +6197,13 @@ function openKeepsakes() {
   if (wall) hangKeepsakeWall(wall);
   const close = $("keepsakesCloseBtn");
   if (close) { try { close.focus({ preventScroll: true }); } catch (_) { close.focus(); } }
+  sweepWhenShelfShows();
 }
 function closeKeepsakes() {
   const m = $("keepsakesModal");
   if (!m.classList.contains("open")) return;
   stopKeepsakeDevWatch();
+  stopShelfSweepWatch();
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   // Only unfreeze the page if no other modal is still holding it open.
@@ -6318,6 +6321,34 @@ function stickerMarkup(s, locked) {
   const cls = "sticker" + (locked ? " sticker-locked" : "");
   return `<span class="${cls}" style="--rot:${stickerTilt(s.id)}deg" aria-hidden="true">${stickerArt(s)}</span>`;
 }
+// The complete set's foil catching the light once (see sweepStickerHolo). Motion-gated like
+// every other flourish; the finish itself is static and shows regardless.
+function sweepHolo() {
+  if (motionReduced() || animInstant()) return false;
+  return sweepStickerHolo();
+}
+// The drawer opens on the polaroid wall with the sticker shelf below it, so the foil catches the
+// light when the shelf first scrolls into view rather than on open, where it would cross
+// stickers nobody can see yet. Once per opening; the shelf being re-rendered under the watch
+// (an unlock landing) just means this opening's sweep is spent.
+let shelfSweepWatch = null;
+function stopShelfSweepWatch() {
+  if (shelfSweepWatch) shelfSweepWatch.disconnect();
+  shelfSweepWatch = null;
+}
+function sweepWhenShelfShows() {
+  stopShelfSweepWatch();
+  const grid = $("keepsakesBody")?.querySelector(".stick-grid");
+  if (!grid || !loadStickerHolo() || typeof IntersectionObserver !== "function") return;
+  // Fires once the top of the shelf is past the lower third of the window: far enough in that
+  // a row of stickers is actually there to catch it.
+  shelfSweepWatch = new IntersectionObserver((entries) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    stopShelfSweepWatch();
+    sweepHolo();
+  }, { rootMargin: "0px 0px -30% 0px" });
+  shelfSweepWatch.observe(grid);
+}
 // Re-render the keepsakes drawer if it is open (otherwise a no-op), so an unlock landing while
 // the player is looking at the shelf lands on screen.
 function refreshStickers() {
@@ -6342,8 +6373,11 @@ function earnSticker(id) {
     showStickerToast(st);
     playUnlockChime();
   }
+  const foiled = !!loadStickerHolo();
   updateKeepsakesNav();
-  refreshStickers();
+  refreshStickers();   // stamps the holographic finish if this was the last one
+  // The set turning to foil is the one moment the light should catch it unasked.
+  if (!foiled && loadStickerHolo()) sweepHolo();
   return true;
 }
 
@@ -6355,6 +6389,7 @@ function showStickerToast(st) {
   if (!layer) return;
   const t = document.createElement("div");
   t.className = "toast toast-sticker";
+  t.dataset.sticker = st.id;   // so the holo sweep can find this sticker's silhouette
   // Same hover tip as the charm toast: a sticker is earned by noticing, so the one place it is
   // fair to say what was noticed is the moment it lands. The shelf still says nothing.
   if (st.how) { t.setAttribute("data-tip", st.how); t.setAttribute("data-tip-delay", "500"); }
@@ -36073,6 +36108,9 @@ function buildDevApi() {
         saveStickers(e); updateKeepsakesNav(); refreshStickers(); return STICKERS.length;
       },
       open: () => openKeepsakes(),                             // the shelf lives under the polaroid wall
+      // The complete set's foil catching the light, forced past the motion gate so the sweep
+      // can be looked at (and timed) on demand. "all stickers" is what turns the finish on.
+      sweep: () => (sweepStickerHolo() ? "sweeping" : "no holographic finish: earn every sticker first"),
       // One sticker as the shelf draws it, earned or as the locked silhouette, for the dev
       // panel's gallery. Reads nothing and writes nothing: the state is handed in.
       markup: (id, locked = false) => (STICKER_BY_ID[id] ? stickerMarkup(STICKER_BY_ID[id], locked) : ""),

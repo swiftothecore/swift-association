@@ -899,6 +899,11 @@ export const STICKERS = [
 
 export const STICKER_BY_ID = Object.fromEntries(STICKERS.map((s) => [s.id, s]));
 
+// Is every registered sticker stuck down? The holographic finish's trigger.
+export function stickerSetComplete(earned) {
+  return STICKERS.every((s) => earned && earned[s.id]);
+}
+
 // A sticker can appear in the drawer, cover, Settings and toast simultaneously.
 // Scope any clip paths to this instance so a hidden copy cannot clip a visible one.
 let stickerArtInstance = 0;

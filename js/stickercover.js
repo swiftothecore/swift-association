@@ -15,15 +15,17 @@
      Same window size gives the same picture forever; a different window size re-deals, the
      way any responsive layout does.
 
-   Nothing here animates, on load or on hover. These are vinyl stuck to board.
+   Nothing here animates, on load or on hover. These are vinyl stuck to board. The one
+   exception is the complete set's holographic finish, which catches the light once when the
+   drawer or the admired cover opens (sweepStickerHolo, below), and never under reduced motion.
 
    Loaded as its own module from index.html rather than through app.js: the cover is on screen
    before app.js has finished booting, and this has no business waiting for game data. */
 
-import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
+import { STICKERS, STICKER_BY_ID, stickerArt, stickerSetComplete } from "./stickers.js";
 import { coverStickerSlots } from "./stickerselection.js";
 import { COVER_STICKER_LIMIT } from "./config.js";
-import { loadStickers, loadSettings } from "./storage.js";
+import { loadStickers, loadSettings, loadStickerHolo, saveStickerHolo } from "./storage.js";
 import { mulberry32, fnv1a } from "./util.js";
 
 /* ---------- The numbers ---------- */
@@ -258,12 +260,179 @@ function ensureDieCut() {
   document.body.appendChild(svg);
 }
 
+/* ---------- The holographic finish ----------
+   Earning every sticker turns the whole sheet to prism foil: the die-cut border becomes foil
+   toned to the palette (rose, butter, sage, sky, lilac rather than a rainbow), the foil shows
+   through every unprinted gap inside the outline as it would on a real holo sticker, and a
+   strip of light lies across each one with a pastel flash where it crosses the print. Chosen
+   on scripts/stickers/gloss-board.html over a gloss laminate, a gilt edge and a resin dome.
+
+   It is still ONE filter replacing #stickCut, so no drawing changes and every surface (cover,
+   shelf, toast, Settings, glossary) takes it from the same rule in styles.css, which keys off
+   :root[data-sticker-holo]. A locked cell keeps its silhouette.
+
+   Once earned it is KEPT. The set is append-only and will grow, and a finish that came off
+   because a new guest's sticker shipped would be a reward taken back for something the player
+   never did. So completion is stamped once (STICKER_HOLO_KEY) and only cleared with the stickers.
+
+   Lives here rather than in index.html's defs because the foil and the light are drawn as
+   data-URI images, which are readable as source here and unreadable as markup there; this
+   module is loaded on every page that shows a sticker, before anything renders one. */
+const HOLO_ID = "stickHolo";
+const holoUri = (svg) => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+// The strip of light: one broad soft band and one narrow bright one beside it.
+const HOLO_BAND = holoUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">` +
+  `<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+  `<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.34" stop-color="#fff" stop-opacity="0"/>` +
+  `<stop offset="0.41" stop-color="#fff" stop-opacity="0.40"/><stop offset="0.47" stop-color="#fff" stop-opacity="0.06"/>` +
+  `<stop offset="0.495" stop-color="#fff" stop-opacity="0.62"/><stop offset="0.515" stop-color="#fff" stop-opacity="0"/>` +
+  `<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><rect width="100" height="100" fill="url(#g)"/></svg>`);
+// The foil, reflected so its bands never meet at a hard seam.
+const HOLO_PRISM = holoUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">` +
+  `<linearGradient id="g" x1="0" y1="0" x2="0.34" y2="0.26" spreadMethod="reflect">` +
+  `<stop offset="0" stop-color="#eab4bc"/><stop offset="0.24" stop-color="#efd78c"/><stop offset="0.5" stop-color="#b5d6ad"/>` +
+  `<stop offset="0.75" stop-color="#a9c6e3"/><stop offset="1" stop-color="#cbb6e3"/>` +
+  `</linearGradient><rect width="100" height="100" fill="url(#g)"/></svg>`);
+// Where the light rests: t across, u down, both 0..1 of the sticker's filter region.
+const HOLO_REST = 0.3;
+
+function ensureHolo() {
+  if (document.getElementById(HOLO_ID)) return;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0");
+  svg.setAttribute("aria-hidden", "true");
+  svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
+  const img = (href, result, kind) =>
+    `<feImage href="${href}" x="-30%" y="-30%" width="160%" height="160%" preserveAspectRatio="none" result="${result}" data-shift="${kind}"/>`;
+  // The first six primitives are #stickCut's, verbatim: the same border width, edge and lift.
+  svg.innerHTML =
+    `<filter id="${HOLO_ID}" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">` +
+    `<feMorphology in="SourceAlpha" operator="dilate" radius="2.6" result="fat"/>` +
+    `<feGaussianBlur in="fat" stdDeviation="1.5" result="soft"/>` +
+    `<feComponentTransfer in="soft" result="mask"><feFuncA type="linear" slope="16" intercept="-4.6"/></feComponentTransfer>` +
+    `<feFlood flood-color="#fbf6e9" result="paper"/>` +
+    `<feComposite in="paper" in2="mask" operator="in" result="cut"/>` +
+    `<feDropShadow in="cut" dx="0.7" dy="1.6" stdDeviation="1.2" flood-color="#2b2722" flood-opacity="0.3" result="lift"/>` +
+    // Foil wherever the cut is not printed: the border, and the gaps inside the outline.
+    `<feComposite in="mask" in2="SourceAlpha" operator="out" result="ring"/>` +
+    img(HOLO_PRISM, "prism", "prism") +
+    `<feComposite in="prism" in2="ring" operator="in" result="holo"/>` +
+    // A white glint on the bevel of the cut, on the edges that face the light.
+    `<feGaussianBlur in="mask" stdDeviation="1" result="bump"/>` +
+    `<feSpecularLighting in="bump" surfaceScale="2.6" specularConstant="1" specularExponent="14" lighting-color="#ffffff" result="glL">` +
+    `<feDistantLight azimuth="225" elevation="40"/></feSpecularLighting>` +
+    `<feComposite in="glL" in2="ring" operator="in" result="glint"/>` +
+    // The strip of light: bright on the foil, and a pastel flash where it crosses the print.
+    img(HOLO_BAND, "band", "band") +
+    `<feComposite in="band" in2="ring" operator="in" result="flash0"/>` +
+    `<feComponentTransfer in="flash0" result="flash"><feFuncA type="linear" slope="2"/></feComponentTransfer>` +
+    `<feComposite in="prism" in2="band" operator="in" result="streak0"/>` +
+    `<feComposite in="streak0" in2="SourceAlpha" operator="in" result="streak1"/>` +
+    `<feComponentTransfer in="streak1" result="streak"><feFuncA type="linear" slope="1.5"/></feComponentTransfer>` +
+    `<feBlend in="streak" in2="SourceGraphic" mode="screen" result="art"/>` +
+    `<feMerge><feMergeNode in="lift"/><feMergeNode in="holo"/><feMergeNode in="flash"/>` +
+    `<feMergeNode in="glint"/><feMergeNode in="art"/></feMerge></filter>`;
+  document.body.appendChild(svg);
+}
+
+// Move the light. t slides the strip and the foil across the sticker and swings the lit edge
+// round with it; HOLO_REST is where it sits when nothing is moving it.
+function setHoloLight(t) {
+  const f = document.getElementById(HOLO_ID);
+  if (!f) return;
+  for (const el of f.querySelectorAll("[data-shift]")) {
+    const k = el.dataset.shift === "band" ? 110 : 60;
+    el.setAttribute("x", `${(-30 + (t - 0.5) * k).toFixed(2)}%`);
+  }
+  const light = f.querySelector("feDistantLight");
+  if (light) light.setAttribute("azimuth", (225 + (t - HOLO_REST) * 120).toFixed(2));
+}
+
+// Stamp completion the first time the whole set is earned, and dress the page to match.
+// Reads the real store, never a dev density pick, so a dev cover never turns the finish on.
+export function syncStickerFinish() {
+  let on = !!loadStickerHolo();
+  if (!on && stickerSetComplete(loadStickers())) { saveStickerHolo(new Date().toISOString()); on = true; }
+  if (on) { ensureHolo(); setHoloLight(HOLO_REST); }
+  document.documentElement.toggleAttribute("data-sticker-holo", on);
+  return on;
+}
+
+// The foil catching the light once: a strip of light crosses every holo sticker on screen
+// together, as a sheet tilted under a lamp would. Callers gate it (motion settings); this
+// only refuses when there is no finish to sweep.
+//
+// It does NOT move the filter. That was the first build, and timed in Chromium it held the
+// drawer at about 15fps for the whole sweep: every frame re-rasterised all 24 stickers' filter
+// chains. So the filter stays still at HOLO_REST and the sweep is a separate layer laid over
+// each sticker for the length of it: a gradient strip under a mask of the sticker's own die-cut
+// silhouette, slid by a transform. A transform under a mask runs on the compositor, so nothing
+// re-rasterises while it moves. The masks are the artwork itself dilated as the die cut is,
+// drawn once per sticker as an image and kept.
+const holoMasks = new Map();
+function holoMask(id) {
+  let m = holoMasks.get(id);
+  if (m) return m;
+  const st = STICKER_BY_ID[id];
+  if (!st) return null;
+  // Its own document, so the .ln strokes are restated (the stylesheet cannot reach an image)
+  // and the art's ids cannot collide with anything. The viewBox is the filter region's.
+  const art = st.art.replace("<svg ", '<svg width="100" height="100" ');
+  m = `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -30 160 160">` +
+    `<style>.ln{stroke:#000;stroke-width:2.3}</style>` +
+    `<filter id="d" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3.1"/></filter>` +
+    `<g filter="url(#d)">${art}</g></svg>`)}")`;
+  holoMasks.set(id, m);
+  return m;
+}
+// Which sticker a host is showing: the cover tags its cells; the shelf, toast and Settings
+// sit inside a cell that does, or carry it themselves.
+function hostStickerId(host) {
+  const tagged = host.closest("[data-sticker], [data-id]");
+  return tagged ? (tagged.dataset.sticker || tagged.dataset.id) : null;
+}
+
+const HOLO_SWEEP_MS = 1500;
+export function sweepStickerHolo() {
+  if (!document.documentElement.hasAttribute("data-sticker-holo")) return false;
+  // Every read before any write: measuring a host after the previous one's layer went in
+  // would force a fresh layout per sticker, and that was the sweep's start hitch.
+  const hosts = [...document.querySelectorAll(".sticker:not(.sticker-locked), .cover-sticker")].filter((h) => {
+    if (!h.querySelector(":scope > svg") || h.querySelector(":scope > .holo-sweep")) return false;
+    // Rendered at all, not merely in view: the admired cover is still scrolling up to meet
+    // the eye when this runs, and a layer off screen costs the compositor nothing.
+    return h.getBoundingClientRect().width > 0;
+  }).map((host) => ({ host, mask: holoMask(hostStickerId(host)), still: getComputedStyle(host).position === "static" }))
+    .filter((h) => h.mask);
+  for (const { host, mask, still } of hosts) {
+    const layer = document.createElement("span");
+    layer.className = "holo-sweep";
+    layer.setAttribute("aria-hidden", "true");
+    layer.style.setProperty("--holo-mask", mask);
+    const band = document.createElement("span");
+    band.className = "holo-sweep-band";
+    layer.appendChild(band);
+    if (still) host.style.position = "relative";
+    host.appendChild(layer);
+    // +-46% starts and ends the strip just off the silhouette (the sticker spans the middle
+    // 62% of the box and the strip is about a fifth of it wide); an even pace, easing only at
+    // the ends, so it is seen crossing rather than flicking past.
+    band.animate(
+      [{ transform: "translate(-46%, -46%)" }, { transform: "translate(46%, 46%)" }],
+      { duration: HOLO_SWEEP_MS, easing: "cubic-bezier(.35,.1,.65,.9)" }
+    ).finished.then(() => layer.remove(), () => layer.remove());
+  }
+  return hosts.length > 0;
+}
+
 let devPick = null;      // dev override for the earned map; null = read the real store
 let devMask = false;     // dev: draw the no-go mask
 
 // Stick the earned set to the cover. Idempotent: it clears its own layer and redraws, so it
 // can be called on resize, on an unlock, or from the dev panel without accumulating anything.
 export function placeCoverStickers(cov, opts) {
+  syncStickerFinish();
   cov = cov || document.querySelector("#loading .nb-cover");
   if (!cov) return 0;
   const max = opts && typeof opts.max === "number" ? opts.max : COVER_MAX;

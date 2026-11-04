@@ -15,7 +15,7 @@ import {
   BONUS_KEY, RUTHLESS_KEY, TRACKS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE, CUSTOM_STOCKS,
   KEEPSAKES_KEY, WOODS_KEY,
-  STICKERS_KEY,
+  STICKERS_KEY, STICKER_HOLO_KEY,
   KEEPSAKES_SEEN_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
@@ -145,8 +145,17 @@ export function loadStickers() {
 export function saveStickers(earned) {
   try { localStorage.setItem(STICKERS_KEY, JSON.stringify(earned)); } catch (e) { /* ignore */ }
 }
+// The date the full set was first completed, or null. The finish it unlocks outlives a set
+// that later grows, so this is written once and only cleared alongside the stickers themselves.
+export function loadStickerHolo() {
+  try { return localStorage.getItem(STICKER_HOLO_KEY) || null; } catch (e) { return null; }
+}
+export function saveStickerHolo(iso) {
+  try { localStorage.setItem(STICKER_HOLO_KEY, iso); } catch (e) { /* ignore */ }
+}
 export function resetStickers() {
   try { localStorage.removeItem(STICKERS_KEY); } catch (e) { /* ignore */ }
+  try { localStorage.removeItem(STICKER_HOLO_KEY); } catch (e) { /* ignore */ }
   const settings = loadSettings();
   settings.coverStickerSlots = null;
   saveSettings(settings);

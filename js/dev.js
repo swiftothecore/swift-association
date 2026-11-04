@@ -1366,7 +1366,8 @@ export function initDev(api) {
     row(stickerSel, btn("unlock", () => { api.stickers.earn(stickerSel.value); toast("sticker: " + stickerSel.value); }),
         btn("relock", () => { api.stickers.remove(stickerSel.value); toast("relocked " + stickerSel.value); }),
         btn("open drawer", () => api.stickers.open())),
-    row(btn("all stickers", () => { api.stickers.all(); toast("all stickers stuck down"); }),
+    row(btn("all stickers", () => { api.stickers.all(); toast("all stickers stuck down: holographic"); }),
+        btn("catch the light", () => toast(api.stickers.sweep())),
         btn("clear stickers", () => { api.stickers.reset(); toast("stickers cleared"); }, "warn")),
     // The shelf catalogues the set; the cover is where it lives, and where a placement can
     // actually be judged. Same door the drawer offers, so the corner tag and the page turn

@@ -172,6 +172,10 @@ export const CUSTOM_KEY = "swiftSongAssociation.custom";               // player
 export const KEEPSAKES_KEY = "swiftSongAssociation.keepsakes";         // earned collectibles — { [polaroidId]: isoDate } (unlock time, mirrors achievements)
 export const WOODS_KEY = "swiftSongAssociation.woodsRun";            // out of the woods polaroid: how many games in a row have answered with Out of the Woods (a bare count)
 export const STICKERS_KEY = "swiftSongAssociation.stickers";           // earned stickers: { [stickerId]: isoDate }, same shape as the keepsakes store
+// When the whole sticker set was first stuck down (an isoDate, or absent). Kept rather than
+// recomputed so the holographic finish it pays for is never taken back when a new sticker is
+// appended to the set: see syncStickerFinish in js/stickercover.js.
+export const STICKER_HOLO_KEY = "swiftSongAssociation.stickerHolo";
 // What the player has actually looked at in the keepsakes drawer — { polaroids:{[id]:true},
 // stickers:{[id]:true} }. Deliberately a set of ids rather than a count: the count can go down
 // (dev tools remove a keepsake) and a stored number would then leave the badge stuck or silent.

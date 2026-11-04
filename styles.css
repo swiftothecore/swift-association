@@ -12103,6 +12103,29 @@
   /* Dark mode dims the whole cover, and vinyl on that board is in the same light. Pitched a
      little brighter than the board itself: a sticker is glossier stock than kraft. */
   :root[data-theme="dark"] .cover-sticker { filter: brightness(0.72) saturate(0.94); }
+  /* The complete set's holographic finish (#stickHolo, built in js/stickercover.js), on every
+     surface at once. It replaces the die cut rather than adding to it, so the border, edge and
+     lift stay the shared ones. A locked cell keeps its silhouette: once the finish is earned
+     the set can still grow, and a new sticker is a question like any other until it is won. */
+  :root[data-sticker-holo] .sticker:not(.sticker-locked) > svg,
+  :root[data-sticker-holo] .cover-sticker > svg { filter: url(#stickHolo); }
+  /* The sweep (sweepStickerHolo): a strip of light laid over a sticker for 1.5s, masked to its
+     own die-cut silhouette and slid by a transform, so it runs on the compositor and nothing
+     under it re-rasterises. Sized to the filter region (-30%..130%), which is the mask's
+     viewBox. The strip is the foil's own colours either side of a white core. */
+  .holo-sweep {
+    position: absolute; left: -30%; top: -30%; width: 160%; height: 160%;
+    overflow: hidden; pointer-events: none;
+    -webkit-mask: var(--holo-mask) center / 100% 100% no-repeat;
+    mask: var(--holo-mask) center / 100% 100% no-repeat;
+  }
+  .holo-sweep-band {
+    position: absolute; inset: 0; will-change: transform; transform: translate(-46%, -46%);
+    background: linear-gradient(135deg, transparent 42%,
+      rgba(234, 180, 188, 0.3) 45%, rgba(239, 215, 140, 0.42) 47.5%,
+      rgba(255, 255, 255, 0.72) 49.5%, rgba(181, 214, 173, 0.42) 51.5%,
+      rgba(169, 198, 227, 0.3) 54%, transparent 57%);
+  }
 
   /* ---------- Admiring the cover ----------
      The cover is otherwise on screen for exactly as long as the data takes to load, which is
