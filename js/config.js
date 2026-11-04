@@ -209,7 +209,7 @@ export const POLAROID_TOTAL = 24;
 // are printed and arrive finished. STICKER_TOTAL is the drawer's counter denominator and sits
 // at the true count of the drawn set, for the same reason POLAROID_TOTAL does: a denominator
 // running ahead of what exists would report "every sticker found" over a short count.
-export const STICKER_TOTAL = 24;
+export const STICKER_TOTAL = 25;
 export const COVER_STICKER_LIMIT = 15;
 
 // Every persisted key shares this namespace; export/import and "clear everything"

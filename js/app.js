@@ -6495,7 +6495,22 @@ function sangWholeSection(song, match) {
   return false;
 }
 
-// The five stickers that read one answered page. All of them want Taylor's own catalogue
+// How many pages in a row, ending on page `upto`, each answered right off an earlier studio
+// record than the page after it: the koi fish guitar's current. A miss, a timeout or a song off
+// anything but the twelve studio records breaks it, and so does a page off the same record,
+// since standing still is not swimming upstream.
+function upstreamRun(results, albums, upto) {
+  let n = 0;
+  for (let i = upto - 1; i >= 0; i--) {
+    const at = results[i] ? STUDIO_ALBUMS.indexOf(albums[i]) : -1;
+    if (at < 0) break;
+    if (n && at <= STUDIO_ALBUMS.indexOf(albums[i + 1])) break;
+    n++;
+  }
+  return n;
+}
+
+// The six stickers that read one answered page. All of them want Taylor's own catalogue
 // underneath, so they sit behind the gate the Catalogue charms already use: a guest run has
 // swapped the corpus wholesale, and none of these objects means anything against another
 // artist's records.
@@ -6530,6 +6545,11 @@ function checkAnswerStickers(song, lyricMatch) {
   if (lyricMatch && lyricMatch.tier === "verse" && sangWholeSection(song, lyricMatch)) {
     earnSticker("poet-bust");
   }
+
+  // Koi fish guitar — three pages running, each answered off an earlier record than the last,
+  // the way a koi swims upstream. Read off the run's own page log, which this page has already
+  // been written into. Any run can still do it, however far the notebook has got.
+  if (upstreamRun(roundResults, roundAlbums, round) >= 3) earnSticker("koi-fish-guitar");
 }
 
 /* ---------- Sticker triggers that read a finished run ---------- */
@@ -26994,7 +27014,7 @@ function submitAnswer(song, isTimeout) {
   // The session ledger, which the three "in one session" stickers read. Sits beside the Catalogue
   // charms because it asks the same kind of question, and takes every mode's correct answers.
   if (correct) noteSessionSong(song);
-  // The five stickers about THIS page: the vault track, lonely word, sung verse, cat and boots. Fed lyricMatch, since one of them is about how the page was answered rather than what.
+  // The six stickers about THIS page: the vault track, lonely word, sung verse, cat, boots and koi guitar. Fed lyricMatch, since one of them is about how the page was answered rather than what.
   if (correct) checkAnswerStickers(song, lyricMatch);
   if (!isTimeout) checkCatalogueEggs($("songInput").value, song, correct);
   // Bullet Holes — every rung of the hint ladder burned on this page and the page missed anyway.
@@ -36097,6 +36117,11 @@ function buildDevApi() {
         boots: { word: "dance", song: "cowboy like me" },
         pegacornMissing: ["Enchanted", "Starlight"].filter((title) =>
           ![...sessionSongs.keys()].some((s) => normalizeTitle(baseTitleOf(s)) === normalizeTitle(title))),
+        // How far the koi has swum this run (it wants 3) and the records it swam through.
+        upstream: (() => {
+          const n = upstreamRun(roundResults, roundAlbums, round);
+          return { run: n, albums: roundAlbums.slice(Math.max(0, round - n), round) };
+        })(),
       }),
       list: () => { const e = loadStickers(); return STICKERS.map((s) => ({ id: s.id, name: s.name, era: s.era, earned: !!e[s.id], at: e[s.id] || null })); },
       state: (id) => (STICKER_BY_ID[id] ? (stickerEarned(id) ? "earned" : "locked") : "unknown sticker: " + id),

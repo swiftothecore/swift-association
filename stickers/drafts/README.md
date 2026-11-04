@@ -4,7 +4,7 @@ Hand-authored vector illustrations based on the supplied boots, koi fish guitar,
 
 The boots feature braided trim, roses, flames and heart banners. The blue guitar has six strings, frets and individually drawn koi. The pegacorn has a rainbow mane and tail, overlapping teal feathers and sparse vector foil marks. Flat colours and drawn highlights replace photographic textures.
 
-These are reference drawings, not what the game ships. The boots and pegacorn stickers in `js/stickers.js` were redrawn from them in the set's own language (graphite line, four colour families, the shared die cut) so they sit on one sheet with the rest, and no longer carry these outlines. The koi guitar remains parked until its unlock is designed, and gets the same redraw before it ships.
+These are reference drawings, not what the game ships. The boots, pegacorn and koi guitar stickers in `js/stickers.js` were redrawn from them in the set's own language (graphite line, four colour families, the shared die cut) so they sit on one sheet with the rest, and no longer carry these outlines.
 
 Approximate uncompressed sizes: boots 105 KB, guitar 30 KB, pegacorn 40 KB. The local drawing generator is `scripts/stickers/redraw_reference_stickers.py`; it does not read or trace the PNG references.
 
