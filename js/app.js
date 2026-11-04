@@ -2602,7 +2602,9 @@ function statsBestSetDate(tokens, best) {
   return first;
 }
 const STATS_MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip, set }) {
+// tint is the view the ticket is kept for (a difficulty id or "infinite"), printed on that
+// tab's stock; All has none and keeps the plain buff.
+function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip, set, tint }) {
   let date = "";
   if (set) {
     const [y, m, d] = set.split("-");
@@ -2610,7 +2612,7 @@ function statsTicketHTML({ kicker, value, unit, line, serial, serialLabel, tip, 
     if (tip) tip += `, set ${+d} ${STATS_MONTHS[+m - 1].charAt(0) + STATS_MONTHS[+m - 1].slice(1).toLowerCase()} ${y}`;
   }
   return `<div class="stp-item stp-w4 stp-o0" style="--r:-1.2deg">${statsTape("ticket")}` +
-    `<div class="stp-ticket-lift"><div class="stp-ticket"${tip ? ` role="img" aria-label="${tip}"` : ""}>` +
+    `<div class="stp-ticket-lift"><div class="stp-ticket"${tint ? ` data-tint="${tint}"` : ""}${tip ? ` role="img" aria-label="${tip}"` : ""}>` +
     `<div class="stp-ticket-main"><span class="stp-ticket-frame" aria-hidden="true"></span><div class="stp-ticket-copy">` +
     `<div class="stp-adm">${kicker ? `<span class="stp-adm-admit">ADMIT ONE · </span>${kicker}` : "ADMIT ONE"}</div>` +
     `<div class="stp-ticket-big"><b>${value}</b><span>${unit}</span></div><div class="stp-ticket-line">${line}</div></div>${date}</div>` +
@@ -2829,6 +2831,7 @@ function statsGameHTML(s, viewMode, isAll, lastScore, W) {
     serial: pad3(s.played), serialLabel: `${s.played === 1 ? "GAME" : "GAMES"}<br>PLAYED`,
     tip: `Best score ${s.best} of ${TOTAL_ROUNDS}, ${s.played} ${s.played === 1 ? "game" : "games"} played`,
     set: s.best > 0 ? statsBestSetDate(isAll ? MODE_ORDER : [viewMode], s.best) : null,
+    tint: isAll ? null : viewMode,
   }));
   out.push(`<div class="stp-item stp-w2 stp-o1" style="--r:1.8deg">${statsTape("gist")}<div class="stp-idx"><div class="stp-lab">the gist</div>` +
     `<p>avg <b>${avg.toFixed(1)}</b></p>` +
@@ -3001,7 +3004,8 @@ function statsBoardHTML(s, viewMode, isAll, lastScore) {
   if (s.played) items += statsGameHTML(s, viewMode, isAll, lastScore, W);
   else {
     items += statsTicketHTML({ kicker: "", value: "–", unit: `/${TOTAL_ROUNDS}`,
-      line: `your first game goes here${isAll ? "" : `, in ${MODES[viewMode].label}`}`, serial: "000", serialLabel: "GAMES<br>PLAYED" });
+      line: `your first game goes here${isAll ? "" : `, in ${MODES[viewMode].label}`}`, serial: "000", serialLabel: "GAMES<br>PLAYED",
+      tint: isAll ? null : viewMode });
     items += `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">Nothing stuck in yet. Every game you finish leaves something to keep.</p>` +
       `${playCTA("start writing", isAll ? {} : { type: "classic", mode: viewMode })}</div>`;
   }
@@ -3190,7 +3194,7 @@ function infiniteTabHTML() {
   // No runs yet: the same blank ticket and note the Classic tabs leave, not a different empty page.
   if (!entries.length) {
     return `<div class="stp">` + statsTicketHTML({ kicker: "", value: "–", unit: "pages",
-      line: "your longest run goes here", serial: "000", serialLabel: "INFINITE<br>RUNS" }) +
+      line: "your longest run goes here", serial: "000", serialLabel: "INFINITE<br>RUNS", tint: "infinite" }) +
       `<div class="stp-item stp-w6 stp-o1"><p class="stp-empty">No infinite runs yet. Infinite deals pages until your lives run out, ` +
       `and every page you survive strings one more bead.</p>${playCTA("play infinite", { type: "infinite" })}</div></div>`;
   }
@@ -3205,6 +3209,7 @@ function infiniteTabHTML() {
     serial: pad3(games), serialLabel: `INFINITE<br>${games === 1 ? "RUN" : "RUNS"}`,
     tip: `Longest infinite run ${top.best} ${top.best === 1 ? "page" : "pages"}, ${VARIANT_LABELS[top.variant]}, ${MODES[top.mode].label}`,
     set: statsBestSetDate([`inf-${top.variant}-${top.mode}`], top.best),
+    tint: "infinite",
   }) + `</div>`;
   const group = (variant) => {
     const sty = INF_VARIANT_STYLE[variant];

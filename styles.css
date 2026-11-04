@@ -12509,6 +12509,15 @@
       radial-gradient(circle var(--notch) at calc(100% - var(--stub)) 0, transparent 97%, #000) top / 100% 51% no-repeat,
       radial-gradient(circle var(--notch) at calc(100% - var(--stub)) 100%, transparent 97%, #000) bottom / 100% 51% no-repeat;
   }
+  /* Each view's ticket is cut from its tab's colour of card: the tab's wash laid on paper and
+     made opaque, so a ticket is still stock and the frame, rules and ink read as they do on the
+     buff. Normal keeps the buff, which is the gold highlighter's own stock; All has no tint. */
+  .stp-ticket[data-tint="relaxed"]  { --tk-stock: #cbdbe7; }
+  .stp-ticket[data-tint="easy"]     { --tk-stock: #d6e4bc; }
+  .stp-ticket[data-tint="hard"]     { --tk-stock: #f0c9bb; }
+  .stp-ticket[data-tint="ultra"]    { --tk-stock: #dad0ea; }
+  .stp-ticket[data-tint="lyricist"] { --tk-stock: #f0cfdd; }
+  .stp-ticket[data-tint="infinite"] { --tk-stock: #c6e1da; }
   .stp-ticket::after {
     content: ""; position: absolute; z-index: 2; pointer-events: none;
     top: calc(var(--notch) + 3px); bottom: calc(var(--notch) + 3px); right: calc(var(--stub) - 1px); width: 2px;
