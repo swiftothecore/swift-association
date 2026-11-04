@@ -2303,6 +2303,9 @@
     --up-t1:#5a1520; --up-t1s:#3c0c14; --up-t2:#7a2e1e; --up-t2s:#551d12; --up-t3:#8e5a22; --up-t3s:#693f15; --up-t4:#9b7832; --up-t4s:#72561f; --up-pine:#1d1c14;
     --cta-art:linear-gradient(180deg, #2c1320 0%, #4c2330 50%, #7a3f3e 85%);
     background-image:linear-gradient(168deg, #ffffff12 0%, #ffffff00 46%, #0000002a 100%), var(--cta-art); }
+  /* The words run over the right-hand stand, and dark type on a red maple or a pine all but vanishes,
+     so they carry a halo of the evening sky that lifts them clear of whatever tree is behind them. */
+  .play-cta[data-startbtn="anv-red-tv"] .cta-label { text-shadow:0 0 2px #f8e4cf, 0 0 5px #f8e4cf, 0 0 9px #f5dcc3, 0 0 14px #f5dcc3; }
   :root[data-theme="dark"] .play-cta[data-startbtn="anv-red-tv"] .cta-label { text-shadow:0 1px 2px #1a080bcc; }
   .tvr-hill { fill:var(--up-hill); } .tvr-verge { fill:var(--up-verge); } .tvr-road { fill:var(--up-road); }
   .tvr-dash { fill:none; stroke:var(--up-dash); stroke-width:.8; stroke-dasharray:6 8; opacity:.55; }
