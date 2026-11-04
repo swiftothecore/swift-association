@@ -3927,7 +3927,22 @@
      twenty-one objects hung on a wall, and 594px could only ever fit four narrow ones per row
      — so the captions wrapped, the tiles came out at wildly different heights, and the wall
      read as clutter. The extra width is spent on the tiles, not on more of them. */
-  .keepsakes-modal .settings-card { width: min(880px, calc(100vw - 28px)); }
+  .keepsakes-modal .settings-card {
+    width: min(880px, calc(100vw - 28px));
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--ink) 26%, transparent) transparent;
+  }
+  /* The drawer is the one sheet tall enough to scroll every time, and the platform bar lays
+     a white trough down its right edge that breaks every rule line it crosses. Track goes
+     transparent so the ruling runs under it; the thumb is a soft bar of the page's own ink,
+     darkening under the cursor so it still reads as a handle. Drawn from --ink, so the
+     night page gets a light bar rather than a brown one it can't show. */
+  .keepsakes-modal .settings-card::-webkit-scrollbar { width: 8px; }
+  .keepsakes-modal .settings-card::-webkit-scrollbar-track { background: transparent; }
+  .keepsakes-modal .settings-card::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--ink) 26%, transparent); border-radius: 4px;
+  }
+  .keepsakes-modal .settings-card::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--ink) 42%, transparent); }
   .keep-lead {
     font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); color: var(--ink-soft);
     line-height: 1.55; margin: 4px 0 14px; max-width: 60ch;
