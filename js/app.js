@@ -23304,11 +23304,20 @@ function wildcardPageCardHTML() {
     headline: roundWildcard.label, dark: challengeDark });
 }
 
+// The per-page On Tour! curtain card — names tonight's album, the only source that counts.
+// Shown on every page (and, on round 1, right after the rules intro).
+function tourPageCardHTML() {
+  const album = tourSetlist[round - 1] || "";
+  return curtainCardHTML({ kicker: `stop ${Math.min(round, TOTAL_ROUNDS)} / ${TOTAL_ROUNDS} · on tour`,
+    tag: "tonight's album", headline: album || "any album", album, dark: challengeDark,
+    sub: album ? `name a song from <b class="curtain-album-name">${escapeHtml(album)}</b>` : "" });
+}
+
 // The curtain content for THIS round: null for no curtain, a single card's HTML, or an
 // array of cards shown in sequence (Switch-Up's round 1 = rules intro then page type):
 //  • EVERY challenge — round 1 only, a "here's what you're doing" intro (challengeIntroHTML).
 //  • Wildcard — every round, naming the active rule.
-//  • On Tour! — every later round, announcing tonight's album.
+//  • On Tour! — every round, announcing tonight's album.
 function roundCurtainHTML() {
   if (gameType !== "challenge" || !currentChallenge) return null;
   const c = currentChallenge;
@@ -23323,18 +23332,16 @@ function roundCurtainHTML() {
     // Wildcard: follow the rules intro with the rule card, so the very first page names
     // the rule it's playing by instead of leaving it to the margin banner alone.
     if (c.rule === "wildcard" && roundWildcard) return [intro, wildcardPageCardHTML()];
+    // On Tour!: follow the rules intro with the first stop, or the opening page's album is
+    // left to the margin banner while every later page gets a card.
+    if (c.rule === "setlist") return [intro, tourPageCardHTML()];
     return intro;
   }
   if (c.rule === "wildcard" && roundWildcard) return wildcardPageCardHTML();
   // Switch-Up — every page flashes whether it wants a title or a sung lyric line.
   if (c.rule === "switchup") return switchPageCardHTML();
   // On Tour! — every page announces tonight's album (the only acceptable source).
-  if (c.rule === "setlist") {
-    const album = tourSetlist[round - 1] || "";
-    return curtainCardHTML({ kicker: `stop ${Math.min(round, TOTAL_ROUNDS)} / ${TOTAL_ROUNDS} · on tour`,
-      tag: "tonight's album", headline: album || "any album", album, dark: challengeDark,
-      sub: album ? `name a song from <b class="curtain-album-name">${escapeHtml(album)}</b>` : "" });
-  }
+  if (c.rule === "setlist") return tourPageCardHTML();
   return null;
 }
 
