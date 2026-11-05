@@ -41,7 +41,7 @@ import {
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, byShelf, DARK_SIDE_IDS, DARK_SIDE_TODO,
-  DARK_SIDE_MILESTONE, CHALLENGE_RETURN_RUNS,
+  DARK_SIDE_MILESTONE, CHALLENGE_RETURN_RUNS, THIN_RECORD_WORDS,
   IMPOSTOR_WORDS, IMPOSTOR_COUNT, DARK_IMPOSTOR_WORDS,
   SEA_GRID_SIZE, SEA_MIN_VALID, SEA_MAX_VALID,
   COMMON_LINES, COMMON_MIN_SONGS, COMMON_MAX_SONGS, COMMON_GEN_ATTEMPTS, COMMON_MAX_ACCEPT,
@@ -12621,6 +12621,13 @@ function placeChallengeDetail() {
 }
 CHALL_NARROW.addEventListener("change", placeChallengeDetail);
 
+// How many different prompt words this notebook has any record with, hit or miss. The same
+// tally the wager's card back reads, so this is true exactly when that card has little to say.
+function thinWordRecord() {
+  const t = loadSongTally();
+  return new Set([...Object.keys(t.words), ...Object.keys(t.misses)]).size < THIN_RECORD_WORDS;
+}
+
 function renderChallengeDetail(id) {
   const el = $("challDetail");
   if (!el) return;
@@ -12793,6 +12800,9 @@ function renderChallengeDetail(id) {
           ? `${rec.darkAttempts} attempt${rec.darkAttempts === 1 ? "" : "s"} · not yet beaten`
           : "dark side not yet attempted");
 
+  // The aside's markup: its copy is plain text with *word* marking the highlighter band.
+  const asideText = (s) => escapeHtml(s).replace(/\*([^*]+)\*/g, `<span class="chall-aside-hl">$1</span>`);
+
   const perfected = perfectedChallenge(id, rec);
   const sealClass = perfected ? "is-perfect" : rec.darkDefeated ? "is-dark"
     : rec.defeated ? "is-beaten" : open ? "is-unbeaten" : "is-locked";
@@ -12836,9 +12846,14 @@ function renderChallengeDetail(id) {
       // A pencilled aside in the era's ink, beside the goal it helps with. Outside the swap
       // cells on purpose: it is advice about playing, true on both sides, so the flip leaves it be.
       (c.aside
-        ? `<div class="chall-aside">${CHALL_MIC}<span>` +
-            escapeHtml(c.aside).replace(/\*([^*]+)\*/g, `<span class="chall-aside-hl">$1</span>`) +
-          `</span></div>`
+        ? `<div class="chall-aside">${CHALL_MIC}<span>${asideText(c.aside)}</span></div>`
+        : "") +
+      // Unlike the aside above this one does differ by side, so it flips with the card. It sits
+      // on a locked card too, on purpose: the player should read it before spending the token.
+      (c.thinAside && thinWordRecord()
+        ? `<div class="chall-aside">` +
+            swap("span", "chall-aside-note", asideText(c.thinAside), dk && asideText(dk.thinAside)) +
+          `</div>`
         : "") +
     `</div>` +
     `<div class="chall-act">` +

@@ -4527,6 +4527,7 @@
   .chall-rule > .chall-swap-d,
   .chall-goal > .chall-swap-d { color: #513a72; }
   .chall-mods > .chall-swap-d { color: #7a6b8c; }
+  .chall-aside-note > .chall-swap-d { color: #513a72; }
   .chall-detail.is-peeking .chall-sec--beat { border-top-color: rgba(122,75,176,0.35); }
   /* the record line follows the copy: while the dark rules show, this is the dark record */
   .chall-meta-in { display: grid; }
@@ -4559,7 +4560,8 @@
   :root[data-theme="dark"] .chall-peek-toggle:focus-visible { color: #dcc2ff; text-decoration-color: rgba(196,154,240,0.85); }
   :root[data-theme="dark"] .chall-detail.is-peeking .chall-sec .chall-eyebrow { color: rgba(196,154,240,0.8); }
   :root[data-theme="dark"] .chall-rule > .chall-swap-d,
-  :root[data-theme="dark"] .chall-goal > .chall-swap-d { color: #cbb2f0; }
+  :root[data-theme="dark"] .chall-goal > .chall-swap-d,
+  :root[data-theme="dark"] .chall-aside-note > .chall-swap-d { color: #cbb2f0; }
   :root[data-theme="dark"] .chall-mods > .chall-swap-d { color: #b0a2c0; }
   :root[data-theme="dark"] .chall-detail.is-peeking .chall-sec--beat { border-top-color: rgba(196,154,240,0.35); }
   :root[data-theme="dark"] .chall-meta-in > .chall-swap-d { color: #a89ab8; }

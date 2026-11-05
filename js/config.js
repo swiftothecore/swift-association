@@ -1349,6 +1349,11 @@ export const RANDOM_CATEGORIES = [
    challenge can be returned to the locked shelf for its token. The challenge keeps its
    history and can be unlocked again later; quitting and dark-side runs never count. */
 export const CHALLENGE_RETURN_RUNS = 7;
+// Below this many distinct prompt words in the lifetime tally, a challenge's `thinAside` shows.
+// Roughly eight runs of new words. Confidence Wager is the one challenge that gets easier
+// the more you have played, and with 857 words its record stays mostly blank for dozens of
+// runs, so this marks the newcomer stretch rather than the point the record becomes useful.
+export const THIN_RECORD_WORDS = 100;
 
 /* `tagline`: what the masthead says after the challenge's name while it is being played. Most
    challenges leave it out and the line reads the run's terms (pages and clock, see
@@ -1878,7 +1883,9 @@ export const CHALLENGES = [
     hard: { startBeads: 1, maxStake: 4, target: 36, wagerTeaseSelf: true,
       blurb: "12s · suggestions · one bead to start · stake up to four, on nothing but your own record",
       desc: "Only your record to guide the bet this time. A hit returns double plus one bead; a miss loses the stake.",
-      win: "Finish the run on 36 beads." },
+      win: "Finish the run on 36 beads.",
+      thinAside: "This one rewards a *long memory*. With a thin notebook, you'll be betting blind." },
+    thinAside: "This one rewards a *long memory*. With a thin notebook, you'll mostly be betting on rarity alone.",
     blurb: "12s · suggestions · stake beads on a word you haven't seen yet",
     desc: "Stake up to three beads on a face-down word, guided by its rarity and your record. A hit returns double plus a bead; a miss loses the stake.",
     win: "Finish the run on 26 beads." },
