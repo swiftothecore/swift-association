@@ -1678,18 +1678,20 @@ export const CHALLENGES = [
   // ---- Tier C minigames (own input / lose-state). ----
   { id: "impostor", name: "Impostor", rule: "impostor", mode: "medium",
     tagline: "{target} real words, every fake flagged",
-    free: false, cost: 1, target: 7, seconds: 15, tapes: 2,
+    free: false, cost: 1, target: 6, seconds: 15, tapes: 2,
     // Dark: more fakes, and cannier ones. `impostorCount` lifts the fakes from 4 to 5 (read
-    // through impostorCountNow — one more chance to mis-flag, still one real page of slack
-    // against the target of 7), `impostorHardWords` swaps the decoy pool for DARK_IMPOSTOR_WORDS
-    // (the hardest-to-dismiss tier), and the clock drops 15s->10s. The target stays 7 real
-    // answers, so the win copy is unchanged; only the difficulty of each call moves.
-    hard: { seconds: 10, impostorCount: 5, impostorHardWords: true,
+    // through impostorCountNow — one more chance to mis-flag), `impostorHardWords` swaps the
+    // decoy pool for DARK_IMPOSTOR_WORDS (the hardest-to-dismiss tier), and the clock drops
+    // 15s->10s. The target is pinned at 7 real answers rather than inherited from the base 6:
+    // flags never count toward it, so the base leaves three of its nine real pages spare and
+    // the dark side one of its eight. Inheriting 6 would hand the dark side a second one.
+    hard: { seconds: 10, impostorCount: 5, impostorHardWords: true, target: 7,
+      win: "Survive the run: flag every impostor and answer 7 real words.",
       blurb: "more fakes, harder to spot · flag the impostors, answer the real ones",
       desc: "Same game, tightened: MORE of the pages are impostors now, and the fakes are the kind of word you could swear you've heard her sing. Flag every impostor and answer the real ones. One wrong call still ends the run." },
     blurb: "some words are fakes · flag the impostors, answer the real ones",
     desc: "Most pages will show a real word that appears in lyrics, but some are IMPOSTORS that don't appear in any real Taylor songs. Flag the impostors and answer the real ones, but don't flag a real word or fail to flag an impostor because you'll instantly lose.",
-    win: "Survive the run: flag every impostor and answer 7 real words." },
+    win: "Survive the run: flag every impostor and answer 6 real words." },
   { id: "sea-of-songs", name: "Sea of Songs", rule: "sea", mode: "medium",
     free: false, cost: 1, target: 9, seconds: 10, noTitle: false, tapes: 3,
     // Dark: fewer needles AND less time. `seaMinValid`/`seaMaxValid` (read through
@@ -2150,7 +2152,7 @@ export const DARK_SIDE_MILESTONE = 5;
                   always accepted and any genuine thread still counts, so a page that can't reach
                   a singleton never rejects a legitimate answer. Clock drops to 2.5s.
    - impostor     `impostorCount` (5 on dark, up from 4) seeds one more fake per run via
-                  impostorCountNow — margin stays at one real page against the target of 7 —
+                  impostorCountNow — one real page of margin against its own target of 7 —
                   and `impostorHardWords` swaps the decoy pool for DARK_IMPOSTOR_WORDS (a
                   zero-match-verified subset of the plausible-tier words) via impostorWordPool.
                   Clock drops to 10s. Count 6 was rejected as zero-margin (must clear every real
@@ -2271,8 +2273,8 @@ export const IMPOSTOR_WORDS = [
    a player can usually be sure she never sang them — they give the game away. Tune freely; the
    only hard rule is that each word must remain a member of IMPOSTOR_WORDS.
    (The dark fake COUNT lives on the challenge's `hard` block as `impostorCount: 5` — margin is
-   6 - count against the target of 7, so 5 keeps one real page of slack; base is IMPOSTOR_COUNT
-   = 4. It can't live here as a constant because CHALLENGES is evaluated before this export.) */
+   6 - count against the dark target of 7, so 5 keeps one real page of slack; base is
+   IMPOSTOR_COUNT = 4 against a target of 6. It can't live here as a constant because CHALLENGES is evaluated before this export.) */
 export const DARK_IMPOSTOR_WORDS = [
   "velvet", "satin", "chiffon", "cashmere", "ivory", "emerald",
   "gilded", "ornate", "opulent", "luminous", "translucent", "veiled",

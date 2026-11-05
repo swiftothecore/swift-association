@@ -20647,7 +20647,7 @@ function renderImpostorBanner() {
   // show real words named (score minus flags) against it — never the padded raw score.
   el.innerHTML =
     `<span class="chall-prog-name">${IMPOSTOR_FLAG}${impostorFlagged} caught</span>` +
-    `<span class="chall-prog-count">${score - impostorFlagged} / ${currentChallenge.target || 7}</span>`;
+    `<span class="chall-prog-count">${score - impostorFlagged} / ${currentChallenge.target || 6}</span>`;
 }
 // The Smallest Song: render the prompt word tiny, faint, tilted, and dropped
 // anywhere along the word line, then set it wandering and fading — every round, constant.
@@ -21383,7 +21383,7 @@ function challengeWinCheck(c) {
   }
   // Impostor: survive the run (no fatal misjudgement) AND name enough REAL words. Caught
   // impostors fill beads and count into `score`, so the real-answer tally is score - flagged.
-  if (c.rule === "impostor") return !impostorFailed && (score - impostorFlagged) >= (c.target || 7);
+  if (c.rule === "impostor") return !impostorFailed && (score - impostorFlagged) >= (c.target || 6);
   // Lyric Lover: recall a target number of word-perfect-or-better lines this run.
   if (c.rule === "verse") return gameVersePerfect >= (c.target || 4);
   // Long Story Long: the character tally IS the win. Pages cleared are not consulted at all —
@@ -21448,7 +21448,7 @@ function challengeTally(c) {
   if (!c) return null;
   if (c.rule === "newsong") return null;
   if (c.rule === "album5") return { got: deepCutLeader().count, need: c.need || 5, unit: "from one album" };
-  if (c.rule === "impostor") return { got: score - impostorFlagged, need: c.target || 7, unit: "real words named" };
+  if (c.rule === "impostor") return { got: score - impostorFlagged, need: c.target || 6, unit: "real words named" };
   if (c.rule === "verse") return { got: gameVersePerfect, need: c.target || 4, unit: "lines word-for-word" };
   if (c.rule === "ink") return { got: gameInk, need: inkTarget(), unit: "characters written" };
   if (c.rule === "survive") return { got: round, need: surviveTarget(c), unit: "rounds reached" };
@@ -37266,7 +37266,7 @@ function buildDevApi() {
         current: () => roundIsImpostor,                            // is the page on screen a fake?
         // Pin this run's fake pages (call right after challenge.start("impostor")). e.g. (2,3,4)
         forceRounds: (...rs) => { impostorRounds = new Set(rs.map((r) => r | 0).filter((r) => r >= 1 && r <= TOTAL_ROUNDS)); },
-        win: () => { impostorFailed = false; score = ((CHALLENGE_BY_ID.impostor.target) || 7) + impostorFlagged; endGame(); },
+        win: () => { impostorFailed = false; score = ((currentChallenge && currentChallenge.target) || 6) + impostorFlagged; endGame(); },
         lose: (kind) => impostorGameOver(kind || "answered"),      // "answered" | "timeout" | "falseflag"
         // The run's page-by-page telemetry, which is the thing to check after a run rather
         // than during one: what each page was, what the player DID on it, and how long it
