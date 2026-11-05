@@ -543,7 +543,7 @@
      on the Halloween week (28 Oct–3 Nov, active timezone) instead of December. */
   #autumnleaves { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: none; }
   .desk-item {
-    position: absolute; opacity: 0.92;
+    position: absolute;
     filter: drop-shadow(3px 7px 6px rgba(46,32,14,0.30)) saturate(0.88);
   }
   .desk-item svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -707,12 +707,12 @@
      The print's proportions are the simulated sheet's exactly (88 by 107), which is what lets the
      canvas hand over to the real frame at the end of the opening without a jump. */
   .di-print, .di-sheet, .di-crumple { --slot: max(calc(50% + 350px), calc(100% - 410px)); top: auto; }
-  .di-crumple { left: calc(var(--slot) + 14px); bottom: 16px; width: 158px; height: 158px; opacity: 1; filter: none; }
-  .di-sheet { left: calc(var(--slot) - 240px); bottom: -40px; width: 680px; height: 680px; opacity: 1;
+  .di-crumple { left: calc(var(--slot) + 14px); bottom: 16px; width: 158px; height: 158px; filter: none; }
+  .di-sheet { left: calc(var(--slot) - 240px); bottom: -40px; width: 680px; height: 680px;
     filter: drop-shadow(3px 6px 5px rgba(46,32,14,0.3)) saturate(0.94); }
   .di-print {
     --w: clamp(150px, 23.5vh, 214px);
-    left: var(--slot); bottom: 12px; width: var(--w); height: calc(var(--w) * 1.2159); opacity: 1;
+    left: var(--slot); bottom: 12px; width: var(--w); height: calc(var(--w) * 1.2159);
     transform: rotate(5deg); filter: drop-shadow(3px 7px 6px rgba(46,32,14,0.32)) saturate(0.94);
   }
   :root[data-theme="dark"] :is(.di-print, .di-sheet) { filter: drop-shadow(3px 8px 8px rgba(0,0,0,0.55)) saturate(0.86) brightness(0.72); }
