@@ -583,9 +583,9 @@ function drawKey(g, entries, regions) {
 // The pad is a printed object, and good desk pads are letterpress. That process leaves two
 // marks, and the type here carries both. The forme bites into the stock, so the far wall of
 // every glyph catches the desk lamp: a paper-pale copy set a third of a unit down-right, under
-// the glyph, lit from the upper left like every other prop on the desk (the pencil's foil
-// imprint is set twice for the same reason). And no two impressions take quite the same ink,
-// so each glyph gets its own density, seeded by the sheet so it holds still between renders.
+// the glyph, lit from the upper left like every other prop on the desk. And no two impressions
+// take quite the same ink, so each glyph gets its own density, seeded by the sheet so it holds
+// still between renders.
 // Both are below a pixel at 1x; what they change is that the figures stop reading as type laid
 // on a screen.
 //
@@ -594,10 +594,9 @@ function drawKey(g, entries, regions) {
 // can only outrank those with !important. Splitting into glyphs happens after the lips are
 // cut, so a lip stays one quiet unbroken copy.
 //
-// A foil figure (the 13th, FOIL) is the one exception, and it is the pencil's exception:
-// foil does not bite, it sits ON the stock with its top edge catching the lamp, so its
-// lip is the pale foil a third of a unit ABOVE the stamp (styles.css .pc-imprint-foil is
-// the same pair on the pencil), and foil goes down evenly, so it takes no ink variance.
+// A foil figure (the 13th, FOIL) is the one exception: foil does not bite, it sits ON the
+// stock with its top edge catching the lamp, so its lip is the pale foil a third of a unit
+// ABOVE the stamp, and foil goes down evenly, so it takes no ink variance.
 const LIP = "#fffaee", FOIL_LIT = "#fbe6ad";
 function pressSheet(texts, seed) {
   for (const t of texts) {
