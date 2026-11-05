@@ -16749,6 +16749,8 @@ function dealLineupFlourish(kind) {
     const face = el.querySelector(".lu-card");
     const flip = document.createElement("div");
     flip.className = "lu-flip";
+    // The same piece of stock turns over: its wear follows it onto the back.
+    flip.style.cssText = face.style.cssText;
     face.replaceWith(flip);
     flip.appendChild(face);
     flip.insertAdjacentHTML("beforeend", backCard(DEAL_BACK));
@@ -16761,12 +16763,12 @@ function dealLineupFlourish(kind) {
   let last = 0;
 
   // THE FAN HAS TO FIT THE SCREEN, and it is measured to rather than guessed at, because a
-  // rotated card is far wider than a card: at 48 degrees a 176x245 card spans 324px, so a fan
+  // rotated card is far wider than a card, so a fan
   // sized by eye on a desk runs off both edges of a phone and makes the whole PAGE scroll
   // sideways mid-deal. Shrink the arc and its radius together until the outermost card's
   // rotated bounding box sits inside the viewport. On a desk nothing shrinks and the fan
   // overhangs the felt into the notebook's margins, which is where it looks best.
-  const cw = cards[0].offsetWidth || 176, ch = cards[0].offsetHeight || 245;
+  const cw = cards[0].offsetWidth || 176, ch = cards[0].offsetHeight || 280;
   const half = window.innerWidth / 2 - 12;
   let spread = Math.min(96, 22 * cards.length), R = 300;
   for (let k = 0; k < 24; k++) {

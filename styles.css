@@ -17906,7 +17906,7 @@
    ============================================================ */
 
 .lu-card, .lu-back {
-  position: relative; width: 176px; height: 305px; flex: none; border-radius: 7px;
+  position: relative; width: 176px; height: 280px; flex: none; border-radius: 7px;
   --card: #fdfaf0; --suit: #2b2722;
   --lu-ink: #302a24; --lu-ink-soft: #584d40; --lu-miss-ink: #655849;
   --lu-red-ink: #9b302b;
@@ -17925,12 +17925,12 @@
 .lu-card::after, .lu-back::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 4; border-radius: 7px;
   background:
-    radial-gradient(10px 7px at 22% 79%, rgba(146,113,58,0.16), transparent 70%),
-    radial-gradient(6px 9px at 81% 17%, rgba(146,113,58,0.12), transparent 72%),
+    radial-gradient(10px 7px at var(--lu-fox-x, 22%) var(--lu-fox-y, 79%), rgba(146,113,58,0.16), transparent 70%),
+    radial-gradient(6px 9px at var(--lu-fox-far-x, 81%) var(--lu-fox-far-y, 17%), rgba(146,113,58,0.12), transparent 72%),
     radial-gradient(120px 90px at 106% 108%, rgba(120,92,48,0.10), transparent 70%);
 }
 .lu-card::before, .lu-back::before {
-  content: ""; position: absolute; top: -1px; right: -1px; width: 21px; height: 21px; z-index: 5;
+  content: ""; position: absolute; top: -1px; right: -1px; width: var(--lu-fold, 21px); height: var(--lu-fold, 21px); z-index: 5;
   background: linear-gradient(225deg, #e8dcc0 0 47%, rgba(43,39,34,0.30) 47% 50%, transparent 50%);
   filter: drop-shadow(-1px 1px 1px rgba(60,50,35,0.25));
 }
@@ -17955,33 +17955,33 @@ body.lu-heavy .lu-ln, body.lu-heavy .lu-ln-o { stroke-width: 1.7; }
 
 .lu-mid { position: absolute; left: 0; right: 0; text-align: center; z-index: 3; }
 .lu-name { font-family: var(--hand); font-weight: 700; font-size: calc(23px + var(--text-size-adjust)); line-height: 1.02; color: var(--lu-ink); margin: 0 0 5px; }
-.lu-rule { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); line-height: 1.35; color: var(--lu-ink-soft); margin: 0; }
+.lu-rule { font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.3; color: var(--lu-ink-soft); margin: 0; text-wrap: pretty; }
 .lu-miss {
-  font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.3px; text-transform: uppercase;
-  color: var(--lu-miss-ink); margin: 0 0 4px;
+  font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2; letter-spacing: 0.1px; text-transform: uppercase;
+  color: var(--lu-miss-ink); margin: 0 0 5px;
 }
 .lu-miss.bad { color: var(--lu-red-ink); }
 /* the printed pool restriction: set like the missed-page ruling because it is the same
    kind of thing — small print the player has to be able to read before spending on the card */
 .lu-pool {
-  font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.2px; text-transform: uppercase;
-  color: var(--suit); margin: 6px 0 0;
+  font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); line-height: 1.2; letter-spacing: 0; text-transform: uppercase;
+  color: var(--suit); margin: 8px auto 0; max-width: 128px;
 }
-.lu-pool::before, .lu-pool::after { content: "·"; opacity: 0.5; margin: 0 2px; }
 body.lu-nomiss .lu-miss { visibility: hidden; }
 
 /* ---- per-look placement, on the card ---- */
-/* A bounded drawing field and a separate copy field. The longest spade and
-   diamond can grow upward within the latter without meeting a stem or bead. */
-.lu-look-facet .lu-art { inset: 14px 12px auto; height: 100px; }
-.lu-look-strandbare .lu-art { inset: 12px 8px auto; height: 120px; }
+/* Art ends above the copy field. Titles start together within each suit;
+   long copy grows down, not up into a drawing. The pool footer keeps its
+   own narrow measure clear of the bottom-right index. */
+.lu-look-facet .lu-art { inset: 14px 12px auto; height: 84px; }
+.lu-look-strandbare .lu-art { inset: 12px 8px auto; height: 96px; }
 .lu-look-facet .lu-mid, .lu-look-strandbare .lu-mid {
-  top: 143px; bottom: 19px; padding: 0 14px;
-  display: flex; flex-direction: column; justify-content: flex-end;
+  top: 112px; bottom: 20px; padding: 0 14px;
+  display: flex; flex-direction: column;
 }
-.lu-look-facet .lu-rule, .lu-look-strandbare .lu-rule { padding: 0 7px; }
+.lu-look-strandbare .lu-pool { margin-top: auto; padding-top: 8px; }
 
-.lu-look-frame .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 27px; }
+.lu-look-frame .lu-mid { top: 50%; transform: translateY(-50%); padding: 0 25px; }
 .lu-look-frame .lu-name { font-size: calc(23px + var(--text-size-adjust)); }
 
 /* the four per-suit looks all hang the words in the same place under the
@@ -17995,8 +17995,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
    the centre open for longer copy and its Large text setting. */
 .lu-look-vine .lu-art { inset: 0; }
 .lu-look-vine .lu-mid {
-  top: 70px; bottom: 65px; padding: 0 17px;
-  display: flex; flex-direction: column; justify-content: center;
+  top: 76px; bottom: 58px; padding: 0 14px;
+  display: flex; flex-direction: column;
 }
 .lu-look-vine .lu-name { font-size: calc(23px + var(--text-size-adjust)); }
 
@@ -18021,9 +18021,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   transform: translateY(-11px) rotate(0deg);
   box-shadow: 0 16px 24px rgba(60,50,35,0.2), 0 1px 2px rgba(60,50,35,0.14);
 }
-/* Struck through rather than hidden: a card you cannot afford is information, and
-   the reason it is out is printed under it. */
-.lu-deal.is-out .lu-card { opacity: 0.65; cursor: not-allowed; transform: rotate(0deg); }
+/* Unavailable stock stays opaque. Dim its ink with paper so neither the
+   notebook ruling nor another card can show through the face. */
+.lu-deal.is-out .lu-card { cursor: not-allowed; transform: rotate(0deg); }
+.lu-deal.is-out .lu-card::after { background: rgba(236,226,206,0.35); }
 .lu-deal.is-out .lu-card:hover { transform: rotate(0deg); box-shadow: 0 5px 13px rgba(60,50,35,0.15), 0 1px 2px rgba(60,50,35,0.14); }
 .lu-out-why {
   font-family: var(--type); font-size: 9px; letter-spacing: 0.4px; text-align: center;
@@ -18049,7 +18050,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
    card would sit behind the next card along. The far kept mark rings the bottom-right index,
    the only corner a card to the right of the front one shows. */
 .lu-felt.is-hand {
-  display: block; position: relative; max-width: none; height: 352px;
+  display: block; position: relative; max-width: none; height: 327px;
   margin: 0 -8px 0 -14px; padding: 0; touch-action: pan-y;
 }
 .is-hand .lu-deal {
@@ -18075,7 +18076,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .is-hand .lu-deal:nth-child(3) { --tilt: -0.6deg; }
 .is-hand .lu-deal:nth-child(4) { --tilt: 1.1deg; }
 .is-hand .lu-deal:nth-child(5) { --tilt: -1deg; }
-.is-hand .lu-deal.is-out .lu-card::after { background: rgba(236,226,206,0.58); }
 .is-hand .lu-out-why { display: none; }
 /* The felt lifts a kept card's face and leaves the mark where the face rises to; a held card
    lifts as a whole, mark included, so the mark has to start where the index already is. */

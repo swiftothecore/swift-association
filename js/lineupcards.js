@@ -32,9 +32,9 @@ export const lnMark = (s, x, y, k) =>
    THE FACETED MARK. Each suit is a BODY of one or more polygons
    plus, where it has one, a STEM drawn plainly. Faceting is a
    band of triangles between the outline and a ring at 52%, then a
-   star of chords inside it, and NEVER a fan to the centroid --
-   fanning knotted the middle of the spade and the club, and
-   faceting their stems made it worse.
+   few chords inside it, and NEVER a fan to the centroid. The
+   spade keeps an open four-sided centre; the other marks retain
+   their star. Fanning and crossed stem diagonals knot the waist.
    ============================================================ */
 export const ngon = (cx, cy, r, n, rot = -Math.PI / 2) =>
   Array.from({ length: n }, (_, i) => {
@@ -52,29 +52,37 @@ const BODY = {
   clubs: [ngon(50, 28, 19, 8), ngon(30, 50, 18, 8), ngon(70, 50, 18, 8)],
 };
 const STEM = {
-  spades: `<path class="lu-ln" d="M44 56 L36 90 L64 90 L56 56"/><path class="lu-ln" d="M50 58 L50 90"/>
-           <path class="lu-ln" d="M44 56 L64 90"/><path class="lu-ln" d="M56 56 L36 90"/>`,
+  spades: `<path class="lu-ln" d="M44 56 L38 90 L62 90 L56 56"/><path class="lu-ln" d="M50 64 L50 90"/>`,
   /* starts at y=46, under the lobes, so the join is hidden the way a real
      club's is; it only becomes its own shape below y=63 */
   clubs:  `<path class="lu-ln" d="M44 46 L36 92 L64 92 L56 46"/><path class="lu-ln" d="M50 58 L50 92"/>
            <path class="lu-ln" d="M41.9 58 L64 92"/><path class="lu-ln" d="M58.1 58 L36 92"/>`,
 };
 
-function facetPoly(pts) {
+function facetPoly(pts, openCentre = false) {
   const n = pts.length;
   const cx = pts.reduce((a, q) => a + q[0], 0) / n;
   const cy = pts.reduce((a, q) => a + q[1], 0) / n;
   const ring = pts.map(([x, y]) => [cx + (x - cx) * 0.52, cy + (y - cy) * 0.52]);
   const f = q => `${q[0].toFixed(1)} ${q[1].toFixed(1)}`;
   const L = (a, b) => `<path class="lu-ln" d="M${f(a)} L${f(b)}"/>`;
-  const poly = p => `<path class="lu-ln" d="M${p.map(f).join(" L")} Z"/>`;
+  const poly = (p, paper = false) => `<path class="${paper ? "lu-ln-o" : "lu-ln"}" d="M${p.map(f).join(" L")} Z"/>`;
   const skip = Math.max(3, Math.round(n / 2.8));
-  return poly(pts) + poly(ring)
+  // Four sides make an open central facet. The old skipped star put fourteen
+  // chords through the spade's narrow waist and became a black knot at card size.
+  const centre = openCentre
+    ? [[0, 3], [3, 7], [7, 11], [11, 0]].map(([a, b]) => L(ring[a], ring[b])).join("")
+    : ring.map((q, i) => L(q, ring[(i + skip) % n])).join("");
+  return poly(pts, openCentre) + poly(ring)
     + pts.map((q, i) => L(q, ring[i])).join("")
-    + pts.map((q, i) => L(q, ring[(i + 1) % n])).join("")
-    + ring.map((q, i) => L(q, ring[(i + skip) % n])).join("");
+    + pts.map((q, i) => !openCentre || i % 2 === 0 ? L(q, ring[(i + 1) % n]) : "").join("")
+    + centre;
 }
-export const facet = suit => BODY[suit].map(facetPoly).join("") + (STEM[suit] || "");
+export const facet = suit => {
+  const body = BODY[suit].map(pts => facetPoly(pts, suit === "spades")).join("");
+  // Paper knocks out the stem inside the spade, leaving a clean joined outline.
+  return suit === "spades" ? STEM.spades + body : body + (STEM[suit] || "");
+};
 
 /* ============================================================
    THE DECO FRAME. A drawn frame, not a CSS border: a double rule,
@@ -108,14 +116,12 @@ export const frame = (suit, plainCaps) => {
 export const petals = (cx, cy, n, r, rot) =>
   Array.from({ length: n }, (_, i) => {
     const a = rot + i * (Math.PI * 2 / n);
-    const ox = Math.cos(a), oy = Math.sin(a);
-    return `<path class="lu-ln-o" d="M${cx} ${cy} Q${(cx + ox * r * 0.7 - oy * r * 0.62).toFixed(1)} ${(cy + oy * r * 0.7 + ox * r * 0.62).toFixed(1)} ${(cx + ox * r * 1.75).toFixed(1)} ${(cy + oy * r * 1.75).toFixed(1)} Q${(cx + ox * r * 0.7 + oy * r * 0.62).toFixed(1)} ${(cy + oy * r * 0.7 - ox * r * 0.62).toFixed(1)} ${cx} ${cy} Z"/>`;
+    const p = (length, angle) => `${(cx + Math.cos(angle) * r * length).toFixed(1)} ${(cy + Math.sin(angle) * r * length).toFixed(1)}`;
+    // Separate bases and rounded shoulders keep the petals legible without
+    // six pointed loops all crossing at the same centre.
+    return `<path class="lu-ln-o" d="M${p(0.36, a - 0.52)} Q${p(1.65, a - 0.45)} ${p(1.6, a)} Q${p(1.65, a + 0.45)} ${p(0.36, a + 0.52)} Z"/>`;
   }).join("")
-  + `<circle class="lu-ln-o" cx="${cx}" cy="${cy}" r="${(r * 0.4).toFixed(1)}"/>`
-  + Array.from({ length: n }, (_, i) => {
-      const a = rot + (i + 0.5) * (Math.PI * 2 / n);
-      return `<path class="lu-ln" d="M${(cx + Math.cos(a) * r * 0.2).toFixed(1)} ${(cy + Math.sin(a) * r * 0.2).toFixed(1)} L${(cx + Math.cos(a) * r * 0.34).toFixed(1)} ${(cy + Math.sin(a) * r * 0.34).toFixed(1)}"/>`;
-    }).join("");
+  + `<circle class="lu-ln-o" cx="${cx}" cy="${cy}" r="${(r * 0.36).toFixed(1)}"/>`;
 
 /* a leaf with a midrib, because a leaf without one is a petal */
 export const leaf = (x, y, a, l) => {
@@ -129,12 +135,12 @@ export const leaf = (x, y, a, l) => {
 /* Two independent sprays in the top and bottom bands. The compact groups leave
    the central copy field clear even when Large text wraps a title and rule. */
 export const VINE = `
-  <g transform="scale(.68)">
+  <g transform="translate(4 3) scale(.62)">
   <path class="lu-ln" d="M5 31 C13 19 25 12 40 10"/>
   ${leaf(11, 25, -1.05, 7)}${leaf(21, 16, 0.35, 6)}${leaf(32, 11, -1.15, 6)}
   ${petals(47, 13, 6, 6.5, -0.3)}
   </g>
-  <g transform="translate(32 45) scale(.68)">
+  <g transform="translate(34 49) scale(.62)">
   <path class="lu-ln" d="M95 109 C87 121 75 128 60 130"/>
   ${leaf(89, 115, 2.09, 7)}${leaf(79, 124, 3.49, 6)}${leaf(68, 129, 1.99, 6)}
   ${petals(53, 127, 5, 7, 0.55)}
@@ -150,13 +156,21 @@ const bez = (p0, p1, p2, t) => [
   (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0],
   (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1],
 ];
-const thread = (p0, p1, p2, n, seed, k = 1) => {
+const thread = (p0, p1, p2, n, seed, k = 1, tied = false) => {
   const sizes = [3.1, 4.2, 3.5, 4.6, 2.9, 3.8, 3.3, 4.4, 3.0].map(v => v * k);
   let out = `<path class="lu-ln" d="M${p0[0]} ${p0[1]} Q${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}"/>`;
+  const beads = Array.from({ length: n }, (_, i) => bez(p0, p1, p2, (i + 0.5) / n));
   for (let i = 0; i < n; i++) {
-    const [x, y] = bez(p0, p1, p2, (i + 0.5) / n);
-    out += `<circle class="lu-ln-o" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${sizes[(seed + i) % sizes.length].toFixed(1)}"/>`;
+    const [x, y] = beads[i];
+    const gap = Math.min(...[beads[i - 1], beads[i + 1]].filter(Boolean)
+      .map(q => Math.hypot(x - q[0], y - q[1])));
+    // Keep a visible length of thread between neighbouring beads, even at
+    // the close spacing at the bottom of each drape.
+    const radius = Math.min(sizes[(seed + i) % sizes.length], gap * 0.4);
+    out += `<circle class="lu-ln-o" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${radius.toFixed(1)}"/>`;
   }
+  if (tied) out += [p0, p2].map(([x, y]) =>
+    `<circle class="lu-ln-o" cx="${x}" cy="${y}" r="1.2"/>`).join("");
   return out;
 };
 /* Inside a frame (kept as an alternate) */
@@ -167,9 +181,9 @@ export const STRAND =
 /* Bare, filling the field the way the faceted mark does: three nested strands
    hung from the top corners. This is diamonds' whole card, not a motif. */
 export const STRAND_BIG =
-    thread([5, 17], [50, 109], [95, 17], 11, 0, 1.15)
-  + thread([20, 12], [50, 76],  [80, 12], 8,  5, 1.00)
-  + thread([35, 8],  [50, 48],  [65, 8],  5,  2, 0.85);
+    thread([5, 17], [50, 109], [95, 17], 11, 0, 1.15, true)
+  + thread([20, 12], [50, 76],  [80, 12], 8,  5, 1.00, true)
+  + thread([35, 8],  [50, 48],  [65, 8],  5,  2, 0.85, true);
 
 /* ============================================================
    THE RULED SCRAP. Clubs is the form suit -- how you play -- so
@@ -249,7 +263,7 @@ export function artFor(look, suit) {
    ============================================================ */
 export const SUIT_LOOK = { spades: "facet", hearts: "vine", diamonds: "strandbare", clubs: "frame" };
 
-const MISS = { fails: "a missed page fails it", skipped: "a missed page is skipped" };
+const MISS = { fails: "miss: fails", skipped: "miss: skipped" };
 
 /* A pool restriction has to be PRINTED. It is measured (deal-lab.html) rather than chosen,
    but a card that is quietly unavailable in a run is worse than one that says so: the player
@@ -263,13 +277,18 @@ export function cardFace(card, look) {
   const red = RED[card.suit] ? " lu-red" : "";
   const und = (card.rank === "6" || card.rank === "9") ? "lu-und" : "";
   const missText = MISS[card.miss] || "";
+  // The stock wears with the card, never with a fresh render or the deal order.
+  const wear = [...card.id].reduce((n, ch) => (Math.imul(n, 31) + ch.charCodeAt(0)) >>> 0, 0);
+  const stock = `--lu-fox-x:${18 + wear % 13}%;--lu-fox-y:${72 + (wear >>> 4) % 13}%;`
+    + `--lu-fox-far-x:${76 + (wear >>> 8) % 11}%;--lu-fox-far-y:${14 + (wear >>> 12) % 13}%;`
+    + `--lu-fold:${18 + wear % 4}px`;
   const ix = pos => `<div class="lu-ix lu-ix-${pos}"><b class="${und}">${card.rank}</b>${mark(card.suit)}</div>`;
-  return `<div class="lu-card lu-look-${look}${red}">
+  return `<div class="lu-card lu-look-${look}${red}" style="${stock}">
     <div class="lu-art">${artFor(look, card.suit)}</div>
     <div class="lu-keyline"></div>
     ${ix("tl")}${ix("br")}
     <div class="lu-mid">
-      <p class="lu-miss${card.miss === "fails" ? " bad" : ""}">${missText || "&nbsp;"}</p>
+      ${missText ? `<p class="lu-miss${card.miss === "fails" ? " bad" : ""}">${missText}</p>` : ""}
       <p class="lu-name">${card.name}</p>
       <p class="lu-rule">${card.rule}</p>
       ${POOL_LINE(card.pools) ? `<p class="lu-pool">${POOL_LINE(card.pools)}</p>` : ""}
