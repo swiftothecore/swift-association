@@ -10607,9 +10607,13 @@
      a challenge tab left up by a run that ended untidily would hang off a zine. Results and
      panels never wear it either. */
   body:not(:has(#screen-game.active)) .challenge-tab { display: none; }
-  /* The curtain already carries the challenge's seal. The mobile bookmark is a sibling
-     of the page and would otherwise paint over that seal despite the curtain's z-index. */
-  body:has(#screen-game .chall-curtain) .challenge-tab { visibility: hidden; }
+  /* The curtain already carries the challenge's seal. The phone bookmark sits ON the page as a
+     sibling of it, so it would paint over that seal despite the curtain's z-index. On a wide
+     page the tab hangs off the fore-edge, clear of the curtain, and stays up: the briefing is
+     where the run begins, and the tab should not drop out for every page's card either. */
+  @media (max-width: 900px) {
+    body:has(#screen-game .chall-curtain) .challenge-tab { visibility: hidden; }
+  }
   .challenge-tab {
     --bite: 46px; --notch: 15px; --tab-y: 92px;
     /* --pad-l is a variable rather than a literal because the ribbon has to line its column
