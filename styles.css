@@ -480,7 +480,10 @@
        separate from the wood. The tile comes out of
        scripts/art/make_oak.py; edit there, never here. */
     background: url("textures/oak-figure.svg") top center / 1200px auto repeat-y;
-    background-color: #cdb389;
+    /* Not just a fallback. iOS browsers with the address bar at the bottom fill the status bar
+       with this flat colour, so it is the wood as it looks UNDER the lamp, sampled from the
+       desk just below that strip. Raw oak here printed a darker band across the top. */
+    background-color: #d9c6a1;
     display: flex;
     justify-content: center;
     padding: 20px 18px var(--desk-tail, 24px);
@@ -12122,12 +12125,20 @@
   .loading:is(.is-admiring, .is-stuck) .nb-cover-tagline { visibility: visible; }
   .loading:is(.is-admiring, .is-stuck) .nb-cover-opening { visibility: hidden; }
   /* typed a dot at a time, the way the typewriter face would, then cleared; never a spinner */
-  .nb-cover-dots i { font-style: normal; animation: coverDot1 1.6s steps(1, end) infinite; }
+  /* The cover is on screen while the main thread is busy parsing the catalogue, so these have to
+     run on the compositor. iOS WebKit won't take a steps() animation there and froze them at the
+     first frame, an empty line, so each dot snaps across a 0.1% linear ramp instead, in a box of
+     its own. The negative delay starts the cycle on all three dots, so a browser that does
+     hold them still at least shows the dots. */
+  .nb-cover-dots i {
+    display: inline-block; font-style: normal; will-change: opacity;
+    animation: coverDot1 1.6s linear -1.28s infinite;
+  }
   .nb-cover-dots i:nth-child(2) { animation-name: coverDot2; }
   .nb-cover-dots i:nth-child(3) { animation-name: coverDot3; }
-  @keyframes coverDot1 { 0% { opacity: 0; } 25%, 100% { opacity: 1; } }
-  @keyframes coverDot2 { 0% { opacity: 0; } 50%, 100% { opacity: 1; } }
-  @keyframes coverDot3 { 0% { opacity: 0; } 75%, 100% { opacity: 1; } }
+  @keyframes coverDot1 { 0%, 24.9% { opacity: 0; } 25%, 100% { opacity: 1; } }
+  @keyframes coverDot2 { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: 1; } }
+  @keyframes coverDot3 { 0%, 74.9% { opacity: 0; } 75%, 100% { opacity: 1; } }
   body[data-reduce-motion="on"] .nb-cover-dots i { animation: none; }
   /* Dark notebook: the same object, seen under a lower lamp. The label keeps its cream
      stock, so only the era accent needs pulling down to stay legible on it. */
@@ -18301,7 +18312,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   header.title { margin-bottom: 16px; }
   header.title .tagline-row { margin-top: 18px; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; }
   .tagline-row .tag-heart { margin-inline: 5px; }
-  .screen.card, [data-flip-id].card { --rule-x: 17px; padding: 20px 14px 26px 30px; }
+  /* Not while booting: this outranks .card.is-booting's padding: 0, which sat the closed cover
+     inside an empty card and left the card's shadow drawing a pale box of desk round it. */
+  .screen.card, [data-flip-id].card { --rule-x: 17px; }
+  .screen.card:not(.is-booting), [data-flip-id].card:not(.is-booting) { padding: 20px 14px 26px 30px; }
   .bracelet-meta-right { margin-right: 4px; }
   /* The charm plate's bleed is tied to the card's padding (see .ach-plate), so it follows the
      phone padding: -13px still lands its left edge on the moved rule, -14px runs it off the
