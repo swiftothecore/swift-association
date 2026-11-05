@@ -1847,7 +1847,13 @@ export const CHALLENGES = [
     win: "Bank 20 beads across the run." },
   { id: "confidence-wager", name: "Confidence Wager", rule: "wager", mode: "medium",
     tagline: "finish on {target} beads",
-    free: false, cost: 1, target: 20, seconds: 12, noTitle: false, maxStake: 3, startBeads: 3, tapes: 1,
+    free: false, cost: 1, target: 26, seconds: 12, noTitle: false, maxStake: 3, startBeads: 3, tapes: 2,
+    // Target went 20 -> 26 on 2026-11-05, and the card moved from easy to tricky with it. A hit
+    // pays stake + 1 and a miss loses the stake, so a flat stake of s over thirteen pages needs:
+    // s=1, 12 right; s=2, 10 right; s=3, 9 right. Staking nothing tops out at 16. At 20 the
+    // cautious flat 1 won on ten pages; at 26 it is all but dead, so you have to actually bet,
+    // and that is what moved the tier. It still sits below Insurance, which needs ten of
+    // thirteen at best with no stake to play with.
     // Dark: the axis here is INFORMATION, so that is what it takes. wagerTease sells two
     // readings of a face-down word — the rarity band worded, and your own lifetime record with
     // it. `wagerTeaseSelf` drops the objective half and leaves you betting on self-knowledge
@@ -1865,14 +1871,17 @@ export const CHALLENGES = [
     // one bead the bankroll doubles at best each page it is fully staked, so 1 -> 2 -> 4 -> 8
     // reaches the old 24 inside six pages of confident play with the back half spare. 30 wants
     // the ceiling of four staked and landed deep into the run rather than banked away from once
-    // the arithmetic is safe, which is the page this challenge is named after. Base + 10.
-    hard: { startBeads: 1, maxStake: 4, target: 30, wagerTeaseSelf: true,
+    // the arithmetic is safe, which is the page this challenge is named after.
+    //   Then 30 -> 36 on 2026-11-05 with the base's 20 -> 26. Staking the most you can every
+    // page, 30 fell to ten right with the misses last; 36 wants eleven (ten stops on 35).
+    // Misses first need fewer, nine, because losses stop at an empty bankroll. Base + 10.
+    hard: { startBeads: 1, maxStake: 4, target: 36, wagerTeaseSelf: true,
       blurb: "12s · suggestions · one bead to start · stake up to four, on nothing but your own record",
       desc: "Only your record to guide the bet this time. A hit returns double plus one bead; a miss loses the stake.",
-      win: "Finish the run on 30 beads." },
+      win: "Finish the run on 36 beads." },
     blurb: "12s · suggestions · stake beads on a word you haven't seen yet",
     desc: "Stake up to three beads on a face-down word, guided by its rarity and your record. A hit returns double plus a bead; a miss loses the stake.",
-    win: "Finish the run on 20 beads." },
+    win: "Finish the run on 26 beads." },
   /* SHELVED (2026-07-28, second time) — Double Or Nothing is off the roster because it and Press
      Your Luck have converged into one challenge. They share the pot, the bank-or-ride offer, the
      wipe on a miss, 13 pages and a target of 20, and differ only in whether the pot escalates by
@@ -2068,7 +2077,6 @@ export const CHALLENGE_SHELF = [
   "switch-up",          // churn (the answer churns: same idea, other half of the page)
   "choose-your-path",   // agency
   "press-your-luck",    // risk
-  "confidence-wager",   // risk
 
   // ---- tapes 2 (tricky)
   "title-in",           // catalogue filter
@@ -2083,6 +2091,7 @@ export const CHALLENGE_SHELF = [
   "its-a-clock",        // the clock
   "wildcard",           // churn
   "devils-path",        // agency (Choose Your Path's alter-ego, at its position one tier up)
+  "confidence-wager",   // risk: the gentler of the two here, you can still miss four
   "insurance",          // risk
 
   // ---- tapes 3 (tough)
@@ -2203,8 +2212,8 @@ export const DARK_SIDE_MILESTONE = 5;
                   stays. It removes a fact rather than adding one, so the "never let the word be
                   deduced" rule holds by construction. `startBeads: 1` throttles the opening
                   because the stake cap is min(maxStake, score); `maxStake: 4` opens a ceiling
-                  you have to earn. Target base + 10: staked to the ceiling the bankroll
-                  doubles a page, so the old 24 landed inside six confident pages.
+                  you have to earn. Target base + 10: staked to the ceiling, ten pages right
+                  with the misses last stops on 35, so 36 asks for eleven.
    - insurance    `tokens` 2 (against the base's 3) and `seconds` 12. There is no bead economy
                   here any more — the challenge was reworked on 2026-09-01 to be survival and
                   nothing else, on both sides, so the dark side is one fewer shield and three
