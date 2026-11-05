@@ -15233,8 +15233,8 @@
     display: inline-flex; align-items: center; gap: 0;
     padding: 8px; border-radius: 999px;
     text-decoration: none; color: #5c4326;
-    background: rgba(245, 239, 225, 0.82);
-    border: 1.5px solid rgba(43, 39, 34, 0.32);
+    background: #f5efe1;
+    border: 1.5px solid #b4afa4;
     box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
     transition: transform 0.18s ease, background 0.18s, color 0.18s, border-color 0.18s,
                 gap 0.22s ease, padding 0.22s ease;
@@ -15265,8 +15265,8 @@
      at night. */
   :root[data-theme="dark"] .corner-link {
     color: #d9cfb8;
-    background: rgba(44, 38, 29, 0.86);
-    border-color: rgba(236, 229, 214, 0.22);
+    background: #2c261d;
+    border-color: #565046;
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
   }
   :root[data-theme="dark"] .corner-link-ic { color: #df6b64; }
@@ -16961,8 +16961,8 @@
   .settings-gear {
     position: fixed; top: 14px; right: 14px; z-index: 60;
     width: 42px; height: 42px; padding: 8.5px; border-radius: 50%;
-    color: #5c4326; background: rgba(245, 239, 225, 0.82);
-    border: 1.5px solid rgba(43, 39, 34, 0.32);
+    color: #5c4326; background: #f5efe1;
+    border: 1.5px solid #b4afa4;
     box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
     transition: transform 0.18s ease, background 0.18s, color 0.18s;
   }
@@ -17036,8 +17036,8 @@
      The hover keeps reading --highlighter, which is already the era's dark mark. */
   :root[data-theme="dark"] .settings-gear {
     color: #d9cfb8;
-    background: rgba(44, 38, 29, 0.86);
-    border-color: rgba(236, 229, 214, 0.22);
+    background: #2c261d;
+    border-color: #565046;
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
   }
   :root[data-theme="dark"] .settings-gear:hover { color: var(--ink); }
