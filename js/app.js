@@ -80,6 +80,7 @@ import { SONG_PENS } from "./pens.js";
 import { tapeVars } from "./tapeprints.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
+import { dealPrint, sheetStage, creaseSvg, deskHangerSVG, smooth } from "./deskprint.js";
 import { albumDots, hasTone } from "./albumdots.js";
 import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
 import { showCover, placeCoverStickers, sweepStickerHolo } from "./stickercover.js";
@@ -133,6 +134,7 @@ import {
   loadKeepsakes, saveKeepsakes, resetKeepsakes, loadWoodsRun, saveWoodsRun,
   loadStickers, saveStickers, resetStickers, loadStickerHolo,
   loadKeepsakesSeen, saveKeepsakesSeen, resetKeepsakesSeen,
+  loadDeskPrint, saveDeskPrint, resetDeskPrint,
   loadMode,
   loadDailyResult, saveDailyResult, clearDailyResult, dailyTotals, dailyPlayedDates,
   loadDailyProgress, saveDailyProgress, clearDailyProgress, dailyProgressCount,
@@ -642,6 +644,7 @@ function applySettings() {
   body.setAttribute("data-text-size", ["small", "large"].includes(settings.textSize) ? settings.textSize : "standard");
   centreTallyHead();     // the text-size lever changes the numeral's size, so its ink moves
   body.setAttribute("data-desk-density", ["quiet", "bare"].includes(settings.deskDensity) ? settings.deskDensity : "full");
+  if (deskWired) renderDeskPrint(true);
   body.setAttribute("data-reduced-flashing", settings.reducedFlashing ? "on" : "off");
   if (settings.highContrast) body.setAttribute("data-contrast", "high");
   else body.removeAttribute("data-contrast");
@@ -1157,6 +1160,7 @@ function commitScreenPresentation(name, refresh = true) {
   // down until the player leaves — which is right, the shelf's own `← front page` is at the
   // top of the card — and there is no flag that can get stuck up after a run that ended oddly.
   document.body.classList.toggle("in-game", name === "game" || name === "bonusplay");
+  renderDeskPrint();   // a run never changes the desk, so what it earned lands on the way home
   updateMastheadHome(name);
   if (refresh) window.dispatchEvent(new CustomEvent("desk:refresh"));
 }
@@ -1181,6 +1185,7 @@ function showScreen(name, options = {}) {
   // outlive the view (renderDailyButtonState restarts it when start is shown again).
   if (name !== "start") stopResetCountdown();
   else knockOnArrival();   // the dice give one shake as the front page arrives
+  closeDeskMenu();
   // The era wash belongs to a run and to the results it earned. Every other page is the plain
   // gold desk — otherwise a finale era rides out of a finished game and tints the whole
   // notebook until the next run or a reload (midnight is navy, so the desk just goes blue).
@@ -3297,6 +3302,14 @@ function infiniteTabHTML() {
 /* ---------- Achievements ---------- */
 let earnedAchievements = {};   // persisted: { id: "YYYY-MM-DD" }
 let newlyUnlocked = [];        // ids unlocked this game (for the results recap)
+// The print on the desk (skill: desk-print). Stored state is loadDeskPrint; these are the moment's.
+let deskWired = false;          // wireDeskPrint has run; applySettings can fire long before it
+let deskStage = null;           // the canvas the ball is painted on
+let deskShown = "";             // what the desk last painted, so an unchanged render costs nothing
+let deskRenderId = 0;           // the newest render, so a slow image load cannot overwrite it
+let deskOpening = false;        // the opening is running; nothing else may touch the slot
+let deskEasing = false;         // the ball's one slow ease open is running
+let deskOpenOnClose = false;    // a print was picked in the drawer while the ball was still shut
 let newlyFound = [];           // { kind, id } polaroids + stickers found this game, in the order
                                // they landed (for the results recap's "also found" line)
 let lastSkillFold = null;      // { delta, res } from this game's foldSkillXp — the results skills recap
@@ -5970,6 +5983,7 @@ function keepsakePolaroidHTML(p, opts = {}) {
 function refreshKeepsakes() {
   if ($("keepsakesModal") && $("keepsakesModal").classList.contains("open")) renderKeepsakesPage();
   if (settingsKeepsakesShowing()) renderKeepsakesPage($("setKeepsakesBody"));
+  renderDeskPrint();
 }
 // Dev-only: grant `id` backdated `agoMs` milliseconds (0 = fresh/developing, >13min = developed).
 function devSetKeepsake(id, agoMs) {
@@ -6274,7 +6288,196 @@ function closeKeepsakes() {
   lastFocusedBeforeKeepsakes = null;
   const target = (back && typeof back.focus === "function" && document.contains(back)) ? back : $("keepsakesGear");
   if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
+  if (deskOpenOnClose) { deskOpenOnClose = false; openDeskBall(); }
 }
+
+/* ---------- The print on the desk ----------
+   Read the desk-print skill before changing this. The keepsakes stop sitting in a drawer: a
+   crushed polaroid lies on the desk, its film clearing with each polaroid earned, and at
+   DESK_PRINT_AT it eases half open and waits to be clicked. From then on a real print sits there.
+
+   Three phases, and only `film` to `ready` to `out` ever happens:
+     film    the ball, grey until the first polaroid, then that photo coming up through the film
+     ready   DESK_PRINT_AT owned. Half open, clickable, and it waits for ever
+     out     the real keepsake frame, chosen or dealt for the day
+   Nothing about the ball ever loops. A ball of paper does not move by itself, and every attempt
+   to make it shake or strain read as wrong, so it changes state and then holds still. */
+const DESK_PRINT_AT = 5;
+const DESK_HALF_OPEN = 0.3;
+const DESK_EASE_DELAY = 1400, DESK_EASE_MS = 3400, DESK_OPEN_MS = 1900;
+
+// The desk only exists on a wide screen (styles.css) and not on the Bare setting. A phone never
+// gets a print, because there is nowhere to put one.
+function deskShows() {
+  return window.matchMedia("(min-width: 1120px)").matches && settings.deskDensity !== "bare";
+}
+// Everything the desk needs to know right now. The day's print is worked out, never stored, so
+// two notebooks holding the same set cannot disagree. The one exception is the day the ball
+// opens: that day belongs to the print that was inside it, creases and all.
+function deskNow(earned = loadKeepsakes()) {
+  const owned = POLAROIDS.filter((p) => earned[p.id]).map((p) => p.id);
+  const ds = loadDeskPrint(), today = todayKey();
+  const first = owned.slice().sort((a, b) => Date.parse(earned[a]) - Date.parse(earned[b]))[0] || null;
+  const kept = ds.kept && earned[ds.kept] ? ds.kept : null;
+  const phase = ds.opened ? "out" : owned.length >= DESK_PRINT_AT ? "ready" : "film";
+  const fresh = ds.opened === today && !!ds.ball && !!earned[ds.ball];
+  const id = kept || (phase === "out" ? (fresh ? ds.ball : dealPrint(owned, today)) : null);
+  return {
+    phase, owned, id, kept, first,
+    face: kept || first,
+    level: Math.min(1, owned.length / DESK_PRINT_AT),
+    creased: fresh && id === ds.ball,
+  };
+}
+function deskPlaceBall() {
+  if (deskStage) deskStage.place($("deskBall").getBoundingClientRect(), $("deskPrint").getBoundingClientRect(), $("deskPrint").offsetWidth);
+}
+// Paint the slot for how things stand. Cheap to call: a repeat of what is already there returns at
+// once, which is why this can hang off every screen change. It does nothing during a run.
+async function renderDeskPrint(force = false) {
+  if (!deskWired || deskOpening || document.body.classList.contains("in-game")) return;
+  if (!deskShows()) { document.body.removeAttribute("data-desk-print"); closeDeskMenu(); deskShown = ""; return; }
+  const now = deskNow(), print = $("deskPrint");
+  document.body.setAttribute("data-desk-print", now.phase);
+  const shown = [now.phase, now.id, now.face, now.level, now.creased].join("|");
+  if (!force && shown === deskShown) { deskEaseBall(now); return; }
+  deskShown = shown;
+  const renderId = ++deskRenderId;
+  if (now.phase === "out") {
+    deskStage?.clear();
+    const p = POLAROID_BY_ID[now.id];
+    print.innerHTML = p ? keepsakePolaroidHTML(p, { tilt: 0 }) : "";
+    if (p && now.creased) print.firstElementChild.insertAdjacentHTML("beforeend", `<span class="desk-creases">${creaseSvg()}</span>`);
+    if ($("deskMenu")) renderDeskMenu();
+    return;
+  }
+  print.innerHTML = "";
+  const p = POLAROID_BY_ID[now.face];
+  deskStage ||= sheetStage($("deskSheet"));
+  deskPlaceBall();
+  await deskStage.face({ art: p?.art, name: p?.name, sub: p?.sub, level: now.level });
+  if (renderId !== deskRenderId || deskOpening) return;
+  deskStage.pose(now.phase === "ready" && loadDeskPrint().eased ? DESK_HALF_OPEN : 0);
+  deskEaseBall(now);
+}
+// The ball's one movement before it is opened: when the fifth polaroid is in, it eases half open,
+// once, and stays there. Only on the front page and only in a visible tab, so it is seen if it can
+// be, and if it is not, the ball still looks different, which is the point of it being a state.
+function deskEaseBall(now) {
+  const ds = loadDeskPrint();
+  if (now.phase !== "ready" || ds.eased || deskEasing) return;
+  if (motionReduced()) { saveDeskPrint({ ...ds, eased: true }); deskStage?.pose(DESK_HALF_OPEN); return; }
+  if (!screens.start.classList.contains("active") || document.hidden) return;
+  deskEasing = true;
+  setTimeout(async () => {
+    const done = deskOpening || !deskStage ? false : await deskStage.glide(DESK_HALF_OPEN, DESK_EASE_MS, (p) => 1 - Math.pow(1 - p, 3));
+    deskEasing = false;
+    if (done) saveDeskPrint({ ...loadDeskPrint(), eased: true });
+  }, DESK_EASE_DELAY);
+}
+// The click the whole thing has been waiting for. Runs the crush backwards and lands on the real
+// print's own pixels, so swapping to the keepsake frame at the end cannot be seen.
+async function openDeskBall() {
+  const now = deskNow();
+  if (now.phase !== "ready" || deskOpening || !deskShows()) return;
+  deskOpening = true;
+  closeDeskMenu();
+  if (!motionReduced() && deskStage) await deskStage.glide(1, DESK_OPEN_MS * (1 - deskStage.t * 0.5), smooth);
+  saveDeskPrint({ ...loadDeskPrint(), eased: true, opened: todayKey(), ball: now.face });
+  deskOpening = false;
+  renderDeskPrint(true);
+  refreshKeepsakes();
+}
+
+// The slip the print opens. Every print owned, in the drawer's order, and the two modes as real
+// tape deck keys with the one in force latched down. Mouse only, like everything on the desk,
+// which is why the keepsakes drawer can do all of it from the keyboard.
+function deskMenuHTML() {
+  const now = deskNow();
+  const prints = now.owned.map((id) => {
+    const p = POLAROID_BY_ID[id];
+    return `<button type="button" class="dm-print" data-print="${id}" aria-pressed="${id === now.id}" aria-label="${escapeHtml(p.name)}" title="${escapeHtml(p.name)}"><span>${polaroidArt(p.art)}</span></button>`;
+  }).join("");
+  const key = (value, a, b, on) => `<div class="deck-slot"><button type="button" class="deck-key${on ? " is-again" : ""}" data-keep="${value}" aria-pressed="${on}"><span class="deck-lab">${a}<br>${b}</span></button></div>`;
+  return `<span class="pol-tape" aria-hidden="true"></span><div class="dm-head">on the desk</div><div class="dm-prints">${prints}</div>` +
+    `<div class="tape-deck dm-deck" data-family="notebook"><div class="tape-deck-bar">${key(0, "a new one", "each day", !now.kept)}${key(1, "keep", "this one", !!now.kept)}</div></div>`;
+}
+function renderDeskMenu() {
+  const m = $("deskMenu");
+  if (!m) return;
+  m.innerHTML = deskMenuHTML();
+  m.classList.toggle("is-full", deskNow().owned.length > 12);
+  const r = $("deskPrint").getBoundingClientRect(), box = m.getBoundingClientRect();
+  const page = document.querySelector(".app").getBoundingClientRect().right + 12;
+  const right = window.innerWidth - box.width - 8;
+  m.style.left = `${Math.max(Math.min(page, right), Math.min(right, r.left + r.width / 2 - box.width / 2))}px`;
+  m.style.top = `${Math.max(8, r.top - box.height - 12)}px`;
+}
+function openDeskMenu() {
+  if ($("deskMenu")) return;
+  const m = document.createElement("div");
+  m.id = "deskMenu"; m.className = "desk-menu";
+  document.body.append(m);
+  renderDeskMenu();
+  m.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const b = e.target.closest("button");
+    if (!b) return;
+    const ds = loadDeskPrint();
+    if (b.dataset.print) ds.kept = b.dataset.print;
+    else ds.kept = b.dataset.keep === "1" ? deskNow().id : null;
+    saveDeskPrint(ds);
+    renderDeskPrint();
+    renderDeskMenu();
+  });
+}
+function closeDeskMenu() { $("deskMenu")?.remove(); }
+
+function wireDeskPrint() {
+  $("deskBall").addEventListener("click", openDeskBall);
+  $("deskPrint").addEventListener("click", (e) => {
+    e.stopPropagation();
+    if ($("deskMenu")) closeDeskMenu(); else openDeskMenu();
+  });
+  document.addEventListener("click", closeDeskMenu);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDeskMenu(); });
+  window.matchMedia("(min-width: 1120px)").addEventListener("change", () => renderDeskPrint(true));
+  document.addEventListener("visibilitychange", () => renderDeskPrint());
+  let queued = false;
+  window.addEventListener("resize", () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; closeDeskMenu(); deskPlaceBall(); });
+  });
+  deskWired = true;
+  renderDeskPrint(true);
+}
+
+// A tap on the wall. A print on the line goes out and stays out. The hanger either turns over, when
+// the same print is still the one on the desk afterwards, or that print goes back on its peg.
+function deskWallTap(cell, body) {
+  if (cell.dataset.state === "locked") return;
+  const id = cell.dataset.id, was = deskNow(), ds = loadDeskPrint();
+  ds.kept = was.id === id && was.kept ? null : id;
+  saveDeskPrint(ds);
+  deskOpenOnClose = was.phase === "ready" && !!ds.kept;
+  const now = deskNow();
+  renderDeskPrint();
+  const hanger = cell.querySelector(".keep-hanger");
+  if (hanger && now.id === id) {
+    hanger.classList.add("is-turning");
+    setTimeout(() => {
+      hanger.innerHTML = deskHangerSVG(!!now.kept);
+      hanger.classList.remove("is-turning");
+      cell.title = deskHangerTip(!!now.kept);
+      cell.setAttribute("aria-label", cell.title);
+    }, 180);
+    return;
+  }
+  renderKeepsakesPage(body);
+  hangKeepsakeWall(body.querySelector(".keep-wall"));
+}
+const deskHangerTip = (kept) => kept ? "Staying on the desk. Tap to hang it back up" : "Out on the desk today. Tap to keep it there";
 
 // The polaroid wall: a lead, the found counter, then the drying line (see polaroidHang). Every
 // keepsake has a peg; an earned one hangs its print at the current develop state, an unearned
@@ -6288,6 +6491,12 @@ function renderKeepsakesPage(body = $("keepsakesBody")) {
     `<p class="chall-eyebrow">Your keepsakes</p>` +
     `<p class="keep-lead">Polaroids from the notebook, earned by playing. A fresh one develops like real ` +
     `instant film, so give a new photo thirteen minutes to come through.</p>`;
+
+  // The wall only talks about the desk where there is one to send a print to, so never on a phone,
+  // and not before the ball is ready to open.
+  const now = deskNow(earned);
+  const deskOn = deskShows() && now.phase !== "film" && body.id !== "setKeepsakesBody";
+  const deskLead = deskOn ? `<p class="keep-lead">Tap a print to keep it on the desk. Otherwise a new one comes out each day.</p>` : "";
 
   const counter =
     `<div class="keep-counter"><span class="keep-counter-n">${found}</span>` +
@@ -6306,15 +6515,27 @@ function renderKeepsakesPage(body = $("keepsakesBody")) {
     const label = state === "locked" ? "a keepsake not yet earned"
       : state === "developing" ? feat + " (still developing)" : feat;
     const peg = `<span class="keep-peg" style="--pr:${h.pr}deg" aria-hidden="true">${keepPegSVG(h.rng)}</span>`;
+    const out = deskOn && state !== "locked" && p.id === now.id;
     const print = state === "locked"
       ? `<span class="keep-num" style="--nr:${h.nr}deg" aria-hidden="true">no. ${i + 1}</span>`
+      : out ? `<span class="keep-hanger" style="--tilt:${(h.swing * 1.6).toFixed(2)}deg">${deskHangerSVG(!!now.kept)}</span>`
       : keepsakePolaroidHTML(p, { earned, state, tilt: h.swing });
-    return `<div class="keep-cell" data-id="${p.id}" data-state="${state}" style="--px:${h.px}%" title="${escapeHtml(label)}">` +
+    const tip = out ? deskHangerTip(!!now.kept) : label;
+    const act = deskOn && state !== "locked" ? ` role="button" tabindex="0" aria-label="${escapeHtml(out ? tip : p.name + ". Keep it on the desk")}"` : "";
+    return `<div class="keep-cell${out ? " is-out" : ""}" data-id="${p.id}" data-state="${state}" style="--px:${h.px}%" title="${escapeHtml(tip)}"${act}>` +
       peg + print + `</div>`;
   }).join("");
 
-  body.innerHTML = intro + counter + `<div class="keep-wall">${tiles}</div>` + stickerShelfHTML();
+  body.innerHTML = intro + deskLead + counter + `<div class="keep-wall">${tiles}</div>` + stickerShelfHTML();
   watchKeepsakeWall(body, body.querySelector(".keep-wall"));
+  if (deskOn) {
+    const wall = body.querySelector(".keep-wall");
+    wall.addEventListener("click", (e) => { const cell = e.target.closest(".keep-cell[role]"); if (cell) deskWallTap(cell, body); });
+    wall.addEventListener("keydown", (e) => {
+      const cell = e.target.closest(".keep-cell[role]");
+      if (cell && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); deskWallTap(cell, body); }
+    });
+  }
   // "Look at the cover" (never "close the notebook" — the in-run quit button owns that phrase):
   // the drawer is a modal over the front page, so it has to get out of the way first, and focus
   // comes back to the keepsakes icon once the book reopens.
@@ -17220,6 +17441,7 @@ function refreshDateSurfaces() {
   window.deskCalendar?.refresh();
   window.deskCassette?.refresh();
   window.deskBeads?.refresh();
+  renderDeskPrint();
   // Moving the date moves what "today" means to the daily gate, so the button's
   // played/unplayed coat and its countdown have to be redrawn with it.
   renderDailyButtonState();
@@ -36267,6 +36489,11 @@ function buildDevApi() {
         saveKeepsakes(e); refreshKeepsakes(); updateKeepsakesNav(); return POLAROIDS.length;
       },
       open: () => openKeepsakes(),                             // jump to the polaroid wall
+      // The print on the desk: how it stands, and rewinding it to a shut ball.
+      desk: () => deskNow(),
+      deskFive: () => { for (const p of POLAROIDS.slice(0, DESK_PRINT_AT)) devSetKeepsake(p.id, POLAROID_DEVELOP_MS + 1000); return deskNow().phase; },
+      deskOpen: () => openDeskBall(),
+      deskReset: () => { resetDeskPrint(); renderDeskPrint(true); return deskNow().phase; },
       // One polaroid's frame at a chosen develop state, for the dev panel's gallery. The
       // store is not consulted and not written: `state` and `frac` (how far through the
       // develop window the print should pretend to be, 0 → 1) are handed in, so the whole set
@@ -38084,6 +38311,7 @@ async function init() {
   // A notebook gets left open. From here on the page notices the day turning under it
   // instead of waiting for a reload to find out.
   watchDayRollover();
+  wireDeskPrint();
 
   try {
     await loadData();

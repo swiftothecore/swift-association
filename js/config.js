@@ -180,6 +180,9 @@ export const STICKER_HOLO_KEY = "swiftSongAssociation.stickerHolo";
 // stickers:{[id]:true} }. Deliberately a set of ids rather than a count: the count can go down
 // (dev tools remove a keepsake) and a stored number would then leave the badge stuck or silent.
 export const KEEPSAKES_SEEN_KEY = "swiftSongAssociation.keepsakesSeen";
+// The print on the desk (skill: desk-print) — { eased, opened: "YYYY-MM-DD"|null, ball: id|null,
+// kept: id|null }. Which print is out is never stored: it is worked out from the date and the set.
+export const DESK_PRINT_KEY = "swiftSongAssociation.deskPrint";
 export const BREADTH_KEY = "swiftSongAssociation.modesSeen";           // { [token]: true } — every mode/difficulty combination ever finished, for "Explorer"
 export const WEEKDAYS_KEY = "swiftSongAssociation.weekdaysPlayed";     // { [0-6]: true } — which weekdays you have finished a game on, for "Seven"
 // The calendar ledger — { days: { [YYYY-MM-DD]: true }, months: { [1-12]: true } }. Deliberately

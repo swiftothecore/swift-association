@@ -16,7 +16,7 @@ import {
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE, CUSTOM_STOCKS,
   KEEPSAKES_KEY, WOODS_KEY,
   STICKERS_KEY, STICKER_HOLO_KEY,
-  KEEPSAKES_SEEN_KEY,
+  KEEPSAKES_SEEN_KEY, DESK_PRINT_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
   MODES, MODE_ORDER, TOTAL_ROUNDS, ACH_ID_MIGRATIONS,
@@ -181,6 +181,22 @@ export function loadKeepsakesSeen() {
 }
 export function saveKeepsakesSeen(seen) {
   try { localStorage.setItem(KEEPSAKES_SEEN_KEY, JSON.stringify(seen)); } catch (e) { /* ignore */ }
+}
+/* ---------- The print on the desk ---------- */
+// The ball's own history and the print the player chose to keep out, and nothing else: the day's
+// print comes from the date and the set, so two notebooks can never drift apart over it.
+export function loadDeskPrint() {
+  try {
+    const o = JSON.parse(localStorage.getItem(DESK_PRINT_KEY));
+    if (o && typeof o === "object") return { eased: !!o.eased, opened: o.opened || null, ball: o.ball || null, kept: o.kept || null };
+  } catch (e) { /* ignore */ }
+  return { eased: false, opened: null, ball: null, kept: null };
+}
+export function saveDeskPrint(state) {
+  try { localStorage.setItem(DESK_PRINT_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+}
+export function resetDeskPrint() {
+  try { localStorage.removeItem(DESK_PRINT_KEY); } catch (e) { /* ignore */ }
 }
 export function resetKeepsakesSeen() {
   try { localStorage.removeItem(KEEPSAKES_SEEN_KEY); } catch (e) { /* ignore */ }

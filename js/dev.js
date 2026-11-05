@@ -1356,6 +1356,10 @@ export function initDev(api) {
         btn("open keepsakes", () => api.keepsakes.open())),
     row(btn("all developed", () => { api.keepsakes.all(); toast("all polaroids developed"); }),
         btn("clear keepsakes", () => { api.keepsakes.reset(); toast("keepsakes cleared"); }, "warn")),
+    // The print on the desk. "shut the ball" rewinds it, so the ease and the opening replay.
+    row("desk print", btn("five polaroids", () => toast(api.keepsakes.deskFive())),
+        btn("open it", () => api.keepsakes.deskOpen()),
+        btn("shut the ball", () => toast(api.keepsakes.deskReset()), "warn")),
     // The results screen's "also found" line, which otherwise only appears on a run that
     // happened to turn something up. The count is per shelf, so 2 draws four objects and 4
     // draws eight, which is where the "+N" unfold starts.
