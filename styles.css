@@ -3700,6 +3700,11 @@
     background-position: 0 0, var(--sheet-x, 0) 0, 0 0;
     background-repeat: repeat, no-repeat, repeat;
   }
+  /* Just past the phone breakpoint the card keeps its wide margin but the row is at its full
+     spacing, which runs about 23px too long. Tighter tabs hold it on one line until 600px. */
+  @media (min-width: 561px) and (max-width: 599px) {
+    :is(#modeTabs, [data-flip-id="modeTabs"], .af-diffs, .stats-subtabs) > .mode-tab { padding-inline: 9px; }
+  }
   /* the tab rows reused on the stats page — two tiers (view / difficulty) */
   .stats-tabs { margin-bottom: 16px; }
   .stats-tabs:has(+ .stats-subtabs) { margin-bottom: 8px; }
