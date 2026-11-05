@@ -16950,6 +16950,18 @@
   .settings-gear svg { display: block; width: 100%; height: 100%; }
   .settings-gear:hover { background: var(--highlighter); transform: scale(1.08); }
   @media (min-width: 1040px) { .settings-gear { top: 18px; right: 22px; } }
+  /* The masthead has the top of the desk to itself until there is room for it and all four
+     icons side by side (900px, with the weather icon showing). Short of that the icons cross
+     to the bottom corner, level with the corner links, and the wordmark takes the width. */
+  @media (max-width: 899px) {
+    .settings-gear { top: auto; bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
+    header.title h1 { font-size: clamp(22px, 8.4vw, 44px); }
+  }
+  /* On a phone the keyboard lifts the bottom of the screen to the writing line, so the gear
+     stands down while a field has the caret rather than sit over the dropdown. */
+  @media (max-width: 560px) {
+    body:has(:is(input, textarea):focus) .settings-gear { visibility: hidden; }
+  }
 
   /* Sound icon: the first seat to the left of the gear, and unlike the keepsakes icon it stays
      through play: muting a chime you've tired of is exactly a mid-round need. The muted default
@@ -18287,10 +18299,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   }
   .app { order: 1; min-width: 0; }
   header.title { margin-bottom: 16px; }
-  /* The masthead shares the top band with the gear instead of sitting under it: the page
-     starts high enough that the wordmark's middle lines up with the gear's, and the margin
-     centres it in the width the gear leaves (gear 44px + an 8px gap + a hair of air). */
-  header.title h1 { margin-right: 54px; }
   header.title .tagline-row { margin-top: 18px; font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; }
   .tagline-row .tag-heart { margin-inline: 5px; }
   .screen.card, [data-flip-id].card { --rule-x: 17px; padding: 20px 14px 26px 30px; }
@@ -18323,10 +18331,7 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
      phone padding above would slide the page line up under it and print the link straight
      across the rule marks, so the game page keeps the head room the desktop card gives it. */
   :is(#screen-game, [data-flip-id="screen-game"]).card { padding-top: 32px; }
-  .settings-gear {
-    position: absolute; top: calc(8px + env(safe-area-inset-top, 0px));
-    right: max(10px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px;
-  }
+  .settings-gear { right: max(12px, env(safe-area-inset-right, 0px)); width: 44px; height: 44px; }
   /* A phone's corner holds the gear alone. Sound is a settings divider already, and the
      keepsakes drawer becomes one here (settingsPanels in app.js, same 560px breakpoint), so
      the gear wears the drawer's unread badge instead. */
