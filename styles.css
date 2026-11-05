@@ -671,21 +671,18 @@
   .di-cassette :is(.cs-title, .cs-note) { visibility: hidden; }
   .di-cassette svg.is-dubbed :is(.cs-title, .cs-note) { visibility: visible; }
   /* The picks lie by the mug, low and to its right. Anchored to the screen edge like the mug is,
-     so the pair keeps its distance on a wide desk, until a narrow one has to pull them back off
-     the page. The rotation is part of the drawing: every pick's gradients are turned against it
-     (see the markup), so changing it relights all three. */
-  .di-picks   { width: 155px; top: 74%; left: min(214px, calc(50% - 496px)); transform: rotate(22deg); }
-  /* The gauge stamped into the pearloid pick. Courier, because it is moulded
-     into a manufactured object rather than written by hand, and tiny: this is
-     the thickness marking, and on a real pick you have to tilt it to the light
-     to read it. Two passes make the deboss read as cut INTO the plastic rather
-     than printed on it: the shaded cut on top, and half a unit below it the
-     lower lip of the groove, which is the only part of it facing the lamp. */
-  .di-picks .pk-gauge {
-    font-family: var(--type); font-weight: 700; font-size: calc(4.6px + var(--text-size-adjust));
-    letter-spacing: 0.4px; text-anchor: middle; fill: #8d8064; opacity: 0.5;
+     so the pair keeps its distance on a wide desk, until a narrow one has to shrink the pile and
+     pull it back off the page. No rotation here: each pick holds its own, and its light is worked out against it
+     (see the markup), so a turn on the prop would relight all three. They also drop the props'
+     shared fade and desaturate: the real set is loud pearl plastic, and that pair turned it to
+     chalk on the pale oak. Each pick throws its own shadow, so this one only seats the pile. */
+  .di-picks   {
+    --picks-w: clamp(140px, 12.5vw, 180px);
+    width: var(--picks-w); top: 74%; left: min(204px, calc(50% - 340px - var(--picks-w))); opacity: 1;
+    filter: drop-shadow(1.5px 3px 2.5px rgba(46,32,14,0.26));
   }
-  .di-picks .pk-gauge-lip { fill: #fffdf4; opacity: 0.55; }
+  /* The gutter is too narrow here to clear the mug sideways, so the pile drops below its rim. */
+  @media (max-width: 1279px) { .di-picks { top: 77.5%; } }
   /* spilled alphabet beads: 7mm beads at desk scale (21px), one loose spill
      drifting down-left from the floss station */
   .di-beads-r {
