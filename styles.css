@@ -18334,18 +18334,36 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   }
   .corner-link, .feedback-link { min-height: 44px; gap: 7px; padding: 8px 12px; }
   .corner-link-label, .feedback-link .corner-link-label { max-width: 160px; opacity: 1; }
-  /* The type tabs span the page here, so the picker drops below the corner franking rather
-     than running its last tab under the stamps. */
-  .mode-picker:has(> #typeTabs) { padding-top: 18px; }
   .mode-tabs { gap: 5px; }
   .mode-tab { --tab-foot: 8px; min-height: 40px; padding: 8px 10px var(--tab-foot); }
   /* A tab that reaches down through its line has to grow by that reach here, or the min-height
      swallows its longer foot and the tab drops 1.5px below its neighbours' tops. */
   .mode-tabs--shelf > .mode-tab.active,
   :is(#modeTabs, [data-flip-id="modeTabs"]) > .mode-tab.active { min-height: 41.5px; }
-  :is(#typeTabs, [data-flip-id="typeTabs"]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  :is(#typeTabs, [data-flip-id="typeTabs"]) .mode-tab { padding-inline: 4px; font-size: calc(18px + var(--text-size-adjust)); white-space: nowrap; }
-  :is(#typeTabs, [data-flip-id="typeTabs"]) .type-glyph { width: 16px; margin-right: 3px; }
+  /* The type tabs stop short of the page's edge and the franking stands in the corner they
+     leave, two dies over one, so the row and the stamps share the top of the page. --frank is
+     the franking's width, and everything here is scaled from the screen so the two meet at
+     every phone width rather than only at one. */
+  .franking, :is(#typeTabs, [data-flip-id="typeTabs"]) { --frank: clamp(54px, 18vw, 76px); }
+  :is(#typeTabs, [data-flip-id="typeTabs"]) { flex-wrap: nowrap; width: calc(100% - var(--frank)); }
+  :is(#typeTabs, [data-flip-id="typeTabs"]) .mode-tab {
+    flex: 1 1 auto; padding-inline: 2px; white-space: nowrap;
+    font-size: calc(clamp(15px, 4.7vw, 18px) + var(--text-size-adjust));
+  }
+  :is(#typeTabs, [data-flip-id="typeTabs"]) .type-glyph { width: 14px; margin-right: 2px; }
+  :is(#typeTabs, [data-flip-id="typeTabs"]) .type-glyph--inf { width: 18px; }
+  .franking {
+    top: 6px; right: 6px; width: var(--frank);
+    flex-wrap: wrap; justify-content: center;
+  }
+  .stamp--focus { width: 52%; }
+  .stamp--ruthless { width: 50%; margin-left: -2%; }
+  .stamp--guest { width: 62%; margin: -3px 0 0 8%; }
+  /* Large text is the one thing that can run Custom into the stamps, and only on the narrowest
+     screens, so there the tabs hold the standard size. */
+  @media (max-width: 349px) {
+    body[data-text-size="large"] :is(#typeTabs, [data-flip-id="typeTabs"]) .mode-tab { font-size: clamp(15px, 4.7vw, 18px); }
+  }
   /* Every difficulty row stands in one line on a phone. Six tabs are 12.7em of handwriting, so
      the ink is scaled to the screen and the tabs' side padding is cut to what's left, with the
      spare width shared out by flex-grow. They still wrap, and rankTabs still shelves them, if
