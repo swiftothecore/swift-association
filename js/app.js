@@ -24262,9 +24262,9 @@ function wagerTease() {
   const times = (n) => (n === 1 ? "once" : n === 2 ? "twice" : `${n} times`);
   let history;
   if (!got && !missed) history = "you have never had this word before";
-  else if (!missed) history = `you have had it ${times(got)} and never missed it`;
+  else if (!missed) history = `you have got it right ${times(got)} and never missed it`;
   else if (!got) history = `you have missed it ${times(missed)}`;
-  else history = `you have had it ${times(got)}, and missed it ${times(missed)}`;
+  else history = `you have got it right ${times(got)}, and missed it ${times(missed)}`;
   return { tier: tier.name, spread: spread[tier.name] || "", history };
 }
 
