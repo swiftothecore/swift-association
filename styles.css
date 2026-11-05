@@ -18375,9 +18375,14 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   }
   :is(#modeTabs, [data-flip-id="modeTabs"], .af-diffs, .stats-subtabs) > .mode-tab-sep { flex: none; margin-inline: 0; }
   .af-diffs > .mode-tab-sep::after { left: -3px; right: -3px; }
+  /* The last tab now stands flush with the page's right edge, so the page's rounded corner
+     would bite a notch out of the join under it. The tab's side and the page's run on as one
+     straight edge instead. */
+  :is(#difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active:last-child:not(.is-back)) .mode-blurb { border-top-right-radius: 0; }
   /* A 320px screen is a few pixels short of holding all six even at the smallest ink. */
   @media (max-width: 339px) {
     :is(#modeTabs, [data-flip-id="modeTabs"], .af-diffs, .stats-subtabs) { gap: 2px; padding-left: 0; }
+    :is(#difficultyRow, [data-flip-id="difficultyRow"]):has(.mode-tab.active:first-child:not(.is-back)) .mode-blurb { border-top-left-radius: 0; }
     .af-diffs > .mode-tab-sep::after { left: -2px; right: -2px; }
   }
   .see-also { margin-inline: 0; }
