@@ -17965,9 +17965,9 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .lu-look-vine .lu-name { font-size: calc(23px + var(--text-size-adjust)); }
 
 /* ---- the felt: five cards dealt before page one ----
-   The cards are the stock above at their printed size, so they are laid out in a
-   row that SCROLLS rather than one that shrinks them: a goal card the player is
-   spending pips on has to stay readable, and five at 176px will not fit a phone. */
+   The cards are always the stock above at their printed size, because a goal card the player
+   is spending pips on has to stay readable. Too narrow for three across, they are held as a
+   fanned hand instead (.is-hand, below). */
 /* Three and two rather than five across: at their printed size five cards are wider than
    the notebook, and a felt you have to scroll sideways is a felt you cannot compare. The
    max-width is what forces the break, so the rows stay 3/2 instead of 4/1 on a wide desk. */
@@ -18002,6 +18002,56 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .lu-keep-mark path, .lu-keep-mark ellipse {
   fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; opacity: 0.85;
 }
+
+/* ---- the held hand ----
+   A phone's felt. .is-hand comes from LINEUP_HAND_MQ in app.js and is the only switch, so
+   there is no media query here to fall out of step with it. --seat is a card's place along the
+   hand, --away how many cards it is from the front one, --gaps the count between first and last.
+
+   A dropped-out card cannot use the felt's opacity here: the card beneath would show through,
+   so it is veiled in paper instead. Its reason moves to .lu-hand-note, since a line under each
+   card would sit behind the next card along. The far kept mark rings the bottom-right index,
+   the only corner a card to the right of the front one shows. */
+.lu-felt.is-hand {
+  display: block; position: relative; max-width: none; height: 352px;
+  margin: 0 -8px 0 -14px; padding: 0; touch-action: pan-y;
+}
+.is-hand .lu-deal {
+  position: absolute; top: 18px; padding-top: 13px;
+  left: calc(var(--seat) * (100% - 176px) / var(--gaps));
+  z-index: calc(10 - var(--away));
+  transition: transform 0.14s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.is-hand .lu-deal.is-front { transform: translateY(-4px); }
+.is-hand .lu-deal.is-kept { transform: translateY(-14px); }
+.is-hand .lu-deal.is-kept.is-front { transform: translateY(-16px); }
+.is-hand .lu-deal .lu-card,
+.is-hand .lu-deal .lu-card:hover,
+.is-hand .lu-deal.is-kept .lu-card,
+.is-hand .lu-deal.is-out .lu-card,
+.is-hand .lu-deal.is-out .lu-card:hover {
+  transform: rotate(var(--tilt, 0deg)); opacity: 1;
+  box-shadow: -3px 2px 7px rgba(60,50,35,0.2), 0 1px 2px rgba(60,50,35,0.14);
+}
+.is-hand .lu-deal:nth-child(1) { --tilt: -1.3deg; }
+.is-hand .lu-deal:nth-child(2) { --tilt: 0.9deg; }
+.is-hand .lu-deal:nth-child(3) { --tilt: -0.6deg; }
+.is-hand .lu-deal:nth-child(4) { --tilt: 1.1deg; }
+.is-hand .lu-deal:nth-child(5) { --tilt: -1deg; }
+.is-hand .lu-deal.is-out .lu-card::after { background: rgba(236,226,206,0.58); }
+.is-hand .lu-out-why { display: none; }
+/* The felt lifts a kept card's face and leaves the mark where the face rises to; a held card
+   lifts as a whole, mark included, so the mark has to start where the index already is. */
+.is-hand .lu-keep-mark { top: 13px; }
+.lu-keep-far { display: none; }
+.is-hand .lu-keep-far { display: block; top: auto; left: auto; right: 2px; bottom: -2px; transform: rotate(180deg); }
+.lu-hand-note {
+  font-family: var(--type); font-size: 10.5px; color: var(--ink-soft); text-align: center;
+  margin: 0 0 6px;
+}
+.lu-hand-note:empty { display: none; }
+.lu-hand-note.is-why { color: var(--red-pen); }
 
 /* ---- THE DEAL ----
    The hand arrives as a flourish rather than appearing, because this is the one decision the

@@ -16360,20 +16360,78 @@ const KEEP_MARK = `<svg viewBox="0 0 40 40" aria-hidden="true">
   <path d="M6.5 25.5 C11 30.5 27 31.5 33 24.5"/>
 </svg>`;
 
+/* ---------- The hand ----------
+   Five cards at their printed size cannot lie side by side on a phone, and they cannot be
+   shrunk, because the rule is what you read before spending pips on it. So below three-across
+   the felt is held as a fanned hand instead of laid out: the cards overlap, one is at the
+   front at full size, and the rest show only a corner. That corner is the index, which is the
+   price, so every price stays comparable at a glance, and a card to the right of the front one
+   shows its bottom-right index for the same reason a real card prints two.
+
+   The hand opens with the LAST card at the front so every other card shows its upright corner,
+   which also means each card in the deal lands on top of the one before it. Tapping is two
+   steps: a card behind comes forward, the front card toggles. Sliding along the hand riffles.
+
+   This query is the only thing that decides the layout: CSS keys off .is-hand, never a media
+   query of its own, so the JS and the stylesheet cannot disagree about which felt is up. */
+const LINEUP_HAND_MQ = window.matchMedia("(max-width: 640px)");
+let lineupFrontId = null;   // survives a re-render, and falls back to the last card on a new deal
+
+const lineupHandHeld = () => LINEUP_HAND_MQ.matches;
+const lineupFrontIndex = () => {
+  const i = lineupDealt.indexOf(lineupFrontId);
+  return i < 0 ? lineupDealt.length - 1 : i;
+};
+
+// The line under the hand, which is the only place a blocked card's reason can go: a reason
+// printed under each card would sit beneath the next card along.
+function paintLineupHandNote() {
+  const note = $("lineupHandNote");
+  if (!note) return;
+  const id = lineupDealt[lineupFrontIndex()];
+  const why = lineupBlocked(id);
+  note.classList.toggle("is-why", !!why);
+  note.textContent = !lineupHandHeld() ? ""
+    : why || (lineupKept.includes(id) ? "tap it again to put it back" : "tap the front card to keep it");
+}
+
+// Bring a card forward without re-rendering, because this runs on every step of a slide along
+// the hand and the felt has to stay the same elements under the finger.
+function raiseLineupCard(id) {
+  if (lineupFrontId === id && lineupFrontIndex() === lineupDealt.indexOf(id)) return;
+  lineupFrontId = id;
+  const front = lineupFrontIndex();
+  [...$("lineupFelt").children].forEach((el, i) => {
+    el.style.setProperty("--away", Math.abs(i - front));
+    el.classList.toggle("is-front", i === front);
+  });
+  paintLineupHandNote();
+}
+
 function renderLineupFelt() {
   const felt = $("lineupFelt");
   if (!felt) return;
-  felt.innerHTML = lineupDealt.map((id) => {
+  const held = lineupHandHeld();
+  const front = lineupFrontIndex();
+  const focused = felt.contains(document.activeElement) ? document.activeElement.dataset.card : null;
+  felt.classList.toggle("is-hand", held);
+  felt.style.setProperty("--gaps", Math.max(1, lineupDealt.length - 1));
+  felt.innerHTML = lineupDealt.map((id, i) => {
     const card = goalById[id];
     const kept = lineupKept.includes(id);
     const why = kept ? "" : lineupBlocked(id);
-    const cls = kept ? " is-kept" : why ? " is-out" : "";
+    const cls = (kept ? " is-kept" : why ? " is-out" : "") + (held && i === front ? " is-front" : "");
     return `<div class="lu-deal${cls}" data-card="${id}" role="button" tabindex="0"` +
+      ` style="--seat:${i};--away:${Math.abs(i - front)}"` +
       ` aria-pressed="${kept}" aria-label="${escapeHtml(card.name)}, ${card.rank}">` +
-      (kept ? `<div class="lu-keep-mark">${KEEP_MARK}</div>` : "") +
+      (kept ? `<div class="lu-keep-mark">${KEEP_MARK}</div><div class="lu-keep-mark lu-keep-far">${KEEP_MARK}</div>` : "") +
       cardFace(card, SUIT_LOOK[card.suit]) +
       `<p class="lu-out-why">${escapeHtml(why)}</p></div>`;
   }).join("");
+  // Every keep and drop rebuilds the felt, which would otherwise throw a keyboard player's
+  // place in the hand away after each card.
+  if (focused) felt.querySelector(`[data-card="${focused}"]`)?.focus({ preventScroll: true });
+  paintLineupHandNote();
 
   const spent = handCost(lineupKept, goalById);
   const pipRow = Array.from({ length: BUDGET }, (_, i) =>
@@ -16425,7 +16483,7 @@ let dealToken = 0;   // bumped by every deal and by every skip, so a stale timer
 
 /* Deal the felt that renderLineupFelt has just laid out. Everything is measured from the
    RESTING positions and animated backwards from the deck's mouth, rather than laying the
-   cards out somewhere else and moving them in: the felt wraps 3/2 (and reflows on a phone),
+   cards out somewhere else and moving them in: the felt wraps 3/2 (and is a fanned hand on a phone),
    so the resting grid is the only layout that is reliably correct, and the flight is derived
    from it. */
 function dealLineupFlourish(kind) {
@@ -16441,14 +16499,10 @@ function dealLineupFlourish(kind) {
   // same way, as it skips every other timed animation.
   if (motionReduced() || animInstant()) return;
 
-  // AND SO DOES A FELT THAT DOES NOT FIT THE SCREEN. Five cards at their printed size stack one
-  // per row on a phone, so the felt runs about 1460px and only the first card is ever on screen
-  // at once; a flourish there would send three of the five to places the player cannot see, and
-  // watching cards leave and never arrive is worse than no flourish at all. Measured off the
-  // slots rather than off a width breakpoint, so a short desktop window is judged the same way.
-  // The real fix is upstream and is a decision about the FELT: a goal card carries a rule you
-  // read before spending pips on it, and two per row on a phone means 118px cards and 7px type,
-  // so the card cannot simply be shrunk. Until that is settled, a phone deals without ceremony.
+  // AND SO DOES A FELT THAT DOES NOT FIT THE SCREEN: watching cards leave and never arrive is
+  // worse than no flourish at all. A phone holds the five as a hand, so it passes this, and what
+  // is left is a very short window. Measured off the slots rather than off a width breakpoint,
+  // so a short desktop window is judged the same way.
   // A felt that FITS the screen but is sitting half below the fold is not a reason to skip:
   // arriving at the top of the page with the last row under the edge is a scroll away from a
   // perfectly watchable deal. Centre it first, then ask. A felt taller than the screen cannot
@@ -37841,10 +37895,39 @@ async function init() {
   $("guestDetailBackBtn").addEventListener("click", closeGuestDetail);
   $("lineupBoardBackBtn").addEventListener("click", closeLineupBoard);
   // The felt. Delegated, because the five cards are re-rendered on every keep and drop.
-  $("lineupFelt").addEventListener("click", (e) => {
-    const deal = e.target.closest(".lu-deal");
-    if (deal) toggleLineupCard(deal.dataset.card);
+  // On a held hand a press on a card behind only brings it forward, so the click that ends that
+  // press must not also keep it; handMoved carries that from pointerdown to click. A click with
+  // no press before it (a screen reader's) lands on a card behind and raises it the same way.
+  let handMoved = false;
+  const handCardAt = (e) => document.elementFromPoint(e.clientX, e.clientY)?.closest("#lineupFelt .lu-deal");
+  const handRaise = (el) => {
+    if (!el || el.classList.contains("is-front")) return;
+    handMoved = true;
+    raiseLineupCard(el.dataset.card);
+  };
+  $("lineupFelt").addEventListener("pointerdown", (e) => {
+    handMoved = false;
+    if (lineupHandHeld()) handRaise(e.target.closest(".lu-deal"));
   });
+  // Touch holds the pointer captured to the card it started on, so the card under the finger has
+  // to be looked up. A mouse only riffles with the button down: hovering is not choosing.
+  $("lineupFelt").addEventListener("pointermove", (e) => {
+    if (lineupHandHeld() && (e.pointerType !== "mouse" || e.buttons)) handRaise(handCardAt(e));
+  });
+  $("lineupFelt").addEventListener("focusin", (e) => {
+    const deal = e.target.closest(".lu-deal");
+    if (deal && lineupHandHeld()) raiseLineupCard(deal.dataset.card);
+  });
+  $("lineupFelt").addEventListener("click", (e) => {
+    const moved = handMoved;
+    handMoved = false;
+    if (moved) return;
+    const deal = e.target.closest(".lu-deal");
+    if (!deal) return;
+    if (lineupHandHeld() && !deal.classList.contains("is-front")) raiseLineupCard(deal.dataset.card);
+    else toggleLineupCard(deal.dataset.card);
+  });
+  LINEUP_HAND_MQ.addEventListener("change", () => { if (lineupDealt.length) renderLineupFelt(); });
   $("lineupFelt").addEventListener("keydown", (e) => {
     if (e.key !== "Enter" && e.key !== " ") return;
     const deal = e.target.closest(".lu-deal");
