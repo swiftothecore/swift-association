@@ -18346,6 +18346,22 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   :is(#typeTabs, [data-flip-id="typeTabs"]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   :is(#typeTabs, [data-flip-id="typeTabs"]) .mode-tab { padding-inline: 4px; font-size: calc(18px + var(--text-size-adjust)); white-space: nowrap; }
   :is(#typeTabs, [data-flip-id="typeTabs"]) .type-glyph { width: 16px; margin-right: 3px; }
+  /* Every difficulty row stands in one line on a phone. Six tabs are 12.7em of handwriting, so
+     the ink is scaled to the screen and the tabs' side padding is cut to what's left, with the
+     spare width shared out by flex-grow. They still wrap, and rankTabs still shelves them, if
+     the Large text setting makes the row too long for the screen. */
+  :is(#modeTabs, [data-flip-id="modeTabs"], .af-diffs, .stats-subtabs) { gap: 3px; }
+  :is(#modeTabs, [data-flip-id="modeTabs"], .af-diffs, .stats-subtabs) > .mode-tab {
+    flex: 1 1 auto; padding-inline: 2px; white-space: nowrap;
+    font-size: calc(clamp(15px, 4.7vw, 19px) + var(--text-size-adjust));
+  }
+  :is(#modeTabs, [data-flip-id="modeTabs"], .af-diffs, .stats-subtabs) > .mode-tab-sep { flex: none; margin-inline: 0; }
+  .af-diffs > .mode-tab-sep::after { left: -3px; right: -3px; }
+  /* A 320px screen is a few pixels short of holding all six even at the smallest ink. */
+  @media (max-width: 339px) {
+    :is(#modeTabs, [data-flip-id="modeTabs"], .af-diffs, .stats-subtabs) { gap: 2px; padding-left: 0; }
+    .af-diffs > .mode-tab-sep::after { left: -2px; right: -2px; }
+  }
   .see-also { margin-inline: 0; }
   .nav-card-title { white-space: normal; }
   .nav-card-kicker { letter-spacing: 0.6px; }
