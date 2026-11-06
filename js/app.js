@@ -32763,6 +32763,30 @@ function renderHowTo() {
     `</div>` +
     (last ? `<div class="howto-done">${playCTA("go and play")}</div>` : "");
 }
+// A key belongs to the page only with no modifier held, no field taking it and no dialog over it.
+function browseKeyIsFree(e) {
+  if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return false;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return false;
+  return !document.body.classList.contains("modal-open") && !$("songModal").classList.contains("open");
+}
+
+// Enter plays the challenge the arrows landed on. Nothing else on the card answers to it: a stray
+// Enter must never tear a token, so a locked track stays quiet and Unlock takes a deliberate press.
+// A control the player has tabbed to keeps its own Enter, and so does a track not yet selected,
+// which selects itself first. The selected track counts as nothing, so clicking one and then
+// pressing Enter plays it. A key still held from the button that opened this page is ignored.
+function handleChallengeEnter(e) {
+  if (e.key !== "Enter" || e.repeat || !screens.challenges.classList.contains("active")) return;
+  if (screens.challenges.inert || !browseKeyIsFree(e)) return;
+  const held = document.activeElement;
+  const free = !held || held === document.body || held.classList.contains("screen")
+    || held.matches('.mx-track-select[aria-current="true"]');
+  const play = free && $("challDetail")?.querySelector("[data-play]");
+  if (!play) return;
+  e.preventDefault();
+  play.click();
+}
+
 // Arrow keys on the two browsing pages. Stats has one row of views to walk, Left and Right going
 // from All through each difficulty to Infinite, and leaves Up and Down to scroll the page.
 // Challenges has two axes: Left and Right change tape, Up and Down change track. Ends stop
@@ -32776,9 +32800,7 @@ function handleBrowseArrow(e) {
   if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
   const onStats = screens.stats.classList.contains("active");
   if (!onStats && !screens.challenges.classList.contains("active")) return;
-  if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
-  if (document.body.classList.contains("modal-open") || $("songModal").classList.contains("open")) return;
+  if (!browseKeyIsFree(e)) return;
   const across = e.key === "ArrowLeft" || e.key === "ArrowRight";
   if (onStats && !across) return;
   e.preventDefault();
@@ -38135,6 +38157,7 @@ async function init() {
     turnHowTo(e.key === "ArrowRight" ? 1 : -1);
   });
   document.addEventListener("keydown", handleBrowseArrow);
+  document.addEventListener("keydown", handleChallengeEnter);
   $("masteryBtn").addEventListener("click", () => openMastery("start"));
   $("viewMasteryBtn").addEventListener("click", () => openMastery("results"));
   $("masteryBackBtn").addEventListener("click", () => backToScreen(masteryBackTarget));
