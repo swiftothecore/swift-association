@@ -32770,27 +32770,30 @@ function browseKeyIsFree(e) {
   return !document.body.classList.contains("modal-open") && !$("songModal").classList.contains("open");
 }
 
-// Enter plays the challenge the arrows landed on. Nothing else on the card answers to it: a stray
-// Enter must never tear a token, so a locked track stays quiet and Unlock takes a deliberate press.
-// A control the player has tabbed to keeps its own Enter, and so does a track not yet selected,
+// Enter plays what the arrows landed on, a challenge or a zine. Nothing else on the page answers
+// to it: a stray Enter must never tear a token, so a locked track stays quiet and Unlock takes a
+// deliberate press, and Endless is the other way to play a zine rather than its front door. A
+// control the player has tabbed to keeps its own Enter, and so does a track not yet selected,
 // which selects itself first. The selected track counts as nothing, so clicking one and then
 // pressing Enter plays it. A key still held from the button that opened this page is ignored.
-function handleChallengeEnter(e) {
-  if (e.key !== "Enter" || e.repeat || !screens.challenges.classList.contains("active")) return;
-  if (screens.challenges.inert || !browseKeyIsFree(e)) return;
+function handlePlayEnter(e) {
+  if (e.key !== "Enter" || e.repeat) return;
+  const onBonus = screens.bonus.classList.contains("active");
+  if (!onBonus && !screens.challenges.classList.contains("active")) return;
+  if ((onBonus ? screens.bonus : screens.challenges).inert || !browseKeyIsFree(e)) return;
   const held = document.activeElement;
   const free = !held || held === document.body || held.classList.contains("screen")
     || held.matches('.mx-track-select[aria-current="true"]');
-  const play = free && $("challDetail")?.querySelector("[data-play]");
+  const play = free && (onBonus ? $("bonusPlayBtn") : $("challDetail")?.querySelector("[data-play]"));
   if (!play) return;
   e.preventDefault();
   play.click();
 }
 
-// Arrow keys on the two browsing pages. Stats has one row of views to walk, Left and Right going
-// from All through each difficulty to Infinite, and leaves Up and Down to scroll the page.
-// Challenges has two axes: Left and Right change tape, Up and Down change track. Ends stop
-// rather than wrap, as the arrows do on How To Play and the Graveyard.
+// Arrow keys on the browsing pages. Stats has one row of views to walk, Left and Right going from
+// All through each difficulty to Infinite, and the bonus shelf has one row of zines; both leave
+// Up and Down to scroll the page. Challenges has two axes: Left and Right change tape, Up and
+// Down change track. Ends stop rather than wrap, as the arrows do on How To Play and the Graveyard.
 //
 // On the document so they work wherever focus happens to be, and focus never moves onto what was
 // picked. Moving it from a keypress would make the target :focus-visible and ring it. That goes
@@ -32799,15 +32802,16 @@ function handleChallengeEnter(e) {
 function handleBrowseArrow(e) {
   if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
   const onStats = screens.stats.classList.contains("active");
-  if (!onStats && !screens.challenges.classList.contains("active")) return;
+  const onBonus = screens.bonus.classList.contains("active");
+  if (!onStats && !onBonus && !screens.challenges.classList.contains("active")) return;
   if (!browseKeyIsFree(e)) return;
   const across = e.key === "ArrowLeft" || e.key === "ArrowRight";
-  if (onStats && !across) return;
+  if ((onStats || onBonus) && !across) return;
   e.preventDefault();
   const held = document.activeElement;
   if (held && held !== document.body && !held.classList.contains("screen")) held.blur();
   const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1;
-  // Tracks may be held down to run the list; a tab or a tape redraws too much to repeat.
+  // Tracks may be held down to run the list; a tab, a tape or a zine redraws too much to repeat.
   if (across && e.repeat) return;
   if (onStats) {
     const views = ["all", ...MODE_ORDER, "infinite"];
@@ -32815,14 +32819,14 @@ function handleBrowseArrow(e) {
     if (statsView && next) renderStats(statsView.lastScore, next);
     return;
   }
-  const body = $("challengesBody");
-  const items = [...body.querySelectorAll(across ? ".mx-tape" : ".mx-track-select")];
-  const at = items.findIndex((b) => across ? b.classList.contains("is-open") : b.getAttribute("aria-current") === "true");
+  const items = onBonus ? [...$("bonusBody").querySelectorAll(".zine-tile")]
+    : [...$("challengesBody").querySelectorAll(across ? ".mx-tape" : ".mx-track-select")];
+  const at = items.findIndex((b) => b.matches(across && !onBonus ? ".is-open" : '[aria-current="true"]'));
   const next = items[at + step];
   if (at < 0 || !next) return;
   next.click();
   // One column already holds the row steady in the click; side by side, follow it down a short window.
-  if (!across && !CHALL_NARROW.matches) next.closest(".mx-track").scrollIntoView({ block: "nearest" });
+  if (!onBonus && !across && !CHALL_NARROW.matches) next.closest(".mx-track").scrollIntoView({ block: "nearest" });
 }
 
 function turnHowTo(step) {
@@ -38157,7 +38161,7 @@ async function init() {
     turnHowTo(e.key === "ArrowRight" ? 1 : -1);
   });
   document.addEventListener("keydown", handleBrowseArrow);
-  document.addEventListener("keydown", handleChallengeEnter);
+  document.addEventListener("keydown", handlePlayEnter);
   $("masteryBtn").addEventListener("click", () => openMastery("start"));
   $("viewMasteryBtn").addEventListener("click", () => openMastery("results"));
   $("masteryBackBtn").addEventListener("click", () => backToScreen(masteryBackTarget));
