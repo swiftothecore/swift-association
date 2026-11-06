@@ -4354,6 +4354,7 @@
     align-items: center; column-gap: 4px; min-height: 32px; padding: 0 4px 0 5px;
     border-radius: 2px; transition: background 0.12s;
   }
+  .mx-track { scroll-margin-block: 28px; }   /* the arrow keys stop a row short of the window edge */
   .mx-track:hover { background: rgba(43,39,34,0.05); }
   .mx-track.selected { background: rgba(39,69,96,0.10); }
   :root[data-theme="dark"] .mx-track:hover { background: rgba(236,229,214,0.05); }

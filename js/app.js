@@ -32763,6 +32763,46 @@ function renderHowTo() {
     `</div>` +
     (last ? `<div class="howto-done">${playCTA("go and play")}</div>` : "");
 }
+// Arrow keys on the two browsing pages. Stats has one row of views to walk, Left and Right going
+// from All through each difficulty to Infinite, and leaves Up and Down to scroll the page.
+// Challenges has two axes: Left and Right change tape, Up and Down change track. Ends stop
+// rather than wrap, as the arrows do on How To Play and the Graveyard.
+//
+// On the document so they work wherever focus happens to be, and focus never moves onto what was
+// picked. Moving it from a keypress would make the target :focus-visible and ring it. That goes
+// for whatever already held focus too: a track that was clicked keeps focus through a selection
+// and earns its ring the moment a key is pressed, so it is let go first.
+function handleBrowseArrow(e) {
+  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
+  const onStats = screens.stats.classList.contains("active");
+  if (!onStats && !screens.challenges.classList.contains("active")) return;
+  if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  if (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (document.body.classList.contains("modal-open") || $("songModal").classList.contains("open")) return;
+  const across = e.key === "ArrowLeft" || e.key === "ArrowRight";
+  if (onStats && !across) return;
+  e.preventDefault();
+  const held = document.activeElement;
+  if (held && held !== document.body && !held.classList.contains("screen")) held.blur();
+  const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1;
+  // Tracks may be held down to run the list; a tab or a tape redraws too much to repeat.
+  if (across && e.repeat) return;
+  if (onStats) {
+    const views = ["all", ...MODE_ORDER, "infinite"];
+    const next = views[views.indexOf(statsView?.viewMode) + step];
+    if (statsView && next) renderStats(statsView.lastScore, next);
+    return;
+  }
+  const body = $("challengesBody");
+  const items = [...body.querySelectorAll(across ? ".mx-tape" : ".mx-track-select")];
+  const at = items.findIndex((b) => across ? b.classList.contains("is-open") : b.getAttribute("aria-current") === "true");
+  const next = items[at + step];
+  if (at < 0 || !next) return;
+  next.click();
+  // One column already holds the row steady in the click; side by side, follow it down a short window.
+  if (!across && !CHALL_NARROW.matches) next.closest(".mx-track").scrollIntoView({ block: "nearest" });
+}
+
 function turnHowTo(step) {
   const next = howToIndex + step;
   if (next < 0 || next >= HOWTO_PAGES.length) return;
@@ -38094,6 +38134,7 @@ async function init() {
     e.preventDefault();
     turnHowTo(e.key === "ArrowRight" ? 1 : -1);
   });
+  document.addEventListener("keydown", handleBrowseArrow);
   $("masteryBtn").addEventListener("click", () => openMastery("start"));
   $("viewMasteryBtn").addEventListener("click", () => openMastery("results"));
   $("masteryBackBtn").addEventListener("click", () => backToScreen(masteryBackTarget));
