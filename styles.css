@@ -579,14 +579,16 @@
      rather than the viewport, keeping their gap to the page constant */
   /* the working desk calendar (js/calendar.js draws the live month): a wire-
      bound pad lying flat beside the page, up between the glasses and the mug.
-     It keeps its distance from the page while the gutter has room. Below about 1300px that
+     It keeps 22px off the page while the gutter has room, because the glasses and the coffee
+     both curve away towards the left and that is where the room is not. Below about 1260px that
      would start pushing it off the left of the screen, so it sits in the middle of the gutter
-     instead (25% - 165px is half of 50% - 330px), and below 1250px, where it no longer fits at
-     full size, it comes down to leave 12px of desk either side. 1.08 is how much wider its
-     tilt makes it. A pad cut off by the window loses its dates, so smaller is the better trade. */
+     instead (25% - 165px is half of 50% - 330px), and below about 1230px, where it no longer
+     fits at full size, it comes down to leave 16px of desk either side. 0.905 is how much of
+     its box the pad itself spans once tilted: the drawing has empty margin at both sides, so
+     measuring from the box would leave it smaller than the desk has room for. */
   .di-calendar {
-    width: min(250px, calc((50% - 355px) / 1.08)); top: 36%;
-    left: max(calc(50% - 490px), calc(25% - 165px));
+    width: min(280px, calc((50% - 362px) / 0.905)); top: 37.6%;
+    left: max(calc(50% - 480px), calc(25% - 165px));
     transform: translate(-50%, -50%) rotate(-4.5deg);
     filter: drop-shadow(5px 9px 8px rgba(46,32,14,0.30)) saturate(0.9);
   }
