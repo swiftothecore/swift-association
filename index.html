@@ -1454,7 +1454,8 @@ if (location.pathname.endsWith('/index.html')) {
   <div class="desk-item di-calendar">
     <svg viewBox="0 50 250 268" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="calWire" x1="0" y1="0" x2="1" y2="0.4"><stop offset="0" stop-color="#efece2"/><stop offset="0.45" stop-color="#a9a294"/><stop offset="1" stop-color="#6f695c"/></linearGradient>
+        <!-- how the wire darkens as it goes down through its hole -->
+        <linearGradient id="calDepth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#160f08" stop-opacity="0"/><stop offset="0.5" stop-color="#160f08" stop-opacity="0.55"/><stop offset="1" stop-color="#160f08" stop-opacity="0.96"/></linearGradient>
         <!-- the band of shine across the 13th's foil, held dark enough to stay legible on cream -->
         <linearGradient id="calFoil" x1="0" y1="0" x2="1" y2="0.55"><stop offset="0" stop-color="#7a5510"/><stop offset="0.36" stop-color="#a67c1a"/><stop offset="0.5" stop-color="#dcb54c"/><stop offset="0.64" stop-color="#a67c1a"/><stop offset="1" stop-color="#755010"/></linearGradient>
         <linearGradient id="calCurl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efe5ca"/><stop offset="0.6" stop-color="#f9f4e4"/><stop offset="1" stop-color="#d8caa8"/></linearGradient>
@@ -1470,26 +1471,47 @@ if (location.pathname.endsWith('/index.html')) {
              arc wrapping over the edge survives. Of the two wire ends that reach
              the edge, one dives under the pad (and simply stops there) and the
              other carries on across the paper as #calStub, into its #calSlot.
-             All three share the loop's centre, so a single x/y places them. -->
-        <g id="calSlot"><rect x="-3.6" y="0" width="7.2" height="3.8" rx="1.9" fill="#43351e" opacity="0.72"/></g>
-        <g id="calLoop">
-          <ellipse rx="3.4" ry="8.6" transform="rotate(13)" fill="none" stroke="url(#calWire)" stroke-width="2.4"/>
-          <!-- the specular line along the wire's upper-left shoulder. It has to
-               SIT ON the ellipse (a touch inside it, within the 2.4 stroke), not
-               near it: drawn at its own radius it reads as a second, thinner
-               wire floating beside the ring. -->
-          <path d="M-2 -3.3 C-0.96 -6.11 -0.06 -7.47 1.3 -7.8" fill="none" stroke="#f8f5ec" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+             All three share the loop's centre, so a single x/y places them.
+
+             The wire is the game's own recipe (pinWire in js/rewardboard.js): an
+             edge, the metal, a lit side and a glint, each its own stroke along
+             the same path, in the nickel of the guest shelf's hardware. So the
+             shading runs ACROSS the wire and both legs match. It used to be one
+             gradient laid over the whole ring, which left one leg nearly white
+             and the other dark. -->
+        <g id="calSlot">
+          <rect x="-3.9" y="0" width="5" height="3.7" rx="1.85" fill="#33291c"/>
+          <!-- the cut edge of the sheet, catching the lamp on the hole's far side -->
+          <path d="M-2.05 3.7 H-0.75 Q1.1 3.7 1.1 1.85" fill="none" stroke="#fff8e8" stroke-opacity="0.62" stroke-width="0.5" stroke-linecap="round" transform="translate(0.14 0.2)"/>
         </g>
-        <!-- The wire on the page: its shadow first (the coil is raised off the
-             paper, lit from the upper left like every other prop), then the
-             wire, ending inside the slot as it turns down through it. It has to
-             START where the loop's right leg crosses the pad's top edge — at
-             (2.99, 2) off the shared centre, on the tangent the ellipse is
-             travelling when it gets there — or the ring and its own tail read
-             as two unrelated objects with a strip of bare paper between. -->
-        <g id="calStub">
-          <path d="M3.8 2.1 C3 5.3 2 8.5 -1.5 11.2" fill="none" stroke="#46341a" stroke-opacity="0.2" stroke-width="3" stroke-linecap="round"/>
-          <path d="M3 2 C2.2 5.2 1.2 8.4 -2.3 11.1" fill="none" stroke="url(#calWire)" stroke-width="2.4" stroke-linecap="round"/>
+        <g id="calLoop" fill="none">
+          <!-- its shadow on the desk, further off than the one on the paper because the desk is further down -->
+          <path d="M-4.1 4.4 L-3.76 2 A3.4 8.6 13 1 1 2.99 2 L2.79 2.8" stroke="#2e2010" stroke-opacity="0.09" stroke-width="3.6" transform="translate(1.7 2.5)"/>
+          <path d="M-4.1 4.4 L-3.76 2 A3.4 8.6 13 1 1 2.99 2 L2.79 2.8" stroke="#2e2010" stroke-opacity="0.12" stroke-width="2.3" transform="translate(1.5 2.2)"/>
+          <path d="M-4.1 4.4 L-3.76 2 A3.4 8.6 13 1 1 2.99 2 L2.79 2.8" stroke="#5c574c" stroke-width="2.5"/>
+          <path d="M-4.1 4.4 L-3.76 2 A3.4 8.6 13 1 1 2.99 2 L2.79 2.8" stroke="#8d8779" stroke-width="1.95"/>
+          <path d="M-4.1 4.4 L-3.76 2 A3.4 8.6 13 1 1 2.99 2 L2.79 2.8" stroke="#cfc8ba" stroke-width="1.1" transform="translate(-0.3 -0.24)"/>
+          <!-- the glint along the upper-left shoulder. It has to SIT ON the wire, within
+               the stroke: drawn at its own radius it reads as a second, thinner wire. -->
+          <path d="M-2 -3.3 C-0.96 -6.11 -0.06 -7.47 1.3 -7.8" stroke="#fbf8f1" stroke-width="0.5" stroke-linecap="round" opacity="0.9" transform="translate(-0.42 -0.32)"/>
+          <!-- where the left leg goes under the paper, in the sheet's shade -->
+          <path d="M-3.78 2.2 L-3.56 1" stroke="#1e160c" stroke-opacity="0.24" stroke-width="2.6"/>
+          <path d="M-3.78 2.2 L-3.66 1.6" stroke="#1e160c" stroke-opacity="0.26" stroke-width="2.6"/>
+        </g>
+        <!-- The wire on the page. Its shadow comes first, and closes in on the wire as the
+             wire comes down to the paper, because a shadow that keeps its distance reads as a
+             ghost second wire. The wire starts above the pad's top edge, on the tangent the
+             ring is travelling, because the sheet's 1 unit outline stands half above that
+             edge and would otherwise cut a pale seam across it. It ends in the hole, where
+             #calDepth darkens it as it goes down through the stack. -->
+        <g id="calStub" fill="none">
+          <path d="M4.3 2.6 C3.6 5.6 2.5 8.8 -1.9 11.3" stroke="#3b2a14" stroke-opacity="0.08" stroke-width="2.9" stroke-linecap="round"/>
+          <path d="M4.3 2.6 C3.6 5.6 2.5 8.8 -1.9 11.3" stroke="#3b2a14" stroke-opacity="0.12" stroke-width="1.7" stroke-linecap="round"/>
+          <path d="M3.22 0.9 L2.99 2 C2.2 5.2 1.2 8.4 -2.3 11.1" stroke="#5c574c" stroke-width="2.5"/>
+          <path d="M3.22 0.9 L2.99 2 C2.2 5.2 1.2 8.4 -2.3 11.1" stroke="#8d8779" stroke-width="1.95"/>
+          <path d="M3.22 0.9 L2.99 2 C2.2 5.2 1.2 8.4 -2.3 11.1" stroke="#cfc8ba" stroke-width="1.1" transform="translate(-0.3 -0.24)"/>
+          <path d="M2.5 3.8 C2.1 5.4 1.5 6.9 0.5 8.3" stroke="#fbf8f1" stroke-width="0.5" stroke-linecap="round" opacity="0.9" transform="translate(-0.42 -0.32)"/>
+          <rect x="-3.9" y="9" width="5" height="3.7" rx="1.85" fill="url(#calDepth)" stroke="none"/>
         </g>
       </defs>
       <!-- The coil, threaded: drawn before the paper so the pad hides the half

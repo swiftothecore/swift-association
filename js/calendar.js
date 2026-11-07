@@ -4,22 +4,22 @@
 // index.html carries only the static paper: the sheet, its tooth, the punch
 // slots, the coil, the red divider rule and the lifted tear corner.
 // This module draws everything the date decides, so the pad is never wrong:
-//   .cal-stack: the months still to come, under this one, on a greyboard
+//   .cal-stack:    the months still to come, under this one, on a greyboard
 //                  back, so the pad thins through the year (see drawStack)
-//   .cal-flecks: the specks in this sheet's pulp (see drawFlecks)
-//   .cal-title: MONTH + year
-//   .cal-season: the month's own hand-drawn mark, left of the title
-//   .cal-week: S M T W T F S, weekends in the printer's red
-//   .cal-marks: the days that matter: the occasion drawn round the date in
+//   .cal-flecks:   the specks in this sheet's pulp (see drawFlecks)
+//   .cal-title:    MONTH + year
+//   .cal-season:   the month's own hand-drawn mark, left of the title
+//   .cal-week:     S M T W T F S, weekends in the printer's red
+//   .cal-marks:    the days that matter: the occasion drawn round the date in
 //                  the era's pen, over a smudge of its colour (see drawFrame)
-//   .cal-days: the grid of dates. A marked day is a red-letter day: its
+//   .cal-days:     the grid of dates. A marked day is a red-letter day: its
 //                  numeral is printed in its mark's ink. The 13th is the
 //                  notebook's own, a gold-letter day: foil-stamped (see FOIL).
 //                  The squares a month leaves empty carry the dates either
 //                  side of it, small and pale (see drawNeighbours)
-//   .cal-key: the small print at the foot: each marked day and what it is
-//   .cal-strikes: a graphite stroke across each plain day already crossed off
-//   .cal-today: the red pen loop around today, main stroke plus a lighter
+//   .cal-key:      the small print at the foot: each marked day and what it is
+//   .cal-strikes:  a graphite stroke across each plain day already crossed off
+//   .cal-today:    the red pen loop around today, main stroke plus a lighter
 //                  echo pass, like a pen that went around twice. On a marked
 //                  day the pen traces the occasion's own outline instead
 //
