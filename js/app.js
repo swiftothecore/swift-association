@@ -3141,13 +3141,15 @@ function statsDailyPassHTML(streak, sealedDates = statsSealedDailyDates()) {
   const viewKey = statsCalendarMonth || currentKey;
   const [yy, mm] = viewKey.split("-").map(Number);
   const daysInMonth = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
-  const firstDow = new Date(Date.UTC(yy, mm - 1, 1)).getUTCDay();   // 0 = Sunday
-  const rows = Math.ceil((firstDow + daysInMonth) / 7);
+  // The first column's day of the week, 0 for Sunday, from the setting every calendar here reads.
+  const weekFrom = settings.weekStart === "sun" ? 0 : 1;
+  const firstCol = (new Date(Date.UTC(yy, mm - 1, 1)).getUTCDay() - weekFrom + 7) % 7;
+  const rows = Math.ceil((firstCol + daysInMonth) / 7);
   const played = dailyPlayedDates();
   const totals = dailyTotals();
   const earliest = earliestPlayedMonth();
   const blank = `<div class="stp-dp-box is-blank"></div>`;
-  let boxes = blank.repeat(firstDow);
+  let boxes = blank.repeat(firstCol);
   for (let day = 1; day <= daysInMonth; day++) {
     const key = `${viewKey}-${String(day).padStart(2, "0")}`, score = played[key];
     const isToday = key === today, done = score != null;
@@ -3166,8 +3168,8 @@ function statsDailyPassHTML(streak, sealedDates = statsSealedDailyDates()) {
       : `<div class="${cls}"${current}>${inner}</div>`;
   }
   // the printed grid closes as a rectangle, the way a pass is printed
-  boxes += blank.repeat(rows * 7 - firstDow - daysInMonth);
-  const dows = ["S", "M", "T", "W", "T", "F", "S"].map((x) => `<span>${x}</span>`).join("");
+  boxes += blank.repeat(rows * 7 - firstCol - daysInMonth);
+  const dows = Array.from({ length: 7 }, (_, c) => `<span>${"SMTWTFS"[(c + weekFrom) % 7]}</span>`).join("");
   const nav = (dir, on) => `<button type="button" class="stp-dp-nav stp-dp-nav-${dir}" aria-label="${dir === "prev" ? "previous" : "next"} month"` +
     `${on ? "" : ` disabled aria-disabled="true"`}>${dir === "prev" ? BACK_ARROW : CTA_ARROW}</button>`;
   const stub = streak.lastPlayed
@@ -30841,7 +30843,7 @@ function renderSettingsBody() {
       setChoiceHTML("theme", "Theme", "a dark notebook for low light", [{ val: "light", label: "Light" }, { val: "system", label: "System" }, { val: "dark", label: "Dark" }]) +
       setChoiceHTML("textSize", "Text size", "across the notebook and menus", [{ val: "small", label: "Small" }, { val: "standard", label: "Standard" }, { val: "large", label: "Large" }]) +
       setChoiceHTML("deskDensity", "Desk decorations", "objects on the desk beside the page", [{ val: "full", label: "Full" }, { val: "quiet", label: "Quiet" }, { val: "bare", label: "Bare" }]) +
-      setChoiceHTML("weekStart", "Week starts on", "for the records and desk calendars", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
+      setChoiceHTML("weekStart", "Week starts on", "for every calendar in the notebook", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
       setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setChecklistHTML([
         // Deliberately theme-neutral: the old "darker ink, whiter paper" described the
