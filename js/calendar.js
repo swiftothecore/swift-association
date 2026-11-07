@@ -1,22 +1,25 @@
 // Working desk calendar — a wire-bound flip pad lying flat on the writing side
 // of the desk, between the glasses and the mug, open to the REAL current month.
 //
-// index.html carries only the static paper: the card, its grain and lighting,
-// the punch slots, the coil, the red divider rule and the lifted tear corner.
+// index.html carries only the static paper: the sheet, its tooth, the punch
+// slots, the coil, the red divider rule and the lifted tear corner.
 // This module draws everything the date decides, so the pad is never wrong:
-//   .cal-title   — MONTH + year
-//   .cal-season  — the month's own hand-drawn mark, left of the title
-//   .cal-week    — S M T W T F S, weekends in the printer's red
-//   .cal-marks   — the days that matter: the occasion drawn round the date in
+//   .cal-stack: the months still to come, under this one, on a greyboard
+//                  back, so the pad thins through the year (see drawStack)
+//   .cal-flecks: the specks in this sheet's pulp (see drawFlecks)
+//   .cal-title: MONTH + year
+//   .cal-season: the month's own hand-drawn mark, left of the title
+//   .cal-week: S M T W T F S, weekends in the printer's red
+//   .cal-marks: the days that matter: the occasion drawn round the date in
 //                  the era's pen, over a smudge of its colour (see drawFrame)
-//   .cal-days    — the grid of dates. A marked day is a red-letter day: its
+//   .cal-days: the grid of dates. A marked day is a red-letter day: its
 //                  numeral is printed in its mark's ink. The 13th is the
 //                  notebook's own, a gold-letter day: foil-stamped (see FOIL).
 //                  The squares a month leaves empty carry the dates either
 //                  side of it, small and pale (see drawNeighbours)
-//   .cal-key     — the small print at the foot: each marked day and what it is
-//   .cal-strikes — a graphite stroke across each plain day already crossed off
-//   .cal-today   — the red pen loop around today, main stroke plus a lighter
+//   .cal-key: the small print at the foot: each marked day and what it is
+//   .cal-strikes: a graphite stroke across each plain day already crossed off
+//   .cal-today: the red pen loop around today, main stroke plus a lighter
 //                  echo pass, like a pen that went around twice. On a marked
 //                  day the pen traces the occasion's own outline instead
 //
@@ -42,6 +45,7 @@
 import { TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, ALBUM_COLORS, CB_ALBUM_COLORS } from "./config.js";
 import { loadSettings, settingsTodayKey } from "./storage.js";
 import { MONTH_SEASON, southernSeasons, seasonMonth } from "./season.js";
+import { rng } from "./zine.js";
 
 const SVG = "http://www.w3.org/2000/svg";
 const svg = document.querySelector(".di-calendar svg");
@@ -145,6 +149,56 @@ const strike = (cx, cy, s) => {
     transform: `translate(${(cx + dx).toFixed(1)} ${(cy + NUM_CY + dy).toFixed(1)}) rotate(${a})`
   });
 };
+// --- the pad itself --------------------------------------------------------------------------
+//
+// The pad is as thick as the year has left. January sits on eleven spare sheets and December on
+// none, so the stack is drawn from the month rather than fixed, down to a greyboard back, and
+// December's lifted corner shows the bare board where every other month shows the next sheet.
+const SHEET = { x: 21, y: 76, width: 208, height: 212, rx: 6 };
+const SHEET_STEP = 0.5;                 // how far each spare sheet shows past the one above it
+const GREYBOARD = "#8d7a5a", NEXT_SHEET = "#ddd1b2";
+function drawStack(stack, under, m) {
+  clear(stack);
+  const left = 11 - m;
+  const sheet = (off, attrs) => el("rect", { ...SHEET, x: SHEET.x + off, y: SHEET.y + off, ...attrs });
+  const back = sheet(left * SHEET_STEP, { fill: GREYBOARD, stroke: "#6e5d42", "stroke-width": 0.5 });
+  back.setAttribute("transform", "translate(1.5 1.8)");
+  stack.appendChild(back);
+  for (let i = left; i >= 1; i--) {
+    stack.appendChild(sheet(i * SHEET_STEP, { fill: i % 2 ? "#e6dcc1" : "#d8ccac", stroke: "#b7a985", "stroke-width": 0.3 }));
+  }
+  under.setAttribute("fill", left ? NEXT_SHEET : GREYBOARD);
+}
+
+// The specks in the pulp of a lightly recycled cotton stock: fine dark inclusions, paler flecks
+// and a few stray fibres. Each sheet is a different piece of paper, so the scatter is seeded by
+// the month and only redrawn when the month turns. They are kept small and faint on purpose: at
+// desk size you should feel them rather than see them, and a fleck big enough to pick out beside
+// a figure starts to read as a full stop. Plain paths under the type, so this adds no filter.
+function drawFlecks(g, seed) {
+  if (g.dataset.seed === String(seed)) return;
+  g.dataset.seed = seed;
+  clear(g);
+  const rand = rng(seed);
+  const atX = () => SHEET.x + rand() * SHEET.width, atY = () => SHEET.y + rand() * SHEET.height;
+  const speck = (x, y, r) => {
+    const a = rand() * 6.28, squash = 0.55 + rand() * 0.45;
+    const p = (t, k) => `${(x + Math.cos(t) * k).toFixed(1)} ${(y + Math.sin(t) * k).toFixed(1)}`;
+    return `M${p(a, r)}L${p(a + 2.1, r * squash)}L${p(a + 4.2, r)}Z`;
+  };
+  let dark = "", pale = "", fibres = "";
+  for (let i = 0; i < 150; i++) dark += speck(atX(), atY(), 0.2 + rand() * rand() * 0.42);
+  for (let i = 0; i < 170; i++) pale += speck(atX(), atY(), 0.3 + rand() * 0.55);
+  for (let i = 0; i < 34; i++) {
+    const x = atX(), y = atY(), a = rand() * 6.28, len = 1.6 + rand() * 3.6, bend = (rand() - 0.5) * 1.6;
+    const mx = Math.cos(a) * len / 2 - Math.sin(a) * bend, my = Math.sin(a) * len / 2 + Math.cos(a) * bend;
+    fibres += `M${x.toFixed(1)} ${y.toFixed(1)}q${mx.toFixed(1)} ${my.toFixed(1)} ${(Math.cos(a) * len).toFixed(1)} ${(Math.sin(a) * len).toFixed(1)}`;
+  }
+  g.appendChild(el("path", { d: pale, fill: "#b49a70", opacity: 0.42 }));
+  g.appendChild(el("path", { d: dark, fill: "#5e4a33", opacity: 0.28 }));
+  g.appendChild(el("path", { d: fibres, fill: "none", stroke: "#a8906a", "stroke-width": 0.26, "stroke-linecap": "round", opacity: 0.38 }));
+}
+
 // --- the month's own mark, in the title line ---
 //
 // One drawing per month rather than one per season, so tearing a sheet off
@@ -327,7 +381,7 @@ function markInk(mark, colors) {
 // lime, TTPD's sand, the snow blue) are too pale to read as an eleven-pixel figure on cream.
 // So the colour is pulled toward the pad's own ink, a step at a time, until it holds 3.2:1
 // against the stock; a dark era passes the first test and barely moves. Contrast is measured
-// against #f3ead4, the middle of the sheet's gradient.
+// against #f4ecd8, the finished sheet.
 const hexRgb = (hex) => {
   const c = hex.replace("#", "");
   const n = c.length === 3 ? [...c].map((h) => h + h).join("") : c;
@@ -337,7 +391,7 @@ const luminance = (rgb) => {
   const [r, g, b] = rgb.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
-const STOCK_L = luminance(hexRgb("#f3ead4"));
+const STOCK_L = luminance(hexRgb("#f4ecd8"));
 const PAD_INK = [0x2e, 0x26, 0x1c];
 function typeInk(hex) {
   const rgb = hexRgb(hex);
@@ -683,6 +737,8 @@ export function render(now) {
   const y = now.getFullYear(), m = now.getMonth(), D = now.getDate();
   const seed = y * 384 + m * 31;
   const colors = loadSettings().colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS;
+  drawStack(svg.querySelector(".cal-stack"), svg.querySelector(".cal-under"), m);
+  drawFlecks(svg.querySelector(".cal-flecks"), seed);
 
   title.textContent = MONTHS[m].toUpperCase();
   title.appendChild(el("tspan", { class: "cal-year", dx: "6" }, String(y)));

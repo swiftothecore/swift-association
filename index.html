@@ -1447,27 +1447,23 @@ if (location.pathname.endsWith('/index.html')) {
        like every other prop, open to the REAL current month. The pad shows its
        own history: the plain days already past are crossed off in graphite, today
        is circled in red pen, and the 13th is printed in gold foil.
-       Only the static paper is drawn here — card, grain, lighting, punch
-       slots, coil, red divider rule and the lifted tear corner; everything the
-       date decides is built from `new Date()` by js/calendar.js.
+       Only the static paper is drawn here: the sheet, its tooth, the punch
+       slots, the coil, the red divider rule and the lifted tear corner.
+       Everything the date decides is built from `new Date()` by js/calendar.js.
        Desktop-only, non-interactive. -->
   <div class="desk-item di-calendar">
     <svg viewBox="0 50 250 268" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="calPage" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#f9f3e2"/><stop offset="0.55" stop-color="#f3ead4"/><stop offset="1" stop-color="#e6dabd"/></linearGradient>
         <linearGradient id="calWire" x1="0" y1="0" x2="1" y2="0.4"><stop offset="0" stop-color="#efece2"/><stop offset="0.45" stop-color="#a9a294"/><stop offset="1" stop-color="#6f695c"/></linearGradient>
         <!-- the band of shine across the 13th's foil, held dark enough to stay legible on cream -->
         <linearGradient id="calFoil" x1="0" y1="0" x2="1" y2="0.55"><stop offset="0" stop-color="#7a5510"/><stop offset="0.36" stop-color="#a67c1a"/><stop offset="0.5" stop-color="#dcb54c"/><stop offset="0.64" stop-color="#a67c1a"/><stop offset="1" stop-color="#755010"/></linearGradient>
         <linearGradient id="calCurl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efe5ca"/><stop offset="0.6" stop-color="#f9f4e4"/><stop offset="1" stop-color="#d8caa8"/></linearGradient>
-        <radialGradient id="calSheen" cx="0.3" cy="0.22" r="1.05">
-          <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>
-          <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
-          <stop offset="1" stop-color="#6d5a38" stop-opacity="0.15"/>
-        </radialGradient>
-        <filter id="calGrain" x="0" y="0" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="11"/>
-          <feColorMatrix type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0.55 0"/>
+        <!-- the sheet's tooth, the same cotton stock as the Blush start button (roseLetterpress in js/cta.js) -->
+        <filter id="calCotton" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency=".74" numOctaves="3" seed="28" stitchTiles="stitch"/>
+          <feColorMatrix type="saturate" values="0"/>
         </filter>
+        <clipPath id="calSheet"><rect x="21" y="76" width="208" height="212" rx="6"/></clipPath>
         <!-- The binding, in the three pieces you can actually see of a real coil
              from directly above. #calLoop is the whole ring, but it is drawn
              BEHIND the pad, so the paper cuts it at the top edge and only the
@@ -1501,12 +1497,18 @@ if (location.pathname.endsWith('/index.html')) {
       <g class="cal-coil">
         <use href="#calLoop" x="41" y="74"/><use href="#calLoop" x="62" y="74"/><use href="#calLoop" x="83" y="74"/><use href="#calLoop" x="104" y="74"/><use href="#calLoop" x="125" y="74"/><use href="#calLoop" x="146" y="74"/><use href="#calLoop" x="167" y="74"/><use href="#calLoop" x="188" y="74"/><use href="#calLoop" x="209" y="74"/>
       </g>
-      <!-- the pad, a few sheets thick: spare months peeking out low-right -->
-      <rect x="25" y="80" width="208" height="212" rx="6" fill="#cfc2a2"/>
-      <rect x="23" y="78" width="208" height="212" rx="6" fill="#ddd1b2"/>
-      <rect x="21" y="76" width="208" height="212" rx="6" fill="url(#calPage)" stroke="#c3b696" stroke-width="1"/>
-      <rect class="cal-grain" x="21" y="76" width="208" height="212" rx="6" filter="url(#calGrain)"/>
-      <rect x="21" y="76" width="208" height="212" rx="6" fill="url(#calSheen)"/>
+      <!-- the months still to come, on a greyboard back (js/calendar.js, drawStack) -->
+      <g class="cal-stack"></g>
+      <!-- The sheet is one flat stock. It used to carry a page gradient and a radial sheen,
+           which left the bottom right corner about 31% darker than the top left: a flat sheet
+           this size does not fall off like that under a lamp, and it made the pad read as a
+           rendered card. The lamp still shows where it belongs, in the shadow, the pressed
+           edge of the type and the lifted corner. The fill is a touch lighter than the
+           finished sheet, because the cotton multiplies it down to about #f4ecd8. -->
+      <rect x="21" y="76" width="208" height="212" rx="6" fill="#f9f0da" stroke="#c3b696" stroke-width="1"/>
+      <rect class="cal-tooth" x="21" y="76" width="208" height="212" rx="6" filter="url(#calCotton)"/>
+      <!-- the specks in the pulp, a different scatter on every sheet (js/calendar.js, drawFlecks) -->
+      <g class="cal-flecks" clip-path="url(#calSheet)"></g>
       <!-- red pen divider under the month title, with a hand wobble -->
       <path class="cal-rule" d="M34 116 Q125 113.8 216 116"/>
       <!-- where the binding meets the page: the punched slots, then the length
@@ -1528,7 +1530,7 @@ if (location.pathname.endsWith('/index.html')) {
       <!-- the sheet's bottom-right corner lifting off the pad, ready to tear:
            the under-month shows beneath, a soft shadow along the fold, then
            the curled corner's pale back catching the light -->
-      <path d="M211 288 L229 270 L229 282 Q229 288 223 288 Z" fill="#ddd1b2"/>
+      <path class="cal-under" d="M211 288 L229 270 L229 282 Q229 288 223 288 Z" fill="#ddd1b2"/>
       <path d="M211.5 287.5 L228.5 270.5" fill="none" stroke="#46341a" stroke-opacity="0.24" stroke-width="2.2" stroke-linecap="round"/>
       <path d="M211 288 L229 270 Q220.5 268.6 212.8 270.5 Q210.2 278.6 211 288 Z" fill="url(#calCurl)" stroke="#c9ba97" stroke-width="0.8" stroke-linejoin="round"/>
     </svg>
