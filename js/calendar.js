@@ -9,7 +9,8 @@
 //   .cal-flecks:   the specks in this sheet's pulp (see drawFlecks)
 //   .cal-title:    MONTH + year
 //   .cal-season:   the month's own hand-drawn mark, left of the title
-//   .cal-week:     S M T W T F S, weekends in the printer's red
+//   .cal-week:     the weekday initials, starting from the day the Week starts on
+//                  setting names, weekends in the printer's red
 //   .cal-marks:    the days that matter: the occasion drawn round the date in
 //                  the era's pen, over a smudge of its colour (see drawFrame)
 //   .cal-days:     the grid of dates. A marked day is a red-letter day: its
@@ -74,10 +75,10 @@ const jit = (seed) => {
 const COL0 = 46, CW = 26.3;             // centre of first column + pitch
 const colX = (c) => COL0 + c * CW;
 const WEEK_Y = 133;                     // weekday-initial baseline
-const ROW0 = 152;                       // first date row anchor
+const ROW0 = 152, ROW0_SIX = 149;       // first date row anchor, and on a six-week sheet (see fitRows)
 const RH_MIN = 22, RH_SHORT = 30;       // the row pitch's floor, and its ceiling on a four-week sheet
-let RH = RH_MIN;                        // this sheet's row pitch, set by fitRows
-const rowY = (r) => ROW0 + r * RH;
+let rowTop = ROW0, RH = RH_MIN;         // this sheet's first row and pitch, set by fitRows
+const rowY = (r) => rowTop + r * RH;
 const NUM_DY = 4.3;                     // baseline of the numerals below the row anchor
 // The numeral's OPTICAL centre, which is what the hand marks aim at and is not the row
 // anchor: Courier Prime's cap height is 0.583em, so an 11.8px figure sits from 3.4 above
@@ -628,10 +629,14 @@ function wrapKey(g, entries, maxW) {
 // stand about 25 tall, so at a fixed 22 a heart's point ran into the crown on the row below.
 // The small print is measured rather than estimated, because a pitch taken from a guess that
 // came up a line short left no room for the key at all, and the sheet printed none.
+// A six-week sheet has the least room of any, so it lifts its first row towards the weekday
+// initials: a busy October on six weeks, with its small print wrapped into the blank squares,
+// fits by exactly those three units.
 function fitRows(rows, keyLines, lastRowMarked) {
+  rowTop = rows > 5 ? ROW0_SIX : ROW0;
   const key = keyLines ? (keyLines - 1) * KEY_LH + KEY_CAP + KEY_GAP : 0;
   const foot = KEY_FOOT - key - (lastRowMarked ? FRAME_FOOT : NUM_DY + 1);
-  RH = Math.max(RH_MIN, Math.min(rows > 4 ? CW : RH_SHORT, (foot - ROW0) / (rows - 1)));
+  RH = Math.max(RH_MIN, Math.min(rows > 4 ? CW : RH_SHORT, (foot - rowTop) / (rows - 1)));
 }
 // Returns the region it printed in, or null when the sheet had no room for it.
 function drawKey(g, entries, regions) {
@@ -656,8 +661,8 @@ function drawKey(g, entries, regions) {
 // --- the neighbouring months ----------------------------------------------------------------
 //
 // A printed pad carries the dates either side of its month in the squares the month leaves
-// empty, small and pale, so the grid is a whole rectangle and a lone 1 on a Saturday is not left
-// stranded in an empty row. They are printed, so they take the press like the other type, and no
+// empty, small and pale, so the grid is a whole rectangle and a lone 1 at the end of a row is not
+// left stranded. They are printed, so they take the press like the other type, and no
 // hand mark ever lands on them. The trailing ones give way when the small print has fallen back
 // to those same squares on a full six-week sheet: the key says something, and they don't.
 function drawNeighbours(g, y, m, firstDay, daysIn, rows, tailFree) {
@@ -736,7 +741,13 @@ export function render(now) {
 
   const y = now.getFullYear(), m = now.getMonth(), D = now.getDate();
   const seed = y * 384 + m * 31;
-  const colors = loadSettings().colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS;
+  const settings = loadSettings();
+  const colors = settings.colorBlindAlbums ? CB_ALBUM_COLORS : ALBUM_COLORS;
+  // The first column's day of the week, 0 for Sunday, from the same setting the records calendar
+  // reads. Monday first also puts the two weekend columns side by side.
+  const weekFrom = settings.weekStart === "sun" ? 0 : 1;
+  const dayOfColumn = (c) => (c + weekFrom) % 7;
+  const weekend = (c) => dayOfColumn(c) === 0 || dayOfColumn(c) === 6;
   drawStack(svg.querySelector(".cal-stack"), svg.querySelector(".cal-under"), m);
   drawFlecks(svg.querySelector(".cal-flecks"), seed);
 
@@ -754,13 +765,13 @@ export function render(now) {
   for (let c = 0; c < 7; c++) {
     const t = el("text", {
       y: WEEK_Y, "text-anchor": "middle",
-      class: (c === 0 || c === 6) ? "wknd" : null
-    }, DOW[c]);
+      class: weekend(c) ? "wknd" : null
+    }, DOW[dayOfColumn(c)]);
     week.appendChild(t);
     t.setAttribute("x", (colX(c) + tracking(t) / 2).toFixed(2));
   }
 
-  const firstDay = new Date(y, m, 1).getDay();     // 0 = Sunday
+  const firstDay = (new Date(y, m, 1).getDay() - weekFrom + 7) % 7;     // the column the 1st falls in
   const daysIn = new Date(y, m + 1, 0).getDate();
   const rows = Math.ceil((firstDay + daysIn) / 7);
   // The small print comes first, because how many lines it runs to decides how tall the rows can
@@ -784,7 +795,7 @@ export function render(now) {
     const mark = DAY_MARK.get(mdKey(m, d));
     const num = el("text", {
       x: cx, y: (cy + NUM_DY).toFixed(1), "text-anchor": "middle",
-      class: (c === 0 || c === 6) ? "wknd" : null
+      class: weekend(c) ? "wknd" : null
     }, String(d));
     // A gold-letter day. The marked days are printed in their era's ink; the 13th is the
     // notebook's own, so the printer set it in gold foil, every month. It used to wear a gold

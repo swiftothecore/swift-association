@@ -645,6 +645,7 @@ function applySettings() {
   centreTallyHead();     // the text-size lever changes the numeral's size, so its ink moves
   body.setAttribute("data-desk-density", ["quiet", "bare"].includes(settings.deskDensity) ? settings.deskDensity : "full");
   if (deskWired) renderDeskPrint(true);
+  window.deskCalendar?.refresh();   // its columns follow the week start, its hearts the album palette
   body.setAttribute("data-reduced-flashing", settings.reducedFlashing ? "on" : "off");
   if (settings.highContrast) body.setAttribute("data-contrast", "high");
   else body.removeAttribute("data-contrast");
@@ -30840,7 +30841,7 @@ function renderSettingsBody() {
       setChoiceHTML("theme", "Theme", "a dark notebook for low light", [{ val: "light", label: "Light" }, { val: "system", label: "System" }, { val: "dark", label: "Dark" }]) +
       setChoiceHTML("textSize", "Text size", "across the notebook and menus", [{ val: "small", label: "Small" }, { val: "standard", label: "Standard" }, { val: "large", label: "Large" }]) +
       setChoiceHTML("deskDensity", "Desk decorations", "objects on the desk beside the page", [{ val: "full", label: "Full" }, { val: "quiet", label: "Quiet" }, { val: "bare", label: "Bare" }]) +
-      setChoiceHTML("weekStart", "Week starts on", "first row of the records calendar", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
+      setChoiceHTML("weekStart", "Week starts on", "for the records and desk calendars", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
       setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setChecklistHTML([
         // Deliberately theme-neutral: the old "darker ink, whiter paper" described the
