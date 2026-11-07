@@ -11,9 +11,11 @@
 //                  the era's pen, over a smudge of its colour (see drawFrame)
 //   .cal-days    — the grid of dates. A marked day is a red-letter day: its
 //                  numeral is printed in its mark's ink. The 13th is the
-//                  notebook's own, a gold-letter day: foil-stamped (see FOIL)
+//                  notebook's own, a gold-letter day: foil-stamped (see FOIL).
+//                  The squares a month leaves empty carry the dates either
+//                  side of it, small and pale (see drawNeighbours)
 //   .cal-key     — the small print at the foot: each marked day and what it is
-//   .cal-strikes — a graphite stroke through each day already crossed off
+//   .cal-strikes — a graphite stroke across each plain day already crossed off
 //   .cal-today   — the red pen loop around today, main stroke plus a lighter
 //                  echo pass, like a pen that went around twice. On a marked
 //                  day the pen traces the occasion's own outline instead
@@ -68,14 +70,19 @@ const jit = (seed) => {
 const COL0 = 46, CW = 26.3;             // centre of first column + pitch
 const colX = (c) => COL0 + c * CW;
 const WEEK_Y = 133;                     // weekday-initial baseline
-const ROW0 = 152, RH = 22;              // first date row baseline + pitch
+const ROW0 = 152;                       // first date row anchor
+const RH_MIN = 22, RH_SHORT = 30;       // the row pitch's floor, and its ceiling on a four-week sheet
+let RH = RH_MIN;                        // this sheet's row pitch, set by fitRows
 const rowY = (r) => ROW0 + r * RH;
-const NUM_DY = 4.1;                     // baseline of the numerals below the row anchor
+const NUM_DY = 4.3;                     // baseline of the numerals below the row anchor
 // The numeral's OPTICAL centre, which is what the hand marks aim at and is not the row
-// anchor: Courier Prime's cap height is 0.583em, so an 11px figure sits from 3.2 above
-// its baseline to the baseline itself, centred 4.1 - 3.2 = 0.9 below the anchor. The
+// anchor: Courier Prime's cap height is 0.583em, so an 11.8px figure sits from 3.4 above
+// its baseline to the baseline itself, centred 4.3 - 3.4 = 0.9 below the anchor. The
 // strike and the pen loop both centre here; the printed grid still hangs off cy.
 const NUM_CY = 0.9;
+// A neighbouring month's date, sized in styles.css at 7.6px, whose 2.2 half cap height puts its
+// centre on the same line as the month's own figures.
+const OTHER_DY = NUM_CY + 2.2;
 // How far below the row anchor an occasion's frame reaches (the heart's point and the
 // tree's trunk are the deepest), so the small print knows where the grid's ink ends.
 const FRAME_FOOT = 12.4;
@@ -112,36 +119,32 @@ for (const m of [...TS_MILESTONES, ...GUEST_DAYS, ...TS_LORE_DAYS]) {
 }
 const mdKey = (m, d) => `${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-// A graphite slash through a spent day. The length comes from the NUMERAL, not from a
-// constant: a stroke long enough to cross "17" is close to twice the width of "7", and
-// a fixed length turned the whole first week into slashes floating up off their digits
-// rather than through them. So it is the measured glyph box plus a hand's overshoot at
-// each end. It is centred on NUM_CY too, because the row anchor is not where the figure
-// is, and the bow is gentle and near-symmetric so neither tip flies clear of the ink.
+// A graphite stroke across a spent day, corner to corner of its square, the way a day really
+// gets crossed off a desk pad. The length comes from the SQUARE, not from the numeral: little
+// ticks fitted to each figure turned a late month into a field of noise, where a stroke the
+// size of the square falls into a rhythm and leaves the days still to come standing clear.
+// It is centred on NUM_CY, because the row anchor is not where the figure is.
+//
+// A day with an occasion on it is not struck at all. A slash through a heart is a slash through
+// the number the heart is holding, and you don't cross out a date you drew a heart round.
 //
 // Angle, length, bow, offset AND pressure are jittered per date. The pressure is the
 // point: twenty-five squares of identical stroke-width and opacity read as one stamp
 // repeated, which is the opposite of the "crossed off on different mornings" the rest
 // of the geometry is trying to say. Weight and opacity are set here rather than in the
 // stylesheet, since a CSS declaration would win over a presentation attribute.
-const strike = (cx, cy, w, s) => {
-  const a = (-16 - jit(s) * 18).toFixed(1);
-  const L = w + 3.2 + jit(s + 7) * 2.2;
-  const bow = 0.7 + jit(s + 13) * 1.1;
+const strike = (cx, cy, s) => {
+  const a = (-38 - jit(s) * 15).toFixed(1);
+  const L = 18 + jit(s + 7) * 5;
+  const bow = 0.5 + jit(s + 13) * 0.9;
   const dx = (jit(s + 3) - 0.5) * 2, dy = (jit(s + 5) - 0.5) * 1.8;
   return el("path", {
     d: `M${(-L / 2).toFixed(1)} ${(bow * 0.7).toFixed(1)} Q0 ${(-bow * 0.5).toFixed(1)} ${(L / 2).toFixed(1)} ${(-bow).toFixed(1)}`,
-    "stroke-width": (0.95 + jit(s + 17) * 0.55).toFixed(2),
-    opacity: (0.4 + jit(s + 23) * 0.26).toFixed(2),
+    "stroke-width": (0.9 + jit(s + 17) * 0.6).toFixed(2),
+    opacity: (0.34 + jit(s + 23) * 0.22).toFixed(2),
     transform: `translate(${(cx + dx).toFixed(1)} ${(cy + NUM_CY + dy).toFixed(1)}) rotate(${a})`
   });
 };
-// Nominal advance of one Courier figure, the fallback when the pad is not laid out yet
-// and getBBox answers zero. Monospaced, so this is exact at the default text size and
-// only drifts if the accessibility text-size bump is on -- which is why the real width
-// is measured first and this is only the floor.
-const DIGIT_W = 6.6;
-
 // --- the month's own mark, in the title line ---
 //
 // One drawing per month rather than one per season, so tearing a sheet off
@@ -233,8 +236,8 @@ const MARK_WASH_D = "M3.4 8.6 C5.4 5.6 9 4.6 13.4 4.9 C18 5.2 20.6 7.4 20.4 11.6
 const SEASON_WASH = { spring: "#6f8f4a", summer: "#c8912a", autumn: "#b0603a", winter: "#5a7c94" };
 // The hemisphere list and the month-to-season table live in js/season.js, shared with the
 // Seasons start button so the pad and the button always agree.
-const MARK_SCALE = 0.92;                // the 24-box drawn at ~22px, the height of the whole title line
-const MARK_GAP = 8;                     // paper between the mark and the M of the month
+const MARK_SCALE = 1.04;                // the 24-box drawn at ~25px, a touch taller than the title line
+const MARK_GAP = 7;                     // paper between the mark and the M of the month
 
 // The mark goes to the LEFT of the month, and the two are centred TOGETHER: the
 // title alone is anchored middle at x=125, which on SEPTEMBER — the longest
@@ -265,7 +268,7 @@ function drawMonthMark(svg, title, m, seed) {
   inner.appendChild(el("path", { d: MARK_WASH_D, class: "cal-wash",
     fill: SEASON_WASH[MONTH_SEASON[sm]], opacity: 0.34 }));
   for (const d of mark.ink) {
-    inner.appendChild(el("path", { d, fill: "none", stroke: "#55412a", "stroke-width": 1.3,
+    inner.appendChild(el("path", { d, fill: "none", stroke: "#55412a", "stroke-width": 1.05,
       "stroke-linecap": "round", "stroke-linejoin": "round" }));
   }
   g.appendChild(inner);
@@ -523,6 +526,9 @@ function drawTodayTrace(g, { d, at, k }) {
 // prints no key rather than a squeezed one. Every right edge stops short of the curled
 // corner, whose fold runs from (211, 288) to (229, 270).
 const KEY_LH = 6.9, KEY_CAP = 3.2, CURL_X = 207;
+const KEY_FOOT = 282.5;                 // the foot line's baseline
+const KEY_GAP = 9;                      // paper kept between the grid's ink and the small print
+const KEY_W = 2 * (CURL_X - 125);       // wide enough, centred on the sheet, to stop short of the curl
 const tvShort = (t) => t.replace(" (Taylor's Version)", " (TV)");
 // What the key calls a day. A record says its title (both, on a day two share); a songday its
 // fan name (`day`), unless that would only say the date back, in which case the row carries a
@@ -538,44 +544,76 @@ function keyLabel(rows) {
   if (top.kind === "guest") return top.calKey || `${top.name}'s birthday`;
   return top.calKey || top.day || top.title;
 }
+const keyParts = (e, first) => [
+  ...(first ? [] : [{ s: "  ·  " }]),
+  { s: String(e.d), ink: e.ink, foil: e.foil },
+  { s: " " + e.label },
+];
+const keyText = (parts) => {
+  const t = el("text", { "text-anchor": "middle" });
+  for (const p of parts) t.appendChild(el("tspan", p.foil ? { class: "foil" } : p.ink ? { class: "rl", style: `--rl:${p.ink}` } : {}, p.s));
+  return t;
+};
+// Measured in the real face, in the group itself, which it leaves as it found it.
+function wrapKey(g, entries, maxW) {
+  const width = (parts) => { const t = keyText(parts); g.appendChild(t); const w = t.getComputedTextLength(); t.remove(); return w; };
+  const lines = [[]];
+  let w = 0;
+  for (const e of entries) {
+    const ww = width(keyParts(e, !lines.at(-1).length));
+    if (lines.at(-1).length && w + ww > maxW) { lines.push([]); w = width(keyParts(e, true)); }
+    else w += ww;
+    lines.at(-1).push(e);
+  }
+  return lines;
+}
+// How tall this sheet's rows can be. A sheet runs to four, five or six weeks and its small print
+// to one line or several, so the pitch is what is left between the first row and the foot, which
+// is what stops a five-week month leaving a blank band over its small print. Five rows come out
+// at CW wherever they can, and that is what makes the squares square. The marks need it: they
+// stand about 25 tall, so at a fixed 22 a heart's point ran into the crown on the row below.
+// The small print is measured rather than estimated, because a pitch taken from a guess that
+// came up a line short left no room for the key at all, and the sheet printed none.
+function fitRows(rows, keyLines, lastRowMarked) {
+  const key = keyLines ? (keyLines - 1) * KEY_LH + KEY_CAP + KEY_GAP : 0;
+  const foot = KEY_FOOT - key - (lastRowMarked ? FRAME_FOOT : NUM_DY + 1);
+  RH = Math.max(RH_MIN, Math.min(rows > 4 ? CW : RH_SHORT, (foot - ROW0) / (rows - 1)));
+}
+// Returns the region it printed in, or null when the sheet had no room for it.
 function drawKey(g, entries, regions) {
-  const partsOf = (e, first) => [
-    ...(first ? [] : [{ s: "  ·  " }]),
-    { s: String(e.d), ink: e.ink, foil: e.foil },
-    { s: " " + e.label },
-  ];
-  const line = (parts) => {
-    const t = el("text", { "text-anchor": "middle" });
-    for (const p of parts) t.appendChild(el("tspan", p.foil ? { class: "foil" } : p.ink ? { class: "rl", style: `--rl:${p.ink}` } : {}, p.s));
-    return t;
-  };
-  const width = (parts) => { const t = line(parts); g.appendChild(t); const w = t.getComputedTextLength(); t.remove(); return w; };
-  const wrap = (maxW) => {
-    const lines = [[]];
-    let w = 0;
-    for (const e of entries) {
-      const ww = width(partsOf(e, !lines.at(-1).length));
-      if (lines.at(-1).length && w + ww > maxW) { lines.push([]); w = width(partsOf(e, true)); }
-      else w += ww;
-      lines.at(-1).push(e);
-    }
-    return lines;
-  };
   for (const R of regions) {
     if (!R) continue;
-    const lines = wrap(R.maxW);
+    const lines = wrapKey(g, entries, R.maxW);
     const need = KEY_CAP + (lines.length - 1) * KEY_LH;
     if (need > R.bottom - R.top) continue;
     const first = R.foot ? R.bottom - (lines.length - 1) * KEY_LH
       : R.top + (R.bottom - R.top - need) / 2 + KEY_CAP;
     lines.forEach((ln, i) => {
-      const t = line(ln.flatMap((e, j) => partsOf(e, j === 0)));
+      const t = keyText(ln.flatMap((e, j) => keyParts(e, j === 0)));
       g.appendChild(t);
       t.setAttribute("x", (R.cx + tracking(t) / 2).toFixed(2));
       t.setAttribute("y", (first + i * KEY_LH).toFixed(1));
     });
-    return;
+    return R;
   }
+  return null;
+}
+
+// --- the neighbouring months ----------------------------------------------------------------
+//
+// A printed pad carries the dates either side of its month in the squares the month leaves
+// empty, small and pale, so the grid is a whole rectangle and a lone 1 on a Saturday is not left
+// stranded in an empty row. They are printed, so they take the press like the other type, and no
+// hand mark ever lands on them. The trailing ones give way when the small print has fallen back
+// to those same squares on a full six-week sheet: the key says something, and they don't.
+function drawNeighbours(g, y, m, firstDay, daysIn, rows, tailFree) {
+  const put = (idx, n) => g.appendChild(el("text", {
+    x: colX(idx % 7), y: (rowY(Math.floor(idx / 7)) + OTHER_DY).toFixed(1), "text-anchor": "middle", class: "other",
+  }, String(n)));
+  const before = new Date(y, m, 0).getDate() - firstDay;
+  for (let c = 0; c < firstDay; c++) put(c, before + 1 + c);
+  if (!tailFree) return;
+  for (let i = 0, tail = rows * 7 - firstDay - daysIn; i < tail; i++) put(firstDay + daysIn + i, i + 1);
 }
 
 // --- letterpress ----------------------------------------------------------------------------
@@ -596,7 +634,8 @@ function drawKey(g, entries, regions) {
 //
 // A foil figure (the 13th, FOIL) is the one exception: foil does not bite, it sits ON the
 // stock with its top edge catching the lamp, so its lip is the pale foil a third of a unit
-// ABOVE the stamp, and foil goes down evenly, so it takes no ink variance.
+// ABOVE the stamp, and foil goes down evenly, so it takes no ink variance. It stays one piece of
+// text for the same reason, so the band of shine in #calFoil crosses the whole figure.
 const LIP = "#fffaee", FOIL_LIT = "#fbe6ad";
 function pressSheet(texts, seed) {
   for (const t of texts) {
@@ -618,8 +657,9 @@ function pressSheet(texts, seed) {
     return frag;
   };
   for (const t of texts) {
+    if (t.classList.contains("foil")) continue;
     // the big title takes the ink evenly; the small figures wander further
-    const floor = t.classList.contains("foil") ? 1 : t.classList.contains("cal-title") ? 0.9 : 0.84;
+    const floor = t.classList.contains("cal-title") ? 0.9 : 0.84;
     for (const node of [...t.childNodes]) {
       if (node.nodeType === 3) t.replaceChild(split(node, floor), node);
       else if (node.tagName === "tspan") node.replaceChildren(split(node, floor));
@@ -667,9 +707,19 @@ export function render(now) {
   const firstDay = new Date(y, m, 1).getDay();     // 0 = Sunday
   const daysIn = new Date(y, m + 1, 0).getDate();
   const rows = Math.ceil((firstDay + daysIn) / 7);
+  // The small print comes first, because how many lines it runs to decides how tall the rows can
+  // be. Its ink is the same answer its numeral gets below.
+  const keyed = [];
+  let lastRowMarked = false;
+  for (let d = 1; d <= daysIn; d++) {
+    const mark = DAY_MARK.get(mdKey(m, d));
+    if (!mark) continue;
+    keyed.push({ d, ink: typeInk(markInk(mark, colors).color), foil: d === 13, label: keyLabel(DAY_ROWS.get(mdKey(m, d))) });
+    if (firstDay + d - 1 >= (rows - 1) * 7) lastRowMarked = true;
+  }
+  fitRows(rows, measured && keyed.length ? wrapKey(key, keyed, KEY_W).length : 0, lastRowMarked);
   // How far down each row's ink reaches, numerals or a hung mark, for the small print.
   const inkFoot = Array.from({ length: rows }, (_, r) => rowY(r) + NUM_DY + 1);
-  const keyed = [];
   for (let d = 1; d <= daysIn; d++) {
     const idx = firstDay + d - 1;
     const r = Math.floor(idx / 7);
@@ -696,29 +746,25 @@ export function render(now) {
       // A hollow mark gets no red letter: on this pad hollow means "marked, but not the real
       // thing", and the printer would not have set it in a second ink either.
       const { color, hollow } = markInk(mark, colors);
-      const ink = typeInk(color);
       if (!hollow) {
         num.classList.add("rl");
-        num.style.setProperty("--rl", ink);
+        num.style.setProperty("--rl", typeInk(color));
       }
-      keyed.push({ d, ink, foil: d === 13, label: keyLabel(DAY_ROWS.get(mdKey(m, d))) });
     }
     days.appendChild(num);
-    // Measured AFTER the append, so the figure is in the tree and has a box; an
-    // unlaid-out pad answers zero and falls back to the nominal monospace advance.
-    if (d < D) {
-      const w = num.getBBox().width || String(d).length * DIGIT_W;
-      strikes.appendChild(strike(cx, cy, w, seed + d));
-    }
+    // After the append, so the figure has a computed style to read its tracking from.
+    num.setAttribute("x", (cx + tracking(num) / 2).toFixed(2));
+    if (d < D && !mark) strikes.appendChild(strike(cx, cy, seed + d));
     if (d === D && !mark) drawToday(today, cx, cy + NUM_CY, seed + 200 + d);
   }
 
+  let keyRegion = null;
   if (measured && keyed.length) {
     const lastCol = (firstDay + daysIn - 1) % 7, last = rows - 1;
-    drawKey(key, keyed, [
+    keyRegion = drawKey(key, keyed, [
       // under the grid, centred on the sheet like the title and the rule, and wrapped narrow
       // enough that a centred line stays clear of the curl
-      { cx: 125, maxW: 2 * (CURL_X - 125), top: inkFoot[last] + 5, bottom: 282.5, foot: true },
+      { cx: 125, maxW: KEY_W, top: inkFoot[last] + 5, bottom: KEY_FOOT, foot: true },
       // the blank squares after the last day, from just clear of its figure and its mark,
       // and up into the gap under the row above
       6 - lastCol >= 2 && {
@@ -728,6 +774,7 @@ export function render(now) {
       },
     ]);
   }
+  drawNeighbours(days, y, m, firstDay, daysIn, rows, !keyRegion || keyRegion.foot);
 
   pressSheet([title, ...week.children, ...days.children, ...key.children], seed);
 }

@@ -1445,8 +1445,8 @@ if (location.pathname.endsWith('/index.html')) {
   <!-- LEFT: the working desk calendar, up between the glasses and the mug.
        A wire-bound month pad lying flat on the wood, seen from directly above
        like every other prop, open to the REAL current month. The pad shows its
-       own history: the days already past are crossed off in graphite, today is
-       circled in red pen, and the 13th is printed in gold foil.
+       own history: the plain days already past are crossed off in graphite, today
+       is circled in red pen, and the 13th is printed in gold foil.
        Only the static paper is drawn here — card, grain, lighting, punch
        slots, coil, red divider rule and the lifted tear corner; everything the
        date decides is built from `new Date()` by js/calendar.js.
@@ -1456,6 +1456,8 @@ if (location.pathname.endsWith('/index.html')) {
       <defs>
         <linearGradient id="calPage" x1="0" y1="0" x2="0.25" y2="1"><stop offset="0" stop-color="#f9f3e2"/><stop offset="0.55" stop-color="#f3ead4"/><stop offset="1" stop-color="#e6dabd"/></linearGradient>
         <linearGradient id="calWire" x1="0" y1="0" x2="1" y2="0.4"><stop offset="0" stop-color="#efece2"/><stop offset="0.45" stop-color="#a9a294"/><stop offset="1" stop-color="#6f695c"/></linearGradient>
+        <!-- the band of shine across the 13th's foil, held dark enough to stay legible on cream -->
+        <linearGradient id="calFoil" x1="0" y1="0" x2="1" y2="0.55"><stop offset="0" stop-color="#7a5510"/><stop offset="0.36" stop-color="#a67c1a"/><stop offset="0.5" stop-color="#dcb54c"/><stop offset="0.64" stop-color="#a67c1a"/><stop offset="1" stop-color="#755010"/></linearGradient>
         <linearGradient id="calCurl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#efe5ca"/><stop offset="0.6" stop-color="#f9f4e4"/><stop offset="1" stop-color="#d8caa8"/></linearGradient>
         <radialGradient id="calSheen" cx="0.3" cy="0.22" r="1.05">
           <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>

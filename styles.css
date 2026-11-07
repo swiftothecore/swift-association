@@ -601,29 +601,33 @@
     -webkit-user-select: none;
     user-select: none;
   }
-  /* The title is sized by CAP HEIGHT, not by the number: Courier Prime's caps
-     are about 0.57em against Georgia's 0.69em, so matching the old 17px on
-     paper takes roughly 19. SEPTEMBER, the longest month, then sets the block
-     (mark + gap + type) down to a left edge of 34.8, which is where the red
-     rule beneath it starts, so the widest month lines up with the rule and no
-     other month can reach it. */
-  .di-calendar .cal-title { font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); letter-spacing: 1px; fill: #55412a; }
-  /* The year is on the red plate, with the weekends: the pad is a two-colour job, and a pale
-     grey year read as a third ink with no reason to be there. Same red as a weekend date. */
-  .di-calendar .cal-title .cal-year { font-weight: 400; font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 1px; fill: #a8563e; }
+  /* The month in fine, widely spaced capitals, the way good stationery sets it. It used to be
+     bold 19px, which made it the heaviest thing on the sheet and read as a typewriter label
+     rather than a printed heading. The spacing is what holds SEPTEMBER, the longest month, to
+     the width of the red rule beneath it, so no other month can reach past the rule either. */
+  .di-calendar .cal-title { font-weight: 400; font-size: calc(16px + var(--text-size-adjust)); letter-spacing: 3px; fill: #4a3a26; }
+  /* The year is on the red plate, with the weekend initials: the pad is a two-colour job, and a
+     pale grey year read as a third ink with no reason to be there. */
+  .di-calendar .cal-title .cal-year { font-weight: 400; font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1.4px; fill: #a8563e; }
   .di-calendar .cal-week text { font-weight: 700; font-size: calc(8.5px + var(--text-size-adjust)); letter-spacing: 0.6px; fill: #8a7c62; }
-  .di-calendar .cal-days text { font-size: calc(11px + var(--text-size-adjust)); fill: #4a4034; }
+  /* Pulled together a little, because Courier's fixed advance leaves an 11 looking gappy. */
+  .di-calendar .cal-days text { font-size: calc(11.8px + var(--text-size-adjust)); letter-spacing: -0.35px; fill: #4a4034; }
   .di-calendar .cal-week text.wknd { fill: #b06a50; }
-  .di-calendar .cal-days text.wknd { fill: #a8563e; }
+  /* Weekend DATES are off the red plate, so the sheet's strongest red is the pen and today is
+     the first thing you see. Two columns of red dates meant nothing here and hid the loop. */
+  .di-calendar .cal-days text.wknd { fill: #806f59; }
+  .di-calendar .cal-days text.other { font-size: calc(7.6px + var(--text-size-adjust)); letter-spacing: 0; fill: #b5a888; }
   /* A red-letter day: a marked date printed in its mark's ink, which calendar.js has already
      darkened enough to read as type (typeInk). After .wknd on purpose, so a release on a
      Saturday wears its era rather than the weekend red. The small print's day numbers are
      the same second ink. */
   .di-calendar .cal-days text.rl, .di-calendar .cal-key .rl { fill: var(--rl); font-weight: 700; }
-  /* The 13th, a gold-letter day: the figure foil-stamped in the pencil imprint's dark gold
-     (calendar.js sets the foil's pale lit edge above it). After .rl, so on 13 December the
-     foil wins over the cake's pink. */
-  .di-calendar .cal-days text.foil, .di-calendar .cal-key .foil { fill: #9c7417; font-weight: 700; }
+  /* The 13th, a gold-letter day: the figure foil-stamped, with a band of shine across it so it
+     reads as foil and not as mustard ink (calendar.js sets the foil's pale lit edge above it).
+     After .rl, so on 13 December the foil wins over the cake's pink. The small print's 13 is
+     too small to carry a band and takes the pencil imprint's dark gold. */
+  .di-calendar .cal-days text.foil { fill: url(#calFoil); font-weight: 700; }
+  .di-calendar .cal-key .foil { fill: #9c7417; font-weight: 700; }
   /* The small print at the foot of the sheet: printed, so the pad's Courier, at the size
      fine print is on a real eight-centimetre pad. A grey line at 1x, readable up close. */
   .di-calendar .cal-key text { font-size: calc(5.5px + var(--text-size-adjust)); letter-spacing: 0.1px; fill: #7d715a; }
