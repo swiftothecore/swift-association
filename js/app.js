@@ -1813,7 +1813,7 @@ function routeTo(slug, from) {
 window.addEventListener("popstate", () => {
   // A live run owns the screen. Its URL was already cleared, so this is someone reaching back
   // past the run; let the browser do whatever it was going to do and leave the board alone.
-  if (screens.game.classList.contains("active") || screens.bonusplay.classList.contains("active")) return;
+  if (screens.game.classList.contains("active") || screens.bonusplay.classList.contains("active")) { clearRoute(); return; }
   const slug = currentRouteSlug();
   routing = true;
   try {
