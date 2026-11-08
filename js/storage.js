@@ -1395,8 +1395,10 @@ export function appendHistory(entry) {
   const takes = loadTakes(list);
   list.unshift(entry);                       // newest first
   if (list.length > HISTORY_CAP) list.length = HISTORY_CAP;
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch (e) { /* ignore */ }
-  saveTakes({ n: takes.n + 1, since: takes.since || entry.d || null });
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    saveTakes({ n: takes.n + 1, since: takes.since || entry.d || null });
+  } catch (e) { /* ignore */ }
   return list;
 }
 
