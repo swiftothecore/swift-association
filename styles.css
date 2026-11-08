@@ -665,13 +665,13 @@
   .di-cassette .cs-title {
     font-family: var(--hand); font-weight: 700;
     font-size: calc(var(--cs-title-size, 13px) + var(--text-size-adjust));
-    fill: #33406a;
+    fill: var(--cs-ink, #33406a);
   }
   /* the version note trails the title on the same rule, smaller and unbolded,
      the way it gets squeezed in after the song name has already been written */
   .di-cassette .cs-sub {
     font-weight: 400; font-size: calc(var(--cs-sub-size, 7.4px) + var(--text-size-adjust));
-    fill: #3d4a72; opacity: 0.84;
+    fill: var(--cs-ink, #3d4a72); opacity: 0.84;
   }
   .di-cassette .cs-note {
     font-family: var(--hand); font-size: calc(var(--cs-note-size, 7.2px) + var(--text-size-adjust));

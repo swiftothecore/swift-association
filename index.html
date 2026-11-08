@@ -1966,9 +1966,10 @@ if (location.pathname.endsWith('/index.html')) {
             fill-rule="evenodd" fill="url(#csLabel)" stroke="#c2b394" stroke-width="0.9" stroke-linejoin="round"/>
       <!-- the card sits proud of the shell, so it casts a hairline of its own -->
       <path d="M18 72 Q18 76 22 76 H166" fill="none" stroke="#100e0a" stroke-width="1.1" opacity="0.3"/>
-      <!-- printed header band and side letter -->
-      <path d="M22 16 H170 Q174 16 174 20 V20.9 H18 V20 Q18 16 22 16 Z" fill="#c76a7e" opacity="0.62"/>
-      <path d="M18 20.9 H174" stroke="#a8536a" stroke-width="0.5" opacity="0.45"/>
+      <!-- printed header band and side letter. The band is printed in the era colour of the
+           song written below it, and these fills are only the blank card's (js/cassette.js). -->
+      <path class="cs-head" d="M22 16 H170 Q174 16 174 20 V20.9 H18 V20 Q18 16 22 16 Z" fill="#c76a7e" opacity="0.85"/>
+      <path class="cs-head-edge" d="M18 20.9 H174" stroke="#a8536a" stroke-width="0.5" opacity="0.45"/>
       <text class="cs-side" x="24" y="20.1">SIDE A</text>
       <text class="cs-spec" x="141" y="20.1">NORMAL</text>
       <!-- the insert's printed rules: red for the title, blue at the foot, the

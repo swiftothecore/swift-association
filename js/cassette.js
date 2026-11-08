@@ -48,16 +48,30 @@
 // widen every line. Sizes go out as custom properties rather than inline
 // font-size so that offset in styles.css still applies.
 //
+// THE CARD WEARS THE SONG'S ERA. The printed band across the top and the pen the
+// title is written in both come from the album's colour in ALBUM_COLORS, so Babe
+// is written in wine under a red band and Clean in navy under 1989's blue. They
+// are two readings of one colour, not the colour itself: the band is held to a
+// printed mid-tone so the cream SIDE A always reads on it, and the ink is pulled
+// down to ballpoint depth so the title always reads on the cream. Chroma is
+// capped on both, because a full-strength era colour on a cassette insert looks
+// like a sticker rather than a print. The grey records come out as grey band and
+// near-black pen, which is what they are. The album line underneath stays in its
+// pencil grey, so the card still has one neutral voice.
+//
 // Purely decorative, like every desk prop: if the markup isn't there — narrow
 // screens, quiet desk density — every entry point here does nothing.
 
-import { STUDIO_ALBUMS, ALBUM_TRACKS, TS_MILESTONES } from "./config.js";
+import { STUDIO_ALBUMS, ALBUM_TRACKS, TS_MILESTONES, ALBUM_COLORS } from "./config.js";
+import { toLch, toHex } from "./floss.js";
 import { mulberry32, dailySeed } from "./util.js";
 import { settingsTodayKey } from "./storage.js";
 
 const svg = document.querySelector(".di-cassette svg");
 const titleEl = svg && svg.querySelector(".cs-title");
 const noteEl = svg && svg.querySelector(".cs-note");
+const headEl = svg && svg.querySelector(".cs-head");
+const headEdgeEl = svg && svg.querySelector(".cs-head-edge");
 
 // The tape this desk owns. Roughly one day in three, and when it comes up it is
 // the re-recorded copy more often than not.
@@ -123,6 +137,34 @@ function anniversaryTrack(dateKey) {
 // The song alone, for the dev panel and console poking.
 export function pick(dateKey) { return drawFor(dateKey).song; }
 
+/* ---------- the era's colours ---------- */
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const BAND_L = [0.55, 0.64], BAND_C = 0.13;   // a print the cream type still reads on
+const INK_L = [0.27, 0.39], INK_C = 0.11;     // a ballpoint the cream card still reads under
+
+// The band, its edge and the pen for an album, or null when it has no colour.
+export function inksFor(album) {
+  const hex = ALBUM_COLORS[album];
+  if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return null;
+  const [L, C, h] = toLch(hex);
+  const bandL = clamp(L, ...BAND_L), bandC = Math.min(C, BAND_C);
+  return {
+    band: toHex(bandL, bandC, h),
+    edge: toHex(bandL - 0.1, bandC, h),
+    ink: toHex(clamp(L - 0.12, ...INK_L), Math.min(C * 0.9, INK_C), h),
+  };
+}
+
+// Print the card for an album, or put back the blank card's pink and blue pen.
+function tint(album) {
+  const inks = inksFor(album);
+  if (headEl) headEl.setAttribute("fill", inks ? inks.band : "#c76a7e");
+  if (headEdgeEl) headEdgeEl.setAttribute("stroke", inks ? inks.edge : "#a8536a");
+  if (inks) svg.style.setProperty("--cs-ink", inks.ink);
+  else svg.style.removeProperty("--cs-ink");
+}
+
 /* ---------- writing it on the card ---------- */
 
 // How much of the printed rule is actually on screen. The tape is an edge prop:
@@ -171,6 +213,7 @@ function fitLine(el, prop, base, extra, span) {
 // trailing it on the days the house tape is the re-recorded copy, the album and
 // track on the blue rule at the foot.
 function write(song, tv) {
+  tint(song.album);
   titleEl.textContent = song.title;
   if (tv) {
     const sub = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
@@ -290,7 +333,7 @@ export function install(songs) {
   // calls, `render` takes a date key for console poking, and `play` forces a
   // song onto the card without moving the date.
   window.deskCassette = {
-    render, refresh, pick,
+    render, refresh, pick, inks: inksFor,
     // The full draw — song plus which pressing of it — for the weighting readout.
     draw: drawFor,
     songs: () => (house ? [house, ...pool] : pool.slice()),

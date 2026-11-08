@@ -70,7 +70,7 @@ const TUNE = {
 const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 const gam = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
 
-function toLch(hex) {
+export function toLch(hex) {
   const [r, g, b] = [1, 3, 5].map((i) => lin(parseInt(hex.slice(i, i + 2), 16) / 255));
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
   const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
@@ -94,7 +94,7 @@ function rgbOf(L, C, h) {
 }
 
 // Back to hex, giving up chroma (never lightness or hue) until the colour is printable.
-function toHex(L, C, h) {
+export function toHex(L, C, h) {
   L = Math.min(0.98, Math.max(0.05, L));
   let rgb = rgbOf(L, C, h);
   for (let i = 0; i < 24 && rgb.some((v) => v < -1e-4 || v > 1 + 1e-4); i++) rgb = rgbOf(L, (C *= 0.9), h);
