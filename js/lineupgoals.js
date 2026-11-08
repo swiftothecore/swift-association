@@ -113,7 +113,12 @@ const RULES = {
     // page you missed, so tanking page one cannot dodge the ban.
     const first = ps[0].artists;
     if (first.length > 1) return keep(done, true);            // a shared song bans nobody outright
-    return keep(done, ps.slice(1).every((p) => p.artists.some((a) => a !== first[0])));
+    /* Strict on purpose, unlike the "either credit can satisfy a card" reading most cards take:
+       a lockout locks. A later song shared with the banned artist still sits on their shelf, and
+       the shelf is closed, so their name anywhere on the page kills the card, as a shared Taylor
+       song does on No Home Team. Only page one is generous, because there the game cannot tell
+       which artist you meant and banning one at random would punish a guess it made for you. */
+    return keep(done, ps.slice(1).every((p) => !p.artists.includes(first[0])));
   },
   "nobody-admitted": (ps, c, done) => {
     const shut = new Set(c.admitted || []);
