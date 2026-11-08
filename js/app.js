@@ -15535,11 +15535,13 @@ async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept, int
   keepsakeSaveBusy = true;
   const label = btn ? keepsakeLabel(btn) : "";
   let kept = false;
+  let snapshot;
   if (btn) { btn.disabled = true; setKeepsakeLabel(btn, wantDownload ? "Saving…" : "Copying…", "busy"); }
   try {
+    snapshot = meta();
     // NOT awaited before the clipboard call: the write has to stay inside the user gesture.
-    if (wantDownload) await download(meta());
-    else await copy(meta());
+    if (wantDownload) await download(snapshot);
+    else await copy(snapshot);
     kept = true;
     if (btn) setKeepsakeLabel(btn, wantDownload ? "Saved" : "Copied", "kept");
   } catch (e2) {
@@ -15547,7 +15549,7 @@ async function saveKeepsakePNG(e, { btn, meta, copy, download, noun, onKept, int
     if (!wantDownload) {
       // Clipboard-image writes aren't supported everywhere — fall back to a download.
       try {
-        await download(meta());
+        await download(snapshot);
         kept = true;
         if (btn) setKeepsakeLabel(btn, "Saved", "kept");
       } catch (e3) {
