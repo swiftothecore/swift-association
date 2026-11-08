@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v768";
+const CACHE = "stta-v769";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -157,6 +157,7 @@ const ASSETS = [
   "js/cassette.js",
   // The desk beads spell a song the date picks, the same way.
   "js/beads.js",
+  "js/floss.js",
   // The polaroid and sticker artwork. app.js imports both at load, so an uncached copy
   // breaks a cold offline start rather than just the keepsakes drawer.
   "js/polaroids.js",
