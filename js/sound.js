@@ -136,6 +136,7 @@ export const sfx = {
     if (c.state === "suspended") c.resume().catch(() => {});
     loadBuffer(name)
       .then((buf) => {
+        if (!enabled && !force) return;
         const src = c.createBufferSource();
         src.buffer = buf;
         const gain = spec.gain * level;
