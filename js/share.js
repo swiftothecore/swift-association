@@ -34,17 +34,18 @@ export async function copyToClipboard(text) {
       return true;
     }
   } catch (e) { /* fall through to the legacy path */ }
+  let ta;
   try {
-    const ta = document.createElement("textarea");
+    ta = document.createElement("textarea");
     ta.value = text;
     ta.setAttribute("readonly", "");
     ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
     document.body.appendChild(ta);
     ta.select();
     const ok = document.execCommand("copy");
-    ta.remove();
     return ok;
   } catch (e) { return false; }
+  finally { if (ta) ta.remove(); }
 }
 
 // Share `{title, text, url}` via the OS sheet, falling back to copying `copyText`
