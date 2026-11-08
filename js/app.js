@@ -18292,7 +18292,7 @@ const TYPE_HINT_SHORT_PAGES = 30;  // ...then chips only, until this many; then 
 // Every segment id typeHintSegments can produce. Only the dev panel reads this (nothing in the
 // fade itself needs the roster) — keep it in step when a segment is added.
 const TYPE_HINT_IDS = ["common-word", "after-hint", "sing-line", "top-match", "no-suggestions",
-                       "verse-bonus", "hint-budget", "hint-button"];
+                       "verse-bonus", "hint-budget", "hint-button", "late-match", "insure-page"];
 
 function keycap(label) { return `<kbd class="keycap">${label}</kbd>`; }
 
