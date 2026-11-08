@@ -113,7 +113,7 @@ const RULES = {
     // page you missed, so tanking page one cannot dodge the ban.
     const first = ps[0].artists;
     if (first.length > 1) return keep(done, true);            // a shared song bans nobody outright
-    return keep(done, ps.slice(1).every((p) => !p.artists.includes(first[0])));
+    return keep(done, ps.slice(1).every((p) => p.artists.some((a) => a !== first[0])));
   },
   "nobody-admitted": (ps, c, done) => {
     const shut = new Set(c.admitted || []);
