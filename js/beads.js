@@ -228,7 +228,7 @@ function spill(song, rng) {
   const deal = scramble(song.beads, slots, rng);
   layer.replaceChildren(...slots.map((slot, i) => stampBead(slot, deal[i])));
   if (heart) heart.setAttribute("fill", ALBUM_COLORS[song.album] || HEART_FALLBACK);
-  dyeFloss(ALBUM_COLORS[song.album]);   // the floss, beads and stars beside it, in its shades
+  dyeFloss(song.album);   // the floss, beads and stars beside it, in its shades
   shown = { ...song, deal: deal.join("") };
   svg.classList.add("is-spilled");
 }

@@ -26,6 +26,8 @@
 //
 // No album to name (a dev spelling of a title nobody released) leaves the lay as drawn.
 
+import { ALBUM_COLORS } from "./config.js";
+
 const svg = document.querySelector(".di-floss svg");
 const ATTRS = ["fill", "stroke", "stop-color"];
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -42,6 +44,26 @@ const PARTS = {
   starB: { from: "#d795a1", shade: [-0.04, 0.95, -24] },
 };
 const L_BAND = [0.52, 0.72];
+
+// Albums the general spread doesn't suit, each fixed by eye on scripts/ui/floss-dye/board.html.
+// `base` replaces the banded lightness, `lift` nudges it, `step` and `turn` scale the parts'
+// lightness steps and hue turns, `hue` turns the whole set, and `parts` pins a part to its own
+// [L, C, h].
+// - Red: a red turned either way along the hue is salmon, orange or brown, and lightened it is
+//   pink, so its shades stay close to crimson and wine, and its lightest two are pinned to a
+//   clear red rather than a dusty rose.
+// - reputation: the band lifted its charcoal to a mid grey; it is let down nearly to its own value.
+// - Lover: its era colour sits on the purple side of pink, so the set is warmed off it and
+//   barely turns, and the back skein, a bead and the small star are the pale blue that is the
+//   other half of that record's palette.
+// - evermore and Midnights: a touch lighter and a touch darker than the band leaves them.
+const TUNE = {
+  "Red": { turn: 0.2, step: 0.5, parts: { bead1: [0.6, 0.15, 26], starA: [0.6, 0.16, 27] } },
+  "reputation": { base: 0.4 },
+  "Lover": { hue: 10, turn: 0.15, parts: { back: [0.8, 0.06, 240], bead2: [0.74, 0.075, 238], starB: [0.82, 0.055, 232] } },
+  "evermore": { lift: 0.05 },
+  "Midnights": { lift: -0.05 },
+};
 
 /* ---------- OKLCH ---------- */
 
@@ -82,11 +104,13 @@ function toHex(L, C, h) {
 /* ---------- the dye ---------- */
 
 // The seven shades for an era colour, as [L, C, h] per part.
-export function shadesFor(eraHex) {
+export function shadesFor(eraHex, tune = {}) {
   const [L, C, h] = toLch(eraHex);
-  const base = Math.min(L_BAND[1], Math.max(L_BAND[0], L));
+  const base = tune.base ?? Math.min(L_BAND[1], Math.max(L_BAND[0], L)) + (tune.lift || 0);
+  const step = tune.step ?? 1, turn = tune.turn ?? 1, hue = h + (tune.hue || 0);
   const out = {};
-  for (const [part, { shade: [dl, cs, dh] }] of Object.entries(PARTS)) out[part] = [base + dl, C * cs, h + dh];
+  for (const [part, { shade: [dl, cs, dh] }] of Object.entries(PARTS))
+    out[part] = tune.parts?.[part] || [base + dl * step, C * cs, hue + dh * turn];
   return out;
 }
 
@@ -97,11 +121,12 @@ function moved(hex, from, to) {
   return toHex(tL + (L - fL), fC > 1e-3 ? tC * (C / fC) : tC, th + (h - fh));
 }
 
-// Dye the lay for an album colour, or put it back as drawn when there is none. `root` is for a
-// board that dyes copies of the lay side by side.
-export function dye(eraHex, root = svg) {
+// Dye the lay for an album, or put it back as drawn when there is none. `root` is for a board
+// that dyes copies of the lay side by side.
+export function dye(album, root = svg) {
   if (!root) return;
-  const shades = eraHex && HEX.test(eraHex) ? shadesFor(eraHex) : null;
+  const eraHex = ALBUM_COLORS[album];
+  const shades = eraHex && HEX.test(eraHex) ? shadesFor(eraHex, TUNE[album]) : null;
   for (const part of root.querySelectorAll("[data-dye]")) {
     const spec = PARTS[part.dataset.dye];
     if (!spec) continue;
