@@ -32810,7 +32810,7 @@ function handleBrowseArrow(e) {
   const onStats = screens.stats.classList.contains("active");
   const onBonus = screens.bonus.classList.contains("active");
   if (!onStats && !onBonus && !screens.challenges.classList.contains("active")) return;
-  if (!browseKeyIsFree(e)) return;
+  if ((onStats ? screens.stats : onBonus ? screens.bonus : screens.challenges).inert || !browseKeyIsFree(e)) return;
   const across = e.key === "ArrowLeft" || e.key === "ArrowRight";
   if ((onStats || onBonus) && !across) return;
   e.preventDefault();
