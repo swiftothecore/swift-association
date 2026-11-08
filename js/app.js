@@ -8516,6 +8516,7 @@ function nextBonusRound(options = {}) {
      of and could only ever loop here through a bug; an endless one has no such floor. */
   if (!bonusPuzzle) {
     const skips = (options.skips || 0) + 1;
+    if (skips > 12) { endBonusRun(); return; }
     /* An endless run has one thing left to try before it gives up on a page: empty the ban list
        and deal again. The count above catches the clean exhaustion, but a builder can also fail
        while a handful of songs are still free — 120 random tries do not reliably find the last
@@ -8529,7 +8530,6 @@ function nextBonusRound(options = {}) {
       nextBonusRound({ ...options, skips });
       return;
     }
-    if (skips > 12) { endBonusRun(); return; }
     nextBonusRound({ ...options, skips });
     return;
   }
