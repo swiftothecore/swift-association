@@ -6193,6 +6193,14 @@ function keepPegSVG(rng) {
 // never moves one, because re-inserting a print would restart its develop animation.
 // It runs again whenever the wall changes size (a resize, the drawer opening from hidden, a
 // caption reflowing as the fonts arrive), and does nothing while the wall has no width.
+//
+// Layout is read in exactly two batches, never interleaved with a write. With a full set of
+// riso prints the wall is some twelve thousand SVG nodes and every forced layout costs the
+// best part of 60ms, so the old shape (set a cell's --py, then read the next cell's width;
+// insert a row's twine, then read the next row's top) paid for about twenty of them and held
+// the drawer shut for half a second after the click. So: read every cell's box first; write
+// every --py; read the row tops once (--py is padding-top, so it moves rows down and never
+// sideways, which is what makes the first read still true); then put all the twine in at once.
 let keepWallObserver = null;
 const keepWalls = new Map();   // body element -> the wall it is showing, so a re-render unobserves
 function hangKeepsakeWall(wall) {
@@ -6201,8 +6209,9 @@ function hangKeepsakeWall(wall) {
   const cells = [...wall.querySelectorAll(".keep-cell")];
   const rows = [];
   for (let k = 0, top = null; k < cells.length; k++) {
-    if (cells[k].offsetTop !== top) { rows.push([]); top = cells[k].offsetTop; }
-    rows[rows.length - 1].push(cells[k]);
+    const c = cells[k];
+    if (c.offsetTop !== top) { rows.push([]); top = c.offsetTop; }
+    rows[rows.length - 1].push({ c, left: c.offsetLeft, width: c.offsetWidth });
   }
   const cs = getComputedStyle(wall);
   const extL = parseFloat(cs.getPropertyValue("--line-l")) || 0;
@@ -6212,9 +6221,9 @@ function hangKeepsakeWall(wall) {
     const rr = mulberry32(fnv1a("keep-line:" + ri));
     const sag = 9 + rr() * 7, lean = rr() * 7 - 3.5, y0 = 12 + rr() * 3;
     const y = (x) => { const t = (x + extL) / span; return y0 + lean * t + sag * 4 * t * (1 - t); };
-    for (const c of row) {
-      const px = (parseFloat(c.style.getPropertyValue("--px")) || 0) / 100 * c.offsetWidth;
-      c.style.setProperty("--py", y(c.offsetLeft + c.offsetWidth / 2 + px).toFixed(2) + "px");
+    for (const { c, left, width } of row) {
+      const px = (parseFloat(c.style.getPropertyValue("--px")) || 0) / 100 * width;
+      c.style.setProperty("--py", y(left + width / 2 + px).toFixed(2) + "px");
     }
     // a few gentle segments, so the line is not a perfect parabola
     const pts = [];
@@ -6234,15 +6243,16 @@ function hangKeepsakeWall(wall) {
       `<circle class="tw-pin" cx="${lx.toFixed(1)}" cy="${ly.toFixed(2)}" r="3.3"/>` +
       `<circle class="tw-pin" cx="${rx.toFixed(1)}" cy="${ry.toFixed(2)}" r="3.1"/></svg>` };
   });
-  // Placed after every --py is set, since a row's top depends on the rows above it.
+  // Placed after every --py is set, since a row's top depends on the rows above it. The tops
+  // are all read in one pass before any twine goes in, and the twine (absolutely placed) goes
+  // in as one string, last row first, which is the order the old row-by-row "afterbegin" left.
+  const tops = lines.map(({ row }) => row[0].c.offsetTop);
+  const H = wall.offsetHeight;
   wall.querySelectorAll(".keep-twine").forEach((t) => t.remove());
-  for (const { row, svg } of lines) {
-    wall.insertAdjacentHTML("afterbegin", svg);
-    const t = wall.firstElementChild;
-    t.style.top = row[0].offsetTop + "px";
-    t.style.left = -extL + "px";
-  }
-  wall.dataset.hung = `${W}x${wall.offsetHeight}`;
+  const twine = lines.map(({ svg }, ri) =>
+    svg.replace(`aria-hidden="true">`, `aria-hidden="true" style="top: ${tops[ri]}px; left: ${-extL}px;">`));
+  wall.insertAdjacentHTML("afterbegin", twine.reverse().join(""));
+  wall.dataset.hung = `${W}x${H}`;
 }
 function watchKeepsakeWall(body, wall) {
   if (!keepWallObserver) {
