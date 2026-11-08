@@ -31966,13 +31966,14 @@ function wireCustomModalBody() {
   act("void", () => {
     const s = loadCustom();
     if (fmVoiding || !s.saved.some((p) => p.id === s.from)) return;
+    const id = s.from;
     fmVoiding = true;
     const sheet = body.querySelector(".fm-sheet");
     if (sheet) sheet.insertAdjacentHTML("beforeend", `<span class="fm-stamp fm-stamp--void" aria-hidden="true">void</span>`);
     setTimeout(() => {
       const t = loadCustom();
-      t.saved = t.saved.filter((p) => p.id !== t.from);
-      t.from = null;
+      t.saved = t.saved.filter((p) => p.id !== id);
+      if (t.from === id) t.from = null;
       saveCustom(t);
       fmVoiding = false;
       // The form can be closed while the stamp is still coming down, and closing has already
