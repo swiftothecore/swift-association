@@ -60,6 +60,7 @@ export function wordVariants(word) {
   // would otherwise strand (die→died, lie→lied, eye→eyed, ice→icy), and shortening it here
   // adds nothing else on the catalogue.
   if (w.length >= 3 && w.endsWith("e")) alts.push(exactWordBody(w.slice(0, -1)) + INFLECT);
+  if (w.length >= 3 && w.endsWith("ie")) alts.push(exactWordBody(w.slice(0, -2) + "y") + "(?:ing|in|ings|ins)");
   if (w.length >= 3 && /[^aeiou]y$/.test(w)) alts.push(exactWordBody(w.slice(0, -1) + "i") + INFLECT);
   if (w.length >= 3 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) alts.push(exactWordBody(w + w.slice(-1)) + INFLECT);
   return alts;
