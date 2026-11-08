@@ -1476,7 +1476,7 @@ export function clearDailyResult(dateStr) {
 function pruneDailyProgress(keepDateStr) {
   const keepKey = keepDateStr ? DAILY_PROGRESS_KEY + "." + keepDateStr : null;
   for (const k of appKeys()) {
-    if ((k === DAILY_PROGRESS_KEY || k.startsWith(DAILY_PROGRESS_KEY + ".")) && k !== keepKey) {
+    if ((k === DAILY_PROGRESS_KEY || k.startsWith(DAILY_PROGRESS_KEY + ".")) && (!keepKey || k < keepKey)) {
       localStorage.removeItem(k);
     }
   }
