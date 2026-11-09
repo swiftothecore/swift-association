@@ -38103,6 +38103,20 @@ async function init() {
   // How to play — the bottom-left corner link, and the card's own paging. The arrows are
   // delegated because renderHowTo replaces them on every turn.
   $("howToPlayLink").addEventListener("click", () => openHowTo("start"));
+  // On a phone the corner links leave the desk for the foot of the front page's sheet (the
+  // phone block in styles.css styles them there), and go back to their fixed corner when the
+  // window widens. Same 560px breakpoint as phoneDesk().
+  {
+    const links = document.querySelector(".corner-links");
+    const home = links.parentElement, after = links.nextSibling;
+    const phone = window.matchMedia("(max-width: 560px)");
+    const seatCornerLinks = () => {
+      if (phone.matches) $("screen-start").append(links);
+      else if (links.parentElement !== home) home.insertBefore(links, after);
+    };
+    phone.addEventListener("change", seatCornerLinks);
+    seatCornerLinks();
+  }
   $("howToBackBtn").addEventListener("click", () => backToScreen(howToBackTarget));
   // Glossary — its own back target, plus two ways in from elsewhere: the "see also" jumps inside
   // the page, and any `data-gloss` term anywhere in the notebook (delegated, since those live in
