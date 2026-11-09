@@ -388,8 +388,7 @@
      seat is lifted so the icon still has a disc to sit on. */
   :root[data-theme="dark"] .nav-card {
     --card-bg: #2f281f;
-    border-color: rgba(236, 229, 214, 0.14);
-    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
+    box-shadow: 0.5px 1px 0 rgba(0, 0, 0, 0.45), 1px 2px 4px rgba(0, 0, 0, 0.4);
   }
   :root[data-theme="dark"] .nav-card-seat { background: rgba(var(--tint), 0.24); }
   /* Graphite is the page's own near-black, which is the one tint that lifting cannot save:
@@ -15364,7 +15363,7 @@
     .feedback-link .corner-link-label { max-width: 0; opacity: 0; }
   }
   .nav-card {
-    --card-bg: #fbf6e9;
+    --card-bg: #fcf7ea;
     flex: 1; min-width: 0; width: auto; margin: 0;
     padding: 15px 16px; text-align: left;
     /* Horizontal keepsake row: circle seat on the left spanning both text rows,
@@ -15381,8 +15380,11 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
     background-size: 90px 90px;
     background-blend-mode: multiply;
-    border: 1px solid rgba(43, 39, 34, 0.2); border-radius: 3px;
-    position: relative; box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1);
+    /* A cut card lying flat on the page: no drawn outline and square corners, which were what
+       made it read as a web card. The edge is only a tight contact shadow down and to the
+       right, and the stock a hair heavier than the page. */
+    border: 0; border-radius: 0;
+    position: relative; box-shadow: 0.5px 1px 0 rgba(43, 39, 34, 0.1), 1px 2px 2.5px rgba(43, 39, 34, 0.12);
     transition: transform 0.16s ease, box-shadow 0.16s ease;
   }
   .nav-card[data-era-tint="gold"]     { --tint: 199, 149, 31; }
@@ -15396,6 +15398,15 @@
   .see-also:not(.see-also--row) > .nav-card:nth-child(4):nth-last-child(2) { grid-column: 2 / span 2; }
   /* A lone last card starting a fresh row centres instead of clinging left. */
   .see-also:not(.see-also--row) > .nav-card:last-child:nth-child(3n+1) { grid-column: 3 / span 2; }
+  /* Set down by hand: each card turned a fixed fraction of a degree, never past half, so the
+     grid stops looking machine-placed. Fixed by position, never random, so a card never moves
+     between visits. Its tape is a child, so it turns with it. */
+  .see-also:not(.see-also--row) > .nav-card:nth-child(6n+1) { rotate: -0.35deg; }
+  .see-also:not(.see-also--row) > .nav-card:nth-child(6n+2) { rotate: 0.2deg; }
+  .see-also:not(.see-also--row) > .nav-card:nth-child(6n+3) { rotate: -0.15deg; }
+  .see-also:not(.see-also--row) > .nav-card:nth-child(6n+4) { rotate: 0.3deg; }
+  .see-also:not(.see-also--row) > .nav-card:nth-child(6n+5) { rotate: -0.25deg; }
+  .see-also:not(.see-also--row) > .nav-card:nth-child(6n)   { rotate: 0.4deg; }
   /* ===== Shared washi-tape surface ==============================================
      One look, reused everywhere the site shows sticky tape: the nav keepsake cards
      (.nav-tape, injected by app.js), the Stats and Records pages' taped-in pieces (.stp-tape),
@@ -15604,13 +15615,13 @@
     text-transform: uppercase; color: var(--ink-soft);
   }
   .nav-card:hover, .nav-card:focus-visible {
-    transform: translateY(-2px); box-shadow: 0 4px 9px rgba(43, 39, 34, 0.16);
+    transform: translateY(-2px); box-shadow: 1px 4px 8px rgba(43, 39, 34, 0.16);
     outline: none;
   }
   .nav-card:hover .nav-card-seat, .nav-card:focus-visible .nav-card-seat {
     background: rgba(var(--tint), 0.22);
   }
-  .nav-card:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(43, 39, 34, 0.1); }
+  .nav-card:active { transform: translateY(0); box-shadow: 0.5px 1px 0 rgba(43, 39, 34, 0.1), 1px 2px 2.5px rgba(43, 39, 34, 0.12); }
   [data-reduce-motion="on"] .nav-card, [data-reduce-motion="on"] .nav-hl { transition: none; }
   [data-reduce-motion="on"] .nav-card:hover, [data-reduce-motion="on"] .nav-card:focus-visible { transform: none; }
   @media (max-width: 480px) {
