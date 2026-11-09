@@ -17873,7 +17873,7 @@ function renderDailyButtonState() {
   btn.setAttribute("aria-label", ariaLabel);
   btn.innerHTML =
     `<span class="day-body"><span class="day-shadow"><span class="day-strip">` +
-      `<span class="day-frame"></span>${ornHTML}${restHTML}` +
+      `<span class="day-tooth"></span><span class="day-frame"></span>${ornHTML}${restHTML}` +
     `</span></span></span>`;
   centreDayNumerals();
 

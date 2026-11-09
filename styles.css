@@ -14841,6 +14841,7 @@
     --day-stub-ink: #f7ead0;
     --day-stub-rule: rgba(247, 234, 208, 0.42);
     --day-glint: rgba(255, 252, 240, 0.85);
+    --day-tooth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='t' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.4 1.55'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23t)'/%3E%3C/svg%3E");
     --day-bite: 10px;      /* the half-circle bitten out of each end */
     --day-seam: 110px;     /* where the perforation runs, measured from the right */
     position: relative; display: block; width: 100%; margin-top: 12px; padding: 0;
@@ -14916,6 +14917,21 @@
       radial-gradient(circle at 70% 65%, var(--day-fleck) 0.5px, transparent 0.6px);
     background-size: 17px 13px, 11px 19px;
   }
+  /* THE TOOTH: the grain of uncoated card, laid under the print across the whole strip and
+     the stub alike. It is fractal noise turned into an alpha MASK over the ticket's own ink,
+     not a picture of grain, so it follows the paper stocks and flips with the night theme
+     the way everything else on the card does. Even across the card on purpose: no sweep,
+     no vignette, the lamp is the shadow's job. Picked over guilloche, microprint, laid,
+     linen, mottling, fibres and halftone on scripts/ui/daily-ticket-texture.html; tooth
+     with a guilloche on top went a step too far. */
+  .day .day-tooth, .day-stub::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    -webkit-mask: var(--day-tooth) repeat; mask: var(--day-tooth) repeat;
+    -webkit-mask-size: 180px 180px; mask-size: 180px 180px;
+  }
+  .day .day-tooth { z-index: 1; background: var(--day-ink); opacity: 0.12; }
+  .day-stub::before { z-index: 0; background: #000; opacity: 0.16; }
+  .day-stub .go, .day-stub .arw { position: relative; z-index: 1; }
   /* THE GLINT: an unplayed ticket catches the light now and then, the way a piece of
      glossy card does when the desk lamp crosses it. One soft diagonal band travels the
      strip in about a second, then the card sits still for the rest of the cycle, so it
