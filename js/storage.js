@@ -183,14 +183,15 @@ export function saveKeepsakesSeen(seen) {
   try { localStorage.setItem(KEEPSAKES_SEEN_KEY, JSON.stringify(seen)); } catch (e) { /* ignore */ }
 }
 /* ---------- The print on the desk ---------- */
-// The ball's own history and the print the player chose to keep out, and nothing else: the day's
-// print comes from the date and the set, so two notebooks can never drift apart over it.
+// The ball's own history, the print the player chose to keep out, and the date they set an
+// album's birthday print aside, and nothing else: the day's print comes from the date and the set,
+// so two notebooks can never drift apart over it.
 export function loadDeskPrint() {
   try {
     const o = JSON.parse(localStorage.getItem(DESK_PRINT_KEY));
-    if (o && typeof o === "object") return { eased: !!o.eased, opened: o.opened || null, ball: o.ball || null, kept: o.kept || null };
+    if (o && typeof o === "object") return { eased: !!o.eased, opened: o.opened || null, ball: o.ball || null, kept: o.kept || null, skipDay: o.skipDay || null };
   } catch (e) { /* ignore */ }
-  return { eased: false, opened: null, ball: null, kept: null };
+  return { eased: false, opened: null, ball: null, kept: null, skipDay: null };
 }
 export function saveDeskPrint(state) {
   try { localStorage.setItem(DESK_PRINT_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }

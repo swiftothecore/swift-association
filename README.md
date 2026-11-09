@@ -26,7 +26,7 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
 - Over 200 achievements, graded by difficulty in the finish of the charm itself
-- Polaroids to collect, and a crushed one on the desk that develops as you earn them, then opens so you can show one off
+- Polaroids to collect, and a crushed one on the desk that develops as you earn them, then opens so you can show one off, and on an album's birthday, a print of its own
 - Stickers, mostly earned by noticing things rather than scoring, to stick on the notebook cover, and a holographic finish for the whole set once it is complete
 - An ink for every album you beat in Album Focus, worn by the game's own title and gilded for a perfect run
 

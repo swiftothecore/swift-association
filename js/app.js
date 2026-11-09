@@ -81,6 +81,7 @@ import { SONG_PENS } from "./pens.js";
 import { tapeVars } from "./tapeprints.js";
 import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
+import { DAY_PRINTS } from "./dayprints.js";
 import { dealPrint, sheetStage, creaseSvg, deskHangerSVG, smooth } from "./deskprint.js";
 import { albumDots, hasTone } from "./albumdots.js";
 import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
@@ -6315,7 +6316,12 @@ function closeKeepsakes() {
      ready   DESK_PRINT_AT owned. Half open, clickable, and it waits for ever
      out     the real keepsake frame, chosen or dealt for the day
    Nothing about the ball ever loops. A ball of paper does not move by itself, and every attempt
-   to make it shake or strain read as wrong, so it changes state and then holds still. */
+   to make it shake or strain read as wrong, so it changes state and then holds still.
+
+   On an album's birthday the desk wears that album's own print (js/dayprints.js) instead, over a
+   kept print too. It is worn, never owned: it never counts, never hangs on the wall and cannot be
+   kept. It never touches the reveal, so not before the ball opens and not on the day it does, and
+   choosing any other print that day sets it aside until tomorrow (`skipDay`). */
 const DESK_PRINT_AT = 5;
 const DESK_HALF_OPEN = 0.3;
 const DESK_EASE_DELAY = 1400, DESK_EASE_MS = 3400, DESK_OPEN_MS = 1900;
@@ -6335,13 +6341,26 @@ function deskNow(earned = loadKeepsakes()) {
   const kept = ds.kept && earned[ds.kept] ? ds.kept : null;
   const phase = ds.opened ? "out" : owned.length >= DESK_PRINT_AT ? "ready" : "film";
   const fresh = ds.opened === today && !!ds.ball && !!earned[ds.ball];
-  const id = kept || (phase === "out" ? (fresh ? ds.ball : dealPrint(owned, today)) : null);
+  // `under` is the print the desk would show on any other day; `todays` the birthday print, if
+  // today has one, and `dated` whether it is the one out.
+  const under = kept || (phase === "out" ? (fresh ? ds.ball : dealPrint(owned, today)) : null);
+  const todays = phase === "out" && !fresh ? dayPrintOn(today) : null;
+  const dated = !!todays && ds.skipDay !== today;
+  const id = dated ? todays.id : under;
   return {
-    phase, owned, id, kept, first,
+    phase, owned, id, kept, first, under, todays, dated,
     face: kept || first,
     level: Math.min(1, owned.length / DESK_PRINT_AT),
     creased: fresh && id === ds.ball,
   };
+}
+// The print an album's birthday puts on the desk, captioned like its margin note: the album, then
+// how many years. Read off anniversaryNote, so a re-record's day wears the original's print under
+// its own name, and a songday (a date sung, not a release) has none.
+function dayPrintOn(dateKey) {
+  const note = anniversaryNote(dateKey, TS_MILESTONES);
+  const art = note && !note.songday && note.album ? DAY_PRINTS[note.album] : null;
+  return art ? { id: `day-${dateKey.slice(5)}`, name: note.headline.toLowerCase(), sub: note.caption, art } : null;
 }
 function deskPlaceBall() {
   if (deskStage) deskStage.place($("deskBall").getBoundingClientRect(), $("deskPrint").getBoundingClientRect(), $("deskPrint").offsetWidth);
@@ -6359,8 +6378,10 @@ async function renderDeskPrint(force = false) {
   const renderId = ++deskRenderId;
   if (now.phase === "out") {
     deskStage?.clear();
-    const p = POLAROID_BY_ID[now.id];
-    print.innerHTML = p ? keepsakePolaroidHTML(p, { tilt: 0 }) : "";
+    const p = now.dated ? now.todays : POLAROID_BY_ID[now.id];
+    print.innerHTML = !p ? "" : now.dated
+      ? polaroidHTML(null, p.name, { keepsake: true, state: "developed", art: p.art, sub: p.sub, tilt: 0, tape: false })
+      : keepsakePolaroidHTML(p, { tilt: 0 });
     if (p && now.creased) print.firstElementChild.insertAdjacentHTML("beforeend", `<span class="desk-creases">${creaseSvg()}</span>`);
     if ($("deskMenu")) renderDeskMenu();
     return;
@@ -6405,10 +6426,14 @@ async function openDeskBall() {
 
 // The slip the print opens. Every print owned, in the drawer's order, and the two modes as real
 // tape deck keys with the one in force latched down. Mouse only, like everything on the desk,
-// which is why the keepsakes drawer can do all of it from the keyboard.
+// which is why the keepsakes drawer can do all of it from the keyboard. On an album's birthday its
+// print leads the slip, so a player who set it aside can bring it back. The keys keep describing
+// the ordinary days around it.
 function deskMenuHTML() {
   const now = deskNow();
-  const prints = now.owned.map((id) => {
+  const t = now.todays, tip = t ? escapeHtml(`${t.name}, ${t.sub}`) : "";
+  const day = t ? `<button type="button" class="dm-print" data-day="1" aria-pressed="${now.dated}" aria-label="${tip}" title="${tip}"><span>${polaroidArt(t.art)}</span></button>` : "";
+  const prints = day + now.owned.map((id) => {
     const p = POLAROID_BY_ID[id];
     return `<button type="button" class="dm-print" data-print="${id}" aria-pressed="${id === now.id}" aria-label="${escapeHtml(p.name)}" title="${escapeHtml(p.name)}"><span>${polaroidArt(p.art)}</span></button>`;
   }).join("");
@@ -6420,7 +6445,8 @@ function renderDeskMenu() {
   const m = $("deskMenu");
   if (!m) return;
   m.innerHTML = deskMenuHTML();
-  m.classList.toggle("is-full", deskNow().owned.length > 12);
+  const now = deskNow();
+  m.classList.toggle("is-full", now.owned.length + (now.todays ? 1 : 0) > 12);
   const r = $("deskPrint").getBoundingClientRect(), box = m.getBoundingClientRect();
   const page = document.querySelector(".app").getBoundingClientRect().right + 12;
   const right = window.innerWidth - box.width - 8;
@@ -6437,9 +6463,15 @@ function openDeskMenu() {
     e.stopPropagation();
     const b = e.target.closest("button");
     if (!b) return;
-    const ds = loadDeskPrint();
-    if (b.dataset.print) ds.kept = b.dataset.print;
-    else ds.kept = b.dataset.keep === "1" ? deskNow().id : null;
+    const ds = loadDeskPrint(), now = deskNow();
+    if (b.dataset.day) ds.skipDay = null;
+    else if (b.dataset.keep === "0") ds.kept = null;
+    else {
+      // A print chosen, or "keep this one", on a birthday sets its print aside until tomorrow;
+      // a birthday print cannot be kept, so "this one" is the print under it.
+      if (now.dated) ds.skipDay = todayKey();
+      ds.kept = b.dataset.print || now.under;
+    }
     saveDeskPrint(ds);
     renderDeskPrint();
     renderDeskMenu();
@@ -6473,6 +6505,7 @@ function deskWallTap(cell, body) {
   if (cell.dataset.state === "locked") return;
   const id = cell.dataset.id, was = deskNow(), ds = loadDeskPrint();
   ds.kept = was.id === id && was.kept ? null : id;
+  if (was.dated) ds.skipDay = todayKey();
   saveDeskPrint(ds);
   deskOpenOnClose = was.phase === "ready" && !!ds.kept;
   const now = deskNow();
