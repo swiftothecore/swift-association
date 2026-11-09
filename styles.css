@@ -9246,6 +9246,13 @@
   :root[data-theme="dark"] .brief-go { --stamp-ink: #e07f74; }
   :root[data-theme="dark"] .brief-card.is-dark .brief-go { --stamp-ink: #c49af0; }
   :root[data-theme="dark"] .brief-go svg { mix-blend-mode: normal; }
+  /* The guest shelf's ADMIT ONE stamp (js/gueststamp.js) is this stamp, inked per guest: the
+     pass's pen by day, its stampNight by night. The mark cut beside the words is drawn as
+     outline, because a stamp prints one ink and a filled shape would print as a blot. */
+  .brief-go.guest-go { --stamp-ink: var(--guest-ink); }
+  :root[data-theme="dark"] .brief-go.guest-go { --stamp-ink: var(--guest-ink-night); }
+  .guest-go :is(.gm-b, .gm-s) { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .guest-go .gm-d { fill: currentColor; }
   @media (max-width: 480px) {
     .chall-curtain-card.brief-card { padding: 24px 20px 20px 34px; }
     .brief-card::before { left: 16px; }

@@ -1,5 +1,6 @@
 "use strict";
 import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, paperTextInk, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets, wordTaken } from "./util.js";
+import { guestStampHTML } from "./gueststamp.js";
 import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
@@ -14694,7 +14695,7 @@ function renderGuestDetail(id) {
       `</div>` +
       `<div class="chall-act">` +
         `<span class="chall-meta">${escapeHtml(meta)}</span>` +
-        `<button type="button" class="chall-go" data-play="${escapeHtml(id)}">${diffBest > 0 ? "Play again" : "Start writing"}</button>` +
+        guestStampHTML(g) +
       `</div></div>`;
     const el2 = $("guestDetailBody");
     el2.querySelectorAll(".af-diffs [data-diff]").forEach((b) =>

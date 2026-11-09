@@ -521,6 +521,11 @@ export const GUESTS = [
     // records, which is the blending the shelf exists to avoid. __dev.guest.eras() checks
     // every guest's wash has its rules.
     era: "guest-olivia-rodrigo",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#9475b8",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
+    mark: '<path class="gm-b" d="M10 9.1C7.6 4.6 3.4 2.8 2.2 4.6C1.2 6.4 3.6 9.6 9.6 10.2Z"/><path class="gm-b" d="M9.8 10.7C6.4 10.9 3.6 13.1 4.4 15.4C5.4 17.2 8.2 15 9.9 11.7Z"/><path class="gm-b" d="M10.3 9.3C12.3 5.4 16.6 3.6 17.9 5.3C18.8 7.1 16.4 9.9 10.6 10.5Z"/><path class="gm-b" d="M10.3 10.9C13.3 11.3 15.7 13.5 15 15.5C14.1 16.9 11.8 15.1 10.2 11.9Z"/><path class="gm-s" stroke-width="1.9" d="M10 7.8C10.2 10.1 10.1 12.6 10 14.4"/><path class="gm-s" stroke-width="1.4" d="M9.9 7.9C9.4 5.9 8.6 4.7 7.6 4.1M10.1 7.9C10.7 5.7 11.7 4.6 12.9 4.3"/>',
   },
   {
     id: "wicked-soundtrack",
@@ -532,6 +537,11 @@ export const GUESTS = [
            ticks: ["#4f8b63", "#c5799b", "#315746", "#a85e82"] },
     // Elphaba is the ink and Glinda the highlighter; the beads already split by singer.
     era: "guest-wicked-soundtrack",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#ce91a8",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
+    mark: '<path class="gm-b" d="M5.6 15.2C7.4 11.4 8.6 7.6 10.6 4.2C11.4 2.8 12.6 2 14.3 2.7C12.8 3.4 12.4 4.7 12.6 6.4C13 9.4 13.8 12.4 14.8 15Z"/><path class="gm-b" d="M1.8 15.9C5.6 14.4 14.2 14.1 18.4 15.6C17.6 17.5 4.6 17.9 1.8 15.9Z"/><path class="gm-s" d="M6.7 13.1C9 12.5 11.7 12.5 14.1 12.9"/>',
   },
   {
     id: "hannah-montana",
@@ -543,6 +553,11 @@ export const GUESTS = [
            ticks: ["#8a63a2", "#e2b63d", "#c78b35", "#6a4c88"] },
     // Violet wordmark as the ink, the yellow star as the highlighter.
     era: "guest-hannah-montana",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#e5c15f",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
+    mark: '<path class="gm-b" d="M10.3 1.7L12.4 7.3L18.5 7.7L13.7 11.4L15.5 17.6L10.1 14L4.7 17.4L6.6 11.3L1.7 7.9L7.8 7.2Z"/><path class="gm-s" stroke-width="1.4" d="M17.3 11.9V14.8M15.8 13.4H18.7"/>',
   },
   {
     id: "billie-eilish",
@@ -555,6 +570,11 @@ export const GUESTS = [
     // Near-black ink with the acid green softened into the highlighter: full acid green is
     // a good bead and a harsh mark.
     era: "guest-billie-eilish",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#c3da51",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
+    mark: '<path class="gm-s" stroke-width="1.3" d="M10.2 .4C10.1 2.4 10.3 4 10.1 5.9"/><path class="gm-s" stroke-width="1.5" d="M7.6 9.6C5.6 8 4.4 7.6 2.6 8.7M7.3 11C5 10.4 3.4 10.9 2 12.1M7.4 12.6C5.4 13.1 4 14.1 3.2 15.9M8 14.2C6.8 15.4 6.2 16.6 6 18.4M12.4 9.7C14.2 7.7 15.8 7.4 17.6 8.3M12.7 11.1C15 10.6 16.8 11.3 18 12.5M12.6 12.8C14.6 13.4 15.8 14.7 16.4 16.3M12 14.4C13 15.6 13.8 16.9 13.9 18.6"/><ellipse class="gm-b" cx="10" cy="11.7" rx="2.9" ry="3.6"/><circle class="gm-d" cx="10.1" cy="7.3" r="1.7"/>',
   },
   {
     id: "ariana-grande",
@@ -567,6 +587,11 @@ export const GUESTS = [
     ink: { deep: "#533747", accent: "#d5a2b4", strap: "#8a6574", pen: "#654454",
            ticks: ["#e5b9bb", "#a48c96", "#8a5f3c", "#1b191d"] },
     era: "guest-ariana-grande",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#dbb1bb",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
+    mark: '<path class="gm-s" d="M9.3 11.3C8.1 13.6 6.9 15.7 5.3 17.6M11 11.4C12 13.7 12.9 15.7 14.7 17.7"/><path class="gm-b" d="M10 9.4C7.4 6.6 3.8 4.6 2.4 6.2C1.4 7.8 1.8 11.4 2.8 12.6C4.4 13.6 7.6 11.6 10 10.4Z"/><path class="gm-b" d="M10.2 9.3C12.4 6.8 16 5.3 17.6 6.7C18.4 8.3 18.2 11.6 17 12.8C15.4 13.6 12.4 11.8 10.2 10.6Z"/><ellipse class="gm-b" cx="10.1" cy="9.9" rx="1.7" ry="2.1"/>',
   },
   {
     id: "harry-styles",
@@ -580,6 +605,11 @@ export const GUESTS = [
            ticks: ["#c07f7a", "#5fb9e0", "#dcc39b", "#545c72"] },
     // The coral and sky ticks: coral ink, a sky highlighter.
     era: "guest-harry-styles",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#e0cba8",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
+    mark: '<path class="gm-s" d="M6.6 10.6C7.6 7 9.6 4.4 12.6 2.9M13.4 11.7C13 8 12.8 5.4 12.6 2.9"/><path class="gm-b" d="M12.6 2.9C14.8 1.4 17.6 1.8 18.5 3.6C16.4 4.7 14.2 4.3 12.6 2.9Z"/><circle class="gm-b" cx="6.3" cy="14.2" r="3.6"/><circle class="gm-b" cx="13.7" cy="15" r="3.2"/><path class="gm-s" stroke-width="1.2" d="M4.6 12.9C5 12.1 5.6 11.7 6.3 11.6M12.3 13.6C12.7 12.9 13.2 12.6 13.8 12.5"/>',
   },
   {
     id: "sabrina-carpenter",
@@ -593,6 +623,11 @@ export const GUESTS = [
            ticks: ["#3a63ae", "#a75124", "#bcd8e2", "#472e22"] },
     // Lipstick ink, a latte highlighter and an espresso bead.
     era: "guest-sabrina-carpenter",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#c48f7f",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
+    mark: '<g transform="translate(10 10.6) rotate(-6) scale(.98)"><path class="gm-b" stroke-width="1.55" d="M-9 .2C-6.4 -1.4 -4.6 -4.2 -2.4 -4.4C-1.2 -4.5 -.5 -3.6 0 -3C.5 -3.6 1.2 -4.5 2.4 -4.4C4.6 -4.2 6.4 -1.4 9 .2C6 .6 3 .2 0 .5C-3 .2 -6 .6 -9 .2ZM-9 .6C-6 1 -3 .9 0 1.1C3 .9 6 1 9 .6C7 3.6 4.4 5.2 0 5.3C-4.4 5.2 -7 3.6 -9 .6Z"/></g>',
   },
 ];
 // Names announced on the shelf before their catalogue data is ready. These deliberately have no

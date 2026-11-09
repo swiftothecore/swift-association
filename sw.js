@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v774";
+const CACHE = "stta-v775";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -85,6 +85,7 @@ const ASSETS = [
   // Missing it makes either surface fail on its first offline reload.
   "js/credential-guard.js",
   "js/util.js",
+  "js/gueststamp.js",
   "js/config.js",
   "js/match.js",
   // Structured, state-free result-card context selection.
