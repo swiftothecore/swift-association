@@ -14119,7 +14119,7 @@ function renderAlbumDetail(album) {
 /* ---------- Guest shelf ----------
    The destination the corner guest stamp franks you through to: other artists' catalogues,
    hung on a rail as backstage passes. GUESTS carries playable catalogues, while
-   GUESTS_COMING_SOON carries name-only disabled passes. Every number on a playable pass (songs,
+   GUESTS_COMING_SOON carries name-only disabled passes (plus the mark their ADMIT ONE stamp will wear). Every number on a playable pass (songs,
    records, prompt words) comes from the guest's own file, fetched the first time the shelf is
    opened and cached for the session. Nothing about a playable guest is hardcoded here, so
    growing data/guests/olivia-rodrigo.json changes the pass without touching this file.
