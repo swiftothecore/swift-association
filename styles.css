@@ -15252,7 +15252,10 @@
      so as a plain fill it lets the wood back through a solid disc: it rides as an image layer
      over the disc's own background-color instead. Registered so that layer can still fade,
      which a gradient can't do by itself. Keep the disc colours as background-color, never the
-     background shorthand: the night rules outrank the hovers and the shorthand would wipe it. */
+     background shorthand: the night rules outrank the hovers and the shorthand would wipe it.
+     The rim is the disc's own cut edge, the cream (or the night stock) a few shades down, so
+     it stays warm against the oak. It was a cool grey once, left over from when the ring was
+     translucent, and on the wood it read as plastic. The settings gear's rule shares it. */
   @property --disc-wash { syntax: "<color>"; inherits: false; initial-value: transparent; }
   .corner-link {
     display: inline-flex; align-items: center; gap: 0;
@@ -15260,7 +15263,7 @@
     text-decoration: none; color: #5c4326;
     background-color: #f5efe1;
     background-image: linear-gradient(var(--disc-wash), var(--disc-wash));
-    border: 1.5px solid #b4afa4;
+    border: 1.5px solid #cdbf9f;
     box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
     transition: transform 0.18s ease, background-color 0.18s, --disc-wash 0.18s, color 0.18s,
                 border-color 0.18s, gap 0.22s ease, padding 0.22s ease;
@@ -15292,7 +15295,7 @@
   :root[data-theme="dark"] .corner-link {
     color: #d9cfb8;
     background-color: #2c261d;
-    border-color: #565046;
+    border-color: #4b4031;
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
   }
   :root[data-theme="dark"] :is(.corner-link:hover, .corner-link:focus-visible) { color: var(--ink); }
@@ -16990,7 +16993,7 @@
     width: 42px; height: 42px; padding: 8.5px; border-radius: 50%;
     color: #5c4326; background-color: #f5efe1;
     background-image: linear-gradient(var(--disc-wash), var(--disc-wash));
-    border: 1.5px solid #b4afa4;
+    border: 1.5px solid #cdbf9f;
     box-shadow: 0 2px 6px rgba(60, 50, 35, 0.22);
     transition: transform 0.18s ease, background-color 0.18s, --disc-wash 0.18s, color 0.18s;
   }
@@ -17065,7 +17068,7 @@
   :root[data-theme="dark"] .settings-gear {
     color: #d9cfb8;
     background-color: #2c261d;
-    border-color: #565046;
+    border-color: #4b4031;
     box-shadow: 0 2px 7px rgba(0, 0, 0, 0.5);
   }
   :root[data-theme="dark"] .settings-gear:hover { color: var(--ink); }
