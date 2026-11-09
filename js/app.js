@@ -95,7 +95,7 @@ import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
 import { sfx } from "./sound.js";
 import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { watchInkEdges } from "./inkedge.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex, siblingForm } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex, siblingForm, compoundForm } from "./match.js";
 import { buildLyricReveal, revealSections } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
@@ -28324,10 +28324,17 @@ function waveProof(w, cls) {
 }
 const verdictWord = () => `<mark class="vw-word">${escapeHtml(currentWord)}</mark>`;
 // A miss that sang another form of the word says so: "illicit affairs never sings works, but
-// it does sing worked". Judged against the page's own regex, so a form the page would have
-// taken is never offered, and the rules for what counts as a form live with siblingForm.
+// it does sing worked", or, failing a form, a compound it hides in: "ivy never sings damn, but
+// it does sing goddamn". Judged against the page's own regex, so a form the page would have
+// taken is never offered; the rules for what counts live with siblingForm and compoundForm.
+// The compound's other half must be one of this corpus's own prompt words.
+let compoundDict = null, compoundDictFrom = null;
 function siblingClause(song, word) {
-  const form = song && song.lyrics ? siblingForm(currentWord, song.lyrics, wordRegex(currentWord)) : "";
+  if (compoundDictFrom !== playableWords) { compoundDict = new Set(playableWords); compoundDictFrom = playableWords; }
+  const own = wordRegex(currentWord);
+  const form = song && song.lyrics
+    ? siblingForm(currentWord, song.lyrics, own) || compoundForm(currentWord, song.lyrics, own, compoundDict)
+    : "";
   // The comma rides with the word so a wrapped row never opens on it.
   return form
     ? `<span class="vw-tie">${word},</span> <span class="vw-but">but it does sing</span> <span class="vw-sib">${escapeHtml(form)}</span>`

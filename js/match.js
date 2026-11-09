@@ -274,6 +274,29 @@ export function siblingForm(word, text, own) {
   return best;
 }
 
+// The other near miss: the word sung inside a compound, "never sings damn, but it does sing
+// goddamn". The rest of the compound must be a word the game itself deals (`dict`, the
+// corpus's prompt words) and three letters or more, which is what keeps "art" out of "heart"
+// and "ear" out of "year". A few dealt words are also common endings, and a compound that
+// splits on one of them is usually an inflection in disguise ("barbed" is not bar and bed,
+// "season" is not sea and son, "scarlet" is not scar and let), so those never count as halves.
+const SUFFIX_SHAPED = new Set(["red", "bed", "ring", "king", "let", "ten", "son"]);
+export function compoundForm(word, text, own, dict) {
+  const w = canonicalMatchText(word).toLowerCase();
+  if (!dict || w.length < 3) return "";
+  const tally = new Map();
+  for (const t of canonicalMatchText(text).toLowerCase().match(/\p{L}+/gu) || []) tally.set(t, (tally.get(t) || 0) + 1);
+  let best = "", most = 0;
+  for (const [t, n] of tally) {
+    if (t.length <= w.length || own.test(t)) continue;
+    const rest = t.endsWith(w) ? t.slice(0, -w.length) : t.startsWith(w) ? t.slice(w.length) : "";
+    const tail = t.endsWith(w) ? w : rest;
+    if (rest.length < 3 || !dict.has(rest) || SUFFIX_SHAPED.has(tail)) continue;
+    if (n > most) { best = t; most = n; }
+  }
+  return best;
+}
+
 // The first lyric line bearing the word (trimmed). Prioritise a line with the *exact*
 // prompt word over a looser stem variant (e.g. "babe" shouldn't surface a line whose
 // only match is "baby"). Only the lenient path falls back; a strict caller already
