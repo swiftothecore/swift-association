@@ -33422,6 +33422,29 @@ function endFirstDesk() {
 // start screen, ready to play. How to play is not pointed at: its icon is on the desk behind.
 const FR_RULE = (...ids) => `<svg class="rule-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
   ids.map((id) => `<use href="#${id}"/>`).join("") + `</svg>`;
+// The theme, offered once on the welcome because a newcomer arriving at night should not have
+// to find Settings to stop the page glaring. Three bare marks, no words, in Settings' own order,
+// drawn in the rule marks' pen: a sun of eight short rays round a hand-closed disc; the Display
+// settings tab's screen, the very same drawing, for "follow the device"; and a crescent drawn
+// heavy like the hint bulb's glass so it holds at 17px. All three are open line drawings: the
+// pick is the cell inked solid, and a solid mark would turn to a blot inside it. Never a ring or
+// the highlighter for the pick (the card already wears the era's yellow five times). The strip
+// sits last in the markup, pinned to the corner by CSS, so the card's first focus is the start.
+// Board: scripts/ui/icons/theme-switch.html (inked sun, long-and-short rays, laptop, half-inked
+// screen and crescent with a star all lost there).
+const FR_THEMES = [
+  { val: "light",  label: "Light",  mark: `<path d="M12.1 7.6 C14.6 7.6 16.5 9.6 16.4 12.1 C16.3 14.6 14.3 16.5 11.9 16.4 C9.4 16.3 7.5 14.3 7.6 11.9 C7.7 9.6 9.5 7.8 11.6 7.6"/>` +
+    `<path d="M12.1 2.4 C12 3.4 12 4.4 12.1 5.3"/><path d="M11.9 18.7 C12 19.6 12 20.6 12 21.6"/>` +
+    `<path d="M18.7 12.1 C19.6 12 20.6 12 21.6 11.9"/><path d="M2.4 11.9 C3.4 12 4.4 12 5.3 12.1"/>` +
+    `<path d="M16.8 7.2 C17.4 6.6 18 6 18.7 5.4"/><path d="M5.3 5.4 C6 6 6.6 6.6 7.2 7.2"/>` +
+    `<path d="M16.8 16.8 C17.4 17.4 18 18 18.6 18.7"/><path d="M7.2 16.8 C6.6 17.4 6 18 5.4 18.6"/>` },
+  { val: "system", label: "System", mark: `<path d="M4 5.2 C9.4 4.9 14.6 4.9 20 5.2 C20.2 8.9 20.2 12.9 19.9 16.9 C14.6 17.2 9.4 17.2 4.1 16.9 C3.8 12.9 3.8 8.9 4 5.2 Z"/>` +
+    `<path d="M12 17.1 C12 18 12 19 12.1 19.9"/><path d="M8.8 20.1 C11 19.9 13.2 19.9 15.3 20.2"/>` },
+  { val: "dark",   label: "Dark",   mark: `<path stroke-width="1.9" d="M19.4 14.8 C18.2 18 15.2 20.3 11.7 20.2 C7.2 20.1 3.8 16.4 3.9 11.9 C4 8.4 6.3 5.4 9.5 4.4 C8.8 5.7 8.4 7.2 8.5 8.8 C8.7 12.9 12.1 16.1 16.2 15.9 C17.4 15.8 18.5 15.4 19.4 14.8 Z"/>` },
+];
+const frThemeHTML = () => `<div class="fr-theme" role="group" aria-label="Theme">` +
+  FR_THEMES.map((t) => `<button type="button" data-fr-theme="${t.val}" aria-label="${t.label}" aria-pressed="${(settings.theme || "light") === t.val}">` +
+    `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${t.mark}</svg></button>`).join("") + `</div>`;
 function firstRunWelcomeHTML() {
   return `<p class="fr-kicker">welcome to the notebook</p>` +
     `<h2 id="firstRunTitle" class="fr-title">Let's ease you in</h2>` +
@@ -33439,7 +33462,7 @@ function firstRunWelcomeHTML() {
     `<div class="fr-tabs">` +
       `<button type="button" class="fr-tab" data-fr="knowit">I know this game <small>show me everything</small></button>` +
       `<button type="button" class="fr-tab" data-fr="knowit-quiet">…and no tips <small>skip the first-game pointers</small></button>` +
-    `</div>`;
+    `</div>` + frThemeHTML();
 }
 // Silence the gentle first-game pointers by spending each beat's one-time coachmark up front, for
 // a player who's told us they don't want them. Leaves the "a few games in" prompts (era, ready
@@ -33480,6 +33503,14 @@ function wireFirstRun() {
   body.addEventListener("click", (e) => {
     const eraBtn = e.target.closest("[data-era-album]");
     if (eraBtn) { firstRunEra = eraBtn.getAttribute("data-era-album"); renderEra(); return; }
+    const themeBtn = e.target.closest("[data-fr-theme]");
+    if (themeBtn) {
+      settings.theme = themeBtn.getAttribute("data-fr-theme");
+      saveSettings(settings);
+      applySettings();
+      body.querySelectorAll("[data-fr-theme]").forEach((b) => b.setAttribute("aria-pressed", String(b === themeBtn)));
+      return;
+    }
     const act = e.target.closest("[data-fr]");
     if (!act) return;
     switch (act.getAttribute("data-fr")) {

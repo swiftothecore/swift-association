@@ -17386,6 +17386,27 @@
   .fr-tab:is(:hover, :focus-visible) { transform: translateY(-2px); box-shadow: 2px 4px 0 #2b272233; }
   .fr-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   body[data-reduce-motion="on"] .fr-tab { transition: none; }
+  /* The welcome's theme switch, pinned to the card's top-right corner (frThemeHTML). One ink-ruled
+     strip of three cells to match the tabs under it; the pick is inked solid, so on the night
+     page --ink and --paper swap and it inverts with everything else. */
+  .fr-theme {
+    position: absolute; top: 20px; right: 22px; display: flex;
+    border: 1.5px solid var(--ink); border-radius: 3px; background: var(--paper); overflow: hidden;
+    box-shadow: 2px 2px 0 #2b272226;
+  }
+  .fr-theme button {
+    display: grid; place-items: center; width: 32px; height: 28px; padding: 0; margin: 0;
+    border: 0; background: none; color: var(--ink-soft); cursor: pointer; transition: color 0.15s, background 0.15s;
+  }
+  /* The kicker shares the top line with the switch, so it stops short of it and wraps instead of running under. */
+  .firstrun-card:has(.fr-theme) .fr-kicker { padding-right: 112px; }
+  .fr-theme button + button { border-left: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); }
+  .fr-theme svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .fr-theme button:hover { color: var(--ink); }
+  .fr-theme button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .fr-theme button:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
+  .fr-theme button[aria-pressed="true"]:focus-visible { outline-color: var(--paper); }
+  body[data-reduce-motion="on"] .fr-theme button { transition: none; }
   .fr-era-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 10px; margin-bottom: 22px; }
   @media (max-width: 480px) { .fr-era-grid { grid-template-columns: 1fr; } }
   .fr-era {
@@ -18678,6 +18699,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .fr-tabs { flex-wrap: nowrap; gap: 10px; }
   .fr-tab { flex: 1 1 0; min-width: 0; padding: 8px 8px; }
   .fr-demo-word .word { font-size: calc(50px + var(--text-size-adjust)); }
+  .fr-theme { top: 13px; right: 12px; }
+  .firstrun-card:has(.fr-theme) .fr-kicker { padding-right: 104px; }
   .fr-era-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fr-era { min-width: 0; padding: 8px; gap: 6px; }
   .fr-era-name { overflow-wrap: anywhere; }
