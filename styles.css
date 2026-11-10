@@ -17359,9 +17359,33 @@
   .fr-kicker { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 2px; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 6px; }
   .fr-title { font-family: var(--hand); font-size: calc(34px + var(--text-size-adjust)); font-weight: 700; color: var(--ink); margin: 0 0 8px; transform: rotate(-0.6deg); }
   .fr-sub { font-family: var(--type); font-size: calc(14px + var(--text-size-adjust)); line-height: 1.5; color: var(--ink-soft); margin: 0 0 20px; max-width: 44ch; }
-  /* The pointer at the how-to card: smaller and ruled off, so it reads as a footnote to the
-     welcome rather than a third thing to decide about before playing. */
-  .fr-aside { font-size: calc(12px + var(--text-size-adjust)); padding-top: 12px; border-top: 1px dashed rgba(43,39,34,0.16); margin-bottom: 18px; }
+  /* The welcome shows the game instead of describing it (firstRunWelcomeHTML): a prompt word in
+     the real .word hand, and under it the verdict line a right page writes. Only the size moves;
+     the highlighter, the tick and "sings" stay the game's own. The word's ::before swipe sits at
+     z-index -1, so the demo isolates itself to keep it on this card rather than behind it. */
+  .fr-demo { text-align: center; margin: 2px 0 16px; isolation: isolate; }
+  .fr-demo-word { margin: 6px 0 4px; }
+  .fr-demo-word .word { font-size: calc(58px + var(--text-size-adjust)); }
+  .fr-demo-say { justify-content: center; }
+  /* Relaxed's terms in the front page's own rule marks, the ones under the difficulty row. */
+  .fr-terms { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px; margin: 0 0 22px; padding: 0; }
+  .fr-terms li { display: inline-flex; align-items: center; gap: 6px; font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); color: var(--ink); }
+  .fr-terms .rule-mark { width: 20px; height: 20px; color: var(--ink); }
+  .fr-start { width: 100%; }
+  /* The two ways past the gentle start: a pair of plain ink tabs, one deciding the other, each
+     with the consequence written small under it. */
+  .fr-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 16px; }
+  .fr-tab {
+    font: 700 calc(12.5px + var(--text-size-adjust)) var(--type); letter-spacing: 0.3px; color: var(--ink);
+    background: var(--paper); border: 1.5px solid var(--ink); border-radius: 3px;
+    padding: 9px 14px; cursor: pointer; box-shadow: 2px 2px 0 #2b272226;
+    transform: rotate(-0.8deg); transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .fr-tab + .fr-tab { transform: rotate(0.6deg); }
+  .fr-tab small { display: block; font-weight: 400; font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-top: 2px; letter-spacing: 0; }
+  .fr-tab:is(:hover, :focus-visible) { transform: translateY(-2px); box-shadow: 2px 4px 0 #2b272233; }
+  .fr-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  body[data-reduce-motion="on"] .fr-tab { transition: none; }
   .fr-era-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 10px; margin-bottom: 22px; }
   @media (max-width: 480px) { .fr-era-grid { grid-template-columns: 1fr; } }
   .fr-era {
@@ -17585,10 +17609,18 @@
     gap: 2px 16px; margin: 4px 0 2px;
   }
   @media (max-width: 520px) { .set-checklist { grid-template-columns: 1fr; } }
-  /* The Custom desk's objects hang under the Desk decorations row they belong to, and they are
-     short single names, so they keep two columns even on a phone. */
-  .set-checklist--desk { margin: -2px 0 8px; }
-  @media (max-width: 520px) { .set-checklist--desk { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  /* The Custom desk's objects hang under the Desk decorations row they belong to. Eight one-word
+     switches at the main checklist's size took four tall rows, so they are scaled down to the
+     label: a smaller box, a smaller hand, four across in two short rows. */
+  .set-checklist--desk {
+    grid-template-columns: repeat(4, auto); justify-content: space-between;
+    gap: 0 10px; margin: -4px 0 6px;
+  }
+  .set-checklist--desk .set-check { align-items: center; gap: 6px; padding: 2px 4px 2px 0; width: auto; }
+  .set-checklist--desk .set-check-box { width: 13px; height: 13px; margin-top: 0; border-width: 1.3px; }
+  .set-checklist--desk .set-check-tick { left: -2px; top: -4px; width: 18px; height: 18px; stroke-width: 2.4; }
+  .set-checklist--desk .set-check-name { font-size: calc(17px + var(--text-size-adjust)); white-space: nowrap; }
+  @media (max-width: 340px) { .set-checklist--desk { grid-template-columns: repeat(2, auto); justify-content: start; gap: 0 28px; } }
   .set-check {
     display: flex; align-items: flex-start; gap: 9px; text-align: left; width: 100%;
     background: transparent; border: none; border-radius: 3px;
@@ -18642,7 +18674,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .set-tab { min-height: 44px; }
   .fr-title { font-size: calc(29px + var(--text-size-adjust)); }
   .fr-sub { font-size: calc(13px + var(--text-size-adjust)); margin-bottom: 14px; }
-  .fr-aside { margin: 16px 0 0; }
   .fr-era-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fr-era { min-width: 0; padding: 8px; gap: 6px; }
   .fr-era-name { overflow-wrap: anywhere; }

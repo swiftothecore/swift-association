@@ -222,19 +222,20 @@ export const APP_PREFIX = "swiftSongAssociation.";
 /* ---------- User settings (the settings panel) ---------- */
 // One flat record. loadSettings merges this over whatever's stored, so adding a
 // new key here gives existing players a sensible default with no migration.
-// The objects on the desk, as the Custom desk setting lists them. `id` is the `.di-<id>` class
+// The objects on the desk, as the Custom desk setting lists them, one word each so the list
+// fits four across. `id` is the `.di-<id>` class
 // in index.html; the print stands for its ball and sheet too, since they are one object at
 // three ages. Quiet and Bare are named here as the hidden sets they amount to, so picking
 // Custom starts from whichever preset the desk was already wearing.
 export const DESK_PROPS = [
-  { id: "glasses", label: "Reading glasses" },
-  { id: "mug", label: "Coffee mug" },
-  { id: "calendar", label: "Desk calendar" },
-  { id: "picks", label: "Guitar picks" },
-  { id: "floss", label: "Embroidery floss" },
-  { id: "beads-r", label: "Alphabet beads" },
+  { id: "glasses", label: "Glasses" },
+  { id: "mug", label: "Mug" },
+  { id: "calendar", label: "Calendar" },
+  { id: "picks", label: "Picks" },
+  { id: "floss", label: "Floss" },
+  { id: "beads-r", label: "Beads" },
   { id: "cassette", label: "Cassette" },
-  { id: "print", label: "The print" },
+  { id: "print", label: "Print" },
 ];
 export const DESK_PRESET_HIDDEN = {
   full: [],
