@@ -18000,8 +18000,11 @@
 
   /* Three pinned sticky notes — quick links out (code / Taylor / ELLE).
      The outer <a> carries the pin, the hover arrow and the drop-shadow; the inner
-     .about-note-paper carries the colour + an irregular torn-paper clip-path (so the
-     pin/arrow aren't clipped). filter:drop-shadow traces the wobbly silhouette. */
+     .about-note-paper carries the colour and the paper's tooth. The notes used to be
+     torn on all four sides with a sheen and an orange sweep, and read as flat colour
+     cut out of nothing: they are now square-cut, evenly lit, and textured. Grain,
+     fibres, dents, cardstock and a pad sheet were weighed beside the tooth on
+     scripts/ui/sticky-texture.html. */
   .about-notes {
     display: flex; flex-wrap: wrap; gap: 18px 16px;
     justify-content: center; margin: 18px 4px 6px;
@@ -18021,16 +18024,17 @@
   }
   .about-note:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 4px; }
 
-  /* the paper itself — colour, padding, torn edges, a faint top-light/bottom-curl */
+  /* the paper itself. Its tooth is a noise height map lit from the top left, kept as
+     white and black ink at an alpha rather than a blend mode, so the one tile reads the
+     same on the black, orange and rose papers. Each note starts at its own offset into
+     the tile so no two share a pattern. Flat things get even light: no sheen, no sweep. */
   .about-note-paper {
     display: flex; flex-direction: column; align-items: center; gap: 9px;
     width: 100%; padding: 20px 12px 16px;
-    box-shadow: inset 0 2px 5px -3px rgba(255,255,255,0.45),
-                inset 0 -8px 12px -7px rgba(0,0,0,0.28);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='t' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' surfaceScale='0.35' diffuseConstant='1' lighting-color='%23fff' result='L'%3E%3CfeDistantLight azimuth='225' elevation='30'/%3E%3C/feDiffuseLighting%3E%3CfeColorMatrix in='L' result='hi' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 1.1 0 0 0 -0.55'/%3E%3CfeColorMatrix in='L' result='sh' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.1 0 0 0 0.55'/%3E%3CfeMerge%3E%3CfeMergeNode in='sh'/%3E%3CfeMergeNode in='hi'/%3E%3C/feMerge%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23t)'/%3E%3C/svg%3E");
   }
-  .about-note--gh   .about-note-paper { clip-path: polygon(2% 2.5%, 30% 1%, 58% 2.2%, 99% 1.4%, 98% 30%, 99.5% 58%, 98.4% 99%, 60% 97.4%, 28% 99%, 1.5% 98%, 1% 62%, 2.6% 30%); }
-  .about-note--ts   .about-note-paper { clip-path: polygon(1% 1.5%, 28% 2.6%, 55% 0.8%, 98.6% 2.4%, 97.6% 33%, 99% 60%, 98% 98.6%, 62% 98%, 30% 99.2%, 2% 97.4%, 1.6% 64%, 0.8% 32%); }
-  .about-note--elle .about-note-paper { clip-path: polygon(2% 2%, 32% 0.8%, 60% 2.3%, 98% 1%, 99% 34%, 97.8% 62%, 99% 98%, 58% 99%, 27% 97.4%, 1.5% 98.8%, 2.2% 60%, 1% 33%); }
+  .about-note--ts   .about-note-paper { background-position: 53px 37px; }
+  .about-note--elle .about-note-paper { background-position: 106px 74px; }
 
   /* a little gold pin head pressed into the top of each note */
   .about-note::before {
@@ -18054,17 +18058,14 @@
 
   /* GitHub — a near-black note, white octocat */
   .about-note--gh { --note-arrow: #f3f3f0; }
-  .about-note--gh .about-note-paper { background: #0a0d12; }
+  .about-note--gh .about-note-paper { background-color: #0a0d12; }
   .about-note--gh .about-note-ico path { fill: #f3f3f0; }
   .about-note--gh .about-note-lbl { color: #f3f3f0; }
 
   /* Taylor's website — a warm orange note with an aquamarine signature + label.
-     Flat (no glitter), softened orange + a gentle top-light so it sits with the set
-     instead of shouting. */
+     Flat (no glitter), and a softened orange so it sits with the set instead of shouting. */
   .about-note--ts { --note-arrow: #34dcc0; }
-  .about-note--ts .about-note-paper {
-    background: linear-gradient(160deg, #d9622f 0%, #c45324 58%, #b04a1f 100%);
-  }
+  .about-note--ts .about-note-paper { background-color: #c9572a; }
   .about-note--ts .about-note-sig {
     width: 84px; height: auto; display: block; margin: 4px 0 2px;
     filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
@@ -18074,7 +18075,7 @@
 
   /* ELLE's Song Association — a warm rose note with the YouTube logo */
   .about-note--elle { --note-arrow: #8a2b22; }
-  .about-note--elle .about-note-paper { background: #f0d3d3; }
+  .about-note--elle .about-note-paper { background-color: #f0d3d3; }
   .about-note--elle .about-note-ico--yt path { fill: #d6342a; }
   .about-note--elle .about-note-lbl { color: #8a2b22; }
 
