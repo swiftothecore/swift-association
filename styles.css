@@ -1936,7 +1936,8 @@
   :is(.play-cta:hover, .play-cta:focus-visible, .bc-cell:hover .play-cta, .bc-cell:focus-visible .play-cta) .cta-drifts--front { transform: scaleY(1.32); transition: transform 4.4s cubic-bezier(.3,.5,.4,1) 1.1s; }
 
   /* =====================================================================
-     SNOW DAY: December's default (wornFinish in app.js; drawn in js/cta.js)
+     SNOW DAY: December's button, over every finish unless switched off on
+     the Mastery card (decemberFinishFor in app.js; drawn in js/cta.js)
      A garden under a grey snow sky, so white flakes show against it, with
      a snowman in the left gutter and a cardinal on a post in the right. It
      is already snowing at rest, every flake held where it is drawn (its
@@ -16403,6 +16404,15 @@
     radial-gradient(circle at 3px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px),
     radial-gradient(circle at 10px 10px, color-mix(in srgb, var(--ink) 45%, transparent) 1.2px, transparent 1.6px); }
   .bc-owe { margin-top: 12px; text-align: center; }
+  /* Snow day's December switch (decemberRow in js/rewardboard.js): sewn on below the finishes,
+     ruled off from them because it is not one of them. Off, it is the empty thread holes. */
+  .bc-card .bc-cell.bc-december { flex-direction: row !important; flex-wrap: wrap; justify-content: center; gap: 6px 16px !important;
+    width: 100%; margin-top: 18px; padding: 14px 4px 2px !important; border-top: 1.2px dashed color-mix(in srgb, var(--ink) 38%, transparent); text-align: left; }
+  .bc-dec-tx { display: flex; flex-direction: column; gap: 3px; }
+  .bc-dec-tx b { font-family: var(--hand); font-size: calc(20px + var(--text-size-adjust)); line-height: 1; color: var(--ink); }
+  .bc-dec-tx span { font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); color: var(--ink); }
+  .bc-dec-tx i { font-family: var(--hand); font-weight: 600; font-style: normal; font-size: 15px; line-height: 1; color: var(--ink-soft); }
+  .bc-december:not(.on) .bc-dec-tx :is(b, span) { color: var(--ink-soft); }
   .bc-refill { position: relative; margin: -1px 22px 0; padding: 12px 12px 14px; background: color-mix(in srgb, var(--o) 9%, var(--mpp-card));
     border: 1.5px solid var(--ink); border-top: 1.5px dashed var(--ink); border-radius: 0 0 6px 6px; }
   .bc-refill-hd { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }

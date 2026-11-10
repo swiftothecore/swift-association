@@ -452,9 +452,8 @@ function buttonCell(D, attr, finish, name, worn, i, note = "") {
     `<span class="bc-nm">${esc(name)}</span>${note ? `<span class="bc-note">${note}</span>` : ""}</button>`;
 }
 // They are start BUTTONS, so they are sewn onto a card, each real one held by two gold
-// cross-stitches. The first is the default, the gold marker that snows all December: it is
-// the card's reset, open to everyone, and its preview wears whatever the default is wearing
-// today. Seasons and Pride stay doorways: each set opens on a refill card tucked under the main
+// cross-stitches. The first is the default, the gold marker: it is the card's reset, open to
+// everyone. Seasons and Pride stay doorways: each set opens on a refill card tucked under the main
 // one (.set-picker, shown and hidden by app.js in the DOM, never re-rendered), and a pinned
 // season or worn flag keeps saying which doorway it came from.
 function buttonCard(D) {
@@ -468,7 +467,7 @@ function buttonCard(D) {
   let cells = "", trays = "", i = 0;
   // A stored "gold" (from before gold was the default again, or a random roll) is the same
   // marker, so it lights this button too.
-  if (gold) cells += buttonCell(D, `data-reward-reset="button"`, "", gold.name, !rnd && (active === "" || active === "gold"), i++, "snows all December");
+  if (gold) cells += buttonCell(D, `data-reward-reset="button"`, "", gold.name, !rnd && (active === "" || active === "gold"), i++);
   for (const r of buttons) {
     if (r === gold) continue;
     if (!open) { cells += emptyCell(); i++; continue; }
@@ -487,7 +486,21 @@ function buttonCard(D) {
     head("Start buttons", rnd ? "a different one sewn on every time you open the notebook" : "the button on your front page", stamp(D, level)) +
     `<div class="bc"><div class="bc-card"><div class="bc-hd"><span class="bc-no">No. ${level}</span><b>Assorted finishes</b><span class="bc-sub">sewn on by hand · ${buttons.length} to a card</span>` +
     (open ? dieControl("button", rnd, "A different finish every visit") : "") + `</div>` +
-    `<div class="bc-grid">${cells}</div>${open ? "" : `<p class="rw-owe bc-owe">${buttons.length - 1} more finishes get sewn on at Mastery ${level}</p>`}</div>${trays}</div></section>`;
+    `<div class="bc-grid">${cells}</div>${open ? "" : `<p class="rw-owe bc-owe">${buttons.length - 1} more finishes get sewn on at Mastery ${level}</p>`}${decemberRow(D)}</div>${trays}</div></section>`;
+}
+// Snow day is not a pick. It is sewn on at the foot of the card, apart from the finishes, and
+// goes over whichever of them is worn all December (decemberFinishFor in app.js); pressing it
+// unpicks it or sews it back on (settings.decemberSnow). Sewn on, it is a real button held by
+// its cross-stitches, like every other on the card; unpicked, only the thread holes are left
+// where it was. It is open at every level, because it reaches every player's button.
+function decemberRow(D) {
+  const on = D.decemberSnow;
+  const sew = on ? `${stitch(71)}<span class="bc-btn">${D.miniButton("snowday")}</span>${stitch(73)}`
+    : `<span class="bc-holes"></span><span class="bc-btn bc-ghost"></span><span class="bc-holes"></span>`;
+  return `<button type="button" class="bc-cell bc-december${on ? " on" : ""}" data-december-snow aria-pressed="${on}">` +
+    `<span class="bc-sew">${sew}</span><span class="bc-dec-tx"><b>Every December</b>` +
+    `<span>${on ? "Snow day goes over your button all month." : "Your own button stays on in December."}</span>` +
+    `<i>${on ? "tap to unpick it" : "tap to sew it back on"}</i></span></button>`;
 }
 function refill(id, title, sub, members) {
   return `<div class="bc-refill set-picker" id="${id}" hidden><div class="bc-refill-hd"><b>${esc(title)}</b><span>${sub}</span>` +

@@ -1323,11 +1323,11 @@ export function initDev(api) {
     row("start words", mLabelSel,
         btn("set", () => { api.mastery.label(mLabelSel.value); toast("button says: " + (mLabelSel.value || "Start writing")); }),
         btn("default", () => { api.mastery.label(""); toast("back to Start writing"); })),
-    // The default button is the gold marker except all December, when it is Snow day. These
-    // wear the default and force it either way for the session; "by date" hands it back.
-    row("default button", btn("snow day", () => toast("button wears " + (api.mastery.snowDay(true) || "gold"))),
-        btn("gold", () => toast("button wears " + (api.mastery.snowDay(false) || "gold"))),
-        btn("by date", () => toast("button wears " + (api.mastery.snowDay(null) || "gold")))),
+    // Snow day goes over the start button all December unless the Mastery card's switch is off.
+    // These force the month either way for the session; "by date" hands it back.
+    row("december snow", btn("december", () => toast("button wears " + api.mastery.snowDay(true))),
+        btn("not december", () => toast("button wears " + api.mastery.snowDay(false))),
+        btn("by date", () => toast("button wears " + api.mastery.snowDay(null)))),
     // Every setter above stamps its unlocks with today, so a dev-built passport wears one date
     // on every stamp. This spreads the reached levels back over a climb, `days` apart.
     row("backdate stamps", mDaysN, "days apart",

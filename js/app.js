@@ -568,7 +568,8 @@ function paintStartButton() {
   if (!playCta) return;
   // activeButtonFinish/activeCtaLabel, not the raw settings: either may hold "random", in
   // which case what the button wears is this page load's roll. wornFinish then turns
-  // the default into Snow day in December and "gold" into the bare marker.
+  // "gold" into the bare marker. All December, Snow day goes over the pick (decemberFinishFor),
+  // unless the player has switched it off on the Mastery card.
   //
   // Except on an album's release day, when the album's own finish is FORCED over all of that,
   // Mastery pick and random roll included, to show support for the album on its anniversary
@@ -581,7 +582,7 @@ function paintStartButton() {
   // button wears any of them: the Mastery board still previews the player's own choice, which is
   // untouched and comes back the next day.
   const day = todayKey();
-  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || christmasFinishFor(day) || guestDayFinishFor(day) || thirteenthFinishFor(day) || wornFinish(activeButtonFinish());
+  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || christmasFinishFor(day) || guestDayFinishFor(day) || thirteenthFinishFor(day) || decemberFinishFor(day) || wornFinish(activeButtonFinish());
   if (finish) playCta.setAttribute("data-startbtn", finish);
   else playCta.removeAttribute("data-startbtn");
   // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
@@ -7325,7 +7326,7 @@ const MASTERY_COSMETICS = {
   tape:      { setting: "masteryTape",      field: "tape",      resetLabel: "Plain tape",     resetMeta: "the everyday tape" },
   paper:     { setting: "masteryPaper",     field: "paper",     resetLabel: "Plain paper",    resetMeta: "the everyday page" },
   trinket:   { setting: "masteryTrinket",   field: "trinket",   resetLabel: "Star trinket",   resetMeta: "the everyday trinket" },
-  button:    { setting: "masteryButton",    field: "button",    resetLabel: "Gold marker",    resetMeta: "snows all December" },
+  button:    { setting: "masteryButton",    field: "button",    resetLabel: "Gold marker",    resetMeta: "the notebook's gold" },
   label:     { setting: "masteryLabel",     field: "label",     resetLabel: "Start writing", resetMeta: "the everyday words" },
 };
 
@@ -7400,6 +7401,15 @@ function renderMasteryPage() {
       const kind = el.getAttribute("data-reward-random");
       chooseRandomCosmetic(kind);
       slideMatchbox(body, kind);
+    });
+  });
+  // Snow day's December switch: sewn on, it goes over the start button all December; unpicked,
+  // the player's own button stays. A plain setting, not a cosmetic pick, so it is open at any
+  // level and never touches masteryButton.
+  body.querySelectorAll("[data-december-snow]").forEach((el) => {
+    el.addEventListener("click", () => {
+      settings.decemberSnow = settings.decemberSnow === false;
+      saveSettings(settings); applySettings(); renderMasteryPage();
     });
   });
   // The set trays (Seasons, Pride) are pure disclosure: they open and shut in the DOM without
@@ -7501,6 +7511,7 @@ function buildRewardBoard(m, mLevel, unlocked) {
     secretHints: !!m.unlocked["reveal-hints"], secretLevel: lv("reveal-hints"), secretsLeft: secretCharmsLeft().length > 0,
     earned: all.filter((r) => m.unlocked[r.id]).length, total: all.length,
     miniButton: (finish) => `<span class="btn-primary play-cta"${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML("", wornFinish(finish))}</span>`,
+    decemberSnow: settings.decemberSnow !== false,
     // the words preview wears this load's roll when the button is on random, like the real one
     nowButton: () => ctaPreviewHTML(activeCtaLabel(), activeButtonFinish()),
     arrow: CTA_ARROW,
@@ -7558,19 +7569,24 @@ rollRandomCosmetics();
 function activeButtonFinish() {
   return settings.masteryButton === COSMETIC_RANDOM ? rolledFinish : (settings.masteryButton || "");
 }
-// The finish a stored pick actually draws. The default ("") is the gold marker, which is the
-// button with no finish attribute at all (its rules are .play-cta:not([data-startbtn])), except
-// through December, when it is Snow day. Only the DEFAULT snows: unlike the dated finishes in
-// js/anniversarycta.js it is not forced, so anyone who has picked a finish in Mastery keeps it,
-// and "gold" picked there (or rolled by random) is the bare marker all year. December is
-// December in either hemisphere, as the page's own snowfall is. Every surface that paints or
-// previews a start button asks this, never the raw setting. It reads todayKey(), which keeps
-// it on the player's timezone and the dev date; window.__devSnowDay (dev panel, session only)
-// forces it either way.
-const snowDayOn = (day) => typeof window.__devSnowDay === "boolean" ? window.__devSnowDay : day.slice(5, 7) === "12";
+// The finish a stored pick actually draws. The default ("") and "gold" are both the gold marker,
+// which is the button with no finish attribute at all (its rules are
+// .play-cta:not([data-startbtn])). Every surface that paints or previews a start button asks
+// this, never the raw setting.
 function wornFinish(finish) {
-  if (!finish) return snowDayOn(todayKey()) ? "snowday" : "";
-  return finish === "gold" ? "" : finish;
+  return finish === "gold" ? "" : finish || "";
+}
+// Snow day, worn over the player's own finish all December, or "". It sits between the dated
+// finishes and the pick: like them it covers whatever was chosen in Mastery, random included,
+// and only on the real button (the Mastery card goes on previewing the player's own pick), but
+// unlike them it lasts a month, so it can be switched off: settings.decemberSnow, the "Every
+// December" row on the Mastery button card. December is December in either hemisphere, as the
+// page's own snowfall is. It reads the dated key, so the player's timezone and the dev date
+// hold; window.__devSnowDay (dev panel, session only) forces the month either way.
+function decemberFinishFor(day) {
+  if (settings.decemberSnow === false) return "";
+  const on = typeof window.__devSnowDay === "boolean" ? window.__devSnowDay : day.slice(5, 7) === "12";
+  return on ? "snowday" : "";
 }
 function activeCtaLabel() {
   return settings.masteryLabel === COSMETIC_RANDOM ? rolledLabel : (settings.masteryLabel || "");
@@ -17580,13 +17596,11 @@ function refreshDateSurfaces() {
   // days in November. Each refresher re-asks its own gate.
   refreshSnow();
   refreshLeaves();
-  // The start button is a dated surface twice over: the default turns to Snow day on the first
-  // of December and back on the first of January, and every finish gives way to an album's on
-  // its release day and comes back the day after. Repainting it is cheap, so it always
-  // repaints; the Mastery page only previews the default by the date, so it redraws only for that.
+  // The start button is a dated surface twice over: Snow day goes over it on the first of
+  // December and comes off on the first of January, and every finish gives way to an album's on
+  // its release day and comes back the day after. Repainting it is cheap, so it always repaints.
   paintStartButton();
   paintTitleInk();   // an album's release day wears its ink in the masthead
-  if (activeButtonFinish() === "" && $("masteryBody")) renderMasteryPage();
 }
 // The day turning under a page that is already open. This is deliberately a POLL against
 // todayKey() rather than one long setTimeout aimed at midnight, because a timer is the one
@@ -35123,17 +35137,15 @@ function buildDevApi() {
       strand: (n = TOTAL_ROUNDS, seed = braceletSeed) =>
         Array.from({ length: n | 0 }, (_, i) => randomTrinketForBead(seed, i)),
       // Preview a start-button finish without unlocking it: pass an id (gold/ink/rose/sky/meadow/ivy,
-      // a season to pin, snowday, or any dev.mastery.flags() id) or "" for the default, the gold
-      // marker that snows all December.
+      // a season to pin, snowday, or any dev.mastery.flags() id) or "" for the default gold marker.
       button: (id) => { settings.masteryButton = id || ""; saveSettings(settings); applySettings(); if ($("masteryBody")) renderMasteryPage(); },
-      // Wear the default button and force whether it is in its December Snow day, for this
-      // session only (window.__devSnowDay, never stored): true or false, or null to hand it
-      // back to the date. Returns the finish now being worn ("" is the gold marker).
+      // Force whether it is December for Snow day, for this session only (window.__devSnowDay,
+      // never stored): true or false, or null to hand it back to the date. The Mastery card's
+      // switch still wins over it. Returns what the start button now wears.
       snowDay: (on) => {
         window.__devSnowDay = typeof on === "boolean" ? on : undefined;
-        settings.masteryButton = ""; saveSettings(settings); applySettings();
-        if ($("masteryBody")) renderMasteryPage();
-        return wornFinish("");
+        paintStartButton();
+        return $("playBtn")?.getAttribute("data-startbtn") || "gold";
       },
       // The Pride flag ids, for feeding to button() above — the one finish that is a set, so
       // the ids are not guessable from the reward ladder.

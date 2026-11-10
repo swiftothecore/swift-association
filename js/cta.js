@@ -393,8 +393,9 @@ const storm = `<i class="cta-storm-sky"></i>${frost("left", 26)}${frost("right",
   flurry("mid", 30, 22, [2.2, 3.2], [1.3, 1.9]) + drifts + flurry("near", 12, 33, [7, 10], [.95, 1.35], 6);
 
 
-// ---- Snow day: December's default ---------------------------------------------------
-// What the default button wears all December (wornFinish in app.js): a garden under a grey
+// ---- Snow day: December's button ----------------------------------------------------
+// What the start button wears all December, over whatever finish is picked, unless the Mastery
+// card's switch is off (decemberFinishFor in app.js): a garden under a grey
 // snow sky, a snowman in a green knitted hat and a red scarf in the left gutter, a cardinal on
 // a fence post in the right, and snowy pines out at the ends where only a wide button shows
 // them. It is already snowing at rest, the flakes held where they are; on hover the snow comes
