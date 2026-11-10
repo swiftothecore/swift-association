@@ -302,7 +302,7 @@ export const DEFAULT_SETTINGS = {
                             // (a MAST_INKS slug; "" = the house brand gold). See MAST_INKS.
   masteryTrinket: "",         // chosen bracelet trinket, unlocked via Mastery ("" = the default star)
   masteryTitle: "",         // chosen prestige title, unlocked via Mastery ("" = follows your mastery: the highest tier's default)
-  masteryButton: "",        // chosen "start writing" button finish ("" = the default, Seasons by the calendar; the rest unlock via Mastery)
+  masteryButton: "",        // chosen "start writing" button finish ("" = the default, the gold marker that snows all December; the rest unlock via Mastery)
   masteryLabel: "",         // chosen start-button words (a CTA_LABELS key), unlocked via Mastery ("" = the default "Start writing")
 };
 
@@ -2585,10 +2585,10 @@ export const MASTERY_REWARDS = [
   { level: 8,  id: "btn-blush",  kind: "button", name: "Blush",     desc: "Rose letterpress on cotton paper, with a fine written underline.", payload: { button: "rose" } },
   { level: 8,  id: "btn-sky",    kind: "button", name: "Sky",       desc: "Cool blue, with little white clouds.", payload: { button: "sky" } },
   { level: 8,  id: "btn-meadow", kind: "button", name: "Meadow",    desc: "Spring green, with grass at the hem.", payload: { button: "meadow" } },
-  // The default button follows the seasons by the calendar (""; see wornFinish in app.js).
-  // What level 8 adds is the choice to keep ONE of them all year, held as a set the way the
-  // Pride flags are: its variants are the four seasons, and a pinned season is stored under
-  // its own id. The gold marker, the default before Seasons, is a level-8 finish now.
+  // The default button ("") is the gold marker, worn as Snow day all December (wornFinish in
+  // app.js). btn-gold stays on the ladder as the card's first button, which is that default,
+  // so picking it is the reset. Seasons pins ONE season all year, held as a set the way the
+  // Pride flags are: its variants are the four seasons, each stored under its own id.
   { level: 8, id: "btn-seasons", kind: "button", name: "Seasons", desc: "Keep one season on your start button all year.", payload: { button: "winter" }, variants: SEASON_BUTTONS },
   { level: 8, id: "btn-ivy", kind: "button", name: "Ivy house", desc: "Warm brickwork with ivy climbing over the edges.", payload: { button: "ivy" } },
   // The only reward with a set inside it. `variants` is what chooseMasteryCosmetic will

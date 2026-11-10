@@ -1,6 +1,5 @@
-// Which season it is, for the two things that keep one: the desk calendar's month marks and
-// the Seasons start-button finish. They read this one module so the pad and the button can
-// never disagree about whether it is autumn yet.
+// Which season it is, for the desk calendar's month marks. The start button does not follow
+// it: its December Snow day is December in either hemisphere (wornFinish in app.js).
 //
 // Seasons turn on the first of the month (meteorological, not the equinoxes): March, June,
 // September and December each begin one. The month is the player's own, taken from the
@@ -11,7 +10,6 @@ import { loadSettings } from "./storage.js";
 // Indexed NORTHERN: [0] is January.
 export const MONTH_SEASON = ["winter", "winter", "spring", "spring", "spring", "summer",
                              "summer", "summer", "autumn", "autumn", "autumn", "winter"];
-export const SEASONS = ["spring", "summer", "autumn", "winter"];
 
 // Which hemisphere's seasons the player lives. A browser will not answer this: the
 // timezone is the only signal on offer, and an IANA id names a place, not a
@@ -62,12 +60,3 @@ export function southernSeasons() {
 // The month (0-11) whose NORTHERN season the player is living: the real month up north,
 // half a year around it down south.
 export const seasonMonth = (m) => southernSeasons() ? (m + 6) % 12 : m;
-
-// The season on a "YYYY-MM-DD" date key. A session-only window.__devSeason (dev panel,
-// start button section) pins it outright, for looking at one finish out of its months.
-export function seasonOn(dateKey) {
-  const dev = typeof window !== "undefined" && window.__devSeason;
-  if (SEASONS.includes(dev)) return dev;
-  const m = Math.min(11, Math.max(0, (parseInt(String(dateKey).slice(5, 7), 10) || 1) - 1));
-  return MONTH_SEASON[seasonMonth(m)];
-}

@@ -123,11 +123,9 @@ const grassBlades = (() => {
 })();
 const garden = `<svg class="cta-garden" viewBox="0 0 600 30" preserveAspectRatio="xMidYMax slice">${grassBlades}</svg>${MEADOW_FLOWERS.map(flower).join("")}`;
 // ---- The Seasons finish ---------------------------------------------------------------
-// One Mastery pick, four finishes: settings.masteryButton holds "seasons", and app.js resolves
-// it through js/season.js to whichever of spring/summer/autumn/winter the player is living in,
-// so the button changes on the first of March, June, September and December (the other way
-// round in a southern timezone), exactly when the desk calendar's marks do. Each season is a
-// quiet material at rest and its own weather on hover, which runs a few seconds and holds.
+// One Mastery pick, four finishes: the Seasons reward pins one of spring/summer/autumn/winter
+// on the button all year, stored as the season's own id. Each season is a quiet material at
+// rest and its own weather on hover, which runs a few seconds and holds.
 const f = (n, d = 1) => Number(n).toFixed(d);
 const bump = (x, c, w) => Math.exp(-(((x - c) / w) ** 2));
 // A tapered limb: a Catmull-Rom spine through [x, y, width] points, outlined and filled, so a
@@ -395,6 +393,84 @@ const storm = `<i class="cta-storm-sky"></i>${frost("left", 26)}${frost("right",
   flurry("mid", 30, 22, [2.2, 3.2], [1.3, 1.9]) + drifts + flurry("near", 12, 33, [7, 10], [.95, 1.35], 6);
 
 
+// ---- Snow day: December's default ---------------------------------------------------
+// What the default button wears all December (wornFinish in app.js): a garden under a grey
+// snow sky, a snowman in a green knitted hat and a red scarf in the left gutter, a cardinal on
+// a fence post in the right, and snowy pines out at the ends where only a wide button shows
+// them. It is already snowing at rest, the flakes held where they are; on hover the snow comes
+// down and thickens the longer the pointer stays, settles on the post and the hat, and the
+// cardinal shakes it off its back. A soft fall straight down, never Winter storm's slant.
+// Designed on scripts/cta/december-board.html (option A, after its paper chain was cut).
+const g2 = (n) => String(Math.round(n * 100) / 100);
+// A snowy fir in silhouette, three tiers, base at y, snow laid on the upper face of each tier.
+const snowFir = (x, base, h, rand) => {
+  const w = h * (.52 + rand() * .12), top = base - h;
+  let tree = "", snow = "";
+  [[0, .34, .2], [.28, .66, .36], [.58, 1, .5]].forEach(([a, b, half]) => {
+    const ya = top + h * a, yb = top + h * b, hw = w * half;
+    tree += `M${g2(x)} ${g2(ya)}L${g2(x + hw)} ${g2(yb)}L${g2(x - hw)} ${g2(yb)}Z`;
+    snow += `M${g2(x)} ${g2(ya)}L${g2(x + hw * .85)} ${g2(yb - .2)}L${g2(x + hw * .3)} ${g2(yb - (yb - ya) * .28)}L${g2(x - hw * .25)} ${g2(yb - (yb - ya) * .22)}L${g2(x - hw * .8)} ${g2(yb - .4)}Z`;
+  });
+  return [tree + `M${g2(x - .4)} ${g2(base)}h.8v1.2h-.8Z`, snow];
+};
+// Snow in three depths, plus two heavier ones that only fade in while the pointer stays:
+// [count, radius range, seconds per fall, sideways drift, opacity, heavy]. Each flake is an
+// <i> drawn at the spot it is held at rest; its fall runs the full height of the button
+// through that spot (sliding past it halfway, so it weaves), and a negative delay starts the
+// clock there. So the paused fall is exactly the drawn spot, and with motion reduced, when
+// the game strips every animation off the button, the snow is still standing in the air.
+// They are HTML rather than SVG so the fall is composited, not repainted, flake by flake.
+const SNOW_DEPTHS = [[90, [.45, .75], [7, 10], 6, .7, false], [50, [.7, 1.1], [4.6, 6.4], 9, .9, false], [16, [1.2, 1.8], [3.1, 4.2], 12, .95, false],
+  [90, [.55, 1], [3.4, 5], 10, .9, true], [20, [1.1, 1.7], [2.6, 3.4], 14, .95, true]];
+const snowDayFall = (rand) => SNOW_DEPTHS.map(([n, [r0, r1], [t0, t1], drift, o, heavy]) => {
+  let out = "";
+  for (let k = 0; k < n; k++) {
+    const x = rand() * 100, y = rand() * 104 - 2, t = t0 + rand() * (t1 - t0), w = (rand() - .35) * drift;
+    const ph = (y + 6) / 112, sway = (rand() < .5 ? -1 : 1) * (.6 + rand() * r1 * 1.6), d = r0 + rand() * (r1 - r0);
+    out += `<i style="left:${g2(x)}%;top:${g2(y)}%;--sz:${g2(d * 2)}px;--o:${o};--t:${g2(t)}s;--d:${g2(-t * ph)}s;` +
+      `--xa:${g2(-w * ph)}px;--ya:${g2(-(y + 6))}cqh;--xm:${g2(w * (.5 - ph) + sway)}px;--ym:${g2(50 - y)}cqh;--xb:${g2(w * (1 - ph))}px;--yb:${g2(106 - y)}cqh"></i>`;
+  }
+  return `<span class="cta-sd-fall${heavy ? " cta-sd-heavy" : ""}">${out}</span>`;
+}).join("");
+const snowDay = (() => {
+  const rand = seededRandom(1201);
+  let ground = "M-5 61V47";
+  for (let x = -5; x <= 605; x += 8) ground += `L${x} ${g2(47 + Math.sin(x * .018 + .6) * 1.6 + Math.sin(x * .07) * .5)}`;
+  ground += "V61Z";
+  let hill = "M-5 47V41";
+  for (let x = -5; x <= 605; x += 10) hill += `L${x} ${g2(41 - Math.sin(x * .011 + 1.2) * 3.2 - Math.sin(x * .04) * .8)}`;
+  hill += "V47Z";
+  let pines = "", pineSnow = "";
+  for (const [x, h] of [[30, 30], [52, 22], [92, 34], [118, 20], [486, 26], [520, 36], [552, 24], [578, 31]]) {
+    const [t, s] = snowFir(x, 48 + rand() * 1.2, h, rand); pines += t; pineSnow += s;
+  }
+  // The snowman stands in the left gutter, inside what a phone shows.
+  const snowman = `<g transform="translate(174 0)">` +
+    `<ellipse cx="0" cy="56.8" rx="9.6" ry="1.6" class="cta-sd-shade" opacity=".7"/>` +
+    `<path class="cta-sd-twig" d="M-4.8 42.5L-11.5 37.6M-9.3 39.2L-11 41.4M4.6 42L11.2 39M9.3 39.9L10.4 37.4"/>` +
+    [[51, 7.4], [41.6, 5.2], [33.6, 3.8]].map(([y, r]) => `<circle class="cta-sd-ball" cy="${y}" r="${r}"/>` +
+      `<path class="cta-sd-round" d="M${g2(r * .35)} ${g2(y + r * .9)}A${r} ${r} 0 0 0 ${g2(r * .95)} ${g2(y + r * .1)}"/>`).join("") +
+    `<circle cx="-1.3" cy="33" r=".45" fill="#2b2722"/><circle cx="1.2" cy="32.9" r=".45" fill="#2b2722"/><path d="M.1 34.1L4 34.9L.1 35.2Z" fill="#e0782c"/>` +
+    `<circle cy="40.3" r=".42" fill="#2b2722"/><circle cy="42.4" r=".42" fill="#2b2722"/>` +
+    `<path d="M-3.7 37.4Q0 38.9 3.7 37.4L3.6 38.9Q0 40.3 -3.6 38.9Z" fill="#c43c30"/><path d="M2.2 38.6L3.9 43.6L2.5 43.8L1.2 39Z" fill="#a8322a"/>` +
+    `<path d="M-3.9 31.2Q0 27 3.9 31.2Z" fill="#3f7f4b"/><path d="M-4 31.3H4" stroke="#efe2c2" stroke-width="1.1"/><circle cy="27.9" r="1.1" fill="#efe2c2"/>` +
+    `<path class="cta-sd-cap" d="M-3 29.6Q-1.6 28.4 -.9 28.9Q0 29.5 .9 28.9Q1.8 28.5 3 29.6Q0 30.3 -3 29.6Z"/></g>`;
+  // The cardinal on its post in the right gutter, with the snow on its back that it shakes off.
+  let shed = "";
+  for (let k = 0; k < 7; k++) {
+    const a = (-160 + rand() * 140) * Math.PI / 180, r = 3 + rand() * 4;
+    shed += `<circle class="cta-sd-shed" style="--sx:${g2(Math.cos(a) * r)}px;--sy:${g2(Math.sin(a) * r)}px" cx="${g2(410.6 + rand() * 2)}" cy="${g2(40.4 + rand())}" r="${g2(.35 + rand() * .3)}"/>`;
+  }
+  const post = `<path d="M409.6 61V45.4H412.4V61Z" class="cta-sd-wood"/><path class="cta-sd-cap" d="M408.8 45.6Q411 43.4 413.2 45.6Q411 46.2 408.8 45.6Z"/>` +
+    `<g class="cta-sd-bird"><path d="M408.4 43.6C408 41.6 409.4 39.6 411.4 39.8L412.6 38.4L413 40.4C414 41.4 414 43 412.6 44Z" fill="#c22f2a"/>` +
+    `<path d="M408.5 43.4L405.4 45.4L405.9 44.2L408.2 42.4Z" fill="#9b2420"/><path d="M412.9 40.2L414.4 40.9L412.9 41.4Z" fill="#e8a53a"/><path d="M411.9 40.1L413 40.3L413 41.5L412 41.2Z" fill="#2b2722"/><circle cx="412.2" cy="40.6" r=".3" fill="#fff"/>` +
+    `<path d="M408.9 41.2Q410 40.2 411.2 40.4" fill="none" stroke="var(--sd-flake)" stroke-width=".55" stroke-linecap="round" opacity=".9"/></g>${shed}`;
+  const scene = `<svg class="cta-sd-scene" viewBox="0 0 600 60" preserveAspectRatio="xMidYMid slice">` +
+    `<path d="${hill}" class="cta-sd-hill"/><path d="${pines}" class="cta-sd-pine"/><path d="${pineSnow}" class="cta-sd-snow"/>` +
+    `<path d="${ground}" class="cta-sd-snow"/><path d="${ground}" class="cta-sd-edge"/>${snowman}${post}</svg>`;
+  return `${scene}${snowDayFall(rand)}`;
+})();
+
 // Every copy of the summer finish gets its own gradient id: the home button and the Mastery
 // swatches are all on the page together, and a url(#id) that resolves to a copy inside a
 // hidden screen paints nothing.
@@ -447,6 +523,7 @@ const FINISH_ART = {
   summer: tide,
   autumn,
   winter: storm,
+  snowday: snowDay,
   pride: prideRipple,
 };
 

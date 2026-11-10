@@ -452,30 +452,25 @@ function buttonCell(D, attr, finish, name, worn, i, note = "") {
     `<span class="bc-nm">${esc(name)}</span>${note ? `<span class="bc-note">${note}</span>` : ""}</button>`;
 }
 // They are start BUTTONS, so they are sewn onto a card, each real one held by two gold
-// cross-stitches. Seasons and Pride stay doorways: each set opens on a refill card tucked under
-// the main one (.set-picker, shown and hidden by app.js in the DOM, never re-rendered), and a
-// pinned season or worn flag keeps saying which doorway it came from.
+// cross-stitches. The first is the default, the gold marker that snows all December: it is
+// the card's reset, open to everyone, and its preview wears whatever the default is wearing
+// today. Seasons and Pride stay doorways: each set opens on a refill card tucked under the main
+// one (.set-picker, shown and hidden by app.js in the DOM, never re-rendered), and a pinned
+// season or worn flag keeps saying which doorway it came from.
 function buttonCard(D) {
   const buttons = ofKind("button");
   const open = D.has(buttons[0].id);
   const active = D.wear.button;
   const rnd = active === D.RANDOM;
   const level = buttons[0].level;
-  const seasons = buttons.find((r) => r.id === "btn-seasons");
+  const gold = buttons.find((r) => r.id === "btn-gold");
   const door = (id) => `data-open-set-picker="${id}" aria-controls="${id}" aria-expanded="false"`;
   let cells = "", trays = "", i = 0;
-  if (seasons) {
-    const pinned = seasons.variants.find((v) => v.id === active);
-    cells += buttonCell(D, door("seasonPicker"), pinned ? pinned.id : "", pinned ? pinned.name : "Seasons", !rnd && (active === "" || !!pinned), i++,
-      pinned ? `pinned all year · +${seasons.variants.length}` : `by the calendar · +${seasons.variants.length}`);
-    trays += refill("seasonPicker", seasons.name, "pin one all year",
-      buttonCell(D, `data-reward-reset="button"`, "", "By the calendar", active === "", 90) +
-      seasons.variants.map((v, k) => open
-        ? buttonCell(D, `data-reward="${seasons.id}" data-variant="${v.id}"`, v.id, v.name, active === v.id, 91 + k)
-        : emptyCell(`${esc(v.name)} · Mastery ${seasons.level}`)).join(""));
-  }
+  // A stored "gold" (from before gold was the default again, or a random roll) is the same
+  // marker, so it lights this button too.
+  if (gold) cells += buttonCell(D, `data-reward-reset="button"`, "", gold.name, !rnd && (active === "" || active === "gold"), i++, "snows all December");
   for (const r of buttons) {
-    if (r === seasons) continue;
+    if (r === gold) continue;
     if (!open) { cells += emptyCell(); i++; continue; }
     if (r.variants) {
       const id = `setPicker-${r.id}`;

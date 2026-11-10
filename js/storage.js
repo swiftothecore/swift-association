@@ -1708,8 +1708,8 @@ export function loadSettings() {
         // point of use keeps one spelling of a flag finish in the codebase.
         if (o.masteryButton === "pride") o.masteryButton = "pride-rainbow";
         // Snowfall grew into the Seasons finish and is now its winter, so a notebook wearing
-        // it keeps winter pinned. "seasons" was briefly its own pick before it became the
-        // default, which is "" now.
+        // it keeps winter pinned. "seasons" (the calendar-following button) is no longer a
+        // finish, so it falls back to the default, "".
         if (o.masteryButton === "snow") o.masteryButton = "winter";
         if (o.masteryButton === "seasons") o.masteryButton = "";
         // The bracelet dangle used to be called a charm, which collided with the achievement
