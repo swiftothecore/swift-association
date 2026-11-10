@@ -12571,8 +12571,8 @@
   :root {
     --mark-cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M2.5 2.5L9.5 9.55' stroke-width='1.45'/%3E%3Cpath d='M9.5 2.45L2.5 9.5' stroke-width='1.45'/%3E%3C/svg%3E");
     --mark-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M1.7 6.5Q3.3 7.7 4.5 10.1' stroke-width='1.5'/%3E%3Cpath d='M4.5 10.1Q6.6 5.3 10.6 1.6' stroke-width='1.2'/%3E%3C/svg%3E");
-    /* the pencil ring "circle one" draws round a chosen number: one loop that overshoots its start */
-    --mark-ring: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 34' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M27.6 4.6C21 1.8 9.4 3 5.2 9.8C1.4 16 4.2 26.6 13.4 30.2C21.8 33.4 33.4 29.8 36 21.6C38.4 14 33 6.4 23.4 4.2C20.4 3.6 17.2 3.8 14.6 4.6' stroke-width='2'/%3E%3C/svg%3E");
+    /* two quick pen strokes under a chosen word or number, the long one first and the second shorter beneath it */
+    --mark-under: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 9' fill='none' stroke='black' stroke-linecap='round'%3E%3Cpath d='M1.6 3.1C7.4 2.2 14.6 1.9 22.6 2.7' stroke-width='1.9'/%3E%3Cpath d='M4.4 6.9C9.4 6.1 14.2 6 19.4 6.5' stroke-width='1.4'/%3E%3C/svg%3E");
     --mark-chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 13 9' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.6 2.3Q4.5 5.3 6.3 7Q8.7 4.4 11.5 1.7' stroke-width='1.5'/%3E%3C/svg%3E");
   }
   .btn-close::before, .quit-btn::before {
@@ -17769,20 +17769,23 @@
   }
   .set-select:focus { border-color: var(--ink-accent); }
 
-  /* countdown length, "circle one": the chosen number ringed in pencil (setCountdownHTML) */
-  .set-circle { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
-  .set-circle-opt {
+  /* countdown length: the six lengths written out in hand, the chosen one underscored in pen
+     with two quick strokes (setCountdownHTML). It was ringed in pencil, the way you'd circle one
+     on a form; a ring round the pick never looked right, and the strokes say "this one" the
+     way you'd mark it in a notebook. */
+  .set-length { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
+  .set-length-opt {
     position: relative; font: 700 calc(22px + var(--text-size-adjust)) var(--hand); line-height: 1;
     color: var(--ink-soft); background: none; border: 0; padding: 3px 7px; cursor: pointer;
   }
-  .set-circle-opt:hover { color: var(--ink); }
-  .set-circle-opt.on { color: var(--ink); }
-  .set-circle-opt.on::after {
-    content: ""; position: absolute; inset: -2px -3px -2px -4px; background: var(--ink-accent); pointer-events: none;
-    -webkit-mask: var(--mark-ring) center / 100% 100% no-repeat; mask: var(--mark-ring) center / 100% 100% no-repeat;
+  .set-length-opt:hover { color: var(--ink); }
+  .set-length-opt.on { color: var(--ink); }
+  .set-length-opt.on::after {
+    content: ""; position: absolute; inset: auto 1px -5px 0; height: 9px; background: var(--ink-accent); pointer-events: none;
+    -webkit-mask: var(--mark-under) center / 100% 100% no-repeat; mask: var(--mark-under) center / 100% 100% no-repeat;
   }
-  .set-circle-opt:focus-visible { outline: 1.5px dashed var(--ink-accent); outline-offset: 1px; border-radius: 3px; }
-  .set-circle-unit { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-left: 5px; }
+  .set-length-opt:focus-visible { outline: 1.5px dashed var(--ink-accent); outline-offset: 1px; border-radius: 3px; }
+  .set-length-unit { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-left: 5px; }
 
   .set-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .env-btn {

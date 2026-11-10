@@ -30535,17 +30535,17 @@ function setSelectHTML(key, name, desc, options) {
     (desc ? `<span class="set-desc">${desc}</span>` : "") + `</div>` +
     `<div class="set-control"><span class="sel-wrap sel-wrap--full"><select class="set-select" id="set-${key}" data-select="${key}" aria-label="${name}">${opts}</select></span></div></div>`;
 }
-// "Circle one": the six lengths written out in hand and the chosen one ringed in pencil, the
-// way you'd fill in a form. It replaced the browser's own range slider, the one stock widget
-// left in Settings; six stops is a choice to circle, not a range to drag along.
+// The six lengths written out in hand, the chosen one underscored in pen. It replaced the
+// browser's own range slider, the one stock widget left in Settings; six stops is a choice to
+// mark, not a range to drag along.
 function setCountdownHTML() {
   const n = settings.countdownSecs;
   const opts = [3, 4, 5, 6, 7, 8].map((s) =>
-    `<button type="button" class="set-circle-opt${s === n ? " on" : ""}" data-countdown="${s}" ` +
+    `<button type="button" class="set-length-opt${s === n ? " on" : ""}" data-countdown="${s}" ` +
       `aria-pressed="${s === n}" aria-label="${s} seconds">${s}</button>`).join("");
   return `<div class="set-row"><div class="set-label"><span class="set-name">${setIco("countdownSecs")}Countdown length</span>` +
     `<span class="set-desc">seconds before the next page auto-turns</span></div>` +
-    `<div class="set-control set-circle" role="group" aria-label="Countdown length">${opts}<span class="set-circle-unit" aria-hidden="true">seconds</span></div></div>`;
+    `<div class="set-control set-length" role="group" aria-label="Countdown length">${opts}<span class="set-length-unit" aria-hidden="true">seconds</span></div></div>`;
 }
 // Heart-hands gesture (the fan motif) — a line-art icon that caps the signature
 // line. fill:currentColor so it era-tints with --ink-accent (set in CSS).
