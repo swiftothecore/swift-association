@@ -76,6 +76,7 @@ import {
   STREAK_FLOOR, STREAK_CAP, STREAK_SALT, STREAK_TIERS,
   STREAK_THROW, STREAK_DROP, STREAK_SPIN, STREAK_MS, STREAK_SIZE, STREAK_CONE,
   DAILY_OWNER_KEY, DAILY_OWNER_BEAT_MS,
+  DESK_PROPS, DESK_PRESET_HIDDEN,
 } from "./config.js";
 import { SONG_PENS } from "./pens.js";
 import { tapeVars } from "./tapeprints.js";
@@ -648,7 +649,9 @@ function applySettings() {
   body.setAttribute("data-anim-speed", settings.animSpeed || "normal");
   body.setAttribute("data-text-size", ["small", "large"].includes(settings.textSize) ? settings.textSize : "standard");
   centreTallyHead();     // the text-size lever changes the numeral's size, so its ink moves
-  body.setAttribute("data-desk-density", ["quiet", "bare"].includes(settings.deskDensity) ? settings.deskDensity : "full");
+  body.setAttribute("data-desk-density", ["quiet", "bare", "custom"].includes(settings.deskDensity) ? settings.deskDensity : "full");
+  // Custom names what is off rather than what is on, so a prop added later arrives on the desk.
+  body.setAttribute("data-desk-hide", settings.deskDensity === "custom" ? deskHiddenIds().join(" ") : "");
   if (deskWired) renderDeskPrint(true);
   window.deskCalendar?.refresh();   // its columns follow the week start, its hearts the album palette
   body.setAttribute("data-reduced-flashing", settings.reducedFlashing ? "on" : "off");
@@ -6381,7 +6384,13 @@ const DESK_EASE_DELAY = 1400, DESK_EASE_MS = 3400, DESK_OPEN_MS = 1900;
 // The desk only exists on a wide screen (styles.css) and not on the Bare setting. A phone never
 // gets a print, because there is nowhere to put one.
 function deskShows() {
-  return window.matchMedia("(min-width: 1120px)").matches && settings.deskDensity !== "bare";
+  return window.matchMedia("(min-width: 1120px)").matches && !deskHiddenIds().includes("print");
+}
+// The props left off the desk under the current setting, as DESK_PROPS ids.
+function deskHiddenIds() {
+  if (settings.deskDensity !== "custom") return DESK_PRESET_HIDDEN[settings.deskDensity] || [];
+  const known = new Set(DESK_PROPS.map((p) => p.id));
+  return (Array.isArray(settings.deskHidden) ? settings.deskHidden : []).filter((id) => known.has(id));
 }
 // Everything the desk needs to know right now. The day's print is worked out, never stored, so
 // two notebooks holding the same set cannot disagree. The one exception is the day the ball
@@ -30677,6 +30686,17 @@ function setCheckHTML(key, name, desc) {
     `<span class="set-check-lbl"><span class="set-check-name">${setIco(key)}${name}</span>` +
     (desc ? `<span class="set-check-desc">${desc}</span>` : "") + `</span></button>`;
 }
+// The Custom desk: one box per object, ticked while it is out on the desk.
+function setDeskPropsHTML() {
+  const hidden = deskHiddenIds();
+  return `<div class="set-checklist set-checklist--desk" role="group" aria-label="Objects on the desk">` +
+    DESK_PROPS.map((p) => {
+      const on = !hidden.includes(p.id);
+      return `<button type="button" class="set-check" data-desk-prop="${p.id}" aria-pressed="${on}">` +
+        `<span class="set-check-box">${SET_TICK_SVG}</span>` +
+        `<span class="set-check-lbl"><span class="set-check-name">${p.label}</span></span></button>`;
+    }).join("") + `</div>`;
+}
 function setChecklistHTML(items) { return `<div class="set-checklist">${items.join("")}</div>`; }
 function setSection(title, inner) {
   // An empty title means the divider tab already names this block — don't say it twice.
@@ -30970,7 +30990,8 @@ function renderSettingsBody() {
     setSection("",
       setChoiceHTML("theme", "Theme", "a dark notebook for low light", [{ val: "light", label: "Light" }, { val: "system", label: "System" }, { val: "dark", label: "Dark" }]) +
       setChoiceHTML("textSize", "Text size", "across the notebook and menus", [{ val: "small", label: "Small" }, { val: "standard", label: "Standard" }, { val: "large", label: "Large" }]) +
-      setChoiceHTML("deskDensity", "Desk decorations", "objects on the desk beside the page", [{ val: "full", label: "Full" }, { val: "quiet", label: "Quiet" }, { val: "bare", label: "Bare" }]) +
+      setChoiceHTML("deskDensity", "Desk decorations", "objects on the desk beside the page", [{ val: "full", label: "Full" }, { val: "quiet", label: "Quiet" }, { val: "bare", label: "Bare" }, { val: "custom", label: "Custom" }]) +
+      (settings.deskDensity === "custom" ? setDeskPropsHTML() : "") +
       setChoiceHTML("weekStart", "Week starts on", "for every calendar in the notebook", [{ val: "mon", label: "Monday" }, { val: "sun", label: "Sunday" }]) +
       setChoiceHTML("clock", "Time format", "", [{ val: "12", label: "12-hour" }, { val: "24", label: "24-hour" }]) +
       setChecklistHTML([
@@ -31128,7 +31149,16 @@ function wireSettingsBody() {
     }
   }));
   body.querySelectorAll("[data-choice]").forEach((b) => b.addEventListener("click", () => {
+    // Custom opens on the desk as it already stands, so the first tick changes one thing.
+    if (b.dataset.choice === "deskDensity" && b.dataset.val === "custom" && settings.deskDensity !== "custom") {
+      settings.deskHidden = deskHiddenIds().slice();
+    }
     settings[b.dataset.choice] = b.dataset.val;
+    saveSettings(settings); applySettings(); renderSettingsBody();
+  }));
+  body.querySelectorAll("[data-desk-prop]").forEach((b) => b.addEventListener("click", () => {
+    const id = b.dataset.deskProp, hidden = deskHiddenIds();
+    settings.deskHidden = hidden.includes(id) ? hidden.filter((x) => x !== id) : [...hidden, id];
     saveSettings(settings); applySettings(); renderSettingsBody();
   }));
   body.querySelectorAll("[data-era-pick]").forEach((b) => b.addEventListener("click", () => {

@@ -222,6 +222,26 @@ export const APP_PREFIX = "swiftSongAssociation.";
 /* ---------- User settings (the settings panel) ---------- */
 // One flat record. loadSettings merges this over whatever's stored, so adding a
 // new key here gives existing players a sensible default with no migration.
+// The objects on the desk, as the Custom desk setting lists them. `id` is the `.di-<id>` class
+// in index.html; the print stands for its ball and sheet too, since they are one object at
+// three ages. Quiet and Bare are named here as the hidden sets they amount to, so picking
+// Custom starts from whichever preset the desk was already wearing.
+export const DESK_PROPS = [
+  { id: "glasses", label: "Reading glasses" },
+  { id: "mug", label: "Coffee mug" },
+  { id: "calendar", label: "Desk calendar" },
+  { id: "picks", label: "Guitar picks" },
+  { id: "floss", label: "Embroidery floss" },
+  { id: "beads-r", label: "Alphabet beads" },
+  { id: "cassette", label: "Cassette" },
+  { id: "print", label: "The print" },
+];
+export const DESK_PRESET_HIDDEN = {
+  full: [],
+  quiet: ["glasses", "mug", "picks", "cassette"],
+  bare: DESK_PROPS.map((p) => p.id),
+};
+
 export const DEFAULT_SETTINGS = {
   // motion & animation
   reduceMotion: "auto",     // "auto" (follow OS) | "on" | "off"
@@ -251,7 +271,8 @@ export const DEFAULT_SETTINGS = {
   textSize: "standard",     // "small" | "standard" | "large"
   highContrast: false,
   colorBlindAlbums: false,  // swap ALBUM_COLORS for a colour-blind-friendly palette
-  deskDensity: "full",      // "full" | "quiet" | "bare" decorative desk dressing
+  deskDensity: "full",      // "full" | "quiet" | "bare" | "custom" decorative desk dressing
+  deskHidden: [],           // DESK_PROPS ids left off the desk; read only on the Custom setting
   seasonalEffects: true,    // calendar-driven snow and autumn leaves
   hideDailyScore: false,    // hide the daily score until "reveal & copy"
   timezone: "auto",         // daily-reset zone: "auto" (detect) | an IANA id e.g. "America/New_York"
