@@ -179,8 +179,11 @@ const MIN_LYRIC_WORDS = 4;
 // ...but a 3-word phrase still passes if it's long enough by character count — a
 // genuinely long trio (e.g. "unconditional everlasting devotion") is clearly a real
 // recalled line, not a bare-word cheat. Short trios ("i love you") still fall short.
+// Counted after normalizing, which strips apostrophes and folds -ing to -in, so the
+// typed trio is usually a letter or two longer than this; 19 lets "lost in translation"
+// and "lights of manhattan" through, where 20 turned them away.
 const MIN_LYRIC_WORDS_SHORT = 3;
-const MIN_LYRIC_SHORT_CHARS = 20;
+const MIN_LYRIC_SHORT_CHARS = 19;
 // Below even that floor sits one narrow exception, because plenty of real lines are
 // simply short ("say don't go", "come morning light", "down bad") and a player who
 // writes one out whole has done the thing the floor was asking for. A phrase under the
