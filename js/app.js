@@ -5396,23 +5396,24 @@ function renderBestLine(el, mode, opts = {}) {
     `${rec.date ? " · " + recordDateLabel(rec.date) : ""}</span></div>`;
 }
 
-/* ---------- Records page: the pressings and the take sheet ----------
-   The page takes its name literally. Every run in the history log is a TAKE, numbered from the
-   first one ever played (loadTakes, not the log's own length: the log is capped). The take that
-   still holds a record is circled in red pen, the way an engineer circles the keeper. Each
-   difficulty's best is pressed to vinyl in that mode's own colour, and a difficulty never played
-   is the empty paper sleeve it will go in, the page showing through its hole. Everything else
-   that keeps a best (Infinite, the daily, verse bonus, dark sides, Ruthless, Track by Track) is
-   one printed tracklist, the B-sides, rather than a stack of tiles per mode. The calendar is the
-   sessions grid printed at the head of the take sheet and filled in by pencil.
+/* ---------- Records page: the lead sheet and the take sheet ----------
+   The page is a songwriter's paperwork. Every run in the history log is a TAKE, numbered from
+   the first one ever played (loadTakes, not the log's own length: the log is capped). The take
+   that still holds a record is circled in red pen, the way an engineer circles the keeper. The
+   six difficulty bests are one line of music on a strip of manuscript paper, a note for each,
+   sitting as high on the staff as the run got through its pages, and a difficulty never played
+   is a bar's rest. Everything else that keeps a best (Infinite, the daily, verse bonus, dark
+   sides, Ruthless, Track by Track) is one printed tracklist, the B-sides, rather than a stack
+   of tiles per mode. The calendar is the sessions grid printed at the head of the take sheet
+   and filled in by pencil.
 
-   The records, the sleeve notes, the B-sides and the take sheet are vinyl and paper in fixed
-   stock, written in fixed inks and taken down a stop at night, exactly as the Stats page's
-   objects are; the captions written ON the page stay in the page's own ink. */
+   The lead sheet, a best's notes, the B-sides and the take sheet are paper in fixed stock,
+   written in fixed inks and taken down a stop at night, exactly as the Stats page's objects
+   are; the captions written ON the page stay in the page's own ink. */
 const TAKES_PER_SHEET = 20;       // takes written on each sheet; the next sheet peeks out below
 let takesShown = 0;               // takes currently on the page
 let recordsBackTarget = "start";  // where ← back returns to
-let _recOpen = null;              // the record whose sleeve notes are open (a MODE_ORDER id), or null
+let _recOpen = null;              // the best whose notes are open (a MODE_ORDER id), or null
 let _sessView = null;             // "y1" | "ytd" | "m1" | "wk"; null until the adaptive default is picked
 let _recWired = false;            // the page's delegated listeners, attached to #recordsBody once
 
@@ -5463,76 +5464,122 @@ function longDayLabel(key) {
   return new Date(key + "T00:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-/* ---------- The pressings ----------
-   Vinyl does not change colour at night, so a record is pressed in the day palette
-   (MODE_COLORS) and the whole object comes down a stop with the rest of the stock. The print
-   on its label, and a mode's name written on the take sheet, is that colour pushed toward the
-   pen so it still reads on cream. */
+/* ---------- The lead sheet ----------
+   The six bests are one line of music. From middle C up to the A above the staff there are
+   exactly thirteen places a note can sit, with one ledger line at each end, and a run is
+   thirteen pages: so a best is a note, thirteen is the high A, one is middle C, and the six of
+   them make a tune that changes shape when a record falls. That is the comparison the vinyl
+   pressings this replaced could not make, six discs being the same circle whatever was on
+   them. The number
+   is still written out above its bar, where a songwriter writes the chord, and the difficulty
+   sits under it where the lyric goes.
+
+   The time signature is TOTAL_ROUNDS over itself: it is the legend, and the reason the scores
+   are bare numbers. A difficulty never played is a bar's rest. The double bar falls before
+   Lyricist because it is a different way of answering (MODALITY_MODES), not a sixth rung, and
+   the line ends on a final bar. A perfect at gold pace (paceTier "gold") is a gilded note with
+   its number written in gold; the leaf stays on the time, where the pace ink already puts it.
+
+   The staff is printed, so it is ruled; the clef, the bar lines and the notes are the player's
+   pen and go through the page's pen wobble. Each note's lean and size are seeded off its mode,
+   so the line is written the same way every time the page opens.
+
+   THE STAFF ONLY HAS THIRTEEN PLACES. If TOTAL_ROUNDS ever moves, leadPlace below is what has
+   to be rethought, not stretched: a fourteenth page has nowhere honest to sit.
+
+   The print on a mode's name here, and written on the take sheet, is its MODE_COLORS pushed
+   toward the pen so it reads on cream. */
 const RECORD_PRINT = Object.fromEntries(MODE_ORDER.map((m) => [m, mixHex(MODE_COLORS[m], "#2b2722", 0.32)]));
-const ringPath = (r) => `M${-r} 0a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
-// A coloured-vinyl pressing. The label is a white test-pressing label with the mode printed on
-// it and the score written in by hand. One honest picture in it: the grooves come in one band
-// per page named, so a 9/13 is a nine-track record. A perfect at gold pace is pressed with a
-// gold-foil label and the leaf the pace ink already wears. The label sits at a tilt seeded off
-// the mode, so each record lies the same way every time the page opens.
-function recordDiscSVG(mode, rec) {
-  const R = 96, LR = 56, IN = 61, OUT = 92, HOLE = 3.4;
-  const n = Math.max(1, rec.score), w = (OUT - IN) / n;
-  let grooves = "", gaps = "";
-  for (let k = 0; k < n; k++) {
-    for (let r = IN + k * w + 0.9; r <= IN + (k + 1) * w - 0.89; r += 1.55) grooves += `<circle r="${r.toFixed(2)}"/>`;
-    if (k) gaps += `<circle r="${(IN + k * w).toFixed(2)}"/>`;
-  }
-  const gold = paceTier(mode, rec) === "gold";
-  const label = gold ? "#e3bd52" : "#f6f0df", print = gold ? "#5e420d" : RECORD_PRINT[mode];
-  const tilt = ((mulberry32(fnv1a("record:" + mode))() - 0.5) * 18).toFixed(1);
-  const type = `font-family="Courier Prime, Courier New, monospace"`;
-  return `<svg class="rec-disc" viewBox="-100 -100 200 200" aria-hidden="true"><g class="rec-spin"><g transform="rotate(${tilt})">` +
-    `<path d="${ringPath(R)}${ringPath(HOLE)}" fill-rule="evenodd" fill="${MODE_COLORS[mode]}" stroke="#2b2722" stroke-opacity="0.85" stroke-width="1.2"/>` +
-    `<circle r="${R - 2.6}" fill="none" stroke="#000" stroke-opacity="0.16" stroke-width="0.8"/>` +
-    `<g fill="none" stroke="#1b140c" stroke-opacity="0.17" stroke-width="0.5">${grooves}</g>` +
-    `<g fill="none" stroke="#fff" stroke-opacity="0.16" stroke-width="1.1">${gaps}</g>` +
-    `<circle r="${IN - 1.6}" fill="none" stroke="#000" stroke-opacity="0.14" stroke-width="0.6"/>` +
-    `<path d="${ringPath(LR)}${ringPath(HOLE)}" fill-rule="evenodd" fill="${label}" stroke="#2b2722" stroke-opacity="0.25" stroke-width="0.6"/>` +
-    `<circle r="${LR - 3.6}" fill="none" stroke="${print}" stroke-width="0.9"/>` +
-    `<text y="-21" text-anchor="middle" ${type} font-weight="700" font-size="13.5" letter-spacing="1.5" fill="${print}">${MODES[mode].label.toUpperCase()}</text>` +
-    `<text x="-29" y="4" text-anchor="middle" ${type} font-size="7.5" letter-spacing="0.6" fill="${print}" opacity="0.8">SIDE A</text>` +
-    `<text x="29" y="4" text-anchor="middle" ${type} font-size="7.5" letter-spacing="0.4" fill="${print}" opacity="0.8">33⅓</text>` +
-    `<path d="M-26 43 H26" stroke="${print}" stroke-width="0.6" opacity="0.55"/>` +
-    `<text y="40.5" text-anchor="middle" font-family="Caveat, cursive" font-weight="700" fill="#2b2722"><tspan font-size="43">${rec.score}</tspan>` +
-      `<tspan font-size="22" font-weight="400" fill="#5a5247">/${TOTAL_ROUNDS}</tspan></text>` +
-    (gold ? `<path transform="translate(34 -32) scale(0.66) translate(-12 -12)" d="M12.2 1.4 Q13.1 9.4 22.4 12.1 Q13.4 14.6 11.3 22.5 Q10.2 14.8 1.7 11.7 Q10.6 9.7 12.2 1.4 Z" fill="#fff6d2" stroke="#7a5512" stroke-width="0.8"/>` : "") +
-    `</g></g></svg>`;
+// A treble clef in one pen line, drawn for a staff 12 apart with its top line at y 0: the curl
+// round the G line, up over the top, back down the stem to the hook. The blot ends the hook.
+const LEAD_CLEF = "M1.6 38.8C-2.6 40.6-6.6 37.2-5 32.4C-3.2 27 6 26.6 8.6 33.4C11.2 41 4.4 48.6-3.4 47.2C-12 45.6-14.6 34.6-8.4 25.2C-3.4 17.6 7 11 8-1C8.6-9.6 4.6-17 1-13.2C-2.8-9.2-1.2 2 .4 12.6C2.4 26.4 5.4 43.6 5.8 55.6C6 63.6 1 67.6-4 64.6";
+const LEAD_REST = "M-2.8-13.4 3-5.8C-.4-2.6-1 1.4 3.4 6C-2 4.6-4.8 8-.8 12.8";   // a crotchet rest, about the staff's middle
+const LEAD_GAP = 14, LEAD_TOP = 62, LEAD_HEIGHT = 152;   // the staff's line spacing, its top line's y, the drawing's height
+// Where a score sits: place 11 is the top line (F), 3 the bottom (E), 13 and 1 the two ledgers.
+const leadPlace = (p) => LEAD_TOP + (11 - p) * LEAD_GAP / 2;
+// One system: `modes` as bars across a drawing W wide. The first system carries the time
+// signature, the last one the final bar. Returned with the geometry the bars are laid out by.
+function leadStaffSVG(modes, W, first, last) {
+  const f = (n) => n.toFixed(1);
+  const top = LEAD_TOP, foot = LEAD_TOP + 4 * LEAD_GAP;
+  const x0 = first ? 92 : 56, x1 = W - 9, bw = (x1 - x0) / modes.length;
+  let staff = "", pen = "", notes = "", nums = "";
+  for (let k = 0; k < 5; k++) staff += `<path d="M6 ${top + k * LEAD_GAP}H${x1}"/>`;
+  pen += `<g transform="translate(30 ${top}) scale(${(LEAD_GAP / 12).toFixed(3)})"><path d="${LEAD_CLEF}"/><circle class="rec-lead-blot" cx="-4.3" cy="62.4" r="2.3"/></g>`;
+  const sig = first
+    ? `<text class="rec-lead-sig" x="70" y="${top + 2 * LEAD_GAP - 2}" text-anchor="middle">${TOTAL_ROUNDS}</text>` +
+      `<text class="rec-lead-sig" x="70.6" y="${foot - 2}" text-anchor="middle">${TOTAL_ROUNDS}</text>`
+    : "";
+  modes.forEach((m, i) => {
+    const r = mulberry32(fnv1a("lead:" + m));
+    const x = x0 + (i + 0.5) * bw + (r() - 0.5) * 3;
+    const rec = loadRecords(m)[0];
+    // the line that closes this bar
+    const bx = x0 + (i + 1) * bw, lean = (r() - 0.5) * 1.2;
+    const bar = (at, w = 1.3) => `<path stroke-width="${w}" d="M${f(at + lean)} ${top - 0.6}L${f(at - lean)} ${foot + 0.6}"/>`;
+    if (i < modes.length - 1) pen += MODALITY_MODES.includes(modes[i + 1]) ? bar(bx - 2.4) + bar(bx + 2.4) : bar(bx);
+    else pen += last ? bar(bx - 6.2) + bar(bx - 0.6, 3.6) : bar(bx);
+    if (!rec) { pen += `<path class="rec-lead-rest" transform="translate(${f(x)} ${top + 2 * LEAD_GAP})" d="${LEAD_REST}"/>`; return; }
+    const p = Math.max(0, Math.min(13, rec.score)), y = leadPlace(p);
+    const gold = paceTier(m, rec) === "gold";
+    const up = p <= 6;   // stems go up from the lower half of the staff and down from the upper
+    const rx = 9 + r() * 0.7, ry = 6.3 + r() * 0.5, rot = -24 + r() * 7;
+    if (p >= 13 || p <= 1) {
+      const ly = leadPlace(p >= 13 ? 13 : 1);
+      pen += `<path stroke-width="1.5" d="M${f(x - 16 + r())} ${f(ly + (r() - 0.5))}L${f(x + 16 + r())} ${f(ly + (r() - 0.5))}"/>`;
+    }
+    const sx = up ? x + rx - 0.9 : x - rx + 0.9, sl = 46 + r() * 4, jt = (r() - 0.5) * 2;
+    notes += `<g class="rec-lead-note${gold ? " is-gold" : ""}" style="--nk:${RECORD_PRINT[m]}">` +
+      `<path d="M${f(sx)} ${f(y + (up ? -1.6 : 1.6))}L${f(sx + jt)} ${f(y + (up ? -sl : sl))}"/>` +
+      `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry)}" transform="rotate(${f(rot)} ${f(x)} ${f(y)})"/></g>`;
+    nums += `<text class="rec-lead-num${gold ? " is-gold" : ""}" x="${f(x)}" y="${f(31 + (r() - 0.5) * 3)}" text-anchor="middle" ` +
+      `transform="rotate(${f((r() - 0.5) * 5)} ${f(x)} 22)">${rec.score}</text>`;
+  });
+  return { x0, x1, bw, svg:
+    `<svg class="rec-lead-svg" viewBox="0 0 ${W} ${LEAD_HEIGHT}" aria-hidden="true"><g class="rec-lead-print">${staff}</g>` +
+    `<g class="rec-lead-pen" filter="url(#navInk)">${pen}</g>${sig}<g filter="url(#navInk)">${notes}</g>${nums}</svg>` };
 }
-// A difficulty with no record yet: the plain paper inner sleeve it will go in, the ruled page
-// showing through its die-cut hole, the mode's name pencilled in the corner.
-function recordSleeveSVG(mode) {
-  const s = 92;
-  return `<svg class="rec-disc" viewBox="-100 -100 200 200" aria-hidden="true">` +
-    `<path d="M${-s} ${-s + 2}q0 -2 2 -2h${2 * s - 4}q2 0 2 2v${2 * s - 4}q0 2 -2 2h${-(2 * s - 4)}q-2 0 -2 -2Z${ringPath(50)}" fill-rule="evenodd" fill="#efe7d3" stroke="#2b2722" stroke-opacity="0.32" stroke-width="1"/>` +
-    `<circle r="50" fill="none" stroke="#2b2722" stroke-opacity="0.22" stroke-width="0.8"/>` +
-    `<path d="M${-s + 10} ${-s + 9} H${s - 54}" stroke="#2b2722" stroke-opacity="0.1" stroke-width="0.8"/>` +
-    `<text x="${s - 12}" y="${s - 12}" text-anchor="end" font-family="Caveat, cursive" font-size="27" fill="#6f675a" transform="rotate(-4 ${s - 12} ${s - 12})">${MODES[mode].label}</text>` +
-    `</svg>`;
+// What is written under a bar, where the lyric goes: the difficulty, how the best was got, when.
+function leadCaptionHTML(mode, rec) {
+  const name = `<span class="rec-bar-nm" style="color:${RECORD_PRINT[mode]}">${MODES[mode].label}</span>`;
+  if (!rec) return name + `<span class="rec-bar-none">not yet</span>`;
+  const how = [];
+  if (rec.time != null) how.push(paceTimeHTML(mode, rec));
+  else if (!MODES[mode].seconds) how.push("no timer");
+  if (rec.hints) how.push(hintCountLabel(rec.hints));
+  return name + how.map((x) => `<span>${x}</span>`).join("") + `<span>${rec.date ? recordDateLabel(rec.date) : "best so far"}</span>`;
 }
-function recordSlotHTML(mode) {
-  const rec = loadRecords(mode)[0];
-  const name = MODES[mode].label;
-  if (!rec) {
-    return `<div class="rec-slot"><div class="rec-press" data-empty>${recordSleeveSVG(mode)}` +
-      `<span class="rec-cap"><span class="rec-cap-none">not pressed yet</span></span></div></div>`;
-  }
-  const bits = [];
-  if (rec.time != null) bits.push(paceTimeHTML(mode, rec));
-  if (rec.hints) bits.push(hintCountLabel(rec.hints));
-  bits.push(rec.date ? recordDateLabel(rec.date) : "best so far");
-  return `<div class="rec-slot">${recEraseX("rec:" + mode)}` +
-    `<button type="button" class="rec-press" data-mode="${mode}" aria-expanded="false" aria-controls="recNotes" ` +
-    `aria-label="${name}: ${rec.score} of ${TOTAL_ROUNDS}. Open its top five">${recordDiscSVG(mode, rec)}` +
-    `<span class="rec-cap">${bits.join(`<span class="rec-cap-dot">·</span>`)}</span></button></div>`;
+// A system and its bars. The drawing and the row of bars share one grid cell: each bar is
+// padded down by the drawing's height (as a percentage of its own width, so it tracks the
+// drawing at any size), which puts its caption under its note and makes the whole bar, staff
+// and all, the thing that is tapped. A bar with nothing in it is not a button.
+function leadSystemHTML(modes, W, first, last) {
+  const g = leadStaffSVG(modes, W, first, last);
+  const pad = (LEAD_HEIGHT / g.bw * 100).toFixed(1);
+  const bars = modes.map((m) => {
+    const rec = loadRecords(m)[0];
+    if (!rec) return `<div class="rec-bar-slot"><div class="rec-bar" data-empty style="padding-top:${pad}%">${leadCaptionHTML(m, null)}</div></div>`;
+    return `<div class="rec-bar-slot">${recEraseX("rec:" + m)}` +
+      `<button type="button" class="rec-bar" data-mode="${m}" aria-expanded="false" aria-controls="recNotes" style="padding-top:${pad}%" ` +
+      `aria-label="${MODES[m].label}: ${rec.score} of ${TOTAL_ROUNDS}. Open its top five">${leadCaptionHTML(m, rec)}</button></div>`;
+  }).join("");
+  return `<div class="rec-lead-sys">${g.svg}<div class="rec-lead-bars" style="padding:0 ${((W - g.x1) / W * 100).toFixed(1)}% 0 ${(g.x0 / W * 100).toFixed(1)}%;` +
+    `grid-template-columns:repeat(${modes.length},minmax(0,1fr))">${bars}</div></div>`;
+}
+// The strip itself, written twice: one system of six bars, and the two systems of three a
+// narrow page gets instead. Music wraps into systems, so the phone's layout is not a squeeze.
+// The stylesheet shows whichever fits the page's own width. The strips sit outside the stock,
+// because the stock is dimmed at night and no filter may reach tape.
+function leadSheetHTML() {
+  const half = Math.ceil(MODE_ORDER.length / 2);
+  return `<div class="rec-taped"><div class="rec-lead rec-stock">` +
+    `<div class="rec-lead-wide">${leadSystemHTML(MODE_ORDER, 580, true, true)}</div>` +
+    `<div class="rec-lead-narrow">${leadSystemHTML(MODE_ORDER.slice(0, half), 330, true, false)}${leadSystemHTML(MODE_ORDER.slice(half), 330, false, true)}</div></div>` +
+    `<span class="stp-tape" aria-hidden="true" style="left:26px;top:-8px;width:52px;transform:rotate(-4deg);clip-path:${TORN_EDGES[2]}"></span>` +
+    `<span class="stp-tape" aria-hidden="true" style="right:30px;top:-9px;width:56px;transform:rotate(3deg);clip-path:${TORN_EDGES[5]}"></span></div>`;
 }
 
-/* ---------- Sleeve notes: a record's top five, and how it moved ----------
+/* ---------- A best's notes: its top five, and how the record moved ----------
    The top five is the board insertRecord has always kept and nothing ever showed. How the record
    moved is walked out of the log oldest first with storage's own cmpRecords, so a record that
    moved on the clock alone (13 in 1:04, then 13 in 0:58) is a move here exactly as it is on the
@@ -5557,7 +5604,7 @@ function recordMoves(mode, hist, takes) {
   if (top && (!last || cmpRecords(top, last) < 0)) moves.push({ ...top, date: top.date ? storedDayKey(top.date) : null, take: null });
   return moves;
 }
-function sleeveNotesHTML(mode) {
+function bestNotesHTML(mode) {
   const hist = loadHistory(), takes = loadTakes(hist);
   const list = loadRecords(mode);
   const top = [];
@@ -5593,10 +5640,12 @@ function sleeveNotesHTML(mode) {
       (last.date ? ` The last time was ${longDayLabel(last.date)}.` : "");
   const played = hist.filter((h) => h.m === mode).length;
   // The strip sits outside the card: the card is dimmed at night and no filter may reach tape.
-  return `<span class="stp-tape" aria-hidden="true" style="left:50%;top:-10px;width:58px;transform:translateX(-50%) rotate(-2deg);clip-path:${TORN_EDGES[1]}"></span>` +
+  // It sits at the left corner, clear of every bar's centre, because the card's pointer rides
+  // along its top edge to whichever bar was tapped and a strip in the middle hid it.
+  return `<span class="stp-tape" aria-hidden="true" style="left:18px;top:-10px;width:54px;transform:rotate(-3deg);clip-path:${TORN_EDGES[1]}"></span>` +
     `<div class="rec-notes-card rec-stock" style="--nk:${RECORD_PRINT[mode]}">` +
     `<div class="rec-notes-hd"><b>${MODES[mode].label}</b><span>${played} ${played === 1 ? "take" : "takes"}</span>` +
-      `<button type="button" class="rec-notes-x" aria-label="close the sleeve notes">×</button></div>` +
+      `<button type="button" class="rec-notes-x" aria-label="close the notes">×</button></div>` +
     `<div class="rec-notes-grid">` +
       `<div><p class="rec-sub">your top five</p><ol class="rec-t5">${top.join("")}</ol></div>` +
       `<div><p class="rec-sub">how the record moved</p><div class="rec-moved">${moved}</div><p class="rec-moved-line">${line}</p></div>` +
@@ -5792,7 +5841,7 @@ function recordHolderRows(hist) {
   }
   return held;
 }
-// One take. A mode with a pressing is written in its print ink; the daily in the red pen;
+// One take. A mode with a bar on the lead sheet is written in its print ink; the daily in the red pen;
 // everything else in the pen, with its family typed small after the name. The quiet columns
 // (notes, the time of day) fold under the name on a phone, so the row carries them twice and
 // the stylesheet shows one copy.
@@ -7091,15 +7140,15 @@ function renderRecordsPage(keepShown = 0) {
     `<button type="button" id="recPolBtn" class="rec-pol-btn" aria-label="${avatar ? "change your photo" : "add a photo"}">${polaroidHTML(avatar, name)}</button>` +
     `<div class="rec-sig-text">${sigText}</div>`;
 
-  const pressed = MODE_ORDER.some((m) => loadRecords(m).length);
+  const played = MODE_ORDER.some((m) => loadRecords(m).length);
   $("recordsBody").classList.toggle("rec-erasing", devRecordErase);
   $("recordsBody").innerHTML =
     `<div class="rec-sig">${sig}</div>` +
     `<section class="rec-sec"><div class="rec-head"><p class="rec-group-label">personal bests</p>` +
-      `<span class="rec-aside">${pressed ? `tap a record for its top five<span class="rec-aside-down">${CTA_ARROW}</span>` : "one record for each difficulty"}</span></div>` +
-      `<div class="rec-crate">${MODE_ORDER.map(recordSlotHTML).join("")}<div class="rec-notes" id="recNotes" hidden></div></div></section>` +
+      `<span class="rec-aside">${played ? `tap a note for its top five<span class="rec-aside-down">${CTA_ARROW}</span>` : "six bars of rest, for now"}</span></div>` +
+      leadSheetHTML() + `<div class="rec-notes" id="recNotes" hidden></div></section>` +
     bSidesHTML() + takeSheetHTML(hist);
-  placeSleeveNotes();
+  placeBestNotes();
 
   const saveBtn = $("recSignSave");
   if (saveBtn) saveBtn.addEventListener("click", () => {
@@ -7120,42 +7169,41 @@ function renderRecordsPage(keepShown = 0) {
   if (!_recWired) {
     _recWired = true;
     $("recordsBody").addEventListener("click", (e) => {
-      const rec = e.target.closest(".rec-press[data-mode]");
-      if (rec) { _recOpen = _recOpen === rec.dataset.mode ? null : rec.dataset.mode; placeSleeveNotes(); return; }
+      const rec = e.target.closest("button.rec-bar");
+      if (rec) { _recOpen = _recOpen === rec.dataset.mode ? null : rec.dataset.mode; placeBestNotes(); return; }
       if (e.target.closest(".rec-notes-x")) {
         const was = _recOpen;
-        _recOpen = null; placeSleeveNotes();
-        document.querySelector(`#recordsBody .rec-press[data-mode="${was}"]`)?.focus();
+        _recOpen = null; placeBestNotes();
+        shownBar(was)?.focus();
         return;
       }
       const sess = e.target.closest("[data-sess]");
       if (sess) { _sessView = sess.dataset.sess; $("recSessions").innerHTML = sessionsHTML(loadHistory()); return; }
       if (e.target.closest("#recNextSheet")) appendTakes(loadHistory());
     });
-    window.addEventListener("resize", () => { if (screens.records.classList.contains("active")) placeSleeveNotes(); });
+    window.addEventListener("resize", () => { if (screens.records.classList.contains("active")) placeBestNotes(); });
   }
 }
-// The sleeve notes drop in under the row their record sits in, pointing up at it. The row is
-// read off the laid-out records rather than the grid's template, so it holds at any width.
-function placeSleeveNotes() {
-  const crate = document.querySelector("#recordsBody .rec-crate");
+// The lead sheet is written twice (leadSheetHTML) and only one copy is laid out, so a bar is
+// always found by asking which copy is on the page.
+function shownBar(mode) {
+  return [...document.querySelectorAll(`#recordsBody button.rec-bar[data-mode="${mode}"]`)].find((b) => b.offsetParent !== null) || null;
+}
+// A best's notes open under the lead sheet, with the card's pointer slid along to the bar that
+// was tapped. Called again on resize, since a page that crosses into the narrow layout has
+// moved every bar.
+function placeBestNotes() {
   const notes = $("recNotes");
-  if (!crate || !notes) return;
-  const slots = [...crate.querySelectorAll(".rec-slot")];
+  if (!notes) return;
   const open = _recOpen && loadRecords(_recOpen).length ? _recOpen : null;
-  crate.querySelectorAll(".rec-press[data-mode]").forEach((b) => b.setAttribute("aria-expanded", String(b.dataset.mode === open)));
-  if (!open) { notes.hidden = true; notes.innerHTML = ""; delete notes.dataset.mode; slots.forEach((s, i) => (s.style.order = i)); return; }
-  slots.forEach((s, i) => (s.style.order = i));
-  const top0 = slots[0].offsetTop;
-  const cols = Math.max(1, slots.filter((s) => s.offsetTop === top0).length);
-  const idx = MODE_ORDER.indexOf(open);
-  const rowEnd = Math.min(slots.length - 1, (Math.floor(idx / cols) + 1) * cols - 1);
-  slots.forEach((s, i) => (s.style.order = i <= rowEnd ? i : i + 1));
-  notes.style.order = rowEnd + 1;
-  if (notes.dataset.mode !== open) { notes.innerHTML = sleeveNotesHTML(open); notes.dataset.mode = open; }
+  document.querySelectorAll("#recordsBody button.rec-bar").forEach((b) => b.setAttribute("aria-expanded", String(b.dataset.mode === open)));
+  if (!open) { notes.hidden = true; notes.innerHTML = ""; delete notes.dataset.mode; return; }
+  if (notes.dataset.mode !== open) { notes.innerHTML = bestNotesHTML(open); notes.dataset.mode = open; }
   notes.hidden = false;
-  const cr = crate.getBoundingClientRect(), br = slots[idx].getBoundingClientRect();
-  notes.querySelector(".rec-notes-card")?.style.setProperty("--px", `${br.left + br.width / 2 - cr.left}px`);
+  const bar = shownBar(open);
+  if (!bar) return;
+  const nr = notes.getBoundingClientRect(), br = bar.getBoundingClientRect();
+  notes.querySelector(".rec-notes-card")?.style.setProperty("--px", `${br.left + br.width / 2 - nr.left}px`);
 }
 
 /* ---------- Dev: erase a record from the records page ----------
@@ -7213,7 +7261,7 @@ document.addEventListener("click", (e) => {
 });
 function openRecords(from) {
   recordsBackTarget = from;
-  _recOpen = null;                                 // the page always opens with every sleeve shut
+  _recOpen = null;                                 // the page always opens with every best's notes shut
   routeTo("records", from);
   renderRecordsPage();
   flipAwayToScreen("records");

@@ -9352,16 +9352,17 @@
      same hand-drawn angle instead of straightening up. */
   .word-wrap[data-flip] .word { transform: rotate(178.8deg); }
 
-  /* ---------- Records page: the pressings and the take sheet ----------
-     See renderRecordsPage. Every number is on the object it would really be on: a difficulty's
-     best is a coloured-vinyl pressing, everything else with a best is a printed tracklist (the
-     B-sides), and the run log is a studio take sheet with its sessions grid printed at the head.
-     The page lays itself out by its OWN width (a container query on #recordsBody), not the
-     window's, so the records drop to two a row wherever the card gets narrow.
+  /* ---------- Records page: the lead sheet and the take sheet ----------
+     See renderRecordsPage. Every number is on the paper it would really be on: the six
+     difficulty bests are a line of music on a strip of manuscript paper, everything else with a
+     best is a printed tracklist (the B-sides), and the run log is a studio take sheet with its
+     sessions grid printed at the head. The page lays itself out by its OWN width (a container
+     query on #recordsBody), not the window's, so the line breaks into two systems wherever the
+     card gets narrow.
 
-     The vinyl and the paper are fixed stock in fixed inks (--rec-*), and at night they are taken
-     down a stop with a filter, exactly as the Stats page's objects are; the writing ON the page
-     (the captions, the asides) stays in the page's own ink. Tape always sits outside a dimmed
+     The paper is fixed stock in fixed inks (--rec-*), and at night it is taken down a stop
+     with a filter, exactly as the Stats page's objects are; the writing ON the page (the
+     section labels, the asides) stays in the page's own ink. Tape always sits outside a dimmed
      element, because no filter may reach a strip (see the shared washi rule). */
   #recordsBody {
     container: records / inline-size;
@@ -9395,38 +9396,49 @@
   /* The worn title is plum by day and had no night value at all: dark plum on the dark sheet. */
   :root[data-theme="dark"] .rec-sig-title { color: #d79ab9; border-color: rgba(215, 154, 185, 0.35); }
 
-  /* the pressings: three a row, two on a narrow page */
-  .rec-crate { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 26px; align-items: start; }
-  .rec-slot { position: relative; min-width: 0; }
-  .rec-press {
-    display: flex; flex-direction: column; align-items: center; gap: 9px; width: 100%;
-    background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit;
+  /* the lead sheet: a strip of manuscript paper, one bar for each difficulty (leadSheetHTML).
+     The drawing and the row of bars share one grid cell, and each bar is padded down past the
+     staff by its own inline style, so a bar is the whole column, staff and caption both. The
+     staff is printed in the form's ink, as the take sheet's rules are; everything else on it
+     is the pen. It is written twice, and the narrow copy is two systems of three bars. */
+  .rec-lead { padding: 12px 6px 14px; }
+  .rec-lead-narrow { display: none; }
+  .rec-lead-sys { display: grid; }
+  .rec-lead-sys + .rec-lead-sys { margin-top: 16px; }
+  .rec-lead-sys > * { grid-area: 1 / 1; }
+  .rec-lead-svg { display: block; width: 100%; height: auto; align-self: start; overflow: visible; pointer-events: none; }
+  .rec-lead-print path { fill: none; stroke: var(--rec-form-soft); stroke-width: 0.85; }
+  .rec-lead-pen { fill: none; stroke: var(--rec-pen); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .rec-lead-pen .rec-lead-blot { fill: var(--rec-pen); stroke: none; }
+  .rec-lead-pen .rec-lead-rest { stroke: var(--rec-soft); stroke-width: 1.9; opacity: 0.75; }   /* pencilled: nothing is written here yet */
+  .rec-lead-sig { font-family: Caveat, cursive; font-weight: 700; font-size: 42px; fill: var(--rec-pen); }
+  .rec-lead-note ellipse { fill: var(--nk); }
+  .rec-lead-note path { fill: none; stroke: var(--nk); stroke-width: 2.1; stroke-linecap: round; }
+  .rec-lead-note.is-gold ellipse { fill: var(--leaf); stroke: #6f4d10; stroke-width: 1.1; }
+  .rec-lead-note.is-gold path { stroke: #6f4d10; }
+  .rec-lead-num { font-family: Caveat, cursive; font-weight: 700; font-size: 35px; fill: var(--rec-pen); }
+  .rec-lead-num.is-gold { fill: var(--brand-gold); }
+  .rec-lead-bars { display: grid; align-items: start; }
+  .rec-bar-slot { position: relative; min-width: 0; }
+  .rec-bar {
+    display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%;
+    background: none; border: 0; margin: 0; padding: 0 1px 2px; color: var(--rec-soft); text-align: center;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1.2;
     -webkit-tap-highlight-color: transparent;
   }
-  .rec-press[data-mode] { cursor: pointer; }
-  .rec-press:focus-visible { outline: none; }
-  .rec-press:focus-visible .rec-disc { outline: 2px solid var(--ink-accent); outline-offset: 5px; border-radius: 50%; }
-  .rec-disc { display: block; width: 100%; max-width: 168px; aspect-ratio: 1; overflow: visible; }
-  .rec-press[data-mode] .rec-disc { filter: drop-shadow(1px 1.6px 0 rgba(43, 39, 34, 0.16)); transition: transform 0.16s ease; }
-  .rec-press[aria-expanded="true"] .rec-disc { transform: translateY(-3px); }
-  :root[data-theme="dark"] .rec-press[data-mode] .rec-disc { filter: drop-shadow(1px 1.6px 0 rgba(0, 0, 0, 0.45)) brightness(0.8) saturate(0.94); }
-  :root[data-theme="dark"] .rec-press[data-empty] .rec-disc { filter: brightness(0.62); }
-  /* Hovered, a record gives one slow turn, label and all, and comes to rest the way it lay. */
-  .rec-spin { transform-box: fill-box; transform-origin: center; }
+  button.rec-bar { cursor: pointer; }
+  .rec-bar:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 1px; border-radius: 3px; }
+  .rec-bar > span { white-space: nowrap; }
+  .rec-bar-nm { font-weight: 700; font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; }
+  .rec-bar .rec-bar-none { font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1; }
+  .rec-bar[aria-expanded="true"] { color: var(--rec-pen); }
+  .rec-bar[aria-expanded="true"] .rec-bar-nm { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
   @media (hover: hover) {
-    body[data-reduce-motion="off"] .rec-press[data-mode]:hover .rec-spin { animation: recSpin 1.8s cubic-bezier(0.32, 0.08, 0.18, 1); }
+    button.rec-bar:hover .rec-bar-nm { text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
   }
-  @keyframes recSpin { to { transform: rotate(360deg); } }
-  .rec-cap {
-    display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 6px; text-align: center;
-    font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); line-height: 1.35; color: var(--ink-soft);
-  }
-  .rec-press[aria-expanded="true"] .rec-cap { color: var(--ink); }
-  .rec-cap-dot { opacity: 0.6; }
-  .rec-cap-none { font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust)); line-height: 1; }
 
-  /* sleeve notes: dropped in under the record's row, pointing up at it (--px, set by JS) */
-  .rec-notes { grid-column: 1 / -1; position: relative; margin: 4px 0 6px; }
+  /* a best's notes: opened under the lead sheet, pointing up at the bar tapped (--px, set by JS) */
+  .rec-notes { position: relative; margin: 16px 0 6px; }
   .rec-notes[hidden] { display: none; }
   .rec-notes-card { padding: 16px 20px; }
   .rec-notes-card::before {
@@ -9581,15 +9593,16 @@
     background: #fbf7ea; color: #b23a3a; font: 700 11px/18px var(--type); cursor: pointer;
   }
   .rec-erase:hover { background: #b23a3a; color: #fbf7ea; }
-  .rec-slot .rec-erase { top: 0; right: 6px; }
+  .rec-bar-slot .rec-erase { top: 0; right: 2px; }
   .rec-tr .rec-erase { top: 1px; right: -26px; }
   .rec-take .rec-erase { top: 50%; right: -16px; transform: translateY(-50%); }
 
-  /* A narrow page: two records a row, the sleeve notes in one column, the tracklist in one, and
-     the take sheet folds its quiet columns (notes, the time of day) under the recording. */
+  /* A narrow page: the lead sheet in two systems, a best's notes in one column, the tracklist
+     in one, and the take sheet folds its quiet columns (notes, the time of day) under the
+     recording. */
   @container records (max-width: 470px) {
-    .rec-crate { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 18px; }
-    .rec-disc { max-width: 150px; }
+    .rec-lead-wide { display: none; }
+    .rec-lead-narrow { display: block; }
     .rec-notes-card { padding: 14px; }
     .rec-notes-grid { grid-template-columns: 1fr; }
     .rec-bs { padding: 16px 14px 12px; }
@@ -9609,7 +9622,7 @@
     .rec-take .no svg { width: 40px; height: 26px; margin: -14px 0 0 -20px; }
     .rec-take .rec-erase { right: 0; }
   }
-  @media (prefers-reduced-motion: reduce) { .rec-disc, .rec-ts-next { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .rec-ts-next { transition: none; } }
 
   /* A <select> is a replaced element with no ::after of its own, so the drawn chevron that
      stands in for the browser's arrow hangs off this wrapper instead, masked so it is the
