@@ -486,13 +486,14 @@ function buttonCard(D) {
     head("Start buttons", rnd ? "a different one sewn on every time you open the notebook" : "the button on your front page", stamp(D, level)) +
     `<div class="bc"><div class="bc-card"><div class="bc-hd"><span class="bc-no">No. ${level}</span><b>Assorted finishes</b><span class="bc-sub">sewn on by hand · ${buttons.length} to a card</span>` +
     (open ? dieControl("button", rnd, "A different finish every visit") : "") + `</div>` +
-    `<div class="bc-grid">${cells}</div>${open ? "" : `<p class="rw-owe bc-owe">${buttons.length - 1} more finishes get sewn on at Mastery ${level}</p>`}${decemberRow(D)}</div>${trays}</div></section>`;
+    `<div class="bc-grid">${cells}</div>${open ? "" : `<p class="rw-owe bc-owe">${buttons.length - 1} more finishes get sewn on at Mastery ${level}</p>`}${D.december ? decemberRow(D) : ""}</div>${trays}</div></section>`;
 }
 // Snow day is not a pick. It is sewn on at the foot of the card, apart from the finishes, and
 // goes over whichever of them is worn all December (decemberFinishFor in app.js); pressing it
 // unpicks it or sews it back on (settings.decemberSnow). Sewn on, it is a real button held by
 // its cross-stitches, like every other on the card; unpicked, only the thread holes are left
-// where it was. It is open at every level, because it reaches every player's button.
+// where it was. It is open at every level, because it reaches every player's button, and it is
+// only on the card in December, the one month it does anything.
 function decemberRow(D) {
   const on = D.decemberSnow;
   const sew = on ? `${stitch(71)}<span class="bc-btn">${D.miniButton("snowday")}</span>${stitch(73)}`

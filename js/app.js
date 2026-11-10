@@ -7512,6 +7512,8 @@ function buildRewardBoard(m, mLevel, unlocked) {
     earned: all.filter((r) => m.unlocked[r.id]).length, total: all.length,
     miniButton: (finish) => `<span class="btn-primary play-cta"${finishAttrs(finish)} aria-hidden="true">${ctaContentHTML("", wornFinish(finish))}</span>`,
     decemberSnow: settings.decemberSnow !== false,
+    // the switch only shows while it has something to switch off (or back on)
+    december: isDecember(todayKey()),
     // the words preview wears this load's roll when the button is on random, like the real one
     nowButton: () => ctaPreviewHTML(activeCtaLabel(), activeButtonFinish()),
     arrow: CTA_ARROW,
@@ -7583,10 +7585,12 @@ function wornFinish(finish) {
 // December" row on the Mastery button card. December is December in either hemisphere, as the
 // page's own snowfall is. It reads the dated key, so the player's timezone and the dev date
 // hold; window.__devSnowDay (dev panel, session only) forces the month either way.
+let shownDecember = null;   // what refreshDateSurfaces last saw, so it redraws Mastery on the turn only
+function isDecember(day) {
+  return typeof window.__devSnowDay === "boolean" ? window.__devSnowDay : day.slice(5, 7) === "12";
+}
 function decemberFinishFor(day) {
-  if (settings.decemberSnow === false) return "";
-  const on = typeof window.__devSnowDay === "boolean" ? window.__devSnowDay : day.slice(5, 7) === "12";
-  return on ? "snowday" : "";
+  return settings.decemberSnow !== false && isDecember(day) ? "snowday" : "";
 }
 function activeCtaLabel() {
   return settings.masteryLabel === COSMETIC_RANDOM ? rolledLabel : (settings.masteryLabel || "");
@@ -17601,6 +17605,11 @@ function refreshDateSurfaces() {
   // its release day and comes back the day after. Repainting it is cheap, so it always repaints.
   paintStartButton();
   paintTitleInk();   // an album's release day wears its ink in the masthead
+  // The Mastery card's December switch only shows in December, so an open card redraws when
+  // the month turns into December or out of it.
+  const december = isDecember(todayKey());
+  if (december !== shownDecember && $("masteryBody")) renderMasteryPage();
+  shownDecember = december;
 }
 // The day turning under a page that is already open. This is deliberately a POLL against
 // todayKey() rather than one long setTimeout aimed at midnight, because a timer is the one
@@ -35144,7 +35153,7 @@ function buildDevApi() {
       // switch still wins over it. Returns what the start button now wears.
       snowDay: (on) => {
         window.__devSnowDay = typeof on === "boolean" ? on : undefined;
-        paintStartButton();
+        refreshDateSurfaces();
         return $("playBtn")?.getAttribute("data-startbtn") || "gold";
       },
       // The Pride flag ids, for feeding to button() above — the one finish that is a set, so
