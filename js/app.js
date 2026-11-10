@@ -4124,9 +4124,6 @@ function foundRecapHTML(items) {
     `</div>`;
 }
 
-// the loose pencil ring the charm overflow count gets on hover
-const MORE_RING = `<svg class="more-ring" viewBox="0 0 40 30" preserveAspectRatio="none" aria-hidden="true">` +
-  `<path pathLength="100" d="M24 3.4C33 3.6 38.4 9 37.6 15.8 36.8 23 29 27 19.4 26.6 9.4 26.2 2.2 21.6 2.6 14.6 3 7.8 10.8 3.2 20.8 3.3 25 3.4 28.6 4.6 31 6.4"/></svg>`;
 const ACH_RECAP_SHOWN = 5;   // unlock charms shown before "+N" points at the collection
 // (5, not 6: six charms plus the overflow count wrap to a second line in the band's half-width column)
 function renderResultRecap() {
@@ -4149,7 +4146,7 @@ function renderResultRecap() {
   }).join("");
   const folded = ids.length > ACH_RECAP_SHOWN;
   const extra = folded
-    ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN}${MORE_RING}</button>`
+    ? `<button type="button" class="ach-chip--more">+${ids.length - ACH_RECAP_SHOWN}</button>`
     : "";
   const charmHTML = ids.length
     ? `<p class="sr-lab ach-recap-lab">newly unlocked · ${ids.length}</p>` +
