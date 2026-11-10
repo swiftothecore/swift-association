@@ -562,6 +562,27 @@
     filter: drop-shadow(4px 9px 7px rgba(46,32,14,0.24)) saturate(0.88); }
   .di-mug     { width: 380px; top: 39%;  left: 0; transform: translateX(-49%) rotate(-14deg);
     filter: drop-shadow(6px 13px 11px rgba(46,32,14,0.28)) saturate(0.88); }
+  /* THE MUG'S GLAZE. The stoneware is drawn in one colour: every glazed tone in the markup is
+     one of these steps lighter or darker than --mg-glaze, and the iron flecks are --mg-fleck.
+     Oatmeal is the everyday mug. On an album's birthday app.js (paintMugGlaze) sets both
+     properties on this element from MUG_GLAZES, and takes them off again the day after, so a
+     reglaze is two values and the drawing never has to know which mug it is. The steps are
+     declared here, on the element the glaze is set on, because a var() inside a custom
+     property is resolved where it is declared: hoist them to :root and they would all be
+     mixed from the default before the birthday ever spoke. */
+  .di-mug {
+    --mg-glaze: #d8cdb4; --mg-fleck: #4a3a26;
+    --mgz-l82: color-mix(in srgb, var(--mg-glaze), #fff 82%);
+    --mgz-l70: color-mix(in srgb, var(--mg-glaze), #fff 70%);
+    --mgz-l42: color-mix(in srgb, var(--mg-glaze), #fff 42%);
+    --mgz-l20: color-mix(in srgb, var(--mg-glaze), #fff 20%);
+    --mgz-l07: color-mix(in srgb, var(--mg-glaze), #fff 7%);
+    --mgz-d15: color-mix(in srgb, var(--mg-glaze), #000 15%);
+    --mgz-d31: color-mix(in srgb, var(--mg-glaze), #000 31%);
+    --mgz-d40: color-mix(in srgb, var(--mg-glaze), #000 40%);
+    --mgz-d52: color-mix(in srgb, var(--mg-glaze), #000 52%);
+    --mgz-d70: color-mix(in srgb, var(--mg-glaze), #000 70%);
+  }
   .di-floss   { width: 370px; top: 5%;   right: 0; transform: translateX(34%) rotate(8deg); }
   /* Less overhang than the other edge props get. The insert is written on, and
      the title is centred on the card, and the title is now a different song

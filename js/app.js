@@ -24,7 +24,7 @@ import {
   CREDITS,
   MODES, MODE_ORDER, MODE_COLORS, PACE_TIERS, DIFFICULTY_LADDER, MODALITY_MODES, EXPLORER_TOKENS, SHELF_TYPES, PAGE_MARK_KINDS, GLOSSARY,
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D, TREE_D, TREE_TRUNK_D, TREE_TRUNK,
-  ALBUM_COLORS, CB_ALBUM_COLORS, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
+  ALBUM_COLORS, CB_ALBUM_COLORS, MUG_GLAZES, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
   STUDIO_ALBUMS, NON_ALBUM_TRACKS, TITLE_ALIASES, STAMP_INKS, pressingName,
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
@@ -17556,6 +17556,7 @@ function refreshDateSurfaces() {
   window.deskCassette?.refresh();
   window.deskBeads?.refresh();
   renderDeskPrint();
+  paintMugGlaze();   // an album's birthday reglazes the mug
   // Moving the date moves what "today" means to the daily gate, so the button's
   // played/unplayed coat and its countdown have to be redrawn with it.
   renderDailyButtonState();
@@ -29446,7 +29447,7 @@ const MUG_ACHIEVEMENT_SIPS = 1000;
 const MUG_RIPPLE_MS = 1420;   // must outlast the last wave front (mg-ring-c's delay + its keyframes)
 const MUG_BREW = { x: 70, y: 90 };   // the brew's centre in the prop's own viewBox units
 const MUG_PUSH = 1.5;         // how far the surface is shoved, in those same units. Read it
-                              // against the brew's 31.5-unit radius: the shove is small enough
+                              // against the brew's 33.6-unit radius: the shove is small enough
                               // to be the coffee flinching and not the coffee sliding.
 let mugRippleTimer = null;
 
@@ -29500,10 +29501,10 @@ function rippleMug(svg, local) {
    two transforms on two elements and neither overwrites the other. */
 const MUG_RAFT_SIZE = 21;      // bubbles on the surface at once
 const MUG_RAFT_CLUMPS = 3;     // gatherings they are dealt around
-const MUG_RAFT_RING = { near: 18, far: 28 };    // how far off the brew's centre a clump sits (the brew's own radius is 31.5)
+const MUG_RAFT_RING = { near: 19, far: 30 };    // how far off the brew's centre a clump sits (the brew's own radius is 33.6)
 const MUG_RAFT_ARC = { from: 0.14, to: 2.05 };  // radians, clockwise from due right: the drinking edge round to the near-left,
                                                 // which is the half of this cup that is ever actually on screen
-const MUG_RAFT_EDGE = 28.6;    // no bubble past here, so a wandering one still dies short of the china
+const MUG_RAFT_EDGE = 30.5;    // no bubble past here, so a wandering one still dies short of the china
 const MUG_BUBBLE_TONES = ["#8a5c33", "#9a6a3c", "#b0855a"];
 const MUG_POP_MS = 300, MUG_SURFACE_MS = 460;   // both must match the keyframes in styles.css
 const MUG_POP_GAP = { min: 4200, spread: 6800 };
@@ -29635,7 +29636,7 @@ function scheduleMugPop(layer) {
    destroyed here, so the raft stays MUG_RAFT_SIZE strong and the pops keep turning it over
    underneath. Bubbles mid-pop are left alone, since they are already on their way somewhere.
 
-   MUG_STIR.push is read against the brew's 31.5-unit radius, the same as the slosh: a couple
+   MUG_STIR.push is read against the brew's 33.6-unit radius, the same as the slosh: a couple
    of units is a bubble getting out of the way, not the surface being swept clean. */
 const MUG_STIR = { push: 3.2, reach: 20, jitter: 0.85 };
 
@@ -29664,12 +29665,35 @@ function stirMugRaft(svg, local) {
   });
 }
 
+/* THE BIRTHDAY GLAZE. The mug is oatmeal stoneware, and on an album's birthday it is glazed
+   in that album's colour for the day (MUG_GLAZES in config.js). It asks anniversaryAlbumFor,
+   the same question the desk print's birthday asks, so a Taylor's Version day wears the
+   original's glaze and a songday or her own birthday leaves the mug alone.
+
+   A glaze is two custom properties on .di-mug and nothing else: styles.css mixes every tone
+   in the drawing from --mg-glaze. The flecks are the one thing a hex cannot carry. Iron spots
+   read dark on a pale glaze and vanish on a dark one, where what shows is the pale grit
+   instead, so below a lightness of 0.3 the flecks flip to a tint of the glaze itself. On an
+   ordinary day both properties come OFF, so the stylesheet's oatmeal is the only place the
+   everyday mug is written down. */
+function paintMugGlaze() {
+  const mug = document.querySelector(".di-mug");
+  if (!mug) return;
+  const glaze = MUG_GLAZES[anniversaryAlbumFor(todayKey())];
+  if (!glaze) { mug.style.removeProperty("--mg-glaze"); mug.style.removeProperty("--mg-fleck"); return; }
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(glaze.slice(i, i + 2), 16) / 255);
+  const dark = 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.3;
+  mug.style.setProperty("--mg-glaze", glaze);
+  if (dark) mug.style.setProperty("--mg-fleck", `color-mix(in srgb, ${glaze}, #fff 70%)`);
+  else mug.style.removeProperty("--mg-fleck");
+}
 function wireDeskMug() {
   const svg = document.querySelector(".di-mug svg");
   const hit = svg && svg.querySelector(".mg-hit");
   if (!hit) return;
   const poured = loadMetrics().mugSips || 0;
   seedMugRaft(svg);
+  paintMugGlaze();
   // Backfill, the same one the page marks keep: the thousandth tap may have landed inside a
   // challenge sandbox, where unlock() is gated. The tap was still counted, so the charm is
   // handed over on the next load.

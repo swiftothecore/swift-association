@@ -3075,6 +3075,30 @@ export const ALBUM_COLORS = {
   "Written for Others":               "#7e7634",  // olive
   "Collaborations":                   "#7a2f4a",  // wine
 };
+/* What the desk mug is glazed in on each album's birthday (app.js paintMugGlaze; every other
+   day it is the oatmeal in styles.css). NOT the album colours above, on purpose: those are
+   tuned to sit apart from each other as flat tags on cream paper, and this is one glaze on a
+   thrown mug sitting on tan cork on pale oak. So each is the album's colour moved to where a
+   potter would have it and the cork would not swallow it: evermore goes down to a tenmoku
+   brown, because its own brown IS the cork; Fearless goes up to a honey yellow for the same
+   reason; The Tortured Poets Department is bone white, since its parchment is the oatmeal
+   the mug wears every other day; and reputation and Midnights are dark enough that the
+   flecks turn pale (paintMugGlaze does that by the glaze's lightness, not by name). One hex
+   each: every tone in the drawing is mixed from it. */
+export const MUG_GLAZES = {
+  "Taylor Swift":                     "#4f9d95",
+  "Fearless":                         "#d9ad45",
+  "Speak Now":                        "#8a6dae",
+  "Red":                              "#a5302f",
+  "1989":                             "#7fb2d6",
+  "reputation":                       "#4b4a4c",
+  "Lover":                            "#dc8fb4",
+  "folklore":                         "#a3a5a3",
+  "evermore":                         "#6b4728",
+  "Midnights":                        "#33457d",
+  "The Tortured Poets Department":    "#efece4",
+  "The Life of a Showgirl":           "#dd7634",
+};
 // A colour-blind-friendly alternative (Okabe-Ito / Paul-Tol hues + spread lightness)
 // so the 12 albums stay distinguishable for deutan/protan/tritan vision. Same keys
 // as ALBUM_COLORS; swapped in when the "colour-blind album colours" setting is on.
