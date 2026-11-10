@@ -17386,13 +17386,17 @@
   .fr-tab:is(:hover, :focus-visible) { transform: translateY(-2px); box-shadow: 2px 4px 0 #2b272233; }
   .fr-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   body[data-reduce-motion="on"] .fr-tab { transition: none; }
-  /* The welcome's theme switch, pinned to the card's top-right corner (frThemeHTML). One ink-ruled
-     strip of three cells to match the tabs under it; the pick is inked solid, so on the night
-     page --ink and --paper swap and it inverts with everything else. */
+  /* The welcome's theme switch, pinned to the card's top-right corner (frThemeHTML). A strip
+     ruled in soft pencil with rounded corners, and the pick a pale wash of ink over the paper with
+     its mark in full ink. Deliberately quieter than the ink-outlined tabs under it: a solid ink
+     strip with near-square corners shipped first and read too heavy for a side option. Both
+     colours are mixed from --ink and --paper, so the night page needs no rule of its own.
+     Board: scripts/ui/icons/theme-switch-frame.html (pen underline, washi, index tabs, Settings'
+     tabs lifted and a red-pen ruled line lost there). */
   .fr-theme {
     position: absolute; top: 20px; right: 22px; display: flex;
-    border: 1.5px solid var(--ink); border-radius: 3px; background: var(--paper); overflow: hidden;
-    box-shadow: 2px 2px 0 #2b272226;
+    border: 1.2px solid color-mix(in srgb, var(--ink-soft) 70%, transparent); border-radius: 8px;
+    background: var(--paper); overflow: hidden;
   }
   .fr-theme button {
     display: grid; place-items: center; width: 32px; height: 28px; padding: 0; margin: 0;
@@ -17400,12 +17404,11 @@
   }
   /* The kicker shares the top line with the switch, so it stops short of it and wraps instead of running under. */
   .firstrun-card:has(.fr-theme) .fr-kicker { padding-right: 112px; }
-  .fr-theme button + button { border-left: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); }
+  .fr-theme button + button { border-left: 1px solid color-mix(in srgb, var(--ink-soft) 35%, transparent); }
   .fr-theme svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .fr-theme button:hover { color: var(--ink); }
-  .fr-theme button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  .fr-theme button:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
-  .fr-theme button[aria-pressed="true"]:focus-visible { outline-color: var(--paper); }
+  .fr-theme button[aria-pressed="true"] { background: color-mix(in srgb, var(--ink) 11%, var(--paper)); color: var(--ink); }
+  .fr-theme button:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; border-radius: 6px; }
   body[data-reduce-motion="on"] .fr-theme button { transition: none; }
   .fr-era-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 10px; margin-bottom: 22px; }
   @media (max-width: 480px) { .fr-era-grid { grid-template-columns: 1fr; } }

@@ -33426,9 +33426,10 @@ const FR_RULE = (...ids) => `<svg class="rule-mark" viewBox="0 0 24 24" aria-hid
 // to find Settings to stop the page glaring. Three bare marks, no words, in Settings' own order,
 // drawn in the rule marks' pen: a sun of eight short rays round a hand-closed disc; the Display
 // settings tab's screen, the very same drawing, for "follow the device"; and a crescent drawn
-// heavy like the hint bulb's glass so it holds at 17px. All three are open line drawings: the
-// pick is the cell inked solid, and a solid mark would turn to a blot inside it. Never a ring or
-// the highlighter for the pick (the card already wears the era's yellow five times). The strip
+// heavy like the hint bulb's glass so it holds at 17px. All three are open line drawings, which
+// keep the same weight as the rule marks beside the start. The pick is a pale ink wash on its
+// cell (styles.css, .fr-theme), never a ring or the highlighter (the card already wears the
+// era's yellow five times). The strip
 // sits last in the markup, pinned to the corner by CSS, so the card's first focus is the start.
 // Board: scripts/ui/icons/theme-switch.html (inked sun, long-and-short rays, laptop, half-inked
 // screen and crescent with a star all lost there).
