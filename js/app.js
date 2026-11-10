@@ -33407,24 +33407,39 @@ function endFirstDesk() {
   applyFirstDesk();
   renderModePicker();
 }
-// The welcome step: a one-line explanation of the game + the recommended gentle start, with two
-// clear "no thanks" paths for players who already know it. "I already know this game" leaves the
-// gentle first-game tips armed (they still nudge, unobtrusively); "…and skip the tips" also
-// silences those pointers up front. None of the three starts a game; all just close the welcome
-// onto the start screen, ready to play.
+// The welcome step. The game is SHOWN rather than described: a prompt word in the real .word
+// hand and highlighter, and under it the verdict line a right page actually writes (verdictMark,
+// .vw-say), so the first thing a newcomer reads is the exact line their first right answer will
+// get. It is decorative, so the whole demo carries one sentence for screen readers instead.
+// The demo word is NOT in a .word-wrap: the game finds its prompt with
+// document.querySelector(".word-wrap"), and this card sits earlier in the document.
+// Relaxed's rules are the front page's own rule marks, the ones printed under the difficulty
+// row behind the card. The start is the Start writing button itself (default gold finish,
+// pencil, marker stroke), so the first press is the same object as every press after.
+// Two clear "no thanks" tabs for players who already know it: "I know this game" leaves the
+// gentle first-game tips armed (they still nudge, unobtrusively); "…and no tips" also silences
+// those pointers up front. None of the three starts a game; all just close the welcome onto the
+// start screen, ready to play. How to play is not pointed at: its icon is on the desk behind.
+const FR_RULE = (...ids) => `<svg class="rule-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">` +
+  ids.map((id) => `<use href="#${id}"/>`).join("") + `</svg>`;
 function firstRunWelcomeHTML() {
   return `<p class="fr-kicker">welcome to the notebook</p>` +
     `<h2 id="firstRunTitle" class="fr-title">Let's ease you in</h2>` +
-    `<p class="fr-sub">Here's the whole game: you'll see a word, and you name a Taylor Swift song that has it somewhere in the lyrics. That's it.</p>` +
-    `<p class="fr-sub">First time? We'd start you in <b>Relaxed</b>, so there's no clock, suggestions and hints stay on, and every song is in play. You can turn the difficulty up whenever you're ready.</p>` +
-    // A pointer, not a fourth button. Nothing here needs the longer version to get started, and
-    // an extra control on the welcome buys a slower first two minutes for very little.
-    `<div class="fr-actions">` +
-      `<button type="button" class="btn-primary" data-fr="relaxed">Start me in Relaxed ${CTA_ARROW}</button>` +
-      `<button type="button" class="btn-link" data-fr="knowit">I already know this game</button>` +
-      `<button type="button" class="btn-link" data-fr="knowit-quiet">I know it, skip the tips</button>` +
+    `<div class="fr-demo" role="img" aria-label="You'll see a word, like golden. Name a Taylor Swift song that has it somewhere in the lyrics, like Daylight.">` +
+      `<div class="fr-demo-word" aria-hidden="true"><span class="word">golden</span></div>` +
+      `<p class="vw-say good fr-demo-say" aria-hidden="true">${verdictMark("good")}<span class="vw-title">Daylight</span> ` +
+        `<span class="vw-verb">sings</span> <mark class="vw-word">golden</mark></p>` +
     `</div>` +
-    `<p class="fr-sub fr-aside">Want more than that? Open <b>how to play</b> whenever you fancy it.</p>`;
+    `<ul class="fr-terms" aria-label="Relaxed">` +
+      `<li>${FR_RULE("rule-clock", "rule-strike")}no clock</li>` +
+      `<li>${FR_RULE("rule-suggest")}suggestions</li>` +
+      `<li>${FR_RULE("rule-hint")}hints</li>` +
+    `</ul>` +
+    `<button type="button" class="btn-primary play-cta fr-start" data-fr="relaxed">${ctaContentHTML("", "", "", "Start me in Relaxed")}</button>` +
+    `<div class="fr-tabs">` +
+      `<button type="button" class="fr-tab" data-fr="knowit">I know this game <small>show me everything</small></button>` +
+      `<button type="button" class="fr-tab" data-fr="knowit-quiet">…and no tips <small>skip the first-game pointers</small></button>` +
+    `</div>`;
 }
 // Silence the gentle first-game pointers by spending each beat's one-time coachmark up front, for
 // a player who's told us they don't want them. Leaves the "a few games in" prompts (era, ready

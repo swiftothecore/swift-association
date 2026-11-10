@@ -18674,6 +18674,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .set-tab { min-height: 44px; }
   .fr-title { font-size: calc(29px + var(--text-size-adjust)); }
   .fr-sub { font-size: calc(13px + var(--text-size-adjust)); margin-bottom: 14px; }
+  /* The tabs stay a pair, side by side at equal widths, rather than stacking at two widths. */
+  .fr-tabs { flex-wrap: nowrap; gap: 10px; }
+  .fr-tab { flex: 1 1 0; min-width: 0; padding: 8px 8px; }
+  .fr-demo-word .word { font-size: calc(50px + var(--text-size-adjust)); }
   .fr-era-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fr-era { min-width: 0; padding: 8px; gap: 6px; }
   .fr-era-name { overflow-wrap: anywhere; }

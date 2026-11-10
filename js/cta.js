@@ -458,12 +458,14 @@ const FINISH_ART = {
 // whole label cream while half of it still sat on gold, which is about 1.6:1.
 const goldStroke = (words) => `<i class="cta-stroke"><span class="cta-stroke-copy"><span class="cta-copy-label">${words}</span><i class="cta-stroke-line"></i></span></i>`;
 
-export function ctaContentHTML(labelId = "", finish = "", dateKey = "") {
+// `say` replaces "Start writing" on a button that is the same object saying something else
+// (the welcome's "Start me in Relaxed"): it keeps the default pencil and stroke.
+export function ctaContentHTML(labelId = "", finish = "", dateKey = "", say = "") {
   // A record's anniversary brings its own lyric (js/anniversarycta.js), forced over the chosen
   // words, and wears the default pencil with it.
   const lyric = anniversaryWords(finish);
   const opt = labelId && !lyric ? CTA_LABELS[labelId] : null;
-  const plain = lyric || "Start writing";
+  const plain = lyric || say || "Start writing";
   // No chosen words means the default, which wears the drawn pencil (the one mark that wiggles).
   const markId = opt ? opt.mark : "pencil";
   const mark = markId ? `<span class="cta-mark${opt ? "" : " cta-mark--pencil"}" aria-hidden="true">${CTA_MARKS[markId] || ""}</span>` : "";
