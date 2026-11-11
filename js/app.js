@@ -30677,8 +30677,14 @@ function setEraGridHTML() {
   };
   const chips = STUDIO_ALBUMS.map((a) => chip(a, a, pal[a] || "#8b8272")).join("") +
     chip("", "No favourite yet", "");
+  // The heart beside the label fills in the chosen era's colour; no favourite leaves it
+  // the plain outline every other row's glyph is drawn in.
+  const fav = settings.favouriteAlbum && pal[settings.favouriteAlbum];
+  const heart = fav
+    ? setIco("favouriteAlbum").replace('class="set-ico"', `class="set-ico set-ico--era" style="--era-c:${fav}"`)
+    : setIco("favouriteAlbum");
   return `<div class="set-row set-row--stack"><div class="set-label">` +
-    `<span class="set-name">${setIco("favouriteAlbum")}Your era</span>` +
+    `<span class="set-name">${heart}Your era</span>` +
     `<span class="set-desc">the album closest to your heart</span></div>` +
     `<div class="set-control set-era-grid" role="group" aria-label="Your era">${chips}</div></div>`;
 }

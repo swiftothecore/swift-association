@@ -17756,6 +17756,7 @@
     color: var(--ink-soft); opacity: 0.85;
   }
   .set-check[aria-pressed="true"] .set-ico { color: var(--ink-accent); opacity: 1; }
+  .set-ico--era { color: var(--era-c); fill: var(--era-c); opacity: 1; }
   .set-desc { font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); color: var(--ink-soft); }
   /* One control column, one axis. Sized rather than shrink-to-fit: a segmented
      control, a slider and a dropdown are all different widths, and letting each
