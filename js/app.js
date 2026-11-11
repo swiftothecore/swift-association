@@ -23410,9 +23410,14 @@ function turnPageSheet(card, fill, done, options = {}) {
 }
 
 // Whether a page turn should be animated at all: reduced motion, "instant" animation speed
-// and the page-turn setting each lay the next page down without the sheet.
+// and the page-turn setting each lay the next page down without the sheet. So does a touch
+// device: the turn clones the whole page into a 3D-rotated layer, and a phone has to
+// re-rasterise every SVG filter and blend inside it each frame, which stuttered badly.
 function pageTurnAnimated() {
-  return !motionReduced() && !animInstant() && settings.pageTurn;
+  return !motionReduced() && !animInstant() && settings.pageTurn && !pageTurnTooHeavy();
+}
+function pageTurnTooHeavy() {
+  return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 }
 
 function nextRound() {
@@ -31124,7 +31129,8 @@ function renderSettingsBody() {
       setChoiceHTML("reduceMotion", "Reduce motion", "Auto follows your system", [{ val: "auto", label: "Auto" }, { val: "on", label: "On" }, { val: "off", label: "Off" }]) +
       setChoiceHTML("animSpeed", "Animation speed", "", [{ val: "normal", label: "Normal" }, { val: "fast", label: "Fast" }, { val: "instant", label: "Instant" }]) +
       setChecklistHTML([
-        setCheckHTML("pageTurn", "Page turn", "the paper flip between rounds"),
+        // No row on a touch device, where the turn never plays and the switch would do nothing.
+        ...(pageTurnTooHeavy() ? [] : [setCheckHTML("pageTurn", "Page turn", "the paper flip between rounds")]),
         setCheckHTML("penCircle", "Pen-circle confirm", "marks your pick before the verdict"),
         setCheckHTML("sparkles", "Sparkles", "a burst on a correct answer"),
         setCheckHTML("timerTension", "Timer tension", "vignette, tremor and the countdown tick as the clock runs low"),
