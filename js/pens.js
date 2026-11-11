@@ -13,7 +13,7 @@
    guest catalogue may reuse one. Never shown to the player as a label: the pen is the clue. */
 export const SONG_PENS = {
   "Taylor Swift": {
-    fountain: ["Tim McGraw", "Teardrops On My Guitar", "A Place In This World", "Cold As You", "The Outside", "Tied Together with a Smile", "Should've Said No", "Mary's Song (Oh My My My)", "Invisible", "A Perfectly Good Heart", "I'd Lie"],
+    fountain: ["Tim McGraw", "Teardrops On My Guitar", "A Place In This World", "Cold As You", "The Outside", "Tied Together with a Smile", "Should've Said No", "Mary's Song (Oh My My My)", "Invisible", "A Perfectly Good Heart"],
     glitter: ["Picture To Burn", "Stay Beautiful", "Our Song", "I'm Only Me When I'm With You", "Beautiful Eyes", "I Heart ?"],
   },
   "Fearless": {
@@ -41,7 +41,7 @@ export const SONG_PENS = {
     glitter: ["...Ready For It?", "End Game", "I Did Something Bad", "Look What You Made Me Do", "Gorgeous", "This Is Why We Can't Have Nice Things"],
   },
   "Lover": {
-    fountain: ["Cruel Summer", "Lover", "The Archer", "Miss Americana & The Heartbreak Prince", "Cornelia Street", "Death By A Thousand Cuts", "Soon You'll Get Better", "False God", "It's Nice To Have A Friend", "Daylight", "All Of The Girls You Loved Before", "Need"],
+    fountain: ["Cruel Summer", "Lover", "The Archer", "Miss Americana & The Heartbreak Prince", "Cornelia Street", "Death By A Thousand Cuts", "Soon You'll Get Better", "False God", "It's Nice To Have A Friend", "Daylight", "All Of The Girls You Loved Before"],
     glitter: ["I Forgot That You Existed", "The Man", "I Think He Knows", "Paper Rings", "London Boy", "You Need To Calm Down", "Afterglow", "ME!"],
   },
   "folklore": {

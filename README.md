@@ -32,7 +32,8 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 
 **The details**
 
-- Every era, plus holiday, movie, collaboration and some unreleased songs
+- Every era, plus holiday, movie and collaboration songs
+- Unreleased songs that nobody is expected to know: name one and it counts, and finding them all takes your songbook past 100%
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
 - Titles of three words or more answer to their initials, the way fans write them (wanegbt)

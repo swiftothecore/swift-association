@@ -11451,6 +11451,11 @@
     text-wrap: balance;
   }
   .deepcut-note b { color: var(--ink); font-weight: 700; }
+  /* An unreleased song named: the red pen, tipped a little, under the card it is about. */
+  .unreleased-note {
+    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--red-pen);
+    text-align: center; margin: 8px auto 0; transform: rotate(-1.5deg); line-height: 1.2;
+  }
   .deepcut-note-album {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));
     text-transform: uppercase; letter-spacing: 1px; margin-left: 7px; vertical-align: 1px;

@@ -27,9 +27,9 @@
     "a Lover-session song whose attribution is widely circulated rather than documented. Treat",
     "it as the row to drop first, not as evidence.",
     "",
-    "The twelve groups fold in EP songs, vault tracks, standalone singles, remixes and one",
-    "unreleased composition (I'd Lie), because songs.json's era grouping does. This file is not",
-    "a claim about original track listings.",
+    "The twelve groups fold in EP songs, vault tracks, standalone singles and remixes, because",
+    "songs.json's era grouping does. This file is not a claim about original track listings.",
+    "The unreleased songs sit in their own last group, as they do in songs.json.",
     "",
     "Album and track order mirror data/songs.json exactly, so the two files diff against each",
     "other. Every title here is spelled as songs.json spells it and matches it on a straight",
@@ -158,12 +158,6 @@
         },
         {
           "title": "I Heart ?",
-          "writers": [
-            "Taylor Swift"
-          ]
-        },
-        {
-          "title": "I'd Lie",
           "writers": [
             "Taylor Swift"
           ]
@@ -1144,15 +1138,6 @@
             "Louis Bell",
             "Adam King Feeney"
           ]
-        },
-        {
-          "title": "Need",
-          "writers": [
-            "Taylor Swift",
-            "Louis Bell",
-            "Adam King Feeney"
-          ],
-          "unconfirmed": true
         }
       ]
     },
@@ -1944,6 +1929,26 @@
             "Max Martin",
             "Shellback"
           ]
+        }
+      ]
+    },
+    {
+      "album": "Unreleased",
+      "songs": [
+        {
+          "title": "I'd Lie",
+          "writers": [
+            "Taylor Swift"
+          ]
+        },
+        {
+          "title": "Need",
+          "writers": [
+            "Taylor Swift",
+            "Louis Bell",
+            "Adam King Feeney"
+          ],
+          "unconfirmed": true
         }
       ]
     }

@@ -26,7 +26,7 @@ import {
   ERAS, TENDER_ERAS, FINALE_ERAS, ALBUM_ERA, TS_MILESTONES, TS_LORE_DAYS, GUEST_DAYS, guestInk, guestShelfState, SALT_SHAKER_D, SALT_CAP_D, CROWN_D, CROWN_BAND_D, TREE_D, TREE_TRUNK_D, TREE_TRUNK,
   ALBUM_COLORS, CB_ALBUM_COLORS, MUG_GLAZES, IMPOSTOR_BEAD, COMMON_THREAD_BEADS,
   MAST_INKS, MAST_INK_BY_SLUG, MAST_SHUFFLE, MAST_SHUFFLE_NAME,
-  STUDIO_ALBUMS, NON_ALBUM_TRACKS, TITLE_ALIASES, STAMP_INKS, pressingName,
+  STUDIO_ALBUMS, NON_ALBUM_TRACKS, UNRELEASED_ALBUM, TITLE_ALIASES, STAMP_INKS, pressingName,
   VAULT_TRACKS, AOTY_ALBUMS, VAULT_ALBUMS,
   ACHIEVEMENTS, ACH_ICONS, ACH_BY_ID, ACH_GROUPS, ACH_GROUP_COLORS, ACH_GROUP_OF,
   ACH_FAMILIES, ACH_FAMILY_COLORS,
@@ -474,6 +474,10 @@ let currentSongs = [];
 // (Short n' Sweet / Wrapped Like A Chain / On Tour!). Soft-rejects use it to tell a near-miss
 // (lyrics fit, sub-rule doesn't) from a wholly wrong answer.
 let currentLyricSongs = [];
+// The unreleased songs that would also have answered this page. Read by the judge and nothing
+// else: currentSongs stays the released catalogue, so every count, hint, reveal and rule is
+// built without them, and naming one is simply a right answer nobody was expected to give.
+let roundBonusSongs = [];
 let dropdownItems = [];
 let dropdownTotal = 0;   // every title the typing matches, of which the card shows the first six
 let activeIndex = -1;
@@ -2135,23 +2139,36 @@ function wordSongMatches(word, strict) {
   }
   return matches;
 }
+/* The released catalogue, which is everything a page is dealt from, counted against, hinted at
+   or revealed with. allSongs also holds the unreleased songs (UNRELEASED_ALBUM), and those only
+   ever ADD: they are right answers when named, and nothing else. Memoised on the corpus array
+   itself, so a guest swap can never read Taylor's list. */
+let releasedMemo = { of: null, songs: [] };
+function releasedSongs() {
+  if (releasedMemo.of !== allSongs) releasedMemo = { of: allSongs, songs: allSongs.filter((s) => !s._unreleased) };
+  return releasedMemo.songs;
+}
 function songsContainingWord(word, strict) {
   const matches = wordSongMatches(word, strict);
-  return (matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics))).slice();
+  return (matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics))).filter((s) => !s._unreleased);
 }
 // Valid answers for a round: lyrics contain the word and — when noTitle (Hard/
 // Ultra) — the title does NOT, so you can't just name the obvious title song.
-function validSongs(word, strict, noTitle) {
+// Released songs only unless `withUnreleased`: a page is built, counted and judged winnable on
+// the released catalogue, and its unreleased answers are found apart by roundBonusFor.
+function validSongs(word, strict, noTitle, withUnreleased = false) {
   const matches = wordSongMatches(word, strict);
   const lyrics = matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics));
-  return (noTitle ? (matches.noTitle ??= lyrics.filter((s) => !matches.rx.test(s._wordTitle ?? s.title))) : lyrics).slice();
+  const pool = noTitle ? (matches.noTitle ??= lyrics.filter((s) => !matches.rx.test(s._wordTitle ?? s.title))) : lyrics;
+  return withUnreleased ? pool.slice() : pool.filter((s) => !s._unreleased);
 }
 // Songs whose TITLE contains the prompt word — the ones the Hard/Ultra "not in
 // the title" rule blocks, so we can warn the player before they waste the clock.
-function titleSongsForWord(word, strict) {
+function titleSongsForWord(word, strict, withUnreleased = false) {
   // A title-only challenge must not pay for a full lyric scan on its first visit.
   const matches = wordSongMatches(word, strict);
-  return (matches.titles ??= allSongs.filter((s) => matches.rx.test(s._wordTitle ?? s.title))).slice();
+  const titles = matches.titles ??= allSongs.filter((s) => matches.rx.test(s._wordTitle ?? s.title));
+  return withUnreleased ? titles.slice() : titles.filter((s) => !s._unreleased);
 }
 // Marginalia warning: in noTitle modes with no list to lean on (Hard/Ultra), name the songs
 // whose title holds the word so the player knows e.g. "All Too Well" won't be accepted. Modes
@@ -3055,7 +3072,7 @@ function statsLifetimeHTML(W, sealedDates = []) {
   if (m.roundsTotal) out.push(statsStampsHTML(m, t, !!favSong));
   // Songs found, album by album, in the order the catalogue runs (pseudo-albums included).
   const found = {}, total = {}, order = [];
-  for (const s of allSongs) {
+  for (const s of releasedSongs()) {
     if (!s.album) continue;
     if (!order.includes(s.album)) order.push(s.album);
     total[s.album] = (total[s.album] || 0) + 1;
@@ -3063,9 +3080,9 @@ function statsLifetimeHTML(W, sealedDates = []) {
   }
   const discovered = Object.values(found).reduce((a, b) => a + b, 0);
   if (discovered) {
-    const left = allSongs.length - discovered;
+    const left = releasedSongs().length - discovered;
     out.push(`<div class="stp-item stp-w6 stp-o6" style="--r:-.5deg">${statsTape("blot")}<div class="stp-blot">` +
-      `<div class="stp-blot-hd"><b>${discovered}</b><span>of ${allSongs.length} songs found</span>` +
+      `<div class="stp-blot-hd"><b>${discovered}</b><span>of ${releasedSongs().length} songs found</span>` +
       `<button type="button" class="stp-door" data-open-songbook="stats">${left ? `${left} to go` : "every one found"} ${CTA_ARROW}</button></div>` +
       statsBlotterHTML(order, found, total, W, phone) + `</div></div>`);
   }
@@ -4888,7 +4905,7 @@ function renderAchievementsPage() {
 // bar); the charms page's copy of the bar sits inside a button already, so it stays plain.
 function albumRainbowSegs(byAlbum, total, jump) {
   const order = [];
-  for (const s of allSongs) if (s.album && !order.includes(s.album)) order.push(s.album);
+  for (const s of releasedSongs()) if (s.album && !order.includes(s.album)) order.push(s.album);
   return order.filter((a) => byAlbum[a]).map((a) => {
     const style = `width:${(byAlbum[a] / total) * 100}%;background:${albumColor(a) || "var(--ink-soft)"}`;
     return jump
@@ -5065,11 +5082,11 @@ function questCardHTML() {
   const a = ACH_BY_ID["answer-every-catalogue-song"];
   if (!a) return "";
   const found = (loadSongTally().songs) || {};
-  const total = allSongs.length || 1;
-  const discovered = allSongs.filter((s) => found[s.title]).length;
+  const total = releasedSongs().length || 1;
+  const discovered = releasedSongs().filter((s) => found[s.title]).length;
   const done = discovered >= total;
   const byAlbum = {};
-  for (const s of allSongs) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
+  for (const s of releasedSongs()) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
   const note = done ? "every song found" : (total - discovered) + " still hiding from you";
   return `<button type="button" class="ach-quest${done ? " done" : ""}" data-open-songbook="achievements">
     <div class="ach-quest-main">
@@ -5110,25 +5127,28 @@ function openSongbook(from, album) {
 const SB_HIDE_KEY = "swiftSongAssociation.songbookHideFound";
 function sbHideFound() { try { return localStorage.getItem(SB_HIDE_KEY) === "1"; } catch { return false; } }
 function renderSongbook() {
+  // The released catalogue only: it is what 100% means. The unreleased songs are not a page of
+  // the book, and their titles are never listed before they are found.
+  const catalogue = releasedSongs();
   const found = (loadSongTally().songs) || {};
-  const total = allSongs.length || 1;
-  const discovered = allSongs.filter((s) => found[s.title]).length;
+  const total = catalogue.length || 1;
+  const discovered = catalogue.filter((s) => found[s.title]).length;
   const remaining = total - discovered;
   const complete = remaining <= 0;
   const pct = Math.floor((discovered / total) * 100);
   const hide = !complete && sbHideFound();
 
   const byAlbum = {};
-  for (const s of allSongs) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
+  for (const s of catalogue) if (found[s.title] && s.album) byAlbum[s.album] = (byAlbum[s.album] || 0) + 1;
 
   const sub = complete
     ? "every song found"
     : remaining + " song" + (remaining === 1 ? "" : "s") + " still hiding";
 
-  // Album order = first appearance in allSongs (the catalogue order).
+  // Album order = first appearance in catalogue (the catalogue order).
   const order = [];
-  for (const s of allSongs) if (s.album && !order.includes(s.album)) order.push(s.album);
-  const albumsDone = order.filter((a) => allSongs.every((s) => s.album !== a || found[s.title])).length;
+  for (const s of catalogue) if (s.album && !order.includes(s.album)) order.push(s.album);
+  const albumsDone = order.filter((a) => catalogue.every((s) => s.album !== a || found[s.title])).length;
 
   // The count sits in a typed capsule led by a little mark: a magnifier while songs are still
   // out there, the songbook's own gold star once they are all in.
@@ -5149,7 +5169,7 @@ function renderSongbook() {
     </div>`;
 
   html += order.map((album) => {
-    const songs = allSongs.filter((s) => s.album === album);
+    const songs = catalogue.filter((s) => s.album === album);
     const got = songs.filter((s) => found[s.title]).length;
     const albDone = got === songs.length;
     const col = albumColor(album) || "var(--ink-soft)";
@@ -5234,8 +5254,8 @@ function fillSongbookGlance(found) {
   songbookGlanceWatch.observe(box);
 }
 function layOutSongbookGlance(box, found) {
-  const missing = allSongs.filter((s) => !found[s.title]);
-  box.innerHTML = catalogueDots(missing, allSongs, {
+  const missing = releasedSongs().filter((s) => !found[s.title]);
+  box.innerHTML = catalogueDots(missing, releasedSongs(), {
     width: box.clientWidth,
     colour: (album) => albumColor(album) || "var(--ink-soft)",
     tip: (s, g) => escapeHtml(`${censor(s.title)} · ${g.album} · ${g.songs.length} still hiding here`),
@@ -6113,7 +6133,7 @@ function checkSongKeepsakes(tally) {
   if (has("cornelia street")) earnPolaroid("cornelia-street");
   if (has("the fate of ophelia")) earnPolaroid("doughphelia");
   // Getting Married — every song with "love" in its title discovered.
-  const love = allSongs.filter((s) => /\blove\b/i.test(s.title));
+  const love = releasedSongs().filter((s) => /\blove\b/i.test(s.title));
   if (love.length && love.every((s) => found[s.title])) earnPolaroid("getting-married");
   // The folklore cabin — every song on folklore discovered, the lakes included.
   const folklore = allSongs.filter((s) => s.album === "folklore");
@@ -7753,7 +7773,7 @@ const bonusCorpusIndexes = new WeakMap();
 function bonusIndexes() {
   let indexes = bonusCorpusIndexes.get(allSongs);
   if (!indexes) {
-    const songs = allSongs;
+    const songs = releasedSongs();
     let lineIndex, ctx, wordIndex, trackIndex;
     indexes = {
       get lineIndex() { return lineIndex ??= buildLineIndex(songs); },
@@ -7762,7 +7782,7 @@ function bonusIndexes() {
       // Full running order, including barred titles, so later tracks never shift.
       get trackIndex() { return trackIndex ??= buildTrackIndex(songs); },
     };
-    bonusCorpusIndexes.set(songs, indexes);
+    bonusCorpusIndexes.set(allSongs, indexes);
   }
   return indexes;
 }
@@ -10516,7 +10536,7 @@ function fillOnlyDots(label, c) {
   const hits = [...owners].map((t) => byTitle.get(t)).filter(Boolean);
   const full = label.clientWidth;
   const sung = (s) => (s.lyrics || "").split(/\s+/).filter((w) => lineSingsWord(w, c.key)).length;
-  const { svg, below } = countDots(hits, allSongs, {
+  const { svg, below } = countDots(hits, releasedSongs(), {
     width: Math.min(260, full - say.offsetWidth - 12),
     fallbackWidth: full,
     colour: (s) => albumColor(s.album) || "var(--ink-soft)",
@@ -16255,6 +16275,8 @@ function installCorpus(grouped, words, opts = {}) {
     songs.map((s, i) => ({
       ...s,
       album,
+      // Never released: a right answer when named, and otherwise invisible (releasedSongs).
+      _unreleased: album === UNRELEASED_ALBUM,
       // WHO SANG IT. A per-song field rather than a corpus-level index, on purpose and for
       // the same reason as _normTitleLyric below: it rides on allSongs, so the guest swap
       // carries it for free and there is NOTHING to add to snapshotCorpus/applyCorpus. A
@@ -16446,7 +16468,9 @@ function shortTitleChallengeWords(max) {
    3. A MERGED SONG CREDITS BOTH ARTISTS, via _alsoBy. Every goal card counts artists, so a
       shared song has to count for each of them; songArtists() is the one way to ask. */
 const blendFiles = () => [
-  Promise.resolve({ name: HOME_ARTIST, albums: taylorGrouped, words: taylorWords }),
+  // The unreleased songs stay out of the blend altogether. The blend renames every album, so the
+  // flag that keeps them credit-only (album === UNRELEASED_ALBUM) could not survive the trip.
+  Promise.resolve({ name: HOME_ARTIST, albums: taylorGrouped.filter((a) => a.album !== UNRELEASED_ALBUM), words: taylorWords }),
   ...GUESTS.map((g) => loadGuest(g.id).then((cat) => ({
     name: g.name, albums: cat.albums || [], words: cat.words || [],
   }))),
@@ -19717,8 +19741,8 @@ function guestBeadTint(song) {
 function setupNewSongChallenge() {
   challengeTargetSong = null; challengeForcedRound = 0; challengeForcedWordVal = "";
   const found = (loadSongTally().songs) || {};
-  const unseen = allSongs.filter((s) => !found[s.title]);
-  const target = shuffle((unseen.length ? unseen : allSongs).slice())[0];
+  const unseen = releasedSongs().filter((s) => !found[s.title]);
+  const target = shuffle((unseen.length ? unseen : releasedSongs()).slice())[0];
   if (!target) return;
   const candidates = playableWords.filter((w) => wordRegex(w, false).test(target.lyrics));
   if (!candidates.length) return;                         // can't surface it — leave disabled
@@ -19806,7 +19830,7 @@ function buildSeaGrid() {
 
   const rx = wordRegex(currentWord, effectiveStrict());
   const validTitles = new Set(currentSongs.map((s) => s.title));
-  const decoyPool = shuffle(allSongs.filter((s) =>
+  const decoyPool = shuffle(releasedSongs().filter((s) =>
     !validTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s._wordTitle ?? s.title)));
   const need = Math.max(0, SEA_GRID_SIZE - chosen.length);
   const decoys = decoyPool.slice(0, need).map((s) => ({ song: s, valid: false }));
@@ -20061,7 +20085,7 @@ function buildOddGrid() {
   if (!holders.length) return false;
   const rx = wordRegex(currentWord, effectiveStrict());
   const holderTitles = new Set(currentSongs.map((s) => s.title));
-  const odd = shuffle(allSongs.filter((s) =>
+  const odd = shuffle(releasedSongs().filter((s) =>
     !holderTitles.has(s.title) && !rx.test(s.lyrics) && !rx.test(s._wordTitle ?? s.title)))[0];
   if (!odd) return false;
   tapTiles = shuffle(holders.map((s) => ({ song: s, correct: false }))
@@ -20333,7 +20357,7 @@ function buildBothWords() {
 // half-right pick reads as a near miss (soft-rejected, page kept) rather than a wrong answer.
 function bothUnionSongs() {
   const rxs = bothWords.map((w) => wordRegex(w, effectiveStrict()));
-  return allSongs.filter((s) => rxs.some((rx) => rx.test(s.lyrics)));
+  return releasedSongs().filter((s) => rxs.some((rx) => rx.test(s.lyrics)));
 }
 // Which of the page's words a song never sings — the soft reject names them.
 function bothWordsMissing(song) {
@@ -20377,7 +20401,7 @@ function commonAcceptSet(lines) {
 // songsContainingWord. Kept local to the rule so nothing else inherits the tighter match.
 function songsThreadingWord(word) {
   const rx = addedLettersRegex(word);
-  return allSongs.filter((s) => rx.test(s.lyrics));
+  return releasedSongs().filter((s) => rx.test(s.lyrics));
 }
 // The line this song will show for the thread word. Prefers a line holding the word exactly
 // (so a page about "haze" leads with "haze" rather than "hazes" where it can), then any line
@@ -20515,7 +20539,7 @@ function revealCommon(correct) {
     : turnSlip("continueBtn");
   // How far the thread runs: every song that sings it, the page's own songs ringed among them.
   const rx = word ? wordRegex(word) : null;
-  const hits = rx ? oneVersionEach(allSongs.filter((s) => rx.test(s.lyrics || ""))) : [];
+  const hits = rx ? oneVersionEach(releasedSongs().filter((s) => rx.test(s.lyrics || ""))) : [];
   fb.innerHTML = verdictMarkup(
     `<div class="banner ${correct ? "good" : "bad"}">${verdictMark(correct ? "good" : "bad", "inl")}${correct ? "that's the thread" : "not the thread"}</div>`,
     `<p class="red-note">the thread was “<b>${escapeHtml(word)}</b>”</p>` +
@@ -21168,7 +21192,7 @@ function renderChallengeMargin() {
 function pickDealtAlbum(need) {
   const want = need || 5;
   const counts = {};
-  for (const s of allSongs) if (s.album) counts[s.album] = (counts[s.album] || 0) + 1;
+  for (const s of releasedSongs()) if (s.album) counts[s.album] = (counts[s.album] || 0) + 1;
   const eligible = STUDIO_ALBUMS.filter((a) => (counts[a] || 0) >= want);
   const pool = eligible.length ? eligible : STUDIO_ALBUMS;
   return shuffle(pool.slice())[0] || null;
@@ -21287,6 +21311,7 @@ function revolveWord() {
   revolveIndex++;
   currentWord = pickWord();
   currentSongs = validSongs(currentWord, effectiveStrict(), effectiveNoTitle());
+  roundBonusSongs = roundBonusFor();
   roundHintSong = pickHintSong();
 
   const wrap = $("wordDisplay").parentNode;   // .word-wrap
@@ -21443,7 +21468,7 @@ function hasAnagramPartner(w) {
       if (!keys.has(k)) keys.set(k, new Set());
       keys.get(k).add(t);
     };
-    for (const s of allSongs) {
+    for (const s of releasedSongs()) {
       for (const t of (s.lyrics || "").toLowerCase().split(/[^a-z']+/)) if (/^[a-z]+$/.test(t)) add(t);
     }
     for (const t of playableWords) add(t.toLowerCase());
@@ -21749,7 +21774,7 @@ function endChallenge() {
     })));
     // "I Knew Everything" — every catalogue song answered correctly at least once.
     // challengeRunActive is already false above, so this unlock fires normally.
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
+    if (releasedSongs().length && releasedSongs().every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: logged,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -22111,7 +22136,7 @@ function endAlbumFocus() {
       album: roundAlbums[i] || null,
       word: roundWords[i] || null,
     })));
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
+    if (releasedSongs().length && releasedSongs().every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
     recordGameMetrics({
       rounds: roundResults.length, correct: score,
       timeSumMs: gameTimeSum * 1000, timedRounds: gameTimedRounds,
@@ -22894,7 +22919,7 @@ function albumWordScore(word, album) {
   const catalogue = Math.max(1, hits.length);
   // idf. Zero for a word reaching every song in the catalogue (maximally uninformative, so it
   // earns no weight at all); never negative, since catalogue can't exceed the song count.
-  return { w: word, songs, catalogue, score: songs * Math.log(allSongs.length / catalogue) };
+  return { w: word, songs, catalogue, score: songs * Math.log(releasedSongs().length / catalogue) };
 }
 // How many of `album`'s own songs answer `word` as an anniversary daily page judges it: Normal's
 // rule (in the lyrics, never in the title), counted once per song so a remix or a piano version
@@ -24956,6 +24981,7 @@ function advanceRound(options = {}) {
     applyWildcardRound();
     if (roundWildcard && roundWildcard.accepts) currentSongs = currentSongs.filter(roundWildcard.accepts);
   }
+  roundBonusSongs = roundBonusFor();
   roundHintSong = pickHintSong();
   resetWordCaches();
   applyEra(pickEra());
@@ -25487,6 +25513,31 @@ function roundAcceptsSong(song) {
   return true;
 }
 
+/* This page's unreleased answers: the songs that would pass every rule the page set, worked out
+   AFTER the page is built so none of them could shape it. roundAcceptsSong already carries each
+   challenge's narrowing (Album Focus, no-title, wildcard, chain, setlist, devil, title-only), so
+   this only has to choose the starting pool. Pages judged off something other than a named
+   song (tap grids, Common Thread, an impostor page) have none. */
+function roundBonusFor() {
+  if (!currentWord || roundIsImpostor || commonRuleActive() || tapGridActive()) return [];
+  const titleRule = gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas";
+  let pool = titleRule
+    ? titleSongsForWord(currentWord, true, true)
+    : validSongs(currentWord, effectiveStrict(), effectiveNoTitle(), true);
+  pool = pool.filter((s) => s._unreleased);
+  if (!pool.length) return pool;
+  if (bothRuleActive() && bothWords.length > 1)
+    pool = pool.filter((s) => bothWords.every((w) => wordRegex(w, effectiveStrict()).test(s.lyrics)));
+  return pool.filter(roundAcceptsSong);
+}
+// Whether a named song answers this page: the released answers, or an unreleased one.
+function roundTakesSong(song) {
+  return !!song && (currentSongs.some((s) => s.title === song.title) || roundBonusSongs.some((s) => s.title === song.title));
+}
+function roundSongByTitle(title) {
+  return currentSongs.find((s) => s.title === title) || roundBonusSongs.find((s) => s.title === title);
+}
+
 // The number of whitespace-separated words in a title (Short n' Sweet's measure).
 // How many words a title reads as. Hyphens and slashes count as breaks, not as letters:
 // "Anti-Hero" is one whitespace-delimited token and two words to anybody looking at it, and
@@ -25617,6 +25668,7 @@ function songMatchScore(song, query) {
    a completion — "Mine", "Ours", "Red" — and that is the lever working rather than failing,
    because a four-letter title was never the one the clock beat you on. */
 const DROPDOWN_LATE_MIN = 5;
+const UNRELEASED_TYPED = 0.6;
 
 // Is the live dropdown the LATE kind — shut until DROPDOWN_LATE_MIN characters, and only ever
 // completing a title from its first word? Read off the string form of the `dropdown` lever, so
@@ -25645,11 +25697,18 @@ function allMatches(query) {
     // begun is help with your typing; finding one from a word out of its middle is help with
     // your recall, and recall is the thing Hard is asking for.
     if (late && match.idx !== 0) continue;
+    // An unreleased title is never offered before most of it has been typed from its start.
+    // The list must not teach the player titles nobody is expected to know; someone who knows
+    // one has typed most of it anyway. UNRELEASED_TYPED is that "most", as a share of the title.
+    if (song._unreleased && (match.idx !== 0 || q.length < Math.max(4, Math.ceil(song._norm.length * UNRELEASED_TYPED)))) continue;
     if (!roundAcceptsSong(song)) continue;   // hide rule-breaking suggestions
     if (isGiveawayPick(song)) continue;      // ...and answers the prompt word alone would hand over
     scored.push({ song, ...match });
   }
-  scored.sort((a, b) => a.rank - b.rank || !!a.alias - !!b.alias || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
+  // An exact title stays on top whichever it is; past that, every released match outranks an
+  // unreleased one, so the songs a page is about are always what Enter reaches first.
+  const shelf = (m) => (m.rank === 0 ? 0 : m.song._unreleased ? 2 : 1);
+  scored.sort((a, b) => shelf(a) - shelf(b) || a.rank - b.rank || !!a.alias - !!b.alias || a.idx - b.idx || a.song.title.localeCompare(b.song.title));
   return scored.map((s) => s.song);
 }
 
@@ -27103,7 +27162,7 @@ function checkCatalogueCharms(song) {
      the catalogue rather than named here, so the pair moves on its own if a shorter or longer
      title is ever added. A tie at either end means several titles qualify, which is the honest
      reading of "the shortest": nothing here promises there is only one. */
-  const lens = allSongs.map((s) => s.title.length);
+  const lens = releasedSongs().map((s) => s.title.length);
   const shortest = Math.min(...lens), longest = Math.max(...lens);
   const named = roundSongs.filter(Boolean);
   if (named.some((t) => t.length === shortest) && named.some((t) => t.length === longest)) {
@@ -27364,7 +27423,7 @@ function submitAnswer(song, isTimeout) {
   // and scores correct, satisfying the win check.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "newsong"
       && challengeTargetSong && song.title === challengeTargetSong.title
-      && !currentSongs.some((s) => s.title === song.title)) {
+      && !roundTakesSong(song)) {
     noteWrongSubmission(song); rejectNewSong(); return;
   }
 
@@ -27443,7 +27502,7 @@ function submitAnswer(song, isTimeout) {
   // (the page isn't burned) so the player keeps hunting for one that holds every word — the
   // near miss is the whole texture of this challenge. A song holding none of them falls through
   // and scores the page wrong, exactly as a wrong answer does anywhere else.
-  if (song && !isTimeout && bothRuleActive() && !currentSongs.some((s) => s.title === song.title)) {
+  if (song && !isTimeout && bothRuleActive() && !roundTakesSong(song)) {
     const missing = bothWordsMissing(song);
     if (missing.length && missing.length < bothWords.length) { noteWrongSubmission(song); rejectBoth(missing); return; }
   }
@@ -27453,7 +27512,7 @@ function submitAnswer(song, isTimeout) {
   // a gamble that could throw away every song already named. The cost keeps it from being a
   // free oracle: thirty seconds buys a handful of guesses, not a scan of the list. A miss that
   // would take the last of the clock falls through and loses the page as it always did.
-  if (song && !isTimeout && multiMissCost() && !currentSongs.some((s) => s.title === song.title)) {
+  if (song && !isTimeout && multiMissCost() && !roundTakesSong(song)) {
     const cost = multiMissCost();
     const left = clockRemaining();
     if (left != null && left > cost) {
@@ -27469,7 +27528,7 @@ function submitAnswer(song, isTimeout) {
   // keeps running); a duplicate is soft-rejected; reaching `need` falls through to
   // resolve the page correct. A wrong song falls through and scores the page wrong.
   if (song && !isTimeout && currentChallenge && currentChallenge.rule === "multi"
-      && currentSongs.some((s) => s.title === song.title)) {
+      && roundTakesSong(song)) {
     const need = currentChallenge.need || 2;
     if (roundNamed.includes(song.title)) {
       noteWrongSubmission(song);
@@ -27523,7 +27582,7 @@ function submitAnswer(song, isTimeout) {
   // has a song to check); every other path scores off the named song.
   const correct = commonRuleActive() ? !!commonAnswerCorrect
     : tapKnowledgeActive() ? !!tapAnswerCorrect
-    : (!!song && currentSongs.some((s) => s.title === song.title));
+    : roundTakesSong(song);
   // Choose Your Path — Second Chance: spend a mulligan to retry a miss
   // (same word, fresh clock) instead of burning the round. Only kicks in on an actual
   // miss while mulligans remain; correct answers and the other challenges are untouched.
@@ -27634,7 +27693,7 @@ function submitAnswer(song, isTimeout) {
   if (isTimeout && !tapGridActive() && !commonRuleActive()) {
     const typed = $("songInput").value;
     const held = lyricModeNow() ? (matchLyricLine(typed) || {}).song : resolveTypedTitle(typed);
-    if (held && currentSongs.some((s) => s.title === held.title)) unlock("time-out-with-right-answer-typed");
+    if (roundTakesSong(held)) unlock("time-out-with-right-answer-typed");
   }
   justEarnedIndex = correct ? round - 1 : -1;
   if (correct) score++;
@@ -28429,7 +28488,7 @@ function fillCountDots(label, hits, { words = [currentWord], named } = {}) {
   const say = label.querySelector(".vw-count-say");
   const full = label.clientWidth;
   const rx = new RegExp(words.map((w) => wordRegex(w).source).join("|"), "gi");
-  const { svg, below } = countDots(hits, allSongs, {
+  const { svg, below } = countDots(hits, releasedSongs(), {
     width: full - (say ? say.offsetWidth : 0) - 12,
     fallbackWidth: full,
     // The lineup inks by ARTIST: its blended album names ("Taylor Swift · Red") match no era
@@ -28529,7 +28588,7 @@ function showCorrectFeedback(song, lyricMatch) {
     : "";
   const card = multi
     ? roundNamed.map((t) => {
-      const named = currentSongs.find((s) => s.title === t) || song;
+      const named = roundSongByTitle(t) || song;
       return lyricCard(named, currentWord, false, null, true, true, isFirstFind(named) ? "first-find" : "");
     }).join("")
     : both
@@ -28541,12 +28600,16 @@ function showCorrectFeedback(song, lyricMatch) {
   const formsNote = firstNote ? "" : wordFormsNote((multi || both) ? null : song, multi ? null : (lyricMatch ? lyricMatch.line : null));
   // Deep Cut: right page, wrong album — name the answer that would have moved the tally.
   const deepCutNote = deepCutMissedAlbumNote(multi ? null : song);
+  // An unreleased song named: nobody expected it, so say what it was worth. Written in the red
+  // pen because it is the one answer that takes the Songbook past 100%.
+  const deepFind = (multi ? roundNamed.map(roundSongByTitle) : [song]).some((s) => s && s._unreleased);
+  const unreleasedNote = deepFind ? `<p class="unreleased-note">never released. that one counts past 100%</p>` : "";
   // "What else held that word?" — the same expansion a missed page offers, because the
   // curiosity is at least as strong on a page you just landed as on one you lost. Shuffled:
   // with the answer already found there's no lead card to earn its place at the top, so the
   // rest of the field arrives in no particular order.
   const shownSongs = multi
-    ? roundNamed.map((t) => currentSongs.find((s) => s.title === t)).filter(Boolean)
+    ? roundNamed.map(roundSongByTitle).filter(Boolean)
     : song ? [song] : [];
   const more = moreSongsBlock(shuffle(currentSongs.slice()), shownSongs, currentWord);
   // Name Three / Double Trouble / Both Of Us: how many songs the page could have been answered
@@ -28569,6 +28632,7 @@ function showCorrectFeedback(song, lyricMatch) {
     ${inkNote}
     ${firstNote}
     ${card}
+    ${unreleasedNote}
     ${count}
     ${deepCutNote}
     ${formsNote}
@@ -28598,7 +28662,7 @@ function showWrongFeedback(song, isTimeout) {
   // none of them counted. So the verdict leads with what was named, then what else would have
   // done. Off this path entirely when nothing was named, where the ordinary miss says it best.
   const multiPart = multiRuleActive() && roundNamed.length > 0
-    ? roundNamed.map((t) => currentSongs.find((s) => s.title === t)).filter(Boolean) : null;
+    ? roundNamed.map(roundSongByTitle).filter(Boolean) : null;
   const sentence = !multiPart && waveVerdictActive() &&
     (isTimeout || !!(song && !wordRegex(currentWord).test(song.lyrics || "")));
   const submitted = song && !isTimeout
@@ -28975,8 +29039,8 @@ function endGame() {
       word: roundWords[i] || null,
     })));
     // "I Knew Everything" — every song in the catalogue answered correctly at least once.
-    // Count discovered against allSongs (not raw tally keys) so it's exact.
-    if (allSongs.length && allSongs.every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
+    // Count discovered against the released catalogue (not raw tally keys) so it's exact.
+    if (releasedSongs().length && releasedSongs().every((s) => tally.songs[s.title])) unlock("answer-every-catalogue-song"); checkSongKeepsakes(tally);
     // Haunted — the POST-fold reading, and deliberately so: the tally folds once per finished
     // game, so three misses on one word means three separate games by construction.
     if (roundResults.some((correct, i) => !correct && roundWords[i] && (tally.misses[roundWords[i]] || 0) >= 3)) {
@@ -30775,7 +30839,7 @@ function dangerItems() {
   const games = totalPlayed();
   const charms = ACHIEVEMENTS.filter((a) => earnedAchievements[a.id]).length;
   const found = loadSongTally().songs || {};
-  const songs = allSongs.filter((s) => found[s.title]).length;
+  const songs = releasedSongs().filter((s) => found[s.title]).length;
   const dailies = Object.keys(dailyPlayedDates()).length;
   const dailyProgress = dailyProgressCount();
   const dailyEntries = dailies + dailyProgress;
@@ -30785,7 +30849,7 @@ function dangerItems() {
     { key: "hof", name: "Records", n: recs, cost: `${recs} ${recs === 1 ? "entry" : "entries"}` },
     { key: "stats", name: "Stats & streaks", n: games, cost: plural(games, "game") },
     { key: "ach", name: "Achievements", n: charms, cost: `${charms} / ${ACHIEVEMENTS.length} charms` },
-    { key: "tally", name: "Catalogue", n: songs, cost: `${songs} / ${allSongs.length} songs` },
+    { key: "tally", name: "Catalogue", n: songs, cost: `${songs} / ${releasedSongs().length} songs` },
     { key: "daily", name: "Daily challenge", n: dailyEntries,
       cost: dailyProgress
         ? `${dailies} played, ${dailyProgress} in progress`
@@ -33843,6 +33907,7 @@ function devApplyWord(word) {
   // the title-only Mary's Song fixture can be reached without waiting for a random deal.
   if (gameType === "challenge" && currentChallenge && currentChallenge.rule === "titleHas")
     currentSongs = titleSongsForWord(currentWord, true);
+  roundBonusSongs = roundBonusFor();
   roundHintSong = pickHintSong();
   resetWordCaches();                    // a forced word is a new page as far as these are concerned
   renderPromptSwipe();

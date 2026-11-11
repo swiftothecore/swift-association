@@ -1114,8 +1114,6 @@ export const RUTHLESS_SKIP_TITLES = new Map([
   ["Forever & Always (Piano Version)", "second cut"],
   ["Snow On The Beach (Remix)", "second cut"],
   ["Karma (Remix)", "second cut"],
-  ["Need", "unheard"],
-  ["I'd Lie", "unheard"],
   ["Beautiful Eyes", "unheard"],
   ["I Heart ?", "unheard"],
 ]);

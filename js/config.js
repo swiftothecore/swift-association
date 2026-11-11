@@ -2935,8 +2935,17 @@ export const STUDIO_ALBUMS = [
 // Filed under a studio era in songs.json, but never tracks on that studio album.
 // Bonus, vault and alternate-edition album tracks remain ordinary album answers.
 export const NON_ALBUM_TRACKS = new Set([
-  "Beautiful Eyes", "I Heart ?", "I'd Lie", "All Of The Girls You Loved Before", "Need",
+  "Beautiful Eyes", "I Heart ?", "All Of The Girls You Loved Before",
 ]);
+
+/* Songs Taylor never put out: demos and leftovers, I'd Lie and Need among them. They are the
+   last group in songs.json and they only ever ADD. Naming one is a right answer, and finding
+   them all takes the Songbook past 100%, but nobody is expected to know them, so nothing is
+   ever dealt from them, counted against you, shown on a miss or used for a hint. Every page's
+   answer set is split in two (app.js setRoundSongs): currentSongs is the released catalogue and
+   carries every count, reveal and rule, and roundBonusSongs holds the unreleased songs that
+   would also have answered it, which only the judge reads. */
+export const UNRELEASED_ALBUM = "Unreleased";
 
 /* How far up each of the twelve the track numbers run, which is a different number from how
    many songs sit under that album in songs.json. It is held here as literals for the same
@@ -3098,6 +3107,7 @@ export const ALBUM_COLORS = {
   "Songs From Movies":                "#2f6b4f",  // pine green
   "Written for Others":               "#7e7634",  // olive
   "Collaborations":                   "#7a2f4a",  // wine
+  "Unreleased":                       "#6b6478",  // smoke violet, a demo's grey
 };
 /* What the desk mug is glazed in on each album's birthday (app.js paintMugGlaze; every other
    day it is the oatmeal in styles.css). NOT the album colours above, on purpose: those are
@@ -3143,6 +3153,7 @@ export const CB_ALBUM_COLORS = {
   "Songs From Movies":                "#117733",  // green
   "Written for Others":               "#999933",  // olive
   "Collaborations":                   "#882255",  // maroon
+  "Unreleased":                       "#6a3d9a",  // purple
 };
 
 /* ---------- Masthead inks (Album Focus reward) ----------
