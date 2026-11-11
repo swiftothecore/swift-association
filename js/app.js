@@ -17729,22 +17729,31 @@ function fitAnniversaryNote() {
   const el = $("anniversaryNote");
   if (!el) return;
   el.classList.remove(...AN_FITS.filter(Boolean));
-  if (el.hidden) return;
   const row = el.parentElement;
-  // Stacked on a phone the note takes its own room like any line of text, so there is
-  // nothing to fit; and a hidden start screen measures zero, which the observer catches
-  // the moment it is shown.
-  if (getComputedStyle(row).display !== "flex") return;
+  row.classList.remove("an-under");
+  if (el.hidden) return;
+  // A hidden start screen measures zero, which the observer catches the moment it is shown.
   const rowH = row.getBoundingClientRect().height;
   if (!rowH) return;
+  // On a narrow window the note may drop UNDER the best line (.an-under), where it takes its
+  // own room like any line of text and has nothing left to fit. It only does that when it
+  // measurably can't sit beside: on a narrow window, losing the second line or the whole
+  // note to keep it beside would be worse than one line of height. It also counts as not
+  // fitting when a word overflows the note sideways (min-width: 0 lets the box squeeze
+  // narrower than "Fearless"), which would write it over the best line.
+  const narrow = matchMedia("(max-width: 700px)").matches;
   const budget = rowH + 2 * AN_SPILL;
-  for (const fit of AN_FITS) {
+  for (const fit of narrow ? AN_FITS.slice(0, 2) : AN_FITS) {
     if (fit) el.classList.add(fit);
     const kids = [...el.children].filter((k) => k.offsetParent !== null);
     if (!kids.length) return;
     const ink = kids[kids.length - 1].getBoundingClientRect().bottom - kids[0].getBoundingClientRect().top;
-    if (ink <= budget) return;
+    const sideways = kids.some((k) => k.scrollWidth > k.clientWidth + 1);
+    if (ink <= budget && !sideways) return;
   }
+  if (!narrow) return;
+  el.classList.remove(...AN_FITS.filter(Boolean));
+  row.classList.add("an-under");
 }
 // The day's mark, shared by the margin note and the game's day tape so the two surfaces always
 // draw the same thing: the era heart, the cake, the 13, the guest's crown or the salt shaker.

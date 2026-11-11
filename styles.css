@@ -10715,13 +10715,14 @@
   .anniversary-note.an-fit-tight .an-mark svg { width: 18px; height: 18px; vertical-align: -3px; }
   .anniversary-note.an-fit-head .an-line { display: none; }
   .anniversary-note.an-fit-none { visibility: hidden; }
-  /* Too narrow to sit beside the podium, so it drops under it, still right-aligned and
-     still just above the button. Here it does take its own height: on a phone there is no
-     empty margin beside the best line to write into. */
-  @media (max-width: 700px) {
-    .start-podium-row { display: block; }
-    .anniversary-note { display: block; height: auto; max-width: none; margin: 10px 0 0; }
-  }
+  /* No room beside the podium, so it drops under it, still right-aligned and still just
+     above the button. Here it does take its own height. This is a MEASURED decision
+     (fitAnniversaryNote sets .an-under), not a breakpoint: a fixed 700px cut dropped the
+     note on a 681px window with three hundred pixels of empty margin beside the best line,
+     opening a gap for nothing. Under 700px the note goes under only when it can't fit
+     beside at full or tight size; above it, the old fit steps still apply. */
+  .start-podium-row.an-under { display: block; }
+  .start-podium-row.an-under > .anniversary-note:not([hidden]) { display: block; height: auto; max-width: none; margin: 10px 0 0; }
 
   /* ---------- Day tape (game screen header, dated days only) ----------
      A strip of the notebook's washi tape stuck across the header beside the page count, the
