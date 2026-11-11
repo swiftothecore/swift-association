@@ -14871,6 +14871,34 @@
     font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: .6px; color: var(--ink-soft);
   }
   .sb-album-count b { color: var(--ink); font-weight: 700; }
+  /* The unreleased page: the same band and checklist as every album, marked off by a hazard
+     stripe because these are the songs nobody is expected to know. Kept to two places so it
+     reads as a warning label rather than a theme: a short yellow-and-black edge where the album
+     ink would be, and the band's own progress fill laid as faint amber stripes. Flat colour,
+     no shading, so it is still ink on paper. */
+  .sb-album.sb-unreleased { --hazard: #e3a91f; --hazard-tick: #a67a0c; }
+  :root[data-theme="dark"] .sb-album.sb-unreleased { --hazard: #d9a23a; --hazard-tick: #e0a83a; }
+  .sb-unreleased .sb-box-tick { stroke: var(--hazard-tick); }
+  .sb-unreleased .sb-band {
+    position: relative; border-left: 0; padding-left: 18px;
+    background:
+      linear-gradient(to right, transparent var(--fill), color-mix(in srgb, var(--paper) 60%, transparent) var(--fill)),
+      repeating-linear-gradient(-45deg,
+        color-mix(in srgb, var(--hazard) 36%, transparent) 0 8px,
+        color-mix(in srgb, var(--hazard) 12%, transparent) 8px 16px);
+  }
+  .sb-unreleased .sb-band::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 7px; border-radius: 2px 0 0 2px;
+    background: repeating-linear-gradient(-45deg, var(--hazard) 0 3.5px, #2b2722 3.5px 7px);
+  }
+  .sb-past {
+    margin-left: 10px; padding-left: 10px; border-left: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+    font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .sb-past-pct {
+    font-family: var(--hand); font-size: calc(21px + var(--text-size-adjust)); line-height: .8;
+    color: var(--red-pen); font-weight: 700; letter-spacing: 0;
+  }
   .sb-done-tag { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
   /* the tick hangs over the band's padding rather than standing in its line, so a finished
      album's band is exactly as tall as an unfinished one */

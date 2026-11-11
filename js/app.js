@@ -5127,15 +5127,20 @@ function openSongbook(from, album) {
 const SB_HIDE_KEY = "swiftSongAssociation.songbookHideFound";
 function sbHideFound() { try { return localStorage.getItem(SB_HIDE_KEY) === "1"; } catch { return false; } }
 function renderSongbook() {
-  // The released catalogue only: it is what 100% means. The unreleased songs are not a page of
-  // the book, and their titles are never listed before they are found.
+  // The released catalogue is what 100% means. The unreleased songs get the book's last page,
+  // under a hazard stripe, and finding them takes the meter past 100% (see the page below).
   const catalogue = releasedSongs();
+  const unreleased = allSongs.filter((s) => s._unreleased);
   const found = (loadSongTally().songs) || {};
+  const bonusGot = unreleased.filter((s) => found[s.title]).length;
   const total = catalogue.length || 1;
   const discovered = catalogue.filter((s) => found[s.title]).length;
   const remaining = total - discovered;
   const complete = remaining <= 0;
-  const pct = Math.floor((discovered / total) * 100);
+  // Past 100% only ever by the unreleased songs, and only once the released book is complete,
+  // so the figure never mixes a song nobody expected you to know into an unfinished count.
+  const past = (n) => (100 + (n / total) * 100).toFixed(1);
+  const pct = complete && bonusGot ? past(bonusGot) : Math.floor((discovered / total) * 100);
   const hide = !complete && sbHideFound();
 
   const byAlbum = {};
@@ -5168,8 +5173,9 @@ function renderSongbook() {
         `<span class="sb-box" aria-hidden="true">${sbBox(hide)}</span>only show what's still hiding</button>
     </div>`;
 
-  html += order.map((album) => {
-    const songs = catalogue.filter((s) => s.album === album);
+  const pages = order.map((album) => ({ album, songs: catalogue.filter((s) => s.album === album) }));
+  if (unreleased.length) pages.push({ album: UNRELEASED_ALBUM, songs: unreleased, bonus: true });
+  html += pages.map(({ album, songs, bonus }) => {
     const got = songs.filter((s) => found[s.title]).length;
     const albDone = got === songs.length;
     const col = albumColor(album) || "var(--ink-soft)";
@@ -5187,10 +5193,14 @@ function renderSongbook() {
     // the share of its songs found, so a nearly-done album reads as nearly full before the
     // count is read.
     const fill = Math.round((got / songs.length) * 1000) / 10;
-    const count = albDone
+    // The unreleased page says what it is worth instead of what it is missing: these only add.
+    const count = bonus
+      ? (albDone ? `<span class="sb-past-pct">${past(got)}%</span>`
+        : `<b>${got}</b> of ${songs.length}<span class="sb-past">past 100%</span>`)
+      : albDone
       ? `<span class="sb-done-tag"><span class="sb-done-mark" aria-hidden="true">${sbBox(true)}</span>all ${songs.length} found</span>`
       : `<b>${got}</b> of ${songs.length}`;
-    return `<section class="sb-album${albDone ? " done" : ""}${hide && albDone ? " folded" : ""}" data-album="${escapeHtml(album)}" style="--alb:${col};--fill:${fill}%">
+    return `<section class="sb-album${bonus ? " sb-unreleased" : ""}${albDone ? " done" : ""}${hide && albDone ? " folded" : ""}" data-album="${escapeHtml(album)}" style="--alb:${col};--fill:${fill}%">
       <h3 class="sb-band">
         <span class="sb-album-name">${escapeHtml(album)}</span>
         <span class="sb-album-count">${count}</span>
