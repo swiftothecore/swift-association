@@ -5416,7 +5416,9 @@ function renderBestLine(el, mode, opts = {}) {
     if (best > 0) rec = { score: best, date: null };
   }
   if (!rec) {
-    el.innerHTML = `<div class="best-empty">no runs yet. set your first record</div>`;
+    // The invitation is its own span so the start page can cut it when a dated day's note
+    // needs the room beside it (fitAnniversaryNote, .an-short), leaving "no runs yet".
+    el.innerHTML = `<div class="best-empty">no runs yet<span class="best-empty-more">. set your first record</span></div>`;
     return;
   }
   const unit = isInfiniteToken(mode) ? " rounds" : " / " + TOTAL_ROUNDS;
@@ -17730,7 +17732,7 @@ function fitAnniversaryNote() {
   if (!el) return;
   el.classList.remove(...AN_FITS.filter(Boolean));
   const row = el.parentElement;
-  row.classList.remove("an-under");
+  row.classList.remove("an-under", "an-short");
   if (el.hidden) return;
   // A hidden start screen measures zero, which the observer catches the moment it is shown.
   const rowH = row.getBoundingClientRect().height;
@@ -17741,17 +17743,33 @@ function fitAnniversaryNote() {
   // note to keep it beside would be worse than one line of height. It also counts as not
   // fitting when a word overflows the note sideways (min-width: 0 lets the box squeeze
   // narrower than "Fearless"), which would write it over the best line.
+  // Before it goes under, an empty best line gives up its invitation ("no runs yet. set your
+  // first record" becomes "no runs yet", .an-short): two rows looked wrong for the sake of
+  // four words. A real best line has nothing to cut, so it is the only one that drops.
   const narrow = matchMedia("(max-width: 700px)").matches;
   const budget = rowH + 2 * AN_SPILL;
-  for (const fit of narrow ? AN_FITS.slice(0, 2) : AN_FITS) {
-    if (fit) el.classList.add(fit);
+  const fits = () => {
     const kids = [...el.children].filter((k) => k.offsetParent !== null);
-    if (!kids.length) return;
+    if (!kids.length) return true;
     const ink = kids[kids.length - 1].getBoundingClientRect().bottom - kids[0].getBoundingClientRect().top;
     const sideways = kids.some((k) => k.scrollWidth > k.clientWidth + 1);
-    if (ink <= budget && !sideways) return;
+    return ink <= budget && !sideways;
+  };
+  const tryFits = (steps) => {
+    el.classList.remove(...AN_FITS.filter(Boolean));
+    for (const fit of steps) {
+      if (fit) el.classList.add(fit);
+      if (fits()) return true;
+    }
+    return false;
+  };
+  if (!narrow) { tryFits(AN_FITS); return; }
+  if (tryFits(AN_FITS.slice(0, 2))) return;
+  if (row.querySelector(".best-empty-more")) {
+    row.classList.add("an-short");
+    if (tryFits(AN_FITS.slice(0, 2))) return;
+    row.classList.remove("an-short");
   }
-  if (!narrow) return;
   el.classList.remove(...AN_FITS.filter(Boolean));
   row.classList.add("an-under");
 }

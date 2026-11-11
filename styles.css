@@ -10722,6 +10722,7 @@
      opening a gap for nothing. Under 700px the note goes under only when it can't fit
      beside at full or tight size; above it, the old fit steps still apply. */
   .start-podium-row.an-under { display: block; }
+  .start-podium-row.an-short .best-empty-more { display: none; }
   .start-podium-row.an-under > .anniversary-note:not([hidden]) { display: block; height: auto; max-width: none; margin: 10px 0 0; }
 
   /* ---------- Day tape (game screen header, dated days only) ----------
