@@ -5130,7 +5130,8 @@ function renderSongbook() {
   // The released catalogue is what 100% means. The unreleased songs get the book's last page,
   // under a hazard stripe, and finding them takes the meter past 100% (see the page below).
   const catalogue = releasedSongs();
-  const unreleased = allSongs.filter((s) => s._unreleased);
+  // Alphabetical: unlike an album, the unreleased page has no running order to keep.
+  const unreleased = allSongs.filter((s) => s._unreleased).sort((a, b) => a.title.localeCompare(b.title));
   const found = (loadSongTally().songs) || {};
   const bonusGot = unreleased.filter((s) => found[s.title]).length;
   const total = catalogue.length || 1;
