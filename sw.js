@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v811";
+const CACHE = "stta-v812";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -66,6 +66,7 @@ const ASSETS = [
   // index.html deliberately requests this URL to break the browser HTTP cache.
   "styles.css?v=83",
   "textures/oak-figure.svg",
+  "textures/oak-phone.webp",   // the same desk, pre-drawn for phones (styles.css)
   // Self-hosted fonts (latin subset). Precached so first offline load has the
   // real faces; declared via @font-face in styles.css / search.css.
   "fonts/caveat-latin.woff2",

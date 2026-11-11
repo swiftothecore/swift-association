@@ -479,6 +479,16 @@
      grain stays at a believable scale on phones; from 1200px up it tracks the
      viewport width exactly. */
   @media (min-width: 1200px) { body { background-size: 100% auto; } }
+  /* Phones get the same tile as a picture. The SVG's seven turbulence filters are cheap to
+     draw once on a desktop, but a phone rasterises the 1200px tile at its own 2-3x density
+     (over 150MB at 3x) and cannot keep it, so it re-runs the noise as the page scrolls.
+     oak-phone.webp is that tile already drawn: the centre 700 CSS px of it at 2x, so at any
+     width up to 700 it covers exactly what the SVG would have, grain for grain. It is a render
+     of oak-figure.svg, never edited by hand: re-render it whenever the SVG changes (draw the
+     SVG at 2400x7200 onto a canvas offset -1000px, keep 1400 wide, cwebp -q 80). */
+  @media (max-width: 700px) {
+    body { background-image: url("textures/oak-phone.webp"); background-size: 700px auto; }
+  }
 
   /* Desk lighting, fixed to the viewport: it is the lamp and the camera, not
      the wood, so it must NOT scroll with the tile. Faint top light, a gentle
