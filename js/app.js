@@ -9661,7 +9661,14 @@ function judgeFix() {
    A miss does NOT end the page. Sudden death is more dramatic and was rejected: it makes a
    clean sweep arithmetically unreachable, and it restores exactly the bimodal problem this
    rebuild exists to solve, since a page on a song you don't know would end on pick 1. */
-const CHAIN_BEAT_MS = 780;   // long enough to read the mark before the next three deal
+/* The beat between a tap and the next three cards. The verdict lands on the cards the moment the
+   tap does, so the beat is only for reading it, and the two verdicts need different amounts of
+   that. A right pick shows the line the player just chose, ringed: nothing new to read, so it
+   only waits long enough to register the ring. A wrong one points at a line they didn't pick,
+   which is the one thing on the page worth stopping for. One flat 780 ms used to cover both, and
+   the right picks felt like the cards had hung. The page clock is stopped either way. */
+const CHAIN_BEAT_RIGHT_MS = 350;
+const CHAIN_BEAT_WRONG_MS = 780;
 
 function stopChainBeat() {
   if (chainBeatId) clearTimeout(chainBeatId);
@@ -9834,7 +9841,7 @@ function judgeChain(i) {
     startBonusClock();
   };
   if (motionReduced() || animInstant()) on();
-  else armChainBeat(on, CHAIN_BEAT_MS);
+  else armChainBeat(on, right ? CHAIN_BEAT_RIGHT_MS : CHAIN_BEAT_WRONG_MS);
 }
 
 // A page is CLEARED at the full six, which is the verse whole — that is what the back cover's tick
