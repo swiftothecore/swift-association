@@ -15159,8 +15159,13 @@
      reads as something noticed out of the corner of the eye rather than as a button
      pulsing for attention. Played, the stub is torn and the glint goes with it; with
      reduced motion it is never drawn at all. It rides ::after, which the played state
-     claims for its fibre lip, and the two can never be on the card at once. */
-  @media (prefers-reduced-motion: no-preference) {
+     claims for its fibre lip, and the two can never be on the card at once.
+     Not on a touch screen. The strip sits inside .day-shadow's drop-shadow and its own
+     mask, so every frame the band moves, the phone re-renders the whole filtered ticket,
+     #day-hair's noise included: half a second a frame on an iPhone, eight hitches every
+     ten seconds. A transform on the band does not escape that, because the filter above it
+     still has to be redrawn. Without the glint the ticket is painted once and left. */
+  @media (prefers-reduced-motion: no-preference) and (pointer: fine) {
     .day:not(.day--done) .day-strip::after {
       content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none;
       background: linear-gradient(105deg, transparent 38%, var(--day-glint) 50%, transparent 62%)
