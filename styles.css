@@ -804,6 +804,37 @@
   .dm-print:is(:hover, :focus-visible) { transform: translateY(1px); box-shadow: 0 2px 0 0 var(--ink); }
   .dm-print[aria-pressed="true"] { transform: translateY(3px); box-shadow: none; }
   .dm-print:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 2px; }
+  /* The slip's two mode keys are tape deck keys in a small housing: a paper top on a hard ink
+     lip (--lip) that sinks on hover and latches flush while its mode is in force, which is what
+     a mode switch is. The key in force wears the notebook's gold. */
+  .tape-deck { --door: 222, 164, 28; --door-a: 0.44; }
+  .tape-deck-bar {
+    display: flex; gap: 8px;
+    border: 2px solid var(--ink); border-radius: 8px;
+    background: color-mix(in srgb, var(--ink) 9%, var(--paper));
+    transform: rotate(-0.35deg);
+  }
+  .deck-slot { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+  .deck-key {
+    --lip: 5px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin: 0 0 var(--lip);
+    font-family: var(--type); color: var(--ink); background: var(--paper);
+    border: 2px solid var(--ink); border-radius: 4px;
+    box-shadow: 0 var(--lip) 0 0 var(--deck-lip, var(--ink));
+    transition: transform 0.09s ease, box-shadow 0.09s ease, background-color 0.2s;
+  }
+  .deck-key.is-again { background: linear-gradient(rgba(var(--door), var(--door-a)), rgba(var(--door), var(--door-a))), var(--paper); }
+  .deck-key:is(:hover, :focus-visible) { transform: translateY(2px); box-shadow: 0 3px 0 0 var(--deck-lip, var(--ink)); }
+  .deck-key:is(:hover, :focus-visible):not(.is-again) { background: color-mix(in srgb, var(--ink) 4%, var(--paper)); }
+  .deck-key:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 4px; }
+  .deck-key:active { transform: translateY(5px); box-shadow: 0 0 0 0 var(--deck-lip, var(--ink)); transition-duration: 0.05s; }
+  /* Night: a cream lip under a key reads as light leaking out of the housing, so the key's side
+     drops to a mid tone of the same ink, and the wash comes up a step over dark paper. */
+  :root[data-theme="dark"] .tape-deck-bar { background: color-mix(in srgb, var(--ink) 6%, var(--paper)); }
+  :root[data-theme="dark"] .deck-key { --deck-lip: color-mix(in srgb, var(--ink) 42%, var(--paper)); }
+  :root[data-theme="dark"] .deck-key.is-again { background: linear-gradient(rgba(var(--door), calc(var(--door-a) + 0.12)), rgba(var(--door), calc(var(--door-a) + 0.12))), var(--paper); }
+  body[data-reduce-motion="on"] .deck-key { transition: none; }
   .dm-deck { padding: 0 0 2px; }
   .dm-deck .tape-deck-bar { gap: 6px; padding: 7px 7px 6px; border-width: 1.5px; box-shadow: 2px 2px 0 rgba(43,39,34,0.14); }
   .dm-deck .deck-key { --lip: 4px; width: 100%; min-height: 38px; padding: 2px 4px; cursor: pointer; }
@@ -7085,87 +7116,98 @@
   .tbt-end .bg-charms { margin: 0 0 12px; padding-top: 11px;
     border-top: 1px dotted color-mix(in srgb, var(--ink-soft) 32%, transparent); }
 
-  /* ---------- THE TAPE DECK: every side mode's end-of-run row ----------
-     One transport bar for every ending that is not the main results page (Challenges, Album
-     Focus, Custom, the guest shelf and the lineup, the bonus back cover, Track by Track and
-     Ruthless). tapeDeck() in app.js draws it and its header comment has the why: EJECT goes back
-     where you came from, REWIND plays this again, and the bonus back cover's third key plays the
-     other side of the same game with its sticker's own mark.
+  /* ---------- THE END ROW: every side mode's end-of-run row ----------
+     One row for every ending that is not the main results page (Challenges, Album Focus,
+     Custom, the guest shelf and the lineup, the bonus back cover, Track by Track and Ruthless).
+     endRow() in app.js draws it and its header comment has the why. Each key is a cloth-bound
+     cover, foil stamped: a weave you can just see and a thick-and-thin rule a finger's width
+     in from the edge. Replay is bound in the door's cloth and stamped in pale foil, and takes
+     the room; the way back and the bonus other-side key are natural linen stamped in ink, and
+     only as wide as their words. That is the hierarchy: replay leads.
 
-     COLOUR IS ONE RULE, never a pick per mode: the rewind key wears the colour of the door eject
-     goes back through, and the game has five. Eject and the other-side key are plain ink, and
-     the words are the only thing a mode gets of its own. This replaced a family in which every
-     pair had its own two washes and its own textile, which by the ninth mode read as random, so
-     do not hand a mode its own colour here; a new mode joins the door its eject returns to.
-       notebook    the notebook's own modes (Album Focus, Custom): the masthead's gold
+     COLOUR IS ONE RULE, never a pick per mode: the replay key wears the cloth of the door the
+     way back goes through, and the game has five. The other keys are plain linen, and the
+     words are the only thing a mode gets of its own. So do not hand a mode its own colour
+     here; a new mode joins the door its way back returns to.
+       notebook    the notebook's own modes (Album Focus, Custom): the masthead's gold, as ochre
        challenges  the wax-seal red
        bonus       the bonus shelf (every zine, Track by Track): its nav card's green
        guests      the guest shelf, and the lineup dealt from it: denim
-       ruthless    its own door, a stamp on the front page: that stamp's burnt orange, leaned
-                   toward its amber so it never reads as the wax red
-     The four washes are tuned to land at one strength on cream (yellow needs the most pigment
-     to show, red the least before it turns pink) and come up a step at night, where they sit
-     over dark paper. */
-  .tape-deck { container-type: inline-size; padding: 2px 0 6px; }
-  .tape-deck[data-family="notebook"]   { --door: 222, 164, 28;  --door-a: 0.44; }
-  .tape-deck[data-family="challenges"] { --door: 178, 52, 42;   --door-a: 0.36; }
-  .tape-deck[data-family="bonus"]      { --door: 52, 146, 114;  --door-a: 0.36; }
-  .tape-deck[data-family="guests"]     { --door: 58, 104, 168;  --door-a: 0.34; }
-  .tape-deck[data-family="ruthless"]   { --door: 206, 100, 36;  --door-a: 0.40; }
-  /* the housing: inked, a shade darker than the page, and laid down a hair off true */
-  .tape-deck-bar {
-    display: flex; gap: 8px;
-    padding: 21px 10px 15px;
-    border: 2px solid var(--ink); border-radius: 8px;
-    background: color-mix(in srgb, var(--ink) 9%, var(--paper));
-    box-shadow: 3px 3px 0 rgba(43, 39, 34, 0.14);
-    transform: rotate(-0.35deg);
+       ruthless    its own door, a stamp on the front page: that stamp's burnt orange
+     Each cloth is its door's colour taken deep enough for pale foil to read on it, which is
+     why the gold is an ochre. Cloth is a thing, not ink, so it keeps its colour at night. */
+  .end-row { display: flex; gap: 10px; padding: 3px 0 9px; container-type: inline-size; }
+  .end-row[data-family="notebook"]   { --cloth: #93680c; }
+  .end-row[data-family="challenges"] { --cloth: #8e2a25; }
+  .end-row[data-family="bonus"]      { --cloth: #1f6a52; }
+  .end-row[data-family="guests"]     { --cloth: #2b4e85; }
+  .end-row[data-family="ruthless"]   { --cloth: #a54c18; }
+  .end-key {
+    --linen: #e3d8bd; --stock: var(--linen);
+    --weave:
+      repeating-linear-gradient(0deg, rgba(255, 252, 240, 0.28) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(60, 46, 24, 0.055) 0 1px, transparent 1px 3px);
+    flex: 0 1 auto; min-width: 0; margin: 0; padding: 5px; border: 0; border-radius: 4px;
+    font-family: var(--type); font-weight: 700; font-size: calc(13.5px + var(--text-size-adjust)); line-height: 1;
+    letter-spacing: 1.8px; text-transform: uppercase; color: #2b2722;
+    background: var(--weave), var(--stock);
+    box-shadow: 0 0 0 1px rgba(43, 39, 34, 0.5), 2px 4px 0 rgba(43, 39, 34, 0.2);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
   }
-  .deck-slot { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
-  /* each key's function, printed on the panel above it the way a deck labels its keys */
-  .deck-legend {
-    position: absolute; top: -16px; left: 0; right: 0; text-align: center;
-    font-family: var(--type); font-weight: 700; font-size: calc(9px + var(--text-size-adjust));
-    letter-spacing: 2.6px; text-transform: uppercase; color: var(--ink-soft);
+  .end-key.is-again {
+    --stock: var(--cloth);
+    --weave:
+      repeating-linear-gradient(0deg, rgba(255, 250, 235, 0.075) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, rgba(20, 14, 8, 0.10) 0 1px, transparent 1px 3px);
+    flex: 1 0 auto; color: #f4e6bd;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--cloth) 70%, #17120d), 2px 4px 0 rgba(43, 39, 34, 0.26);
   }
-  /* The key: a paper top on a hard ink lip (--lip), the same flat offset the game's buttons
-     already cast, standing in for the key's side. It sinks on hover and latches flush on press. */
-  .deck-key {
-    --lip: 5px;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    min-height: 47px; padding: 0 10px; margin: 0 0 var(--lip);
-    font-family: var(--type); color: var(--ink); background: var(--paper);
-    border: 2px solid var(--ink); border-radius: 4px;
-    box-shadow: 0 var(--lip) 0 0 var(--deck-lip, var(--ink));
-    transition: transform 0.09s ease, box-shadow 0.09s ease, background-color 0.2s;
+  /* The stamped rule: thick outside, thin inside, with the cloth showing between them. One
+     border and two inset shadows, the first of which is the gap. */
+  .end-key-face {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    min-width: 0; min-height: 44px; padding: 0 14px; border-radius: 2px;
+    border: 1.5px solid color-mix(in srgb, currentColor 80%, transparent);
+    box-shadow: inset 0 0 0 2.5px var(--stock), inset 0 0 0 3.25px color-mix(in srgb, currentColor 70%, transparent);
   }
-  .deck-key.is-again { background: linear-gradient(rgba(var(--door), var(--door-a)), rgba(var(--door), var(--door-a))), var(--paper); }
-  .deck-key:is(:hover, :focus-visible) { transform: translateY(2px); box-shadow: 0 3px 0 0 var(--deck-lip, var(--ink)); }
-  .deck-key:is(:hover, :focus-visible):not(.is-again) { background: color-mix(in srgb, var(--ink) 4%, var(--paper)); }
-  .deck-key:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 4px; }
-  .deck-key:active { transform: translateY(5px); box-shadow: 0 0 0 0 var(--deck-lip, var(--ink)); transition-duration: 0.05s; }
-  .deck-lab { font-weight: 700; font-size: calc(14px + var(--text-size-adjust)); letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .deck-key .deck-glyph { width: 21px; height: 21px; flex: none; }
-  /* the two sticker marks are strokes, not fills: weighted up to sit level with the solid ones */
-  /* Both are padded out to the solid glyphs' 21px box, so when the mark stacks over the word
-     on a narrow deck every label still sits on one line across the keys. */
-  .deck-key .play-nib { width: 19px; height: 19px; margin: 1px 0; flex: none; stroke-width: 1.9; }
-  .deck-key .play-loop { width: 24px; height: 15px; margin: 3px 0; stroke-width: 2.1; }
-  /* Narrow (a phone, or three keys in a short card): the mark goes over the word, so a label
-     never has to be cut to fit beside it. */
+  .end-key.is-again .end-key-face { padding: 0 18px; }
+  .end-key-mark { display: flex; flex: none; }
+  /* the tracking's trailing space is paid back on the left, so the word sits centred */
+  .end-key-lab { min-width: 0; padding: 2px 0 2px 1.8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .end-key .back-arrow { display: block; width: 24px; height: 12px; margin: 0; overflow: visible; }
+  .end-key .again-turn { display: block; width: 19px; height: 19px; }
+  .end-key .play-nib { display: block; width: 18px; height: 18px; stroke-width: 1.6; }
+  .end-key .play-loop { width: 25px; height: 15px; stroke-width: 1.7; }
+  .end-key:is(:hover, :focus-visible) { transform: translate(-1px, -2px); box-shadow: 0 0 0 1px rgba(43, 39, 34, 0.5), 3px 6px 0 rgba(43, 39, 34, 0.18); }
+  .end-key.is-again:is(:hover, :focus-visible) { color: #fff3cf; box-shadow: 0 0 0 1px color-mix(in srgb, var(--cloth) 70%, #17120d), 3px 6px 0 rgba(43, 39, 34, 0.22); }
+  .end-key:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 5px; }
+  .end-key:active, .end-key.is-again:active { transform: translate(1px, 3px); box-shadow: 0 0 0 1px rgba(43, 39, 34, 0.5), 0 0 0 rgba(43, 39, 34, 0); transition-duration: 0.05s; }
+  /* Three keys (the bonus back cover) in anything short of a wide card: the marks leave, since
+     three words already say which key is which. */
+  @container (max-width: 560px) {
+    .end-row-n3 .end-key { font-size: calc(13px + var(--text-size-adjust)); letter-spacing: 1.5px; }
+    .end-row-n3 .end-key-mark { display: none; }
+    .end-row-n3 .end-key-face, .end-row-n3 .end-key.is-again .end-key-face { padding: 0 13px; }
+  }
+  /* A phone: only replay keeps its mark, so no word is ever cut to fit. */
   @container (max-width: 400px) {
-    .tape-deck-bar { gap: 6px; padding: 20px 7px 14px; }
-    .deck-key { flex-direction: column; gap: 3px; min-height: 54px; padding: 6px 4px; }
-    .deck-lab { font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 0.5px; }
-    .deck-legend { letter-spacing: 1.6px; }
+    .end-row { gap: 8px; }
+    .end-key, .end-row-n3 .end-key { font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1.1px; padding: 4px; }
+    .end-key-face, .end-key.is-again .end-key-face { padding: 0 9px; gap: 7px; }
+    .end-key-lab { padding-left: 1.1px; }
+    .end-key:not(.is-again) .end-key-mark { display: none; }
+    .end-row-n3 .end-key-face, .end-row-n3 .end-key.is-again .end-key-face { padding: 0 8px; }
   }
-  /* Night. The washes come up a step over dark paper; the shadow has nothing to fall on; and a
-     cream lip under a key reads as light leaking out of the deck, so the key's side drops to a
-     mid tone of the same ink. */
-  :root[data-theme="dark"] .tape-deck-bar { box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45); background: color-mix(in srgb, var(--ink) 6%, var(--paper)); }
-  :root[data-theme="dark"] .deck-key { --deck-lip: color-mix(in srgb, var(--ink) 42%, var(--paper)); }
-  :root[data-theme="dark"] .deck-key.is-again { background: linear-gradient(rgba(var(--door), calc(var(--door-a) + 0.12)), rgba(var(--door), calc(var(--door-a) + 0.12))), var(--paper); }
-  body[data-reduce-motion="on"] .deck-key { transition: none; }
+  @container (max-width: 340px) {
+    .end-key, .end-row-n3 .end-key { font-size: calc(11.5px + var(--text-size-adjust)); letter-spacing: 0.9px; }
+  }
+  /* Night. The cloth keeps its colour; the linen comes down a step so it is not the brightest
+     thing on a dark page, and the shadow has to be darker than the page to fall on it. */
+  :root[data-theme="dark"] .end-key { --linen: #cfc3a6; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 2px 4px 0 rgba(0, 0, 0, 0.45); }
+  :root[data-theme="dark"] .end-key:is(:hover, :focus-visible) { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 3px 6px 0 rgba(0, 0, 0, 0.4); }
+  :root[data-theme="dark"] .end-key:active { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 0 rgba(0, 0, 0, 0); }
+  body[data-reduce-motion="on"] .end-key { transition: none; }
 
   /* The back cover's deck runs the full width of the card it sits under, both reading one
      --bg-card-w stated once on .bg-end. */
@@ -7233,7 +7275,7 @@
        is short enough to keep. */
     .bg-track.ok .bg-track-note { display: none; }
     .bg-track.ok .bg-track-note.is-time { display: block; }
-    /* The deck is the last thing on a phone's page, and the corner links float over the bottom
+    /* The end row is the last thing on a phone's page, and the corner links float over the bottom
        of the screen, so without somewhere to scroll to its keys sit underneath them and cannot
        be pressed. The padding is the links' own height plus a thumb's worth of clearance. It is
        set down with the charms below because it is the one rule here about the actions. */
@@ -7303,7 +7345,7 @@
   }
   .chall-result-token { font-family: var(--type); font-size: calc(13px + var(--text-size-adjust)); color: #2b2722; margin-bottom: 4px; }
   .chall-result-meta { font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); color: var(--ink-soft); margin-bottom: 12px; }
-  /* The podium's tape deck (TAPE DECK above), sitting over the full-width way home (the
+  /* The podium's end row (END ROW above), sitting over the full-width way home (the
      postmark, .postmark). Challenges, Album Focus, Custom, the guest shelf and the lineup all
      end here. */
   .chall-result-actions { margin-top: 8px; }
