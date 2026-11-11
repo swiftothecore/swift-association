@@ -33337,12 +33337,6 @@ function firstRunFocusables() {
     card.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
   ).filter((el) => !el.disabled && el.offsetParent !== null && el.tabIndex !== -1);
 }
-function focusFirstRun() {
-  const modal = $("firstRun");
-  if (!modal.classList.contains("open")) return;
-  const target = firstRunFocusables()[0] || modal.querySelector(".firstrun-card");
-  if (target) { try { target.focus({ preventScroll: true }); } catch (_) { target.focus(); } }
-}
 function showOnboardingOverlay() {
   const m = $("firstRun");
   if (m.classList.contains("open")) return;
@@ -33376,7 +33370,6 @@ function renderFirstRunStep() {
   if (!body) return;
   const step = FIRST_RUN_STEPS[firstRunIndex];
   if (step === "welcome") body.innerHTML = firstRunWelcomeHTML();
-  focusFirstRun();
 }
 // Re-render the era grid in place (on chip select, and when the standalone prompt opens),
 // keeping focus sensible without disturbing the highlight held in firstRunEra.
@@ -33460,7 +33453,7 @@ const FR_RULE = (...ids) => `<svg class="rule-mark" viewBox="0 0 24 24" aria-hid
 // keep the same weight as the rule marks beside the start. The pick is a pale ink wash on its
 // cell (styles.css, .fr-theme), never a ring or the highlighter (the card already wears the
 // era's yellow five times). The strip
-// sits last in the markup, pinned to the corner by CSS, so the card's first focus is the start.
+// sits last in the markup, pinned to the corner by CSS, so the first Tab lands on the start.
 // Board: scripts/ui/icons/theme-switch.html (inked sun, long-and-short rays, laptop, half-inked
 // screen and crescent with a star all lost there).
 const FR_THEMES = [
@@ -33557,7 +33550,12 @@ function wireFirstRun() {
       case "normal-no":  closeFirstRun(); break;
     }
   });
-  modal.addEventListener("keydown", (e) => {
+  // The overlay never takes focus when it opens: moving focus onto its first button made the
+  // browser paint that button's :focus-visible state (the hover look) on a fresh load, before
+  // anyone had touched a key. So focus is usually still on the body, outside the card, and the
+  // keys are heard on the document (capture, so the page's own Escape handlers never see them).
+  // The first Tab carries focus into the card; from there the trap below keeps it inside.
+  document.addEventListener("keydown", (e) => {
     if (!modal.classList.contains("open")) return;
     if (e.key === "Escape") {
       e.preventDefault();
@@ -33587,7 +33585,7 @@ function wireFirstRun() {
       e.preventDefault();
       first.focus();
     }
-  });
+  }, true);
 }
 
 // One-off nudge off the recommended Relaxed path: invites the player to start the clock in
@@ -33620,7 +33618,6 @@ function showReadyForNormal(force) {
       `<button type="button" class="btn-link" data-fr="normal-no">Stay in Relaxed for now</button>` +
     `</div>`;
   showOnboardingOverlay();
-  focusFirstRun();
 }
 
 // One-off era prompt, held back until the player is a few games in (ERA_PROMPT_AFTER_GAMES) so
