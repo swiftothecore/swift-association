@@ -17527,6 +17527,20 @@
   .fr-terms li { display: inline-flex; align-items: center; gap: 6px; font-family: var(--type); font-size: calc(12.5px + var(--text-size-adjust)); color: var(--ink); }
   .fr-terms .rule-mark { width: 20px; height: 20px; color: var(--ink); }
   .fr-start { width: 100%; }
+  /* The clock nudge (readyForNormalHTML) shows the step on the front page's own difficulty row:
+     the real .mode-tab stock as spans, Normal lifted as the active tab, the rest knocked back,
+     and a pen hop (drawReadyHop) from Relaxed onto Normal in the era's accent ink. */
+  .fr-rung { position: relative; display: flex; justify-content: center; margin: 34px 0 6px; }
+  .fr-rung .mode-tabs { flex-wrap: nowrap; justify-content: center; padding: 0 6px; border-bottom: 1.5px solid rgba(43,39,34,.32); }
+  :root[data-theme="dark"] .fr-rung .mode-tabs { border-bottom-color: color-mix(in srgb, var(--ink) 32%, transparent); }
+  .fr-rung .mode-tab { cursor: default; }
+  .fr-rung .mode-tab.is-was { opacity: .45; }
+  .fr-hop { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+  .fr-hop path { fill: none; stroke: var(--ink-accent, var(--ink)); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .fr-hop text { font: 700 17px var(--hand); fill: var(--ink-accent, var(--ink)); }
+  .fr-rung-lead { text-align: center; margin: 0 auto 12px; }
+  .fr-rung ~ .fr-tabs .fr-tab { flex: 1 1 0; }
+  .fr-rung ~ .fr-terms, .fr-rung-lead { max-width: none; }
   /* The two ways past the gentle start: a pair of plain ink tabs, one deciding the other, each
      with the consequence written small under it. */
   .fr-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 16px; }
@@ -18858,6 +18872,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   .fr-tabs { flex-wrap: nowrap; gap: 10px; }
   .fr-tab { flex: 1 1 0; min-width: 0; padding: 8px 8px; }
   .fr-demo-word .word { font-size: calc(50px + var(--text-size-adjust)); }
+  .fr-rung .mode-tabs { gap: 3px; padding: 0 2px; }
+  .fr-rung .mode-tab { font-size: calc(15px + var(--text-size-adjust)); padding: 5px 7px 6px; }
   .fr-theme { top: 13px; right: 12px; }
   .firstrun-card:has(.fr-theme) .fr-kicker { padding-right: 104px; }
   .fr-era-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
