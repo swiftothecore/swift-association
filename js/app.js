@@ -25409,9 +25409,25 @@ function startRevolve(firstDelay) {
 // file itself is mixed for the last one; 3 and 2 are attenuated at the call, so the
 // three ticks are one sound leaning in rather than three separate alarms.
 const COUNTDOWN_TICK_GAIN = { 3: 0.55, 2: 0.78, 1: 1 };
+/* Handed to its two readers directly, never to an ancestor. A custom property inherits, so one
+   written on <body> restyled everything under it ten times a second through the last four
+   seconds of a page, which is exactly when a phone has least to spare: 5.5ms a write on a
+   desktop. Writing it on the game page instead was tried and barely helped (3.9ms), because
+   the cost is the walk down through the page's own subtree. So the word gets --tension on its
+   own wrap, and the vignette gets --vignette on the page, which styles.css registers as
+   non-inheriting so that it stops there: 0.1ms for the pair. data-tense is what switches the
+   word's tremor on at all, so a calm page runs no animation. The last value is remembered
+   because the clock calls this every tick and most ticks have nothing new to say. */
+let tensionShown = null;
 function setTension(t) {
   // Timer-tension setting off → keep the vignette/tremor at rest.
-  document.body.style.setProperty("--tension", settings.timerTension ? String(t) : "0");
+  const v = settings.timerTension ? String(t) : "0";
+  if (v === tensionShown) return;
+  tensionShown = v;
+  const wrap = $("wordDisplay").parentElement;
+  wrap.style.setProperty("--tension", v);
+  wrap.toggleAttribute("data-tense", v !== "0");
+  screens.game.style.setProperty("--vignette", v);
 }
 function updateTally(remaining) {
   if (!settings.timerTension) return;

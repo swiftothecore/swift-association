@@ -1146,13 +1146,19 @@
     /* deckled / torn-ish edge softness */
     transition: background 0.5s ease;
   }
-  /* tension vignette — the room dims as the timer runs out */
+  /* tension vignette — the room dims as the timer runs out.
+     --vignette is registered so that it does NOT inherit: setTension (js/app.js) writes it on
+     the page ten times a second, and an ordinary custom property there would restyle every
+     element on the page each time. The pseudo-element asks for it by name instead. A browser
+     without @property treats it as an ordinary variable, which is slower and looks the same. */
+  @property --vignette { syntax: "<number>"; inherits: false; initial-value: 0; }
   .card::after {
     content: ""; position: absolute; inset: 0; border-radius: 3px;
     pointer-events: none; z-index: 5;
     background: radial-gradient(108% 82% at 50% 43%,
       transparent 36%, rgba(58,14,14,0.5) 76%, rgba(34,6,6,0.82) 100%);
-    opacity: var(--tension, 0);
+    --vignette: inherit;
+    opacity: var(--vignette, 0);
     transition: opacity 0.15s linear;
   }
 
@@ -10119,8 +10125,16 @@
     font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); letter-spacing: 1px;
     color: var(--ink-soft); margin-bottom: 6px; transform: rotate(-0.5deg);
   }
-  .word-wrap { position: relative; text-align: center; margin: 6px 0 14px; animation: tremor 0.15s linear infinite; }
-  /* amplitude scales with --tension, so it's perfectly still until time runs low */
+  /* isolation stands in for the stacking context the tremor used to give the wrap all round
+     long, so the swipe and the stamp layer the same whether or not it is shaking. */
+  .word-wrap { position: relative; text-align: center; margin: 6px 0 14px; isolation: isolate; }
+  /* The tremor only exists while the clock is low. It used to run for the whole round at an
+     amplitude of zero, which looked still and was not: an endless animation keeps the page
+     producing frames for as long as it is on screen. setTension (js/app.js) raises data-tense
+     on the wrap. :where keeps this at the wrap's own weight, so anything that already
+     overrode the animation still does. */
+  .word-wrap:where([data-tense]) { animation: tremor 0.15s linear infinite; }
+  /* amplitude scales with --tension, so it builds from nothing as time runs low */
   @keyframes tremor {
     0%   { transform: translate(calc(var(--tension) * -1.1px), calc(var(--tension) *  0.5px)); }
     25%  { transform: translate(calc(var(--tension) *  1.3px), calc(var(--tension) * -0.9px)); }
