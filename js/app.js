@@ -3981,7 +3981,10 @@ function scheduleToastDismiss() {
     bottom.classList.add("leaving");
     setTimeout(() => {
       bottom.remove();
-      hideTip();   // removal fires no mouseout, so a tooltip on this toast would otherwise linger
+      // Removal fires no mouseout, so a tooltip on this toast would otherwise linger. Only
+      // take down a bubble that belongs to THIS toast: a charm on the results page being
+      // hovered while the toast slides out keeps its tooltip.
+      if (_tipTarget && bottom.contains(_tipTarget)) hideTip();
 
       // FLIP: the removal collapses the layout instantly, so smoothly animate the
       // toasts above from their old positions down into their new ones.
