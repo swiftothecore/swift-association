@@ -3513,6 +3513,10 @@ function unlock(id) {
   // A shelf ending prints the run's charms, and this one may have landed after it was drawn
   // (keeping the back cover is the case that matters). No-ops everywhere else.
   if (bonusEnded) refreshBonusCharmRow();
+  // The main results page is the same case: its recap is drawn once as the run ends, and a
+  // charm earned on the page itself (copying the bracelet is the one that matters) would
+  // otherwise toast and then be missing from "newly unlocked" right underneath it.
+  else if (activeScreenName() === "results") renderResultRecap();
 }
 
 // The charms that count as hidden for Is It Over Now?. Frozen as a literal rather than
