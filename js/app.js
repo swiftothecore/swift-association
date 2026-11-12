@@ -97,7 +97,7 @@ import { exportBackCard, copyBackCard, buildBackSVG } from "./backcard.js";
 import { sfx } from "./sound.js";
 import { faviconBlobUrl, faviconSVG } from "./favicon.js";
 import { watchInkEdges } from "./inkedge.js";
-import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex, siblingForm, compoundForm } from "./match.js";
+import { wordRegex as wordRegexCore, extractLineWithWord as extractLineWithWordCore, highlightWord as highlightWordCore, variantBody, exactWordBody, boundedWordBody, falseFriendRegex, addedLettersRegex, siblingForm, compoundForm, buildLyricTokenIndex, indexMatches } from "./match.js";
 import { buildLyricReveal, revealSections } from "./lyric-reveal.mjs";
 import { verdictMark } from "./verdictmark.js";
 import { songWave } from "./songwave.js";
@@ -2134,7 +2134,12 @@ function wordSongMatches(word, strict) {
   const key = JSON.stringify([word, !!strict]);
   let matches = wordSongCache.get(key);
   if (!matches) {
-    matches = { rx: wordRegex(word, strict), lyrics: null, noTitle: null, titles: null };
+    // The regex is built only when something needs it: the catalogue lists below are answered
+    // from the word index, and compiling one of these costs more than the whole lookup.
+    matches = {
+      word, strict: !!strict, rxMemo: null, lyrics: null, noTitle: null, titles: null,
+      get rx() { return this.rxMemo ??= wordRegex(word, strict); },
+    };
     wordSongCache.set(key, matches);
   }
   return matches;
@@ -2148,9 +2153,26 @@ function releasedSongs() {
   if (releasedMemo.of !== allSongs) releasedMemo = { of: allSongs, songs: allSongs.filter((s) => !s._unreleased) };
   return releasedMemo.songs;
 }
+/* Every song (unreleased included, in catalogue order) whose lyrics, or whose title, the word's
+   regex matches, answered from a word index instead of by running the regex down every song.
+   The regex's Unicode boundary makes each one slow to COMPILE, and startup needed two per
+   playable word, which was a phone's whole four-second boot; buildLyricTokenIndex (match.js)
+   says why the index gives the same songs, and indexMatches hands back null for the few words
+   it cannot vouch for, which still take the regex. Held per corpus ARRAY in a WeakMap, like
+   releasedMemo, so a guest swap reads its own index and there is nothing for
+   snapshotCorpus/applyCorpus to carry. */
+const corpusWordIndexes = new WeakMap();
+const songText = { lyrics: (s) => s.lyrics, titles: (s) => s._wordTitle ?? s.title };
+function songsMatching(matches, field) {
+  let indexes = corpusWordIndexes.get(allSongs);
+  if (!indexes) corpusWordIndexes.set(allSongs, indexes = {});
+  const index = indexes[field] ??= buildLyricTokenIndex(allSongs.map(songText[field]));
+  const at = indexMatches(index, matches.word, matches.strict);
+  return at ? at.map((i) => allSongs[i]) : allSongs.filter((s) => matches.rx.test(songText[field](s)));
+}
 function songsContainingWord(word, strict) {
   const matches = wordSongMatches(word, strict);
-  return (matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics))).filter((s) => !s._unreleased);
+  return (matches.lyrics ??= songsMatching(matches, "lyrics")).filter((s) => !s._unreleased);
 }
 // Valid answers for a round: lyrics contain the word and — when noTitle (Hard/
 // Ultra) — the title does NOT, so you can't just name the obvious title song.
@@ -2158,8 +2180,15 @@ function songsContainingWord(word, strict) {
 // the released catalogue, and its unreleased answers are found apart by roundBonusFor.
 function validSongs(word, strict, noTitle, withUnreleased = false) {
   const matches = wordSongMatches(word, strict);
-  const lyrics = matches.lyrics ??= allSongs.filter((s) => matches.rx.test(s.lyrics));
-  const pool = noTitle ? (matches.noTitle ??= lyrics.filter((s) => !matches.rx.test(s._wordTitle ?? s.title))) : lyrics;
+  const lyrics = matches.lyrics ??= songsMatching(matches, "lyrics");
+  let pool = lyrics;
+  if (noTitle) {
+    if (!matches.noTitle) {
+      const inTitle = new Set(matches.titles ??= songsMatching(matches, "titles"));
+      matches.noTitle = lyrics.filter((s) => !inTitle.has(s));
+    }
+    pool = matches.noTitle;
+  }
   return withUnreleased ? pool.slice() : pool.filter((s) => !s._unreleased);
 }
 // Songs whose TITLE contains the prompt word — the ones the Hard/Ultra "not in
@@ -2167,7 +2196,7 @@ function validSongs(word, strict, noTitle, withUnreleased = false) {
 function titleSongsForWord(word, strict, withUnreleased = false) {
   // A title-only challenge must not pay for a full lyric scan on its first visit.
   const matches = wordSongMatches(word, strict);
-  const titles = matches.titles ??= allSongs.filter((s) => matches.rx.test(s._wordTitle ?? s.title));
+  const titles = matches.titles ??= songsMatching(matches, "titles");
   return withUnreleased ? titles.slice() : titles.filter((s) => !s._unreleased);
 }
 // Marginalia warning: in noTitle modes with no list to lean on (Hard/Ultra), name the songs
@@ -17308,8 +17337,6 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
   const easy = [], hard = [], ultra = [], normal = [], normalTail = [];
   albumWordMap = {};
   for (const w of playableWords) {
-    const lenient = wordRegex(w, false);
-    const strict = wordRegex(w, true);
     const albums = new Set();
     // Easy counts plain lyric matches (title songs are allowed in Easy/Medium).
     // Hard/Ultra count only *valid* answers (word in lyrics but NOT the title), so
@@ -17317,11 +17344,16 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     // Each counts SONGS, not pressings: a word in State Of Grace and its acoustic version is
     // in one song, so it is not pushed a band commoner than it really is.
     const easyS = new Set(), hardS = new Set(), ultraS = new Set();
+    // Asked as lists rather than as regex tests on each song: the lists come from the word
+    // index, and a regex per word was the cost of the boot (see songsMatching).
+    const strictLyric = new Set(songsContainingWord(w, true));
+    const lenientTitle = new Set(titleSongsForWord(w, false, true));
+    const strictTitle = new Set(titleSongsForWord(w, true, true));
     for (const s of songsContainingWord(w, false)) {
       easyS.add(s._family);
       albums.add(s.album);
-      if (!lenient.test(s._wordTitle ?? s.title)) hardS.add(s._family);
-      if (strict.test(s.lyrics) && !strict.test(s._wordTitle ?? s.title)) ultraS.add(s._family);   // strict, no title, rarest
+      if (!lenientTitle.has(s)) hardS.add(s._family);
+      if (strictLyric.has(s) && !strictTitle.has(s)) ultraS.add(s._family);   // strict, no title, rarest
     }
     const easyN = easyS.size, hardN = hardS.size, ultraN = ultraS.size;
     for (const a of albums) (albumWordMap[a] = albumWordMap[a] || []).push(w);

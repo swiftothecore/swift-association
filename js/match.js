@@ -170,6 +170,85 @@ export function wordRegex(word, strict) {
   return rx;
 }
 
+// A word index over a catalogue's texts (lyric sheets, or titles), so the catalogue scans can
+// ask "which of these does wordRegex(word, strict) match?" WITHOUT compiling wordRegex.
+//
+// Why: the boundary class is Unicode (\p{L}\p{M}\p{N}), and a regex carrying it under the "iu"
+// flags costs V8 about 0.4ms to compile on a desktop, against about 0.006ms for the same
+// pattern in ASCII. Startup asked that question of every playable word, lenient and strict,
+// lyrics and titles: two of those regexes per word, 857 words, the whole of a phone's
+// four-second boot. Running them over fewer songs saved nothing, because the time was never
+// in the running.
+//
+// Why the answer is the same: wordRegex is a boundary, a guard and an alternation, and its
+// boundary is a whole-token edge. So it matches a text exactly when some TOKEN of the text
+// (a run of word characters, cut where the boundary cuts) is, whole, one of the alternation's
+// spellings and not one of the guard's. The alternation's optional apostrophe tails ('s, 'll,
+// lovin') do not break that: each also matches with the tail left off, ending on the same
+// token edge. Tokens are compared lower-cased; the long s is the one letter "iu" folds onto
+// ASCII that toLowerCase does not, so it is folded by hand. A word that is not plain ASCII
+// letters and digits, or whose guard names a spelling with an apostrophe in it, gets null and
+// the caller runs the real regex instead. Checked against wordRegex on every word and every
+// sheet and title of Taylor and every guest, lenient and strict: the same texts, every one.
+const TOKEN_SPLIT = new RegExp(`[^${WORD_CHAR}]+`, "u");
+const PREFIX_K = 3;
+export function buildLyricTokenIndex(texts) {
+  const vocab = new Map();     // token -> ascending indexes of the texts holding it
+  texts.forEach((text, i) => {
+    for (const tok of String(text).toLowerCase().replace(/ſ/g, "s").split(TOKEN_SPLIT)) {
+      if (!tok) continue;
+      const at = vocab.get(tok);
+      if (!at) vocab.set(tok, [i]);
+      else if (at[at.length - 1] !== i) at.push(i);
+    }
+  });
+  const byPrefix = new Map();  // first one to three letters -> the tokens starting with them
+  for (const tok of vocab.keys()) {
+    for (let k = 1; k <= Math.min(PREFIX_K, tok.length); k++) {
+      const p = tok.slice(0, k);
+      const list = byPrefix.get(p);
+      if (list) list.push(tok); else byPrefix.set(p, [tok]);
+    }
+  }
+  return { vocab, byPrefix };
+}
+// Every spelling the alternation can start with is one of these: the word (its base and tail,
+// and the doubled consonant), the word less its last letter (the g-dropped -ing, the silent-e
+// drop), and the two stem swaps (-ie to -y, consonant-y to -i). They only narrow which tokens
+// get the anchored test below; that test is what decides.
+function tokenPrefixes(w) {
+  const out = [w];
+  if (w.length >= 3 && (w.endsWith("e") || (w.endsWith("ing") && /[aeiouy]/.test(w.slice(0, -3))))) out.push(w.slice(0, -1));
+  if (w.length >= 3 && w.endsWith("ie")) out.push(w.slice(0, -2) + "y");
+  if (w.length >= 3 && /[^aeiou]y$/.test(w)) out.push(w.slice(0, -1) + "i");
+  return out;
+}
+// The ascending indexes of the texts wordRegex(word, strict) matches, or null when the word is
+// one this makes no promise about and the caller must run the regex.
+export function indexMatches(index, word, strict) {
+  const w = canonicalMatchText(word).toLowerCase();
+  if (!/^[a-z0-9]+$/.test(w)) return null;
+  const bad = FALSE_FRIENDS[w] || [];
+  if (bad.some((f) => !/^[a-z0-9]+$/.test(f))) return null;
+  let hits;
+  if (strict) hits = index.vocab.get(w) || [];
+  else {
+    // The same alternation wordRegex uses, anchored to a whole token and compiled without the
+    // Unicode flag: tokens are already cut and lower-cased, so it needs neither.
+    const whole = new RegExp("^(?:" + wordVariants(w).join("|") + ")$");
+    const seen = new Set(), out = new Set();
+    for (const pre of tokenPrefixes(w)) {
+      for (const tok of index.byPrefix.get(pre.slice(0, PREFIX_K)) || []) {
+        if (!tok.startsWith(pre) || seen.has(tok)) continue;
+        seen.add(tok);
+        if (whole.test(tok) && !bad.includes(tok)) for (const i of index.vocab.get(tok)) out.add(i);
+      }
+    }
+    hits = [...out].sort((x, y) => x - y);
+  }
+  return hits;
+}
+
 // The ADD-ONLY half of the lenient match: the word kept whole, with letters only ever added to
 // the end of it. "haze" reaches "hazes", "hazed" and "hazing"; it does not reach "hazy", because
 // getting there means taking the "e" off first. Two of the four alternations above survive the
