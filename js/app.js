@@ -2048,10 +2048,15 @@ function pickEra() {
   if (recentEras.length > 3) recentEras.shift();
   return era;
 }
-// The era wash. It also has to repaint the tab icon, because the shuffle ink points --mast-ink
-// at --ink-accent: under that one ink the era IS the title's colour, and a favicon left alone
-// would sit on whichever era happened to be loaded when the ink was last applied. paintFavicon
-// bails on an unchanged href, so for the other thirteen inks this costs one string compare.
+// The era wash. Under the shuffle ink it also has to repaint the tab icon, because that ink
+// points --mast-ink at --ink-accent: the era IS the title's colour, and a favicon left alone
+// would sit on whichever era happened to be loaded when the ink was last applied.
+// ONLY under the shuffle, though. Every other ink is a fixed colour, and paintFavicon's dedupe
+// is not free: to compare it has to read --mast-ink-day off the body, and straight after
+// data-era moves that read forces the browser to restyle the whole page then and there. On a
+// phone that was about 27ms of every 60ms page turn and over 100ms of opening Mastery, spent
+// learning the icon had not changed. An ink, gild or contrast change still repaints it through
+// paintTitleGild, so nothing that can move a fixed ink's icon is skipped.
 function applyEra(era) {
   // A page turn clones the outgoing page AFTER its caller has already moved the era on (a give-up
   // sets gold and then flips home; endGame sets the finale era and then turns to the results), so
@@ -2064,7 +2069,7 @@ function applyEra(era) {
     setTimeout(() => { eraOnScreen = null; }, 0);
   }
   document.body.setAttribute("data-era", era);
-  paintFavicon();
+  if (document.body.getAttribute("data-ink") === MAST_SHUFFLE) paintFavicon();
 }
 
 /* ---------- Matching helpers ---------- */
