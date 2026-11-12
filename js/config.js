@@ -3270,6 +3270,16 @@ export const TITLE_ALIASES = {
   ],
   // "I Heart ?" reads aloud as "I Heart Question Mark".
   "I Heart ?": ["i heart question mark"],
+  // Unreleased songs by the names fans use. "Battle" is the old bracketed half of Let's Go, kept
+  // as a quiet answer: the card only ever prints "Let's Go". The full old title still works.
+  "Just South of Knowing Why": ["drive all night"],
+  "Let's Go": ["battle", "let's go battle"],
+};
+
+// Titles the catalogue has renamed. Keyed old -> new, and read only by loadSongTally, which
+// folds a lifetime count stored under the old title into the new one so the songbook keeps it.
+export const TITLE_RENAMES = {
+  "Let's Go (Battle)": "Let's Go",
 };
 
 // THE star: one plump five-pointer, cut by hand, and every star on the site is this drawing

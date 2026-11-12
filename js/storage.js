@@ -19,7 +19,7 @@ import {
   KEEPSAKES_SEEN_KEY, DESK_PRINT_KEY,
   MASTERY_KEY, SKILL_IDS, MASTERY_REWARDS, MASTERY_GATE,
   skillLevelFromXp, masteryLevelFromXp,
-  MODES, MODE_ORDER, TOTAL_ROUNDS, ACH_ID_MIGRATIONS,
+  MODES, MODE_ORDER, TOTAL_ROUNDS, ACH_ID_MIGRATIONS, TITLE_RENAMES,
 } from "./config.js";
 
 const HISTORY_CAP = 1000;   // keep the most recent N runs; older ones drop off
@@ -1061,7 +1061,13 @@ export function loadSongTally() {
     if (raw) {
       const o = JSON.parse(raw);
       if (o && typeof o === "object") {
-        return { songs: o.songs || {}, albums: o.albums || {}, words: o.words || {}, misses: o.misses || {} };
+        const songs = o.songs || {};
+        for (const [was, now] of Object.entries(TITLE_RENAMES)) {
+          if (!songs[was]) continue;
+          songs[now] = (songs[now] || 0) + songs[was];
+          delete songs[was];
+        }
+        return { songs, albums: o.albums || {}, words: o.words || {}, misses: o.misses || {} };
       }
     }
   } catch (e) { /* ignore */ }

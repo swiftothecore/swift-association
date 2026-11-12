@@ -25700,14 +25700,16 @@ function titleMatchScore(title, query) {
    "eat" or "at" would drag in thirty songs whose titles hold neither. */
 function songMatchScore(song, query) {
   let best = titleMatchScore(song._norm, query);
+  if (best) best.text = song._norm;
   for (const alias of song._aliasNorms || []) {
     const m = titleMatchScore(alias, query);
     if (m && m.rank >= 4 && (m.rank === 5 || alias[m.idx - 1] !== " ")) continue;
-    if (m && (!best || m.rank < best.rank || (m.rank === best.rank && best.alias && m.idx < best.idx))) best = { ...m, alias: true };
+    if (m && (!best || m.rank < best.rank || (m.rank === best.rank && best.alias && m.idx < best.idx))) best = { ...m, alias: true, text: alias };
   }
   // The full initials list the song as an alias would at a prefix's rank: below an exact
   // title, and level with the other song when two share them, so Enter's tie hold asks.
-  if (!best && song._acronym && song._acronym === query) best = { rank: 2, idx: 0, alias: true };
+  // `text` is the whole title, so the unreleased gate never lets initials through.
+  if (!best && song._acronym && song._acronym === query) best = { rank: 2, idx: 0, alias: true, text: song._norm };
   return best;
 }
 
@@ -25747,10 +25749,14 @@ function allMatches(query) {
     // begun is help with your typing; finding one from a word out of its middle is help with
     // your recall, and recall is the thing Hard is asking for.
     if (late && match.idx !== 0) continue;
-    // An unreleased title is never offered before most of it has been typed from its start.
-    // The list must not teach the player titles nobody is expected to know; someone who knows
-    // one has typed most of it anyway. UNRELEASED_TYPED is that "most", as a share of the title.
-    if (song._unreleased && (match.idx !== 0 || q.length < Math.max(4, Math.ceil(song._norm.length * UNRELEASED_TYPED)))) continue;
+    // An unreleased title is never offered before most of it has been typed. The list must
+    // not teach the player titles nobody is expected to know; someone who knows one has typed
+    // most of it anyway. UNRELEASED_TYPED is that "most", as a share of whichever title or
+    // alias matched, so a fan's name for the song ("drive all night") is measured as itself.
+    // It may be found from the middle ("diary of me"), but only from the start of a word, so
+    // the tail of a word can't fish one out.
+    if (song._unreleased && (match.rank === 5 || (match.idx > 0 && match.text[match.idx - 1] !== " ")
+        || q.length < Math.max(4, Math.ceil(match.text.length * UNRELEASED_TYPED)))) continue;
     if (!roundAcceptsSong(song)) continue;   // hide rule-breaking suggestions
     if (isGiveawayPick(song)) continue;      // ...and answers the prompt word alone would hand over
     scored.push({ song, ...match });
