@@ -6488,11 +6488,13 @@ function deskNow(earned = loadKeepsakes()) {
   };
 }
 // The print an album's birthday puts on the desk, captioned like its margin note: the album, then
-// how many years. Read off anniversaryNote, so a re-record's day wears the original's print under
-// its own name, and a songday (a date sung, not a release) has none.
+// how many years. Read off anniversaryNote, so a songday (a date sung, not a release) has none. A
+// re-record's day wears its own print, keyed by its title in TS_MILESTONES, when it has one, and
+// the original's otherwise (1989's two birthdays share a date and so share one print).
 function dayPrintOn(dateKey) {
   const note = anniversaryNote(dateKey, TS_MILESTONES);
-  const art = note && !note.songday && note.album ? DAY_PRINTS[note.album] : null;
+  const tv = TS_MILESTONES.find((m) => m.md === dateKey.slice(5) && m.kind === "tv");
+  const art = note && !note.songday && note.album ? (tv && DAY_PRINTS[tv.title]) || DAY_PRINTS[note.album] : null;
   return art ? { id: `day-${dateKey.slice(5)}`, name: note.headline.toLowerCase(), sub: note.caption, art } : null;
 }
 function deskPlaceBall() {
