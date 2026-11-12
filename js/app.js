@@ -1,5 +1,5 @@
 "use strict";
-import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, paperTextInk, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets, wordTaken } from "./util.js";
+import { $, escapeRegExp, escapeHtml, tabNameLines, prefersReducedMotion, shuffle, chance, paperTextInk, normalizeTitle, titleAcronym, normalizeLyric, fuzzySubstringRatio, levenshtein, swappedNeighbours, typoDistance, mulberry32, fnv1a, charmBlob, dailySeed, censorText, anniversaryNote, thirteenNote, guestDayNote, versionFamilies, stripLyricBrackets, wordTaken } from "./util.js";
 import { guestStampHTML } from "./gueststamp.js";
 import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
@@ -26224,6 +26224,7 @@ function phraseSingsPromptWord(normPhrase, rawPhrase) {
 // Token -> the two words it was really singing (or null for "it's just a word"), rebuilt
 // each page along with wordSpotCache, since which split counts depends on the page's word.
 let joinFixCache = new Map();
+let garbleForms = null;                 // see promptWordForms
 
 // Everything derived from WHICH WORD the page is asking for. They all have to fall together:
 // a cache built for the last word is not merely stale here, it quietly answers questions
@@ -26234,6 +26235,7 @@ function resetWordCaches() {
   promptRxCache = new Map();            // how to recognise it in flattened lyric text
   joinFixCache = new Map();             // which joined-up tokens were hiding it
   joinNeighbours = null;                // what the catalogue sings on either side of it
+  garbleForms = null;                   // every spelling of it the catalogue sings
 }
 
 // Lyric sheets and players disagree about spaces. songs.json sings "sand castles"; a player
@@ -26570,7 +26572,93 @@ function inkRuleActive() {
 function matchLyricLine(phrase, pool = currentSongs) {
   const normPhrase = normalizeSungPhrase(phrase);
   if (!normPhrase) return null;
-  if (!phraseSingsPromptWord(normPhrase, phrase)) return null;
+  if (!phraseSingsPromptWord(normPhrase, phrase)) return matchGarbledLine(normPhrase, pool);
+  return matchSungPhrase(normPhrase, pool);
+}
+
+// The page's word, badly typed, inside a line that is otherwise plainly right: "i once
+// believed love would be brunnign red". The gate above reads every token on its own and
+// forgives one slip, which is all it safely can without knowing what line is being sung,
+// so "brunnign" (three slips) was refused before any song was looked at.
+//
+// Here the LINE decides. Each token that could be a garble of the word (not a word the
+// catalogue sings, within GARBLE_SHARE of a form of the word the catalogue does sing) is
+// put back as that form, and the repaired line goes through the ordinary matcher. It
+// only counts if that finds a line of a valid song AND the lyric it lands on really sings
+// the word, so the player still has to have typed the word, just not cleanly.
+//
+// Nothing here can confirm a song on a refusal: a failure returns null exactly as the
+// gate did, and the nudge that follows is still judged off the word alone. The real-word
+// guard is the same one oneTypoApart's caller uses, for the same reason: "turning" for
+// "burning" is a different word, not a slip, however right the rest of the line is.
+const GARBLE_SHARE = 0.4;
+function matchGarbledLine(normPhrase, pool) {
+  if (!sungPhraseLongEnough(normPhrase)) return null;
+  for (const repaired of garbleRepairs(normPhrase)) {
+    const m = matchSungPhrase(repaired, pool);
+    if (!m || !lineSingsPromptWord(m.line)) continue;
+    // Graded and inked on the repaired text, so a garble costs what any typo costs in the
+    // rest of the line: nothing for the grade, which counts words, not letters.
+    return { ...m, fuzzy: true, garbled: true };
+  }
+  return null;
+}
+function sungPhraseLongEnough(np) {
+  const count = np.split(" ").length;
+  return count >= MIN_LYRIC_WORDS || (count >= MIN_LYRIC_WORDS_SHORT && np.length >= MIN_LYRIC_SHORT_CHARS);
+}
+// Does a matched lyric span sing one of the page's words? The same expression as the gate,
+// held against the lyric instead of the typed text, with and without its bracketed asides.
+function lineSingsPromptWord(line) {
+  const norm = normalizeLyric(line || ""), bare = normalizeLyric(stripLyricBrackets(line || ""));
+  const spelled = normalizeLyric(line || "", { keepApostrophes: true });
+  return lyricRequiredWords().some((w) => {
+    const rx = promptWordRegex(w);
+    return rx.test(norm) || rx.test(bare) || rx.test(spelled);
+  });
+}
+// Every spelling of the page's word(s) the catalogue sings: "burnin", "burns", "burned" on a
+// page for "burn". A garble is measured against these rather than the bare word, because a
+// player garbling "burning" was typing "burning" and not "burn". One walk of the vocabulary
+// per page, cached with the other word-derived caches (declared beside them).
+function promptWordForms() {
+  if (garbleForms) return garbleForms;
+  const needs = lyricRequiredWords().filter((w) => !normalizeLyric(w).includes(" "))
+    .map((w) => promptWordRegex(w));
+  garbleForms = [];
+  for (const t of lyricVocab) {
+    if (t.length < LYRIC_TYPO_MIN_WORD || !needs.some((rx) => rx.test(t))) continue;
+    // Measured against the sung spelling too, since normalizeLyric only g-drops a clean
+    // "ing": "brunnign" has no "ing" to fold, so it sits beside "burning", not "burnin".
+    const unfolded = t.replace(/in(s)?$/, "ing$1");
+    garbleForms.push({ form: t, spellings: unfolded !== t && normalizeLyric(unfolded) === t ? [t, unfolded] : [t] });
+  }
+  return garbleForms;
+}
+// The typed line with one garbled token put back as the form of the word it was nearest,
+// nearest garble first. Empty when nothing in the line could have been the word.
+function garbleRepairs(normPhrase) {
+  const tokens = normPhrase.split(" ");
+  const forms = promptWordForms();
+  const out = [];
+  tokens.forEach((t, i) => {
+    if (t.length < LYRIC_TYPO_MIN_WORD - 1 || lyricVocab.has(t)) return;
+    let best = null;
+    for (const { form, spellings } of forms) {
+      for (const s of spellings) {
+        if (Math.abs(s.length - t.length) > Math.round(s.length * GARBLE_SHARE)) continue;
+        const d = typoDistance(t, s);
+        if (d > Math.round(s.length * GARBLE_SHARE)) continue;
+        if (!best || d < best.d) best = { d, form };
+      }
+    }
+    if (best) out.push({ d: best.d, text: [...tokens.slice(0, i), best.form, ...tokens.slice(i + 1)].join(" ") });
+  });
+  return out.sort((a, b) => a.d - b.d).map((r) => r.text);
+}
+
+// The verdict proper, on a phrase the gate has already passed.
+function matchSungPhrase(normPhrase, pool) {
   const wordCount = normPhrase.split(" ").length;
   // Accept 4+ words, OR a 3-word phrase that's long enough by character count.
   if (wordCount < MIN_LYRIC_WORDS &&
@@ -27005,7 +27093,19 @@ function verseProgress(text) {
     if ((tier === "perfect" || tier === "verse") && !phraseSingsPromptWord(np, text)) return "good";
     return tier === "base" ? "fragment" : tier;
   }
-  return verseTypoProgress(np, text);
+  return verseTypoProgress(np, text) || garbledLineProgress(np, text);
+}
+
+// The gauge for a line whose prompt word is garbled past one slip ("brunnign"): it reads the
+// verdict itself, so it lights exactly when Enter would take the line, at the rung Enter would
+// pay, and never sooner. Only tried when a token could be a garble of the word at all, which
+// keeps the full-catalogue fuzzy pass off every ordinary keystroke.
+function garbledLineProgress(np, raw) {
+  if (!sungPhraseLongEnough(np) || phraseSingsPromptWord(np, raw)) return null;
+  if (!garbleRepairs(np).length) return null;
+  const m = matchGarbledLine(np, currentSongs);
+  if (!m) return null;
+  return m.tier === "base" ? "fragment" : m.tier;
 }
 
 const VERSE_METER = {

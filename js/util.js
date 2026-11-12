@@ -208,6 +208,32 @@ export function swappedNeighbours(a, b) {
          a.slice(i + 2) === b.slice(i + 2);
 }
 
+// Edit distance that counts a swap of two adjacent letters as ONE edit, as a typist
+// would ("brunnign" is three slips from "burning": a swap, a doubled n, a swap), where
+// plain Levenshtein charges every swap twice. Optimal string alignment: a swapped pair
+// is never edited again, which is all a typo measure needs.
+export function typoDistance(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let back = null;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const curr = [i];
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let d = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
+      if (back && i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d = Math.min(d, back[j - 2] + 1);
+      }
+      curr.push(d);
+    }
+    back = prev;
+    prev = curr;
+  }
+  return prev[b.length];
+}
+
 // Approximate SUBSTRING match: how well `pattern` matches its best-aligned window of
 // `text`, in [0,1] (1 = a clean substring; less for typos / partial). The DP's first
 // row stays 0 so the pattern may start anywhere in `text`, and leftover `text` past
