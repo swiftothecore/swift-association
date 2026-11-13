@@ -511,7 +511,7 @@
   /* ---------- Desk props (decorative, desktop only) ----------
      Quiet, semi-realistic objects on the desk. The big ones straddle the
      screen edges, half off the viewport, so the desk reads as continuing past
-     the window; the calendar, pencil and picks sit whole on the wood beside
+     the window; the calendar and pencil sit whole on the wood beside
      the notebook, as if just set down. Hidden on narrow screens where they'd
      crowd the notebook. The container is document-anchored (absolute, one
      viewport tall) rather than fixed, so the props sit on the first screenful
@@ -539,7 +539,7 @@
   :is(#screen-start, .corner-links, .tagline-row) :is(.anniversary-note, input, textarea, [contenteditable]) {
     -webkit-user-select: text; user-select: text;
   }
-  body[data-desk-density="quiet"] :is(.di-glasses, .di-mug, .di-picks, .di-cassette) { display: none; }
+  body[data-desk-density="quiet"] :is(.di-glasses, .di-mug, .di-cassette) { display: none; }
   /* The ball is a prop until it is ready to open, and from then on it is the player's own: the
      print stays out on the Quiet desk, so the ball that turns into it does too. */
   body[data-desk-density="quiet"]:not([data-desk-print="ready"]) :is(.di-crumple, .di-sheet) { display: none; }
@@ -549,7 +549,6 @@
   body[data-desk-density="custom"][data-desk-hide~="glasses"] .di-glasses,
   body[data-desk-density="custom"][data-desk-hide~="mug"] .di-mug,
   body[data-desk-density="custom"][data-desk-hide~="calendar"] .di-calendar,
-  body[data-desk-density="custom"][data-desk-hide~="picks"] .di-picks,
   body[data-desk-density="custom"][data-desk-hide~="floss"] .di-floss,
   body[data-desk-density="custom"][data-desk-hide~="beads-r"] .di-beads-r,
   body[data-desk-density="custom"][data-desk-hide~="cassette"] .di-cassette,
@@ -570,10 +569,10 @@
   /* All props share one real-world scale, taken from the notebook page:
      660px of page = 22cm of paper, so roughly 3px per mm. Folded glasses
      ~14cm, mug ~8cm plus its coaster, cassette 10.2cm,
-     a desk calendar pad ~8cm wide, picks 3cm. Sizes below follow from that. */
+     a desk calendar pad ~8cm wide. Sizes below follow from that. */
   /* Composition: things live in loose clusters with real empty desk between
      them, not one prop per slot. Left is the morning side (glasses up top, then
-     the desk calendar, and the mug with guitar picks tossed by it). Right is the
+     the desk calendar, and the mug). Right is the
      bracelet station up top and the cassette low, with the ball of film under it. */
   /* screen-edge props: pinned to a viewport edge, roughly half hanging off */
   /* the glasses carry their own contact shadow inside the drawing, so the
@@ -722,19 +721,6 @@
      used to measure the card, then reveal the complete fitted label at once. */
   .di-cassette :is(.cs-title, .cs-note) { visibility: hidden; }
   .di-cassette svg.is-dubbed :is(.cs-title, .cs-note) { visibility: visible; }
-  /* The picks lie by the mug, low and to its right. Anchored to the screen edge like the mug is,
-     so the pair keeps its distance on a wide desk, until a narrow one has to shrink the pile and
-     pull it back off the page. No rotation here: each pick holds its own, and its light is worked
-     out against it (see the markup), so a turn on the prop would relight all three. They also drop
-     the props' shared fade and desaturate: the real set is loud pearl plastic, and that pair turned
-     it to chalk on the pale oak. Each pick throws its own shadow, so this one only seats the pile. */
-  .di-picks   {
-    --picks-w: clamp(132px, 11.5vw, 165px);
-    width: var(--picks-w); top: 74%; left: min(204px, calc(50% - 340px - var(--picks-w))); opacity: 1;
-    filter: drop-shadow(1px 2px 2px rgba(46,32,14,0.2));
-  }
-  /* The gutter is too narrow here to clear the mug sideways, so the pile drops below its rim. */
-  @media (max-width: 1279px) { .di-picks { top: 76.5%; } }
   /* spilled alphabet beads: 7mm beads at desk scale (21px), one loose spill
      drifting down-left from the floss station */
   .di-beads-r {

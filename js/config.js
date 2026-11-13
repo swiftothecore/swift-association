@@ -231,7 +231,6 @@ export const DESK_PROPS = [
   { id: "glasses", label: "Glasses" },
   { id: "mug", label: "Mug" },
   { id: "calendar", label: "Calendar" },
-  { id: "picks", label: "Picks" },
   { id: "floss", label: "Floss" },
   { id: "beads-r", label: "Beads" },
   { id: "cassette", label: "Cassette" },
@@ -239,7 +238,7 @@ export const DESK_PROPS = [
 ];
 export const DESK_PRESET_HIDDEN = {
   full: [],
-  quiet: ["glasses", "mug", "picks", "cassette"],
+  quiet: ["glasses", "mug", "cassette"],
   bare: DESK_PROPS.map((p) => p.id),
 };
 
