@@ -135,6 +135,10 @@ export function slipDealCount(songs, slips) {
    song ban list, `avoidFakes` a soft preference against an impostor word seen in the last few
    pages, and `dealt` the line ids already shown (a hard bar, so a deep endless run never hands
    back a page it has already answered until every line has been dealt).
+   The soft preference only orders the song's lines, it never removes one: a familiar impostor is
+   tried after every fresh one fails the real-lyric check, rather than the song being given up.
+   The familiar group is shuffled only when it is reached, so the draws are unchanged whenever a
+   fresh line deals.
    Returns null if nothing is dealable; the caller reshuffles or skips. */
 export function buildSlipPuzzle(songs, slips, lineIndex, rng = Math.random, avoidSongs = null,
                                 avoidFakes = null, dealt = null) {
@@ -142,8 +146,9 @@ export function buildSlipPuzzle(songs, slips, lineIndex, rng = Math.random, avoi
   const pool = shuffled(songs.filter((s) => !(avoidSongs && avoidSongs.has(s.title)) && open(s).length), rng);
   for (const song of pool) {
     const rows = open(song);
-    const fresh = rows.filter((r) => !(avoidFakes && avoidFakes.has(wordKey(r.fake))));
-    for (const row of shuffled(fresh.length ? fresh : rows, rng)) {
+    const seen = (r) => !!avoidFakes && avoidFakes.has(wordKey(r.fake));
+    const groups = [rows.filter((r) => !seen(r)), rows.filter(seen)].filter((g) => g.length);
+    for (const group of groups) for (const row of shuffled(group, rng)) {
       const line = song.sections[row.a].lines[row.b];
       const raw = line.split(/\s+/).filter(Boolean);
       const parts = raw.map(splitWord);

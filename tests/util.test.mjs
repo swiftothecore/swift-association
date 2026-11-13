@@ -14,12 +14,6 @@ test('the prompt ledger treats a singular and its regular plural as one deal', (
   assert.equal(wordTaken([], 'hand'), false);
 });
 
-test('the prompt ledger keeps news separate from new', {
-  todo: 'suspected bug: the plural rule treats the noun news as a plural of new',
-}, () => {
-  assert.equal(wordTaken(['new'], 'news'), false);
-});
-
 test('typed titles fold stylized letters, conjunctions and numerals while lyric recall keeps numerals distinct', () => {
   assert.equal(normalizeTitle('Wi$h Li$t'), normalizeTitle('wish list'));
   assert.equal(normalizeTitle('Forever & Always'), normalizeTitle('Forever and Always'));

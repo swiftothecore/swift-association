@@ -41,9 +41,7 @@ test('Spot the Slip cannot deal a real lyric as a fake or replay a spent line', 
   assert.equal(buildSlipPuzzle([song], map, index, alwaysFirst, null, null, new Set([page.id])), null);
 });
 
-test('Spot the Slip falls back to a familiar fake when the fresh fake would make a real lyric', {
-  todo: 'suspected bug: the soft preference discards safe familiar swaps before validation',
-}, () => {
+test('Spot the Slip falls back to a familiar fake when the fresh fake would make a real lyric', () => {
   const song = makeSong('Paper Trail', [
     'We found a lantern buried deep', 'She left a ribbon beside the stairs',
   ]);
