@@ -2,16 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { wordRegex } from '../js/match.js';
+import { wordRegex, buildLyricTokenIndex, indexMatches } from '../js/match.js';
 import { normalizeTitle, normalizeLyric, versionFamilies, stripLyricBrackets, titleAcronym } from '../js/util.js';
-import { TITLE_ALIASES, TAYLOR_BUCKETS, RECENT_WINDOW } from '../js/config.js';
+import { TITLE_ALIASES, TAYLOR_BUCKETS, RECENT_WINDOW, UNRELEASED_ALBUM } from '../js/config.js';
 const app = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 const grouped = read('../data/songs.json'), words = read('../data/words.json');
 const guest = read('../data/guests/olivia-rodrigo.json');
 const section = (a, b) => app.slice(app.indexOf(a), app.indexOf(b, app.indexOf(a)));
 function harness() {
-  const context = vm.createContext({ console, normalizeTitle, normalizeLyric, versionFamilies, stripLyricBrackets, titleAcronym, TITLE_ALIASES,
+  const context = vm.createContext({ console, normalizeTitle, normalizeLyric, versionFamilies, stripLyricBrackets, titleAcronym, TITLE_ALIASES, UNRELEASED_ALBUM, buildLyricTokenIndex, indexMatches,
     wordRegexCore: wordRegex, effectiveStrict: () => { throw Error('Pool used live difficulty'); },
     indexPlayableWords() {}, allSongs: [], titleIndex: new Map(), spacelessIndex: new Map(),
     playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {},
@@ -50,7 +50,8 @@ test('ordinary installation performs no challenge scans and first use matches ea
 test('cached word matches retain every song and its order under both matching rules', () => {
   const h = harness();
   h.install(grouped, words, { aliases: true });
-  const songs = h.context.allSongs;
+  // The unreleased songs only ever add a right answer when named, so no pool counts them.
+  const songs = h.context.allSongs.filter((s) => !s._unreleased);
   for (const strict of [false, true]) {
     for (const word of [...words, 'not-in-this-catalogue']) {
       const rx = wordRegex(word, strict);
@@ -106,7 +107,7 @@ test('reusing lyric membership keeps rarity buckets and album word order identic
     // Counted in songs, a second pressing as the song it presses (versionFamilies).
     const easyS = new Set(), hardS = new Set(), ultraS = new Set();
     for (const s of h.context.allSongs) {
-      if (!lenient.test(s.lyrics)) continue;
+      if (s._unreleased || !lenient.test(s.lyrics)) continue;
       easyS.add(s._family); held.add(s.album);
       if (!lenient.test(s.title)) hardS.add(s._family);
       if (strict.test(s.lyrics) && !strict.test(s.title)) ultraS.add(s._family);

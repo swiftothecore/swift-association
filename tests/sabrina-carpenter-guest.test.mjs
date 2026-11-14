@@ -10,11 +10,16 @@ const catalogue = JSON.parse(fs.readFileSync(
   'utf8',
 ));
 
-test('Sabrina Carpenter is a playable guest with her souvenir registered last', () => {
+test('Sabrina Carpenter is a playable guest with her souvenir appended after the earlier guests', () => {
   const guest = GUESTS.find(({ id }) => id === 'sabrina-carpenter');
   assert.equal(guest?.file, 'data/guests/sabrina-carpenter.json');
   assert.equal(GUESTS_COMING_SOON.some(({ id }) => id === 'sabrina-carpenter'), false);
-  assert.equal(STICKERS.at(-1).id, 'guest-sabrina-carpenter');
+  // STICKERS is append-only (the cover seeds placement off its order), so her souvenir sits
+  // after the guests who arrived before her; later stickers may follow it.
+  const at = (id) => STICKERS.findIndex((s) => s.id === id);
+  assert.ok(at('guest-sabrina-carpenter') > at('guest-harry-styles'));
+  assert.ok(at('guest-harry-styles') > at('guest-ariana-grande'));
+  assert.ok(at('guest-ariana-grande') >= 0);
 });
 
 test('Sabrina Carpenter catalogue has the requested release splits', () => {

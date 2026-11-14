@@ -90,6 +90,9 @@ test('bonus pages build only their required indexes and restore the right corpus
     bonusRound: 1, producerCredits: {}, writerCredits: {}, nashvillePool: [], secretMessages: [],
     bonusSongs: () => songs, activeLens: () => 'top', slipSwaps: new Map(), slipDealt: new Set(), devRuthlessNext: null, ruthlessLensId: null,
   });
+  // The indexes are keyed on the corpus array, so the released list has to follow allSongs as
+  // it is swapped below; which songs it leaves out is not what this test is about.
+  context.releasedSongs = () => context.allSongs;
   for (const [name, label] of Object.entries(builders)) context[name] = (corpus) => {
     calls.push(label); return { label, corpus };
   };
@@ -137,7 +140,7 @@ test('challenge rows use one fresh board snapshot and preserve pins and locks', 
       mixtapeSVG: (key, word, done, total) => `${done} / ${total}`,
       CHALL_TICK_DARK: 'dark', CHALL_TICK: 'tick', CHALL_RING: 'open', CHALL_LOCK: 'locked',
       CHALL_PIN: 'pin', CHALL_UNPIN: 'unpin', TAPE_WORD: { 1: 'easy' },
-      tapesMarkup: () => '', walletStubs: () => '', glossaryDefn: () => '', escapeHtml: util.escapeHtml,
+      tapesMarkup: () => '', walletStubs: () => '', tallyCounterSVG: (n) => `<tally ${n}>`, glossaryDefn: () => '', escapeHtml: util.escapeHtml,
       $: () => el, selectChallenge() {},
     });
     vm.runInContext(fn(app, 'challengeUnlocked') + fn(app, 'hasDarkSide') + fn(app, 'perfectedChallenge') + fn(app, 'renderChallengesPage'), context);

@@ -10,8 +10,13 @@ const context = buildWordFreq(songs);
 
 test('Sing It Back accepts doubled-consonant present participles as shared inflections', () => {
   const red = songs.find(song => song.title === 'Red');
-  const puzzle = buildBlankPuzzle([red], context, mulberry32(4), 1);
-  assert.equal(puzzle.answer, 'Forgetting');
+  // Look for a deal of "Forgetting" rather than pinning one seed: which word a seed blanks moves
+  // whenever the catalogue's word counts do, and the judging is what this test is about.
+  let puzzle = null;
+  for (let seed = 0; seed < 500 && puzzle?.answer !== 'Forgetting'; seed++) {
+    puzzle = buildBlankPuzzle([red], context, mulberry32(seed), 1);
+  }
+  assert.equal(puzzle?.answer, 'Forgetting');
   assert.equal(judgeBlank('forget', puzzle, context.freq), true);
   assert.equal(judgeBlank('forgetting', { answer: 'forget' }, context.freq), true);
   for (const [typed, answer] of [['stop', 'stopping'], ['stopping', 'stop']]) {

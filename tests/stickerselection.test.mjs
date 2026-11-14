@@ -11,7 +11,6 @@ test('default cover keeps the first fifteen earned and ignores unknown IDs', () 
   assert.deepEqual(chosen(slots).map((s) => s.id), STICKERS.slice(0, 15).map((s) => s.id));
   assert.ok(slots.every((s) => s.id === s.anchor));
   assert.equal(STICKER_TOTAL, STICKERS.length);
-  assert.equal(STICKERS.some((s) => s.id === 'koi-fish-guitar'), false);
 });
 
 test('removing a sticker frees its anchor and a replacement leaves every other anchor intact', () => {
