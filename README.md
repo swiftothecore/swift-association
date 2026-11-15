@@ -2,7 +2,7 @@
 
 **[Play it now at swiftassociation.com](https://swiftassociation.com)** (alpha, and yes it works on your phone)
 
-[![A round in progress: the word "sad" on a notebook page, a timer running down, and a half-built friendship bracelet across the top](readme/hero.webp)](https://swiftassociation.com)
+[![A round in progress: the word "weather" on a notebook page on a desk, a timer running down, and a half-built friendship bracelet across the top](readme/hero.webp)](https://swiftassociation.com)
 
 I’m working on a game inspired by ELLE’s Song Association: by default you get 10 seconds to name a song or lyric with a specific word in it. The twist? It’s all Taylor Swift songs 🫶
 
