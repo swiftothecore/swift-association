@@ -1,6 +1,6 @@
 # Welcome to the ✨Swift to the Song Association✨ repository
 
-**[Play it now at swiftassociation.com](https://swiftassociation.com)** (alpha, and yes it works on your phone)
+**[Play it at swiftassociation.com](https://swiftassociation.com)**, on your phone or your laptop. It's still in alpha.
 
 [![A round in progress: the word "weather" on a notebook page on a desk, a timer running down, and a half-built friendship bracelet across the top](readme/hero.webp)](https://swiftassociation.com)
 
@@ -42,13 +42,10 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - Personal bests as a line of music on a lead sheet, one note for each difficulty, and every run you have played written on a studio take sheet
 - Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
 - A companion lyric searcher, [Swift to the Lyric](https://swiftassociation.com/search), for searching every line of every song
-- A graveyard of everything the notebook used to have, each plot carrying the argument that ended it
 - A night version of the whole desk, and a high-contrast setting that works in either light
-- Installable as a phone or desktop app, with offline readiness in Settings; guest catalogues download when opened
+- Installable as a phone or desktop app, with offline readiness in Settings
 
-More mini-games, easter eggs and achievements are on the way.
-
-I want this game to have extensive replay value, to be challenging, and to work for as many people as possible, so accessibility is part of the work and all feedback is welcome, via the feedback button on the site or at https://swiftassociation.com/feedback. Above all, **I want it to be fun.**
+I want this game to have extensive replay value, to be challenging, and to work for as many people as possible, so accessibility is part of the work and all feedback is welcome at [swiftassociation.com/feedback](https://swiftassociation.com/feedback). Above all, **I want it to be fun.**
 
 *no its becky*
 
