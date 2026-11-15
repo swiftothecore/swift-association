@@ -1188,10 +1188,12 @@ function showScreen(name, options = {}) {
   explicitScreenReveal = null;
   const deferFocus = !!options.deferFocus;
   const deferPresentation = !!options.deferPresentation;
+  const wasRuthlessPicker = screens.ruthless.classList.contains("active");
   // Defensive: clear any stray inline animation a flip sheet helper might have left on a real
   // screen, so every screen animates normally on its next genuine show.
   Object.values(screens).forEach((s) => { s.classList.remove("active"); s.style.animation = ""; });
   screens[name].classList.add("active");
+  if (wasRuthlessPicker || name === "ruthless") updateTagline();
   // Drop any lingering perfect-game shimmer; celebratePerfect re-adds it after
   // showScreen("results") when the run was actually flawless.
   clearPerfectFX();
@@ -13893,7 +13895,7 @@ function renderRuthlessPage() {
     secs += `<button type="button" class="rl-sec" data-lens="${lens.id}" data-played="${rec.plays ? 1 : 0}"` +
         ` aria-label="${escapeHtml(lens.label)}${startHere ? " (start here)" : ""}: ${pool} songs, ${rec.plays ? "best " + fmtTimeFine(rec.best) + ", " : ""}${escapeHtml(note)}">` +
       `<span>` +
-        `<span class="rl-h">[${escapeHtml(lens.label)}]${stamp}<span class="rl-pool">${pool} songs</span></span>` +
+        `<span class="rl-h"><span>[${escapeHtml(lens.label)}]</span>${stamp}<span class="rl-pool">${pool} songs</span></span>` +
         `<span class="rl-lines" aria-hidden="true">${rlStrokes(lens)}</span>` +
       `</span>` +
       `<span class="rl-rec">${best}<span class="rl-note">${escapeHtml(note)}</span></span>` +
@@ -13901,10 +13903,8 @@ function renderRuthlessPage() {
   });
   const el = $("ruthlessBody");
   el.innerHTML =
-    `<p class="rl-blurb">Ten songs will write themselves out from wherever you point, ` +
-    `one word a second. Name them.</p>` +
-    `<p class="rl-sub"><span><span class="sub-clause">ten pages ·</span> <span class="sub-clause">the clock is the score ·</span> ` +
-      `<span class="sub-clause">low wins</span></span>` +
+    `<p class="rl-blurb">Pick a starting section. Name the songs as they write themselves, one word a second.</p>` +
+    `<p class="rl-sub"><span>Lowest total time wins</span>` +
       `<span class="rl-count">played ${played}/${lenses.length}</span></p>` +
     `<div class="rl-doc">${secs}</div>` +
     `<p class="rl-foot"><svg class="rl-tip" aria-hidden="true" focusable="false"><use href="#rule-hint"/></svg>` +
@@ -17498,7 +17498,9 @@ function updateTagline() {
     ? (customPreset ? normalizeCustomMode(customPreset.mode) : activeCustomMode())
     : currentMode;
   const clock = cm.seconds > 0 ? `${plural(cm.seconds, "second")} each` : "no timer";
-  const line = gameType === "infinite"
+  const line = screens.ruthless.classList.contains("active") || gameType === "ruthless"
+    ? `${BONUS_ROUNDS} pages · the clock is the score`
+    : gameType === "infinite"
     ? `endless pages · ${clock}`
     : gameType === "custom"
     ? `${cm.rounds === 0 ? "endless pages" : plural(cm.rounds, "page")} · ${clock} · your own rules`
@@ -17506,11 +17508,6 @@ function updateTagline() {
     // tagline is the only line on the game screen with room to say so.
     : gameType === "guest"
     ? `${TOTAL_ROUNDS} pages · ${clock} · ${(currentGuest() || {}).name || "a guest"}`
-    // Ruthless is the one run with no per-page clock at all, so quoting `clock` here would
-    // hang the last difficulty's seconds over a mode that doesn't have any. What it has
-    // instead is the only thing worth saying: the clock is not the limit, it is the result.
-    : gameType === "ruthless"
-    ? `${BONUS_ROUNDS} pages · the clock is the score`
     // A shelf game is not a gameType, so without this branch its run wore whatever the front
     // page last picked ("13 pages · 10 seconds each · Normal difficulty") over a run of ten
     // pages on the game's own clock. Track by Track has no pages, only the one clock.

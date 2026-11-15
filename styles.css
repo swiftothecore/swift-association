@@ -7598,9 +7598,7 @@
     margin: 0; padding-bottom: clamp(4px, .9vh, 8px); border-bottom: 1px solid var(--rule);
   }
   .rl-count { white-space: nowrap; }
-  /* The terms line breaks only between its clauses, never inside one: left to wrap anywhere it
-     set "the clock is the score · low" with "wins" alone under it. Track by Track's line too. */
-  :is(.rl-sub, .tbt-sub) .sub-clause { white-space: nowrap; }
+  .tbt-sub .sub-clause { white-space: nowrap; }
 
   /* The document: exactly the measured height, with the six sections spread into it. */
   .rl-doc {
@@ -7719,9 +7717,22 @@
   /* On a window too short for the whole sheet, the footnote goes before the document does: it is
      a reminder, and the six sections are the screen. */
   @media (max-height: 700px) { .rl-foot { display: none; } }
-  @media (max-width: 480px) {
-    .rl-h { letter-spacing: .12em; }
-    .rl-start { margin-left: 8px; letter-spacing: .1em; }
+  @media (max-width: 560px), (pointer: coarse) {
+    .rl-sec { min-height: 44px; }
+  }
+  @media (max-width: 560px) {
+    :is(#screen-ruthless, [data-flip-id="screen-ruthless"]) .stats-nav { margin-bottom: 10px; }
+    .rl-sec { width: auto; column-gap: 12px; }
+    .rl-h {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px;
+      letter-spacing: .12em; white-space: normal;
+    }
+    .rl-start {
+      margin-left: 0; padding-inline: 5px; font-size: clamp(.48rem, 1.9vw, .6rem);
+      letter-spacing: .1em; white-space: nowrap;
+    }
+    /* Match the percentage spacing used to budget each line in rlStrokes. */
+    .rl-ln { gap: 1%; }
     /* the song count is the first thing to go: it is context, not what a pick turns on */
     .rl-pool { display: none; }
   }
@@ -18693,6 +18704,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
       max(10px, env(safe-area-inset-right, 0px))
       max(20px, env(safe-area-inset-bottom, 0px))
       max(10px, env(safe-area-inset-left, 0px));
+  }
+  /* Keep the fixed gear clear of the last lens when the sheet reaches the fold. */
+  body:has(#screen-ruthless.active) {
+    padding-bottom: max(34px, calc(20px + env(safe-area-inset-bottom, 0px)));
   }
   .app { order: 1; min-width: 0; }
   header.title { margin-bottom: 16px; }
