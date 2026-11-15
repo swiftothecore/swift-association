@@ -3886,12 +3886,12 @@ function checkCapsEgg(raw) {
 // A Wrinkle In Time — 13:13 on the 13th, caught while a game is actually running. Cheap enough
 // to call from both ends of a page (the turn and the verdict), which between them give a run
 // several looks inside any given minute. The DATE comes off todayKey so the dev date override
-// moves it like every other dated surface; the time of day is the real wall clock, since
-// nothing overrides that.
+// moves it like every other dated surface; the time of day is the real wall clock, read in the
+// same zone as that date (activeClock), since nothing overrides it.
 function checkWrinkleEgg() {
   if (todayKey().slice(8, 10) !== "13") return;
-  const now = new Date();
-  if (now.getHours() === 13 && now.getMinutes() === 13) unlock("play-at-1313-on-the-13th");
+  const { hour, minute } = activeClock();
+  if (hour === 13 && minute === 13) unlock("play-at-1313-on-the-13th");
 }
 
 /* ---------- Custom tooltips (data-tip; controllable delay, no clipping) ---------- */
@@ -5527,6 +5527,21 @@ function localHourOf(iso) {
     const p = new Intl.DateTimeFormat("en-GB", { timeZone: activeTimeZone(), hour12: false, hour: "2-digit" }).formatToParts(new Date(iso));
     return (+(p.find((x) => x.type === "hour")?.value) || 0) % 24;
   } catch (e) { return new Date(iso).getHours(); }
+}
+// The wall clock in the player's active zone, for the charms that ask what time it is ("between
+// 12 and 1am", "13:13 on the 13th", "on a Friday night"). Reading Date#getHours instead takes the
+// machine's zone, so a player who set the time zone setting would be judged on two clocks at once:
+// the day from todayKey, the hour from the machine. Minutes come from the zone too, since some
+// zones sit on a half or quarter hour. `dow` comes off todayKey so the dev date moves it, as it
+// moves every other dated surface.
+function activeClock(now = new Date()) {
+  let hour = now.getHours(), minute = now.getMinutes();
+  try {
+    const p = new Intl.DateTimeFormat("en-GB", { timeZone: activeTimeZone(), hour12: false, hour: "2-digit", minute: "2-digit" }).formatToParts(now);
+    hour = (+(p.find((x) => x.type === "hour")?.value) || 0) % 24;
+    minute = +(p.find((x) => x.type === "minute")?.value) || 0;
+  } catch (e) { /* the machine's clock is the fallback */ }
+  return { dow: keyDow(todayKey()), hour, minute };
 }
 function keyPlus(key, n) { const d = new Date(key + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
 function keyMinus(key, n) { return keyPlus(key, -n); }
@@ -18303,7 +18318,7 @@ function resetRunState() {
   quickAnswerRun = 0;
   suggestionIndex = -1;
   roundClockTotal = 0;
-  runStartHour = new Date().getHours();   // the hour this run opened on, for the whole-game clock charms
+  runStartHour = activeClock().hour;   // the hour this run opened on, for the whole-game clock charms
   hintsUsed = 0;
   hintBudgetLeft = Infinity;   // Custom mode overrides this to its hint budget in startCustom
   runFolded = false;
@@ -21809,7 +21824,7 @@ function endChallenge() {
     // Blood moonlit — a dark side beaten after midnight, before five. The eclipse is the dark
     // side's own mark, and the small hours are Glitch's. Read off THIS run, so any dark side,
     // won again, still earns it.
-    if (won && challengeDark && new Date().getHours() < 5) earnPolaroid("blood-moon");
+    if (won && challengeDark && activeClock().hour < 5) earnPolaroid("blood-moon");
     // Champagne coupe — one page short of this card's own best. The dark side keeps its own.
     // Long Story Long sits this out: its record is a character count, so "one short" would be
     // one CHARACTER short of a stored 400-odd, which is neither a near miss anybody would feel
@@ -27424,16 +27439,17 @@ function checkCatalogueCharms(song) {
     unlock("answer-vault-track-for-tv-track-title");
   }
 
-  // The named pairs, and the two dated ones. A weekday comes off the real clock, like the rest
-  // of the day-of-the-week charms; Friday's window is the evening the line describes.
+  // The named pairs, and the two dated ones. A weekday comes off the player's own day in the
+  // active zone, like the rest of the day-of-the-week charms; Friday's window is the evening the
+  // line describes.
   const w = currentWord.toLowerCase();
-  const now = new Date();
+  const now = activeClock();
   if (w === "cat" && baseTitleOf(song.title) === "Karma") unlock("answer-karma-for-cat");
   if (w === "folklore" && song.title === "gold rush") unlock("answer-gold-rush-for-folklore");
-  if (w === "wednesday" && song.title === "Begin Again" && now.getDay() === 3) {
+  if (w === "wednesday" && song.title === "Begin Again" && now.dow === 3) {
     unlock("answer-begin-again-for-wednesday-on-a-wednesday");
   }
-  if (w === "friday" && song.title === "I'm Only Me When I'm With You" && now.getDay() === 5 && now.getHours() >= 18) {
+  if (w === "friday" && song.title === "I'm Only Me When I'm With You" && now.dow === 5 && now.hour >= 18) {
     unlock("answer-only-me-for-friday-on-a-friday-night");
   }
 }
@@ -28105,7 +28121,7 @@ function submitAnswer(song, isTimeout) {
   if (correctStreak >= 7) earnPolaroid("seven");         // picture me in the trees
   if (correctStreak >= 10) unlock("streak-10");
   // It's Raining And It's Monday — answer the word "rain" right on a Monday.
-  if (correct && !commonRuleActive() && currentWord === "rain" && new Date().getDay() === 1) unlock("answer-rain-on-monday");
+  if (correct && !commonRuleActive() && currentWord === "rain" && activeClock().dow === 1) unlock("answer-rain-on-monday");
 
   checkpointRunProgress(devNoLog);
 
@@ -29427,7 +29443,7 @@ function endGame() {
   if (hasTriangle(roundSongs)) unlock("answer-cardigan-betty-august-one-game");
   if (longestBTitleRun(roundResults, roundSongs) >= 3) unlock("streak-3-b-titles");
   if (totalLifetimeMisses() >= 1000) unlock("miss-1000-rounds-lifetime");
-  if (new Date().getHours() === 0) unlock("play-between-midnight-and-1am");   // played in the midnight hour
+  if (activeClock().hour === 0) unlock("play-between-midnight-and-1am");   // played in the midnight hour
   // Safe & Sound — the three most recent finished runs were all classic Easy.
   const recent = loadHistory();
   if (recent.length >= 3 && recent.slice(0, 3).every((h) => h.m === "easy")) unlock("play-easy-3-times-in-row");
@@ -29441,7 +29457,7 @@ function endGame() {
   }
   // 3 AM And I'm Still Awake — the WHOLE game inside that hour, so both ends are checked. A run
   // resumed after a refresh keeps the hour it opened on (see restoreDailyProgress).
-  if (runStartHour === 3 && new Date().getHours() === 3) unlock("play-whole-game-in-3am-hour");
+  if (runStartHour === 3 && activeClock().hour === 3) unlock("play-whole-game-in-3am-hour");
   // Happy Birthday To You — off TS_MILESTONES, which the dated marginalia already reads, rather
   // than a second hardcoded 13 December that would then be free to drift from the first.
   const birthday = TS_MILESTONES.find((m) => m.kind === "birthday");
