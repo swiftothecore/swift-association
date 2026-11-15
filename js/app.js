@@ -38,7 +38,7 @@ import {
   BONUS_WHO_SECONDS, PRODUCER_ALBUMS, WHO_PAY_ONE, WHO_PAY_BOTH,
   BONUS_NASHVILLE_SECONDS, NASHVILLE_WRONG, NASHVILLE_KNOW_BETTER,
   BONUS_PEN_SECONDS, PEN_ALBUMS, PEN_GUESTS,
-  BONUS_CLOUD_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
+  BONUS_CLOUD_SECONDS, BONUS_SIGNS_SECONDS, CLOUD_WIDE_PAGES, CLOUD_WORDS_WIDE, CLOUD_WORDS_SPARE,
   RUTHLESS_WORD_MS, RUTHLESS_OPEN_WORDS,
   RUTHLESS_PACE_SECONDS, RUTHLESS_RUN_RUNGS,
   CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_ORDER, CHALLENGE_SEALS, byShelf, DARK_SIDE_IDS, DARK_SIDE_TODO,
@@ -106,6 +106,7 @@ import { handFrom } from "./penfill.js";
 import * as F13 from "./form13.js";
 import { postmarkSVG, postmarkDate } from "./postmark.js";
 import { zineCover, hasCover } from "./zine.js";
+import { ensureSignDefs, signMark } from "./signs.js";
 // Track by Track's twelve album sleeves (pure; see js/sleeves.js).
 import { albumSleeve, commonNameSize, hasMotif, motifOf, sleeveName } from "./sleeves.js";
 import { cloudMarkup, cloudFontReady } from "./cloud.js";
@@ -122,6 +123,7 @@ import { buildLineIndex, buildWordFreq, buildSlipPuzzle, readSlipSwaps, slipDeal
          buildNashvillePuzzle, nashvilleDealCount,
          buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
          buildCloudPuzzle, cloudWords,
+         buildSignsPuzzle, signsDealable,
          judgeBlank, blankExact, blankSungOnce } from "./bonus.js";
 import { passportHTML, stampCardsHTML, passportStamp, passportTracing, passportCaption, passportStampInk, issuedStampSVG } from "./passport.js";
 import { rewardBoardHTML, titleFileHTML, pinWire } from "./rewardboard.js";
@@ -3584,6 +3586,8 @@ const HIDDEN_ACH_IDS = [
   "finish-nashville-run-below-zero", "pass-last-nashville-page-to-finish-on-zero",
   // Then What's, Sing It Back's and Name That Song's second charms, each a single page.
   "pick-a-then-what-line-from-the-wrong-verse", "write-back-a-word-sung-only-once", "name-wrong-song-off-the-right-record",
+  // So Many Signs' pratfall: a page lost with its title spelled out in front of you.
+  "miss-a-signs-page-after-its-title-was-spelled-out",
   /* The Core batch's remaining secrets. Listing them roughly two-thirds
      again on the capstone's price, which is the deliberate reading of it: leaving them out
      would make Is It Over Now?'s own description untrue the moment they shipped. Grouped the
@@ -8583,6 +8587,8 @@ function bonusSeconds() {
   // A cloud is READ rather than scanned — the eye has to cross the whole page and weigh what
   // it finds — so it gets the reading budget the lyric games get rather than a title game's.
   if (bonusGame.id === "word-cloud") return BONUS_CLOUD_SECONDS;
+  // One budget across both rows of pictures: turning over gives no time back (see the constant).
+  if (bonusGame.id === "so-many-signs") return BONUS_SIGNS_SECONDS;
   // Ruthless Game has no budget: its page runs until it is named or given up on, and the
   // seconds it took ARE the score. Nothing asks this for a timed game (startBonusClock takes
   // the count-up branch before it gets here), so the value is never reached in practice.
@@ -8622,6 +8628,8 @@ function buildBonusPuzzle() {
     return buildCloudPuzzle(fresh, indexes.wordIndex, Math.random, 120,
                             new Set(bonusRecentSongs),
                             { words: bonusRound > CLOUD_WIDE_PAGES ? CLOUD_WORDS_SPARE : CLOUD_WORDS_WIDE });
+  if (bonusGame.id === "so-many-signs")
+    return buildSignsPuzzle(songs, signsData.songs, Math.random, new Set(bonusRecentSongs));
   if (bonusGame.id === "aaron-or-jack")
     return buildProducerPuzzle(songs, producerCredits, Math.random, 120, new Set(bonusRecentSongs));
   if (bonusGame.id === "who-held-the-pen")
@@ -8668,6 +8676,8 @@ function bonusDealCount() {
   // genuinely reach the end of — see the roster note on why that is the design, not a bug.
   if (bonusGame && bonusGame.id === "the-capitals")
     return capitalsDealCount(songs, secretMessages);
+  // Only the songs the picture list draws: the rest of the pool is left out on purpose.
+  if (bonusGame && bonusGame.id === "so-many-signs") return signsDealable(songs, signsData.songs).length;
   // Both sides, since either can be dealt on any page — and none of them is in `songs`.
   if (bonusGame && bonusGame.id === "nashville") return nashvilleDealCount(nashvillePool);
   // Every song in the pool has authored lines today, but a song whose lines were all dropped as
@@ -8778,6 +8788,7 @@ function nextBonusRound(options = {}) {
   penPlayed = null;
   nashvilleDoor = null;
   nashvillePassed = false;
+  signsTurned = false;
   if (bonusGame.id === "only-here" && bonusPuzzle.hand)
     bonusPuzzle.hand.forEach((c) => onlyDealt.add(c.key));
   // A fresh chain: nothing picked, nothing banked. The longest run survives the page.
@@ -8856,7 +8867,7 @@ function bonusPageEra() {
    list: half its titles are somebody else's, and an unreleased song has no record. Styles
    hang off `data-song-era` ("page" or "reveal"), so this colours nothing by itself. */
 const SONG_ERA_ON_PAGE = new Set(["sing-it-back", "then-what", "only-here", "running-order"]);
-const SONG_ERA_AT_REVEAL = new Set(["name-that-song", "redacted", "word-cloud", "the-capitals",
+const SONG_ERA_AT_REVEAL = new Set(["name-that-song", "redacted", "word-cloud", "the-capitals", "so-many-signs",
                                     "spot-the-slip", "correct-the-slip", "aaron-or-jack", "who-held-the-pen"]);
 function paintSongEra(when) {
   const screen = screens.bonusplay;
@@ -9278,6 +9289,8 @@ function renderBonusRound() {
       if (e.key === "Enter") { e.preventDefault(); judgeName(); }
     });
     if (!bonusLocked) focusRoundInput(input);
+  } else if (bonusGame.id === "so-many-signs") {
+    renderSignsPage(body);
   } else if (bonusGame.id === "word-cloud") {
     /* THE PAGE IS THE CLOUD AND NOTHING ELSE. No title, no album, no section label, no line of
        the song in order anywhere on it — the scatter is the only evidence there is meant to be,
@@ -10205,6 +10218,17 @@ function judgeName(picked = null) {
     settleRuthless(true);
     return;
   }
+  /* So Many Signs forgives ONE wrong title: a miss on the first row turns the second row over
+     instead of ending the page, at the same price as turning it over by hand. A miss with both
+     rows showing ends the page like any other. */
+  if (!correct && bonusGame.id === "so-many-signs" && !signsTurned) {
+    const r = $("bonusReject");
+    r.textContent = `not ${censor(song.title)}. here's another row`;
+    r.classList.remove("show"); void r.offsetWidth; r.classList.add("show");
+    $("bonusInput").value = "";
+    turnSignsOver();
+    return;
+  }
   $("bonusInput").disabled = true;
   // The page already names the right song (Name That Song's sheet heading, Redacted's peeled
   // verse), so the only thing left to say is what was written — and on a hit that's the same
@@ -10671,7 +10695,7 @@ function bonusAnswerCard() {
   if (bonusGame.id === "redacted" || bonusGame.id === "only-here" ||
       bonusGame.id === "then-what" || bonusGame.id === "running-order" ||
       bonusGame.id === "aaron-or-jack" || bonusGame.id === "who-held-the-pen" ||
-      bonusGame.id === "the-capitals" || bonusGame.id === "nashville" ||
+      bonusGame.id === "the-capitals" || bonusGame.id === "nashville" || bonusGame.id === "so-many-signs" ||
       bonusGame.id === "sing-it-back" || isRuthlessRun()) return "";
   /* Name That Song keeps only "full lyrics": the reveal has already written the title, record
      and section over the line and set the lines either side of it round it (see
@@ -10735,6 +10759,8 @@ function bonusPageScore(correct) {
     return !correct ? 0 : bonusPuzzle.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
   if (!correct) return 0;
   if (bonusGame && bonusGame.id === "redacted") return Math.max(REDACT_MIN_POINTS, redactWorth);
+  // Two off the first row of pictures, one once the page has been turned over.
+  if (bonusGame && bonusGame.id === "so-many-signs") return signsTurned ? 1 : 2;
   return 1;
 }
 
@@ -10792,6 +10818,9 @@ function bonusBannerText(correct, isTimeout) {
   // one" over the impostor the player circled.
   if (isFixRun() && slipFixing)
     return correct ? "found it and fixed it" : isTimeout ? "found it, ran out of ink" : "found it, not that word";
+  if (bonusGame && bonusGame.id === "so-many-signs")
+    return correct ? (signsTurned ? "got there on the second row" : "saw it straight off")
+         : isTimeout ? "the page ran out" : "not this one";
   return correct ? "that's the one" : isTimeout ? "the page ran out" : "not this one";
 }
 
@@ -10898,6 +10927,8 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     // Correct the Slip alone: the impostor was found and the word written back was wrong. Half
     // the page, and marked as half (BG_HALF), so it never reads like an impostor walked past.
     half: isFixRun() && slipFixing && !correct,
+    // So Many Signs: the page was turned over to its second row. Pictures In My Mind reads it.
+    turned: bonusGame.id === "so-many-signs" && signsTurned,
     title: bonusPuzzle.song.title,
     album: bonusPuzzle.song.album,
     words: ruthlessShown,
@@ -10962,6 +10993,10 @@ function settleBonusRound(correct, detail, isTimeout = false) {
             ? (bonusPuzzle.by === "solo" ? "alone"
                : bonusPuzzle.by === "one" ? "2 names" : "3+ names")
         : bonusGame.id === "running-order" ? `${trackSecs.toFixed(2)}s`
+        // What the page paid, which is the one thing the margin cannot already say: a tick off
+        // the first row and a tick off the second look alike. Endless pays one page either way,
+        // so there the album, like every other title game.
+        : bonusGame.id === "so-many-signs" ? (bonusEndless ? bonusPuzzle.song.album : `${gained} pts`)
         : isRuthlessRun() ? fmtTimeFine(gained)
         : bonusPuzzle.song.album,
   });
@@ -11052,6 +11087,8 @@ function settleBonusRound(correct, detail, isTimeout = false) {
     // see penDetail. The lines above have already been signed by the judge.
     const meta = $("bonusPenMeta");
     if (meta) meta.textContent = bonusPuzzle.album;
+  } else if (bonusGame.id === "so-many-signs") {
+    revealSigns(correct);
   } else if (bonusGame.id === "name-that-song") {
     /* The page finishes as a lyric sheet, the way Redacted's does: the instruction goes and the
        title is written in pen over the line it was asked about, with the record and the section
@@ -11306,6 +11343,11 @@ function foldBonusPageCharms(correct, isTimeout) {
        message is a written line and "Maple Latte." is two words however short it looks. */
     if (correct && !isTimeout && bonusPuzzle.message.trim().split(/\s+/).length === 1)
       unlock("name-a-one-word-capitals-message");
+  } else if (bonusGame.id === "so-many-signs") {
+    // Didn't See The Signs: lost with the title spelled out in pictures on the page. A timeout
+    // counts; the rebus was in front of you either way.
+    if (!correct && signsTurned && bonusPuzzle.second.kind === "T")
+      unlock("miss-a-signs-page-after-its-title-was-spelled-out");
   } else if (bonusGame.id === "word-cloud") {
     // Counted here rather than at the end, because whether a page was a spare one is a fact
     // about the page and the run fold has no page left to ask.
@@ -11372,10 +11414,13 @@ function foldBonusRunCharms(perfect, cleared) {
     const sweepCharm = { "spot-the-slip": "sweep-spot-the-slip", "correct-the-slip": "sweep-correct-the-slip", "name-that-song": "sweep-name-that-song-one-line-each",
                          "only-here": "take-rarest-only-here-card-all-10-pages", "then-what": "finish-then-what-unbroken-chain",
                          "running-order": "sweep-running-order", "word-cloud": "sweep-word-cloud",
-                         "the-capitals": "sweep-the-capitals",
+                         "the-capitals": "sweep-the-capitals", "so-many-signs": "sweep-so-many-signs",
                          "who-held-the-pen": "sweep-who-held-the-pen" }[bonusGame.id];
     if (sweepCharm) unlock(sweepCharm);
     if (bonusGame.id === "sing-it-back" && blankExactRun) unlock("sweep-sing-it-back-all-words-exact");
+    // Pictures In My Mind: every page named off its first row, which is the full twenty.
+    if (bonusGame.id === "so-many-signs" && bonusLog.every((p) => !p.turned))
+      unlock("sweep-so-many-signs-on-first-clues");
     // Extra Credit: a sweep on a deal that carried a joint production, read off the deal's own
     // ceiling, which only climbs past one a page when a "both" page was dealt.
     if (bonusGame.id === "aaron-or-jack" && whoCeiling > BONUS_ROUNDS * WHO_PAY_ONE)
@@ -16216,9 +16261,114 @@ function installSecretMessages(byAlbum, grouped) {
   return map;
 }
 
+/* ---------- So Many Signs' pictures ----------
+   data/signs.json is { marks: [svg], names: [name], songs: { title: [[kind, markIds, note]] } },
+   built by scripts/bonus/signs/build.py from the clue list and the approved marks. Titles are
+   checked against songs.json the way the credits are, and a miss is named once, loudly: a
+   title spelled differently in one file is a page that silently stops existing. */
+let signsData = { marks: [], names: [], songs: new Map(), orphans: [] };
+function installSigns(doc, grouped) {
+  const known = new Set();
+  grouped.forEach((a) => a.songs.forEach((song) => known.add(song.title)));
+  const songs = new Map(), orphans = [];
+  Object.entries(doc.songs || {}).forEach(([title, clues]) => {
+    if (known.has(title)) songs.set(title, clues); else orphans.push(title);
+  });
+  if (orphans.length) console.warn(`signs.json: ${orphans.length} title(s) do not match songs.json and were dropped`, orphans);
+  signsData = { marks: doc.marks || [], names: doc.names || [], songs, orphans };
+}
+
+let signsTurned = false;   // the page's second row is face up
+
+// One row of pictures, as a strip of marks. Read out by name, since a row is a sentence.
+function signsRowHTML(row, id) {
+  const said = row.ids.map((i) => signsData.names[i] || "a picture").join(", ");
+  return `<div class="bg-sign-row" id="${id}" role="img" aria-label="Pictures: ${escapeHtml(said)}">` +
+    row.ids.map((i) => `<span class="bg-sign">${signMark(signsData.marks[i] || "")}</span>`).join("") + `</div>`;
+}
+
+/* THE PAGE IS TWO CARDS. The first lies face up with its row of pictures; the second lies face
+   down beside it and IS the turn-over button, because turning a card over is the thing a person
+   at a desk would do with it. The worth line says what turning costs on the ten-page side; on
+   the endless side a page is one page either way and the cost is the clock, so it says nothing. */
+function renderSignsPage(body) {
+  ensureSignDefs();
+  const p = bonusPuzzle;
+  body.innerHTML =
+    `<p class="bg-ask">name the song these pictures are hiding</p>` +
+    `<div class="bg-signs">` +
+      `<div class="bg-sign-card is-up">${signsRowHTML(p.first, "bonusSignFirst")}</div>` +
+      `<button type="button" class="bg-sign-card is-down" id="bonusSignTurn" aria-label="Turn over the second card for another row of pictures">` +
+        `<span class="bg-sign-back" aria-hidden="true"><span class="bg-sign-back-word">turn over</span></span>` +
+      `</button>` +
+    `</div>` +
+    (bonusEndless ? ""
+      : `<p class="bg-worth">this page is worth <b id="bonusWorth">2</b></p>`) +
+    bonusWritingLine({ placeholder: "type the title…", aria: "Type the song title",
+                       hint: "Enter accepts the top match", dropdown: true });
+  $("bonusSignTurn").addEventListener("click", () => { if (!bonusLocked) turnSignsOver(); });
+  const input = $("bonusInput");
+  input.addEventListener("input", updateBonusDropdown);
+  input.addEventListener("keydown", (e) => {
+    if (bonusDropdownKey(e)) return;
+    if (e.key === "Enter") { e.preventDefault(); judgeName(); }
+  });
+  if (!bonusLocked) focusRoundInput(input);
+}
+
+/* Turn the second card face up. A squash to edge-on and back rather than a 3D turn, with the
+   face swapped at the thin point, so there is no backface to trust (see the turn notes in
+   styles.css). Once only: a page has two rows and that is all. */
+/* `reveal` is the settle showing the card that was never needed: it turns the card up WITHOUT
+   marking the page turned, because the page's price, banner and log were all read as it stood. */
+function turnSignsOver({ quiet = false, reveal = false } = {}) {
+  if (!bonusPuzzle || !bonusPuzzle.second || $("bonusSignSecond")) return;
+  if (!reveal) {
+    if (signsTurned) return;
+    signsTurned = true;
+  }
+  const card = $("bonusSignTurn");
+  const worth = $("bonusWorth");
+  if (worth && !bonusLocked) {
+    worth.textContent = "1";
+    worth.classList.remove("is-spent"); void worth.offsetWidth; worth.classList.add("is-spent");
+  }
+  if (!card) return;
+  const face = document.createElement("div");
+  face.className = "bg-sign-card is-up is-second";
+  face.innerHTML = signsRowHTML(bonusPuzzle.second, "bonusSignSecond");
+  if (quiet || prefersReducedMotion() || !pageTurnAnimated()) { card.replaceWith(face); return; }
+  card.disabled = true;
+  card.classList.add("is-turning");
+  setTimeout(() => {
+    face.classList.add("is-landing");
+    card.replaceWith(face);
+  }, 160);
+  if (!quiet) playSound("page");
+}
+
+/* The reveal: the title is written over the cards in pen (red on a miss), the album under the
+   rule, the second card turned up if it was never needed, and under each row what its pictures
+   were saying. The song is the heading, so there is no answer card below. */
+function revealSigns(correct) {
+  const body = $("bonusPlayBody");
+  body.querySelector(".bg-ask")?.remove();
+  turnSignsOver({ quiet: true, reveal: true });
+  const cards = body.querySelector(".bg-signs");
+  if (!cards) return;
+  cards.insertAdjacentHTML("beforebegin", bonusSongHead(bonusPuzzle.song, ""));
+  if (!correct) body.querySelector(".bg-sheet-title")?.classList.add("is-answer");
+  const say = (row) => row.kind === "T" ? "the title, spelled out" : row.note;
+  [[bonusPuzzle.first, "#bonusSignFirst"], [bonusPuzzle.second, "#bonusSignSecond"]].forEach(([row, sel]) => {
+    const el = body.querySelector(sel);
+    const note = say(row);
+    if (el && note) el.insertAdjacentHTML("afterend", `<p class="bg-sign-said">${escapeHtml(censor(note))}</p>`);
+  });
+}
+
 async function loadData() {
   // Optional shelf data must not prevent the core notebook opening after a network failure.
-  const [wordsRes, songsRes, credsRes, secretsRes, writersRes, nashRes, slipsRes] = await Promise.all([
+  const [wordsRes, songsRes, credsRes, secretsRes, writersRes, nashRes, slipsRes, signsRes] = await Promise.all([
     fetch("data/words.json"),
     fetch("data/songs.json"),
     fetch("data/producers.json").catch(() => null),
@@ -16226,6 +16376,7 @@ async function loadData() {
     fetch("data/writers.json").catch(() => null),
     fetch("data/nashville.json").catch(() => null),
     fetch("data/slips.json").catch(() => null),
+    fetch("data/signs.json").catch(() => null),
   ]);
   if (!wordsRes.ok || !songsRes.ok) throw new Error("Failed to fetch data files");
   const words = await wordsRes.json();
@@ -16278,6 +16429,12 @@ async function loadData() {
     try { installNashvillePool(await nashRes.json()); }
     catch (e) { console.warn("Nashville pools failed to load", e); }
   } else console.warn("Nashville pools missing: Nashville will have nothing to deal");
+  /* So Many Signs' pictures, installed beside the corpus for the credits' reason: a fact about
+     Taylor's songs keyed by her titles, never swapped for a guest's. Survivable on failure. */
+  if (signsRes?.ok) {
+    try { installSigns(await signsRes.json(), grouped); }
+    catch (e) { console.warn("picture clues failed to load", e); }
+  } else console.warn("picture clues missing: So Many Signs will have nothing to deal");
   // Kept for the blended lineup corpus, which needs Taylor's catalogue in its ORIGINAL
   // grouped shape (installCorpus flattens); re-fetching a precached file would work but
   // would be a second copy of the same bytes.
@@ -35944,6 +36101,7 @@ function buildDevApi() {
             : id === "who-held-the-pen" ? buildPenPuzzle(songs, writerCredits)
             : id === "running-order" ? buildTrackPuzzle(songs, bonusIndexes().trackIndex)
             : id === "the-capitals" ? buildCapitalsPuzzle(songs, secretMessages)
+            : id === "so-many-signs" ? buildSignsPuzzle(songs, signsData.songs)
             : id === "sing-it-back" ? buildBlankPuzzle(songs, ctx)
             : buildSlipPuzzle(songs, slipSwaps, lineIndex);
           if (p) ok++;
@@ -36125,6 +36283,40 @@ function buildDevApi() {
          the page at all (how few other songs do). Reading them side by side is the only way
          to see the selection and the sizing doing two different jobs, which is the whole
          design and the thing an innocent-looking edit collapses. */
+      /* So Many Signs. `signs()` reads the live page (song, both rows by mark name, whether it has
+         been turned); `signs.answer()` names it, `signs.wrong()` writes a wrong title (which turns
+         the page over the first time and loses it the second), `signs.turn()` turns by hand, and
+         `signs.audit()` says how many shelf songs have pictures and whether any title or mark id
+         in data/signs.json fails to resolve. */
+      signs: Object.assign(() => {
+        if (!bonusGame || bonusGame.id !== "so-many-signs" || !bonusPuzzle) return "no So Many Signs page live";
+        const row = (r) => ({ kind: r.kind, pictures: r.ids.map((i) => signsData.names[i]).join(", "), note: r.note });
+        return { song: bonusPuzzle.song.title, first: row(bonusPuzzle.first), second: row(bonusPuzzle.second), turned: signsTurned };
+      }, {
+        answer: () => {
+          if (!bonusGame || bonusGame.id !== "so-many-signs" || bonusLocked) return "no live page";
+          const input = $("bonusInput"); input.value = bonusPuzzle.song.title;
+          input.dispatchEvent(new Event("input")); judgeName(bonusPuzzle.song);
+          return bonusPuzzle.song.title;
+        },
+        wrong: () => {
+          if (!bonusGame || bonusGame.id !== "so-many-signs" || bonusLocked) return "no live page";
+          const other = bonusSongs().find((x) => x.title !== bonusPuzzle.song.title);
+          judgeName(other);
+          return `wrote ${other.title}`;
+        },
+        turn: () => { turnSignsOver(); return signsTurned; },
+        audit: () => {
+          const pool = bonusSongs();
+          const dealable = signsDealable(pool, signsData.songs);
+          const badIds = [];
+          signsData.songs.forEach((clues, t) => clues.forEach(([, ids]) => ids.forEach((i) => {
+            if (!signsData.marks[i]) badIds.push(`${t}: ${i}`); })));
+          return { inFile: signsData.songs.size, dealable: dealable.length, shelfPool: pool.length,
+                   offShelf: [...signsData.songs.keys()].filter((t) => !pool.some((x) => x.title === t)),
+                   orphans: signsData.orphans, badIds, marks: signsData.marks.length };
+        },
+      }),
       cloud: () => {
         if (!bonusGame || bonusGame.id !== "word-cloud" || !bonusPuzzle) return "no Word Cloud page live";
         const { wordIndex } = bonusIndexes();
@@ -36582,6 +36774,8 @@ function buildDevApi() {
             // fabricated page reads its own deal exactly as a played one would.
             : bonusGame.id === "aaron-or-jack"
               ? (ok ? (p.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE) : 0)
+            // So Many Signs pays two off the first row and one off the second, nothing between.
+            : bonusGame.id === "so-many-signs" ? (ok ? 2 - (n % 3 === 0 ? 1 : 0) : 0)
             : ok ? Math.max(REDACT_MIN_POINTS, bonusPagePoints(bonusGame) - (n % 6)) : 0;
           if (bonusGame.id === "aaron-or-jack")
             whoCeiling += p.by === "both" ? WHO_PAY_BOTH : WHO_PAY_ONE;
@@ -36592,6 +36786,7 @@ function buildDevApi() {
                 : bonusGame.id === "sing-it-back" ? p.answer
                 : bonusGame.id === "redacted" ? `${pts} pts`
                 : bonusGame.id === "then-what" ? `${pts} pts`
+                : bonusGame.id === "so-many-signs" ? `${pts} pts`
                 : bonusGame.id === "only-here" ? (ok ? `${pts} · ${p.hand[p.optimal[0]].word.toLowerCase()}`
                                                         : p.hand[p.optimal[0]].word.toLowerCase())
                 : bonusGame.id === "aaron-or-jack" ? p.by

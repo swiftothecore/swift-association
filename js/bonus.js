@@ -1934,3 +1934,36 @@ export function buildCloudPuzzle(songs, wordIndex, rng = Math.random, tries = 12
   };
   return pickSong(true) || pickSong(false);
 }
+
+/* ---------- So Many Signs ----------
+   A page is one song and two rows of drawn pictures (data/signs.json, title -> clues). Each
+   clue is [kind, markIds, note]: T spells the title picture by picture, L pictures a line, S
+   the song's story; the note is what the pictures say, printed at the reveal.
+
+   THE ORDER IS THE RULE. The page opens on a row that is NOT the title rebus, and the rebus is
+   held back as the rescue, because a title spelled out is the easier row by a distance and
+   paying two for it would make turning over pointless. A song with no rebus (about half) opens
+   on its first row and rescues with its second. A song with two rebuses would open on one; the
+   list has none today. */
+export function signsPair(clues) {
+  const rows = (clues || []).map(([kind, ids, note]) => ({ kind, ids, note: note || "" }));
+  if (rows.length < 2) return null;
+  const first = rows.find((c) => c.kind !== "T") || rows[0];
+  const rest = rows.filter((c) => c !== first);
+  const second = rest.find((c) => c.kind === "T") || rest[0];
+  return { first, second };
+}
+
+/* The shelf's pool filtered to the songs that have pictures, which is the only thing that can
+   make this game short of pages: the list covers 225 of the shelf's songs and leaves the rest
+   out on purpose (a song with nothing that draws is simply not a page). The ban list is a
+   preference the caller empties; a page is never dealt off a song the list does not carry. */
+export function signsDealable(songs, signs) {
+  return songs.filter((s) => signs.has(s.title) && signsPair(signs.get(s.title)));
+}
+export function buildSignsPuzzle(songs, signs, rng = Math.random, avoid = null) {
+  const pool = signsDealable(songs, signs).filter((s) => !avoid || !avoid.has(s.title));
+  if (!pool.length) return null;
+  const song = pool[Math.floor(rng() * pool.length)];
+  return { song, ...signsPair(signs.get(song.title)) };
+}

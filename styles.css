@@ -6766,6 +6766,61 @@
     color: var(--ink); white-space: nowrap; transform-origin: center;
     -webkit-user-select: none; user-select: none;
   }
+  /* ---- So Many Signs ----
+     Two cards on the page. The first lies face up with a row of drawn pictures; the second lies
+     face down under it and is itself the turn-over button, because turning a card over is what a
+     person at a desk does with one. Both cards are the page's own paper, because a mark's white
+     parts are filled with var(--paper) (`.tint[data-c="paper"]`) and a card of any other colour
+     would show them up as patches. The marks are drawn in the charm pen at the size the board
+     signed them off at, and wobble through the charms' own filter. */
+  .bg-signs { display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 4px auto 16px; }
+  .bg-sign-card {
+    min-width: min(100%, 200px); max-width: 100%; min-height: 92px; padding: 12px 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: var(--paper); border-radius: 4px; color: var(--ink);
+    box-shadow: 0 1px 2px rgba(40,30,15,0.16), 0 4px 10px rgba(40,30,15,0.08);
+    transform: rotate(-0.7deg);
+  }
+  .bg-sign-card.is-second { transform: rotate(0.9deg); }
+  .bg-sign-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; }
+  .bg-sign { width: 64px; height: 64px; flex: none; }
+  .sign-mark { width: 100%; height: 100%; overflow: visible; filter: url(#charmWobble); }
+  .sign-mark .ink, .sign-mark .ink-fill { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .sign-mark .ink { stroke-width: 1.5; }
+  .sign-mark .ink-fill { stroke-width: 1.7; }
+  .sign-mark .tint { stroke: none; }
+  .sign-mark .tint[data-c="paper"] { fill: var(--paper); }
+  .sign-mark .tint-line { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85; }
+  /* The face-down card: the zine's own yellow ruled across it like the back of a playing card,
+     with what it does written on in typewriter. */
+  .bg-sign-card.is-down {
+    cursor: pointer; border: 0; font: inherit; transform: rotate(0.9deg); width: min(100%, 230px);
+    background: repeating-linear-gradient(-38deg, color-mix(in srgb, #d8a21e 30%, var(--paper)) 0 3px, var(--paper) 3px 7px);
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+  }
+  .bg-sign-card.is-down:not(:disabled):is(:hover, :focus-visible) {
+    transform: rotate(0.9deg) translateY(-2px);
+    box-shadow: 0 2px 3px rgba(40,30,15,0.18), 0 8px 16px rgba(40,30,15,0.12);
+  }
+  .bg-sign-back-word {
+    display: inline-block; padding: 5px 10px 4px; background: var(--paper); border-radius: 2px;
+    font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); letter-spacing: 1.4px;
+    text-transform: lowercase; color: var(--ink);
+  }
+  .bg-sign-card.is-turning { animation: bgSignSquash 0.16s ease-in forwards; }
+  .bg-sign-card.is-landing { animation: bgSignLand 0.2s ease-out; }
+  @keyframes bgSignSquash { to { transform: rotate(0.9deg) scaleX(0); } }
+  @keyframes bgSignLand { from { transform: rotate(0.9deg) scaleX(0); } }
+  /* What a row was saying, written under it at the reveal in the soft lyric ink. */
+  .bg-sign-said {
+    margin: 8px auto 0; max-width: 34ch; text-align: center;
+    font-family: var(--hand); font-size: calc(18px + var(--text-size-adjust)); line-height: 1.2; color: var(--ink-soft);
+  }
+  @media (max-width: 560px) {
+    .bg-sign { width: 50px; height: 50px; }
+    .bg-sign-row { gap: 6px; }
+    .bg-sign-card { padding: 10px 12px; min-height: 76px; }
+  }
   .bg-giveup { display: flex; width: max-content; max-width: 100%; margin: 12px auto 0; }
   /* Walking away is paid for, so give up is a penalty ticket, notched either side, with the
      fine printed on its stub. Grey, and counting the words still to come, until it can be

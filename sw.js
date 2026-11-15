@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v823";
+const CACHE = "stta-v824";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -126,6 +126,7 @@ const ASSETS = [
   // The bonus shelf's torn-paper zine covers (pure; see js/zine.js). app.js imports it at
   // load, so a stale copy of one and a fresh copy of the other is a broken shelf.
   "js/zine.js",
+  "js/signs.js",
   // Track by Track's twelve album sleeves (pure; see js/sleeves.js). They are drawn with the
   // workshop exported from js/zine.js, so the two are one deploy: a stale copy of either is a
   // board pasted up by different hands from the shelf beside it.
@@ -189,6 +190,7 @@ const ASSETS = [
   "data/songs.json",
   "data/producers.json",
   "data/slips.json",
+  "data/signs.json",
   "data/writers.json",
   "data/nashville.json",
   "data/words.json",

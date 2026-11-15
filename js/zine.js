@@ -211,6 +211,75 @@ function slipCollage(r, ink) {
   return s;
 }
 
+
+/* ---------- So Many Signs: the big few ----------
+   Nine big torn-paper pictures packed edge to edge on coral and running off every side, so the
+   card is all picture and the 24px tile still sees shapes (a heart, a star, a face) rather than
+   speckle. Picked off scripts/bonus/picture-covers.html over a rebus strip, a speech bubble, a
+   burning photo, one big heart-eyed face (it read as the emoji itself, the thing the game's own
+   drawn marks exist to avoid) and two busier scatters. Every placement is authored; only the
+   tearing is random. Coral sits near Spot the Slip's vermillion stripe, but that card is navy
+   with one stripe and this one is a crowd. */
+const heartPts = (cx, cy, s, n = 30) => Array.from({ length: n }, (_, i) => {
+  const t = (i / n) * Math.PI * 2;
+  const x = 16 * Math.sin(t) ** 3;
+  const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+  return [cx + x * s / 34, cy + (y + 2.5) * s / 34];
+});
+const starPts = (cx, cy, R, rIn, rot = -90) => Array.from({ length: 10 }, (_, i) => {
+  const a = (rot + i * 36) * Math.PI / 180, rr = i % 2 ? rIn : R;
+  return [cx + Math.cos(a) * rr, cy + Math.sin(a) * rr];
+});
+const dropPts = (cx, cy, R) => {
+  const pts = [];
+  for (let i = 0; i <= 16; i++) { const a = (-30 + i * 15) * Math.PI / 180; pts.push([cx + Math.cos(a) * R, cy + Math.sin(a) * R]); }
+  pts.push([cx, cy - R * 2.15]);
+  return pts;
+};
+const bandPts = (cx, cy, R, w, from, to, n = 18) => {   // a thick arc: the smile
+  const o = [], i = [];
+  for (let k = 0; k <= n; k++) {
+    const a = (from + (to - from) * (k / n)) * Math.PI / 180;
+    o.push([cx + Math.cos(a) * (R + w / 2), cy + Math.sin(a) * (R + w / 2)]);
+    i.push([cx + Math.cos(a) * (R - w / 2), cy + Math.sin(a) * (R - w / 2)]);
+  }
+  return o.concat(i.reverse());
+};
+const crescentPts = (cx, cy, R) => {
+  const pts = [];
+  for (let k = 0; k <= 14; k++) { const a = (50 + k * (260 / 14)) * Math.PI / 180; pts.push([cx + Math.cos(a) * R, cy + Math.sin(a) * R]); }
+  const ix = cx + R * 0.5, iy = cy - R * 0.12, ir = R * 0.86;
+  for (let k = 0; k <= 12; k++) { const a = (300 - k * (240 / 12)) * Math.PI / 180; pts.push([ix + Math.cos(a) * ir, iy + Math.sin(a) * ir]); }
+  return pts;
+};
+const scaledPts = (pts, x, y, k) => pts.map(([a, b]) => [x + a * k, y + b * k]);
+const SIGN_BOLT = [[2.5, -11], [-7.5, 2], [-1, 2], [-4.5, 11], [8.5, -3.2], [2, -3.2], [7, -11]];
+const SIGN_FLAME = [[0, 10], [-7, 5], [-8, -2], [-4.5, -6.5], [-3, -1.5], [0, -11], [3.5, -4.5], [6, -7.5], [8, 0], [7, 6]];
+function signPic(r, kind, x, y, sz, rot) {
+  const RED = "#d0343c", GOLD = "#f4c430", BLUE = "#3f7fc4", NAVY = "#2b3d66", BROWN = "#5a3218", ORANGE = "#ec7a26", PINK = "#ef9ab4";
+  const o = { amp: Math.min(0.9, sz * 0.035), step: Math.max(2.6, sz * 0.18) };
+  const fine = { amp: Math.min(0.45, sz * 0.02), step: 2.4, fibre: false, shadow: false };
+  let s = "";
+  if (kind === "heart") s = sheet(heartPts(x, y, sz), RED, r, o);
+  if (kind === "pinkheart") s = sheet(heartPts(x, y, sz), PINK, r, o);
+  if (kind === "star") s = sheet(starPts(x, y, sz / 2, sz * 0.245, -90), GOLD, r, o);
+  if (kind === "drop") s = sheet(dropPts(x, y + sz * 0.24, sz * 0.34), BLUE, r, o);
+  if (kind === "bolt") s = sheet(scaledPts(SIGN_BOLT, x, y, sz / 20), ORANGE, r, o);
+  if (kind === "moon") s = sheet(crescentPts(x, y, sz / 2), GOLD, r, o);
+  if (kind === "fire") s = sheet(scaledPts(SIGN_FLAME, x, y, sz / 21), ORANGE, r, o) +
+    sheet(scaledPts(SIGN_FLAME, x, y + sz * 0.16, sz / 21 * 0.52), GOLD, r, fine);
+  if (kind === "note") s = sheet(circlePts(x - sz * 0.13, y + sz * 0.3, sz * 0.19, r, 16, 0), NAVY, r, o) +
+    sheet([[x + sz * 0.02, y - sz * 0.46], [x + sz * 0.12, y - sz * 0.46], [x + sz * 0.1, y + sz * 0.3], [x, y + sz * 0.3]], NAVY, r, fine) +
+    sheet([[x + sz * 0.08, y - sz * 0.46], [x + sz * 0.4, y - sz * 0.24], [x + sz * 0.37, y - sz * 0.1], [x + sz * 0.1, y - sz * 0.26]], NAVY, r, fine);
+  if (kind === "hearteyes") {
+    s = sheet(circlePts(x, y, sz / 2, r, 26, sz * 0.02), GOLD, r, o) +
+        sheet(heartPts(x - sz * 0.19, y - sz * 0.1, sz * 0.32), RED, r, fine) +
+        sheet(heartPts(x + sz * 0.19, y - sz * 0.11, sz * 0.3), RED, r, fine) +
+        sheet(bandPts(x, y + sz * 0.02, sz * 0.25, sz * 0.085, 24, 156), BROWN, r, fine);
+  }
+  return `<g transform="rotate(${rot} ${x} ${y})">${s}</g>`;
+}
+
 const COVERS = {
   /* SPOT THE SLIP — the line that throws. A slate page of ruled taupe strips with one
      vermillion impostor kicked out of line, longer than the rest and running off the edge.
@@ -444,6 +513,12 @@ const COVERS = {
      A cover made of real lettering was tried here and thrown out. It dodged Redacted, but by
      abandoning the torn-paper collage every other cover on this shelf is built from, so it
      read as a slide rather than as something made by hand. */
+  "so-many-signs": (r) =>
+    sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], "#e98f86", r, { shadow: false, crisp: true }) +
+    [["hearteyes", 32, 34, 48, -8], ["star", 90, 25, 38, 6], ["bolt", 108, 55, 22, 18], ["drop", 110, 82, 30, 12],
+     ["moon", 72, 78, 34, -18], ["fire", 24, 90, 36, -6], ["note", 54, 116, 30, -6],
+     ["heart", 96, 120, 36, 8], ["pinkheart", 16, 136, 24, -10]]
+      .map(([k, x, y, sz, rot]) => signPic(r, k, x, y, sz, rot)).join(""),
   "word-cloud": (r) => {
     const GROUND = "#7f8a6a", DARK = "#232b1c", MID = "#4c5739", PALE = "#e8e8d0";
     let s = sheet([[-6, -6], [126, -6], [126, 166], [-6, 166]], GROUND, r, { shadow: false, crisp: true });
@@ -649,6 +724,9 @@ const LABELS = {
   "then-what":      { x: 14, y: 16,  w: 92, h: 23, rot: 1.6 },
   "running-order":  { x: 12, y: 128, w: 96, h: 22, rot: -1.5 },
   "word-cloud":     { x: 12, y: 126, w: 96, h: 21, rot: -1.3 },
+  // Bottom right, over the heart and the note: the pictures run off every edge, so there is no
+  // quiet corner, and a label pasted over a crowd reads as part of it.
+  "so-many-signs":  { x: 30, y: 136, w: 84, h: 21, rot: -1.6 },
   "track-by-track": { x: 14, y: 14,  w: 92, h: 21, rot: -1.1 },
   "aaron-or-jack":  { x: 14, y: 14,  w: 94, h: 23, rot: 1.6 },
   "nashville":      { x: 13, y: 126, w: 94, h: 22, rot: -1.4 },
@@ -693,7 +771,9 @@ let uid = 0;
    counted rather than derived from the game, because a shelf draws the same cover twice
    (in the rack and open on the desk) and two nodes cannot share one. */
 // A side of another zine tears on that zine's seed, so both sides are the same paper.
-const SEED_AS = { "correct-the-slip": "spot-the-slip" };
+/* So Many Signs tears on the seed its cover was picked on (picture-covers.html), so the shelf
+   shows exactly the card that was chosen rather than the same pictures torn another way. */
+const SEED_AS = { "correct-the-slip": "spot-the-slip", "so-many-signs": "picture-bigfew" };
 export function zineCover(g, extra = "") {
   const cls = `zine-cover${extra ? " " + extra : ""}`;
   const r = rng(seedOf(SEED_AS[g.id] || g.id));

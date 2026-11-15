@@ -1011,6 +1011,20 @@ export const BONUS_GAMES = [
     kicker: "the song, out of order", tint: "#6b7a50",
     line: "A scatter of a song's own words. Name it.",
     blurb: "A song's own words scattered across the page, the ones it leans on written biggest and none of it in order. Nothing here can be sung." },
+  /* SO MANY SIGNS — a row of drawn pictures with a song hiding in it. Every page carries TWO
+     clues (data/signs.json, built from scripts/bonus/clue-list.md and the drawn marks by
+     scripts/bonus/signs/build.py): it opens on a picture of a line or the song's story, and the
+     title spelled out in pictures (or a second line, where the title will not draw) is held
+     back as the rescue. Named off the first clue it pays 2; turned over, by the button or by a
+     wrong guess, it pays 1. That is the game's one spendable resource, Redacted's peel in a
+     single step. Placed after Word Cloud and before Running Order on the title ramp: the
+     cloud took the order and the singing away, this takes the words themselves and leaves
+     only what they pictured, and Running Order takes even that. The pictures are our own
+     marks in the charm pen, every one coloured, never real emoji. */
+  { id: "so-many-signs", name: "So Many Signs", ready: true, points: 2, endless: true,
+    kicker: "pictures in, title out", tint: "#d8a21e",
+    line: "A row of pictures. Name the song.",
+    blurb: "A row of little drawings with a song hiding in them. Name it off the first row for two, or turn the page over for a second row worth one." },
   // The one game on the shelf that asks nothing about the words: a page is a track number and
   // an album, and ten seconds. Right or wrong like the tap and gap games, so a run is out of
   // ten and it takes `sweep` for their reason too, the reachable ceiling: at 10/10 an eleventh
@@ -1235,6 +1249,11 @@ export const BONUS_CLOUD_SECONDS = 20;
    give you less of the song to recognise, which is felt rather than announced. The two counts
    are what a page is dealt, not what it must fill; a song with a thin vocabulary hands over
    what it has and is re-rolled below CLOUD_MIN_WORDS (see buildCloudPuzzle). */
+/* So Many Signs' clock: ONE budget for the page, across both rows. Turning over gives no
+   time back, so the rescue is a trade of a point AND some of the clock. Longer than Word Cloud's
+   twenty because a picture row is decoded rather than read, and a second row may still have to
+   be read after it. */
+export const BONUS_SIGNS_SECONDS = 25;
 export const CLOUD_WIDE_PAGES = 5;
 export const CLOUD_WORDS_WIDE = 25;
 export const CLOUD_WORDS_SPARE = 15;
@@ -4942,6 +4961,17 @@ export const ACHIEVEMENTS = [
   // flex — knowing a song off less of it. Priced in something on screen, like everything else
   // on this shelf: the cloud you are looking at and the page number above it.
   { id: "clear-every-spare-word-cloud-page", name: "You Saw Enough", desc: "Clear all five of a Word Cloud run's spare pages", tier: 2, secret: false, icon: "spectacles", sitting: true, earn: { cat: "bonus" } },
+  /* So Many Signs' three. The sweep is the ordinary one. Pictures In My Mind is the game's own
+     flex and the reason the rescue exists: a sweep named off every first row, never turned
+     over, which is the full twenty. Didn't See The Signs is the shelf's pratfall slot (secret):
+     a page lost after its TITLE had been spelled out in pictures, which only a song whose
+     second row is a title rebus can deal, and about half of them are. All three stay winnable
+     for ever: every run is a fresh deal. Named off "Picture perfect shiny family" (Midnight
+     Rain), "I'm taking pictures in my mind" (Stay Beautiful) and "You didn't even see the
+     signs" (exile), the song the game's own name comes from. */
+  { id: "sweep-so-many-signs", name: "Picture Perfect", desc: "Sweep So Many Signs", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-so-many-signs-on-first-clues", name: "Pictures In My Mind", desc: "Sweep So Many Signs on the first row every time, never turning over", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
+  { id: "miss-a-signs-page-after-its-title-was-spelled-out", name: "Didn't See The Signs", desc: "Miss a So Many Signs page even after its title was spelled out in pictures", secret: true, icon: "placeholder" },
   /* The Capitals' two. The sweep is the ordinary one and takes the reachable ceiling's shape,
      but the PAGE charm is the interesting half and it is Both Ways' argument almost exactly:
      four of the seventy-two messages are a single proper noun ("Toby.", "SAG.", "Adam.",
@@ -5441,6 +5471,7 @@ export const ACH_GROUP_OF = {
   "write-out-an-album-with-no-wrong-guesses": "bonus", "write-out-an-album-at-under-two-seconds-a-track": "bonus", "write-out-the-longest-album": "bonus", "write-out-all-twelve-albums": "bonus",
   "sweep-running-order": "bonus", "name-running-order-page-with-half-the-clock-left": "bonus",
   "sweep-word-cloud": "bonus", "clear-every-spare-word-cloud-page": "bonus",
+  "sweep-so-many-signs": "bonus", "sweep-so-many-signs-on-first-clues": "bonus",
   "sweep-the-capitals": "bonus", "name-a-one-word-capitals-message": "bonus",
   "sweep-who-held-the-pen": "bonus", "call-a-late-solo-credit": "bonus",
   "finish-nashville-run-with-no-wrong-calls": "bonus", "finish-nashville-run-below-zero": "bonus",
