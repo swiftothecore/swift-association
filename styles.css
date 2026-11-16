@@ -9703,14 +9703,16 @@
 
   /* sessions: the bookings grid at the head of the form, boxes printed, filled in by pencil */
   .rec-bk { padding: 12px 0 14px; border-bottom: 1px solid var(--rec-form-soft); }
-  .rec-bk-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 8px; }
-  .rec-bk-hd > span { font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; color: var(--rec-form); }
-  .rec-rng { display: flex; flex-wrap: wrap; gap: 2px 4px; }
-  .rec-rng button { position: relative; background: none; border: 0; padding: 3px 8px; cursor: pointer; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1; color: var(--rec-form-soft); }
-  .rec-rng button[aria-pressed="true"] { color: var(--rec-pen); font-weight: 700; }
+  /* The range picker is a row of index tabs along the sheet's rule: the chosen range is the tab
+     pulled forward, its own stock running on into the sheet below with no rule under it. Never
+     mark the pick with a drawn loop; that was tried and is what this replaced. */
+  .rec-bk-hd { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 10px; border-bottom: 1px solid var(--rec-form-soft); }
+  .rec-bk-hd > span { padding-bottom: 6px; font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.5px; text-transform: uppercase; color: var(--rec-form); }
+  .rec-rng { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 2px; }
+  .rec-rng button { position: relative; background: none; border: 1px solid transparent; border-bottom: 0; margin-bottom: -1px; padding: 5px 9px; cursor: pointer; font-family: var(--type); font-size: calc(11px + var(--text-size-adjust)); line-height: 1; color: var(--rec-form-soft); }
+  .rec-rng button:hover { color: var(--rec-form); }
+  .rec-rng button[aria-pressed="true"] { padding-top: 7px; background: var(--rec-stock); border-color: var(--rec-form-soft); border-bottom: 1px solid var(--rec-stock); border-radius: 2px 2px 0 0; color: var(--rec-pen); font-weight: 700; cursor: default; }
   .rec-rng button:focus-visible { outline: 2px solid var(--ink-accent); outline-offset: 2px; }
-  .rec-rng button svg { position: absolute; inset: -4px -3px; width: calc(100% + 6px); height: calc(100% + 8px); overflow: visible; pointer-events: none; }
-  .rec-rng button svg path { fill: none; stroke: var(--rec-pen); stroke-width: 1.3; stroke-linecap: round; opacity: 0.75; }
   .rec-bk-body { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 6px; }
   .rec-bk-body.bare { grid-template-columns: minmax(0, 1fr); }
   .rec-bk-days { display: grid; grid-template-rows: repeat(7, 1fr); padding-top: 13px; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust)); color: var(--rec-form-soft); align-items: center; }

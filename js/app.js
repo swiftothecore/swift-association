@@ -5899,8 +5899,8 @@ function sessionsHTML(hist) {
     side = `<div class="rec-bk-days">${[6, 5, 4, 3, 2, 1, 0].map((n) => `<span>${WD_ABBR[keyDow(keyMinus(today, n))]}</span>`).join("")}</div>`;
   }
   const opts = [["y1", "12 months"], ["ytd", today.slice(0, 4)], ["m1", "30 days"], ["wk", "this week"]];
-  const rng = `<div class="rec-rng" role="group" aria-label="sessions range">${opts.map(([v, l], i) =>
-    `<button type="button" data-sess="${v}" aria-pressed="${v === view}">${escapeHtml(l)}${v === view ? briefLoopSVG(41 + i) : ""}</button>`).join("")}</div>`;
+  const rng = `<div class="rec-rng" role="group" aria-label="sessions range">${opts.map(([v, l]) =>
+    `<button type="button" data-sess="${v}" aria-pressed="${v === view}">${escapeHtml(l)}</button>`).join("")}</div>`;
   const key = [1, 2, 3, 5].map((c, i) => `<rect class="box" x="${i * 19 + 0.5}" y="0.5" width="11" height="11" rx="0.5"/>${sessHatch(i * 19 + 0.5, 0.5, 11, sessLevel(c), 70 + i)}`).join("");
   const span = { y1: "the last twelve months", ytd: "so far this year", m1: "the last thirty days", wk: "the last seven days" }[view];
   const foot = !hist.length ? "No sessions booked yet."
