@@ -18,29 +18,26 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - The ability to make your own **custom modes**
 - A guest shelf of other artists' catalogues, played on their own and never mixed into Taylor's
 - The lineup: thirteen pages from every catalogue at once, played under goal cards you pick before page one
-- A shelf of bonus mini-games, each a little hand-bound zine, most with an endless side where one miss ends it
+- A shelf of bonus mini-games, most with an endless side where one miss ends it
 - Ruthless Game, where the song writes itself out a word a second and your time is the score
 
 **The long game**
 
 - Challenges mode with 32 challenges, most with a harder "dark side" to unlock, plus a super-hard tier unlocked through mastery
 - A skills and mastery system full of rewards
-- Over 200 achievements, graded by difficulty in the finish of the charm itself
-- Polaroids to collect, and a crushed one on the desk that develops as you earn them, then opens so you can show one off, and on an album's birthday, a print of its own
-- Stickers, mostly earned by noticing things rather than scoring, to stick on the notebook cover, and a holographic finish for the whole set once it is complete
-- An ink for every album you beat in Album Focus, worn by the game's own title and gilded for a perfect run
+- Over 200 achievements to unlock
+- Polaroids to collect, that you can eventually display on the desk itself
+- Stickers to earn, which get stuck on the notebook cover
 
 **The details**
 
-- Every era, plus holiday, movie and collaboration songs
-- Unreleased songs that nobody is expected to know: name one and it counts, and finding them all takes your songbook past 100%
+- Every era, plus holiday, movie and collaboration songs (and some unreleased songs too!)
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
-- Titles of three words or more answer to their initials, the way fans write them (wanegbt)
 - A start button that snows all December and dresses up for album release days, her birthday, Christmas, the 13th of every month and the guest shelf's birthdays
-- Stats kept as a scrapbook, down to a tabloid headline about the word that keeps beating you
-- Personal bests as a line of music on a lead sheet, one note for each difficulty, and every run you have played written on a studio take sheet
-- Beads that record how a page went, not just whether, and finished bracelets you can copy or download as a PNG
+- A stats page to track your stats across all your games
+- Personal bests displayed in a fun way
+- Beads that record how a page went, and finished bracelets you can copy or download as a PNG
 - A companion lyric searcher, [Swift to the Lyric](https://swiftassociation.com/search), for searching every line of every song
 - A night version of the whole desk, and a high-contrast setting that works in either light
 - Installable as a phone or desktop app, with offline readiness in Settings
