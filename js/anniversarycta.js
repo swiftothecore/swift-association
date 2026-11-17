@@ -1,6 +1,7 @@
 // The dated Start writing button: sixteen finishes, one per studio album and one per Taylor's
 // Version, each with its own lyric for the words, and the rule that puts each on the button on its record's release day; one for her
-// birthday, Iced for her; one for Christmas Day, Fresh off the baler; one more, Thirteen
+// birthday, Iced for her; one for Christmas Day, Fresh off the baler; one each for New Year's Eve
+// and New Year's Day, Gold pen on black card and The morning after; one more, Thirteen
 // marks, for the 13th of every month; and one for each day the guest shelf keeps in the margin.
 //
 // THE FINISH IS FORCED, AND THAT IS THE POINT. On each album's anniversary the button wears
@@ -9,7 +10,8 @@
 // day, the notebook dressing up for her record the way a fan does, and support you can switch
 // off would only be a theme. It lasts the one day and hands the button straight back, and it
 // never touches the stored choice, so nothing is lost by it. Her birthday is forced the same way,
-// and so is Christmas Day, for the tree farm she grew up on, and so is the 13th, for her lucky
+// and so is Christmas Day, for the tree farm she grew up on, and the two days either side of
+// midnight at the turn of the year, and so is the 13th, for her lucky
 // number, on the 13th only. So is each guest's day, the notebook being generous about somebody
 // else on the one day the margin already marks for them.
 //
@@ -18,6 +20,7 @@
 // say why). The twelve were
 // designed on scripts/cta/chosen-board.html, the four Taylor's Versions on scripts/cta/tv-board.html,
 // the birthday on scripts/cta/birthday-board.html, Christmas on scripts/cta/christmas-board.html,
+// the turn of the year on scripts/cta/new-year-board.html,
 // the 13th on scripts/cta/thirteenth-board.html and the guests' on scripts/cta/guest-days-board.html;
 // change a finish there first and carry it across, so the board and the button do not drift apart.
 import { TS_MILESTONES, ALBUM_COLORS, GUEST_DAYS } from "./config.js";
@@ -1018,6 +1021,269 @@ function layTag(btn) {
 const CHRISTMAS = TS_MILESTONES.find((m) => m.kind === "songday" && m.md === "12-25");
 export const christmasFinishFor = (dateKey) => dateKey?.slice(5) === CHRISTMAS.md ? "anv-christmas" : "";
 
+/* ---------- the turn of the year ----------
+   Two finishes, one for each side of midnight, both fireworks and neither the Speak Now
+   (Taylor's Version) display over water. Designed on scripts/cta/new-year-board.html beside a
+   third, a sparkler writing the year, that was not taken. */
+const TAU = Math.PI * 2;
+
+/* ---- New Year's Eve: Gold pen on black card ---- */
+// The back page of the notebook, black card, and a metallic gel pen in three inks. Two rockets
+// are on their way up as dotted lines and two bursts are already drawn out at the far ends. On
+// hover the rockets go off, drawn out from their middles in the pen's own line and dabbed at every
+// tip, two small ones follow, and the lamp runs across the card and catches the ink.
+//
+// Three metallic inks. Each is a little run of stops so that, laid across a burst, the line goes
+// from the colour of the ink to the shine of it and back, the way metallic ink does on card.
+const GEL_INKS = {
+  gold: ['#ad832e', '#e6c46c', '#fff1c0', '#d9ae52', '#a67b2b'],
+  silver: ['#8f959c', '#d3d8dc', '#fafbfc', '#b4bac0', '#8a9097'],
+  rose: ['#b0625a', '#e6a596', '#fbdcd0', '#d08a7b', '#a2574e'],
+};
+// A burst as it is drawn with a pen: the rays are strokes, never perfect, each from near the
+// middle outward with a little gravity on it, and each finished with a dab. Some are dotted, as a
+// hand goes when it gets bored of lines. `kind` picks the shell; `drawn` is one already on the card.
+//
+// A ray waiting to be drawn is dashed "1 2" from 1.5, not "1 1" from 1: the plain pattern leaves a
+// zero-length dash on the end of the path, and its round cap is a dot at the tip of every ray.
+function gelBurst(rand, id, { x, y, r, ink, kind, d = 0, drawn = false, ink2 }) {
+  const paint = (k) => `url(#${id}${k})`;
+  let rays = '', dabs = '';
+  const ray = (dd, w, k, delay, len = 1) => {
+    rays += drawn ? `<path d="${dd}" fill="none" stroke="${paint(k)}" stroke-width="${f(w)}" stroke-linecap="round"/>`
+      : `<path class="gp-ray" pathLength="1" style="--d:${f(delay)}s;--t:${f(.42 * len)}s" d="${dd}" fill="none" stroke="${paint(k)}" stroke-width="${f(w)}" stroke-linecap="round"/>`;
+  };
+  const dab = (cx, cy, rr, k, delay) => {
+    dabs += `<circle${drawn ? '' : ` class="gp-dab" style="--d:${f(delay)}s"`} cx="${f(cx)}" cy="${f(cy)}" r="${f(rr)}" fill="${paint(k)}"/>`;
+  };
+  if (kind === 'chrys') {
+    for (let i = 0, n = 24; i < n; i++) {
+      const a = i / n * TAU + (rand() - .5) * .16, rr = r * (.8 + rand() * .26), r0 = 2.2 + rand() * 1.6;
+      const ex = x + Math.cos(a) * rr, ey = y + Math.sin(a) * rr + rr * .06;
+      const mx = x + Math.cos(a + (rand() - .5) * .08) * rr * .55, my = y + Math.sin(a) * rr * .55;
+      const dd = `M${f(x + Math.cos(a) * r0)} ${f(y + Math.sin(a) * r0)}Q${f(mx)} ${f(my)} ${f(ex)} ${f(ey)}`;
+      if (i % 5 === 2) {   // a dotted ray: three dots instead of a line
+        for (let k = 1; k <= 3; k++) { const t = .4 + k * .2; dab(x + (ex - x) * t, y + (ey - y) * t, .42 + k * .08, ink, d + .08 + k * .07); }
+      } else ray(dd, .62 + rand() * .2, ink, d + rand() * .05);
+      dab(ex, ey, .62 + rand() * .3, ink, d + .34 + rand() * .06);
+    }
+    if (ink2) for (let i = 0; i < 12; i++) {   // an inner ring in the second ink
+      const a = i / 12 * TAU + .13 + (rand() - .5) * .2, r1 = r * .3, r2 = r * (.46 + rand() * .06);
+      ray(`M${f(x + Math.cos(a) * r1)} ${f(y + Math.sin(a) * r1)}L${f(x + Math.cos(a) * r2)} ${f(y + Math.sin(a) * r2)}`, .55, ink2, d + .05 + rand() * .05, .6);
+      dab(x + Math.cos(a) * (r2 + 1.5), y + Math.sin(a) * (r2 + 1.5), .5, ink2, d + .3);
+    }
+  } else if (kind === 'willow') {
+    // Thrown out evenly all round like any shell, and then every arm is pulled down: the upper
+    // ones arch over, the side ones sag, and all of them end in a long fall that breaks into dots.
+    // Gravity is the whole of the difference; arms that all start upward read as a fountain.
+    for (let i = 0, n = 18; i < n; i++) {
+      const a = i / n * TAU + (rand() - .5) * .14, rr = r * (.62 + rand() * .2), ux = Math.cos(a), uy = Math.sin(a);
+      const px = x + ux * rr, py = y + uy * rr * .85;
+      const ex = px + ux * rr * .22, ey = py + r * (.55 + rand() * .3) * (1 - uy * .35);
+      ray(`M${f(x + ux * 2)} ${f(y + uy * 2)}Q${f(px + ux * rr * .12)} ${f(py - 1.2)} ${f(ex)} ${f(ey)}`, .55, ink, d + rand() * .05, 1.3);
+      for (let k = 1; k <= 3; k++) dab(ex + ux * k * .25, ey + k * 2, .48 - k * .1, ink, d + .5 + k * .08);
+    }
+    dab(x, y, .9, ink, d);
+  } else if (kind === 'ring') {
+    // A ring of stars and a looser ring inside it: stippled, nothing joined.
+    for (let i = 0; i < 26; i++) { const a = i / 26 * TAU + (rand() - .5) * .08, rr = r * (.94 + rand() * .1); dab(x + Math.cos(a) * rr, y + Math.sin(a) * rr * .92, .55 + rand() * .25, ink, d + .1 + rand() * .1); }
+    for (let i = 0; i < 12; i++) { const a = i / 12 * TAU + .2, rr = r * (.5 + rand() * .1); dab(x + Math.cos(a) * rr, y + Math.sin(a) * rr * .92, .45, ink2 || ink, d + .05 + rand() * .1); }
+  }
+  return `<g>${rays}${dabs}</g>`;
+}
+// A rocket's climb, drawn as a pen does it: a dotted line wobbling up, closer-set near the top,
+// with a little starred head where it is now, which goes as the shell opens.
+function gelClimb(id, x0, y0, x1, y1, ink, d) {
+  let dots = '';
+  for (let t = 0; t <= 1; t += .055 + (1 - t) * .03) {
+    const x = x0 + (x1 - x0) * t + Math.sin(t * 9 + x0) * .8, y = y0 + (y1 - y0) * (1 - (1 - t) * (1 - t));
+    dots += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.42 + t * .38)}"/>`;
+  }
+  return `<g fill="url(#${id}${ink})">${dots}<g class="gp-head" style="--d:${f(d)}s">` +
+    `<circle cx="${f(x1)}" cy="${f(y1)}" r="1.3"/><path d="M${f(x1 - 3.4)} ${f(y1)}h6.8M${f(x1)} ${f(y1 - 3.4)}v6.8M${f(x1 - 1.7)} ${f(y1 - 1.7)}l3.4 3.4M${f(x1 + 1.7)} ${f(y1 - 1.7)}l-3.4 3.4" stroke="url(#${id}${ink})" stroke-width=".5" stroke-linecap="round"/></g></g>`;
+}
+function gelFireworks() {
+  const id = `anvGp${++serial}`, rand = R(2027);
+  const inks = Object.entries(GEL_INKS).map(([k, s]) => `<linearGradient id="${id}${k}" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="34" y2="22" spreadMethod="reflect">` +
+    s.map((c, i) => `<stop offset="${f(i / (s.length - 1))}" stop-color="${c}"/>`).join('') + `</linearGradient>`).join('');
+  // Black card: never flat black, a warm near-black with short pale fibres in it.
+  let fibres = '';
+  for (let k = 0; k < 260; k++) {
+    const x = rand() * 600, y = rand() * 60, a = rand() * TAU, l = .8 + rand() * 2.6;
+    fibres += `M${f(x)} ${f(y)}q${f(Math.cos(a) * l * .5 + .3)} ${f(Math.sin(a) * l * .5 - .3)} ${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}`;
+  }
+  // The doodled stars a hand puts round fireworks: little crosses and dots, kept off the words.
+  let stars = '';
+  for (let k = 0, tries = 0; k < 30 && tries < 400; tries++) {
+    const x = 10 + rand() * 580, y = 4 + rand() * 52;
+    if (x > 196 && x < 404) continue;
+    const s = .9 + rand() * 1.5, ink = ['gold', 'silver', 'rose', 'gold'][k % 4];
+    stars += rand() < .45
+      ? `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.35 + rand() * .3)}" fill="url(#${id}${ink})"/>`
+      : `<path d="M${f(x - s)} ${f(y)}h${f(s * 2)}M${f(x)} ${f(y - s)}v${f(s * 2)}${rand() < .4 ? `M${f(x - s * .6)} ${f(y - s * .6)}l${f(s * 1.2)} ${f(s * 1.2)}M${f(x + s * .6)} ${f(y - s * .6)}l${f(-s * 1.2)} ${f(s * 1.2)}` : ''}" stroke="url(#${id}${ink})" stroke-width=".42" stroke-linecap="round"/>`;
+    k++;
+  }
+  // The two that go off on hover sit in the gutters a phone still shows, about fifty units either
+  // side of the words; the two already drawn are out at the ends, for a wide button only.
+  const A = { x: 173, y: 26, r: 16.5 }, B = { x: 424, y: 18, r: 15 };
+  const drawn = gelBurst(rand, id, { x: 70, y: 27, r: 19, ink: 'rose', kind: 'ring', drawn: true, ink2: 'gold' }) +
+    gelBurst(rand, id, { x: 532, y: 25, r: 18, ink: 'silver', kind: 'chrys', drawn: true, ink2: 'rose' });
+  const rockets = gelClimb(id, A.x - 8, 64, A.x, A.y, 'gold', .05) + gelClimb(id, B.x + 6, 64, B.x, B.y, 'gold', .4);
+  const live = gelBurst(rand, id, { ...A, ink: 'gold', kind: 'chrys', d: .08, ink2: 'silver' }) +
+    gelBurst(rand, id, { ...B, ink: 'gold', kind: 'willow', d: .42 }) +
+    gelBurst(rand, id, { x: 136, y: 13, r: 8, ink: 'rose', kind: 'chrys', d: .7 }) +
+    gelBurst(rand, id, { x: 470, y: 42, r: 7, ink: 'silver', kind: 'ring', d: .8 });
+  const ink = `<g>${drawn}${stars}${rockets}${live}</g>`;
+  // The lamp catching the ink: the ink again, lifted toward white by an SVG filter (a CSS filter
+  // on an SVG element does nothing in Safari), seen only through a soft band that runs across once.
+  const sheen = `<linearGradient id="${id}sh" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>` +
+    `<mask id="${id}m" maskUnits="userSpaceOnUse" x="-10" y="-10" width="620" height="80"><g class="gp-sheen"><rect x="-30" y="-10" width="60" height="80" fill="url(#${id}sh)" transform="skewX(-20)"/></g></mask>` +
+    `<filter id="${id}lit"><feColorMatrix type="saturate" values=".6"/><feComponentTransfer><feFuncR type="linear" slope="1.8"/><feFuncG type="linear" slope="1.8"/><feFuncB type="linear" slope="1.8"/></feComponentTransfer></filter>`;
+  return { fx: strip('gp-card', `<defs>${inks}${sheen}</defs><rect x="-10" y="-10" width="620" height="80" fill="#1c1a1e"/>` +
+    `<path d="${fibres}" fill="none" stroke="#d9d2c4" stroke-width=".22" opacity=".09"/>${ink}` +
+    `<g mask="url(#${id}m)" style="mix-blend-mode:screen" opacity=".85"><g filter="url(#${id}lit)">${ink}</g></g>`) };
+}
+// Forced on 31 December, over Snow day and the player's own pick, the way Christmas is.
+const newYearsEveFinishFor = (dateKey) => dateKey?.slice(5) === "12-31" ? "anv-new-years-eve" : "";
+
+/* ---- New Year's Day: The morning after ---- */
+// The floor of the room the party was in, the morning after: honey oak boards with glitter in
+// them, candle wax gone hard, curls of gold foil ribbon, and last night's instant photographs
+// dropped where they were taken. It is the last song on reputation, which the margin marks the
+// day with, and those are the things on that floor. One print has come up, a gold burst over the
+// roofs; the rest are still the murky green of a print that has not developed. On hover they
+// develop through the cold blue cast an instant print has before its colour arrives, and the
+// glitter catches the light.
+function morningAfter() {
+  const id = `anvMa${++serial}`, rand = R(101);
+  // Hardwood: boards of honey oak, each its own shade, with butt joints, grain in two inks, the
+  // odd cathedral, and a dark seam with a hairline of light under it between every board.
+  const TONES = ['#c99c63', '#b98852', '#d4a96f', '#b3824c', '#c69860', '#cfa066', '#bd8d57'];
+  let boards = '', grain = '', light = '', seams = '';
+  for (let b = 0; b < 6; b++) {
+    const y0 = -6 + b * 12.4, h = 12.4;
+    let x = -20 - rand() * 80;
+    while (x < 620) {
+      const w = 90 + rand() * 170, tone = TONES[Math.floor(rand() * TONES.length)];
+      boards += `<rect x="${f(x)}" y="${f(y0)}" width="${f(w)}" height="${f(h)}" fill="${tone}"/>`;
+      for (let g = 0; g < 4; g++) {
+        const gy = y0 + 1.5 + rand() * (h - 3), amp = (rand() - .5) * 1.6;
+        const line = `M${f(x + 2)} ${f(gy)}C${f(x + w * .3)} ${f(gy + amp)} ${f(x + w * .6)} ${f(gy - amp)} ${f(x + w - 2)} ${f(gy + amp * .4)}`;
+        if (g % 2) light += line; else grain += line;
+      }
+      if (rand() < .45) { const cx = x + w * (.3 + rand() * .4), cy = y0 + h / 2, rw = 10 + rand() * 14;
+        grain += `M${f(cx - rw)} ${f(cy + 3)}Q${f(cx)} ${f(cy - 5)} ${f(cx + rw)} ${f(cy + 3)}M${f(cx - rw * .6)} ${f(cy + 3.2)}Q${f(cx)} ${f(cy - 2.4)} ${f(cx + rw * .6)} ${f(cy + 3.2)}`; }
+      seams += `M${f(x)} ${f(y0)}v${f(h)}`;
+      x += w;
+    }
+    seams += `M-10 ${f(y0)}H610`;
+  }
+  // Glitter in the boards: gold and silver mostly, a few of the pinks and the blue. Some of it,
+  // never in front of the words, is what catches on hover.
+  let glitter = '', glints = '';
+  const GL = ['#e9c75c', '#f1dc96', '#e4e6e9', '#c9ccd2', '#eaa0b6', '#9cc9e3'];
+  for (let k = 0; k < 190; k++) {
+    const x = rand() * 600, y = rand() * 60;
+    if (x > 214 && x < 386 && y > 16 && y < 44 && rand() < .75) continue;
+    const s = .5 + rand() * .9, c = GL[Math.floor(rand() * rand() * GL.length)];
+    glitter += `<rect x="${f(x - s / 2)}" y="${f(y - s / 2)}" width="${f(s)}" height="${f(s)}" fill="${c}" transform="rotate(${f(rand() * 90)} ${f(x)} ${f(y)})"/>`;
+    if (k % 6 === 0 && !(x > 205 && x < 395)) glints += `<path class="ma-glint" style="--d:${f(.2 + rand() * 1.6)}s" d="M${f(x)} ${f(y - 3)}L${f(x + .45)} ${f(y - .45)}L${f(x + 3)} ${f(y)}L${f(x + .45)} ${f(y + .45)}L${f(x)} ${f(y + 3)}L${f(x - .45)} ${f(y + .45)}L${f(x - 3)} ${f(y)}L${f(x - .45)} ${f(y - .45)}Z" fill="#fffdf2"/>`;
+  }
+  // Spilt wax sets thin and flat: an uneven puddle with a run off one side, a hairline of shadow
+  // under its edge, and the gloss of it as one small catchlight. Drawn rounder it read as popcorn.
+  const wax = (cx, cy, r) => {
+    const run = rand() * TAU;
+    let d = '';
+    for (let i = 0; i <= 18; i++) { const a = i / 18 * TAU, near = Math.max(0, Math.cos(a - run)) ** 6, rr = r * (.75 + rand() * .3 + near * 1.3); d += `${i ? 'L' : 'M'}${f(cx + Math.cos(a) * rr * 1.2)} ${f(cy + Math.sin(a) * rr * .62)}`; }
+    return `<path d="${d}Z" fill="#3b220e" opacity=".22" transform="translate(.35 .45)" stroke="#3b220e" stroke-width=".8" stroke-linejoin="round"/>` +
+      `<path d="${d}Z" fill="#efe3c6" stroke="#efe3c6" stroke-width=".8" stroke-linejoin="round"/>` +
+      `<path d="${d}Z" fill="none" stroke="#fff9ea" stroke-width=".35" stroke-linejoin="round" opacity=".7" transform="translate(-.2 -.25)"/>` +
+      `<ellipse cx="${f(cx - r * .35)}" cy="${f(cy - r * .18)}" rx="${f(r * .32)}" ry="${f(r * .1)}" fill="#fff" opacity=".85"/>`;
+  };
+  // A curl of foil ribbon, a coil seen from the side, loosening toward its free end.
+  const ribbon = (x, y, a = 0) => {
+    const ca = Math.cos(a), sa = Math.sin(a);
+    let d = '';
+    for (let k = 0; k <= 80; k++) {
+      const t = k / 80, th = t * TAU * 3.4, r = 2.6 + t * 1.2, px = t * 24 + Math.cos(th) * r * .55, py = Math.sin(th) * r * .5 + t * t * 2;
+      d += `${k ? 'L' : 'M'}${f(x + px * ca - py * sa)} ${f(y + px * sa + py * ca)}`;
+    }
+    return `<path d="${d}" fill="none" stroke="#3b220e" stroke-opacity=".2" stroke-width="1.3" transform="translate(.4 .6)"/><path d="${d}" fill="none" stroke="#c99b36" stroke-width="1.05" stroke-linejoin="round"/>` +
+      `<path d="${d}" fill="none" stroke="#fbe6a2" stroke-width=".4" stroke-dasharray="1.6 2.8" stroke-linejoin="round"/>`;
+  };
+  // Last night's photographs, each a firework from the night before, softened as a small print
+  // off a cheap lens is. Drawn crisp, the gold burst read as an icon of the sun.
+  const photos = {
+    // a gold peony over the roofs
+    peony: (w) => {
+      let d = '', t = '';
+      const cx = w * .52, cy = w * .4;
+      for (let i = 0; i < 44; i++) {
+        const a = i / 44 * TAU + (rand() - .5) * .12, r = w * (.18 + rand() * .2), r0 = w * (.04 + rand() * .06);
+        const ex = cx + Math.cos(a) * r, ey = cy + Math.sin(a) * r + r * .12;
+        d += `M${f(cx + Math.cos(a) * r0)} ${f(cy + Math.sin(a) * r0)}Q${f(cx + Math.cos(a) * r * .7)} ${f(cy + Math.sin(a) * r * .7)} ${f(ex)} ${f(ey)}`;
+        if (rand() < .5) t += `M${f(ex)} ${f(ey)}l${f(Math.cos(a) * .4)} ${f(1.2 + rand() * 1.6)}`;
+      }
+      return `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(w * .42)}" fill="url(#${id}glow)"/>` +
+        `<ellipse cx="${f(cx - 3)}" cy="${f(cy + w * .3)}" rx="${f(w * .4)}" ry="${f(w * .1)}" fill="#c9a77a" opacity=".12"/>` +
+        `<g filter="url(#${id}soft)"><path d="${d}" stroke="#f7b955" stroke-width=".55" stroke-linecap="round" opacity=".9"/><path d="${d}" stroke="#fff3cf" stroke-width=".2" stroke-linecap="round"/>` +
+        `<path d="${t}" stroke="#ffcf7a" stroke-width=".3" stroke-linecap="round" opacity=".7"/></g>` +
+        `<path d="M0 ${f(w)}V${f(w * .82)}h3v-2h4v3h3v-5h2v5h4v-1h3v-3h3v4h${f(w - 22)}V${f(w)}Z" fill="#06070d"/>`;
+    },
+    // pink and red, two shells at once, the camera shaken a little
+    pair: (w) => {
+      let d1 = '', d2 = '';
+      for (let i = 0; i < 20; i++) { const a = i / 20 * TAU; d1 += `M${f(w * .35)} ${f(w * .45)}l${f(Math.cos(a) * w * .22)} ${f(Math.sin(a) * w * .22)}`; d2 += `M${f(w * .7)} ${f(w * .3)}l${f(Math.cos(a + .1) * w * .16)} ${f(Math.sin(a + .1) * w * .16)}`; }
+      return `<g transform="translate(.6 .3)" opacity=".45"><path d="${d1}" stroke="#ff7aa0" stroke-width=".7"/></g><path d="${d1}" stroke="#ff8fb0" stroke-width=".55" stroke-linecap="round"/>` +
+        `<path d="${d2}" stroke="#ff5a4a" stroke-width=".55" stroke-linecap="round"/><path d="M0 ${f(w)}V${f(w * .88)}Q${f(w * .5)} ${f(w * .8)} ${f(w)} ${f(w * .9)}V${f(w)}Z" fill="#05060a"/>`;
+    },
+    // a silver willow, falling, with somebody's head and raised arm in the foreground
+    willow: (w) => {
+      let d = '';
+      for (let i = 0; i < 16; i++) { const a = -Math.PI / 2 + (i / 15 - .5) * Math.PI * 1.6, r = w * .26; const px = w * .55 + Math.cos(a) * r, py = w * .3 + Math.sin(a) * r * .7; d += `M${f(w * .55)} ${f(w * .3)}Q${f(px)} ${f(py)} ${f(px + Math.cos(a) * 2)} ${f(py + w * .32)}`; }
+      return `<path d="${d}" fill="none" stroke="#e6ecf2" stroke-width=".45" opacity=".9"/><path d="${d}" fill="none" stroke="#9fb6d6" stroke-width="1.2" opacity=".25"/>` +
+        `<path d="M${f(w * .06)} ${f(w)}C${f(w * .08)} ${f(w * .8)} ${f(w * .2)} ${f(w * .72)} ${f(w * .3)} ${f(w * .74)}C${f(w * .4)} ${f(w * .76)} ${f(w * .44)} ${f(w * .86)} ${f(w * .46)} ${f(w)}Z" fill="#05060a"/>` +
+        `<path d="M${f(w * .36)} ${f(w * .82)}L${f(w * .52)} ${f(w * .5)}L${f(w * .56)} ${f(w * .52)}L${f(w * .44)} ${f(w * .86)}Z" fill="#05060a"/>`;
+    },
+    // a sparkler waved close to the lens: a loop of light and the head still burning
+    loop: (w) => {
+      const d = `M${f(w * .2)} ${f(w * .7)}C${f(w * .1)} ${f(w * .2)} ${f(w * .7)} ${f(w * .1)} ${f(w * .75)} ${f(w * .45)}C${f(w * .8)} ${f(w * .75)} ${f(w * .35)} ${f(w * .8)} ${f(w * .45)} ${f(w * .5)}`;
+      return `<path d="${d}" fill="none" stroke="#ff9a3c" stroke-width="2.4" opacity=".35"/><path d="${d}" fill="none" stroke="#ffe6a8" stroke-width=".9"/>` +
+        `<circle cx="${f(w * .45)}" cy="${f(w * .5)}" r="2" fill="#fff7e0"/><circle cx="${f(w * .45)}" cy="${f(w * .5)}" r="5" fill="#ffc66a" opacity=".25"/>`;
+    },
+  };
+  const lens = `<defs><radialGradient id="${id}glow"><stop offset="0" stop-color="#ffd27a" stop-opacity=".32"/><stop offset=".5" stop-color="#ff9a3c" stop-opacity=".08"/><stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/></radialGradient>` +
+    `<filter id="${id}soft" x="-.2" y="-.2" width="1.4" height="1.4"><feGaussianBlur stdDeviation=".22"/></filter>` +
+    `<linearGradient id="${id}gloss" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>`;
+  // An instant print's own proportions: a square picture on a white frame with the deep lip. The
+  // murk over an undeveloped one is what develops away on hover.
+  const print = (x, y, rot, kind, { murky = false, d = 0, w = 25 } = {}) => {
+    const pid = `${id}c${++serial}`, pad = 2.2, lip = 7.2, W = w + pad * 2, H = w + pad + lip;
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})"><defs><linearGradient id="${pid}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0c1c"/><stop offset="1" stop-color="#1a1b33"/></linearGradient>` +
+      `<clipPath id="${pid}"><rect x="${pad}" y="${pad}" width="${w}" height="${w}"/></clipPath></defs>` +
+      `<rect x="-.4" y=".9" width="${f(W + 1)}" height="${f(H + .6)}" rx=".8" fill="#2b1a0c" opacity=".28"/>` +
+      `<rect width="${f(W)}" height="${f(H)}" rx=".7" fill="#fdfaf2"/><rect width="${f(W)}" height="${f(H)}" rx=".7" fill="none" stroke="#2b272222" stroke-width=".3"/>` +
+      `<g clip-path="url(#${pid})"><g transform="translate(${pad} ${pad})"><rect width="${w}" height="${w}" fill="url(#${pid}s)"/>` +
+      `<g fill="none"${kind === 'peony' ? '' : ` filter="url(#${id}soft)"`}>${photos[kind](w)}</g>` +
+      (murky ? `<rect class="ma-murk" style="--d:${f(d)}s;--t:${f(2.4 + rand() * .6)}s" width="${w}" height="${w}" fill="#6d7064"/>` : '') +
+      `<rect width="${w}" height="${w}" fill="url(#${id}gloss)"/><rect width="${w}" height="${w}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="1.2"/></g></g></g>`;
+  };
+  const props = wax(140, 47, 3.2) + wax(129, 9, 2.4) + wax(452, 50, 2.8) + wax(84, 50, 2.2) + ribbon(10, 16, .3) + ribbon(468, 44, -.15) + ribbon(556, 49, .1);
+  // The two a phone still shows sit in the gutters either side of the words: the developed one
+  // left, one to develop right. The outer two are for a wide button.
+  const prints = print(40, 6, -9, 'loop', { murky: true, d: .55 }) + print(160, 9, -7, 'peony') +
+    print(413, 9, 8, 'pair', { murky: true, d: .1 }) + print(536, 5, -4, 'willow', { murky: true, d: .9 });
+  return { fx: strip('ma-floor', `${lens}<g>${boards}</g><path d="${grain}" fill="none" stroke="#7d5229" stroke-width=".4" opacity=".42"/><path d="${light}" fill="none" stroke="#ecc58c" stroke-width=".55" opacity=".3"/>` +
+    `<path d="${seams}" fill="none" stroke="#5c3c1e" stroke-width=".7" opacity=".7"/><path d="${seams}" fill="none" stroke="#f2d3a0" stroke-width=".3" opacity=".35" transform="translate(.5 .6)"/>` +
+    `<g>${glitter}</g>${props}${prints}<g>${glints}</g>`) };
+}
+// Forced on 1 January. The day comes off the New Year's Day row in TS_MILESTONES, so the button
+// and the margin note cannot disagree about it.
+const NEW_YEARS_DAY = TS_MILESTONES.find((m) => m.kind === "songday" && m.md === "01-01");
+const newYearsDayFinishFor = (dateKey) => dateKey?.slice(5) === NEW_YEARS_DAY.md ? "anv-new-years-day" : "";
+// Either side of midnight, for the one place that asks for both.
+export const newYearFinishFor = (dateKey) => newYearsEveFinishFor(dateKey) || newYearsDayFinishFor(dateKey);
+
 /* ---------- the guest shelf's days ----------
    One finish for each day GUEST_DAYS keeps: the seven guests' birthdays, Wicked's opening night
    and Hannah Montana's premiere standing in for the two that are not people, and the two names
@@ -1491,7 +1757,7 @@ const GUEST_FINISHES = {
   "billie-eilish": ["anv-guest-billie-eilish", roots, "Come out and play"],          // come out and play
 };
 const finishOf = (m) => BY_KIND[m.kind]?.[m.album]?.[0] || "";
-const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ...Object.values(GUEST_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake], ["anv-christmas", balerTree]]
+const ART = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ...Object.values(GUEST_FINISHES), ["anv-13th", thirteenMarks], ["anv-birthday", birthdayCake], ["anv-christmas", balerTree], ["anv-new-years-eve", gelFireworks], ["anv-new-years-day", morningAfter]]
   .map(([id, draw]) => [id, draw]));
 const WORDS = Object.fromEntries([...Object.values(ANNIVERSARY_FINISHES), ...Object.values(TV_FINISHES), ...Object.values(GUEST_FINISHES)].map(([id, , words]) => [id, words]));
 

@@ -1228,7 +1228,8 @@ export function initDev(api) {
         btn("13 dates", () => { console.table(api.thirteen.dates()); toast("sacred dates in console"); }),
         btn("13th button", () => { const r = api.thirteen.button(); showDate(r.date); toast(`${r.date}: ${r.finish}`); }),
         btn("birthday button", () => { const r = api.milestone.birthdayButton(); showDate(r.date); toast(`${r.date}: ${r.finish}, age ${r.age}`); }),
-        btn("christmas button", () => { const r = api.milestone.christmasButton(); showDate(r.date); toast(`${r.date}: ${r.finish}`); })),
+        btn("christmas button", () => { const r = api.milestone.christmasButton(); showDate(r.date); toast(`${r.date}: ${r.finish}`); }),
+        btn("new year buttons", () => { const r = api.milestone.newYearButton(); showDate(r.date); toast(`${r.date}: ${r.finish}`); })),
     row(btn("share payload", () => {
           const p = api.share.payload();
           console.log("[dev] the tag would copy:\n" + [p.text, p.url].filter(Boolean).join("\n"));

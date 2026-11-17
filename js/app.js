@@ -5,7 +5,7 @@ import "./credential-guard.js";
 import { offlineSettingsHTML, mountOfflineSettings, readOfflineStatus } from "./offline.js";
 import { SITE_URL, copyToClipboard } from "./share.js";
 import { ctaContentHTML, initCtaInteractions } from "./cta.js";
-import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, christmasFinishFor, guestDayFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
+import { anniversaryFinishFor, anniversaryFinishList, birthdayFinishFor, christmasFinishFor, newYearFinishFor, guestDayFinishFor, thirteenthFinishFor, layoutAnniversaryArt } from "./anniversarycta.js";
 import { dayTrinket } from "./dicetrinkets.js";
 import { southernSeasons } from "./season.js";
 /* The lineup's goal deck. js/lineupdeck.js is the source of truth for what a card says,
@@ -580,7 +580,9 @@ function paintStartButton() {
   // Except on an album's release day, when the album's own finish is FORCED over all of that,
   // Mastery pick and random roll included, to show support for the album on its anniversary
   // (the reasoning is at the top of js/anniversarycta.js), on her birthday, which wears Iced for
-  // her the same way, on Christmas Day, which wears Fresh off the baler, on each guest's day in
+  // her the same way, on Christmas Day, which wears Fresh off the baler, on New Year's Eve and
+  // New Year's Day, which wear Gold pen on black card and The morning after (the Eve goes over
+  // Snow day like any dated finish), on each guest's day in
   // GUEST_DAYS, which wears that guest's own finish, and on the 13th of every month, which wears
   // Thirteen marks. They are asked in that order: her birthday is always a 13th, so it has to come
   // first to be seen at all, a guest's day outranks the 13th as it does in the margin, and a
@@ -588,7 +590,7 @@ function paintStartButton() {
   // button wears any of them: the Mastery board still previews the player's own choice, which is
   // untouched and comes back the next day.
   const day = todayKey();
-  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || christmasFinishFor(day) || guestDayFinishFor(day) || thirteenthFinishFor(day) || decemberFinishFor(day) || wornFinish(activeButtonFinish());
+  const finish = anniversaryFinishFor(day) || birthdayFinishFor(day) || christmasFinishFor(day) || newYearFinishFor(day) || guestDayFinishFor(day) || thirteenthFinishFor(day) || decemberFinishFor(day) || wornFinish(activeButtonFinish());
   if (finish) playCta.setAttribute("data-startbtn", finish);
   else playCta.removeAttribute("data-startbtn");
   // A Pride finish brings its ramp with it; every other finish paints from CSS and must be
@@ -35454,6 +35456,14 @@ function buildDevApi() {
         refreshDateSurfaces();
         return { date: window.__devDate, finish: anniversaryFinishFor(window.__devDate) || christmasFinishFor(window.__devDate) };
       },
+      // The turn of the year's two finishes (js/anniversarycta.js). Moves the dev date to New
+      // Year's Eve, or from there to New Year's Day, so one button steps through both.
+      newYearButton: () => {
+        const now = window.__devDate || todayKey(), eve = now.slice(5) === "12-31";
+        window.__devDate = eve ? `${+now.slice(0, 4) + 1}-01-01` : `${now.slice(0, 4)}-12-31`;
+        refreshDateSurfaces();
+        return { date: window.__devDate, finish: newYearFinishFor(window.__devDate) };
+      },
       // The album-anniversary word pool for a date now lives with the rest of the daily
       // tooling, which sees more of the draw than this did: see __dev.daily.preview.
     },
@@ -35531,7 +35541,7 @@ function buildDevApi() {
             if (!tn) continue;
             const shadowed = anniversaryNote(key, TS_MILESTONES) ? "milestone"
               : guestDayNote(key, GUEST_DAYS) ? "guest day" : "";
-            const button = anniversaryFinishFor(key) || birthdayFinishFor(key) || christmasFinishFor(key) || guestDayFinishFor(key) || thirteenthFinishFor(key);
+            const button = anniversaryFinishFor(key) || birthdayFinishFor(key) || christmasFinishFor(key) || newYearFinishFor(key) || guestDayFinishFor(key) || thirteenthFinishFor(key);
             out.push(`${key}  ${tn.caption}${shadowed ? `  (shadowed by ${shadowed})` : ""}${button ? `  button: ${button}` : ""}`);
           }
         }

@@ -2114,7 +2114,9 @@
      and designed on birthday-board.html, then the 13th of every month's, anv-13th (ch-
      classes), forced by thirteenthFinishFor and designed on thirteenth-board.html, and last
      Christmas Day's, anv-christmas (nt- classes), forced by christmasFinishFor and designed on
-     christmas-board.html. The guest shelf's days follow at the end, anv-guest-<id>, forced by
+     christmas-board.html, then New Year's Eve's and New Year's Day's, anv-new-years-eve (gp-
+     classes) and anv-new-years-day (ma- classes), both forced by newYearFinishFor and designed on
+     new-year-board.html. The guest shelf's days follow at the end, anv-guest-<id>, forced by
      guestDayFinishFor and designed on guest-days-board.html. */
   .btn-primary.play-cta[data-startbtn^="anv-"]::after { content:none; }
   .anv-out { position:absolute; inset:0; z-index:2; pointer-events:none; }
@@ -2741,6 +2743,51 @@
   @keyframes ntSwing { 0% { transform:rotate(var(--nt-tilt, -2.4deg)); } 18% { transform:rotate(calc(var(--nt-tilt, -2.4deg) + 5deg)); }
     40% { transform:rotate(calc(var(--nt-tilt, -2.4deg) - 3deg)); } 62% { transform:rotate(calc(var(--nt-tilt, -2.4deg) + 1.6deg)); }
     82% { transform:rotate(calc(var(--nt-tilt, -2.4deg) - .6deg)); } 100% { transform:rotate(var(--nt-tilt, -2.4deg)); } }
+
+  /* ============ New Year's Eve: Gold pen on black card ============
+     31 December, forced by newYearFinishFor over Snow day and the player's pick, and designed on
+     scripts/cta/new-year-board.html. The back page of the notebook, black card, and a metallic gel
+     pen in gold, silver and rose gold: two rockets on their way up as dotted lines, two bursts
+     already drawn at the far ends. On hover the rockets go off, each burst drawn out from its middle
+     and dabbed at every tip, and the lamp runs across the card and catches the ink. */
+  .play-cta[data-startbtn="anv-new-years-eve"] { --cta-fill:#1b1a1e; --cta-text:#f3e6c4; --cta-hover-text:#fbf0d2;
+    background-image:linear-gradient(168deg, #ffffff10 0%, #ffffff00 46%, #00000030 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-new-years-eve"] { --cta-fill:#141317; }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-new-years-eve"] .cta-fx { filter:brightness(.88); }
+  .play-cta[data-startbtn="anv-new-years-eve"] .cta-label { text-shadow:0 1px 2px #0d0c0f, 0 0 7px #0d0c0fcc; }
+  .gp-ray { stroke-dasharray:1 2; stroke-dashoffset:1.5; }
+  .gp-dab { opacity:0; transform:scale(0); transform-box:fill-box; transform-origin:center; }
+  .gp-head { transition:opacity .2s ease; }
+  .gp-sheen { transform:translateX(-140px); }
+  .play-cta[data-startbtn="anv-new-years-eve"]:is(:hover, :focus-visible) .gp-ray { animation:gpRay var(--t) var(--d) cubic-bezier(.15,.75,.3,1) both; }
+  .play-cta[data-startbtn="anv-new-years-eve"]:is(:hover, :focus-visible) .gp-dab { animation:gpDab .22s var(--d) cubic-bezier(.3,1.6,.5,1) both; }
+  .play-cta[data-startbtn="anv-new-years-eve"]:is(:hover, :focus-visible) .gp-head { opacity:0; transition-delay:var(--d); }
+  .play-cta[data-startbtn="anv-new-years-eve"]:is(:hover, :focus-visible) .gp-sheen { animation:gpSheen 1.6s .95s cubic-bezier(.4,0,.6,1) both; }
+  @keyframes gpRay { from { stroke-dashoffset:1.5; } 0.1% { stroke-dashoffset:1; } to { stroke-dashoffset:0; } }
+  @keyframes gpDab { from { opacity:0; transform:scale(0); } to { opacity:1; transform:scale(1); } }
+  @keyframes gpSheen { from { transform:translateX(-140px); } to { transform:translateX(760px); } }
+  /* With motion reduced nothing on the button animates, so the bursts are shown already drawn. */
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-new-years-eve"]:is(:hover, :focus-visible) .gp-ray { stroke-dashoffset:0; }
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-new-years-eve"]:is(:hover, :focus-visible) .gp-dab { opacity:1; transform:none; }
+
+  /* ============ New Year's Day: The morning after ============
+     1 January, forced by newYearFinishFor and designed on scripts/cta/new-year-board.html. The
+     floor of the room the party was in: honey oak, glitter in the boards, candle wax gone hard,
+     curls of gold foil, and last night's instant photographs where they fell, one developed and
+     the rest still murky. On hover they develop through an instant print's cold blue cast, and the
+     glitter catches the light. Night dims the floor rather than recolouring it, as a lamp would. */
+  .play-cta[data-startbtn="anv-new-years-day"] { --cta-fill:#c4945b; --cta-text:#2b2722; --cta-hover-text:#2b2722;
+    background-image:linear-gradient(168deg, #ffffff22 0%, #ffffff00 46%, #2b272224 100%); }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-new-years-day"] { --cta-fill:#6e5233; }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-new-years-day"] .cta-fx { filter:brightness(.66) saturate(.85); }
+  .play-cta[data-startbtn="anv-new-years-day"] .cta-label { text-shadow:0 0 3px #f5e6c8, 0 0 7px #f5e6c8cc, 0 0 12px #f5e6c888; }
+  :root[data-theme="dark"] .play-cta[data-startbtn="anv-new-years-day"] .cta-label { text-shadow:0 0 3px #cdbb98, 0 0 7px #cdbb98cc, 0 0 12px #cdbb9888; }
+  .ma-glint { opacity:0; transform:scale(.2); transform-box:fill-box; transform-origin:center; }
+  .play-cta[data-startbtn="anv-new-years-day"]:is(:hover, :focus-visible) .ma-murk { animation:maDevelop var(--t) var(--d) ease-in both; }
+  .play-cta[data-startbtn="anv-new-years-day"]:is(:hover, :focus-visible) .ma-glint { animation:maGlint 1.1s var(--d) ease-in-out 2 both; }
+  @keyframes maDevelop { 0% { opacity:1; fill:#6d7064; } 35% { opacity:.86; fill:#4c5873; } 70% { opacity:.4; fill:#57607a; } 100% { opacity:0; fill:#6a6f80; } }
+  @keyframes maGlint { 0%, 100% { opacity:0; transform:scale(.2) rotate(0); } 45% { opacity:1; transform:scale(1) rotate(20deg); } }
+  body[data-reduce-motion="on"] .play-cta[data-startbtn="anv-new-years-day"]:is(:hover, :focus-visible) .ma-murk { opacity:0; }
 
   /* ---------- The guest shelf's days ----------
      One finish for each day GUEST_DAYS keeps in the margin, forced by guestDayFinishFor the way a
