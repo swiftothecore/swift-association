@@ -7,6 +7,8 @@
  * drifts by the 31st. It all comes off on the 1st of January. The lumps are seeded by item and
  * position, never by day, so each day's pile grows out of the one before instead of re-dealing.
  *
+ * SWITCH. settings.settledSnow, in the Display settings, apart from the falling snow's.
+ *
  * WHAT HOLDS IT. The desk props, the bead discs, the wordmark's letters, the front page's top
  * edge, the corner buttons, and the print once the ball has been opened. Never the crushed
  * ball (anything that landed on it went when it was crushed), the wordmark's underline, or the

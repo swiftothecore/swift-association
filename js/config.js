@@ -273,7 +273,8 @@ export const DEFAULT_SETTINGS = {
   colorBlindAlbums: false,  // swap ALBUM_COLORS for a colour-blind-friendly palette
   deskDensity: "full",      // "full" | "quiet" | "bare" | "custom" decorative desk dressing
   deskHidden: [],           // DESK_PROPS ids left off the desk; read only on the Custom setting
-  seasonalEffects: true,    // calendar-driven snow and autumn leaves
+  seasonalEffects: true,    // calendar-driven falling snow and autumn leaves
+  settledSnow: true,        // the snow that builds up on the desk through December (js/snowcap.js)
   hideDailyScore: false,    // hide the daily score until "reveal & copy"
   timezone: "auto",         // daily-reset zone: "auto" (detect) | an IANA id e.g. "America/New_York"
   weekStart: "mon",         // first row/column of week-based views (the records and desk calendars, the Daily's monthly pass): "mon" | "sun"

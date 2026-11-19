@@ -935,8 +935,9 @@ function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); paintWe
 
 /* ---------- Settled snow ----------
    The snow that has built up on the desk, a little more each day of December (js/snowcap.js
-   carries the design and the cost). It rides the same switch as the falling snow but not the
-   reduce-motion gate, because nothing about it moves. Every caller goes through here, which
+   carries the design and the cost). It has its own switch, settings.settledSnow, apart from
+   the falling snow's: the weather button on the desk is the off switch for what is falling, and
+   this is not falling. Nor is it behind the reduce-motion gate, because nothing about it moves. Every caller goes through here, which
    folds a burst of calls into one lay, waits for the fonts (the wordmark's letters are measured)
    and for the front page's entrance to finish (its top edge holds snow, and snow on a page
    that is still fading in floats over nothing). It runs when something changes, never on a
@@ -944,7 +945,7 @@ function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); paintWe
    opening. */
 let snowCapPending = null, snowCapResize = null, snowCapResizeBound = false;
 function snowCapDay() {
-  if (settings.seasonalEffects === false) return 0;
+  if (settings.settledSnow === false) return 0;
   const key = todayKey();
   if (key.slice(5, 7) === "12" && isDecember(key)) return +key.slice(8, 10);
   return devForceSnow || isDecember(key) ? 20 : 0;   // a dev force out of season shows the 20th
@@ -958,7 +959,10 @@ function refreshSnowCaps(opts = {}) {
   snowCapPending = { settle: [...(opts.settle || [])] };
   const start = $("screen-start");
   const entrance = (start?.getAnimations() || []).filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}));
-  Promise.all([document.fonts.ready, ...entrance]).then(() => setTimeout(() => {
+  // The entrance gets a second and a half at most: a tab opened in the background never runs
+  // it, and the snow must not wait on a page nobody is looking at.
+  const settled = Promise.race([Promise.all(entrance), new Promise((r) => setTimeout(r, 1500))]);
+  Promise.all([document.fonts.ready, settled]).then(() => setTimeout(() => {
     const { settle } = snowCapPending;
     snowCapPending = null;
     const day = snowCapDay();
@@ -30999,6 +31003,8 @@ const SET_ICONS = {
   colorBlindAlbums: `<circle cx="8.8" cy="9.2" r="4"/><circle cx="15.2" cy="9.2" r="4"/><circle cx="12" cy="15" r="4"/>`,
   deskDensity: `<path d="M3 17h18M5 17V9h14v8M8 9V5h8v4"/>`,
   seasonalEffects: `<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M9 4.8 12 7l3-2.2M9 19.2l3-2.2 3 2.2"/>`,
+  // a drift heaped on a ledge
+  settledSnow: `<path d="M3 18.5h18"/><path d="M4.5 18.5c-.2-2.6 1.6-4 3.9-3.3.7-2.9 4.6-3.6 6.2-1.1 1.9-.9 4.2.6 4.1 4.4"/>`,
   hideDailyScore: `<path d="M3.5 12S7 6.5 12 6.5 20.5 12 20.5 12 17 17.5 12 17.5 3.5 12 3.5 12z"/><circle cx="12" cy="12" r="2.4"/><path d="M4.5 19.5 19.5 4.5"/>`,
   sound: `<path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z"/><path d="M15.3 9.7a3.8 3.8 0 0 1 0 4.6"/><path d="M18 7.2a7.4 7.4 0 0 1 0 9.6"/>`,
   soundFeedback: `<path d="M5 14l4 4L19 7"/><path d="M4 5h8"/>`,
@@ -31527,7 +31533,8 @@ function renderSettingsBody() {
         // on the dark page, where the ink goes lighter and the paper darker.
         setCheckHTML("highContrast", "High contrast", "stronger ink, bolder accents"),
         setCheckHTML("colorBlindAlbums", "Colour-blind album colours", "a more distinguishable palette"),
-        setCheckHTML("seasonalEffects", "Seasonal effects", "December snow and autumn leaves"),
+        setCheckHTML("seasonalEffects", "Seasonal effects", "falling snow in December, leaves in autumn"),
+        setCheckHTML("settledSnow", "Settled snow", "builds up on the desk through December"),
         setCheckHTML("hideDailyScore", "Seal Daily results until reveal", "keeps the tally, bracelet, and recap covered until you open them with the tag on the bracelet"),
       ]));
   panels.sound =
