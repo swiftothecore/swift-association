@@ -28,7 +28,8 @@
  * from its own box. The print and the buttons are plain shapes worked out from their boxes.
  *
  * STACKING. Each item's snow is its own canvas, inserted straight after the item so it stacks
- * with it: a prop half under the notebook keeps its snow under the notebook too.
+ * with it: a prop half under the notebook keeps its snow under the notebook too. Buttons are
+ * the exception: their snow goes just before them, so a badge on a button stays on top.
  */
 
 import { SNOW_LINES } from "./snowlines.js";
@@ -311,7 +312,10 @@ export function laySnowCaps(day, { settle = [], lines = SNOW_LINES, doc = docume
   clearSnowCaps(doc);
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   for (const j of jobs) {
-    j.anchor.after(j.cv);
+    // A button's snow goes in BEFORE it, so the button paints over it: a notification badge
+    // on the keepsakes jar stays on top of the snow instead of being buried. The cap sits
+    // above the button's rim, so nothing of it is lost. Everything else goes after its item.
+    if (j.name.startsWith("btn-")) j.anchor.before(j.cv); else j.anchor.after(j.cv);
     // A timed animation rather than a style flip on the next frame, so it finishes on the clock
     // even in a tab nobody is looking at and can never be left stuck invisible.
     if (settle.includes(j.name) && !still) j.cv.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 2600, delay: 500, easing: "ease-in", fill: "backwards" });
