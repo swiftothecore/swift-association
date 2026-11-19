@@ -84,6 +84,7 @@ import { drawRandom, poolSummary } from "./random.js";
 import { POLAROIDS, POLAROID_BY_ID } from "./polaroids.js";
 import { DAY_PRINTS } from "./dayprints.js";
 import { dealPrint, sheetStage, creaseSvg, deskHangerSVG, smooth } from "./deskprint.js";
+import { laySnowCaps, clearSnowCaps } from "./snowcap.js";
 import { albumDots, hasTone } from "./albumdots.js";
 import { STICKERS, STICKER_BY_ID, stickerArt } from "./stickers.js";
 import { showCover, placeCoverStickers, sweepStickerHolo } from "./stickercover.js";
@@ -930,7 +931,40 @@ function stopSnow() {
     snowCanvas.style.display = "none";
   }
 }
-function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); paintWeatherGear(); }
+function refreshSnow() { if (snowActive()) startSnow(); else stopSnow(); paintWeatherGear(); refreshSnowCaps(); }
+
+/* ---------- Settled snow ----------
+   The snow that has built up on the desk, a little more each day of December (js/snowcap.js
+   carries the design and the cost). It rides the same switch as the falling snow but not the
+   reduce-motion gate, because nothing about it moves. Every caller goes through here, which
+   folds a burst of calls into one lay, waits for the fonts (the wordmark's letters are measured)
+   and for the front page's entrance to finish (its top edge holds snow, and snow on a page
+   that is still fading in floats over nothing). It runs when something changes, never on a
+   frame: the date, the setting, the theme, a resize, the front page coming back, the ball
+   opening. */
+let snowCapPending = null, snowCapResize = null, snowCapResizeBound = false;
+function snowCapDay() {
+  if (settings.seasonalEffects === false) return 0;
+  const key = todayKey();
+  if (key.slice(5, 7) === "12" && isDecember(key)) return +key.slice(8, 10);
+  return devForceSnow || isDecember(key) ? 20 : 0;   // a dev force out of season shows the 20th
+}
+function refreshSnowCaps(opts = {}) {
+  if (!snowCapResizeBound) {
+    snowCapResizeBound = true;
+    window.addEventListener("resize", () => { clearTimeout(snowCapResize); snowCapResize = setTimeout(refreshSnowCaps, 200); });
+  }
+  if (snowCapPending) { snowCapPending.settle.push(...(opts.settle || [])); return; }
+  snowCapPending = { settle: [...(opts.settle || [])] };
+  const start = $("screen-start");
+  const entrance = (start?.getAnimations() || []).filter((a) => a.effect?.getComputedTiming().iterations !== Infinity).map((a) => a.finished.catch(() => {}));
+  Promise.all([document.fonts.ready, ...entrance]).then(() => setTimeout(() => {
+    const { settle } = snowCapPending;
+    snowCapPending = null;
+    const day = snowCapDay();
+    if (day) laySnowCaps(day, { settle }); else clearSnowCaps();
+  }, 0));
+}
 
 /* ---------- Autumn leaves ---------- */
 // The snowfall's seasonal sibling on the same rAF machinery: a full-viewport canvas of leaves
@@ -1245,6 +1279,7 @@ function showScreen(name, options = {}) {
   // Re-scatter the keepsake-card tape each time its screen is shown, so the pinning
   // feels hand-done rather than templated.
   if (name === "start" || name === "results") { scatterNavTape(name); updateMasteryNav(); updateKeepsakesNav(); }
+  if (name === "start") refreshSnowCaps();   // the front page's top edge is laid only while it is up
   // Move keyboard/screen-reader focus onto the newly shown screen so the next Tab
   // (and the SR reading position) start there, not on the now-hidden trigger. The
   // game screen manages its own focus on #songInput, so don't steal it there.
@@ -6580,6 +6615,9 @@ async function openDeskBall() {
   deskOpening = false;
   renderDeskPrint(true);
   refreshKeepsakes();
+  // The print is lying flat now and can hold snow; it settles in over a few seconds rather than
+  // being there the moment the card is smoothed out (a crushed ball holds none).
+  refreshSnowCaps({ settle: ["print"] });
 }
 
 // The slip the print opens. Every print owned, in the drawer's order, and the two modes as real
@@ -38625,6 +38663,9 @@ function buildDevApi() {
             sparkle: () => celebrateCorrect(3), lyricSparkle: () => lyricSparkle(), starShower: () => celebratePerfect(),
             blueWash: () => triggerBlueWash(), secret13: () => revealSecret13(),
             snow: (on) => { devForceSnow = on === undefined ? !devForceSnow : !!on; refreshSnow(); return devForceSnow; },
+            // the settled snow for any day of December (no argument: today's), laid at once
+            // and returning what each pass cost in ms. A day change puts it back to today's.
+            snowCaps: (day) => laySnowCaps(day ?? snowCapDay()),
             leaves: (on) => { devForceLeaves = on === undefined ? !devForceLeaves : !!on; refreshLeaves(); return devForceLeaves; },
             pen: (p) => setPen(p || null),
             // what this page's pen would be, from which of its answers, and any js/pens.js

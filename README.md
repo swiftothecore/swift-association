@@ -35,6 +35,7 @@ I’m working on a game inspired by ELLE’s Song Association: by default you ge
 - Unique UI with a notebook theme, and lots and lots of easter eggs
 - Lyricist mode, where you answer by typing a lyric line instead of a song title
 - A start button that snows all December and dresses up for album release days, her birthday, Christmas, both sides of New Year, the 13th of every month and the guest shelf's birthdays
+- Snow that builds up on everything on the desk, a little more each day of December
 - A stats page to track your stats across all your games
 - Personal bests displayed in a fun way
 - Beads that record how a page went, and finished bracelets you can copy or download as a PNG

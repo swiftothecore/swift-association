@@ -42,7 +42,7 @@
  * Paths are relative so the worker works at the site root (swiftassociation.com)
  * and under any project subpath, without hardcoding the origin.
  */
-const CACHE = "stta-v828";
+const CACHE = "stta-v829";
 const GUEST_CACHE = "stta-guests";
 const guestRoot = new URL("data/guests/", self.registration.scope);
 const isGuest = (url) => url.origin === guestRoot.origin &&
@@ -166,6 +166,8 @@ const ASSETS = [
   "js/polaroids.js",
   "js/dayprints.js",   // the albums' birthday prints for the desk, imported at load the same way
   "js/deskprint.js",
+  "js/snowcap.js",
+  "js/snowlines.js",
   "js/crumple.js",
   "js/stickers.js",
   // The stickers stuck to the closed notebook cover. Pairs with js/stickers.js above,
