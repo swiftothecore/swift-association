@@ -1961,9 +1961,18 @@ export function signsPair(clues) {
 export function signsDealable(songs, signs) {
   return songs.filter((s) => signs.has(s.title) && signsPair(signs.get(s.title)));
 }
+/* Two versions of one song (All Too Well and its 10 Minute Version) are drawn from the same
+   scarf, the same car and the same kitchen, so the pictures cannot say which cut they mean:
+   naming the other dealable version is right, exactly as on Name That Song (`also`, judged in
+   judgeName). The avoid list bars the whole family for the same reason, so a run never deals
+   one version's pictures after the other's. */
 export function buildSignsPuzzle(songs, signs, rng = Math.random, avoid = null) {
-  const pool = signsDealable(songs, signs).filter((s) => !avoid || !avoid.has(s.title));
+  const banned = avoid ? new Set([...avoid].map(versionFamily)) : null;
+  const dealable = signsDealable(songs, signs);
+  const pool = dealable.filter((s) => !banned || !banned.has(versionFamily(s.title)));
   if (!pool.length) return null;
   const song = pool[Math.floor(rng() * pool.length)];
-  return { song, ...signsPair(signs.get(song.title)) };
+  const family = versionFamily(song.title);
+  const also = dealable.filter((s) => s.title !== song.title && versionFamily(s.title) === family).map((s) => s.title);
+  return { song, ...signsPair(signs.get(song.title)), ...(also.length ? { also } : {}) };
 }

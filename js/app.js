@@ -10214,9 +10214,12 @@ function judgeName(picked = null) {
     bonusPuzzle.song = song;
     // The two versions do not number their sections alike (a 10 Minute Version has more
     // verses), so the label under the heading is read off the version now being shown.
-    const key = normalizeLyric(bonusPuzzle.line);
-    const sec = (song.sections || []).find((x) => (x.lines || []).some((l) => normalizeLyric(l) === key));
-    if (sec) bonusPuzzle.label = sec.label || "";
+    // So Many Signs deals pictures rather than a line, and has no label to re-read.
+    if (bonusPuzzle.line) {
+      const key = normalizeLyric(bonusPuzzle.line);
+      const sec = (song.sections || []).find((x) => (x.lines || []).some((l) => normalizeLyric(l) === key));
+      if (sec) bonusPuzzle.label = sec.label || "";
+    }
   }
   // The shelf writes to the session ledger too, from the one path where the answer is a SONG.
   // Sing It Back asks for a missing word and Only Here for cards, so neither names anything.
@@ -10913,13 +10916,16 @@ function verdictMarkup(head, body, advanceUI) {
 
 function settleBonusRound(correct, detail, isTimeout = false) {
   bonusLocked = true;
-  /* A Name That Song line both versions of a song share says so, because either title was
-     right and the page should not let a player think the one it shows was the only answer.
+  /* A Name That Song line both versions of a song share says so (as does a So Many Signs page
+     drawn from one of them), because either title was right and the page should not let a
+     player think the one it shows was the only answer.
      Only for versions the shelf deals: a hidden acoustic or piano cut can never be named, so
      "also on" one of those would be trivia rather than part of the answer. */
-  if (bonusGame && bonusGame.id === "name-that-song" && bonusPuzzle.also && bonusPuzzle.also.length) {
+  if (bonusGame && (bonusGame.id === "name-that-song" || bonusGame.id === "so-many-signs") &&
+      bonusPuzzle.also && bonusPuzzle.also.length) {
     const alt = bonusPuzzle.also.map((t) => `<b>${escapeHtml(censor(t))}</b>`).join(" and ");
-    const note = correct ? `also on ${alt}` : `${alt} counted too`;
+    // A picture is not "on" a song the way a line is, so the signs say the other cut counted.
+    const note = correct && bonusGame.id === "name-that-song" ? `also on ${alt}` : `${alt} counted too`;
     detail = detail ? `${detail} · ${note}` : note;
   }
   stopBonusClock();
