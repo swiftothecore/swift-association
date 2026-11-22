@@ -560,6 +560,11 @@
   /* Settled snow (js/snowcap.js): each item's own canvas, laid straight after it. The front
      page's top edge is laid only while that page is up, and put away the moment another is. */
   #screen-start:not(.active) + canvas.snowcap { display: none; }
+  /* The keepsakes jar steps off the desk for a run (body.in-game .keepsakes-gear), and its snow,
+     which sits just before it rather than inside it, has to step off with it or it floats over
+     nothing in the corner. Nothing re-lays the snow when a run starts, so this is the only
+     thing that can put it away. */
+  body.in-game canvas.snowcap:has(+ .keepsakes-gear) { display: none; }
   /* Autumn leaves: the snowfall's seasonal sibling. Same layer, same rules, but gated
      on the Halloween week (28 Oct–3 Nov, active timezone) instead of December. */
   #autumnleaves { position: fixed; inset: 0; z-index: 50; pointer-events: none; display: none; }
