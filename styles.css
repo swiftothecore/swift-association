@@ -18705,6 +18705,24 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   border-top: 1.5px solid var(--red-pen); transform: rotate(-1.2deg); opacity: 0.85;
 }
 .lu-goals-result { margin: 8px 0 6px; }
+/* A live card's note: who is shut, who opened, how far a count has got. Quieter than the name,
+   and set after a dot so a strip of three still reads as three cards. */
+.lu-goal-note { font-style: normal; opacity: 0.8; }
+.lu-goal-note:not(:empty)::before { content: "· "; opacity: 0.6; }
+.lu-goal-note.is-over { color: var(--red-pen); opacity: 1; }
+/* The floor, counted only once a page has been missed: until then every page is landing. */
+.lu-goal.lu-floor { color: var(--red-pen); }
+/* The card a page killed, said once under the verdict, in the same red pen as the strike. */
+.lu-gone {
+  font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust)); line-height: 1.3;
+  color: var(--red-pen); margin: 2px 0 8px;
+}
+.lu-gone b { font-weight: 700; }
+/* On the results: why each lost card was lost, one compact line under the struck names. */
+.lu-goal-why {
+  font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 0.3px;
+  color: var(--ink-soft); text-align: center; margin: -2px 0 8px; line-height: 1.5;
+}
 
 /* ---- THE GOAL BOARD ----
    The mode's record lives on its own panel (see renderLineupBoardPage); what sits on the

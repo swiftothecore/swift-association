@@ -15,7 +15,7 @@ import { southernSeasons } from "./season.js";
 import { DECK, byId as goalById, SUITS } from "./lineupdeck.js";
 import { BUDGET, handCost, conflicts, validateHand, poolForHand, dealable, pips } from "./lineuphand.js";
 import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineupcards.js";
-import { judge, WON, DEAD, FLOOR as LINEUP_FLOOR } from "./lineupgoals.js";
+import { judge, WON, DEAD, ALIVE, FLOOR as LINEUP_FLOOR, goalNote, deathNote, deathPage, landed as lineupLanded } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, NORMAL_TAIL_CHANCE, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DAILY_ALBUM_MIN_ANSWERS, DAILY_ALBUM_SKIP_FROM, DIFF_KEY, DEFAULT_SETTINGS,
@@ -10921,7 +10921,11 @@ function countdownAdvance(lead, cdId, skipId) {
 
 function verdictMarkup(head, body, advanceUI) {
   const adv = `<div class="feedback-advance">${advanceUI}</div>`;
-  return matchMedia("(max-width: 560px)").matches ? head + adv + body : head + body + adv;
+  // A lineup card that died on this page says so here, right under the verdict, where the eye
+  // already is: the strip strikes it too, but a strike in 10px type above the word was easy to
+  // miss, and two cards could go on page one without the page saying a word.
+  const gone = gameType === "lineup" ? lineupGoneHTML() : "";
+  return matchMedia("(max-width: 560px)").matches ? head + gone + adv + body : head + gone + body + adv;
 }
 
 function settleBonusRound(correct, detail, isTimeout = false) {
@@ -17541,15 +17545,71 @@ function judgeLineupHand() {
 /* The hand as it stands, on the page you are playing. A dead card is struck the MOMENT it
    dies rather than at the end, because a goal that fails silently is the worst version of
    failing: you would play six more pages for something already gone. Red pen through the
-   name is the notebook's own way of saying a thing is no longer available. */
+   name is the notebook's own way of saying a thing is no longer available.
+
+   A live card also carries a short note (goalNote): who Closed Shelf has shut, who you opened
+   with, how far a count has got. Without it the strip asked the player to remember the run,
+   and the card that most needs remembering said nothing after banning Taylor on page one. Once
+   a page has been missed, the strip also counts the pages landed against the floor, since that
+   is the one number every card in the hand now depends on. */
 function renderLineupGoals() {
   const strip = $("lineupGoals");
   if (!strip) return;
-  if (gameType !== "lineup" || !lineupHand.length) { strip.hidden = true; strip.innerHTML = ""; return; }
+  if (gameType !== "lineup" || !lineupHand.length) { strip.hidden = true; strip.innerHTML = ""; stopLineupCuff(); return; }
   strip.hidden = false;
-  strip.innerHTML = judgeLineupHand().map(({ card, state }) =>
-    `<span class="lu-goal${state === DEAD ? " is-dead" : state === WON ? " is-won" : ""}">` +
-    suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b></span>`).join("");
+  const pages = lineupPages(), ctx = lineupCtx();
+  const got = lineupLanded(pages), missed = pages.length - got;
+  const floor = missed && got < LINEUP_FLOOR
+    ? `<span class="lu-goal lu-floor">${got} of ${LINEUP_FLOOR} landed</span>` : "";
+  strip.innerHTML = floor + judgeLineupHand().map(({ card, state }) => {
+    const why = state === DEAD ? deathNote(card, pages, ctx) : "";
+    const note = state === ALIVE ? goalNote(card, pages, ctx) : "";
+    const cuff = state === ALIVE && card.inside ? ` data-cuff="${card.inside}"` : "";
+    return `<span class="lu-goal${state === DEAD ? " is-dead" : state === WON ? " is-won" : ""}"` +
+      (why ? ` title="${escapeHtml(why)}"` : "") + `>` +
+      suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b>` +
+      (note || cuff ? `<i class="lu-goal-note"${cuff}>${escapeHtml(note)}</i>` : "") + `</span>`;
+  }).join("");
+  if (strip.querySelector("[data-cuff]")) startLineupCuff(); else stopLineupCuff();
+}
+
+/* Off The Cuff's own ten seconds, counted down on the strip. The page's clock is the
+   difficulty's (fifteen on Easy, twenty on Lyricist, none at all on Relaxed), so without this
+   the card's deadline was invisible: a Relaxed page answered at fourteen seconds struck it with
+   nothing on the screen to warn you. It reads the same page stopwatch the judge does. */
+let lineupCuffTimer = null;
+function paintLineupCuff() {
+  const el = document.querySelector("#lineupGoals [data-cuff]");
+  if (!el || gameType !== "lineup") { stopLineupCuff(); return; }
+  if (roundLocked || !screens.game.classList.contains("active")) { el.textContent = ""; el.classList.remove("is-over"); return; }
+  const left = Number(el.dataset.cuff) - (performance.now() - roundStart) / 1000;
+  el.textContent = left > 0 ? `${Math.ceil(left)}s` : "over";
+  el.classList.toggle("is-over", left <= 0);
+}
+function startLineupCuff() {
+  if (!lineupCuffTimer) lineupCuffTimer = setInterval(paintLineupCuff, 250);
+  paintLineupCuff();
+}
+function stopLineupCuff() {
+  clearInterval(lineupCuffTimer);
+  lineupCuffTimer = null;
+}
+
+/* The cards the page just answered killed, kept for the verdict's line. Judged on the run a
+   page ago and the run now, so a card that died earlier is never announced twice. */
+let lineupGone = [];
+function noteLineupDeaths() {
+  const pages = lineupPages(), ctx = lineupCtx(), before = pages.slice(0, -1);
+  lineupGone = lineupHand.map((id) => goalById[id])
+    .filter((card) => judge(card, before, ctx) !== DEAD && judge(card, pages, ctx) === DEAD)
+    .map((card) => ({ name: card.name, why: deathNote(card, pages, ctx) }));
+}
+function lineupGoneHTML() {
+  if (!lineupGone.length) return "";
+  const line = lineupGone.map(({ name, why }) =>
+    `<span><b>${escapeHtml(name)}</b> is gone${why ? `: ${escapeHtml(why)}` : ""}</span>`).join(" · ");
+  lineupGone = [];
+  return `<p class="lu-gone">${line}</p>`;
 }
 
 // The distinct artists a finished run actually covered, in the order they first turned up.
@@ -17568,6 +17628,7 @@ function lineupCovered() {
 // dealt is not hers. markRunBreadth is skipped for the same reason the bonus shelf skips it:
 // the breadth ladder is a main-game charm and this is not a main-game run.
 function endLineup() {
+  stopLineupCuff();
   const covered = lineupCovered();
   showScreen("results");
   // The strand, coloured by ARTIST. roundAlbums is still handed over and is still ignored for
@@ -17601,6 +17662,14 @@ function endLineup() {
     `<span class="lu-goal${state === WON ? " is-won" : " is-dead"}` +
     `${firsts.has(card.id) ? " is-first" : ""}">` +
     suitMark(card.suit) + `<b>${escapeHtml(card.name)}</b></span>`).join("");
+  // Why each lost card was lost, and on which page. A struck name beside a strand that plainly
+  // shows seven artists (Headliners asks six) reads as a bug unless the page says what did it.
+  const pagesRun = lineupPages(), ctxRun = lineupCtx();
+  const lost = verdict.filter(({ state }) => state !== WON).map(({ card }) => {
+    const at = deathPage(card, pagesRun, ctxRun), why = deathNote(card, pagesRun, ctxRun);
+    return `${escapeHtml(card.name)}: ${at ? `page ${at}` : "the last page"}${why ? `, ${escapeHtml(why)}` : ""}`;
+  });
+  const lostLine = lost.length ? `<div class="lu-goal-why">${lost.join(" · ")}</div>` : "";
   const names = covered.length
     ? covered.map((n) => escapeHtml(n)).join(" · ")
     : "nobody: not a page landed";
@@ -17618,7 +17687,7 @@ function endLineup() {
       `${firsts.size === 1 ? "a card you had never held" : firsts.size + " cards you had never held"}` +
       ` · ${onBoard} of ${DECK.length} on the board</div>`
     : "";
-  const meta = `<div class="lu-goals lu-goals-result">${goals}</div>` + newsLine +
+  const meta = `<div class="lu-goals lu-goals-result">${goals}</div>` + lostLine + newsLine +
     `<div class="chall-result-meta">${covered.length} of ${SHELF} on one strand · ${names}</div>`;
   $("resultPodium").innerHTML = status + meta +
     `<div class="chall-result-actions">` +
@@ -28131,6 +28200,9 @@ function submitAnswer(song, isTimeout) {
       dropdown: pageDropdownShown,
       sung: !!lyricMatch,
     };
+    // The cards this page killed, for the verdict's own line (verdictMarkup), read before the
+    // strip redraws so "alive a page ago" is still the hand as it stood.
+    noteLineupDeaths();
     renderLineupGoals();   // a card that just died is struck on this page, not at the end
   }
   // Distinct albums the prompt word *could* have been answered from — the Discography skill
