@@ -6507,10 +6507,11 @@ function closeKeepsakes() {
    Nothing about the ball ever loops. A ball of paper does not move by itself, and every attempt
    to make it shake or strain read as wrong, so it changes state and then holds still.
 
-   On an album's birthday the desk wears that album's own print (js/dayprints.js) instead, over a
-   kept print too. It is worn, never owned: it never counts, never hangs on the wall and cannot be
-   kept. It never touches the reveal, so not before the ball opens and not on the day it does, and
-   choosing any other print that day sets it aside until tomorrow (`skipDay`). */
+   On an album's birthday, and on hers, the desk wears that day's own print (js/dayprints.js)
+   instead, over a kept print too. It is worn, never owned: it never counts, never hangs on the
+   wall and cannot be kept. It never touches the reveal, so not before the ball opens and not on
+   the day it does, and choosing any other print that day sets it aside until tomorrow
+   (`skipDay`). */
 const DESK_PRINT_AT = 5;
 const DESK_HALF_OPEN = 0.3;
 const DESK_EASE_DELAY = 1400, DESK_EASE_MS = 3400, DESK_OPEN_MS = 1900;
@@ -6553,8 +6554,16 @@ function deskNow(earned = loadKeepsakes()) {
 // how many years. Read off anniversaryNote, so a songday (a date sung, not a release) has none. A
 // re-record's day wears its own print, keyed by its title in TS_MILESTONES, when it has one, and
 // the original's otherwise (1989's two birthdays share a date and so share one print).
+// Her own birthday has no album, and her name is the debut's title, so its print is keyed
+// "birthday". It is captioned like a card instead: the margin note's headline ("Happy 37th
+// birthday, Taylor") is too long for the print's lip, which is cut to one line.
 function dayPrintOn(dateKey) {
   const note = anniversaryNote(dateKey, TS_MILESTONES);
+  const born = TS_MILESTONES.find((m) => m.md === dateKey.slice(5) && m.kind === "birthday");
+  if (born) {
+    const age = +dateKey.slice(0, 4) - born.year;
+    return DAY_PRINTS.birthday ? { id: `day-${dateKey.slice(5)}`, name: note.caption, sub: `${age} today`, art: DAY_PRINTS.birthday } : null;
+  }
   const tv = TS_MILESTONES.find((m) => m.md === dateKey.slice(5) && m.kind === "tv");
   const art = note && !note.songday && note.album ? (tv && DAY_PRINTS[tv.title]) || DAY_PRINTS[note.album] : null;
   return art ? { id: `day-${dateKey.slice(5)}`, name: note.headline.toLowerCase(), sub: note.caption, art } : null;
