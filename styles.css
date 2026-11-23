@@ -18666,6 +18666,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 }
 .lu-who:hover { background: rgba(255,255,255,0.75); }
 .lu-who.is-named { color: var(--red-pen); border-color: var(--red-pen); background: rgba(255,255,255,0.8); }
+/* A name a held card has already ruled out: struck in red pen, the notebook's "not available
+   here", and the reason on hover rather than printed, since every chip would otherwise grow. */
+.lu-who.is-shut { cursor: not-allowed; opacity: 0.55; text-decoration: line-through; text-decoration-color: var(--red-pen); }
+.lu-who.is-shut:hover { background: rgba(255,255,255,0.45); }
 /* The ordinal is load-bearing when both naming cards are in the hand: Sworn In reads the
    first name and Three Chairs reads all three, so which one you picked first is a decision. */
 .lu-who-n { font-weight: 700; margin-right: 5px; opacity: 0.8; }

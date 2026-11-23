@@ -42,10 +42,17 @@ export function poolForHand(cards) {
   return allowed.length ? allowed[allowed.length - 1] : null;
 }
 
-/* The arithmetic, once. A hand's artist floors and ceilings either can all be true at
-   the same time or they cannot, and saying so is the same job whether you are testing
-   one more card onto a table or judging a finished trio. */
-export function arithmetic(cards) {
+/* The arithmetic, once. A hand's artist floors and ceilings either can all be true at the
+   same time or they cannot, and saying so is the same job whether you are testing one more
+   card onto a table or judging a finished trio.
+
+   `ctx` is the notebook the hand is held on: { shelf, home, admitted }. It is optional (the
+   boards and the tests judge hands in the abstract), but the felt always passes it, because
+   two of the cards shut catalogues that only the notebook can name: No Home Team shuts hers,
+   and Nobody Admitted shuts every guest you have been admitted to, which is a different set on
+   every notebook. A hand that needs more artists than it leaves open cannot be won, and that is
+   only knowable live. */
+export function arithmetic(cards, ctx = {}) {
   const cap = Math.min(...cards.map(c => c.cap || 99));
   const need = Math.max(...cards.map(c => c.need || 0));
   const hog = Math.max(...cards.map(c => c.hog || 0));
@@ -53,7 +60,34 @@ export function arithmetic(cards) {
   if (need > cap) return "needs more artists than the hand allows";
   if (need + hog - 1 > PAGES) return "more pages than the run has";
   if (hog > hogCap) return "one artist cannot take that many pages here";
+  /* A card with a PACE makes every artist wait for the one before to answer that many pages,
+     so any stretch of n pages holds at most ceil(n / pace) of them. A breadth card asking for
+     more than that inside its own window (Opening Act's five, No Repeats Yet's eight, the whole
+     run for Full Lineup) can never be won beside it. */
+  const pace = Math.max(...cards.map(c => c.pace || 1));
+  if (pace > 1 && cards.some(c => c.need && Math.ceil((c.within || PAGES) / pace) < c.need)) {
+    return "too many artists for that pace";
+  }
+  if (ctx.shelf) {
+    const shut = new Set();
+    if (cards.some(c => c.shuts === "home")) shut.add(ctx.home);
+    if (cards.some(c => c.shuts === "admitted")) for (const a of ctx.admitted || []) shut.add(a);
+    const open = ctx.shelf.filter(a => !shut.has(a));
+    const names = Math.max(...cards.map(c => c.names || 0));
+    if (!open.length) return "nobody left to answer with";
+    if (need > open.length || names > open.length) return "too few artists left open";
+    if (cards.some(c => c.away) && !open.some(a => a !== ctx.home)) return "nobody left but Taylor";
+  }
   if (!poolForHand(cards)) return "no pool allows both";
+  return "";
+}
+
+/* One card already asking everything another does, in either direction. Holding both is not
+   impossible, it is paying twice for one promise, which a player only finds out by reading two
+   card faces side by side; the felt refuses the pair instead. Returns the reason or "". */
+function coverage(card, laid) {
+  if ((laid.covers || []).includes(card.id)) return "covered by " + laid.name;
+  if ((card.covers || []).includes(laid.id)) return "already asks " + laid.name;
   return "";
 }
 
@@ -62,37 +96,57 @@ export function arithmetic(cards) {
 export function validateHand(ids, byId, opts = {}) {
   /* BUDGET_OVERRIDE exists for the calibration sweep on hand-lab.html, which has to ask
      what a different budget would do without editing the constant everything else reads. */
-  const { budgetOn = true, BUDGET_OVERRIDE = BUDGET } = opts;
+  const { budgetOn = true, BUDGET_OVERRIDE = BUDGET, ctx = {} } = opts;
   const cards = ids.map(id => byId[id]);
   for (const a of cards) for (const b of cards) {
     if (a === b) continue;
     if ((a.bans || []).includes(b.id)) return { ok: false, why: a.name + " bans " + b.name };
+    const twice = coverage(a, b);
+    if (twice) return { ok: false, why: twice };
   }
-  const why = arithmetic(cards);
+  const why = arithmetic(cards, ctx);
   if (why) return { ok: false, why };
   const cost = handCost(ids, byId);
   if (budgetOn && cost > BUDGET_OVERRIDE) return { ok: false, why: "over budget", cost };
   return { ok: true, cost, pool: poolForHand(cards) };
 }
 
-/* A card is out if something on the table bans it, if the artist ceilings and floors
-   cannot all be true at once, if it would blow the budget, or if there is no pool left
-   that every card permits. The arithmetic checks are the ones a ban list alone would
-   miss: Three Chairs and Headliners never name each other, they simply cannot both be
-   satisfied, and deriving that keeps it true the day an eleventh catalogue lands. */
+/* A card is out if something on the table bans it, if one of the two already asks everything
+   the other does, if the artist ceilings and floors cannot all be true at once, if it would
+   blow the budget, or if there is no pool left that every card permits. The arithmetic checks
+   are the ones a ban list alone would miss: Three Chairs and Headliners never name each other,
+   they simply cannot both be satisfied, and deriving that keeps it true the day another
+   catalogue lands. */
 export function conflicts(card, hand, byId, opts = {}) {
-  const { budgetOn = true, maxHand = 3 } = opts;
+  const { budgetOn = true, maxHand = 3, ctx = {} } = opts;
   if (hand.includes(card.id)) return "";
   for (const id of hand) {
     const laid = byId[id];
     if ((laid.bans || []).includes(card.id)) return "against " + laid.name;
     if ((card.bans || []).includes(id)) return "against " + laid.name;
+    const twice = coverage(card, laid);
+    if (twice) return twice;
   }
-  const why = arithmetic(hand.map(id => byId[id]).concat(card));
+  const why = arithmetic(hand.map(id => byId[id]).concat(card), ctx);
   if (why) return why;
   if (budgetOn && hand.length < maxHand) {
     if (handCost(hand, byId) + pips(card.rank) > BUDGET) return "over budget";
   }
   if (hand.length >= maxHand) return "table is full";
   return "";
+}
+
+/* Whether a card is a GOAL at all at this difficulty and on this notebook. A card the run
+   makes true by itself is a free board tick dressed as a promise, so it is never dealt there.
+   `mode` is a MODES entry; `ctx` the same notebook context as above. Read off the mode's own
+   levers rather than a list of difficulty ids, so a mode retuned tomorrow is judged as it is. */
+export function dealable(card, mode = {}, ctx = {}) {
+  switch (card.needs) {
+    case "hints": return !!mode.hint;                                   // No Hints: only where there is a ladder
+    case "suggestions": return !!mode.dropdown && !mode.lyricOnly;      // Cold Open: only where the list would open
+    case "titles": return !mode.lyricOnly;                              // Sing It Back: not where every answer is sung
+    case "clock": return !mode.seconds || mode.seconds > (card.inside || 0);  // Off The Cuff: not on its own clock or less
+    case "admissions": return (ctx.admitted || []).length > 0;          // Nobody Admitted: only once it shuts somebody
+    default: return true;
+  }
 }

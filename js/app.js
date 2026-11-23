@@ -17028,9 +17028,10 @@ const HAND_MAX = 3;
 // measurement's guarantee held onto: hand-lab says no five is dead today, and this makes sure
 // nobody discovers otherwise on a live run the day a card is added or retuned.
 function dealLineupFive() {
+  const ctx = lineupCtx();
   for (let attempt = 0; attempt < 40; attempt++) {
     const five = shuffle(DECK.map((c) => c.id)).slice(0, 5);
-    const pair = five.some((a) => five.some((b) => a !== b && validateHand([a, b], goalById).ok));
+    const pair = five.some((a) => five.some((b) => a !== b && validateHand([a, b], goalById, { ctx }).ok));
     if (pair) return five;
   }
   return shuffle(DECK.map((c) => c.id)).slice(0, 5);   // unreachable in practice; never deal nothing
@@ -17040,7 +17041,7 @@ function dealLineupFive() {
 // always droppable, so it never asks.
 function lineupBlocked(id) {
   if (lineupKept.includes(id)) return "";
-  return conflicts(goalById[id], lineupKept, goalById, { maxHand: HAND_MAX });
+  return conflicts(goalById[id], lineupKept, goalById, { maxHand: HAND_MAX, ctx: lineupCtx() });
 }
 
 // The red pen round a kept card's corner index, which is where its price is printed. Drawn
@@ -17401,11 +17402,28 @@ function namesWanted() {
   return Math.max(0, ...lineupKept.map((id) => goalById[id].names || 0));
 }
 
+/* A name the hand itself has already ruled out, or "". Naming Taylor beside No Home Team, a
+   guest you have been admitted to beside Nobody Admitted, or swearing to Taylor beside Quiet
+   Half (seven pages from an artist allowed six) is a hand lost before page one, and the felt
+   is the only place that can say so: the cards never name each other. `slot` is where the name
+   would sit, because only the first name is the one Sworn In reads. */
+function lineupNameVeto(who, slot) {
+  const kept = lineupKept.map((id) => goalById[id]);
+  if (who === HOME_ARTIST && kept.some((c) => c.shuts === "home")) return "No Home Team shuts her";
+  if (kept.some((c) => c.shuts === "admitted") && lineupCtx().admitted.includes(who)) return "Nobody Admitted shuts them";
+  if (slot === 0 && who === HOME_ARTIST && lineupKept.includes("sworn-in") && lineupKept.includes("quiet-half")) {
+    return "Quiet Half shuts her after six";
+  }
+  return "";
+}
+
 function renderLineupNaming() {
   const box = $("lineupNaming");
   if (!box) return;
   const want = namesWanted();
   lineupNamed = lineupNamed.filter((n) => lineupShelf().includes(n)).slice(0, want);
+  // A card kept after naming can rule a name out; drop it rather than deal a dead hand.
+  lineupNamed = lineupNamed.filter((n, i) => !lineupNameVeto(n, i));
   box.hidden = !want;
   if (!want) return;
   const swornFirst = want > 1 && lineupKept.includes("sworn-in");
@@ -17415,7 +17433,9 @@ function renderLineupNaming() {
   box.innerHTML = `<p class="lu-name-lead">${escapeHtml(lead)}</p><div class="lu-name-row">` +
     lineupShelf().map((who) => {
       const at = lineupNamed.indexOf(who);
-      return `<button type="button" class="lu-who${at > -1 ? " is-named" : ""}" data-who="${escapeHtml(who)}">` +
+      const veto = at > -1 ? "" : lineupNameVeto(who, lineupNamed.length);
+      return `<button type="button" class="lu-who${at > -1 ? " is-named" : ""}${veto ? " is-shut" : ""}"` +
+        ` data-who="${escapeHtml(who)}"${veto ? ` disabled title="${escapeHtml(veto)}"` : ""}>` +
         (at > -1 && want > 1 ? `<span class="lu-who-n">${at + 1}</span>` : "") +
         escapeHtml(who) + `</button>`;
     }).join("") + `</div>`;
@@ -17426,7 +17446,7 @@ function toggleLineupName(who) {
   if (!want || !lineupShelf().includes(who)) return;
   const at = lineupNamed.indexOf(who);
   if (at > -1) lineupNamed.splice(at, 1);
-  else if (lineupNamed.length < want) lineupNamed.push(who);
+  else if (lineupNamed.length < want && !lineupNameVeto(who, lineupNamed.length)) lineupNamed.push(who);
   else return;
   renderLineupFelt();
 }
