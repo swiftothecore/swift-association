@@ -43,12 +43,17 @@ test('Cold Open shuts suggestions while lockouts and No Hints stay promises', ()
   }
 });
 
-test('the playable lockouts declare how a missed page is treated', () => {
-  for (const card of DECK.filter(card => card.suit === 'spades')) {
-    assert.ok(['fails', 'skipped'].includes(card.miss), card.id);
+test('every playable card declares how a missed page is treated', () => {
+  for (const card of DECK) {
+    assert.ok(['fails', 'skipped', 'breaks', 'window'].includes(card.miss), card.id);
+    // A window card reads misses its own way, so it has to say how on its face.
+    assert.equal(card.miss === 'window', !!card.missText, card.id);
   }
-  assert.equal(byId['three-chairs'].miss, 'fails');
-  assert.equal(byId['closed-shelf'].miss, 'skipped');
+  // Bans skip a miss rather than fail on one; the floor is what stops a blank run keeping them.
+  for (const card of DECK.filter(card => card.suit === 'spades')) assert.equal(card.miss, 'skipped', card.id);
+  // Only the cards whose rule IS "every page" still fail outright.
+  assert.deepEqual(DECK.filter(card => card.miss === 'fails').map(card => card.id).sort(),
+    ['clean-sheet', 'homecoming', 'off-the-cuff']);
 });
 
 test('the deck prevents contradictory goals, whether by a ban or by available pages', () => {

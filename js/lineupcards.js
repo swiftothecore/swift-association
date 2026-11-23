@@ -263,7 +263,11 @@ export function artFor(look, suit) {
    ============================================================ */
 export const SUIT_LOOK = { spades: "facet", hearts: "vine", diamonds: "strandbare", clubs: "frame" };
 
-const MISS = { fails: "miss: fails", skipped: "miss: skipped" };
+/* The missed-page ruling, in the words a fresh reader needs rather than the judge's own keys.
+   A window card prints its own (`missText`), because "the first eight" or "page 1 or 13" is
+   the whole of what it means. Anything that kills the card is set in red. */
+const MISS = { fails: "a miss kills it", skipped: "misses are skipped", breaks: "a miss breaks the streak" };
+export const missLine = card => card.missText || MISS[card.miss] || "";
 
 /* A pool restriction has to be PRINTED. It is measured (deal-lab.html) rather than chosen,
    but a card that is quietly unavailable in a run is worse than one that says so: the player
@@ -276,7 +280,7 @@ const POOL_LINE = pools =>
 export function cardFace(card, look) {
   const red = RED[card.suit] ? " lu-red" : "";
   const und = (card.rank === "6" || card.rank === "9") ? "lu-und" : "";
-  const missText = MISS[card.miss] || "";
+  const missText = missLine(card);
   // The stock wears with the card, never with a fresh render or the deal order.
   const wear = [...card.id].reduce((n, ch) => (Math.imul(n, 31) + ch.charCodeAt(0)) >>> 0, 0);
   const stock = `--lu-fox-x:${18 + wear % 13}%;--lu-fox-y:${72 + (wear >>> 4) % 13}%;`
@@ -288,7 +292,7 @@ export function cardFace(card, look) {
     <div class="lu-keyline"></div>
     ${ix("tl")}${ix("br")}
     <div class="lu-mid">
-      ${missText ? `<p class="lu-miss${card.miss === "fails" ? " bad" : ""}">${missText}</p>` : ""}
+      ${missText ? `<p class="lu-miss${/kills/.test(missText) ? " bad" : ""}">${missText}</p>` : ""}
       <p class="lu-name">${card.name}</p>
       <p class="lu-rule">${card.rule}</p>
       ${POOL_LINE(card.pools) ? `<p class="lu-pool">${POOL_LINE(card.pools)}</p>` : ""}

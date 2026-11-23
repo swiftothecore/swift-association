@@ -15,7 +15,7 @@ import { southernSeasons } from "./season.js";
 import { DECK, byId as goalById, SUITS } from "./lineupdeck.js";
 import { BUDGET, handCost, conflicts, validateHand, poolForHand, POOL_ORDER, pips } from "./lineuphand.js";
 import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineupcards.js";
-import { judge, WON, DEAD } from "./lineupgoals.js";
+import { judge, WON, DEAD, FLOOR as LINEUP_FLOOR } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
   TOTAL_ROUNDS, RECENT_WINDOW, NOVELTY_BOOST, NORMAL_TAIL_CHANCE, DAILY_ALBUM_SKEW, DAILY_ALBUM_WEIGHT_EXP, DAILY_ALBUM_MIN_ANSWERS, DAILY_ALBUM_SKIP_FROM, DIFF_KEY, DEFAULT_SETTINGS,
@@ -14864,8 +14864,9 @@ function renderLineupBoardPage() {
   }).join("");
   el.innerHTML =
     `<p class="lu-deck-lead">Five of these are dealt before page one and you keep up to three, ` +
-      `on a budget of ${BUDGET} pips. A card you held at least once is ticked; one you ` +
-      `committed to and lost is struck.</p>` +
+      `on a budget of ${BUDGET} pips. A card only counts on a run that lands at least ` +
+      `${LINEUP_FLOOR} pages. One you held at least once is ticked; one you committed to and ` +
+      `lost is struck.</p>` +
     `<div class="lu-deck-count">${escapeHtml(tally.line)}</div>` +
     `<div class="lu-deck">${suits}</div>`;
 }
@@ -14920,7 +14921,8 @@ function renderLineupDetail() {
       `<div class="chall-eyebrow">The catch</div>` +
       `<div class="chall-goal">You are dealt five goal cards and keep up to three, on a budget of ` +
         `${BUDGET} pips, <b>before page one</b>. They are what makes a wider catalogue harder ` +
-        `instead of easier, and you commit to them blind.</div>` +
+        `instead of easier, and you commit to them before you have seen a single word. A card ` +
+        `only counts on a run that lands at least ${LINEUP_FLOOR} pages.</div>` +
     `</div>` +
     lineupBoardStubHTML() +
     `<div class="chall-sec chall-sec--pick">` +

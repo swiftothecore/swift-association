@@ -44,7 +44,11 @@ test('The Last Great keeps every viable attribution when later pages resolve a s
   assert.equal(verdict('the-last-great', run(['A', 'A', 'B', ['A', 'B'], 'C'])), ALIVE);
 });
 
-test('Closed Shelf settles a completed run even when every page was missed', () => {
-  assert.equal(verdict('closed-shelf', run(Array(12).fill(null))), ALIVE);
-  assert.equal(verdict('closed-shelf', run(Array(13).fill(null))), WON);
+test('Closed Shelf is never held on a run that landed too few pages', () => {
+  // A ban is a promise about the pages you answer, so thirteen blanks keep it vacuously and
+  // must still not win it: the floor strikes it once eight landed pages are out of reach.
+  assert.equal(verdict('closed-shelf', run(Array(5).fill(null))), ALIVE);
+  assert.equal(verdict('closed-shelf', run(Array(6).fill(null))), DEAD);
+  assert.equal(verdict('closed-shelf', run(Array(13).fill(null))), DEAD);
+  assert.equal(verdict('closed-shelf', run(['A', ...Array(7).fill('B'), ...Array(5).fill(null)])), WON);
 });

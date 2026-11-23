@@ -22,8 +22,21 @@
 
 export const ALIVE = "alive", WON = "won", DEAD = "dead";
 
+/* THE FLOOR. No card is held on a run that lands fewer than this many pages. Without it every
+   ban in the deck was won by a run that answered nothing at all, since "not one Taylor song"
+   and "no artist twice in a row" are both perfectly true of thirteen blank pages: No Home
+   Team, Quiet Half and One And Done made a 24-pip hand a player could hold by letting the
+   clock run out thirteen times. A ban is a promise about the pages you DO answer, and a run
+   has to answer enough of them for the promise to have cost anything. Eight is the line the
+   deck's own floors already draw (Undercard's eight away pages, Ten In A Row's ten), and it
+   leaves room for five misses, so a lockout still has its real tension: a page you would
+   rather miss than break the ban for. */
+export const FLOOR = 8;
+
 const answeredPages = (pages) => pages.filter((p) => p.artists && p.artists.length);
 const isMiss = (p) => !p.artists || !p.artists.length;
+// The name a strip has room for: "Taylor", "Olivia", "Wicked".
+const short = (name) => String(name || "").split(" ")[0];
 
 /* How many DIFFERENT artists a set of pages can be credited to. Not a count of
    names: a page answered with a song that sits on two shelves can be credited to
@@ -83,11 +96,12 @@ const settle = (done, ok) => (ok ? (done ? WON : ALIVE) : done ? DEAD : ALIVE);
 const doomed = (c, have, want) => have + (c.pages - c.played) < want;
 
 /* ============================================================
-   THE RULES. One per card id, each (pages, ctx) -> state, where
-   ctx is { pages: 13, shelf: [names], home, named: [], admitted: [] }.
+   THE RULES. One per card id, each (pages, ctx, done, card) -> state,
+   where ctx is { pages: 13, shelf: [names], home, named: [], admitted: [] }.
    `pages` here has already had the card's missed-page ruling applied
-   by judge() below, so a "skipped" card never sees an unanswered page
-   and a "fails" card is already dead before it gets here.
+   by judge() below: a "skipped" card never sees an unanswered page, a
+   "fails" card is already dead before it gets here, and a "breaks" or
+   "window" card sees every page, misses as pages with nobody on them.
    ============================================================ */
 const RULES = {
   /* ---- SPADES: lockouts ---- */
@@ -161,8 +175,11 @@ const RULES = {
     return DEAD;
   },
   "back-to-december": (ps, c, done) => {
+    // A window card: it sees every page. Opening on nobody or finishing on nobody is not
+    // finishing on the artist you opened with, and a miss anywhere between is no business of it.
+    if (!ps.length) return ALIVE;
+    if (isMiss(ps[0])) return DEAD;
     if (!done) return ALIVE;                                  // only the last page can settle it
-    if (ps.length < 2) return DEAD;
     const open = ps[0].artists, close = ps[ps.length - 1].artists;
     return open.some((a) => close.includes(a)) ? WON : DEAD;
   },
@@ -198,11 +215,20 @@ const RULES = {
     return doomed(c, got, c.shelf.length) ? DEAD : settle(done, false);
   },
   "round-the-table": (ps, c, done) => {
-    // Nobody twice until everybody once: the first `shelf` pages must all be different.
-    // A repeat inside the head breaks it the page it happens, not when the head fills.
-    const head = ps.slice(0, c.shelf.length);
-    if (distinctArtists(head, c.shelf) < head.length) return DEAD;
-    return settle(done, head.length === c.shelf.length);
+    // Nobody twice until everybody once. A window card: until the round is complete every page
+    // counts, so a miss inside it kills the card rather than being skipped over, which would let
+    // a player duck a page that offered nothing but repeats. Once everyone has answered, nothing
+    // that follows can break it.
+    const head = [];
+    for (const p of ps) {
+      if (distinctArtists(head, c.shelf) >= c.shelf.length) break;
+      if (isMiss(p)) return DEAD;
+      head.push(p);
+      if (distinctArtists(head, c.shelf) < head.length) return DEAD;
+    }
+    const got = distinctArtists(head, c.shelf);
+    if (got >= c.shelf.length) return WON;
+    return doomed(c, got, c.shelf.length) ? DEAD : settle(done, false);
   },
   "undercard": (ps, c, done) => {
     const away = ps.filter((p) => p.artists.some((a) => a !== c.home)).length;
@@ -228,7 +254,8 @@ const RULES = {
   /* ---- CLUBS: form. These read HOW a page was answered, not who by. ---- */
   // thirteen from thirteen: not "thirteen pages happened", which is what this used to check
   "clean-sheet": (ps, c, done) => keep(done, !ps.some(isMiss)),
-  "off-the-cuff": (ps, c, done) => keep(done, ps.every((p) => !isMiss(p) && p.ms <= 10000)),
+  "off-the-cuff": (ps, c, done, card) =>
+    keep(done, ps.every((p) => !isMiss(p) && p.ms <= (card.inside || 10) * 1000)),
   "cold-open": (ps, c, done) => keep(done, ps.every((p) => !p.dropdown)),
   "sing-it-back": (ps, c, done) => {
     const got = ps.filter((p) => p.sung).length;
@@ -248,19 +275,142 @@ export const hasRule = (id) => Object.prototype.hasOwnProperty.call(RULES, id);
 /* Judge one card against the run so far.
 
    The missed-page ruling is applied HERE rather than in each rule, because it is the same
-   decision every time and PLAN.md requires every card to print one: a card that FAILS on a
-   miss is dead the moment a page goes unanswered, and a card that SKIPS one simply never
-   sees it. Cards with no ruling at all are the clubs, which judge how a page was answered
-   and so read the unanswered ones too. */
-export function judge(card, pages, ctx) {
+   decision every time and every card prints one: a card that FAILS on a miss is dead the
+   moment a page goes unanswered, a card that SKIPS one never sees it, and a card whose miss
+   BREAKS a streak or falls inside a WINDOW reads every page, misses as pages nobody answered.
+   Then the FLOOR, which no card's own rule knows about: a card is never held on a run that
+   lands fewer than FLOOR pages, and is struck the moment the pages left cannot get it there. */
+function ruleState(card, pages, c) {
   const rule = RULES[card.id];
   if (!rule) throw new Error("no lineup rule for card " + card.id);
-  const c = { pages: 13, shelf: [], home: "", named: [], admitted: [], ...ctx, played: pages.length };
   const done = pages.length >= c.pages;
   if (card.miss === "fails" && pages.some(isMiss)) return DEAD;
-  // A card with no ruling gets the run unfiltered. Clean Sheet and Ten In A Row are ABOUT the
-  // misses, and the rest of the clubs judge how every page was played: a hint pulled or a
-  // dropdown opened on a page that was then missed was still pulled, still opened.
-  const raw = !card.miss;
-  return rule(raw ? pages : answeredPages(pages), c, done);
+  const seen = card.miss === "skipped" ? answeredPages(pages) : pages;
+  return rule(seen, c, done, card);
 }
+const context = (ctx, pages) =>
+  ({ pages: 13, floor: FLOOR, shelf: [], home: "", named: [], admitted: [], ...ctx, played: pages.length });
+const landedOf = (pages) => pages.length - pages.filter(isMiss).length;
+// True once the pages left cannot carry the run to the floor.
+const belowFloor = (pages, c) => landedOf(pages) + (c.pages - pages.length) < c.floor;
+
+export function judge(card, pages, ctx) {
+  const c = context(ctx, pages);
+  const state = ruleState(card, pages, c);
+  if (state === DEAD) return DEAD;
+  if (belowFloor(pages, c)) return DEAD;
+  if (state === WON && landedOf(pages) < c.floor) return pages.length >= c.pages ? DEAD : ALIVE;
+  return state;
+}
+
+/* The page a card died on, 1-based, or 0 if it has not died. Replayed page by page rather
+   than remembered, because the judge is pure and the run is short. */
+export function deathPage(card, pages, ctx) {
+  for (let i = 1; i <= pages.length; i++) if (judge(card, pages.slice(0, i), ctx) === DEAD) return i;
+  return 0;
+}
+
+/* Why a card died, in the words a struck card says it on the page and on the results: a short
+   phrase, never a sentence, so it can follow the card's name ("Headliners: a missed page").
+   Asked of the run as it stood on the page it died, so the reason is the one that killed it
+   rather than one that arrived later. */
+export function deathNote(card, pages, ctx) {
+  const at = deathPage(card, pages, ctx);
+  if (!at) return "";
+  const run = pages.slice(0, at), c = context(ctx, run), last = run[run.length - 1];
+  if (card.miss === "fails" && isMiss(last)) return "a missed page";
+  if (ruleState(card, run, c) !== DEAD) return `too few pages left to land ${c.floor}`;
+  const ps = card.miss === "skipped" ? answeredPages(run) : run;
+  const why = WHY[card.id];
+  return (why && why(ps, c, last)) || "";
+}
+
+const WHY = {
+  "no-home-team": (ps, c) => `a ${short(c.home)} song`,
+  "three-chairs": (ps, c) => ((c.named || []).length === 3 ? "an artist outside your three" : "three never named"),
+  "quiet-half": (ps, c) => `a seventh ${short(c.home)} page`,
+  "closed-shelf": (ps) => `${short(ps[0].artists[0])} again`,
+  "nobody-admitted": () => "a catalogue you have been admitted to",
+  "one-and-done": () => "one artist twice running",
+  "sworn-in": (ps, c) => ((c.named || [])[0] ? `too few pages left for ${short(c.named[0])}` : "nobody named"),
+  "homecoming": () => "too few pages left for seven on one",
+  "long-story-short": () => "too few pages left for five in a row",
+  "two-of-us": () => "a third artist",
+  "back-to-december": (ps) => (isMiss(ps[0]) ? "a missed first page" : isMiss(ps[ps.length - 1]) ? "a missed last page" : "finished on somebody else"),
+  "the-last-great": () => "a new artist too soon",
+  "full-lineup": () => "too few pages left for everyone",
+  "round-the-table": (ps, c, last) => (isMiss(last) ? "a miss before everyone had answered" : distinctArtists(answeredPages(ps), c.shelf) < answeredPages(ps).length ? "a second page before everyone had one" : "too few pages left for everyone"),
+  "undercard": () => "too few pages left for eight",
+  "no-repeats-yet": (ps, c, last) => (isMiss(last) ? "a miss in the first eight" : "a repeat in the first eight"),
+  "headliners": () => "too few pages left for six",
+  "opening-act": () => "too few artists in the first five",
+  "clean-sheet": () => "a missed page",
+  "off-the-cuff": (ps, c, last) => (isMiss(last) ? "a missed page" : "a page over ten seconds"),
+  "cold-open": () => "the suggestions opened",
+  "sing-it-back": () => "too few pages left for five",
+  "no-hints": () => "a hint",
+  "ten-in-a-row": () => "too few pages left for ten in a row",
+};
+
+/* What a LIVE card has to tell you that its name cannot: who is banned, who you opened with,
+   how far a count has got. Without it the strip asked the player to remember the run, and the
+   one card that most needs remembering, Closed Shelf, said nothing at all after banning
+   Taylor on page one. Short enough to sit after a name on one line; "" when there is nothing
+   to say yet. Only asked of cards still alive, since a won card is ticked and a dead one has
+   deathNote instead. */
+export function goalNote(card, pages, ctx) {
+  const c = context(ctx, pages);
+  const ps = answeredPages(pages);
+  const of = (n, want) => `${Math.min(n, want)} of ${want}`;
+  const singles = (p) => (p && p.artists.length === 1 ? p.artists[0] : "");
+  switch (card.id) {
+    case "three-chairs": return (c.named || []).map(short).join(", ");
+    case "quiet-half": {
+      const used = ps.filter((p) => p.artists.every((a) => a === c.home)).length;
+      return used >= 6 ? `${short(c.home)} shut` : `${short(c.home)} ${of(used, 6)}`;
+    }
+    case "closed-shelf": return ps.length && singles(ps[0]) ? `${short(singles(ps[0]))} shut` : "";
+    case "nobody-admitted": {
+      const shut = c.admitted || [];
+      return !shut.length ? "" : shut.length <= 2 ? `${shut.map(short).join(", ")} shut` : `${shut.length} shut`;
+    }
+    case "one-and-done": return ps.length && singles(ps[ps.length - 1]) ? `not ${short(singles(ps[ps.length - 1]))} next` : "";
+    case "sworn-in": {
+      const who = (c.named || [])[0];
+      return who ? `${short(who)} ${of(ps.filter((p) => p.artists.includes(who)).length, 7)}` : "";
+    }
+    case "homecoming": {
+      let best = "", n = 0;
+      for (const a of c.shelf) { const k = ps.filter((p) => p.artists.includes(a)).length; if (k > n) { n = k; best = a; } }
+      return n ? `${short(best)} ${of(n, 7)}` : "";
+    }
+    case "long-story-short": { const n = trailingStreak(pages, c.shelf); return n ? `${n} in a row` : ""; }
+    case "two-of-us": {
+      const used = [...new Set(ps.flatMap((p) => p.artists))];
+      return used.length && used.length <= 2 ? used.map(short).join(" + ") : "";
+    }
+    case "back-to-december": return pages.length && singles(pages[0]) ? `opened on ${short(singles(pages[0]))}` : "";
+    case "the-last-great": {
+      const last = ps.length ? singles(ps[ps.length - 1]) : "";
+      if (!last) return "";
+      const n = ps.filter((p) => p.artists.includes(last)).length;
+      return n < 2 ? `${short(last)} once more first` : "";
+    }
+    case "full-lineup": return of(distinctArtists(ps, c.shelf), c.shelf.length);
+    case "round-the-table": return of(distinctArtists(ps, c.shelf), c.shelf.length);
+    case "undercard": return of(ps.filter((p) => p.artists.some((a) => a !== c.home)).length, 8);
+    case "no-repeats-yet": return of(distinctArtists(pages.slice(0, 8), c.shelf), 8);
+    case "headliners": return of(distinctArtists(ps, c.shelf), 6);
+    case "opening-act": return pages.length < 5 ? of(distinctArtists(pages.slice(0, 5), c.shelf), 4) : "";
+    case "sing-it-back": return of(ps.filter((p) => p.sung).length, 5);
+    case "ten-in-a-row": {
+      let run = 0;
+      for (const p of pages) run = isMiss(p) ? 0 : run + 1;
+      return run ? `${run} in a row` : "";
+    }
+    default: return "";
+  }
+}
+
+// How many pages the run has landed, for the strip's floor counter.
+export const landed = landedOf;
