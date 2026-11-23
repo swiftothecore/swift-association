@@ -100,7 +100,7 @@ export const DECK = [
     rule:"The first artist you answer with is banned for the rest of the run.", miss:"skipped",
     bans:["back-to-december","long-story-short","homecoming"] },
   { id:"nobody-admitted", miss:"skipped", suit:"spades", rank:"7", name:"Nobody Admitted",
-    rule:"No catalogue you have already been admitted to on the guest shelf.",
+    rule:"No guest you have been admitted to.",
     shuts:"admitted", needs:"admissions" },
   // A missed page is skipped over, so it cannot sit between two pages by one artist and part
   // them: that would make a miss the way to keep this card, and a miss never helps.

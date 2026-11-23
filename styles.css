@@ -10661,6 +10661,12 @@
     color: #9b2226;
   }
   :root[data-theme="dark"] .dropdown .item.off-limits .dd-tag { color: #e5837d; }
+  /* On a lineup page each title says whose it is, in that artist's bead ink. */
+  .dropdown .dd-who {
+    flex: none; margin-left: 10px; display: inline-flex; align-items: center; gap: 4px;
+    font-size: calc(10px + var(--text-size-adjust)); letter-spacing: 0.4px; color: var(--ink-soft);
+  }
+  .dropdown .dd-who-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-soft); display: inline-block; }
 
   /* The soft-reject note: a red-pen margin note hung UNDER the answer line, its arrow curling
      back up at what was just refused. It used to float above the line as a see-through pill,
@@ -18578,6 +18584,9 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .is-hand .lu-deal:nth-child(4) { --tilt: 1.1deg; }
 .is-hand .lu-deal:nth-child(5) { --tilt: -1deg; }
 .is-hand .lu-out-why { display: none; }
+/* Only the front card's words are read; a card behind shows its corner, and its copy peeking
+   out between two cards was only fragments ("ted", "rst"). Its art and index stay. */
+.is-hand .lu-deal:not(.is-front) .lu-mid { visibility: hidden; }
 /* The felt lifts a kept card's face and leaves the mark where the face rises to; a held card
    lifts as a whole, mark included, so the mark has to start where the index already is. */
 .is-hand .lu-keep-mark { top: 13px; }
@@ -18653,6 +18662,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   color: var(--ink-soft);
 }
 .lu-felt-go { display: flex; justify-content: center; padding: 2px 0 14px; }
+/* Not yet a hand: the button has to look unpressable, not merely paler. */
+#lineupGoBtn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
 
 /* ---- naming before page one (Three Chairs, Sworn In) ---- */
 .lu-naming { text-align: center; margin: 0 0 10px; }
@@ -18673,6 +18684,17 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 /* The ordinal is load-bearing when both naming cards are in the hand: Sworn In reads the
    first name and Three Chairs reads all three, so which one you picked first is a decision. */
 .lu-who-n { font-weight: 700; margin-right: 5px; opacity: 0.8; }
+/* How many of the thirteen pages the artist usually turns up on, at this hand's words. */
+.lu-who-reach { margin-left: 6px; opacity: 0.55; font-size: 0.92em; }
+.lu-name-key {
+  font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); color: var(--ink-soft);
+  opacity: 0.8; margin: 6px 0 0;
+}
+/* The Lineup panel's note under the difficulty tabs on Hard and Ultra. */
+.lu-lean {
+  font-family: var(--type); font-size: calc(10px + var(--text-size-adjust)); line-height: 1.5;
+  color: var(--ink-soft); margin: 7px 0 0;
+}
 
 /* A held card is TICKED in red pen, the partner of the red strike through a lost one: ticked if
    you held it, struck if you lost it. Drawn, not typed, and used as a mask so it takes the pen's
@@ -18795,6 +18817,10 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 .lu-deck-rule {
   display: block; font-family: var(--hand); font-size: calc(17px + var(--text-size-adjust));
   line-height: 1.22; color: var(--ink); opacity: 0.9;
+}
+.lu-deck-small {
+  display: block; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust));
+  letter-spacing: 0.6px; color: var(--ink-soft); opacity: 0.75; margin-top: 1px;
 }
 .lu-deck-rec {
   display: block; font-family: var(--type); font-size: calc(8.5px + var(--text-size-adjust));

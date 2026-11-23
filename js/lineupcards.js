@@ -277,7 +277,9 @@ const POOL_LINE = pools =>
   : pools.length === 1 ? `${pools[0]} pool only`
   : `${pools.slice(0, -1).join(", ")} and ${pools[pools.length - 1]} only`;
 
-export function cardFace(card, look) {
+/* `extra` is a line only the notebook can print (Nobody Admitted's "shuts Wicked, Harry"),
+   set like the pool line because it is the same kind of small print. */
+export function cardFace(card, look, extra = "") {
   const red = RED[card.suit] ? " lu-red" : "";
   const und = (card.rank === "6" || card.rank === "9") ? "lu-und" : "";
   const missText = missLine(card);
@@ -296,6 +298,7 @@ export function cardFace(card, look) {
       <p class="lu-name">${card.name}</p>
       <p class="lu-rule">${card.rule}</p>
       ${POOL_LINE(card.pools) ? `<p class="lu-pool">${POOL_LINE(card.pools)}</p>` : ""}
+      ${extra ? `<p class="lu-pool">${extra}</p>` : ""}
     </div>
   </div>`;
 }

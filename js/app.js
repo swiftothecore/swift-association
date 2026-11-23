@@ -14,7 +14,7 @@ import { southernSeasons } from "./season.js";
    the rule cannot drift between the board a card is designed on and the felt it is dealt to. */
 import { DECK, byId as goalById, SUITS } from "./lineupdeck.js";
 import { BUDGET, handCost, conflicts, validateHand, poolForHand, dealable, pips } from "./lineuphand.js";
-import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineupcards.js";
+import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard, missLine } from "./lineupcards.js";
 import { judge, WON, DEAD, ALIVE, FLOOR as LINEUP_FLOOR, goalNote, deathNote, deathPage, landed as lineupLanded } from "./lineupgoals.js";
 import {
   PANEL_ROUTES,
@@ -762,7 +762,7 @@ function focusRoundInput(input, preventScroll = false) {
    mark is the late one on a Hard page, the same broken strokes the page's rule marks wear.
    `ask` is Enter's tie hold (enterTieOf): the header asks which one instead, on the card itself
    because the card is where the eye already is, and the answer is the list under it. */
-function fillSuggestionCard(dd, songs, { total, active, idPrefix, late = false, ask = false, offLimits = () => false, choose }) {
+function fillSuggestionCard(dd, songs, { total, active, idPrefix, late = false, ask = false, offLimits = () => false, who = null, choose }) {
   dd.innerHTML = "";
   const head = document.createElement("div");
   head.className = "dd-head" + (ask ? " dd-ask" : "");
@@ -782,7 +782,7 @@ function fillSuggestionCard(dd, songs, { total, active, idPrefix, late = false, 
     div.setAttribute("role", "option");
     div.setAttribute("aria-selected", i === active ? "true" : "false");
     div.innerHTML = `<span class="dd-title">${escapeHtml(censor(song.title))}</span>` +
-      (off ? `<span class="dd-tag">in the title</span>` : "");
+      (off ? `<span class="dd-tag">in the title</span>` : who ? who(song) : "");
     wireSuggestion(div, () => choose(song, i));
     list.appendChild(div);
   });
@@ -14681,6 +14681,16 @@ function guestPassMarkup(g, slot) {
    dots) reads it here so they stay one key. `night` swaps a lead too dark for the night desk for
    the artist's second ink: Billie's sleeve black goes acid and Sabrina's espresso goes cream,
    and every other lead is light enough to stay. */
+// The artist (or both, for a song on two shelves) beside a suggestion on a lineup page.
+function lineupWhoTag(song) {
+  const names = songArtists(song).filter(Boolean);
+  if (!names.length) return "";
+  return `<span class="dd-who">` + names.map((n) => {
+    const ink = lineupInk(n);
+    return `<i class="dd-who-dot"${ink ? ` style="background:${ink}"` : ""}></i>${escapeHtml(n.split(" ")[0])}`;
+  }).join(" ") + `</span>`;
+}
+
 function lineupInk(name, night = false) {
   if (name === HOME_ARTIST) return "#b08d46";
   const [lead, second] = LINEUP_INKS[name] || [];
@@ -14833,6 +14843,22 @@ function lineupCardTip(id) {
   return "";
 }
 
+// The small print a card's face carries, for the deck page: its missed-page ruling, the pools
+// it is dealt into, and the difficulties that never deal it.
+const NEEDS_LINE = {
+  hints: "Relaxed only, the one difficulty with hints",
+  suggestions: "never dealt where the suggestions are already shut",
+  titles: "never dealt on Lyricist",
+  clock: "never dealt where the clock is ten seconds or less",
+  admissions: "dealt once you have been admitted somewhere",
+};
+function lineupDeckSmall(card) {
+  const bits = [missLine(card)];
+  if (card.pools) bits.push(card.pools.length === 1 ? `${card.pools[0]} words only` : `${card.pools.join(" and ")} words only`);
+  if (NEEDS_LINE[card.needs]) bits.push(NEEDS_LINE[card.needs]);
+  return bits.filter(Boolean).join(" · ");
+}
+
 // The stub on the laminate: the tally, and the way through to the deck. One line on purpose.
 function lineupBoardStubHTML() {
   return `<button type="button" class="lu-board-stub" data-lineup-board="1">` +
@@ -14851,7 +14877,8 @@ function renderLineupBoardPage() {
   const tally = lineupBoardTally();
   const suits = Object.keys(SUITS).map((suit) => {
     const meta = SUITS[suit];
-    const rows = DECK.filter((c) => c.suit === suit).map((card) => {
+    // Dearest first inside a suit, as a hand is read: the price is the first thing on a card.
+    const rows = DECK.filter((c) => c.suit === suit).sort((a, b) => pips(b.rank) - pips(a.rank)).map((card) => {
       const rec = lineupCardRecord(card.id);
       const cls = rec.won ? " is-won" : rec.held ? " is-struck" : " is-undealt";
       const tip = lineupCardTip(card.id);
@@ -14859,6 +14886,7 @@ function renderLineupBoardPage() {
         `<span class="lu-deck-name">${escapeHtml(card.name)}` +
           `<span class="lu-deck-pips">${pips(card.rank)} pips</span></span>` +
         `<span class="lu-deck-rule">${escapeHtml(card.rule)}</span>` +
+        `<span class="lu-deck-small">${escapeHtml(lineupDeckSmall(card))}</span>` +
         (tip ? `<span class="lu-deck-rec">${escapeHtml(tip)}</span>` : "") + `</li>`;
     }).join("");
     return `<section class="lu-deck-suit lu-suit-${suit}">` +
@@ -14898,6 +14926,15 @@ function lineupBoardComplete() {
   return DECK.every((c) => lineupCardRecord(c.id).won);
 }
 
+/* The rarer the words, the more of them are hers: her catalogue is several times any guest's, so
+   a word only three songs sing is far likelier to be three of hers. Measured on the blend, Hard
+   puts a guest on 12 to 40% of pages and Ultra on 3 to 12%, with Taylor on over nine in ten. The
+   panel says so rather than letting the strand come back mostly hers on an Ultra run. */
+const LINEUP_LEAN = {
+  hard: "The rarer words lean on her catalogue: expect Taylor on most pages, and fewer guests.",
+  ultra: "The rarest words are mostly hers: expect Taylor on nearly every page, and a guest only now and then.",
+};
+
 function renderLineupDetail() {
   const el = $("guestDetailBody");
   if (!el) return;
@@ -14933,6 +14970,7 @@ function renderLineupDetail() {
     `<div class="chall-sec chall-sec--pick">` +
       `<div class="chall-eyebrow">Written at</div>` +
       `<div class="mode-tabs mode-tabs--shelf af-diffs">${tabs}</div>` +
+      (LINEUP_LEAN[guestSelectedDiff] ? `<p class="lu-lean">${LINEUP_LEAN[guestSelectedDiff]}</p>` : "") +
     `</div>` +
     `<div class="chall-act">` +
       `<span class="chall-meta">${escapeHtml(diffLabel(guestSelectedDiff))}` +
@@ -17066,6 +17104,14 @@ function pendingLineupDeal(diff) {
   return lineupHasPair(five) ? five : null;
 }
 
+// A line a card face can only print on this notebook: Nobody Admitted naming what it shuts,
+// since "no catalogue you have been admitted to" means a different list for every player.
+function lineupFaceExtra(card) {
+  if (card.shuts !== "admitted") return "";
+  const shut = lineupCtx().admitted;
+  return shut.length <= 3 ? `shuts ${shut.map((n) => n.split(" ")[0]).join(", ")}` : `shuts ${shut.length} of ${GUESTS.length} guests`;
+}
+
 // Why this card cannot join what is already on the table, or "" when it can. A kept card is
 // always droppable, so it never asks.
 function lineupBlocked(id) {
@@ -17145,7 +17191,7 @@ function renderLineupFelt() {
       ` style="--seat:${i};--away:${Math.abs(i - front)}"` +
       ` aria-pressed="${kept}" aria-label="${escapeHtml(card.name)}, ${card.rank}">` +
       (kept ? `<div class="lu-keep-mark">${KEEP_MARK}</div><div class="lu-keep-mark lu-keep-far">${KEEP_MARK}</div>` : "") +
-      cardFace(card, SUIT_LOOK[card.suit]) +
+      cardFace(card, SUIT_LOOK[card.suit], lineupFaceExtra(card)) +
       `<p class="lu-out-why">${escapeHtml(why)}</p></div>`;
   }).join("");
   // Every keep and drop rebuilds the felt, which would otherwise throw a keyboard player's
@@ -17471,6 +17517,33 @@ function lineupNameVeto(who, slot) {
   return "";
 }
 
+/* How many of the thirteen pages each artist usually turns up on, at the pool this hand will be
+   dealt from. Naming is the one decision on the felt made with no information at all: on Normal
+   a trio of guests covers every page 1% of the time and any trio with Taylor 87%, and on Ultra
+   no guest is on more than one page in eight, so Sworn In to a guest there was lost before it
+   began. Counted off the blend's own word index (the blend is always installed while the felt is
+   up), once per pool, and approximately: a song with the word in its title is set aside on every
+   pool but Easy's, as those pages do. */
+let lineupReachCache = { corpus: null, pools: {} };
+function lineupReach(pool) {
+  if (lineupReachCache.corpus !== blendCorpus) lineupReachCache = { corpus: blendCorpus, pools: {} };
+  if (lineupReachCache.pools[pool]) return lineupReachCache.pools[pool];
+  const words = (wordBuckets && wordBuckets[pool]) || playableWords || [];
+  const counts = Object.fromEntries(lineupShelf().map((a) => [a, 0]));
+  for (const w of words) {
+    const titled = pool === "easy" ? null : new Set(titleSongsForWord(w, false));
+    const who = new Set();
+    for (const song of songsContainingWord(w, false)) {
+      if (titled && titled.has(song)) continue;
+      for (const a of songArtists(song)) who.add(a);
+    }
+    for (const a of who) if (a in counts) counts[a]++;
+  }
+  const n = Math.max(1, words.length);
+  return (lineupReachCache.pools[pool] = Object.fromEntries(
+    Object.entries(counts).map(([a, k]) => [a, Math.round((k / n) * TOTAL_ROUNDS)])));
+}
+
 function renderLineupNaming() {
   const box = $("lineupNaming");
   if (!box) return;
@@ -17484,6 +17557,7 @@ function renderLineupNaming() {
   const lead = want === 1
     ? "Name the artist you are sworn to."
     : `Name ${want}. ${swornFirst ? "The first is the one you are sworn to." : "Only their catalogues count."}`;
+  const reach = activeCorpus === "lineup" ? lineupReach(lineupRunPool()) : null;
   box.innerHTML = `<p class="lu-name-lead">${escapeHtml(lead)}</p><div class="lu-name-row">` +
     lineupShelf().map((who) => {
       const at = lineupNamed.indexOf(who);
@@ -17491,8 +17565,9 @@ function renderLineupNaming() {
       return `<button type="button" class="lu-who${at > -1 ? " is-named" : ""}${veto ? " is-shut" : ""}"` +
         ` data-who="${escapeHtml(who)}"${veto ? ` disabled title="${escapeHtml(veto)}"` : ""}>` +
         (at > -1 && want > 1 ? `<span class="lu-who-n">${at + 1}</span>` : "") +
-        escapeHtml(who) + `</button>`;
-    }).join("") + `</div>`;
+        escapeHtml(who) + (reach ? `<span class="lu-who-reach">${reach[who]}</span>` : "") + `</button>`;
+    }).join("") + `</div>` +
+    (reach ? `<p class="lu-name-key">beside each name: how many of the ${TOTAL_ROUNDS} pages they usually turn up on at ${escapeHtml(diffLabel(lineupDiff))}</p>` : "");
 }
 
 function toggleLineupName(who) {
@@ -17622,8 +17697,8 @@ function lineupCovered() {
   return seen;
 }
 
-// A lineup run's own end, sandboxed the way endCustom and endGuest are. It writes NOTHING:
-// there is no board for it yet, and a blended catalogue must never reach the lifetime tally,
+// A lineup run's own end, sandboxed the way endCustom and endGuest are. It writes nothing but the
+// goal board (below), and a blended catalogue must never reach the lifetime tally,
 // the difficulty boards or the history: those are Taylor's, and two thirds of what this run
 // dealt is not hers. markRunBreadth is skipped for the same reason the bonus shelf skips it:
 // the breadth ladder is a main-game charm and this is not a main-game run.
@@ -26223,6 +26298,9 @@ function renderDropdown(ask = false) {
   fillSuggestionCard(dd, dropdownItems, {
     total: dropdownTotal, active: activeIndex, idPrefix: "dd-opt-", late: dropdownLate(), ask,
     offLimits: isOffLimitsPick,
+    // On a lineup page the artist IS the decision (Closed Shelf, One And Done, Two Of Us), so
+    // each title says whose it is, in the ink that artist's beads are strung in.
+    who: gameType === "lineup" ? lineupWhoTag : null,
     choose: (song, i) => {
       // Took The Money reads which rung of the list was taken. Set around the call and cleared
       // straight after it, so a pick that gets soft-rejected can't leave a stale rung behind for
