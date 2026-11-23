@@ -13,7 +13,7 @@ import { southernSeasons } from "./season.js";
    js/lineupcards.js draws the face. All three are imported rather than reimplemented so
    the rule cannot drift between the board a card is designed on and the felt it is dealt to. */
 import { DECK, byId as goalById, SUITS } from "./lineupdeck.js";
-import { BUDGET, handCost, conflicts, validateHand, poolForHand, POOL_ORDER, pips } from "./lineuphand.js";
+import { BUDGET, handCost, conflicts, validateHand, poolForHand, dealable, pips } from "./lineuphand.js";
 import { cardFace, SUIT_LOOK, mark as suitMark, BACKS, backCard } from "./lineupcards.js";
 import { judge, WON, DEAD, FLOOR as LINEUP_FLOOR } from "./lineupgoals.js";
 import {
@@ -164,7 +164,8 @@ import {
   loadChallengeTokens, saveChallengeTokens, resetChallenges,
   loadAlbumFocus, saveAlbumFocus, albumFocusRecord, recordAlbumFocusRun, resetAlbumFocus,
   loadGuests, saveGuests, guestRecord, recordGuestRun, resetGuests,
-  loadLineupBoard, lineupCardRecord, recordLineupRun, resetLineupBoard,
+  loadLineupBoard, lineupCardRecord, recordLineupStart, recordLineupRun, resetLineupBoard,
+  loadLineupDeal, saveLineupDeal,
   purgeAdaptive,
   bonusRecord, recordBonusRun, resetBonus, seedBonusSweep,
   ruthlessRecord, recordRuthlessRun, resetRuthless, loadRuthless, saveRuthless,
@@ -17020,21 +17021,45 @@ function warmBlendCorpus(onDone) {
    is either free (in which case you are picking, with extra steps) or punitive enough that
    you would reroll to the cheap hand anyway.
 
-   Still no way in: `__dev.lineup.play()` is the only caller. */
+   No redeal, deliberately, and that includes the back door: the five are kept per difficulty
+   until they are played (saveLineupDeal), so leaving the felt and dealing again finds the same
+   five on the table. */
 
 const HAND_MAX = 3;
+
+// The cards that are goals at all at this difficulty and on this notebook: never one the run
+// would make true by itself (lineuphand.js `dealable`).
+function lineupDealable(diff = lineupDiff) {
+  const mode = MODES[diff] || MODES.medium, ctx = lineupCtx();
+  return DECK.filter((c) => dealable(c, mode, ctx)).map((c) => c.id);
+}
+// Whether a five still holds a legal pair, which is the one thing a deal has to guarantee.
+function lineupHasPair(five) {
+  const ctx = lineupCtx();
+  return five.some((a) => five.some((b) => a !== b && validateHand([a, b], goalById, { ctx }).ok));
+}
 
 // Five off the top of a shuffled deck. The guard is not the measurement repeated — it is the
 // measurement's guarantee held onto: hand-lab says no five is dead today, and this makes sure
 // nobody discovers otherwise on a live run the day a card is added or retuned.
-function dealLineupFive() {
-  const ctx = lineupCtx();
+function dealLineupFive(diff = lineupDiff) {
+  const pool = lineupDealable(diff);
   for (let attempt = 0; attempt < 40; attempt++) {
-    const five = shuffle(DECK.map((c) => c.id)).slice(0, 5);
-    const pair = five.some((a) => five.some((b) => a !== b && validateHand([a, b], goalById, { ctx }).ok));
-    if (pair) return five;
+    const five = shuffle(pool).slice(0, 5);
+    if (lineupHasPair(five)) return five;
   }
-  return shuffle(DECK.map((c) => c.id)).slice(0, 5);   // unreachable in practice; never deal nothing
+  return shuffle(pool).slice(0, 5);   // unreachable in practice; never deal nothing
+}
+
+// The five already on the table at this difficulty, if they are still a fair deal: every card
+// still in the deck and still dealable here (a notebook's admissions only grow, but a card can
+// be retuned between visits), and still holding a legal pair. Anything else is dealt afresh.
+function pendingLineupDeal(diff) {
+  const five = loadLineupDeal()[diff];
+  if (!Array.isArray(five) || five.length !== 5) return null;
+  const here = new Set(lineupDealable(diff));
+  if (!five.every((id) => here.has(id)) || new Set(five).size !== 5) return null;
+  return lineupHasPair(five) ? five : null;
 }
 
 // Why this card cannot join what is already on the table, or "" when it can. A kept card is
@@ -17124,6 +17149,8 @@ function renderLineupFelt() {
   if (focused) felt.querySelector(`[data-card="${focused}"]`)?.focus({ preventScroll: true });
   paintLineupHandNote();
 
+  const lead = $("lineupFeltLead");
+  if (lead) lead.textContent = `Five dealt at ${diffLabel(lineupDiff)}. Keep up to three.`;
   const spent = handCost(lineupKept, goalById);
   const pipRow = Array.from({ length: BUDGET }, (_, i) =>
     `<span class="lu-spend-pip${i < spent ? " spent" : ""}"></span>`).join("");
@@ -17137,9 +17164,11 @@ function renderLineupFelt() {
   // What this hand DOES to the run, which is the half of the choice a card face cannot
   // print: the pool is a property of the whole hand, and a lever is a change the player is
   // buying rather than a rule they are promising to keep.
-  const ceiling = handPoolCeiling();
+  // Said in difficulties, which is what a player knows, and only when the hand actually moves
+  // the words: a ceiling at or above the chosen difficulty changes nothing and says nothing.
+  const pool = lineupRunPool(), own = (MODES[lineupDiff] || MODES.medium).pool;
   const notes = [];
-  if (ceiling) notes.push(`this hand can only be played on the ${ceiling} pool`);
+  if (pool !== own) notes.push(`this hand plays on ${POOL_LABEL[pool] || pool}'s words, not ${diffLabel(lineupDiff)}'s`);
   if (lineupKept.some((id) => (goalById[id].lever || {}).dropdown === false)) {
     notes.push("the suggestions are shut, so every title is typed in full");
   }
@@ -17317,16 +17346,22 @@ async function startLineupRun(diffId) {
   try { await installBlendCorpus(); }
   catch (e) { notifyNote("the lineup", "couldn't fetch the catalogues. check your connection"); return; }
   lineupDiff = GUEST_DIFFS.includes(diffId) ? diffId : "medium";
-  lineupDealt = dealLineupFive();
+  const pending = pendingLineupDeal(lineupDiff);
+  lineupDealt = pending || dealLineupFive();
+  if (!pending) saveLineupDeal(lineupDiff, lineupDealt);
   lineupKept = [];
   lineupNamed = [];
   renderLineupFelt();
   showScreen("lineup");
   // One frame late, because the flight is measured off the RESTING slots and the felt has not
-  // been laid out until the screen is active.
-  requestAnimationFrame(() => dealLineupFlourish());
+  // been laid out until the screen is active. A five that was already on the table is not dealt
+  // again: it is still lying where it was left.
+  if (!pending) requestAnimationFrame(() => dealLineupFlourish());
 }
 let lineupDiff = "medium";   // the difficulty the felt was opened at, spent by beginLineupRun
+// True from dealing in until the run's end has folded its wins into the board, so a second pass
+// through endGame (nothing a player can do today, but a stray timer could) never counts a run twice.
+let lineupRunLive = false;
 
 // Deal yourself in: the felt's choice becomes a run.
 function beginLineupRun() {
@@ -17345,8 +17380,7 @@ function beginLineupRun() {
   // pool, so a run holding it has to be dealt there or the pips spent on it bought nothing.
   // Clamping downward rather than simply obeying the hand keeps the difficulty the player
   // chose meaningful everywhere it is still winnable.
-  const ceiling = handPoolCeiling();
-  if (ceiling && poolRank(ceiling) < poolRank(currentMode.pool)) currentMode.pool = ceiling;
+  currentMode.pool = lineupRunPool();
   // A card whose rule describes the STATE of the run rather than a promise you could break
   // sets that state here, on the run's own clone of the mode. Cold Open is the only one:
   // effectiveDropdown reads currentMode.dropdown, so shutting it there is the whole change.
@@ -17356,6 +17390,11 @@ function beginLineupRun() {
   activeCorpus = "lineup";
   lineupHand = lineupKept.slice();         // after resetRunState, which clears the run's hand
   lineupHandNames = lineupNamed.slice();
+  // The five are played now, so the next visit at this difficulty is a fresh deal, and the hand
+  // is on the board as committed from this page on: quitting a run is not a way to unlose it.
+  saveLineupDeal(lineupDiff, null);
+  recordLineupStart(lineupHand);
+  lineupRunLive = true;
   focusDifficulty = currentMode.id;
   applyInputHints();
   updateTagline();
@@ -17368,12 +17407,23 @@ function beginLineupRun() {
   nextRound();
 }
 
-// Where a pool sits on the easy to ultra ladder. MODES "all" is the widest draw of the lot, so
-// it ranks above ultra: every restriction a card can carry is a narrowing of it.
+// Where a pool sits on the easy to ultra ladder, by how rare its words are. Normal is Hard's
+// floor and up, so it holds every Hard word and commoner ones besides: it sits between Easy and
+// Hard. Ranking it above Ultra (as an unknown pool once was) turned a Normal run holding
+// Headliners into a run on Hard's rarer words, which is the hand making the pool HARDER.
+const POOL_RANK = { easy: 0, normal: 1, all: 1, hard: 2, ultra: 3 };
 function poolRank(pool) {
-  const i = POOL_ORDER.indexOf(pool);
-  return i === -1 ? POOL_ORDER.length : i;
+  return POOL_RANK[pool] ?? 1;
 }
+
+// The word pool the kept hand will actually be dealt from at this difficulty: the difficulty's
+// own, clamped down to the hand's ceiling when a card in it needs an easier pool.
+function lineupRunPool(diff = lineupDiff) {
+  const own = (MODES[diff] || MODES.medium).pool;
+  const ceiling = handPoolCeiling();
+  return ceiling && poolRank(ceiling) < poolRank(own) ? ceiling : own;
+}
+const POOL_LABEL = { easy: "Easy", normal: "Normal", hard: "Hard", ultra: "Ultra" };
 
 // The hardest pool the kept hand can be played on, or null when nothing in it is restricted.
 // Asking only the cards that CARRY a restriction is the load-bearing part: poolForHand returns
@@ -17544,8 +17594,9 @@ function endLineup() {
      that answer only exists until it is written down — ask the board afterwards and every card
      you just won looks like one you had already. Only the cards COMMITTED TO are folded in; a
      card dealt and declined is not a card failed. */
-  const firsts = new Set(recordLineupRun(
-    verdict.map(({ card, state }) => ({ id: card.id, won: state === WON })), lineupDiff));
+  const firsts = new Set(lineupRunLive ? recordLineupRun(
+    verdict.map(({ card, state }) => ({ id: card.id, won: state === WON })), lineupDiff) : []);
+  lineupRunLive = false;
   const goals = verdict.map(({ card, state }) =>
     `<span class="lu-goal${state === WON ? " is-won" : " is-dead"}` +
     `${firsts.has(card.id) ? " is-first" : ""}">` +
@@ -37743,9 +37794,7 @@ function buildDevApi() {
         shared: allSongs.filter((s) => s._alsoBy).length,
       }),
       dupes: () => blendMerges,
-      // The only way into the mode. There is no entry point on the front page yet, on purpose:
-      // the hand of goal cards the run is built around is not written, and without it a lineup
-      // run is an easier classic run on a bigger catalogue.
+      // Straight to the felt at a difficulty, skipping the guest shelf and the Lineup's panel.
       play: (diff) => { startLineupRun(diff); return "dealing the lineup…"; },
       // Force a hand onto the felt, which is the only way to test a specific card without
       // shuffling until it turns up. Ids that are not in the deck are dropped rather than
@@ -37797,8 +37846,9 @@ function buildDevApi() {
       /* The goal board, and the thing PLAN asked for: a way to tick it without grinding
          twenty-four hands out of a shuffled deck. `board` reports it, `tick` wins cards by id
          (no argument wins the whole deck, which is the only sane way to check the laminate's
-         frank), and `clear` empties it. tick goes through recordLineupRun rather than writing
-         the store directly, so a ticked card is banked by exactly the code a real run uses. */
+         frank), and `clear` empties it. tick goes through recordLineupStart and recordLineupRun
+         rather than writing the store directly, so a ticked card is banked by exactly the code a
+         real run uses. */
       // The desk's rolling wash: what it is holding, and what every artist on the shelf would
       // turn it. `bad` lists an artist with no wash at all; whether a guest's wash actually has
       // rules in the stylesheet is __dev.guest.eras(), since a missing rule silently paints nothing.
@@ -37832,6 +37882,7 @@ function buildDevApi() {
       tick: (...ids) => {
         const want = ids.flat().filter((id) => DECK.some((c) => c.id === id));
         const cards = want.length ? want : DECK.map((c) => c.id);
+        recordLineupStart(cards);
         recordLineupRun(cards.map((id) => ({ id, won: true })), lineupDiff);
         return window.__dev.lineup.board();
       },
@@ -37841,7 +37892,7 @@ function buildDevApi() {
       strike: (...ids) => {
         const want = ids.flat().filter((id) => DECK.some((c) => c.id === id));
         const cards = want.length ? want : DECK.map((c) => c.id);
-        recordLineupRun(cards.map((id) => ({ id, won: false })), lineupDiff);
+        recordLineupStart(cards);
         return window.__dev.lineup.board();
       },
       clear: () => { resetLineupBoard(); return window.__dev.lineup.board(); },
@@ -39142,12 +39193,15 @@ async function init() {
     if (who) toggleLineupName(who.dataset.who);
   });
   $("lineupGoBtn").addEventListener("click", beginLineupRun);
-  // Backing out of the felt is backing out of the mode, so the corpus goes with it rather
-  // than being left blended on the front page.
+  // Backing out of the felt goes back to the Lineup's own panel, which is where the felt was
+  // opened from (or, after a replay, the mode's home), and the corpus goes with it rather than
+  // being left blended behind the guest shelf. The five stay on the table (saveLineupDeal).
   $("lineupBackBtn").addEventListener("click", () => {
     restoreCorpus();
-    renderStartPickers();
-    flipInToScreen("start");
+    guestSelected = LINEUP_PASS.id;
+    renderLineupDetail();
+    flipInToScreen("guestdetail");
+    window.scrollTo({ top: 0, behavior: "instant" });
   });
   // The rail's pass-per-rail count is a layout decision made in markup (a pass cannot shrink
   // past its own name), so a width change that crosses a breakpoint has to re-render. Only

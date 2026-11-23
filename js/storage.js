@@ -11,7 +11,7 @@ import {
   CHALLENGES_KEY, CHALLENGE_TOKENS_KEY,
   ALBUM_FOCUS_KEY, ALBUM_FOCUS_TARGET, DIFF_RANK,
   ADAPTIVE_LEGACY_KEY,
-  GUEST_KEY, GUEST_TARGET, LINEUP_KEY,
+  GUEST_KEY, GUEST_TARGET, LINEUP_KEY, LINEUP_DEAL_KEY,
   BONUS_KEY, RUTHLESS_KEY, TRACKS_KEY,
   CUSTOM_KEY, CUSTOM_DEFAULT_MODE, CUSTOM_STOCKS,
   KEEPSAKES_KEY, WOODS_KEY,
@@ -408,27 +408,61 @@ export function lineupCardRecord(id) {
   const e = loadLineupBoard()[id] || {};
   return { held: e.held || 0, won: e.won || 0, at: e.at || null };
 }
-/* Fold a finished lineup run into the board. `verdict` is the hand as judged, one
-   { id, won } per card COMMITTED TO (never the whole deck, and never the cards that were dealt
-   and dropped — a card you declined to keep is not a card you failed). Returns the ids won for
-   the FIRST time ever, so the results screen can mark them; the caller is the only place that
-   knows how to say so, and it has to be told before the board is written or the news is gone. */
+/* A hand is folded into the board in two halves. `recordLineupStart` runs when the player deals
+   in, and counts every card in the hand as held: committed to. `recordLineupRun` runs at the end
+   and counts the ones that were won. Splitting them is what keeps "dealt and lost" honest. When
+   both happened at the end, a run quit on the page a card died left no mark at all, so a player
+   could walk away from every loss and keep a board of nothing but wins.
+
+   `verdict` is the hand as judged, one { id, won } per card COMMITTED TO (never the whole deck,
+   and never the cards that were dealt and dropped — a card you declined to keep is not a card
+   you failed). Returns the ids won for the FIRST time ever, so the results screen can mark them;
+   the caller is the only place that knows how to say so, and it has to be told before the board
+   is written or the news is gone. */
+export function recordLineupStart(ids) {
+  const all = loadLineupBoard();
+  for (const id of ids || []) {
+    if (!id) continue;
+    const e = all[id] || {};
+    e.held = (e.held || 0) + 1;
+    all[id] = e;
+  }
+  saveLineupBoard(all);
+}
 export function recordLineupRun(verdict, diff) {
   const all = loadLineupBoard();
   const firsts = [];
   for (const { id, won } of verdict || []) {
-    if (!id) continue;
+    if (!id || !won) continue;
     const e = all[id] || {};
-    e.held = (e.held || 0) + 1;
-    if (won) {
-      if (!(e.won || 0)) firsts.push(id);
-      e.won = (e.won || 0) + 1;
-      e.at = harderDiff(e.at, diff);
-    }
+    if (!(e.won || 0)) firsts.push(id);
+    e.won = (e.won || 0) + 1;
+    e.at = harderDiff(e.at, diff);
+    // A board written before the split counted held at the end; never let won outrun it.
+    e.held = Math.max(e.held || 0, e.won);
     all[id] = e;
   }
   saveLineupBoard(all);
   return firsts;
+}
+
+/* The five on the felt, kept per difficulty until they are played. The hand is DEALT, never
+   picked, and a deal that vanished when you backed out of the felt could be rerolled with three
+   clicks (back, the pass, "Deal me a hand"), which is picking with extra steps. So the five stay
+   on the table: leaving and coming back finds them where you left them, and only dealing in
+   clears them. Per difficulty because which cards may be dealt depends on it (No Hints only
+   where there are hints), so a Normal five shown at Ultra could hold a card Ultra never deals. */
+export function loadLineupDeal() {
+  try {
+    const raw = localStorage.getItem(LINEUP_DEAL_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") return o; }
+  } catch (e) { /* ignore */ }
+  return {};
+}
+export function saveLineupDeal(diff, ids) {
+  const all = loadLineupDeal();
+  if (ids && ids.length) all[diff] = ids.slice(); else delete all[diff];
+  try { localStorage.setItem(LINEUP_DEAL_KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
 }
 export function resetLineupBoard() {
   try { localStorage.removeItem(LINEUP_KEY); } catch (e) { /* ignore */ }
