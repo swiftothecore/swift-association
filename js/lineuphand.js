@@ -15,7 +15,12 @@
    ============================================================ */
 
 export const PAGES = 13;
-export const BUDGET = 24;
+/* The budget sits just under three average cards, so most deals let you keep three and some make
+   you choose. It was 24 against an average card of 8.13 (82% of deals allowed three). Pricing the
+   covering cards at least as high as what they cover, and Two Of Us at a Queen once it was guests
+   only, lifted the average to about 8.3 and cut that to 70-75%; 25 puts it back at 76-81% on every
+   difficulty (measured 2026-11-23, 8,000 deals each). Retune here if a card's price moves. */
+export const BUDGET = 25;
 
 /* Rank IS the price, and the unit is the card's own pips — the six diamonds printed on a
    six of diamonds are its six pips, so a number card costs its face value and the court
@@ -29,9 +34,10 @@ export const handCost = (hand, byId) => hand.reduce((n, id) => n + pips(byId[id]
 export const isCourt = (rank) => "AKQJ".includes(rank);
 
 /* The pools a card may be dealt into, in difficulty order. Absent on a card means
-   "any" — only the breadth cards carry a restriction, and theirs are measured by
-   scripts/lineup/deal-lab.html rather than chosen. */
-export const POOL_ORDER = ["easy", "hard", "ultra"];
+   "any". Restrictions are measured (scripts/lineup/deal-lab.html and the lab masks),
+   never chosen. Normal sits between Easy and Hard: it holds every Hard word and
+   commoner ones, so a card that needs guests to turn up can still be dealt there. */
+export const POOL_ORDER = ["easy", "normal", "hard", "ultra"];
 export const cardPools = c => c.pools || POOL_ORDER;
 
 /* The pool a finished hand can be played at: the hardest one EVERY card allows.
@@ -76,6 +82,9 @@ export function arithmetic(cards, ctx = {}) {
     const names = Math.max(...cards.map(c => c.names || 0));
     if (!open.length) return "nobody left to answer with";
     if (need > open.length || names > open.length) return "too few artists left open";
+    // The guests-only cards draw on the guests the hand leaves open, never on her.
+    const guests = open.filter(a => a !== ctx.home).length;
+    if (cards.some(c => c.guests && (c.names || 1) > guests)) return "too few guests left open";
     if (cards.some(c => c.away) && !open.some(a => a !== ctx.home)) return "nobody left but Taylor";
   }
   if (!poolForHand(cards)) return "no pool allows both";

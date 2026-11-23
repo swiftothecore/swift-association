@@ -273,7 +273,7 @@ export const missLine = card => card.missText || MISS[card.miss] || "";
    but a card that is quietly unavailable in a run is worse than one that says so: the player
    is spending pips on it. Only the breadth cards carry one. */
 const POOL_LINE = pools =>
-  !pools || pools.length >= 3 ? ""
+  !pools || pools.length >= 4 ? ""
   : pools.length === 1 ? `${pools[0]} pool only`
   : `${pools.slice(0, -1).join(", ")} and ${pools[pools.length - 1]} only`;
 

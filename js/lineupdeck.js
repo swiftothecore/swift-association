@@ -54,6 +54,13 @@
              the two cards that ask for it. The felt collects them
              and judge() reads them as ctx.named; a card that wants
              names and has none is DEAD, never quietly winnable.
+     guests  the card is about guests only and never credits Taylor.
+             She turns up on 91 to 100% of pages on every pool, so a
+             devotion card she could answer was won before page one:
+             Sworn In to her, seven of thirteen on her, Three Chairs or
+             Two Of Us with her in them. Without her these four only
+             clear the 90% bar on easy and normal words, so that is
+             where they are dealt.
      covers  cards this one already asks for in full. Holding both
              spends pips twice on one promise, so the felt refuses
              the pair, and a card never costs less than what it
@@ -90,10 +97,14 @@ export const DECK = [
   // the ultra pool 44% of pages have any answer that is not hers, so eight of thirteen is a 15%
   // deal (lab: the blend's own masks, perfect play). Hard is 99%.
   { id:"no-home-team", miss:"skipped", suit:"spades", rank:"A", name:"No Home Team",
-    rule:"Thirteen pages and not one Taylor song.", shuts:"home", pools:["easy","hard"],
+    rule:"Thirteen pages and not one Taylor song.", shuts:"home", pools:["easy","normal","hard"],
     covers:["undercard","quiet-half"], bans:["full-lineup"] },
+  // Guests only, so every page it lets you answer is away from home: it covers Undercard and
+  // Quiet Half. The best guest trio named in advance covers eight pages on 99.7% of normal
+  // deals, 81.8% of hard and 0.8% of ultra.
   { id:"three-chairs", miss:"skipped", suit:"spades", rank:"K", name:"Three Chairs",
-    rule:"Name three artists before page one. Only their catalogues count.", cap:3, names:3, flag:"pick three first" },
+    rule:"Name three guests before page one. Only their catalogues count.", cap:3, names:3, guests:true,
+    pools:["easy","normal"], covers:["quiet-half","undercard"], flag:"pick three first" },
   { id:"quiet-half", miss:"skipped", suit:"spades", rank:"Q", name:"Quiet Half",
     rule:"Taylor is allowed for six pages. After that she is shut." },
   { id:"closed-shelf", suit:"spades", rank:"J", name:"Closed Shelf",
@@ -109,18 +120,22 @@ export const DECK = [
     bans:["long-story-short","all-too-well","the-last-great"] },
 
   // ---- HEARTS: devotion ----
-  { id:"sworn-in", miss:"skipped", suit:"hearts", rank:"A", name:"Sworn In",
-    rule:"Name one artist before page one. They must answer seven pages.",
-    need:1, hog:7, names:1, flag:"pick one first" },
+  // Sworn to the best guest named in advance: 94.5% of normal deals reach seven, 22.6% of hard.
+  { id:"sworn-in", miss:"skipped", suit:"hearts", rank:"K", name:"Sworn In",
+    rule:"Name one guest before page one. They must answer seven pages.",
+    need:1, hog:7, names:1, guests:true, pools:["easy","normal"], flag:"pick one first" },
   // "Nothing wrong all run" is the card, so this is the one heart that still fails on a miss.
-  { id:"homecoming", hog:7, miss:"fails", suit:"hearts", rank:"K", name:"Homecoming",
-    rule:"Seven of the thirteen on one artist, and nothing wrong all run.",
+  // It asks all of Clean Sheet and seven pages from one guest besides, so it is the Ace.
+  { id:"homecoming", hog:7, miss:"fails", suit:"hearts", rank:"A", name:"Homecoming",
+    rule:"Seven of the thirteen on one guest, and nothing wrong all run.", guests:true, pools:["easy","normal"],
     covers:["clean-sheet","ten-in-a-row"], bans:["closed-shelf"] },
   { id:"long-story-short", miss:"breaks", hog:5, suit:"hearts", rank:"J", name:"Long Story Short",
     rule:"Five pages in a row answered by the same artist.",
     bans:["one-and-done","closed-shelf"] },
-  { id:"two-of-us", miss:"skipped", suit:"hearts", rank:"6", name:"Two Of Us",
-    rule:"Every page you answer goes to one of two artists.", cap:2 },
+  // Two guests and nobody else covers Quiet Half and Undercard, so it costs at least a Queen.
+  { id:"two-of-us", miss:"skipped", suit:"hearts", rank:"Q", name:"Two Of Us",
+    rule:"Every page you answer goes to one of two guests.", cap:2, guests:true, pools:["easy","normal"],
+    covers:["quiet-half","undercard"] },
   { id:"back-to-december", miss:"window", suit:"hearts", rank:"3", name:"Back To December",
     missText:"a miss on page 1 or 13 kills it",
     rule:"Finish on the artist you opened with.", bans:["closed-shelf"] },
@@ -148,7 +163,7 @@ export const DECK = [
     // the bar on hard, and K=3 is not a goal, so this one is gated rather than retuned.
     pools:["easy"], need:SHELF, within:SHELF, hogCap: PAGES - SHELF + 1, covers:["full-lineup","headliners"] },
   { id:"undercard", miss:"skipped", suit:"diamonds", rank:"5", name:"Undercard",
-    rule:"Eight of the thirteen answered by somebody who is not Taylor.", away:8, pools:["easy","hard"] },
+    rule:"Eight of the thirteen answered by somebody who is not Taylor.", away:8, pools:["easy","normal","hard"] },
   { id:"no-repeats-yet", miss:"window", suit:"diamonds", rank:"10", name:"No Repeats Yet",
     missText:"a miss in the first eight kills it",
     // easy 100% / hard 21.1% / ultra 0.3%, and the diagonal says no K rescues it either.
@@ -156,13 +171,13 @@ export const DECK = [
     covers:["opening-act","headliners"] },
   { id:"headliners", miss:"skipped", suit:"diamonds", rank:"8", name:"Headliners",
     // easy 100% / hard 99.7% / ultra 76.4%. The only breadth card hard can carry unchanged.
-    rule:"Six different artists somewhere across the run.", pools:["easy","hard"], need:6 },
+    rule:"Six different artists somewhere across the run.", pools:["easy","normal","hard"], need:6 },
   { id:"opening-act", miss:"window", suit:"diamonds", rank:"6", name:"Opening Act",
     missText:"a miss still spends one of the five",
     // Was five-in-five: easy 100% / hard 78.3%, which fails the bar. Four-in-five is 96.4% on
     // hard and keeps what the card says — a spread opening — so this one retunes rather than
     // gating. Ultra is 58.1% even at four, so it still stays out.
-    rule:"Four different artists in the first five pages.", pools:["easy","hard"], need:4, within:5 },
+    rule:"Four different artists in the first five pages.", pools:["easy","normal","hard"], need:4, within:5 },
 
   // ---- CLUBS: form ----
   // Off The Cuff asks everything Clean Sheet does and the clock as well, so it is the Ace and
@@ -201,7 +216,7 @@ export const BENCH = [
     bans:["one-and-done","closed-shelf"], why:"NOT TAKEN. The idea survives the cut: it was the word \u201crecord\u201d that made it unreadable, not the feat. Worth revisiting if the deck ever wants a second heavy heart." },
   { id:"mine", suit:"hearts", rank:"9", name:"Mine", miss:"fails",
     rule:"Over half the run on one artist, and she is not Taylor.",
-    hog:7, why:"NOT TAKEN. Homecoming without the clean-sheet clause, which turned out to be most of what Homecoming is." },
+    hog:7, why:"NOT TAKEN. Homecoming without the clean-sheet clause, which turned out to be most of what Homecoming is. Homecoming has since taken Mine's other half: it is guests only." },
 
   { id:"split-the-bill", suit:"diamonds", rank:"Q", name:"Split The Bill", miss:"helps", need:5,
     rule:"No artist answers more than three pages.",

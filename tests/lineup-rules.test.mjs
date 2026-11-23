@@ -54,9 +54,23 @@ test('Round The Table fails on a miss only before everybody has answered', () =>
   assert.equal(deathNote(byId['round-the-table'], run([T, A, T]), ctx), 'a second page before everyone had one');
 });
 
-test('Two Of Us holds every page you answer to two artists, and skips the rest', () => {
-  assert.equal(verdict('two-of-us', run([T, A, null, T, A, T, A, T, A, T, null, T, A])), WON);
-  assert.equal(verdict('two-of-us', run([T, A, W])), DEAD);
+test('Two Of Us holds every page you answer to two guests, and skips the rest', () => {
+  assert.equal(verdict('two-of-us', run([W, A, null, W, A, W, A, W, A, W, null, W, A])), WON);
+  assert.equal(verdict('two-of-us', run([W, A, B])), DEAD);
+  assert.equal(deathNote(byId['two-of-us'], run([W, A, B]), ctx), 'a third artist');
+});
+
+test('the devotion cards never count her', () => {
+  // She turns up on nearly every page, so a card she could answer was won before page one.
+  assert.equal(verdict('two-of-us', run([T, A])), DEAD);
+  assert.equal(deathNote(byId['two-of-us'], run([T]), ctx), 'a Taylor page');
+  assert.equal(verdict('homecoming', run([...Array(7).fill(T), ...Array(6).fill(A)])), DEAD);
+  assert.equal(verdict('homecoming', run([...Array(7).fill(W), ...Array(6).fill(T)])), WON);
+  assert.equal(goalNote(byId['homecoming'], run([T, T, T, W]), ctx), 'Wicked 1 of 7');
+  for (const id of ['sworn-in', 'homecoming', 'three-chairs', 'two-of-us']) {
+    assert.equal(byId[id].guests, true, id);
+    assert.deepEqual(byId[id].pools, ['easy', 'normal'], id);
+  }
 });
 
 test('Off The Cuff reads its own seconds', () => {

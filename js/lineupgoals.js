@@ -57,6 +57,9 @@ export function distinctArtists(pages, shelf) {
   return n;
 }
 
+// The shelf without her, for the guests-only cards.
+const guestsOf = (c) => c.shelf.filter((a) => a !== c.home);
+
 /* The most pages any ONE artist could have answered. */
 function biggestShare(pages, shelf) {
   let best = 0;
@@ -160,15 +163,15 @@ const RULES = {
     return doomed(c, got, 7) ? DEAD : settle(done, false);
   },
   "homecoming": (ps, c, done) => {
-    const share = biggestShare(ps, c.shelf);
+    const share = biggestShare(ps, guestsOf(c));
     if (share >= 7) return WON;
     return doomed(c, share, 7) ? DEAD : settle(done, false);
   },
   "long-story-short": (ps, c, done) =>
     longestStreak(ps, c.shelf) >= 5 ? WON : doomed(c, trailingStreak(ps, c.shelf), 5) ? DEAD : settle(done, false),
   "two-of-us": (ps, c, done) => {
-    // Every page on one of two artists. Try each pair the run could support.
-    for (const a of c.shelf) for (const b of c.shelf) {
+    // Every page on one of two guests. Try each pair the run could support.
+    for (const a of guestsOf(c)) for (const b of guestsOf(c)) {
       if (a === b) continue;
       if (ps.every((p) => p.artists.includes(a) || p.artists.includes(b))) return keep(done, true);
     }
@@ -335,7 +338,7 @@ const WHY = {
   "sworn-in": (ps, c) => ((c.named || [])[0] ? `too few pages left for ${short(c.named[0])}` : "nobody named"),
   "homecoming": () => "too few pages left for seven on one",
   "long-story-short": () => "too few pages left for five in a row",
-  "two-of-us": () => "a third artist",
+  "two-of-us": (ps, c) => (ps.length && ps[ps.length - 1].artists.every((a) => a === c.home) ? `a ${short(c.home)} page` : "a third artist"),
   "back-to-december": (ps) => (isMiss(ps[0]) ? "a missed first page" : isMiss(ps[ps.length - 1]) ? "a missed last page" : "finished on somebody else"),
   "the-last-great": () => "a new artist too soon",
   "full-lineup": () => "too few pages left for everyone",
@@ -381,12 +384,12 @@ export function goalNote(card, pages, ctx) {
     }
     case "homecoming": {
       let best = "", n = 0;
-      for (const a of c.shelf) { const k = ps.filter((p) => p.artists.includes(a)).length; if (k > n) { n = k; best = a; } }
+      for (const a of guestsOf(c)) { const k = ps.filter((p) => p.artists.includes(a)).length; if (k > n) { n = k; best = a; } }
       return n ? `${short(best)} ${of(n, 7)}` : "";
     }
     case "long-story-short": { const n = trailingStreak(pages, c.shelf); return n ? `${n} in a row` : ""; }
     case "two-of-us": {
-      const used = [...new Set(ps.flatMap((p) => p.artists))];
+      const used = [...new Set(ps.flatMap((p) => p.artists))].filter((a) => a !== c.home);
       return used.length && used.length <= 2 ? used.map(short).join(" + ") : "";
     }
     case "back-to-december": return pages.length && singles(pages[0]) ? `opened on ${short(singles(pages[0]))}` : "";

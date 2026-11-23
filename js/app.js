@@ -14854,7 +14854,8 @@ const NEEDS_LINE = {
 };
 function lineupDeckSmall(card) {
   const bits = [missLine(card)];
-  if (card.pools) bits.push(card.pools.length === 1 ? `${card.pools[0]} words only` : `${card.pools.join(" and ")} words only`);
+  if (card.pools) bits.push(card.pools.length === 1 ? `${card.pools[0]} words only`
+    : `${card.pools.slice(0, -1).join(", ")} and ${card.pools[card.pools.length - 1]} words only`);
   if (NEEDS_LINE[card.needs]) bits.push(NEEDS_LINE[card.needs]);
   return bits.filter(Boolean).join(" · ");
 }
@@ -17053,7 +17054,7 @@ function warmBlendCorpus(onDone) {
 
    THE HAND IS DEALT, NOT PICKED, and that is the decision the whole felt rests on. Picking
    three from all twenty-four is a decision made once: you would find the cheapest legal trio
-   and play it forever, and the 24-pip budget would stop biting the day you solved it. Five
+   and play it forever, and the pip budget would stop biting the day you solved it. Five
    dealt with "keep up to three" is a different question every run, because the ten possible
    trios in your five are not the ten in anybody else's. hand-lab.html measured the part that
    could have sunk it: a dealt five ALWAYS contains a legal pair, at every budget from 20 to
@@ -17502,20 +17503,17 @@ function namesWanted() {
   return Math.max(0, ...lineupKept.map((id) => goalById[id].names || 0));
 }
 
-/* A name the hand itself has already ruled out, or "". Naming Taylor beside No Home Team, a
-   guest you have been admitted to beside Nobody Admitted, or swearing to Taylor beside Quiet
-   Half (seven pages from an artist allowed six) is a hand lost before page one, and the felt
-   is the only place that can say so: the cards never name each other. `slot` is where the name
-   would sit, because only the first name is the one Sworn In reads. */
-function lineupNameVeto(who, slot) {
+/* A name the hand itself has already ruled out, or "". A guest you have been admitted to,
+   beside Nobody Admitted, is a hand lost before page one, and the felt is the only place that
+   can say so: the cards never name each other. Taylor is never on the list at all, since both
+   naming cards are guests only (lineupNameable). */
+function lineupNameVeto(who) {
   const kept = lineupKept.map((id) => goalById[id]);
-  if (who === HOME_ARTIST && kept.some((c) => c.shuts === "home")) return "No Home Team shuts her";
   if (kept.some((c) => c.shuts === "admitted") && lineupCtx().admitted.includes(who)) return "Nobody Admitted shuts them";
-  if (slot === 0 && who === HOME_ARTIST && lineupKept.includes("sworn-in") && lineupKept.includes("quiet-half")) {
-    return "Quiet Half shuts her after six";
-  }
   return "";
 }
+// Who the naming chips offer: the guests, because Sworn In and Three Chairs are guests only.
+const lineupNameable = () => lineupShelf().filter((a) => a !== HOME_ARTIST);
 
 /* How many of the thirteen pages each artist usually turns up on, at the pool this hand will be
    dealt from. Naming is the one decision on the felt made with no information at all: on Normal
@@ -17548,20 +17546,20 @@ function renderLineupNaming() {
   const box = $("lineupNaming");
   if (!box) return;
   const want = namesWanted();
-  lineupNamed = lineupNamed.filter((n) => lineupShelf().includes(n)).slice(0, want);
+  lineupNamed = lineupNamed.filter((n) => lineupNameable().includes(n)).slice(0, want);
   // A card kept after naming can rule a name out; drop it rather than deal a dead hand.
-  lineupNamed = lineupNamed.filter((n, i) => !lineupNameVeto(n, i));
+  lineupNamed = lineupNamed.filter((n) => !lineupNameVeto(n));
   box.hidden = !want;
   if (!want) return;
   const swornFirst = want > 1 && lineupKept.includes("sworn-in");
   const lead = want === 1
-    ? "Name the artist you are sworn to."
+    ? "Name the guest you are sworn to."
     : `Name ${want}. ${swornFirst ? "The first is the one you are sworn to." : "Only their catalogues count."}`;
   const reach = activeCorpus === "lineup" ? lineupReach(lineupRunPool()) : null;
   box.innerHTML = `<p class="lu-name-lead">${escapeHtml(lead)}</p><div class="lu-name-row">` +
-    lineupShelf().map((who) => {
+    lineupNameable().map((who) => {
       const at = lineupNamed.indexOf(who);
-      const veto = at > -1 ? "" : lineupNameVeto(who, lineupNamed.length);
+      const veto = at > -1 ? "" : lineupNameVeto(who);
       return `<button type="button" class="lu-who${at > -1 ? " is-named" : ""}${veto ? " is-shut" : ""}"` +
         ` data-who="${escapeHtml(who)}"${veto ? ` disabled title="${escapeHtml(veto)}"` : ""}>` +
         (at > -1 && want > 1 ? `<span class="lu-who-n">${at + 1}</span>` : "") +
@@ -17572,10 +17570,10 @@ function renderLineupNaming() {
 
 function toggleLineupName(who) {
   const want = namesWanted();
-  if (!want || !lineupShelf().includes(who)) return;
+  if (!want || !lineupNameable().includes(who)) return;
   const at = lineupNamed.indexOf(who);
   if (at > -1) lineupNamed.splice(at, 1);
-  else if (lineupNamed.length < want && !lineupNameVeto(who, lineupNamed.length)) lineupNamed.push(who);
+  else if (lineupNamed.length < want && !lineupNameVeto(who)) lineupNamed.push(who);
   else return;
   renderLineupFelt();
 }
