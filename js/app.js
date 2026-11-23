@@ -17119,12 +17119,12 @@ function lineupBlocked(id) {
   return conflicts(goalById[id], lineupKept, goalById, { maxHand: HAND_MAX, ctx: lineupCtx() });
 }
 
-// The red pen round a kept card's corner index, which is where its price is printed. Drawn
-// rather than a tick or a checkbox: the notebook marks a decision in pen.
-const KEEP_MARK = `<svg viewBox="0 0 40 40" aria-hidden="true">
-  <ellipse cx="19.5" cy="19" rx="14.5" ry="13" transform="rotate(-8 19.5 19)"/>
-  <path d="M6.5 25.5 C11 30.5 27 31.5 33 24.5"/>
-</svg>`;
+/* A kept card is marked by how it sits, not by anything drawn on it: it comes up out of the deal
+   straight, and the cards left behind sink back and tilt, the way a card is pulled out of a hand.
+   It used to be ringed in red pen round its price, and a ring is the one selection mark the
+   notebook never uses. The options were laid out on scripts/lineup/keep-mark.html: washi tape
+   across the corner was too faint on cream and covered the price, and a red tick already means
+   "won" on the strip and the deck page. */
 
 /* ---------- The hand ----------
    Five cards at their printed size cannot lie side by side on a phone, and they cannot be
@@ -17181,6 +17181,7 @@ function renderLineupFelt() {
   const front = lineupFrontIndex();
   const focused = felt.contains(document.activeElement) ? document.activeElement.dataset.card : null;
   felt.classList.toggle("is-hand", held);
+  felt.classList.toggle("has-kept", lineupKept.length > 0);
   felt.style.setProperty("--gaps", Math.max(1, lineupDealt.length - 1));
   felt.innerHTML = lineupDealt.map((id, i) => {
     const card = goalById[id];
@@ -17190,7 +17191,6 @@ function renderLineupFelt() {
     return `<div class="lu-deal${cls}" data-card="${id}" role="button" tabindex="0"` +
       ` style="--seat:${i};--away:${Math.abs(i - front)}"` +
       ` aria-pressed="${kept}" aria-label="${escapeHtml(card.name)}, ${card.rank}">` +
-      (kept ? `<div class="lu-keep-mark">${KEEP_MARK}</div><div class="lu-keep-mark lu-keep-far">${KEEP_MARK}</div>` : "") +
       cardFace(card, SUIT_LOOK[card.suit], lineupFaceExtra(card)) +
       `<p class="lu-out-why">${escapeHtml(why)}</p></div>`;
   }).join("");

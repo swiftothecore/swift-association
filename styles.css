@@ -18537,15 +18537,14 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
   font-family: var(--type); font-size: 9px; letter-spacing: 0.4px; text-align: center;
   color: var(--red-pen); margin: 7px 2px 0; min-height: 12px;
 }
-/* The kept mark: red pen round the corner index, which is where the price is. */
-.lu-keep-mark {
-  position: absolute; top: 2px; left: 2px; width: 40px; height: 40px; z-index: 6; pointer-events: none;
-  color: var(--red-pen);
+/* Once a card is kept, the ones left behind sink back and tilt a little further, so the kept
+   ones read as pulled out of the deal without a mark drawn on them (never a ring round the
+   price: see renderLineupFelt). A veiled card is already set apart and stays as it is. */
+.lu-felt:not(.is-hand).has-kept .lu-deal:not(.is-kept):not(.is-out) .lu-card {
+  transform: translateY(6px) rotate(-2deg) scale(0.965);
+  box-shadow: 0 3px 8px rgba(60,50,35,0.12), 0 1px 2px rgba(60,50,35,0.12);
 }
-.lu-keep-mark svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.lu-keep-mark path, .lu-keep-mark ellipse {
-  fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; opacity: 0.85;
-}
+.lu-felt:not(.is-hand).has-kept .lu-deal:nth-child(even):not(.is-kept):not(.is-out) .lu-card { transform: translateY(6px) rotate(2deg) scale(0.965); }
 
 /* ---- the held hand ----
    A phone's felt. .is-hand comes from LINEUP_HAND_MQ in app.js and is the only switch, so
@@ -18554,8 +18553,8 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 
    A dropped-out card cannot use the felt's opacity here: the card beneath would show through,
    so it is veiled in paper instead. Its reason moves to .lu-hand-note, since a line under each
-   card would sit behind the next card along. The far kept mark rings the bottom-right index,
-   the only corner a card to the right of the front one shows. */
+   card would sit behind the next card along. A kept card rises out of the fan as a whole, which
+   is what shows on its peek whichever corner of it is visible. */
 .lu-felt.is-hand {
   display: block; position: relative; max-width: none; height: 327px;
   margin: 0 -8px 0 -14px; padding: 0; touch-action: pan-y;
@@ -18587,11 +18586,6 @@ body.lu-nomiss .lu-miss { visibility: hidden; }
 /* Only the front card's words are read; a card behind shows its corner, and its copy peeking
    out between two cards was only fragments ("ted", "rst"). Its art and index stay. */
 .is-hand .lu-deal:not(.is-front) .lu-mid { visibility: hidden; }
-/* The felt lifts a kept card's face and leaves the mark where the face rises to; a held card
-   lifts as a whole, mark included, so the mark has to start where the index already is. */
-.is-hand .lu-keep-mark { top: 13px; }
-.lu-keep-far { display: none; }
-.is-hand .lu-keep-far { display: block; top: auto; left: auto; right: 2px; bottom: -2px; transform: rotate(180deg); }
 .lu-hand-note {
   font-family: var(--type); font-size: 10.5px; color: var(--ink-soft); text-align: center;
   margin: 0 0 6px;
