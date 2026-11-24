@@ -16979,13 +16979,18 @@ async function fetchBlendCats() {
 
 // The expensive half. Synchronous on purpose: installCorpus installs into the globals as it
 // goes (its derivations read them), so there is no safe point to yield in the middle of it.
+// It hands back whatever corpus was live before it started, in the same synchronous breath, so
+// a build that finishes while some other run is on screen leaves that run's catalogue alone.
+// Installing the blend is the caller's decision (installBlendCorpus, startLineupRun).
 function buildBlend(cats) {
+  const was = snapshotCorpus(), wasActive = activeCorpus;
   const { grouped, merged } = buildBlendGrouped(cats);
   blendMerges = merged;
   const words = [...new Set(cats.flatMap((c) => c.words))].sort();
   blendCorpus = installCorpus(grouped, words,
     { aliases: false, buckets: BLEND_BUCKETS, challengePools: false });
-  activeCorpus = "lineup";
+  applyCorpus(was);
+  activeCorpus = wasActive;
   return blendCorpus;
 }
 
@@ -17009,13 +17014,19 @@ function paintedOnce() {
 
 let blendBuilding = null;   // the in-flight build, so a warm and a click share one run of it
 
-// Build the blend and INSTALL it into the globals. Two callers share one build: the detail
-// panel warms it while you read, and startLineupRun awaits whatever is already running.
+// Have the blend built, without installing it. Two callers share one build: the detail panel
+// warms it while you read, and startLineupRun awaits whatever is already running.
+async function readyBlendCorpus() {
+  if (blendCorpus) return blendCorpus;
+  if (blendBuilding) { await blendBuilding; return blendCorpus; }
+  return buildBlend(await fetchBlendCats());
+}
+// Build the blend and INSTALL it into the globals.
 async function installBlendCorpus() {
-  if (blendCorpus) { applyCorpus(blendCorpus); activeCorpus = "lineup"; return blendCorpus; }
-  if (blendBuilding) { await blendBuilding; applyCorpus(blendCorpus); activeCorpus = "lineup"; return blendCorpus; }
-  const cats = await fetchBlendCats();
-  return buildBlend(cats);
+  const corpus = await readyBlendCorpus();
+  applyCorpus(corpus);
+  activeCorpus = "lineup";
+  return corpus;
 }
 
 /* Warm the blend from the laminate's panel, which is the whole payload beat. The 2.4 seconds
@@ -17038,8 +17049,7 @@ function warmBlendCorpus(onDone) {
   blendBuilding = (async () => {
     const cats = await fetchBlendCats();
     await paintedOnce();
-    buildBlend(cats);
-    restoreCorpus();                 // the panel is not a run; hand Taylor back (it sets the flag)
+    buildBlend(cats);                // which leaves the live corpus as it found it: the panel is not a run
   })();
   blendBuilding
     .catch(() => { blendCorpus = null; })
@@ -17394,8 +17404,14 @@ async function startLineupRun(diffId) {
   // The note is for the paths that skip the panel — a replay off the results screen, or
   // __dev.lineup.play — and for a first open slow enough that the reading did not cover it.
   if (!blendCorpus) notifyNote("the lineup", "putting every catalogue on one shelf…");
-  try { await installBlendCorpus(); }
+  const ticket = startTicket();
+  let corpus;
+  try { corpus = await readyBlendCorpus(); }
   catch (e) { notifyNote("the lineup", "couldn't fetch the catalogues. check your connection"); return; }
+  // Gone somewhere else while it built: keep the build, leave the felt and the corpus alone.
+  if (!startStillWanted(ticket)) return;
+  applyCorpus(corpus);
+  activeCorpus = "lineup";
   lineupDiff = GUEST_DIFFS.includes(diffId) ? diffId : "medium";
   const pending = pendingLineupDeal(lineupDiff);
   lineupDealt = pending || dealLineupFive();
@@ -19421,7 +19437,9 @@ async function dispatchRandom(entry) {
     // randomiser resolves one before announcing the draw.
     case "album":     startAlbumFocus(entry.album, entry.diff || randomDiff(ALBUM_FOCUS_DIFFS)); return true;
     case "guest": {
-      await startGuestRun(entry.guest, entry.diff || randomDiff(GUEST_DIFFS));
+      // "left": the player moved on while the catalogue downloaded. That is not a failed draw,
+      // and drawing again would take over whatever they moved on to.
+      if (await startGuestRun(entry.guest, entry.diff || randomDiff(GUEST_DIFFS)) === "left") return "left";
       // startGuestRun toasts and bails on a failed fetch; the only honest read on whether it
       // took is whether a guest run is actually live.
       return gameType === "guest";
@@ -19644,7 +19662,9 @@ async function dealRandom() {
     if (!entry) break;
     resolveRandomDifficulty(entry);
     notifyNote("the draw", randomDrawLabel(entry));
-    if (await dispatchRandom(entry)) { if (!devNoLog) foldDicePick(); return; }
+    const dealt = await dispatchRandom(entry);
+    if (dealt === "left") return;
+    if (dealt) { if (!devNoLog) foldDicePick(); return; }
     pool = pool.filter((e) => e.cat !== "guest");
   }
   notifyNote("the draw", "nothing to deal right now. try the shelves");
@@ -20151,11 +20171,15 @@ function startAlbumFocus(album, diffId) {
 async function startGuestRun(id, diffId) {
   const g = GUESTS.find((x) => x.id === id);
   if (!g) return;
+  const ticket = startTicket();
   let corpus = guestCorpora.get(id);
   if (!corpus) {
     let cat;
     try { cat = await loadGuest(id); }
     catch (e) { notifyNote("guest shelf", "couldn't fetch that catalogue. check your connection"); return; }
+    // Checked BEFORE installCorpus, which swaps the globals as it builds. The download is kept
+    // (loadGuest caches it), so asking again starts at once.
+    if (!startStillWanted(ticket)) return "left";
     // Building installs into the globals as it goes (see installCorpus), so this line already
     // leaves the guest's catalogue live; the assignment below just remembers it for the replay.
     // challengePools: false for the same reason the blend skips them — a challenge only ever
@@ -30078,6 +30102,13 @@ function armQuit() {
 function sameLiveRun(run) {
   return !!run && run === runProgressId && screens.game.classList.contains("active");
 }
+// The same question for a start that has to wait on the network first (a guest's catalogue, the
+// lineup's blend). Taken before the wait, asked after it: is the player still on the screen they
+// asked from, with no run started since? On a slow connection the wait is long enough to give
+// up on and start something else, and a catalogue landing after that used to take over whatever
+// was on screen, a Classic run halfway through included.
+function startTicket() { return { run: runProgressId, screen: activeScreenName() }; }
+function startStillWanted(t) { return t.run === runProgressId && t.screen === activeScreenName(); }
 
 // Abandon the in-progress run and return to the start screen. A quit isn't a finished
 // game, so nothing is logged to stats / records / history — but two fail-fun
@@ -38031,8 +38062,8 @@ function buildDevApi() {
         const built = buildBlend(cats);
         const t2 = performance.now();
         return { fetchMs: Math.round(t1 - t0), buildMs: Math.round(t2 - t1),
-                 totalMs: Math.round(t2 - t0), songs: allSongs.length,
-                 words: playableWords.length, ok: !!built };
+                 totalMs: Math.round(t2 - t0), songs: built.allSongs.length,
+                 words: built.playableWords.length, ok: !!built };
       },
       board: () => {
         const cell = (c) => { const r = lineupCardRecord(c.id); return c.id +
