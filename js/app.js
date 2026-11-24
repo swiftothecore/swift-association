@@ -19633,9 +19633,14 @@ async function rollRandom() {
   btn?.setAttribute("aria-busy", "true");
   const moving = !!btn && !motionReduced();
   let tumble = null, reshake = null;
+  // The throw takes half a second, and the rest of the front page stays live under it. A run
+  // started (or a panel opened) while the dice are in the air is the player's answer: the dice
+  // land and deal nothing, rather than dealing a second game over the one just begun.
+  const ticket = startTicket();
   try {
     if (moving) await throwDice(btn);
     else if (btn) tumbleDice(btn);
+    if (!startStillWanted(ticket)) return;
     // Most deals leave the page at once. One that is still waiting on a download a beat after
     // the landing shakes the dice again, so the tap visibly took.
     if (moving) reshake = setTimeout(() => { tumble = shakeDice(btn); }, 150);
