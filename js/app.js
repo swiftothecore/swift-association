@@ -8988,15 +8988,35 @@ function paintCloud() {
   if (!box || !bonusPuzzle || !bonusPuzzle.words) return;
   // Masked like every other lyric on the shelf; a masked word keeps its length, so its size holds.
   const words = bonusPuzzle.words.map((w) => ({ ...w, word: censor(w.word) }));
-  const { html, height } = cloudMarkup(words, { width: box.clientWidth });
+  const width = box.clientWidth;
+  const { html, height } = cloudMarkup(words, { width });
   box.innerHTML = html;
   box.style.height = `${height}px`;
+  /* Page one of a run is laid while its screen is still hidden behind the turn from the shelf,
+     where the box measures nothing and cloudMarkup falls back to its 880px design width. That
+     cloud was then clipped by the box on every phone and most desktops, half its words cut off,
+     until something happened to resize the window. So a box with no width is watched, and the
+     cloud is laid again the moment it has one. */
+  cloudWidthWatch?.disconnect();
+  cloudWidthWatch = null;
+  if (!width) {
+    const watch = new ResizeObserver(() => {
+      if (!box.isConnected) { watch.disconnect(); return; }
+      if (!box.clientWidth) return;
+      watch.disconnect();
+      if (cloudWidthWatch === watch) cloudWidthWatch = null;
+      paintCloud();
+    });
+    watch.observe(box);
+    cloudWidthWatch = watch;
+  }
   if (!cloudFontReady() && !cloudRepaintQueued) {
     cloudRepaintQueued = true;
     document.fonts.ready.then(() => { cloudRepaintQueued = false; paintCloud(); });
   }
 }
 let cloudRepaintQueued = false;
+let cloudWidthWatch = null;   // waiting for a cloud box laid at zero width to get a real one
 
 /* A cloud is fitted to a width, so a turned phone leaves it either clipped or marooned. Nothing
    else on the page needs this, which is why the listener is registered once here and no-ops for
