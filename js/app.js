@@ -8989,6 +8989,7 @@ function paintCloud() {
   // Masked like every other lyric on the shelf; a masked word keeps its length, so its size holds.
   const words = bonusPuzzle.words.map((w) => ({ ...w, word: censor(w.word) }));
   const width = box.clientWidth;
+  cloudLaidWidth = width;
   const { html, height } = cloudMarkup(words, { width });
   box.innerHTML = html;
   box.style.height = `${height}px`;
@@ -9017,15 +9018,23 @@ function paintCloud() {
 }
 let cloudRepaintQueued = false;
 let cloudWidthWatch = null;   // waiting for a cloud box laid at zero width to get a real one
+let cloudLaidWidth = -1;      // the box width the cloud on the page was laid for
 
 /* A cloud is fitted to a width, so a turned phone leaves it either clipped or marooned. Nothing
    else on the page needs this, which is why the listener is registered once here and no-ops for
-   every other game rather than living in a shared resize path. */
+   every other game rather than living in a shared resize path.
+   ONLY A NEW WIDTH lays it again. Every lay deals fresh tilts, so a repaint is a different cloud,
+   and phones send resizes that change nothing a cloud is fitted to: the toolbar folding away as
+   the page scrolls, and on Android the keyboard coming up for the answer line, which re-dealt
+   every page under the player's eyes just as they started reading it. */
 let cloudResizeTimer = null;
 addEventListener("resize", () => {
   if (!$("bonusCloud")) return;
   clearTimeout(cloudResizeTimer);
-  cloudResizeTimer = setTimeout(paintCloud, 150);
+  cloudResizeTimer = setTimeout(() => {
+    const box = $("bonusCloud");
+    if (box && box.clientWidth !== cloudLaidWidth) paintCloud();
+  }, 150);
 });
 
 function renderBonusRound() {
