@@ -26554,7 +26554,8 @@ function rejectNewSong() {
     // it — so the box is shut for exactly as long as the title takes to leave the page.
     const input = $("songInput");
     input.blur(); input.disabled = true;
-    setTimeout(() => { input.disabled = false; endGame(); }, hold);
+    const run = runProgressId;
+    setTimeout(() => { input.disabled = false; if (sameLiveRun(run)) endGame(); }, hold);
     return;
   }
   const n = newSongLives;
@@ -27706,7 +27707,8 @@ function playImpostorLose(kind) {
   const fellForIt = kind !== "falseflag";
   wrap.classList.add(fellForIt ? (reduced ? "impostor-ha" : "impostor-laugh") : "impostor-wronged");
   const hold = reduced ? 450 : 1150 * animScale() || 450;
-  setTimeout(() => showImpostorLoseWipe(kind), hold);
+  const run = runProgressId;
+  setTimeout(() => { if (sameLiveRun(run)) showImpostorLoseWipe(kind); }, hold);
 }
 function showImpostorLoseWipe(kind) {
   const w = escapeHtml(currentWord);
@@ -27725,7 +27727,8 @@ function showImpostorLoseWipe(kind) {
   const hold = (motionReduced() || animInstant()) ? 750 : 1600;
   // Route through endGame (not endChallenge directly) so the runFolded guard + finale cleanup
   // fire; endGame dispatches straight back to endChallenge for the challenge game type.
-  setTimeout(() => { ov.remove(); endGame(); }, hold);
+  const run = runProgressId;
+  setTimeout(() => { ov.remove(); if (sameLiveRun(run)) endGame(); }, hold);
 }
 
 /* ---------- Catalogue-knowledge charms ----------
@@ -30064,6 +30067,16 @@ function armQuit() {
     btn.classList.remove("armed");
     btn.textContent = btn.dataset.label;
   }, 3000);
+}
+
+// For an end the game holds back while a loss plays out on the page (the impostor's laugh, One
+// Of A Kind's title blowing away): is the run that scheduled it still the one on screen? The
+// quit button stays live through those holds, so without asking, a run given up mid-gag was
+// ended anyway a second later: the results screen landed on top of the desk, and the abandoned
+// run was folded into history and stats as a finished one. `run` is the runProgressId read
+// when the hold began, which a fresh run started inside the hold no longer matches.
+function sameLiveRun(run) {
+  return !!run && run === runProgressId && screens.game.classList.contains("active");
 }
 
 // Abandon the in-progress run and return to the start screen. A quit isn't a finished
