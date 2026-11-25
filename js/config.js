@@ -3427,7 +3427,7 @@ export const ACH_ICONS = {
   // TEMPORARY placeholder charm — a dashed frame around a question mark. Any icon set to
   // "placeholder" is art-pending (new challenges / achievements before their real icon is
   // drawn). Search "placeholder" to find everything still awaiting a bespoke charm; as of
-  // 2026-10-21 nothing wears it, and a new charm borrowing it should not stay on it for long.
+  // 2026-11-25 nothing wears it, and a new charm borrowing it should not stay on it for long.
   placeholder: `<svg viewBox="0 0 24 24"><rect class="ink" fill="none" stroke-width="1.5" stroke-dasharray="2.6 2.2" x="4" y="4" width="16" height="16" rx="3"/><path class="ink" fill="none" stroke-width="1.8" stroke-linecap="round" d="M9.3 9.5 a2.7 2.7 0 1 1 3.5 2.6 c-0.95 0.32 -1.05 0.95 -1.05 1.9"/><circle class="ink-fill" cx="11.75" cy="16.6" r="1.05"/></svg>`,
 
   /* ---- Achievement charm overhaul (every charm bespoke) ---- */
@@ -4128,6 +4128,18 @@ export const ACH_ICONS = {
   // two candles of different heights, the flames leaning in until the tips nearly meet:
   // close enough to touch (Sparks Fly). Two rounds of reaching hands never read at this size
   twoflames:`<svg viewBox="0 0 24 24"><path class="ink" stroke-width="1.1" opacity="0.5" d="M1 21.8 H23"/><rect class="ink-fill" x="3.4" y="13.4" width="4.4" height="8.2" rx="0.5"/><rect class="ink-fill" x="15.8" y="10.6" width="4.6" height="11" rx="0.5"/><path class="ink" stroke-width="1" d="M5.6 13.4 V12.2 M18.1 10.6 V9.4"/><path class="ink-fill" d="M5.6 12 C4.2 11.6 4 10 4.8 8.8 C5.8 7.6 7.8 6.4 10.2 5.8 C9.6 7 9 8.4 8.4 9.8 C7.6 11.2 6.6 12.2 5.6 12 Z"/><path class="ink-fill" d="M18.1 9.2 C16.6 9.4 15.4 8.4 14.8 7 C14.6 6 14.4 5 14 4 C15.4 4 16.8 4.6 17.8 5.6 C19 6.8 19.2 8.6 18.1 9.2 Z"/></svg>`,
+  /* ---- So Many Signs' charms drawn (2026-11-25) ----
+     The picture-clue game shipped its three charms on the dashed question mark. Each was picked
+     from three candidates, and two picks were changed once they were seen beside the drawer. */
+  // a framed picture with a first-prize rosette pinned over its corner: picture perfect, and it
+  // won. It hung on a nail by a wire at first, which is goldrecord's frame on the same shelf
+  prizeframe:`<svg viewBox="0 0 24 24"><g transform="translate(0 -2.4)"><path class="ink-fill" d="M18.6 13.3 L18.6 6.5 L2.6 6.5 L2.6 19.2 L14 19.2"/><path class="ink" style="stroke-width:1.05" d="M16.6 13.2 V8.5 H4.6 V17.2 H13.9"/><circle cx="7.4" cy="10.7" r="1.15" fill="currentColor" stroke="none"/><path class="ink" style="stroke-width:1.1" d="M4.8 15.4 C6.6 13.2 8.4 12.8 10.4 14.6 C11.4 13.6 12.6 13.2 13.9 13.6"/><path class="ink-fill" d="M20.42 16.52 Q21.13 17.64 19.92 18.22 Q19.88 19.49 18.65 19.33 Q18.04 20.4 16.97 19.57 Q15.83 20.16 15.44 18.87 Q14.06 18.67 14.52 17.45 Q13.43 16.67 14.52 15.75 Q14.09 14.47 15.44 14.33 Q15.7 13.07 16.97 13.63 Q17.93 12.66 18.65 13.87 Q20 13.59 19.92 14.98 Q21.13 15.55 20.4 16.6 Z"/><circle class="ink" style="stroke-width:1.1" cx="17.4" cy="16.6" r="1.6"/><path class="ink" style="stroke-width:1.2" d="M15.6 19.4 L14.4 23.2 L15.5 22.6 L16.2 23.4 L17 20.2"/><path class="ink" style="stroke-width:1.2" d="M18.2 20.2 L19 23.2 L19.7 22.4 L20.8 22.9 L19.7 19.4"/></g></svg>`,
+  // a thought bubble with a row of pictures in it: the first row was all it took, and the rest
+  // was in your head. A profile with a picture inside was the other pick, and that is versehead
+  thoughtrow:`<svg viewBox="0 0 24 24"><path class="ink-fill" d="M7.7 14.6 C4.6 15 2.6 12.6 3.7 10.1 C2.6 7.4 5 5 7.7 5.9 C8.8 3.4 12.6 2.9 14.4 5 C16.6 3.6 20 4.8 20.2 7.6 C22.6 8.5 22.6 12.3 20.2 13.4 C20.2 15.8 17.3 17 15.3 15.6 C13.7 17.4 9.7 17.2 7.7 14.6 Z"/><circle class="ink" style="stroke-width:1.3" cx="6" cy="18.6" r="1.45"/><circle class="ink" style="stroke-width:1.2" cx="3.3" cy="21.6" r="0.85"/><path fill="currentColor" stroke="none" d="M8.1 12.26 C7.49 11.68 6.35 10.95 6.35 10.16 C6.35 9.34 7.01 8.94 7.57 8.94 C7.89 8.94 8.1 9.16 8.1 9.52 C8.1 9.16 8.34 8.94 8.66 8.94 C9.22 8.94 9.85 9.38 9.85 10.16 C9.85 10.95 8.71 11.68 8.1 12.26 Z"/><path fill="currentColor" stroke="none" d="M12.4 8.01 L12.98 9.5 L14.49 9.62 L13.39 10.62 L13.67 12.05 L12.4 11.3 L10.98 12.25 L11.5 10.59 L10.2 9.58 L11.8 9.48 Z"/><path fill="currentColor" stroke="none" d="M17.15 8.3 L15.39 10.76 L16.64 10.76 L15.94 12.7 L17.92 10.06 L16.64 10.06 Z"/></svg>`,
+  // the sign with the title spelled out on it in pictures, still shaking, with stars where you
+  // walked into it. Hands over the eyes was the other way to say it, and blindfold says that
+  bonk:`<svg viewBox="0 0 24 24"><g transform="rotate(-7 12 7)"><rect class="ink-fill" x="3.4" y="2.6" width="17.2" height="9" rx="0.9"/><path fill="currentColor" stroke="none" d="M7.4 8.62 C6.84 8.09 5.8 7.42 5.8 6.7 C5.8 5.95 6.41 5.58 6.92 5.58 C7.21 5.58 7.4 5.79 7.4 6.11 C7.4 5.79 7.62 5.58 7.91 5.58 C8.42 5.58 9 5.98 9 6.7 C9 7.42 7.96 8.09 7.4 8.62 Z"/><path fill="currentColor" stroke="none" d="M12 4.79 L12.56 6.23 L13.89 6.39 L12.81 7.26 L13.28 8.77 L12 7.93 L10.74 8.73 L11.16 7.27 L9.98 6.34 L11.46 6.26 Z"/><path fill="currentColor" stroke="none" d="M16.91 5.45 C15.35 5.7 14.77 7.26 15.51 8.12 C16.25 8.91 17.66 8.83 18.15 8.01 C17 8.34 15.92 7.59 16.09 6.6 C16.17 6.03 16.5 5.62 16.91 5.45 Z"/></g><path class="ink" style="stroke-width:1.2" d="M11 12 L11.3 21.8 M13.2 11.8 L13 21.8"/><path class="ink" style="stroke-width:1.1" opacity="0.55" d="M5.4 22 H19"/><g class="ink" style="stroke-width:1.05"><path d="M1.6 3.6 C1 5 1 6.4 1.4 7.6"/><path d="M22.4 4.4 C23 5.6 23 7 22.5 8.4"/></g><g class="ink" style="stroke-width:1.1"><path d="M9.5 15.6 L7.2 14.9"/><path d="M9.5 17 L7 17.5"/><path d="M9.8 14.4 L8.7 13.4"/></g><path class="ink" style="stroke-width:1" d="M4.6 18.4 L5 19.5 L6.1 19.8 L5 20.1 L4.6 21.2 L4.2 20.1 L3.1 19.8 L4.2 19.5 Z"/></svg>`,
 };
 
 /* ---------- Mastery marks ----------
@@ -4971,9 +4983,9 @@ export const ACHIEVEMENTS = [
      for ever: every run is a fresh deal. Named off "Picture perfect shiny family" (Midnight
      Rain), "I'm taking pictures in my mind" (Stay Beautiful) and "You didn't even see the
      signs" (exile), the song the game's own name comes from. */
-  { id: "sweep-so-many-signs", name: "Picture Perfect", desc: "Sweep So Many Signs", tier: 2, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "sweep-so-many-signs-on-first-clues", name: "Pictures In My Mind", desc: "Sweep So Many Signs on the first row every time, never turning over", tier: 3, secret: false, icon: "placeholder", sitting: true, earn: { cat: "bonus" } },
-  { id: "miss-a-signs-page-after-its-title-was-spelled-out", name: "Didn't See The Signs", desc: "Miss a So Many Signs page even after its title was spelled out in pictures", secret: true, icon: "placeholder" },
+  { id: "sweep-so-many-signs", name: "Picture Perfect", desc: "Sweep So Many Signs", tier: 2, secret: false, icon: "prizeframe", sitting: true, earn: { cat: "bonus" } },
+  { id: "sweep-so-many-signs-on-first-clues", name: "Pictures In My Mind", desc: "Sweep So Many Signs on the first row every time, never turning over", tier: 3, secret: false, icon: "thoughtrow", sitting: true, earn: { cat: "bonus" } },
+  { id: "miss-a-signs-page-after-its-title-was-spelled-out", name: "Didn't See The Signs", desc: "Miss a So Many Signs page even after its title was spelled out in pictures", secret: true, icon: "bonk" },
   /* The Capitals' two. The sweep is the ordinary one and takes the reachable ceiling's shape,
      but the PAGE charm is the interesting half and it is Both Ways' argument almost exactly:
      four of the seventy-two messages are a single proper noun ("Toby.", "SAG.", "Adam.",
