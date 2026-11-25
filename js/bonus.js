@@ -1942,16 +1942,22 @@ export function buildCloudPuzzle(songs, wordIndex, rng = Math.random, tries = 12
 
    THE ORDER IS THE RULE. The page opens on a row that is NOT the title rebus, and the rebus is
    held back as the rescue, because a title spelled out is the easier row by a distance and
-   paying two for it would make turning over pointless. A song with no rebus (about half) opens
-   on its first row and rescues with its second. A song with two rebuses would open on one; the
-   list has none today. */
-export function signsPair(clues) {
+   paying two for it would make turning over pointless. A song with no rebus opens on one of its
+   rows and rescues with another. A song with two rebuses would open on one; the list has none.
+
+   WHICH row opens is dealt. A lyric row pictures one sung line, so a song with several good
+   lines carries several rows, and each page draws its opener from them at random (and its
+   rescue too, when there is no rebus to hold back). The same song comes round again with a
+   different picture, which is the replayability the one-line rule buys back. */
+export function signsPair(clues, rng = Math.random) {
   const rows = (clues || []).map(([kind, ids, note]) => ({ kind, ids, note: note || "" }));
   if (rows.length < 2) return null;
-  const first = rows.find((c) => c.kind !== "T") || rows[0];
+  const any = (list) => list[Math.floor(rng() * list.length)];
+  const lines = rows.filter((c) => c.kind !== "T");
+  const first = any(lines.length ? lines : rows);
   const rest = rows.filter((c) => c !== first);
-  const second = rest.find((c) => c.kind === "T") || rest[0];
-  return { first, second };
+  const rebus = rest.filter((c) => c.kind === "T");
+  return { first, second: any(rebus.length ? rebus : rest) };
 }
 
 /* The shelf's pool filtered to the songs that have pictures, which is the only thing that can
@@ -1974,5 +1980,5 @@ export function buildSignsPuzzle(songs, signs, rng = Math.random, avoid = null) 
   const song = pool[Math.floor(rng() * pool.length)];
   const family = versionFamily(song.title);
   const also = dealable.filter((s) => s.title !== song.title && versionFamily(s.title) === family).map((s) => s.title);
-  return { song, ...signsPair(signs.get(song.title)), ...(also.length ? { also } : {}) };
+  return { song, ...signsPair(signs.get(song.title), rng), ...(also.length ? { also } : {}) };
 }

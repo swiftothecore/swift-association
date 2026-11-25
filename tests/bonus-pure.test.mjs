@@ -6,7 +6,7 @@ import {
   buildRedactedPuzzle, buildChainPuzzle, buildWordIndex, buildOnlyHerePuzzle,
   onlyHerePoints, buildCloudPuzzle, buildRuthlessPuzzle, ruthlessLens,
   buildAlbumSheet, trackCandidates, resolveTrackGuess, judgeTrack,
-  buildTrackPuzzle, buildCapitalsPuzzle, buildProducerPuzzle, buildPenPuzzle, buildNashvillePuzzle,
+  buildTrackPuzzle, buildCapitalsPuzzle, buildProducerPuzzle, buildPenPuzzle, buildNashvillePuzzle, signsPair,
 } from '../js/bonus.js';
 
 const alwaysFirst = () => 0;
@@ -328,4 +328,26 @@ test('Nashville chooses a side before a title and still deals when one side is s
   assert.equal(page.hers, false);
   assert.equal(page.artist, 'Alex Doe');
   assert.equal(buildNashvillePuzzle(pool, alwaysFirst, new Set([hers, ...decoys].map(s => s.title))), null);
+});
+
+test('So Many Signs deals any of a song\'s line rows first and keeps the title rebus as the rescue', () => {
+  const clues = [['L', [1, 2], 'one line'], ['T', [3]], ['L', [4], 'another line'], ['L', [5, 6], 'a third']];
+  const seen = new Set();
+  for (let i = 0; i < 40; i++) {
+    const { first, second } = signsPair(clues, () => (i % 4) / 4 + 0.01);
+    assert.notEqual(first.kind, 'T');
+    assert.equal(second.kind, 'T');
+    seen.add(first.note);
+  }
+  assert.deepEqual([...seen].sort(), ['a third', 'another line', 'one line']);
+});
+
+test('So Many Signs with no rebus rescues with a different line row', () => {
+  const clues = [['L', [1], 'one'], ['L', [2], 'two'], ['L', [3], 'three']];
+  for (const r of [0, 0.4, 0.7, 0.99]) {
+    const { first, second } = signsPair(clues, () => r);
+    assert.notEqual(first, second);
+    assert.notEqual(first.note, second.note);
+  }
+  assert.equal(signsPair([['L', [1], 'alone']]), null);
 });
