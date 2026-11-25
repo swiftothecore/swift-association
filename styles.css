@@ -11579,9 +11579,42 @@
   }
   .deepcut-note b { color: var(--ink); font-weight: 700; }
   /* An unreleased song named: the red pen, tipped a little, under the card it is about. */
-  .unreleased-note {
-    font-family: var(--hand); font-size: calc(19px + var(--text-size-adjust)); color: var(--red-pen);
-    text-align: center; margin: 8px auto 0; transform: rotate(-1.5deg); line-height: 1.2;
+  /* The unreleased find (unreleasedStrip): a strip of the Songbook's last page under the card,
+     its nine boxes on the page's own hazard stripe. Hung off the card's ribbon rather than
+     centred, so it reads as part of that answer. Flat stripes, ink on paper, as on the page. */
+  .ur-strip {
+    --hazard: #e3a91f; --hazard-tick: #a67a0c;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin: -4px 0 4px 17px;
+  }
+  :root[data-theme="dark"] .ur-strip { --hazard: #d9a23a; --hazard-tick: #e0a83a; }
+  .ur-boxes {
+    position: relative; display: flex; gap: 4px; padding: 5px 9px 5px 15px; border-radius: 2px;
+    background: repeating-linear-gradient(-45deg,
+      color-mix(in srgb, var(--hazard) 30%, transparent) 0 8px,
+      color-mix(in srgb, var(--hazard) 10%, transparent) 8px 16px);
+  }
+  .ur-boxes::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; border-radius: 2px 0 0 2px;
+    background: repeating-linear-gradient(-45deg, var(--hazard) 0 3px, #2b2722 3px 6px);
+  }
+  .ur-boxes .sb-box { margin: 0; }
+  .ur-boxes .sb-box-tick { stroke: var(--hazard-tick); }
+  /* the one just found, ticked in the red pen and drawn in as the card lands */
+  .ur-boxes .sb-box.fresh .sb-box-tick { stroke: var(--red-pen); }
+  @media (prefers-reduced-motion: no-preference) {
+    .ur-boxes .sb-box.fresh .sb-box-tick {
+      stroke-dasharray: 20; stroke-dashoffset: 20; animation: urTick .45s ease-out .45s forwards;
+    }
+  }
+  @keyframes urTick { to { stroke-dashoffset: 0; } }
+  .ur-say {
+    font-family: var(--type); font-size: calc(10.5px + var(--text-size-adjust)); letter-spacing: .8px;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .ur-say b { color: var(--ink); }
+  .ur-pct {
+    font-family: var(--hand); text-transform: none; letter-spacing: 0; font-weight: 700;
+    font-size: calc(19px + var(--text-size-adjust)); color: var(--red-pen);
   }
   .deepcut-note-album {
     font-family: var(--type); font-size: calc(10px + var(--text-size-adjust));

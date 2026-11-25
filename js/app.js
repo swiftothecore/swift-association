@@ -29251,6 +29251,41 @@ function siblingClause(song, word) {
     : word;
 }
 
+/* The unreleased find. Naming one of the songs she never released gets the page like any other,
+   and under the card goes a strip of the Songbook's last page: its hazard stripe and its row of
+   checkboxes, one per unreleased song in the Songbook's own (alphabetical) order, the ones
+   already found ticked in hazard ink and the one just found ticked in red pen. It says what the
+   find is worth without stating a rule: one of nine, and how many are left.
+   It replaced a red-pen line, "that one counts past 100%", which named a meter the player is not
+   looking at and was untrue for most of play, because the Songbook only counts past 100% once
+   every released song is in. So the figure appears here only when it is real, by the Songbook's
+   own sum, and until then the strip gives the count.
+   Only on the game types that fold the catalogue: anywhere else the find never reaches the
+   Songbook, and a fresh tick on its page would be a promise the run does not keep. The card's
+   album tag still says "Unreleased" there. */
+function unreleasedStrip(named) {
+  if (!named.length || !foldsCatalogue()) return "";
+  const tally = loadSongTally().songs || {};
+  const run = new Set(roundSongs.slice(0, round).filter(Boolean));
+  for (const s of named) run.add(s.title);
+  const has = (t) => !!tally[t] || run.has(t);
+  const fresh = new Set(named.filter((s) => !foundBefore(s.title)).map((s) => s.title));
+  const book = allSongs.filter((s) => s._unreleased).sort((a, b) => a.title.localeCompare(b.title));
+  const got = book.filter((s) => has(s.title)).length;
+  const released = releasedSongs();
+  const complete = released.length && released.every((s) => has(s.title));
+  const boxes = book.map((s) =>
+    `<span class="sb-box${fresh.has(s.title) ? " fresh" : ""}">${sbBox(has(s.title))}</span>`).join("");
+  const say = complete
+    ? `<span class="ur-pct">${(100 + (got / released.length) * 100).toFixed(1)}%</span>` +
+      `<span class="sr-only"> of the catalogue, with ${got} of ${book.length} unreleased songs</span>`
+    : got === book.length
+      ? `<b>all ${book.length}</b> never released`
+      : `<b>${got}</b> of ${book.length} never released`;
+  return `<div class="ur-strip"><span class="ur-boxes" aria-hidden="true">${boxes}</span>` +
+    `<span class="ur-say">${say}</span></div>`;
+}
+
 function showCorrectFeedback(song, lyricMatch) {
   resetLyricReveals();
   const fb = $("feedback");
@@ -29306,10 +29341,9 @@ function showCorrectFeedback(song, lyricMatch) {
   const formsNote = firstNote ? "" : wordFormsNote((multi || both) ? null : song, multi ? null : (lyricMatch ? lyricMatch.line : null));
   // Deep Cut: right page, wrong album — name the answer that would have moved the tally.
   const deepCutNote = deepCutMissedAlbumNote(multi ? null : song);
-  // An unreleased song named: nobody expected it, so say what it was worth. Written in the red
-  // pen because it is the one answer that takes the Songbook past 100%.
-  const deepFind = (multi ? roundNamed.map(roundSongByTitle) : [song]).some((s) => s && s._unreleased);
-  const unreleasedNote = deepFind ? `<p class="unreleased-note">never released. that one counts past 100%</p>` : "";
+  // An unreleased song named: a strip of the Songbook's last page under the card (see
+  // unreleasedStrip), so the find shows what it is worth instead of explaining a rule.
+  const unreleasedNote = unreleasedStrip((multi ? roundNamed.map(roundSongByTitle) : [song]).filter((s) => s && s._unreleased));
   // "What else held that word?" — the same expansion a missed page offers, because the
   // curiosity is at least as strong on a page you just landed as on one you lost. Shuffled:
   // with the answer already found there's no lead card to earn its place at the top, so the
