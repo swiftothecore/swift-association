@@ -41,7 +41,7 @@ test('Miley Cyrus catalogue has its records, every song once and every line sung
       ['SHE IS COMING', 6],
       ['Plastic Hearts', 12],
       ['Endless Summer Vacation', 12],
-      ['Something Beautiful', 11],
+      ['Something Beautiful', 13],
       ['Bass Persuades', 10],
       ['Soundtracks', 10],
       ['Collaborations', 13],

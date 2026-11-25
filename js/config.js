@@ -683,7 +683,7 @@ export const GUESTS = [
     id: "miley-cyrus",
     name: "Miley Cyrus",
     file: "data/guests/miley-cyrus.json",
-    songCount: 168,
+    songCount: 170,
     // Denim, which is where her stamp's ink came from. The ticks are four rungs of the bead
     // palette, each taken off a sleeve: the Endless Summer Vacation sky, the Plastic Hearts
     // pink, the Younger Now lime and the Bangerz violet.
