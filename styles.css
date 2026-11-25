@@ -173,6 +173,7 @@
   body[data-era="guest-ariana-grande"]     { --ink-accent:#7d4560; --highlighter:rgba(229,170,184,0.48); --bead:#b87a90; --page-wash:rgba(213,162,180,0.06); }
   body[data-era="guest-harry-styles"]      { --ink-accent:#a4534c; --highlighter:rgba(95,185,224,0.36);   --bead:#c07f7a; --page-wash:rgba(192,127,122,0.05); }
   body[data-era="guest-sabrina-carpenter"] { --ink-accent:#a3303f; --highlighter:rgba(214,168,128,0.46); --bead:#6b4632; --page-wash:rgba(184,119,103,0.05); }
+  body[data-era="guest-beyonce"]            { --ink-accent:#8a5410; --highlighter:rgba(226,160,52,0.44); --bead:#b0701a; --page-wash:rgba(185,116,26,0.05); }
 
   /* ---- Masthead inks (Album Focus reward, body[data-ink]) ----
      ONE token, --mast-ink, worn by every gold mark in the masthead — the gold word, the star
@@ -336,6 +337,7 @@
   :root[data-theme="dark"] body[data-era="guest-ariana-grande"]     { --ink-accent:#e6aec2; --highlighter:rgba(225,160,180,0.28); --bead:#e6aec2; --page-wash:rgba(213,162,180,0.06); }
   :root[data-theme="dark"] body[data-era="guest-harry-styles"]      { --ink-accent:#ec9a90; --highlighter:rgba(95,185,224,0.26);   --bead:#ec9a90; --page-wash:rgba(192,127,122,0.06); }
   :root[data-theme="dark"] body[data-era="guest-sabrina-carpenter"] { --ink-accent:#f08a94; --highlighter:rgba(205,160,120,0.28); --bead:#d9a27f; --page-wash:rgba(184,119,103,0.06); }
+  :root[data-theme="dark"] body[data-era="guest-beyonce"]            { --ink-accent:#e8b259; --highlighter:rgba(220,160,60,0.28); --bead:#e8b259; --page-wash:rgba(200,140,50,0.06); }
 
   /* Masthead inks on the night desk: the night half of each pair above, switched on here. The
      night column is NOT a lightened copy of the day one and is not derivable from it: at night
@@ -17384,6 +17386,7 @@
   body[data-contrast="high"][data-era="guest-ariana-grande"]     { --ink-accent:#5c2140; --highlighter:rgba(215,130,155,0.66); --bead:#5c2140; }
   body[data-contrast="high"][data-era="guest-harry-styles"]      { --ink-accent:#7a2b25; --highlighter:rgba(50,150,210,0.62);  --bead:#7a2b25; }
   body[data-contrast="high"][data-era="guest-sabrina-carpenter"] { --ink-accent:#7e0f22; --highlighter:rgba(195,135,85,0.68);  --bead:#7e0f22; }
+  body[data-contrast="high"][data-era="guest-beyonce"]            { --ink-accent:#5e3606; --highlighter:rgba(220,150,40,0.66);  --bead:#5e3606; }
 
   /* ---- Masthead inks in high contrast ----
      Only the day/night PAIR is restated; --mast-ink is still resolved from it by the two rules
@@ -17482,6 +17485,7 @@
   :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-ariana-grande"]     { --ink-accent:#ffc3d8; --highlighter:rgba(235,165,190,0.46); --bead:#ffc3d8; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-harry-styles"]      { --ink-accent:#ffb3a8; --highlighter:rgba(105,195,235,0.46); --bead:#ffb3a8; }
   :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-sabrina-carpenter"] { --ink-accent:#ffa3ac; --highlighter:rgba(215,165,120,0.48); --bead:#ffa3ac; }
+  :root[data-theme="dark"] body[data-contrast="high"][data-era="guest-beyonce"]            { --ink-accent:#ffc977; --highlighter:rgba(230,170,70,0.46); --bead:#ffc977; }
   /* The night desk goes darker still and the lamp pool comes down. The sheet has dropped
      nearly to the desk's own value to buy ink contrast, so if the desk stayed where it was
      the page would stop reading as a separate object sitting on it. The oak grain survives

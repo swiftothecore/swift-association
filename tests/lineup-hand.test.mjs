@@ -22,9 +22,10 @@ test('a hand that shuts every catalogue it needs is refused on the notebook that
   assert.equal(ok(['nobody-admitted', 'no-home-team'], notebook(guests)), false);
   assert.equal(ok(['nobody-admitted', 'undercard'], notebook(guests)), false);
   assert.equal(ok(['nobody-admitted', 'full-lineup'], notebook([guests[0]])), false);
-  // Three Chairs names three GUESTS, so Taylor being open does not rescue it.
-  assert.equal(ok(['nobody-admitted', 'three-chairs'], notebook(guests.slice(0, 5))), false);
-  assert.equal(ok(['nobody-admitted', 'three-chairs'], notebook(guests.slice(0, 4))), true);
+  // Three Chairs names three GUESTS, so Taylor being open does not rescue it. Counted from the
+  // end of the shelf, so a new guest does not move the line.
+  assert.equal(ok(['nobody-admitted', 'three-chairs'], notebook(guests.slice(0, guests.length - 2))), false);
+  assert.equal(ok(['nobody-admitted', 'three-chairs'], notebook(guests.slice(0, guests.length - 3))), true);
   assert.equal(ok(['nobody-admitted', 'sworn-in'], notebook(guests)), false);
   // Without a notebook the hand is judged in the abstract, as the boards do.
   assert.equal(validateHand(['nobody-admitted', 'no-home-team'], byId, { budgetOn: false }).ok, true);

@@ -69,6 +69,10 @@ export function wordTaken(used, w) {
 export function normalizeTitle(s) {
   return s
     .toLowerCase()
+    // Accents fold away, so "deja vu" names Déjà Vu, and the decorative stars in a title
+    // (***Flawless, SWEET ★ HONEY ★ BUCKIIN') are spacing, not letters anyone types.
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[*★☆]/g, " ")
     .replace(/[’‘]/g, "'")                 // curly apostrophe -> straight
     .replace(/\$/g, "s")                     // Wi$h Li$t -> wish list
     .replace(/[&+]/g, "and")                 // & / + -> and

@@ -213,7 +213,7 @@ export const POLAROID_TOTAL = 24;
 // are printed and arrive finished. STICKER_TOTAL is the drawer's counter denominator and sits
 // at the true count of the drawn set, for the same reason POLAROID_TOTAL does: a denominator
 // running ahead of what exists would report "every sticker found" over a short count.
-export const STICKER_TOTAL = 25;
+export const STICKER_TOTAL = 26;
 export const COVER_STICKER_LIMIT = 15;
 
 // Every persisted key shares this namespace; export/import and "clear everything"
@@ -518,15 +518,19 @@ export const LINEUP_INKS = {
   "Ariana Grande": ["#d5a2b4", "#1b191d"],
   "Harry Styles": ["#5aa8d6", "#dcc39b"],        // the Fine Line sky and the fourth record's sand
   "Sabrina Carpenter": ["#6b4426", "#e3cba9"],   // espresso and cream
+  // Honey off the hive and the COWBOY CARTER sash. Hannah also leads on a warm yellow, and they
+  // stay apart the way the two near-blacks do: hers never appears without the violet, this one
+  // never without the red, which nobody else on the shelf wears.
+  "Beyoncé": ["#c47f1c", "#a82a30"],
 };
 
-// Rarity thresholds for the BLENDED lineup corpus (Taylor plus every guest, ~745 songs).
+// Rarity thresholds for the BLENDED lineup corpus (Taylor plus every guest, ~1000 songs).
 // MEASURED, not scaled — see scripts/lineup/blend-lab.html, which counts with the game's own
 // wordRegex. Easy rises with the shelf because abundance scales with it; hard and ultra keep
 // Taylor's ranges untouched because scarcity does NOT — three songs is three songs whether the
 // shelf holds 291 or 749. Do not "fix" this by matching Taylor's bucket shares: that slides
 // ultra out to a window of 18-54 songs, which is not rare, it is just a different word.
-export const BLEND_BUCKETS = { easy: 38, hard: [3, 9], ultra: [1, 3] };
+export const BLEND_BUCKETS = { easy: 49, hard: [3, 9], ultra: [1, 3] };
 
 // Shelf counts avoid fetching every catalogue. tests/mobile-loading.test.mjs checks these.
 export const GUESTS = [
@@ -653,6 +657,25 @@ export const GUESTS = [
     // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML).
     mark: '<g transform="translate(10 10.6) rotate(-6) scale(.98)"><path class="gm-b" stroke-width="1.55" d="M-9 .2C-6.4 -1.4 -4.6 -4.2 -2.4 -4.4C-1.2 -4.5 -.5 -3.6 0 -3C.5 -3.6 1.2 -4.5 2.4 -4.4C4.6 -4.2 6.4 -1.4 9 .2C6 .6 3 .2 0 .5C-3 .2 -6 .6 -9 .2ZM-9 .6C-6 1 -3 .9 0 1.1C3 .9 6 1 9 .6C7 3.6 4.4 5.2 0 5.3C-4.4 5.2 -7 3.6 -9 .6Z"/></g>',
   },
+  {
+    id: "beyonce",
+    name: "Beyoncé",
+    file: "data/guests/beyonce.json",
+    songCount: 239,
+    // Honey off the hive, which is where her stamp's ink came from. The ticks are four rungs
+    // of the bead palette, each measured off a sleeve: the pink of the self-titled type, the
+    // RENAISSANCE chrome, The Gift's amber and the COWBOY CARTER sash.
+    ink: { deep: "#3a2508", accent: "#d9a033", strap: "#8a5a1a", pen: "#6e4a12",
+           ticks: ["#d79ab9", "#c3cbd3", "#b0701a", "#a82a30"] },
+    // A browner honey than Fearless's gold, so the run never reads as one of her records.
+    era: "guest-beyonce",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#ddb14e",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML): a Lemonade
+    // lemon, since the hive is already her birthday's.
+    mark: '<path class="gm-b" d="M1.6 10.9C2.6 10.6 3.2 9.6 3.6 8.6C5 5.8 7.6 4.6 10.4 4.6C13.6 4.6 16.4 6.4 17.2 9C17.5 9.6 18.2 9.9 18.8 10C18.2 10.2 17.6 10.6 17.3 11.4C16.4 14.2 13.6 16.2 10 16.2C6.8 16.2 4.2 14.6 3.4 12.4C3 11.6 2.4 11.1 1.6 10.9Z"/><path class="gm-b" d="M10.6 4.7C11.4 2.6 13.4 1.4 15.8 1.6C15 3.6 13 4.8 10.6 4.7Z"/><path class="gm-s" stroke-width="1.3" d="M5.6 9C6.8 7.4 8.6 6.6 10.6 6.6"/>',
+  },
 ];
 // Names announced on the shelf before their catalogue data is ready. These deliberately have no
 // file, ink, or era, so nothing can mistake them for playable guests.
@@ -661,10 +684,8 @@ export const GUESTS_COMING_SOON = [
   // two inks, picked off scripts/guests/guest-go-buttons.html. A playable guest's stamp prints in
   // its pass's pen, so when the catalogue lands, design the pass around stampPen (it becomes
   // ink.pen) and move mark and stampNight across to the GUESTS entry. These are deliberately
-  // not an `ink` object: that is the pass's whole hardware, and it is not designed yet. Beyoncé's is the Lemonade lemon
-  // (the hive is her birthday's); Miley's is a flower, for Flowers (the wrecking ball is hers).
-  { id: "beyonce", name: "Beyoncé", stampPen: "#6e4a12", stampNight: "#ddb14e",   // honey
-    mark: '<path class="gm-b" d="M1.6 10.9C2.6 10.6 3.2 9.6 3.6 8.6C5 5.8 7.6 4.6 10.4 4.6C13.6 4.6 16.4 6.4 17.2 9C17.5 9.6 18.2 9.9 18.8 10C18.2 10.2 17.6 10.6 17.3 11.4C16.4 14.2 13.6 16.2 10 16.2C6.8 16.2 4.2 14.6 3.4 12.4C3 11.6 2.4 11.1 1.6 10.9Z"/><path class="gm-b" d="M10.6 4.7C11.4 2.6 13.4 1.4 15.8 1.6C15 3.6 13 4.8 10.6 4.7Z"/><path class="gm-s" stroke-width="1.3" d="M5.6 9C6.8 7.4 8.6 6.6 10.6 6.6"/>' },
+  // not an `ink` object: that is the pass's whole hardware, and it is not designed yet. Miley's
+  // is a flower, for Flowers (the wrecking ball is hers).
   { id: "miley-cyrus", name: "Miley", stampPen: "#1f3b6b", stampNight: "#a4bedb", // denim
     mark: '<path class="gm-s" d="M10 8.6C9.6 12.4 10.5 15.6 9.8 19.2"/><path class="gm-b" d="M9.9 15.4C7.8 13.3 5.2 13.4 4 14.7C5.6 16.1 8 16.3 9.9 15.4Z"/><path class="gm-b" d="M10.1 13.1C11.8 11.4 14.4 11.2 15.6 12.3C14.2 13.9 12 14.1 10.1 13.1Z"/><path class="gm-b" d="M9.2 5.5C7 1.7 13 1.7 10.8 5.5M10.8 5.6C13.5 2.7 15.1 7.9 11.2 7M11.2 7C15.4 8.9 10.4 12.5 10 7.9M10 7.9C9.4 11.9 5 8.5 8.8 7M8.8 7C4.5 7.9 6.3 2.3 9.2 5.5"/><circle class="gm-b" cx="10" cy="6.6" r="1.25"/>' },
 ];
@@ -2861,9 +2882,9 @@ export const TS_LORE_DAYS = [
 /* ---------- Guest days (the guest shelf's own dated marginalia) ----------
    The birthdays of the artists hanging on the guest shelf, and the two arrival days that
    stand in for a birthday where there is no person to have one. It covers the ANNOUNCED
-   names too, not just the playable ones: the shelf already prints Beyoncé and Miley on a
+   names too, not just the playable ones: the shelf already prints Miley on a
    hanger, so the margin saying happy birthday to a name the player can read on that shelf
-   is telling the truth. `soon: true` marks those two, the margin note's line says
+   is telling the truth. `soon: true` marks that one, the margin note's line says
    "coming to the guest shelf" and the crown is drawn HOLLOW, in plain ink, because they
    have no pass to be coloured by and pretending otherwise would be the lie. The flag is
    deliberately written down rather than inferred from GUESTS_COMING_SOON so that a stale
@@ -2878,12 +2899,12 @@ export const TS_LORE_DAYS = [
    hex, so a pass that gets re-inked re-inks its birthday too. A guest with no entry simply
    has no day, which is the right failure — a wrong birthday is worse than a quiet one.
 
-   Two of the seven are not people and are not pretended to be. Wicked has an opening night
+   Two of the nine are not people and are not pretended to be. Wicked has an opening night
    and Hannah Montana has a premiere, so each names its own `headline` and the `arrived`
    phrase its screen-reader line is built from, exactly the way a songday overrides its note, a
    `calKey` for the desk calendar's small print, which otherwise calls a day "<name>'s birthday",
    and a `caption` for the in-game day tape, which otherwise says "happy birthday, <first name>".
-   The remaining five take the default "Happy <nth> birthday, <first name>".
+   The remaining seven take the default "Happy <nth> birthday, <first name>".
    ⚠ Verify every date before editing — fans catch a wrong one instantly. */
 export const GUEST_DAYS = [
   { md: "02-01", year: 1994, kind: "guest", guest: "harry-styles",      name: "Harry Styles" },
@@ -2893,7 +2914,7 @@ export const GUEST_DAYS = [
     calKey: "Hannah Montana's premiere", caption: "happy premiere day, Hannah" },
   { md: "05-11", year: 1999, kind: "guest", guest: "sabrina-carpenter", name: "Sabrina Carpenter" },
   { md: "06-26", year: 1993, kind: "guest", guest: "ariana-grande",     name: "Ariana Grande" },
-  { md: "09-04", year: 1981, kind: "guest", guest: "beyonce",           name: "Beyoncé",        soon: true },
+  { md: "09-04", year: 1981, kind: "guest", guest: "beyonce",           name: "Beyoncé" },
   { md: "10-30", year: 2003, kind: "guest", guest: "wicked-soundtrack", name: "Wicked",
     headline: "Happy opening night, Wicked", arrived: "opened on Broadway",
     calKey: "Wicked's opening night", caption: "happy opening night, Wicked" },

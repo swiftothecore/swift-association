@@ -18392,7 +18392,7 @@ function heartSvg(fill) {
 // `edge` is the pass's deep ink for the jewels, which keeps them legible on an accent as pale
 // as Hannah's yellow; it falls back to plain dark when there is no pass.
 //
-// `hollow` is the announced-but-not-playable state (Beyoncé, Miley): an outline in plain ink,
+// `hollow` is the announced-but-not-playable state (Miley): an outline in plain ink,
 // no fill, no jewels and no highlight, because the whole point is that there is no pass to be
 // coloured by yet. It is the day tape's form of the desk calendar's rule for the same state,
 // where an announced name is pencilled in (graphite outline, no colour) — "named, but not
@@ -35949,7 +35949,7 @@ function buildDevApi() {
         // It would otherwise look exactly like a coming-soon name and draw the hollow crown.
         unknown: GUEST_DAYS.filter((d) => !guestShelfState(d.guest)).map((d) => d.guest),
         // A playable guest with no pass ink (its crown would fall back to plain), and the
-        // stale-flag case the whole `soon` field exists to make catchable: the day Beyoncé
+        // stale-flag case the whole `soon` field exists to make catchable: the day Miley
         // ships, her row still says `soon` and would keep drawing hollow forever.
         noPass: GUEST_DAYS.filter((d) => guestShelfState(d.guest) === "playable" && !guestInk(d.guest))
           .map((d) => d.guest),

@@ -36,8 +36,14 @@ test('guest catalogues fold only same-album pressings', () => {
     if (m.length) found[file] = m;
   }
   // Ariana's three intros sit on three records; only the eternal sunshine cut is one song twice.
+  // Beyoncé's are two deluxe remixes beside their originals and the Dreamgirls finale reprise.
   assert.deepEqual(found, {
     'ariana-grande.json': ['intro (end of the world) [extended] -> intro (end of the world)'],
+    'beyonce.json': [
+      'Video Phone (Extended Remix) -> Video Phone',
+      'Ego (Remix) -> Ego',
+      'Dreamgirls (Finale) -> Dreamgirls',
+    ],
   });
 });
 
