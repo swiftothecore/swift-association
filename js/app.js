@@ -18392,7 +18392,7 @@ function heartSvg(fill) {
 // `edge` is the pass's deep ink for the jewels, which keeps them legible on an accent as pale
 // as Hannah's yellow; it falls back to plain dark when there is no pass.
 //
-// `hollow` is the announced-but-not-playable state (Miley): an outline in plain ink,
+// `hollow` is the announced-but-not-playable state: an outline in plain ink,
 // no fill, no jewels and no highlight, because the whole point is that there is no pass to be
 // coloured by yet. It is the day tape's form of the desk calendar's rule for the same state,
 // where an announced name is pencilled in (graphite outline, no colour) — "named, but not
@@ -26215,6 +26215,16 @@ function typoTitleSong(key) {
   return found;
 }
 
+// Two titles in one catalogue can fold to the same key (Miley's "D.R.E.A.M." and her 2009
+// "Dream" are both "dream"), and titleIndex can hold only one of them. When the page takes
+// the other, the player who typed it meant that one: hand back the twin the page accepts.
+// Taylor's catalogue has no such pair, so on her songs this always returns what it was given.
+function pageTwin(song) {
+  if (!song) return song;
+  const twins = allSongs.filter((s) => s._norm === song._norm);
+  if (twins.length < 2) return song;
+  return twins.find((s) => currentSongs.some((c) => c.title === s.title)) || song;
+}
 // The one place that turns typed text into a song, in order of how much it forgives:
 // the title as written, then misplaced spaces, then a single typo. Shared by the game's
 // answer box and the bonus shelf's, so the two can never disagree about what counts as
@@ -28119,9 +28129,12 @@ function submitAnswer(song, isTimeout) {
         }
         enterHeldFor = "";
         song = dropdownItems[suggestionIndex];
+        // A whole title typed out, not a card the arrows chose: the list cannot tell two titles
+        // that fold to one key apart, so the twin rule below applies here too.
+        if (!ddSteered && song && song._norm === line) song = pageTwin(song);
       } else {
         const raw = $("songInput").value;
-        song = resolveTypedTitle(raw);   // exact, then misplaced spaces, then a single typo
+        song = pageTwin(resolveTypedTitle(raw));   // exact, then misplaced spaces, then a single typo
         // Not a title — try it as a lyric line. EXCEPT: a custom title-only preset never
         // accepts a sung line (you must name the title), and when this round's tier-3 line
         // hint has been revealed the line is on screen, so accepting a typed line would just
@@ -35949,8 +35962,8 @@ function buildDevApi() {
         // It would otherwise look exactly like a coming-soon name and draw the hollow crown.
         unknown: GUEST_DAYS.filter((d) => !guestShelfState(d.guest)).map((d) => d.guest),
         // A playable guest with no pass ink (its crown would fall back to plain), and the
-        // stale-flag case the whole `soon` field exists to make catchable: the day Miley
-        // ships, her row still says `soon` and would keep drawing hollow forever.
+        // stale-flag case the whole `soon` field exists to make catchable: the day an announced
+        // name ships, its row still says `soon` and would keep drawing hollow forever.
         noPass: GUEST_DAYS.filter((d) => guestShelfState(d.guest) === "playable" && !guestInk(d.guest))
           .map((d) => d.guest),
         staleSoon: GUEST_DAYS.filter((d) => !!d.soon !== (guestShelfState(d.guest) === "announced"))

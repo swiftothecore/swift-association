@@ -213,7 +213,7 @@ export const POLAROID_TOTAL = 24;
 // are printed and arrive finished. STICKER_TOTAL is the drawer's counter denominator and sits
 // at the true count of the drawn set, for the same reason POLAROID_TOTAL does: a denominator
 // running ahead of what exists would report "every sticker found" over a short count.
-export const STICKER_TOTAL = 26;
+export const STICKER_TOTAL = 27;
 export const COVER_STICKER_LIMIT = 15;
 
 // Every persisted key shares this namespace; export/import and "clear everything"
@@ -522,6 +522,9 @@ export const LINEUP_INKS = {
   // stay apart the way the two near-blacks do: hers never appears without the violet, this one
   // never without the red, which nobody else on the shelf wears.
   "Beyoncé": ["#c47f1c", "#a82a30"],
+  // Denim and the Plastic Hearts pink. Harry is the other blue, and his is a pale sky that
+  // never appears without sand; this one is a deep denim that never appears without the pink.
+  "Miley Cyrus": ["#2f5a92", "#e3418a"],
 };
 
 // Rarity thresholds for the BLENDED lineup corpus (Taylor plus every guest, ~1000 songs).
@@ -676,6 +679,26 @@ export const GUESTS = [
     // lemon, since the hive is already her birthday's.
     mark: '<path class="gm-b" d="M1.6 10.9C2.6 10.6 3.2 9.6 3.6 8.6C5 5.8 7.6 4.6 10.4 4.6C13.6 4.6 16.4 6.4 17.2 9C17.5 9.6 18.2 9.9 18.8 10C18.2 10.2 17.6 10.6 17.3 11.4C16.4 14.2 13.6 16.2 10 16.2C6.8 16.2 4.2 14.6 3.4 12.4C3 11.6 2.4 11.1 1.6 10.9Z"/><path class="gm-b" d="M10.6 4.7C11.4 2.6 13.4 1.4 15.8 1.6C15 3.6 13 4.8 10.6 4.7Z"/><path class="gm-s" stroke-width="1.3" d="M5.6 9C6.8 7.4 8.6 6.6 10.6 6.6"/>',
   },
+  {
+    id: "miley-cyrus",
+    name: "Miley Cyrus",
+    file: "data/guests/miley-cyrus.json",
+    songCount: 168,
+    // Denim, which is where her stamp's ink came from. The ticks are four rungs of the bead
+    // palette, each taken off a sleeve: the Endless Summer Vacation sky, the Plastic Hearts
+    // pink, the Younger Now lime and the Bangerz violet.
+    ink: { deep: "#14243f", accent: "#6f93c4", strap: "#34527f", pen: "#1f3b6b",
+           ticks: ["#4f86c0", "#e3418a", "#c8d93a", "#8a72c0"] },
+    // Deep denim ink under a Plastic Hearts pink highlighter. Taylor's own denim era is blue
+    // ink under a blue highlighter, so the pink is what keeps a run from reading as hers.
+    era: "guest-miley-cyrus",
+    // The ADMIT ONE stamp in the detail panel prints in the pen by day and in this, the
+    // accent lifted a little toward the paper, by night: the pen vanishes on the night desk.
+    stampNight: "#a4bedb",
+    // The mark cut into that stamp, drawn in a 20x20 box (see guestStampHTML): a flower, for
+    // Flowers, since the wrecking ball is her sticker's.
+    mark: '<path class="gm-s" d="M10 8.6C9.6 12.4 10.5 15.6 9.8 19.2"/><path class="gm-b" d="M9.9 15.4C7.8 13.3 5.2 13.4 4 14.7C5.6 16.1 8 16.3 9.9 15.4Z"/><path class="gm-b" d="M10.1 13.1C11.8 11.4 14.4 11.2 15.6 12.3C14.2 13.9 12 14.1 10.1 13.1Z"/><path class="gm-b" d="M9.2 5.5C7 1.7 13 1.7 10.8 5.5M10.8 5.6C13.5 2.7 15.1 7.9 11.2 7M11.2 7C15.4 8.9 10.4 12.5 10 7.9M10 7.9C9.4 11.9 5 8.5 8.8 7M8.8 7C4.5 7.9 6.3 2.3 9.2 5.5"/><circle class="gm-b" cx="10" cy="6.6" r="1.25"/>',
+  },
 ];
 // Names announced on the shelf before their catalogue data is ready. These deliberately have no
 // file, ink, or era, so nothing can mistake them for playable guests.
@@ -684,10 +707,7 @@ export const GUESTS_COMING_SOON = [
   // two inks, picked off scripts/guests/guest-go-buttons.html. A playable guest's stamp prints in
   // its pass's pen, so when the catalogue lands, design the pass around stampPen (it becomes
   // ink.pen) and move mark and stampNight across to the GUESTS entry. These are deliberately
-  // not an `ink` object: that is the pass's whole hardware, and it is not designed yet. Miley's
-  // is a flower, for Flowers (the wrecking ball is hers).
-  { id: "miley-cyrus", name: "Miley", stampPen: "#1f3b6b", stampNight: "#a4bedb", // denim
-    mark: '<path class="gm-s" d="M10 8.6C9.6 12.4 10.5 15.6 9.8 19.2"/><path class="gm-b" d="M9.9 15.4C7.8 13.3 5.2 13.4 4 14.7C5.6 16.1 8 16.3 9.9 15.4Z"/><path class="gm-b" d="M10.1 13.1C11.8 11.4 14.4 11.2 15.6 12.3C14.2 13.9 12 14.1 10.1 13.1Z"/><path class="gm-b" d="M9.2 5.5C7 1.7 13 1.7 10.8 5.5M10.8 5.6C13.5 2.7 15.1 7.9 11.2 7M11.2 7C15.4 8.9 10.4 12.5 10 7.9M10 7.9C9.4 11.9 5 8.5 8.8 7M8.8 7C4.5 7.9 6.3 2.3 9.2 5.5"/><circle class="gm-b" cx="10" cy="6.6" r="1.25"/>' },
+  // not an `ink` object: that is the pass's whole hardware, and it is not designed yet.
 ];
 // Everybody the lineup deals from: every playable guest, plus home. It lives here rather than
 // in js/lineupdeck.js so that app.js can ask for it without pulling the whole goal deck into
@@ -2881,10 +2901,10 @@ export const TS_LORE_DAYS = [
 
 /* ---------- Guest days (the guest shelf's own dated marginalia) ----------
    The birthdays of the artists hanging on the guest shelf, and the two arrival days that
-   stand in for a birthday where there is no person to have one. It covers the ANNOUNCED
-   names too, not just the playable ones: the shelf already prints Miley on a
-   hanger, so the margin saying happy birthday to a name the player can read on that shelf
-   is telling the truth. `soon: true` marks that one, the margin note's line says
+   stand in for a birthday where there is no person to have one. It covers ANNOUNCED
+   names too, not just the playable ones: a name the shelf prints on a hanger before its
+   catalogue is ready still gets its day, because the margin saying happy birthday to a name
+   the player can read on that shelf is telling the truth. `soon: true` marks one, the margin note's line says
    "coming to the guest shelf" and the crown is drawn HOLLOW, in plain ink, because they
    have no pass to be coloured by and pretending otherwise would be the lie. The flag is
    deliberately written down rather than inferred from GUESTS_COMING_SOON so that a stale
@@ -2918,7 +2938,7 @@ export const GUEST_DAYS = [
   { md: "10-30", year: 2003, kind: "guest", guest: "wicked-soundtrack", name: "Wicked",
     headline: "Happy opening night, Wicked", arrived: "opened on Broadway",
     calKey: "Wicked's opening night", caption: "happy opening night, Wicked" },
-  { md: "11-23", year: 1992, kind: "guest", guest: "miley-cyrus",       name: "Miley",          soon: true },
+  { md: "11-23", year: 1992, kind: "guest", guest: "miley-cyrus",       name: "Miley Cyrus" },
   { md: "12-18", year: 2001, kind: "guest", guest: "billie-eilish",     name: "Billie Eilish" },
 ];
 
