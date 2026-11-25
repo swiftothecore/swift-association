@@ -5793,55 +5793,94 @@ function bestNotesHTML(mode) {
     `</div></div>`;
 }
 
-/* ---------- The B-sides: every other best, as one tracklist ----------
-   Only what has been played gets a track, the rule the old tiles kept: each mode's own sheet is
-   where its unplayed rows live with dashes, and this page is a record of what has been done.
-   Infinite counts rounds survived; Ruthless and Track by Track are times and LOW WINS, said once
-   in each group's heading rather than on every line. */
+/* ---------- The B-sides: every other best, sorted by the shape its numbers have ----------
+   Picked from scripts/records/bsides-b-board.html (2026-11-25) after the tracklist read as
+   eighteen rows that all looked alike. One sheet, in bands, set in the lead sheet's own three
+   kinds of type: names (a difficulty, a field, a family) in bold tracked capitals, details in
+   small lowercase, values by hand. Never set a name at the 9.5px grey the old tracklist used:
+   that is the "big numbers, nothing saying what they were" problem this replaced.
+   - The four loose figures are form fields: a typed label, the value on a line, and under the
+     line whatever it takes to read the value (longest streak, in one game, beaten).
+   - Infinite is a grid that always has all six difficulties, in MODE_ORDER and the lead sheet's
+     inks, and its columns ARE the lead sheet's bars (see .rec-bs-wide). A variant never played
+     gets no row; a difficulty not tried in a played variant is a dash, as the lead sheet
+     pencils a rest. So the columns never move as the notebook fills.
+   - Ruthless (running order) and Track by Track (release order) are lists read down a column,
+     because times are compared down, not across. Low wins is said once in each heading.
+   Dates and run counts are not on this sheet: the take sheet dates every run that holds a
+   record. */
 function bSidesHTML() {
-  const groups = [];
-  let no = 0;
-  const tr = (erase, name, value, sub, swatch) => `<div class="rec-tr">${erase}<span class="no">${++no}.</span>` +
-    `<span class="nm">${swatch ? `<i class="sw" style="--sw:${swatch}"></i>` : ""}${escapeHtml(name)}</span><span class="ld"></span>` +
-    `<span class="vl">${value}</span>${sub ? `<span class="sb">${sub}</span>` : ""}</div>`;
-  const inf = [];
-  for (const v of ["3lives", "sudden"]) for (const m of MODE_ORDER) {
-    const tok = "inf-" + v + "-" + m, rec = loadRecords(tok)[0];
-    if (!rec) continue;
-    const runs = loadStats(tok).played;
-    inf.push(tr(recEraseX("rec:" + tok), `${VARIANT_LABELS[v] || v} · ${MODES[m].label}`, `${rec.score}`,
-      [runs ? `${runs} ${runs === 1 ? "run" : "runs"}` : "", rec.date ? recordDateLabel(rec.date) : "best so far"].filter(Boolean).join(" · "), MODE_COLORS[m]));
-  }
-  if (inf.length) groups.push(`<h4>Infinite · rounds survived</h4>` + inf.join(""));
+  const parts = [];
+  let tracks = 0;
+  const fields = [];
   const db = dailyBest(), streak = effectiveDailyStreak(todayKey());
-  if (db > 0 || streak.best > 0) groups.push(`<h4>The daily</h4>` +
-    (db > 0 ? tr("", "Best daily", `${db}<small>/${TOTAL_ROUNDS}</small>`, "") : "") +
-    (streak.best > 0 ? tr("", "Streak", `${streak.current}<small class="u">${streak.current === 1 ? "day" : "days"}</small>`, `longest ${streak.best}`) : ""));
+  if (db > 0) fields.push(["best daily", `${db}<small>/${TOTAL_ROUNDS}</small>`, ""]);
+  if (streak.best > 0) fields.push(["daily streak", `${streak.current}<small> ${streak.current === 1 ? "day" : "days"}</small>`,
+    streak.best > streak.current ? `longest ${streak.best}` : "your longest"]);
   const vm = loadMetrics();
-  if (vm.bestVerseBonus > 0) groups.push(`<h4>Verse bonus</h4>` + tr("", "Best in a game", `+${vm.bestVerseBonus}`,
-    `${vm.versePerfect} word-perfect · ${vm.wholeVerses} whole verse${vm.wholeVerses === 1 ? "" : "s"}`));
+  if (vm.bestVerseBonus > 0) fields.push(["verse bonus", `+${vm.bestVerseBonus}`, "in one game"]);
   // Counted off DARK_SIDE_IDS, so the "of N" re-targets itself as more dark sides are authored,
   // and read from the dark fields alone: a base win says nothing about the dark side.
   const darkBeaten = DARK_SIDE_IDS.filter((k) => challengeRecord(k).darkDefeated).length;
-  if (darkBeaten > 0) groups.push(`<h4>Dark sides</h4>` + tr("", "Beaten", `${darkBeaten}<small class="u">of ${DARK_SIDE_IDS.length}</small>`, ""));
-  // How a Ruthless time was got rides under it: two runs can post the same seconds with a
-  // different number of pages handed back, and that is the more interesting half.
+  if (darkBeaten > 0) fields.push(["dark sides", `${darkBeaten}<small> of ${DARK_SIDE_IDS.length}</small>`, "beaten"]);
+  tracks += fields.length;
+  if (fields.length) parts.push(`<div class="rec-bs-fields">${fields.map(([label, value, note]) =>
+    `<div class="rec-bs-f"><span class="lb">${label}</span><b>${value}</b><em>${note || "&nbsp;"}</em></div>`).join("")}</div>`);
+
+  const inf = {};
+  for (const v of ["3lives", "sudden"]) for (const m of MODE_ORDER) {
+    const rec = loadRecords("inf-" + v + "-" + m)[0];
+    if (rec) { (inf[v] ||= {})[m] = rec; tracks++; }
+  }
+  const variants = ["3lives", "sudden"].filter((v) => inf[v]);
+  if (variants.length) {
+    const cell = (v, m) => {
+      const rec = inf[v][m], who = `${VARIANT_LABELS[v]}, ${MODES[m].label}`;
+      return rec
+        ? `<span role="cell" class="c">${recEraseX("rec:inf-" + v + "-" + m)}<b aria-label="${who}: ${rec.score} ${rec.score === 1 ? "round" : "rounds"}">${rec.score}</b></span>`
+        : `<span role="cell" class="c"><i aria-hidden="true">–</i><span class="sr-only">${who}: not played</span></span>`;
+    };
+    // Written twice, as the lead sheet is. Wide: the six difficulties across, in the lead sheet's
+    // own columns. Narrow, where the lead sheet breaks into two systems: on its side, the
+    // difficulties down the page and the variants across.
+    const wide = `<div class="rec-bs-grid rec-bs-wide" role="table" aria-label="Infinite, rounds survived">` +
+      `<div class="rg" role="row"><span role="columnheader" class="cn"></span>` +
+      MODE_ORDER.map((m) => `<span role="columnheader" class="hd" style="color:${RECORD_PRINT[m]}">${MODES[m].label}</span>`).join("") + `</div>` +
+      variants.map((v) => `<div class="rg" role="row"><span role="rowheader" class="rl">${VARIANT_LABELS[v]}</span>${MODE_ORDER.map((m) => cell(v, m)).join("")}</div>`).join("") + `</div>`;
+    const narrow = `<div class="rec-bs-grid rec-bs-narrow" role="table" aria-label="Infinite, rounds survived" ` +
+      `style="grid-template-columns:minmax(0,1fr) repeat(${variants.length},minmax(0,96px))">` +
+      `<div class="rg" role="row"><span role="columnheader" class="cn"></span>` +
+      variants.map((v) => `<span role="columnheader" class="hd">${VARIANT_LABELS[v]}</span>`).join("") + `</div>` +
+      MODE_ORDER.map((m) => `<div class="rg" role="row"><span role="rowheader" class="rl hdm" style="color:${RECORD_PRINT[m]}">${MODES[m].label}</span>` +
+        variants.map((v) => cell(v, m)).join("") + `</div>`).join("") + `</div>`;
+    parts.push(`<div class="rec-bs-fam"><h4>Infinite<span>rounds survived</span></h4>${wide}${narrow}</div>`);
+  }
+
+  const row = (erase, name, value, note) => `<div class="rec-bs-tr">${erase}<span class="nm">${name}</span><span class="ld"></span>` +
+    `<span class="vl">${value}</span>${note ? `<span class="nt">${note}</span>` : ""}</div>`;
+  // How a Ruthless time was got rides under it, only when pages were handed back: two runs can
+  // post the same seconds with a different number given up, and that is the more interesting half.
+  // Each lens is marked the way a lyric sheet marks a section.
   const lenses = RUTHLESS_RUNNING_ORDER.map((id) => ruthlessLens(id)).filter(Boolean).filter((l) => ruthlessRecord(l.id).plays);
-  if (lenses.length) groups.push(`<h4>Ruthless Game · lowest wins</h4>` + lenses.map((l) => {
-    const rec = ruthlessRecord(l.id);
-    return tr(recEraseX("rl:" + l.id), l.label, fmtTimeFine(rec.best),
-      `${rec.bestGaveUp ? `${rec.bestGaveUp} given up` : `named all ${BONUS_ROUNDS}`} · ${recordDateLabel(rec.date)}`);
-  }).join(""));
+  tracks += lenses.length;
+  if (lenses.length) parts.push(`<div class="rec-bs-fam"><h4>Ruthless Game<span>lowest wins</span></h4>` +
+    `<div class="rec-bs-list" style="--rows:${Math.ceil(lenses.length / 2)}">${lenses.map((l) => {
+      const rec = ruthlessRecord(l.id);
+      return row(recEraseX("rl:" + l.id), `<i>[</i>${escapeHtml(l.label)}<i>]</i>`, fmtTimeFine(rec.best), rec.bestGaveUp ? `${rec.bestGaveUp} given up` : "");
+    }).join("")}</div></div>`);
   // No combined line and there must not be one: see the storage note on why a sum runs
   // backwards on a low-wins board and an average pays you to bank the shortest albums.
   const tbt = loadTracks();
   const albums = STUDIO_ALBUMS.filter((a) => tbt[a] && tbt[a].plays);
-  if (albums.length) groups.push(`<h4>Track by Track · lowest wins</h4>` + albums.map((a) =>
-    tr(recEraseX("tbt:" + a), a, fmtTimeFine(tbt[a].best), `played ${tbt[a].plays} · ${recordDateLabel(tbt[a].date)}`, albumColor(a) || "#999")).join(""));
-  if (!groups.length) return "";
+  tracks += albums.length;
+  if (albums.length) parts.push(`<div class="rec-bs-fam"><h4>Track by Track<span>lowest wins</span></h4>` +
+    `<div class="rec-bs-list" style="--rows:${Math.ceil(albums.length / 2)}">${albums.map((a) =>
+      row(recEraseX("tbt:" + a), `<span style="color:${mixHex(albumColor(a) || "#6f675a", "#2b2722", 0.3)}">${escapeHtml(STATS_ALBUM_SHORT[a] || a)}</span>`,
+        fmtTimeFine(tbt[a].best), "")).join("")}</div></div>`);
+  if (!parts.length) return "";
   return `<section class="rec-sec"><div class="rec-head"><p class="rec-group-label">everything else</p><span class="rec-aside">every other best you hold</span></div>` +
-    `<div class="rec-taped"><div class="rec-bs rec-stock"><div class="rec-bs-hd"><b>B-SIDES</b><span>${no} ${no === 1 ? "track" : "tracks"}</span></div>` +
-    `<div class="rec-bs-cols">${groups.map((g) => `<div class="rec-bs-grp">${g}</div>`).join("")}</div></div>` +
+    `<div class="rec-taped"><div class="rec-bs rec-stock"><div class="rec-bs-hd"><b>B-SIDES</b><span>${tracks} ${tracks === 1 ? "track" : "tracks"}</span></div>` +
+    parts.join("") + `</div>` +
     `<span class="stp-tape" aria-hidden="true" style="left:50%;top:-9px;width:60px;transform:translateX(-50%) rotate(2deg);clip-path:${TORN_EDGES[4]}"></span></div></section>`;
 }
 
