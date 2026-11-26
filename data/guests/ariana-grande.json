@@ -2,10 +2,10 @@
  "id": "ariana-grande",
  "name": "Ariana Grande",
  "buckets": {
-  "easy": 10,
+  "easy": 13,
   "hard": [
-   4,
-   12
+   3,
+   8
   ],
   "ultra": [
    1,
@@ -26,7 +26,10 @@
     "#1a1a1a",
     "#c8ccd0"
    ],
-   "Christmas Songs": "#26543a"
+   "Christmas Songs": "#26543a",
+   "Soundtracks": "#a993c9",
+   "Collaborations": "#7fa7c9",
+   "Standalone & Rarities": "#b2414f"
   }
  },
  "words": [
@@ -11125,7 +11128,7 @@
      "title": "intro (end of the world) [extended]",
      "sections": [
       {
-       "label": "extended] Lyrics[Intro",
+       "label": "Intro",
        "lines": [
         "Uh"
        ]
@@ -13491,6 +13494,2876 @@
         "Don't make me fall in love again if he won't be here next year (If he won't be, if he won't be here)",
         "Santa, tell me (Tell me) if he really cares (Do you care?)",
         "'Cause I can't give it all away if he won't be here next year"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "album": "Soundtracks",
+   "songs": [
+    {
+     "title": "Zero to Hero",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Hercules",
+        "Hercules"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Bless my soul",
+        "Herc was on a roll",
+        "Person of the week in every Greek opinion poll",
+        "What a pro",
+        "Herc could stop a show",
+        "Point him at a monster and you're talking S.R.O",
+        "He was a no one",
+        "(A zero, zero)",
+        "Now he's a honcho",
+        "(He's a hero)",
+        "Here was a kid with his act down pat",
+        "From zero to hero in no time flat",
+        "Zero to hero, just like that"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "When he smiled, the girls went wild with (\"oohs\" and \"aahs\")",
+        "And they slapped his face on every vase, on every \"vahse\"",
+        "From appearance fees and royalties",
+        "Our Herc had cash to burn",
+        "Now nouveau riche and famous",
+        "He could tell you",
+        "What's a Grecian urn?"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "Say amen, there he goes again",
+        "Sweet and undefeated and an awesome 10 for 10",
+        "Folks lined up just to watch him flex",
+        "And this perfect package",
+        "Packed a pair of pretty pecs",
+        "Hercie, he comes, he sees, he conquers",
+        "Honey, the crowds were going bonkers",
+        "He showed the moxie brains and spunk",
+        "From zero to hero, major hunk",
+        "Zero to hero and who'da thunk?"
+       ]
+      },
+      {
+       "label": "Verse 4",
+       "lines": [
+        "Who put the glad in gladiator?",
+        "(Hercules!)",
+        "Whose daring deeds are great theatre?",
+        "(Hercules!)",
+        "Is he bold?",
+        "Is he sweet?",
+        "My favorite flavor!"
+       ]
+      },
+      {
+       "label": "Verse 5",
+       "lines": [
+        "Hercules, Hercules",
+        "Hercules, Hercules",
+        "Her-, her-",
+        "(Hercules, Hercules)",
+        "Bless my soul",
+        "Herc was on a roll",
+        "Undefeated",
+        "Riding high, (and the nicest guy)",
+        "Not conceited",
+        "He was a no one",
+        "(A zero, zero)",
+        "Now he's a honcho",
+        "(He's a hero)",
+        "He hit the heights at breakneck speed",
+        "From zero to hero",
+        "Herc is a hero",
+        "Now he's a hero",
+        "Yes, indeed"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Beauty and the Beast",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Hey"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Tale as old as time",
+        "True as it can be",
+        "Barely even friends",
+        "Then somebody bends",
+        "Unexpectedly"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Just a little change",
+        "Small to say the least",
+        "Both a little scared",
+        "Neither one prepared",
+        "Beauty and the Beast"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "Ever just the same",
+        "Ever a surprise",
+        "Ever as before",
+        "And ever just as sure",
+        "As the sun will rise",
+        "Oh-woah"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Hey",
+        "Yeah",
+        "Ooh, ooh-ooh, ooh-ooh",
+        "Oh-oh"
+       ]
+      },
+      {
+       "label": "Verse 4",
+       "lines": [
+        "Ever just the same, oh",
+        "And ever a surprise, yeah",
+        "Ever as before",
+        "And ever just as sure",
+        "As the sun will rise",
+        "Oh, oh, oh"
+       ]
+      },
+      {
+       "label": "Verse 5",
+       "lines": [
+        "Tale as old as time, ayy",
+        "Tune as old as song, oh",
+        "Bittersweet and strange",
+        "Finding you can change",
+        "Learning you were wrong, woah"
+       ]
+      },
+      {
+       "label": "Verse 6",
+       "lines": [
+        "Certain as the sun",
+        "Certain as the sun",
+        "Rising in the east",
+        "Tale as old as time",
+        "Song as old as rhyme",
+        "Beauty and the Beast",
+        "(Mm-hm-mm) Tale as old as time",
+        "Song as old as rhyme",
+        "Beauty and the Beast"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Woah (Yeah-ayy)",
+        "Beauty and— (Ayy)",
+        "Beauty and the Beast"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Don't Call Me Angel",
+     "sections": [
+      {
+       "label": "Chorus",
+       "lines": [
+        "Boy, don't call me angel",
+        "You ain't got me right",
+        "Don't call me angel",
+        "You can't pay my price",
+        "Ain't from no Heaven",
+        "Yeah, you heard me right (Yeah, you heard me)",
+        "Even though you know we fly (Though you know we)",
+        "Don't call me angel"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Uh, don't call me angel when I'm a mess",
+        "Don't call me angel when I get undressed",
+        "You know I, I don't like that, boy",
+        "Uh, I make my money, and I write the checks",
+        "So say my name with a little respect",
+        "All my girls successful, and you're just our guest"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Do I really need to say it?",
+        "Do I need to say it again, yeah?",
+        "You better stop the sweet talk",
+        "And keep your pretty mouth shut"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Boy, don't call me angel",
+        "You ain't got me right",
+        "Don't call me angel",
+        "You can't pay my price",
+        "Ain't from no Heaven",
+        "Yeah, you heard me right (Yeah, you heard me)",
+        "Even though you know we fly (Though you know we)",
+        "Don't call me angel"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "See you here with somebody",
+        "You sizin' up my body, oh yeah",
+        "Don't you know that I bite when the sun set? Yeah",
+        "So don't you try come around me",
+        "Might work with her, but not me, oh yeah",
+        "Don't you know that I bite when the sun set?"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Keep my name out your mouth",
+        "I know what you about",
+        "So keep my name out your mouth (Oh yeah)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Boy, don't call me angel",
+        "You ain't got me right",
+        "Don't call me angel",
+        "You can't pay my price",
+        "Ain't from no Heaven",
+        "Yeah, you heard me right (Yeah, you heard me)",
+        "Even though you know we fly (Though you know we)",
+        "Don't call me angel"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "I appreciate the way you watch me, I can't lie",
+        "I drop it down, I pick it up, I back it off the county line",
+        "I fell from Heaven, now I'm living like a devil",
+        "You can't get me off your mind",
+        "I appreciate the way you want me, I can't lie (Can't lie)",
+        "I drop it low, I back it up, I know you wanna think you're mine",
+        "Baby, I totally get it, you can't guess so",
+        "You can't get me off your mind",
+        "We in it together, but don't call me angel"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Boy, don't call me angel",
+        "You ain't got me right",
+        "Don't call me angel",
+        "You can't pay my price",
+        "Ain't from no Heaven",
+        "Yeah, you heard me right (Yeah, you heard me)",
+        "Even though you know we fly (Though you know we)",
+        "Don't call me angel"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "(Yeah, you heard me)",
+        "Angel",
+        "Don't call me angel (Yeah, you heard me)",
+        "Don't call me angel"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Bad to You",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Hello, Charlie (Ooh)",
+        "Ariana, Normani (Ooh)",
+        "Uh, let's go"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Baby, I've been feedin' the addiction",
+        "Flyin' from there and back, felt like an acrobat",
+        "Brown eyed, so I fell into submission",
+        "Needed to catch myself, like what the hell?"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Now we pull your chain",
+        "Just to wake you up, wake you up",
+        "Push you 'til you break",
+        "Now you're steppin' up, steppin' up, ah, ah"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Why are you only good to me",
+        "When I'm bad to you?",
+        "Why are you only?",
+        "Why are you only good to me (Yeah, yeah, yeah)",
+        "When I'm bad to you?",
+        "Why are you only?",
+        "Loving you and hating you is in, depending on the day",
+        "Tell me why are you only good to me (Yeah, yeah, yeah)",
+        "When I'm bad to you?",
+        "Why are you only?"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Stopped thinkin' like a victim",
+        "This time, I'll throw it back",
+        "Boy, can you handle that?",
+        "Got you trippin', gave you no attention",
+        "That's when I figured out what you're about"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Now we pull your chain",
+        "Just to wake you up (Yeah), wake you up (Yeah)",
+        "Push you 'til you break",
+        "Now you're steppin' up, steppin' up, ah, ah"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Why are you only good to me (Hey)",
+        "When I'm bad to you?",
+        "Why are you only?",
+        "Why are you only good to me (Yeah, yeah, yeah, yeah)",
+        "When I'm bad to you? (So bad)",
+        "Why are you only?",
+        "Loving you and hating you is in, depending on the day",
+        "Tell me why are you only good to me (Yeah, yeah, yeah)",
+        "When I'm bad to you?",
+        "Why are you only?"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "Mm, ayo",
+        "Why you only nice when I get bad, boy? Psha",
+        "Get back on your job like you employed, boy, psha",
+        "You know that I'm saucy, got that sauce, soy, psha",
+        "I ain't 'bout to stay up on this merry-go-round and round",
+        "'Cause we go 'round and 'round",
+        "But I don't want no clowns around me (Brrr)",
+        "I tell 'em, \"Who is you cuffin'?\"",
+        "I got 'em huffin' and puffin'",
+        "He keep on callin' me \"baby\"",
+        "Like I'm a bun in the oven",
+        "I said"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Why are you only good to me (Oh yeah)",
+        "When I'm bad to you? (When I'm bad to you)",
+        "Why are you only?",
+        "Why are you only good to me (Oh, oh, eh)",
+        "When I'm bad to you? (When I'm bad to you)",
+        "Why are you only?",
+        "Loving you and hating you is in, depending on the day",
+        "Tell me why are you only good to me (So good, uh)",
+        "When I'm bad to you?",
+        "Why are you only?"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Just Look Up",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Mm-mm, hmm",
+        "Ah, ah"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "We knew no bounds",
+        "Fell at the speed of sound",
+        "Ridin' against all odds, but soon against ourselves",
+        "You haunted every memory",
+        "With no goodbyes, all bad for me",
+        "Your pride put out the fire in our flames"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Then just one look is all it takes",
+        "I feel your eyes, they're locked on every part of me",
+        "And then my dumb heart says"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Just look up",
+        "There is no place to hide",
+        "True love doesn't die",
+        "It holds on tight and never lets you go",
+        "Just look up",
+        "You cannot deny the signs",
+        "What you've waited for",
+        "Don't wait no more",
+        "It's right up above you",
+        "Just look up"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "(Baby)",
+        "Know I let you down, a nigga can't deny it (Uh-huh)",
+        "And there's so much I could lose and, yes, that matters (Yeah)",
+        "I've been dealin' with madness (Yo)",
+        "Wasn't the man you needed (Hmm)",
+        "You dealin' with sadness, truthfully, it's all on me (Hmm)",
+        "And I'm sorry, my love",
+        "I'ma heal your heart, I'll hold it in my hand (Ooh, ah-ah)",
+        "Time is oh so precious, we don't really have much left now (Ooh)",
+        "Take my hand, baby, never leave you, Riley"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "Look up, what he's really trying to say",
+        "Is get your head out of your ass",
+        "Listen to the goddamn qualified scientists",
+        "We really fucked it up, fucked it up this time",
+        "It's so close, I can feel the heat big time",
+        "And you can act like everything is alright",
+        "But this is probably happening in real time",
+        "Celebrate or cry or pray, whatever it takes",
+        "To get you through the mess that we made",
+        "'Cause tomorrow may never come"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Just look up",
+        "Turn off that shit Box News",
+        "'Cause you're about to die soon everybody",
+        "Ooh, I, I, oh, I",
+        "Look up",
+        "Here it comes",
+        "I'm so glad I'm here with you forever",
+        "In your arms"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "album": "Collaborations",
+   "songs": [
+    {
+     "title": "Get On Your Knees",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Mm, rrr"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "Get on your knees, get on your knees, get on your knees",
+        "Baby, just get on your knees (On your knees)",
+        "Say pretty please, say pretty please, say pretty please",
+        "Baby, just say pretty please (Pretty please)"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Yo, I'll be back at eleven",
+        "You just act like a peasant",
+        "Got a bow on my panties because my ass is a present",
+        "Yeah, it's gooder than Meagan",
+        "You look good when you beggin'",
+        "I be laughin' when you beggin' me to just put the head in",
+        "Let me sit on your face",
+        "It's okay, you can play with it",
+        "When I'm bouncin' it, chill out, and don't you make a mistake with it",
+        "Let me see what you're workin' with",
+        "If I'm ridin', I'm murkin' it",
+        "Slow grindin', I'm twerkin' it",
+        "Yeah, I bagged him, I Birkin'd it (Kyuh)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I don't need a dozen roses",
+        "You ain't gotta wine and dine me, no",
+        "I don't need a pretty poet",
+        "Ooh, gettin' all emotional",
+        "You gotta beg for it, beg for it",
+        "I wanna see you lookin' up",
+        "Baby, I'ma need you to beg",
+        "Beg, beg for it"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "Get on your knees, get on your knees, get on your knees",
+        "Baby, just get on your knees (On your knees)",
+        "Say pretty please, say pretty please, say pretty please",
+        "Baby, just say pretty please (Pretty please)"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Gimme brain, assume the position",
+        "Make me way smarter like you was a magician",
+        "Paid my dues and tuition, it's good for your nutrition",
+        "Get head like a beautician",
+        "Got me twitchin', finish your mission (Finish your mission)",
+        "You make it come down, you make it run down",
+        "I'ma need you to give these other dudes the rundown",
+        "You got that legendary, this shit is fake, scary",
+        "Got me seein' them fireworks, I'm on my Kate Perry"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "(Ah) I don't need a dozen roses",
+        "You ain't gotta wine and dine me, no",
+        "I don't need a pretty poet",
+        "Ooh, gettin' all emotional",
+        "You gotta beg for it, beg for it",
+        "I wanna see you lookin' up",
+        "Baby, I'ma need you to beg (I'ma need you to beg)",
+        "Beg, beg for it (Let's go)"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "'Cause we are just animals (Animals)",
+        "Baby, it's primal (It's primal)",
+        "I want you on all fours (All fours)",
+        "And before I let you walk",
+        "You gotta show me how you crawl (Come here)",
+        "If you want it all (Want it all?)",
+        "It's non-negotiable",
+        "So do as I say (I say)",
+        "If you wanna get the job (Yeah, yeah)",
+        "You better know who's the boss (Yeah)",
+        "Yeah"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I don't need a dozen roses",
+        "You ain't gotta wine and dine me, no",
+        "I don't need a pretty poet",
+        "Ooh, gettin' all emotional",
+        "You gotta beg for it, beg for it (Beg for it)",
+        "I wanna see you lookin' up (Lookin' up)",
+        "Baby, I'ma need you to beg",
+        "Beg, beg for it"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Get on your knees, get on your knees, get on your knees",
+        "Baby, just get on your knees (On your knees)",
+        "Say pretty please, say pretty please, say pretty please",
+        "Baby, just say pretty please (Pretty please)"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "All My Love",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Sometimes I think we're the brightest stars",
+        "And I try to believe we'll find a way",
+        "Will life change, will our hearts turn colder? (Major Lazer)",
+        "All the rhythms in my heart lift me up inside",
+        "We can stay out of the trouble, is it worth the blame?",
+        "Is it true that the more you give, the more they take?",
+        "All the rhythms in my heart lift me up and say"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Only love will make us ache",
+        "Only love is worth the chase",
+        "All my love, I know we're waiting for this",
+        "On the rocks up on the mountaintops"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "All my love",
+        "All my love",
+        "All my love",
+        "Up on the mountaintop"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "All the rhythms in my heart lift me up and say",
+        "We're just a mess of broken people but we love the game",
+        "I would do anything for us, it's worth the pain",
+        "All the rhythms in my heart lift me up and say"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Only love will make us ache",
+        "Only love is worth the chase",
+        "All my love, I know we're waiting for this",
+        "On the rocks up on the mountaintops"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "All my love",
+        "All my love",
+        "All my love",
+        "Up on the mountaintop",
+        "All my love",
+        "All my love",
+        "All my love",
+        "Up on the mountaintop"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "You're always on my mind",
+        "Oh, there'll come a day",
+        "Day where we can fly",
+        "Reach the glory haze, oh, hey",
+        "High up in the sun in the brighter sky",
+        "Sun in the brighter sky"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Only love will make us ache",
+        "Only love is worth the chase",
+        "All my love, I know we're waiting for this",
+        "On the rocks up on the mountaintops"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "All my love",
+        "All my love",
+        "All my love",
+        "Up on the mountaintop",
+        "All my love",
+        "All my love",
+        "All my love",
+        "Up on the mountaintop"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Adore",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Boy, so what's been on your mind? (Your mind)",
+        "For me, it's just you all the time (Time)",
+        "We don't need to go nowhere tonight",
+        "It's you and I, we'll be alright",
+        "'Cause here, we get to take our time (Time)",
+        "You, you're finer than some wine (Wine)",
+        "We don't need to go nowhere tonight",
+        "It's you and I, we'll be alright"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I'll give you everything (I'll give you everything)",
+        "I'll give you everything (I'll give you everything)",
+        "You don't owe me anything (You don't owe me anything)",
+        "So are you ready, baby?"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You got me screaming",
+        "My, my, my, ma-ma, my, my (Ma-ma, my, my)",
+        "You got me screaming",
+        "My, my, my, ma-ma, my, my (Ma-ma, my, my)",
+        "And then I'm like, oh, your love (Oh, your love)",
+        "My, my, my, my, my",
+        "And then I'm like, oh, yeah, yeah (Oh, yeah, yeah)",
+        "'Cause you're what I adore, babe"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "After that",
+        "When you catch your breath, you look at me and say",
+        "\"Love, are you real?\"",
+        "Just don't pretend you're just a friend, boy"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I'll give you everything (I'll give you everything)",
+        "I'll give you everything (I'll give you everything)",
+        "You don't owe me anything (You don't owe me anything)",
+        "So are you ready, baby?"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You got me screaming",
+        "My, my, my, ma-ma, my, my (Ma-ma, my, my)",
+        "You got me screaming",
+        "My, my, my, ma-ma, my, my (Ma-ma, my, my)",
+        "And then I'm like, oh, your love (Oh, your love)",
+        "My, my, my, my, my",
+        "And then I'm like, oh, yeah, yeah (Oh, yeah, yeah)",
+        "'Cause you're what I adore, babe"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Just don't pretend you're just a friend (Just a friend)",
+        "Don't pretend you're just a friend (Just a friend)",
+        "Don't pretend (Don't pretend) you're just a friend (Just a friend)",
+        "Don't pretend (Don't pretend) you're just a friend, boy (Just a friend, boy)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You got me screaming",
+        "My, my, my, ma-ma, my, my (Ma-ma, my, my)",
+        "You got me screaming",
+        "My, my, my, ma-ma, my, my (Ma-ma, my, my)",
+        "And then I'm like, oh, your love (Oh, your love)",
+        "My, my, my, my, my",
+        "And then I'm like, oh, yeah, yeah (Oh, yeah, yeah)",
+        "'Cause you're what I adore, babe"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Over and Over Again",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "From the way you smile to the way you look",
+        "You capture me unlike no other",
+        "From the first hello, yeah, that's all it took",
+        "And suddenly we had each other"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "And I won't leave you",
+        "Always be true",
+        "One plus one, two for life",
+        "Over and over again"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "So don't ever think I need more",
+        "I've got the one to live for",
+        "No one else will do",
+        "And I'm telling you",
+        "Just put your heart in my hands",
+        "I promise it won't get broken",
+        "We'll never forget this moment",
+        "Yeah, we'll stay brand new",
+        "‘Cause I'll love you",
+        "Over and over again",
+        "Over and over again"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "From the heat of night to the break of day",
+        "I'll keep you safe and hold you forever",
+        "And the sparks will fly, they will never fade",
+        "'Cause every day gets better and better"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "And I won't leave you",
+        "Always be true",
+        "One plus one, two for life",
+        "Over and over again"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "So don't ever think I need more",
+        "I’ve got the one to live for",
+        "No one else will do",
+        "Yeah, I'm telling you",
+        "Just put your heart in my hands",
+        "I promise it won't get broken",
+        "We'll never forget this moment",
+        "Yeah, we'll stay brand new",
+        "'Cause I'll love you",
+        "Over and over again",
+        "Over and over again"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "Girl, when I'm with you, I lose track of time",
+        "When I'm without you, you're stuck on my mind",
+        "I'll be all you need 'til the day that I die",
+        "I'll love you",
+        "Over and over again"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "So don't ever think I need more",
+        "I've got the one to live for",
+        "No one else will do",
+        "Yeah, I'm telling you",
+        "Just put your heart in my hands",
+        "Promise it won't get broken",
+        "We'll never forget this moment",
+        "Yeah, we'll stay brand new",
+        "'Cause I'll love you",
+        "Over and over again",
+        "Yeah, over and over again"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Over and over again"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "My Favorite Part",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "I don't know why, but the beginning makes me smile"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Said, you just don't know how beautiful you are",
+        "And, baby, that's my favorite part",
+        "You walk around so clueless to it all",
+        "Like nobody gonna break your heart",
+        "It'll be alright, babe",
+        "See, me, I got you covered",
+        "I'ma be your lover, you might be the one",
+        "If it's only tonight, ayy",
+        "We don't need to worry, we ain't in a hurry rushin' into love"
+       ]
+      },
+      {
+       "label": "Verse",
+       "lines": [
+        "Said, you know I know who you really are, ain't need to lie",
+        "Said, the universe couldn't keep us apart, why would it even try? Yeah",
+        "Said, don't let them hurt you ever, I know you far too smart",
+        "Before things come together, they have to fall apart",
+        "It's been a while since I've been sober, this life can be so hard",
+        "I'd rather talk about you"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Said, you just don't know how beautiful you are",
+        "And, baby, that's my favorite part (Oh)",
+        "You walk around so clueless to it all",
+        "Like nobody gonna break your heart",
+        "It'll be alright, babe",
+        "See, me, I got you covered",
+        "I'ma be your lover, you might be the one",
+        "If it's only tonight, ayy",
+        "We don't need to worry, we ain't in a hurry rushin' into love, yeah, yeah"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "If you wanna stay, we're takin' it slow, baby",
+        "'Cause you want me, and I got enough on my mind",
+        "But I can make some time for somethin' so divine, oh, yeah"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Said, you just don't know how beautiful you are (Yeah)",
+        "And, baby, that's my favorite part, baby",
+        "You walk around so clueless to it all",
+        "Like nobody gonna break your heart",
+        "It'll be alright, babe",
+        "See, me, I got you covered",
+        "I'ma be your lover, you might be the one",
+        "If it's only tonight, ayy",
+        "We don't need to worry, we ain't in a hurry rushin' into love"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Faith",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "See the girl with the diamonds in her shoes? (Yeah)",
+        "She walks around like she's got nothin' to lose",
+        "Yeah, she's a go-getter, she's everybody's type",
+        "She's a queen of the city but she don't believe the hype",
+        "She's got her own elevation, holy motivation",
+        "So I wrote some letters out in big bold type"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I got faith in you, baby",
+        "I got faith in you now",
+        "And you've been such a, such a good friend to me",
+        "Know that I love you somehow",
+        "I met you, hallelujah, I got faith (Ooh)"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "See the boy with the Stevie Wonder swag?",
+        "Ain't got a clue all the magic that he has (Uh-huh)",
+        "He's a go-getter, he's everybody's type",
+        "I'ma make it my mission, make him feel alright",
+        "He's a twelve on a ten point, rockin' out to his joint",
+        "Just say the word 'cause I could sing all night"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I got faith (Faith) in you, baby",
+        "I got faith (Oh) in you now",
+        "And you've been such a, such a good friend to me (Me)",
+        "Know that I love you somehow (Love you somehow)",
+        "I met you, hallelujah, I got faith (Faith)"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Yes I do, mm (Yeah)",
+        "I get around ya and my mind goes crazy",
+        "I think about you mornin', noon, night and day",
+        "I get around ya and my mind goes crazy",
+        "I think about you mornin', noon, night and day",
+        "I got faith in you, honey (I get around you and my mind goes crazy)",
+        "I got faith in you, girl (I think about you mornin', noon, night and day)",
+        "I got faith in you, honey (Baby)",
+        "I got faith in you, girl",
+        "I met you, hallelujah"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I got faith (Faith) in you, baby (Baby)",
+        "I got faith (Faith; Oh) in you now",
+        "And you've been such a, such a good friend to me (Woo)",
+        "Know that I love you somehow (Love you somehow)",
+        "I met you, hallelujah, I got faith (Faith, faith, baby)",
+        "I got faith (Faith) in you, baby (Baby)",
+        "I got faith (Faith) in you now (Oh)",
+        "And you've been such a, such a good friend to me",
+        "Know that I love you somehow (Yes, I do)",
+        "I met you, hallelujah",
+        "I met you, hallelujah",
+        "I met you, hallelujah, I got faith"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Faith",
+        "Woo"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Quit",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "And you say that I'm the devil you know",
+        "And I don't disagree, no, I don't see the harm",
+        "They say, \"You crazy, just leave him, he'll suffocate you\"",
+        "But I wanna be in your arms",
+        "They say, \"No, don't pick up the phone\"",
+        "\"Let him think that nobody home\"",
+        "But I'm under your spell",
+        "'Cause when you call, my heart starts to roll",
+        "I always want more",
+        "It's my heaven, my hell"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "We're headin' deep, inside lives a voice, a voice so quiet",
+        "But I can't hear the voice when your heart beats next to mine"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I can't quit you",
+        "I can't quit you",
+        "I can't quit you",
+        "I can't quit you"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Yeah, I'm gonna regret it",
+        "Yeah, I'm gonna regret it",
+        "Yeah, I'm gonna regret it",
+        "I know I'm gonna regret it"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "When you say, \"Baby,\" I just want you to lay me down",
+        "And we'll fuck the pain away",
+        "'Cause skin on skin, I feel nothing but the burning of desire",
+        "And that's just foreplay"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "We're headin' deep, inside lives a voice, a voice so quiet",
+        "But I can't hear the voice when your heart beats next to mine"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I can't quit you",
+        "I can't quit you",
+        "I can't quit you",
+        "I can't quit you"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Yeah, I'm gonna regret it",
+        "Yeah, I'm gonna regret it",
+        "Yeah, I'm gonna regret it",
+        "I know I'm gonna regret it"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "I can't quit you",
+        "I can't quit you, oh, baby, yeah",
+        "I can't quit you",
+        "I can't quit you, oh, babe",
+        "Gonna regret it",
+        "Yeah, I'm gonna regret it",
+        "Yeah, I'm gonna regret it",
+        "Yeah, I'm gonna regret it",
+        "I'm gonna regret it, yeah, ayy",
+        "Gonna regret it",
+        "Yeah, I'm gonna regret it"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Heatstroke",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Won't you please",
+        "Slow it down?",
+        "I'm tryna talk to you, darlin'",
+        "Tryna walk with you, darlin'",
+        "Do you hear me?",
+        "And no-no-no-no-nobody can stop it",
+        "The love you got from me",
+        "And every time, I look out at my seat today",
+        "They chase, they flash they flash, yes"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Tell me how you feel right now",
+        "'Cause all I wanna do is keep it real right now",
+        "I'm tryna beat it up, Beat Pills right now",
+        "Athletic in the sheets, I got skills right now",
+        "Break bread with some red baby hair",
+        "Ballin' in the club, Ace of Spades, yeah",
+        "Pop that bitch and spray it like 'Raid'",
+        "Yellow diamonds on you like a glass of lemonade",
+        "QB, I'll throw it",
+        "Teeth white, Newports",
+        "I want knees like shorts",
+        "80 thousand dollar Birkin bag in the Porsche",
+        "I'm tryna fuck with you 'til we on life support",
+        "I'll split it with you if we get half of Michael Jordan",
+        "No toilet tissue, I shit on niggas 'cause life is short (facts)",
+        "No passport to go with me, I had to get deported"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Release, let go, and have a good time",
+        "Have a good, have a good time, yeah",
+        "Have a good, have a good time",
+        "Release, let go, and have a good time",
+        "Let's have a good, have a good time, yeah"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "When you do things like this",
+        "And you set me free",
+        "How can anyone get tired?",
+        "When you do things like this",
+        "And you set me free",
+        "I think I've just been inspired",
+        "Oh babe"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Jeffery!",
+        "Brand new chapter of a real you",
+        "She got every red bottom like a baboon",
+        "Hunnid' bottles in the club, real one room",
+        "Girl you gotta keep up with a boss move",
+        "King of the jungle, tycoon",
+        "Everybody thinking that's a cartoon",
+        "We just wanna party, way back in the war room",
+        "Do you want some? No I don't, son",
+        "Tryna watch me ballin', do you want money?",
+        "I'm just tryna turn up, tryna work something",
+        "Shawty suck the dick good, she wanna fuck it first",
+        "Hey mista, you a rat burn",
+        "Good hair down her back",
+        "Rich nigga, I like 'em ratchet",
+        "Fuck it up, throw it back",
+        "No shave, Brazilian wax"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Release, let go, and have a good time",
+        "Have a good, have a good time, yeah",
+        "Have a good, have a good time",
+        "Release, let go, and have a good time",
+        "Have a good, have a good time, yeah"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "When you do things like this",
+        "And you set me free",
+        "How can anyone get tired?",
+        "When you do things like this",
+        "And you set me free",
+        "I think I've just been inspired",
+        "When you do things like this",
+        "And you set me free, boy",
+        "How can anyone get tired?",
+        "When you do things like this",
+        "And you set me free",
+        "I think I've just been inspired"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Hey, hey",
+        "I could sweat like this all night",
+        "Oh, heatstroke, oh",
+        "I think you opened my eyes"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Dance to This",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Young ambition",
+        "Say we'll go slow, but we never do",
+        "Premonition",
+        "See me spendin' every night with you"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Oh, yeah, under the kitchen lights",
+        "You still look like dynamite",
+        "And I wanna end up on you",
+        "Oh, don't need no place to go",
+        "Just put on the radio",
+        "You know what I wanna do"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "We can just dance to this",
+        "Don't take much to start me",
+        "We can just dance to this",
+        "Push up on my body, yeah",
+        "You know we've already seen all of the parties",
+        "We can just dance to this",
+        "We can just, we can just dance to this"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Dance to this",
+        "We can just dance to this"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Dear beloved",
+        "Bring those 501s a bit closer, bit closer",
+        "And dear, my lover",
+        "Do that thing we never do sober, sober"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Oh, under the kitchen lights",
+        "You still look like dynamite",
+        "And I wanna end up on you (Yeah)",
+        "Oh, we don't need no place to go",
+        "Just put on the radio",
+        "You know what I wanna do"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "We can just dance to this",
+        "Don't take much to start me",
+        "We can just dance to this",
+        "Push up on my body, yeah",
+        "You know we've already seen all of the parties",
+        "We can just dance to this",
+        "We can just, we can just dance to this"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Mm, mm",
+        "Dance to this",
+        "Mm",
+        "We can just dance to this"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "I don't wanna sleep tonight-night-night-night-night",
+        "I just wanna take that ride",
+        "I don't wanna sleep tonight-night-night-night-night",
+        "I just wanna take that ride"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "We can just dance to this",
+        "Don't take much to start me (Mm)",
+        "We can just dance to this",
+        "Push up on my body, yeah",
+        "You know we've already seen all of the parties",
+        "We can just dance to this",
+        "We can just",
+        "We can just dance to this",
+        "Don't take much to start me",
+        "We can just dance to this",
+        "Push up on my body, yeah",
+        "You know we've already seen all of the parties",
+        "We can just dance to this",
+        "We can just, we can just dance to this"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Dance to this, love",
+        "Dance to this",
+        "We can just dance to this",
+        "Dance to this, dance to this",
+        "We can just dance to this"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "I don't wanna sleep tonight-night-night-night-night",
+        "I just wanna take that ride",
+        "I don't wanna sleep tonight-night-night-night-night",
+        "I just wanna take that ride",
+        "We can just dance to this",
+        "I don't wanna sleep tonight-night-night-night-night",
+        "I just wanna take that ride",
+        "I don't wanna sleep tonight-night-night-night-night",
+        "I just wanna take that ride",
+        "We can just dance to this",
+        "I don't wanna sleep tonight-night-night-night-night"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Bed",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Got a bed wit' your name on it",
+        "Wit' your name on it",
+        "Got a kiss wit' your name on it",
+        "Wit' your name on it"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Thousand dollar sheets",
+        "Waitin' for you on some thousand dollar sheets",
+        "I got Carter III on repeat",
+        "Back shots to the beat of \"A Milli\" on you",
+        "Got me acting like you got a milli on you",
+        "He say I'm the GOAT, yeah, the billy on you",
+        "I could make all your dreams come true",
+        "Wanna fall through, then you better come through"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "But don't make me wait until the morning"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Got a bed wit' your name on it",
+        "Wit' your name on it",
+        "Got a kiss wit' your name on it",
+        "Wit' your name on it",
+        "Love me good, love me down",
+        "Don't turn me down",
+        "Got a bed wit' your name on it",
+        "Wit' your name on it"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Strawberry lingerie",
+        "Waitin' for you, strawberries, lingerie",
+        "You told me you on the way",
+        "Mess around, mess around, put it down on you",
+        "I'ma do everything I said I'm gon' do",
+        "Pretty little body, it look better on you",
+        "Might have to blow it like a feather on you",
+        "Waterfalls, ooh, yeah, you better come through"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "But don't make me wait until the morning"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Got a bed wit' your name on it",
+        "Wit' your name on it",
+        "Got a kiss wit' your name on it",
+        "Wit' your name on it",
+        "Love me good, love me down",
+        "Don't turn me down",
+        "Got a bed wit' your name on it (Oh, yeah)",
+        "Wit' your name on it (On it)"
+       ]
+      },
+      {
+       "label": "Interlude",
+       "lines": [
+        "O-on, on it (On it)",
+        "O-on, on it",
+        "O-on, on it",
+        "O-on, on it (But I put your name on it)"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "Yo, he in my startin' five, he get his city live",
+        "These niggas scared, they doing 50 in a 55",
+        "I'm tryna clap him like somebody told him, \"Gimme five\"",
+        "I'ma be a half an hour, but I told him, \"Gimme five\"",
+        "I'm tryna dance on him, blow my advance on 'em",
+        "I like him better when he got some sweatpants on him",
+        "I like his hang time, he said his head right",
+        "I said go all the way down and then head right",
+        "I watch him fuck it up, look at him luckin' up",
+        "I said, \"You need some thick skin, baby, suck it up\"",
+        "He go insane on it, I put my fame on it",
+        "Coulda put ZAYN on it, but I put your name on it"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I got a bed wit' your name on it",
+        "Wit' your name on it",
+        "Got a kiss wit' your name on it",
+        "Wit' your name on it, yeah",
+        "Love me good, love me down",
+        "Don't turn me down (Turn it down, baby)",
+        "Got a bed wit' your name on it (Your name)",
+        "Wit' your name on it"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Rule the World",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Yeah",
+        "Uh-huh",
+        "2 Chainz"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Top down on the Dawn like I'm used to it (Yeah)",
+        "Prayin' he make it home like I'm used to it",
+        "Prayin' he make it home, I got used to it (Used to it)",
+        "Prayin' he make it home like I'm used to it",
+        "Top down on the Dawn like I'm used to it",
+        "Prayin' he make it home, I got used to it",
+        "Prayin' he make it home like he used to",
+        "I realized we could rule the world",
+        "I realized we could rule the world (Oh yeah, oh yeah)"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Yeah",
+        "Fell in love with a real one, this a dedication (Wow)",
+        "Had 'em patiently waitin' for a revelation",
+        "Even when I ain't around, ain't no separation",
+        "Your skin's smooth, your eyes brown and you're far from basic",
+        "Then we go to different places with no suitcases (Wow)",
+        "But when we come back, we got suitcases (Yeah)",
+        "Right now I use love for a medication (Love)",
+        "Back in the day I'd shoot Cupid with no hesitation (Bow, bow)",
+        "I got more than 40 acres for my reparations",
+        "Pussy on my navigation, that's my destination (Tell 'em)",
+        "Please don't never tell on me, baby (Never tell)",
+        "That mean don't call 12 on me, baby (Don't call 12)",
+        "As long as the meal prepared for me, baby (It's prepared)",
+        "The mills I prepare, I share with you, baby (Share)",
+        "Of course they gon' like this shit, look at it (Look)",
+        "Everybody ain't happy, then look at me"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Top down on the Dawn like I'm used to it (Used to it)",
+        "Prayin' he make it home like I'm used to it",
+        "Prayin' he make it home, I got used to it",
+        "Prayin' he make it home like I'm used to it (Yeah)",
+        "Top down on the Dawn like I'm used to it",
+        "Prayin' he make it home, I got used to it (Wow)",
+        "Prayin' he make it home like he used to (Wow, tell 'em, baby)",
+        "I realized we could rule the world",
+        "I realized we could rule the world (Oh yeah, oh yeah)"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Why don't we ride four deep",
+        "Rode so far, we on E",
+        "She on E, she on me (Yeah, yeah)",
+        "Let's try that way... okay",
+        "Shawty came in, walkin' like a model",
+        "Shaped like a bottle",
+        "She know if she mess with me, it's gon' be trouble",
+        "I'ma bust that bubble",
+        "I'ma always love her, mess up all the covers (Yeah, yeah)",
+        "Watch me break it down like a foldin' chair",
+        "See me in the Chain Reactions, I got 40 pair",
+        "Sorry I ain't answer the phone, I was slappin' ass",
+        "Last night ain't answer, I was pullin' hair",
+        "Y'all know me, so lowkey",
+        "All this ice on, I got cold feet",
+        "My shawty bad, she a trophy",
+        "She like to lay on me and call me cozy (Yeah)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Top down on the Dawn like I'm used to it",
+        "Prayin' he make it home like I'm used to it",
+        "Prayin' he make it home, I got used to it (Pray for me)",
+        "Prayin' he make it home like I'm used to it (Alright)",
+        "Top down on the Dawn like I'm used to it (Skrrt)",
+        "Prayin' he make it home, I got used to it (Skrrt)",
+        "Prayin' he make it home like he used to",
+        "I realized we could rule the world",
+        "I realized we could rule the world (Oh yeah, oh yeah)"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Skrrt (Yeah)",
+        "Yeah",
+        "I'ma trap it out one way or another (Yee)",
+        "Yeah (Oh)",
+        "One thing about love, they say it's blind",
+        "No matter where you're from",
+        "You gon' bump into it one day",
+        "Tru"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Good as Hell (Remix)",
+     "sections": [
+      {
+       "label": "Chorus",
+       "lines": [
+        "I do my hair toss, check my nails",
+        "Baby, how you feelin'? (Feelin' good as hell)",
+        "Hair toss, check my nails",
+        "Baby, how you feelin'? (Feelin' good as hell)"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Woo, child, tired of the bullshit",
+        "Go on, dust your shoulders off, keep it moving",
+        "Yes, Lord, tryna get some new shit",
+        "In there, swimwear, going-to-the-pool shit",
+        "Come now, come dry your eyes",
+        "You know you a star, you can touch the sky",
+        "I know that it's hard but you have to try",
+        "If you need advice, let me simplify"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "If he don't love you anymore",
+        "Just walk your fine ass out the door"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I do my hair toss, check my nails",
+        "Baby, how you feelin'? (Feelin' good as hell)",
+        "Hair toss, check my nails",
+        "Baby, how you feelin'? (Feelin' good as hell)",
+        "(Feeling good as hell)",
+        "Baby, how you feelin'? (Feelin' good as hell)"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Woo, girl, need to kick off your shoes",
+        "Gotta take a deep breath, time to focus on you",
+        "All the big fights, long nights that you been through",
+        "I got a bottle of tequila I been saving for you (Thank god)",
+        "'Cause he better know my worth",
+        "There's so much that I deserve",
+        "But I ain't worried now, I'ma let my hair down",
+        "He been tryin' it, but not today"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "So girl, if he don't love you anymore",
+        "Then walk your fine ass out the door"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "And do your hair toss, check my nails (Ah)",
+        "Baby, how you feelin'? (Feelin' good as hell)",
+        "Hair toss, check my nails (Mmm)",
+        "Baby, how you feelin'? (Feelin' good as hell) (Show it off tonight)",
+        "Hair toss, check my nails (Woo)",
+        "Baby, how you feelin'? (Feelin' good as hell) (And we gon' be alright, oh)",
+        "Hair toss, check my nails (Mmm)",
+        "Baby, how you feelin'? (Feelin' good as hell) (Mmm)"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Ooh, yeah (Mmm), alright (Yee)",
+        "Listen, so girl, if he don't love you anymore, more",
+        "Then walk your fine ass out the door (Door)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "And do your hair toss, check my nails (Woo)",
+        "Baby, how you feelin'? (Feelin' good as hell) (Woo-hoo)",
+        "Hair toss, check my nails (Hey yeah)",
+        "Baby, how you feelin'? (Feelin' good as hell) (Show it off tonight)",
+        "Hair toss, check my nails (Mmm)",
+        "Baby, how you feelin'? (Feelin' good as hell) (And we gon' make it right)",
+        "Hair toss, check my nails (Oh, hey)",
+        "Baby, how you feelin'? (Feelin' good as hell) (Yeah)",
+        "(Feelin' good as hell)",
+        "Baby, how you feelin'? (Feelin' good as hell)",
+        "(Haha, I danced, that's what I did)"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Rain On Me",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I didn't ask for a free ride",
+        "I only asked you to show me a real good time",
+        "I never asked for the rainfall",
+        "At least I showed up, you showed me nothin' at all"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "It's comin' down on me",
+        "Water like misery",
+        "It's comin' down on me",
+        "I'm ready, rain on me"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I'd rather be dry, but at least I'm alive",
+        "Rain on me, rain, rain",
+        "Rain on me, rain, rain",
+        "I'd rather be dry, but at least I'm alive",
+        "Rain on me, rain, rain",
+        "Rain on me"
+       ]
+      },
+      {
+       "label": "Drop",
+       "lines": [
+        "Rain on me",
+        "Mm, oh yeah, baby",
+        "Rain on me"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Livin' in a world where no one's innocent",
+        "Oh, but at least we try, mm",
+        "Gotta live my truth, not keep it bottled in",
+        "So I don't lose my mind, baby, yeah"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I can feel it on my skin (It's comin' down on me)",
+        "Teardrops on my face (Water like misery)",
+        "Let it wash away my sins (It's comin' down on me)",
+        "Let it wash away, yeah-yeah"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I'd rather be dry, but at least I'm alive",
+        "Rain on me, rain, rain",
+        "Rain on me, rain, rain",
+        "I'd rather be dry, but at least I'm alive",
+        "Rain on me, rain, rain",
+        "Rain (Rain) on (On) me"
+       ]
+      },
+      {
+       "label": "Drop",
+       "lines": [
+        "Rain on me",
+        "Rain on me",
+        "Oh yeah, yeah",
+        "Rain on me, ooh, yeah",
+        "Rain on me",
+        "Rain on me, ooh"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Hands up to the sky",
+        "I'll be your galaxy",
+        "I'm about to fly",
+        "Rain on me, tsunami",
+        "Hands up to the sky",
+        "I'll be your galaxy",
+        "I'm about to fly",
+        "Rain on me (Rain on me)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I'd rather be dry, but at least I'm alive (Rain on me)",
+        "Rain on me, rain, rain",
+        "Rain on me, rain, rain (Rain on me)",
+        "I'd rather be dry, but at least I'm alive (At least I'm alive)",
+        "Rain on me, rain, rain (Rain on me, baby)",
+        "Rain on me (Rain on me)"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "I hear the thunder comin' down",
+        "Won't you rain on me? Eh, eh, yeah",
+        "Rain on, woo",
+        "I hear the thunder comin' down",
+        "Won't you rain on me? Eh, eh, yeah",
+        "Rain on me"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Oh Santa!",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Oh, Santa's gon' come and make him mine this Christmas",
+        "Santa's gon' come and make him mine, mine (Oh, Santa)",
+        "Santa's gon' come and make him mine this Christmas (Oh, Santa)",
+        "Santa's gon' come and make him mine, mine (Oh, oh)"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Santa",
+        "If you get this letter, won't you help me out?",
+        "I know you're kinda busy with your elves right now",
+        "And I don't know how",
+        "You do the things you do while I'm asleep on Christmas Eve",
+        "But it's amazing",
+        "And I bet that you could bring me back my baby",
+        "Because every time I see Christmas lights",
+        "I feel this void inside and I just can't take it"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I saw them shopping last week",
+        "And his new girl was so bleak",
+        "And then I swore to myself",
+        "Santa's gonna come and make him mine this Christmas night"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Ho, ho, ho",
+        "Santa's gon' come and make him mine this Christmas",
+        "Santa's gon' come and make him mine, ho, ho, ho",
+        "Santa's gon' come and make him mine this Christmas night"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Oh, Santa",
+        "I heard that it's really gonna snow this year",
+        "So I hope Rudolph and his other eight reindeer",
+        "Get you safely here (Oh)",
+        "So you can scoop him up and swoop him right down my chimney",
+        "I've been really, really, really good this year",
+        "So put on that red suit and make him appear (I've been really good this year)",
+        "Because Christmas cheer",
+        "Just ain't the same without my baby",
+        "Come on, ole Kris Kringle, save me"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "They say it's unrealistic",
+        "But I believe in ya, Saint Nick",
+        "So grant this wish for me right quick",
+        "Santa, won't ya come and make him mine this Christmas night? (Santa)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Ho, ho, ho",
+        "Santa's gon' come and make him mine this Christmas",
+        "Santa's gon' come and make him mine, ho, ho, ho (Santa)",
+        "Santa's gon' make him mine this Christmas night"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Oh, Santa",
+        "Oh, Santa (Oh)",
+        "Come on, Santa",
+        "Santa gon' come and make him mine this Christmas (Oh, Santa)",
+        "Santa gon' come and make him mine, mine",
+        "Santa gon' come and make him mine this Christmas",
+        "Santa gon' come and make him mine, mine"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "Oh, oh, oh, oh, Santa Claus",
+        "If you get this letter, please don't make me wait",
+        "'Cause all December, I'll be counting down the days",
+        "So, hop on your sleigh",
+        "I promise that I won't forget the milk and cookies"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "The tree's all sparkly and gold",
+        "But inside, I feel so cold",
+        "So soon as you leave the North Pole",
+        "Santa, won't you come and make him mine this Christmas? (Ooh-ooh)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Santa's gon' come and make him mine, ho, ho, ho",
+        "(Santa's gon' come and make him mine)",
+        "Santa's gon' come and make him mine this christmas",
+        "(I know you will, oh)",
+        "Santa's gon' come and make him mine, ho, ho, ho (Woah)",
+        "Santa's gon' come and make him mine, mine (Yeah)",
+        "Santa's gon' come and make him mine, ho, ho, ho (Santa, I know you will)",
+        "Santa's gon' come and make him mine this Christmas",
+        "Santa's gon' come and make him mine, ho, ho, ho",
+        "Santa's gon' come and make him mine, mine"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Oh, Santa's gonna come and make him mine this Christmas"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Save Your Tears (Remix)",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Ooh (Ooh)",
+        "Na-na, yeah"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I saw you dancing in a crowded room (Uh)",
+        "You look so happy when I'm not with you",
+        "But then you saw me, caught you by surprise",
+        "A single teardrop falling from your eye"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "I don't know why I run away (Oh)",
+        "I make you cry when I run away (Oh)"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Take me back 'cause I wanna stay",
+        "Save your tears for another"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Save your tears for another day (Oh)",
+        "Save your tears for another day (Mm)"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Met you once under a Pisces moon",
+        "I kept my distance 'cause I know that you",
+        "Don't like when I'm with nobody else",
+        "I couldn't help it, I put you through hell"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "I don't know why I run away, oh boy (Run away, oh yeah; oh)",
+        "I make you cry when I run away (Away, oh; oh)"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Boy, take me back 'cause I wanna stay",
+        "Save your tears for another",
+        "I realize that it's much too late",
+        "And you deserve someone better"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Save your tears for another day (Oh)",
+        "Save your tears for another day (Oh)"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "(Bum, bum, bum, bum, bum)",
+        "I don't know why I run away (Oh)",
+        "(Bum, bum, bum, bum, bum)",
+        "I make you cry when I run away (Save)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Save your tears for another day (Ooh; oh)",
+        "Ooh, girl, I said (Okay)",
+        "Save (Save) your (Your) tears for another day (Oh yeah, yeah; oh)"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Save your tears for another day (Oh)",
+        "Save your tears for another day (Oh)",
+        "Save your tears for another day"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Met Him Last Night",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Late at night, I'm sippin' as you pass me by",
+        "Red or white? You pour another, say, \"It's fine\""
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I don't believe in you (I, I don't believe that)",
+        "'Cause I know just how you do (I, I seen it right through)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I've seen the devil, yeah, I met him last night",
+        "Had conversation, yeah, I think he's alright",
+        "Seemed kinda funny, yeah, he kinda my type (Yeah, he's kinda my type)",
+        "Yeah, yeah, yeah",
+        "I've seen the devil, yeah, I met him last night",
+        "One conversation, now he's spendin' the night",
+        "I think I Iove him, though I know it ain't right"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "You got me fucked up, I won't let this happen again (Mm-mm, yeah)",
+        "This the last time, you won't take advantage of my innocence (Mm-mm, yeah)"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I don't believe in you (I, I don't believe that)",
+        "Disguised, but I see right through (I, I seen it right through)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I've seen the devil, yeah, I met him last night",
+        "Had conversation, yeah, I think he's alright",
+        "Seemed kinda funny, yeah, he kinda my type",
+        "(Yeah, he's kinda my type)",
+        "Yeah, yeah, yeah",
+        "I've seen the devil, yeah, I met him last night",
+        "One conversation, now he's spendin' the night",
+        "I think I Iove him, though I know it ain't right",
+        "(No, no, it ain't right, yeah)"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "How could I ever believe him? (Yeah)",
+        "That one look could be so deceivin' (Yeah)",
+        "Boy, you were my only vice, I never feel this way",
+        "Won't be no hostage, I'm leavin' (Yeah)",
+        "Boy, you just gave me a reason",
+        "No one ever thought I'd be the one",
+        "No one ever thought I'd be the one to fall",
+        "Watch me bounce before I give you my all",
+        "So, I promise tonight is the last call"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I don't believe in you (I, I don't believe that)",
+        "Disguised, but I see right through (I, I seen it right through)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I've seen the devil, yeah, I met him last night",
+        "Had conversation, yeah, I think he's alright",
+        "Seemed kinda funny, yeah, he kinda my type",
+        "Yeah, yeah, yeah",
+        "I've seen the devil, yeah, I met him last night",
+        "One conversation, now he's spendin' the night",
+        "I think I Iove him, though I know it ain't right",
+        "(Ain't right, ain't right, ain't right, no)"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Mm-mm-mm (Oh, woah)",
+        "Mm-mm-mm",
+        "Mm-mm-mm",
+        "Oh, hey, hey"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Die For You (Remix)",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I'm findin' ways to articulate the feelin' I'm goin' through",
+        "I just can't say I don't love you (Yeah)",
+        "'Cause I love you, yeah",
+        "It's hard for me to communicate the thoughts that I hold",
+        "But tonight, I'm gon' let you know",
+        "Let me tell the truth",
+        "Baby, let me tell the truth, yeah"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "You know what I'm thinkin', see it in your eyes",
+        "You hate that you want me, hate it when you cry",
+        "You're scared to be lonely, 'specially in the night",
+        "I'm scared that I'll miss you, happens every time",
+        "I don't want this feelin', I can't afford love",
+        "I try to find a reason to pull us apart",
+        "It ain't workin' 'cause you're perfect",
+        "And I know that you're worth it",
+        "I can't walk away, oh"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Even though we're goin' through it (Ah)",
+        "And it makes you feel alone",
+        "Just know that I would die for you (Ooh, ooh)",
+        "Baby, I would die for you, yeah",
+        "The distance and the time between us (Distance and the time)",
+        "It'll never change my mind 'cause",
+        "Baby, I would die for you (I would die for you)",
+        "Baby, I would die for you, yeah"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "I'm findin' ways to stay concentrated on what I gotta do",
+        "But, baby boy, it's so hard 'round you",
+        "And yes, I'm blamin' you",
+        "And you know I can't fake it, now or never",
+        "And you insinuatin' that you think we might be better",
+        "Better me and you",
+        "Yeah, I know you do"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "You know what I'm thinkin', see it in your eyes",
+        "You hate that you want me, hate it when you cry",
+        "It ain't workin' 'cause you're perfect (Mm)",
+        "And I know you deserve it",
+        "I can't walk away"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Even though we're goin' through it",
+        "And it makes you (Me) feel alone",
+        "Just know that I would die for you (I would die for you)",
+        "Baby, I would die for you, yeah",
+        "The distance and the time between us",
+        "It'll never change my mind 'cause",
+        "Baby, I would die for you (I would die for you, uh)",
+        "Baby, I would die for you, yeah (I would die for you)"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "I would die for you, I would lie for you",
+        "Keep it real with you, I would kill for you, my baby",
+        "I'm just sayin', yeah",
+        "I would die for you, I would lie for you",
+        "Keep it real with you, I would kill for you, my baby",
+        "Na-na-na, na-na-na, na-na-na"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Even though we're goin' through it (Ooh)",
+        "And it makes you feel alone (No, no)",
+        "Just know that I would die for you (No)",
+        "Baby, I would die for you, yeah",
+        "The distance and the time between us (Ooh)",
+        "It'll never change my mind 'cause (No, no)",
+        "Baby, I would die for you (No)",
+        "Baby, I would die for you, yeah (Oh, babe)"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "album": "Standalone & Rarities",
+   "songs": [
+    {
+     "title": "Put Your Hearts Up",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Let me see you put your hearts up, yeah",
+        "Let me see you put your hearts up, yeah",
+        "If we give a little love, maybe we can change the world (Change the world)"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Y-y-y-you think you're so small, like you're itty-bitty",
+        "Just one match in the lights of the city",
+        "Walkin' by strangers on the side of the street",
+        "Like a quarter in a cup will get 'em up on their feet, like",
+        "You think you're never gonna make your mark",
+        "Sit back and watch the world while it falls apart, like",
+        "Out of sight, out of mi-i-i-ind, like",
+        "Like it's just a waste of time, like-like-like"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Hey, yeah, yeah, yeah, yeah",
+        "Hey, yeah, yeah",
+        "If we give a little love, maybe we can change the world (Change the world)",
+        "I said",
+        "Hey, yeah, yeah, yeah, yeah",
+        "Hey, yeah, yeah",
+        "Sing it if you're with me, all you boys and all you girls (All you girls)"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Let me see you put your hearts up, yeah",
+        "Let me see you put your hearts up, yeah",
+        "If we give a little love, maybe we can change the world (Change the world)"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "W-w-w-wish in a well, shootin' star in the sky",
+        "We can do anything if we try",
+        "Can't resurrect Gandhi, resurrect King",
+        "But if we put our heads together, we can do anything, like",
+        "You don't have to be a billionaire",
+        "You don't have to have much to show how much you care, like",
+        "Give a wink, give a kiss, like",
+        "Give a little happiness, like-like-like"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Hey, yeah, yeah, yeah, yeah",
+        "Hey, yeah, yeah (Hey)",
+        "If we give a little love, maybe we can change the world (Maybe we can change the world)",
+        "I said",
+        "Hey, yeah, yeah, yeah, yeah",
+        "Hey, yeah, yeah",
+        "Sing it if you're with me, all you boys and all you girls (Sing it if you're with me, all you boys and all you girls)"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Let me see you put your hearts up, yeah (Let me see you, let me see you put your hearts up)",
+        "Let me see you put your hearts up, yeah (Let me see you, let me see you put your hearts up)",
+        "If we give a little love, maybe we can change the world (Change the world)"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Don't let it bring you down now, down now",
+        "Don't let it bring you down now, down now",
+        "Ain't got nothin' but love now, love now",
+        "Ain't got nothin' but love now, love now",
+        "Don't let it bring you down now, down now",
+        "Don't let it bring you down now, down now",
+        "Ain't got nothin' but love now, love now",
+        "Ain't got nothin' but love now, love now"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Hey, yeah, yeah, yeah, yeah",
+        "Hey, yeah, yeah (Hey, yeah, yeah)",
+        "If we give a little love, maybe we can change the world (We can change the world, we can change the world)",
+        "I said",
+        "Hey, yeah, yeah, yeah, yeah",
+        "Hey, yeah, yeah (Hey, yeah, yeah)",
+        "Sing it if you're with me, all you boys and all you girls (Sing it, all you boys and girls)"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Let me see you put your hearts up, yeah (Let me see you, let me see you put your hearts up)",
+        "Let me see you put your hearts up, yeah (Let me see you, let me see you put your hearts up)",
+        "If we give a little love, maybe we can change the world (We can change the world, no; Change the world)",
+        "Let me see you put your hearts up, yeah (Let me see you, let me see you put your hearts up)",
+        "Let me see you put your hearts up, yeah (Let me see you, let me see you put your hearts up)",
+        "If we give a little love, maybe we can change the world (We can change the world; Change the world)"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Hey, yeah, yeah, yeah, yeah"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Somewhere Over the Rainbow",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Somewhere over the rainbow",
+        "Way up high",
+        "There's a land that I've heard of",
+        "Once in a lullaby"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Somewhere over the rainbow",
+        "Skies are blue",
+        "And the dreams that you dare to dream",
+        "Really do come true"
+       ]
+      },
+      {
+       "label": "Refrain 1",
+       "lines": [
+        "Someday I'll wish upon a star",
+        "And wake up where the clouds are far behind me, oh",
+        "Where troubles melt like lemon drops",
+        "Way above the chimney tops",
+        "That's where you'll find me"
+       ]
+      },
+      {
+       "label": "Refrain 2",
+       "lines": [
+        "Oh, somewhere over the rainbow",
+        "Bluebirds fly",
+        "Birds fly over the rainbow",
+        "Why, then oh why, can't I?"
+       ]
+      },
+      {
+       "label": "Refrain 1",
+       "lines": [
+        "Someday I'll wish upon a star",
+        "And wake up where the clouds are far behind me, oh",
+        "Where troubles melt like lemon drops",
+        "Way above the chimney tops",
+        "That's where you'll find me"
+       ]
+      },
+      {
+       "label": "Refrain 2",
+       "lines": [
+        "Somewhere over the rainbow",
+        "Bluebirds fly, hmm",
+        "Birds fly over the rainbow",
+        "Why, then oh why, can't I?"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "If happy little bluebirds fly",
+        "Beyond the rainbow",
+        "Why, oh why, can't I?"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "MONOPOLY",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Yeah"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I've been on a roll, where you been?",
+        "Real protective with my soul, where you been?",
+        "Is your GPS even on, where you been?",
+        "Matter of fact, I don't even care where you been"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Bad vibes, get off of me",
+        "Outta here with that fuckery",
+        "Treat my goals like property",
+        "Collect them like Monopoly",
+        "I probably won't come if there's not a fee",
+        "And if they try come stoppin' me",
+        "I swerve both ways, dichotomy"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "I like women and men (Yeah)",
+        "Work so fuckin' much, need a twinny, twin, twin",
+        "How you hit the club and you barely got in?",
+        "Then we hit the bank, making them investments for the win, oh"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Said, I been on a roll, where you been? (Where you been?)",
+        "Real protective with my soul, where you been? (Where you been?)",
+        "Is your GPS even on, where you been? (Where you been?)",
+        "Matter of fact, I don't even care where you been"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Bad vibes, get off of me",
+        "Outta here with that fuckery",
+        "Treat my goals like property",
+        "Collect them like Monopoly",
+        "I probably won't come if there's not a fee",
+        "And if they try come stoppin' me",
+        "I show them my discography (Yeah, yeah)"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "I like women and men (Yeah)",
+        "Work so fuckin' much, need a twinny, twin, twin (Hey)",
+        "You'd be straight for life if I gave you my PIN (Yeah)",
+        "Even though we gave up that 90% for the win, go"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "I've been on a roll, where you been? (Where you been?)",
+        "Real protective with my soul, where you been? (Where you been?)",
+        "Is your GPS even on, where you been? (Where you been?)",
+        "Matter of fact, I don't even care where you been"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Yeah, hell nah",
+        "I don't even care where you been (Oh, yeah)",
+        "Hell nah (Oh, yeah)",
+        "Said I don't even care"
+       ]
+      },
+      {
+       "label": "Verse 4",
+       "lines": [
+        "Remember when we made a fuckin' album off that Clicquot? (Ooh)",
+        "I never track my vocals, so shout out to Eric Vetro (I love Eric Vetro, man)",
+        "This been buildin' up, I guess this friendship like Home Depot (Ooh)",
+        "I'm so thankful working with my best friend, she the cheat code",
+        "She the cheat code (Yeah)"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Where you at? Where you been? (Oh yeah)",
+        "Where you been? Where you at, ho? Hey (Where you been?)",
+        "Where you at? Where you been, ho? Hey (Mmm, yeah)",
+        "I don't care where you been, ho (Been)",
+        "Where you been, Cletus?",
+        "Yeah, who? (What?) Clevus?",
+        "Who the fuck is Cletus?",
+        "It's from, um",
+        "Cletus? Girl",
+        "Nutty Fropessor",
+        "We have to wrap, five, six, seven, eight",
+        "Yeah"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Boyfriend",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I'm a motherfuckin' train wreck",
+        "I don't wanna be too much",
+        "But I don't wanna miss your touch",
+        "And you don't seem to give a fuck",
+        "I don't wanna keep you waiting",
+        "But I do just what I have to do",
+        "And I might not be the one for you",
+        "But you ain't allowed to have no boo"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "'Cause I know we be so complicated",
+        "But we be so smitten, it's crazy",
+        "I can't have what I want, but neither can you"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You ain't my boyfriend (Boyfriend)",
+        "And I ain't your girlfriend (Girlfriend)",
+        "But you don't want me to see nobody else",
+        "And I don't want you to see nobody",
+        "But you ain't my boyfriend (Boyfriend)",
+        "And I ain't your girlfriend (Girlfriend)",
+        "But you don't want me to touch nobody else (Nobody)",
+        "Baby, we ain't gotta tell nobody"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Even though you ain't mine, I promise the way we fight",
+        "Make me honestly feel like we just in love (Love)",
+        "'Cause, baby, when push comes to shove (Shove)",
+        "Damn, baby, I'm a train wreck, too (Too)",
+        "I lose my mind when it comes to you",
+        "I take time with the ones I choose",
+        "And I don't want a smile if it ain't from you, yeah"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I know we be so complicated",
+        "Lovin' you sometimes drive me crazy",
+        "'Cause I can't have what I want and neither can you (No, no)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You ain't my boyfriend (Boyfriend)",
+        "And I ain't your girlfriend (Girlfriend)",
+        "But you don't want me to see nobody else",
+        "And I don't want you to see nobody",
+        "But you ain't my boyfriend (Boyfriend)",
+        "And I ain't your girlfriend (Girlfriend)",
+        "But you don't want me to touch nobody else (Nobody)",
+        "Baby, we ain't gotta tell nobody"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "I wanna kiss you (Yeah), don't wanna miss you (Yeah)",
+        "But I can't be with you 'cause I got issues (No)",
+        "Yeah, on the surface, seem like it's easy",
+        "Careful with words, but it's still hard to read me",
+        "Stress high when the trust low (Mmm)",
+        "Bad vibes, where'd the fun go? (Oh)",
+        "Try to open up and love more (Love more)",
+        "Try to open up and love more"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "If you were my boyfriend",
+        "And you were my girlfriend",
+        "I prolly wouldn't see nobody else",
+        "But I can't guarantee that by myself"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You ain't my boyfriend (Boyfriend, you ain't my boyfriend)",
+        "And I ain't your girlfriend (Girlfriend, I ain't your girlfriend)",
+        "But you don't want me to see nobody else (Nobody)",
+        "And I don't want you to see nobody",
+        "But you ain't my boyfriend (Boyfriend, you know you ain't my boyfriend)",
+        "And I ain't your girlfriend (Girlfriend, yeah, mmm)",
+        "But you don't want me to touch nobody else (Nobody)",
+        "Baby, we ain't gotta tell nobody (Oh yeah)",
+        "You ain't my boyfriend (Boyfriend)",
+        "And I ain't your girlfriend (Girlfriend)",
+        "But you don't want me to see nobody else",
+        "And I don't want you to see nobody",
+        "But you ain't my boyfriend (Boyfriend)",
+        "And I ain't your girlfriend (Girlfriend, yeah)",
+        "But you don't want me to touch nobody else (Nobody)",
+        "Baby, we ain't gotta tell nobody"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Stuck with U",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Mmm",
+        "Hey, yeah",
+        "(That's just for fun)",
+        "(What?)",
+        "(I'm stuck with you)",
+        "Ah"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I'm not one to stick around",
+        "One strike and you're out, baby",
+        "Don't care if I sound crazy",
+        "But you never let me down, no, no",
+        "That's why when the sun's up, I'm stayin'",
+        "Still layin' in your bed, singin'"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Ooh, ooh, ooh, ooh",
+        "Got all this time on our hands",
+        "Might as well cancel our plans, yeah",
+        "I could stay here for a lifetime"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "So, lock the door and throw out the key",
+        "Can't fight this no more, it's just you and me",
+        "And there's nothin' I, nothin' I, I can do",
+        "I'm stuck with you, stuck with you, stuck with you",
+        "So, go ahead and drive me insane",
+        "Baby, run your mouth, I still wouldn't change",
+        "Being stuck with you, stuck with you, stuck with you",
+        "I'm stuck with you, stuck with you, stuck with you, baby"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "There's nowhere we need to be, no, no, no",
+        "I'ma get to know you better",
+        "Kinda hope we're here forever",
+        "There's nobody on these streets",
+        "If you told me that the world's endin'",
+        "Ain't no other way that I can spend it"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Oh, oh, oh, oh (Ooh)",
+        "Got all this time in my hands",
+        "Might as well cancel our plans (Yeah, yeah)",
+        "I could stay here forever"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "So, lock the door and throw out the key",
+        "Can't fight this no more, it's just you and me",
+        "And there's nothin' I, nothin' I, I can do",
+        "I'm stuck with you, stuck with you, stuck with you",
+        "So, go ahead and drive me insane",
+        "Baby, run your mouth, I still wouldn't trade",
+        "Being stuck with you, stuck with you, stuck with you",
+        "I'm stuck with you, stuck with you, stuck with you"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Woah",
+        "Baby, come take all my time",
+        "Go on, make me lose my mind",
+        "We got all that we need here tonight"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I lock the door (Lock the door) and throw out the key",
+        "Can't fight this no more (Can't fight this no more), it's just you and me",
+        "And there's nothin' I, nothin' I'd rather do",
+        "I'm stuck with you, stuck with you, stuck with you",
+        "So, go ahead and drive me insane",
+        "Baby, run your mouth, I still wouldn't change",
+        "All this lovin' you, hatin' you, wantin' you",
+        "I'm stuck with you, stuck with you, stuck with",
+        "You, oh, oh"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Stuck with you, stuck with you, stuck with you"
        ]
       }
      ]

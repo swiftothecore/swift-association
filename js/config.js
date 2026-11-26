@@ -611,7 +611,7 @@ export const GUESTS = [
     id: "ariana-grande",
     name: "Ariana Grande",
     file: "data/guests/ariana-grande.json",
-    songCount: 135,
+    songCount: 162,
     // Cocoa, rose and champagne translate the catalogue's warm neutrals and pinks
     // into pass hardware while the full nine-record palette stays in the data file.
     // The ticks are four rungs off that palette — blush, mauve, caramel, near-black.
