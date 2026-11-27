@@ -30225,11 +30225,10 @@ function endGame() {
     renderBestLine($("resultPodium"), mode);
   }
 
-  // A fresh player who took the gentle Relaxed start gets a one-time nudge toward Normal, and
-  // once they're a few games in, the one-time "which era is yours?" prompt. Both are one-shot
-  // overlays sharing #firstRunBody, and their gates now overlap, so they take turns: whoever
-  // claims this results screen wins and the other stays armed for a later game. Firing both
-  // would silently overwrite the first — and mark it seen — costing the player that invitation.
+  // A strong Relaxed run from a player who has never played a timed mode gets the ADD A CLOCK
+  // stamp in the replay row, and a few games in comes the one-time "which era is yours?" card.
+  // The era card waits out any results screen the stamp claims, so the player who has just
+  // been offered Normal reads that offer, not a card over it.
   if (!maybeShowReadyForNormal()) maybeAskEra();
 }
 
@@ -34238,7 +34237,7 @@ function maybeGuideHint() {
   showGuideBeat("guideHint");
 }
 
-/* Quiet the one-time onboarding: the welcome, the era prompt, the ready-for-Normal nudge and
+/* Quiet the one-time onboarding: the welcome, the era prompt, the ADD A CLOCK stamp and
    the guided-round beats, all spent up front so nothing stands in front of the game. Shared by
    the established-player guard below and the ?intro=0 testing flag. */
 function silenceFirstImpressions() {
@@ -34526,10 +34525,6 @@ function wireFirstRun() {
       // Post-game era prompt (standalone — not part of the first-run step machine)
       case "confirm": setFavouriteAlbum(firstRunEra); closeFirstRun(); break;
       case "skip":    closeFirstRun(); break;
-      // Post-game "ready for Normal?" nudge
-      case "normal-yes": setGameType("classic"); setMode("medium"); closeFirstRun(); break;
-      case "normal-no":  closeFirstRun(); break;
-      case "normal-easy": setGameType("classic"); setMode("easy"); closeFirstRun(); break;
     }
   });
   // The overlay never takes focus when it opens: moving focus onto its first button made the
@@ -34587,62 +34582,6 @@ function maybeShowReadyForNormal() {
   paintNormalStamp();
   setResultStamps(true, false, true);
   return true;
-}
-// The card shows the step rather than describing it: the front page's own difficulty row, with
-// a pen hop from Relaxed onto Normal, so "switch any time" points at a row the player has now
-// seen. The terms are the three levers Normal actually moves against Relaxed (MODES in
-// js/config.js: a 10s clock, no hints, not in the title; suggestions stay), drawn in the front
-// page's rule marks. It used to say only "adds a clock", which left two of the three out.
-// Hopping over Easy is visible now, so Easy gets its own door as the second tab. The row is
-// decorative spans (aria-hidden), not buttons, and sits outside #modeTabs, which renderModePicker
-// owns. The start is the Start writing button itself, as on the welcome. Board:
-// scripts/ui/clock-nudge-board.html (C; A laid the run's page times on the timer bar, B ran it).
-function readyForNormalHTML() {
-  const rung = (m, cls) => `<span class="mode-tab ${cls}" data-mode="${m}">${MODES[m].label}</span>`;
-  return `<p class="fr-kicker">nicely done</p>` +
-    `<h2 id="firstRunTitle" class="fr-title">Ready to start the clock?</h2>` +
-    `<div class="fr-rung" aria-hidden="true"><div class="mode-tabs mode-tabs--shelf">` +
-      rung("relaxed", "is-was") + rung("easy", "is-was") + rung("medium", "active") + rung("hard", "is-was") + rung("ultra", "is-was") +
-    `</div></div>` +
-    `<p class="fr-sub fr-rung-lead">Same game, three changes:</p>` +
-    `<ul class="fr-terms" aria-label="What Normal changes">` +
-      `<li>${FR_RULE("rule-clock")}${MODES.medium.seconds} seconds a page</li>` +
-      `<li>${FR_RULE("rule-hint", "rule-strike")}no hints</li>` +
-      `<li>${FR_RULE("rule-title", "rule-strike")}not in the title</li>` +
-    `</ul>` +
-    `<button type="button" class="btn-primary play-cta fr-start" data-fr="normal-yes">${ctaContentHTML("", "", "", "Switch me to Normal")}</button>` +
-    `<div class="fr-tabs">` +
-      `<button type="button" class="fr-tab" data-fr="normal-no">Stay in Relaxed <small>switch any time</small></button>` +
-      `<button type="button" class="fr-tab" data-fr="normal-easy">Try Easy first <small>${MODES.easy.seconds} seconds, titles still count</small></button>` +
-    `</div>`;
-}
-// The hop is measured off the tabs as laid out, so it lands on Normal at any text size or width.
-// A quick pen stroke: lifts off steep, flattens lopsided over Easy, drops onto Normal, with a
-// head of two unequal strokes.
-function drawReadyHop() {
-  const rung = document.querySelector("#firstRunBody .fr-rung");
-  if (!rung || !rung.offsetWidth) return;
-  rung.querySelector(".fr-hop")?.remove();
-  const box = rung.getBoundingClientRect();
-  const a = rung.querySelector('[data-mode="relaxed"]').getBoundingClientRect();
-  const b = rung.querySelector('[data-mode="medium"]').getBoundingClientRect();
-  const k = box.width / rung.offsetWidth || 1;
-  const x1 = (a.left - box.left + a.width * .55) / k, x2 = (b.left - box.left + b.width * .42) / k;
-  const y = (a.top - box.top) / k - 2, top = y - 30, w = x2 - x1, f = (n) => n.toFixed(1);
-  const W = rung.offsetWidth, H = rung.offsetHeight;
-  rung.insertAdjacentHTML("beforeend",
-    `<svg class="fr-hop" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true" focusable="false">` +
-    `<path d="M${f(x1 - 2)} ${f(y - 1)} C${f(x1 - 1)} ${f(top + 4)} ${f(x1 + w * .38)} ${f(top - 4)} ${f(x1 + w * .62)} ${f(top + 1)} S${f(x2 + 1)} ${f(top + 12)} ${f(x2 + .5)} ${f(y - 3)}"/>` +
-    `<path d="M${f(x2 - 7.8)} ${f(y - 11.2)} C${f(x2 - 4.4)} ${f(y - 7.6)} ${f(x2 - 2)} ${f(y - 5)} ${f(x2 + .4)} ${f(y - 2.6)} C${f(x2 + 1.6)} ${f(y - 6)} ${f(x2 + 3.4)} ${f(y - 9)} ${f(x2 + 5.6)} ${f(y - 11.4)}"/>` +
-    `<text x="${f(x2 + 10)}" y="${f(top + 8)}" transform="rotate(-5 ${f(x2)} ${f(top)})">next</text></svg>`);
-}
-window.addEventListener("resize", drawReadyHop);
-function showReadyForNormal(force) {
-  if (!force && !screens.results.classList.contains("active")) return;   // they navigated away — skip
-  $("firstRunBody").innerHTML = readyForNormalHTML();
-  showOnboardingOverlay();
-  requestAnimationFrame(drawReadyHop);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawReadyHop);
 }
 
 // One-off era prompt, held back until the player is a few games in (ERA_PROMPT_AFTER_GAMES) so

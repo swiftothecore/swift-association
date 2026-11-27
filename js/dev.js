@@ -789,7 +789,7 @@ export function initDev(api) {
   const glossSel = select(["", ...api.onboarding.glossaryTerms()], (x) => x, (x) => x || "top of page");
   body.append(section("onboarding",
     row(btn("replay first-run", () => api.onboarding.replay()),
-        btn("ready-for-normal nudge", () => api.onboarding.normalNudge())),
+        btn("ADD A CLOCK stamp (on results)", () => api.onboarding.normalNudge())),
     row(btn("era prompt", () => api.onboarding.eraPrompt()),
         btn("mark done", () => { api.onboarding.markDone(); toast("first-run marked done"); })),
     row(btn("first desk on", () => { api.onboarding.firstDesk(true); toast("front page stripped"); }),
