@@ -43,9 +43,9 @@ test('Miley Cyrus catalogue has its records, every song once and every line sung
       ['Endless Summer Vacation', 12],
       ['Something Beautiful', 13],
       ['Bass Persuades', 10],
-      ['Soundtracks', 10],
+      ['Soundtracks', 5],
       ['Collaborations', 13],
-      ['Standalone & Rarities', 5],
+      ['Standalone & Rarities', 2],
     ],
   );
   assert.equal(new Set(songs.map(({ title }) => title.toLocaleLowerCase())).size, songs.length);
@@ -60,12 +60,14 @@ test('Miley Cyrus catalogue has its records, every song once and every line sung
   assert.ok(Object.keys(catalogue.palette.colors).length === catalogue.albums.length);
 });
 
-test('the one pair of Miley titles that fold to the same key is the pair pageTwin covers', () => {
+// Her 2009 "Dream" folded to the same key as "D.R.E.A.M." until it was cut as a cover. Pinned
+// empty so a new pair is noticed and checked against pageTwin.
+test('no two Miley titles fold to the same key', () => {
   const byKey = new Map();
   for (const { title } of songs) {
     const key = normalizeTitle(title);
     byKey.set(key, [...(byKey.get(key) || []), title]);
   }
   const clashes = [...byKey.values()].filter((titles) => titles.length > 1);
-  assert.deepEqual(clashes, [['D.R.E.A.M.', 'Dream']]);
+  assert.deepEqual(clashes, []);
 });

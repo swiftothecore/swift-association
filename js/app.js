@@ -26215,8 +26215,10 @@ function typoTitleSong(key) {
   return found;
 }
 
-// Two titles in one catalogue can fold to the same key (Miley's "D.R.E.A.M." and her 2009
-// "Dream" are both "dream"), and titleIndex can hold only one of them. When the page takes
+// Two titles in one corpus can fold to the same key (the lineup's blend holds Ariana's "stay"
+// beside Miley's "Stay", and Beyoncé's "Déjà Vu" beside Olivia's "deja vu"; Miley's "D.R.E.A.M."
+// and "Dream" were the first, before Dream was cut as a cover), and titleIndex can hold only
+// one of them. When the page takes
 // the other, the player who typed it meant that one: hand back the twin the page accepts.
 // Taylor's catalogue has no such pair, so on her songs this always returns what it was given.
 function pageTwin(song) {

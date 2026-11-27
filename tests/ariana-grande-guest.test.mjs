@@ -24,9 +24,9 @@ test('Ariana Grande catalogue has its records and three loose shelves, every son
       ['eternal sunshine', 19],
       ['petal', 12],
       ['Christmas Songs', 11],
-      ['Soundtracks', 5],
+      ['Soundtracks', 3],
       ['Collaborations', 17],
-      ['Standalone & Rarities', 5],
+      ['Standalone & Rarities', 4],
     ],
   );
   // The pass quotes the count, so it has to move with the file.
@@ -44,8 +44,10 @@ test('Ariana Grande catalogue has its records and three loose shelves, every son
 test('the loose shelves carry no Genius page suffixes and no Italian-only song', () => {
   // Genius files several of these under a longer page title; the game names the song.
   const titles = new Set(songs.map(({ title }) => title));
-  for (const title of ['Zero to Hero', "Don't Call Me Angel", 'Oh Santa!', 'Somewhere Over the Rainbow']) {
-    assert.ok(titles.has(title), title);
+  for (const title of ["Don't Call Me Angel", 'Oh Santa!']) assert.ok(titles.has(title), title);
+  // Covers stay off the loose shelves: a word only they hold points at the song's writer.
+  for (const title of ['Zero to Hero', 'Beauty and the Beast', 'Somewhere Over the Rainbow']) {
+    assert.equal(titles.has(title), false, title);
   }
   assert.equal(songs.some(({ title }) => /\(from |charlie's angels\)|live from/i.test(title)), false);
   // E più ti penso is sung entirely in Italian: an English prompt word cannot land in it, and

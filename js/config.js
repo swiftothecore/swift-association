@@ -611,7 +611,7 @@ export const GUESTS = [
     id: "ariana-grande",
     name: "Ariana Grande",
     file: "data/guests/ariana-grande.json",
-    songCount: 162,
+    songCount: 159,
     // Cocoa, rose and champagne translate the catalogue's warm neutrals and pinks
     // into pass hardware while the full nine-record palette stays in the data file.
     // The ticks are four rungs off that palette — blush, mauve, caramel, near-black.
@@ -683,7 +683,7 @@ export const GUESTS = [
     id: "miley-cyrus",
     name: "Miley Cyrus",
     file: "data/guests/miley-cyrus.json",
-    songCount: 170,
+    songCount: 162,
     // Denim, which is where her stamp's ink came from. The ticks are four rungs of the bead
     // palette, each taken off a sleeve: the Endless Summer Vacation sky, the Plastic Hearts
     // pink, the Younger Now lime and the Bangerz violet.
