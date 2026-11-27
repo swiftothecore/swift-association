@@ -16875,11 +16875,12 @@ function shortTitleChallengeWords(max) {
    3. A MERGED SONG CREDITS BOTH ARTISTS, via _alsoBy. Every goal card counts artists, so a
       shared song has to count for each of them; songArtists() is the one way to ask. */
 const blendFiles = () => [
-  // The unreleased songs stay out of the blend altogether. The blend renames every album, so the
-  // flag that keeps them credit-only (album === UNRELEASED_ALBUM) could not survive the trip.
+  // The unreleased songs stay out of the blend altogether, a guest's as well as Taylor's. The blend
+  // renames every album, so the flag that keeps them credit-only (album === UNRELEASED_ALBUM)
+  // could not survive the trip, and a guest's Unreleased shelf would be dealt as ordinary songs.
   Promise.resolve({ name: HOME_ARTIST, albums: taylorGrouped.filter((a) => a.album !== UNRELEASED_ALBUM), words: taylorWords }),
   ...GUESTS.map((g) => loadGuest(g.id).then((cat) => ({
-    name: g.name, albums: cat.albums || [], words: cat.words || [],
+    name: g.name, albums: (cat.albums || []).filter((a) => a.album !== UNRELEASED_ALBUM), words: cat.words || [],
   }))),
 ];
 

@@ -99,7 +99,6 @@
     "escape",
     "eye",
     "face",
-    "fade",
     "fake",
     "father",
     "fear",
@@ -282,7 +281,6 @@
     "street",
     "strong",
     "stupid",
-    "summer",
     "surprise",
     "swear",
     "sweet",
@@ -4770,76 +4768,6 @@
           ]
         },
         {
-          "title": "Lo Vas A Olvidar",
-          "sections": [
-            {
-              "label": "Verso 1",
-              "lines": [
-                "Dime si me echas de meno' aún",
-                "Dime si no me perdonas aún",
-                "¿Qué harás con to' este veneno? Na' bueno",
-                "Dime si me echas de meno' aún"
-              ]
-            },
-            {
-              "label": "Coro",
-              "lines": [
-                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
-                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?",
-                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
-                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?"
-              ]
-            },
-            {
-              "label": "Interludio",
-              "lines": [
-                "Isn't good",
-                "And, yeah, that's it",
-                "Ah, besitos, hahaha",
-                "Take care, please"
-              ]
-            },
-            {
-              "label": "Verso 2",
-              "lines": [
-                "Dime que no te arrepientes aún",
-                "Dime si aún queda algo en común",
-                "El tiempo que se pierde no vuelve",
-                "Dame un beso y bájame de la cru'"
-              ]
-            },
-            {
-              "label": "Coro",
-              "lines": [
-                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
-                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?",
-                "¿Lo va' a olvidar? Can you let it go? Can you let it go?",
-                "¿Lo va' a olvidar? Can you let it go? ¿Lo va' a olvidar?"
-              ]
-            },
-            {
-              "label": "Puente",
-              "lines": [
-                "Ay, ay",
-                "Ay, ay, ay, ah-ah"
-              ]
-            },
-            {
-              "label": "Outro",
-              "lines": [
-                "El amor no puede medirse en paso' firme'",
-                "Un día soy un Dio' y al otro puedo partirme",
-                "I needed to go 'cause I needed to know you don't need me",
-                "You reap what you sow, but it seems like you don't even see me",
-                "El amor no puede medirse en paso' firme'",
-                "Un día soy un Dio' y al otro puedo partirme",
-                "You say it to me like it's something I have any choice in",
-                "If I wasn't important, then why would you waste all your poison?"
-              ]
-            }
-          ]
-        },
-        {
           "title": "What Was I Made For?",
           "sections": [
             {
@@ -5360,99 +5288,6 @@
           ]
         }
       ]
-    },
-    {
-      "album": "Unreleased",
-      "songs": [
-        {
-          "title": "Blind Faith",
-          "sections": [
-            {
-              "label": "Chorus",
-              "lines": [
-                "It's okay, okay to miss me",
-                "It's okay to say that you made a mistake",
-                "You loved me, love just don't fade away (Okay, okay)",
-                "It's okay, okay to miss me (Okay, okay)",
-                "It's okay, okay to miss me"
-              ]
-            },
-            {
-              "label": "Verse 1",
-              "lines": [
-                "24/7, now, I know you'll never stop",
-                "Thinking of a heaven that you know you never got",
-                "Wanted to believe you that I'm needed but I'm not",
-                "Just in case you wondered how I made it to the top",
-                "I'll never spend the summer telling mean girls that I'm hot",
-                "You can buy them diamonds with the money you don't got (It's okay)",
-                "If you don't stay I won't complain",
-                "I don't want you here anyway",
-                "It's not the same",
-                "I'm in so low that I can't go out",
-                "Can't let them see that I'm not proud to wear your chain"
-              ]
-            },
-            {
-              "label": "Chorus",
-              "lines": [
-                "It's okay, okay to miss me",
-                "Trying not to make you complacent",
-                "You loved me, love just don't fade away (Okay, okay)",
-                "It's okay, okay to miss me",
-                "It's okay, okay to miss me",
-                "It's okay to say that you made a mistake",
-                "You loved me, love just don't fade away",
-                "It's okay, okay to miss me"
-              ]
-            },
-            {
-              "label": "Bridge",
-              "lines": [
-                "I don't like to spend time by myself",
-                "I know you're engaged with somebody else",
-                "If you don't think I'll survive on my own",
-                "Why won't, why won't you just let me go?"
-              ]
-            },
-            {
-              "label": "Verse 2",
-              "lines": [
-                "You don't think I'll survive on my own",
-                "That's what you tell yourself, lyin' alone",
-                "Who knows? Maybe you're fine you're okay",
-                "I don't really care anyway",
-                "Anyway, it's not like me to stay",
-                "Plus, I don't want to take you with me",
-                "I could, I could lie say I can't",
-                "But I could, but I'd rather you just miss me"
-              ]
-            },
-            {
-              "label": "Bridge",
-              "lines": [
-                "It's okay, okay to miss me",
-                "Trying not to make you complacent",
-                "I have never known you to be that way",
-                "Trying hard to work on my patience",
-                "If you wanted me then you could make me stay"
-              ]
-            },
-            {
-              "label": "Chorus",
-              "lines": [
-                "But it's okay, okay to miss me",
-                "It's okay to say that you made a mistake",
-                "You loved me, love just don't fade away",
-                "It's okay, okay to miss me",
-                "It's okay, okay to miss me",
-                "It's okay to say that you made a mistake",
-                "You loved me, love just don't fade away"
-              ]
-            }
-          ]
-        }
-      ]
     }
   ],
   "palette": {
@@ -5465,8 +5300,7 @@
       "HIT ME HARD AND SOFT": "#1e4470",
       "Soundtracks": "#2f6b4f",
       "Standalone Singles": "#6b4a7a",
-      "Collaborations": "#7a2f4a",
-      "Unreleased": "#8f8f8a"
+      "Collaborations": "#7a2f4a"
     }
   }
 }
