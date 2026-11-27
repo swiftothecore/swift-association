@@ -54,7 +54,6 @@
   "broken",
   "bruise",
   "burn",
-  "bus",
   "called",
   "came",
   "car",
@@ -7520,6 +7519,66 @@
        ]
       }
      ]
+    },
+    {
+     "title": "Needless To Say",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Guess you think it's kinda funny",
+        "All the boys who love-and-left me",
+        "In New York now, getting laid",
+        "Guess you think it's entertaining",
+        "Early-twenties judgment",
+        "Oh, it gets you off, how much you love it"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You need",
+        "Need less to say about everything",
+        "Need more to do than just focus on me",
+        "Try working on you",
+        "I promise you'll be much happier if you do"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "A pretty dress, an awkward angle",
+        "I bet you zoomed in close and held it up to show all of your friends",
+        "So much spite, I bet it's painful",
+        "One-way conversations",
+        "How's the weather in your mother's basement?"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You need",
+        "Need less to say about everything",
+        "Need more to do than just focus on me",
+        "Try working on you",
+        "I promise you'll be much happier if you do",
+        "You need",
+        "Need lessons on immaturity",
+        "Need more to do than just comment at me",
+        "Try working on you",
+        "I promise you'll be much happier if you do (Ooh)"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "You do",
+        "Needless to say",
+        "Needless to say",
+        "Needless to say"
+       ]
+      }
+     ]
     }
    ]
   },
@@ -9126,369 +9185,521 @@
    ]
   },
   {
-   "album": "Singles & Collaborations",
+   "album": "Soundtracks",
    "songs": [
     {
-     "title": "Smoke and Fire",
+     "title": "Smile",
      "sections": [
-      {
-       "label": "Chorus",
-       "lines": [
-        "(Oh-oh) Our love is running into a burning building",
-        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
-        "Feel the heat, so we started running",
-        "You know you saw it coming",
-        "But the memories are still in my mind",
-        "Burning like smoke and fire"
-       ]
-      },
       {
        "label": "Verse 1",
        "lines": [
-        "Rumors spread like wildfire",
-        "I held a strong ground",
-        "But I've been burning down",
-        "'Cause it's like fire is all I hear about",
-        "And we are fading out",
-        "Don't wanna turn out the light",
-        "But it's like..."
+        "Things aren't going your way",
+        "And it's written all over your face",
+        "And you're not even looking for the better days",
+        "'Cause you think that there's nothing left, no"
        ]
       },
       {
        "label": "Pre-Chorus",
        "lines": [
-        "I'm no firefighter",
-        "I just need to breathe tonight",
-        "So sound the alarm, and there goes the night"
+        "But you can feel the sun, you can hear the wind blow",
+        "It's right outside of your window",
+        "There's so many reasons for you to be happy",
+        "It's all up to you, so don't be stupid",
+        "It's always worse in your head",
+        "So just take a second"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "(Oh-oh) Our love is running into a burning building",
-        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
-        "Feel the heat, so we started running",
-        "You know you saw it coming",
-        "But the memories are still in my mind",
-        "Burning like smoke and fire"
+        "To breathe",
+        "Take in what you see",
+        "Who knows what you'll find?",
+        "In this beautiful life",
+        "That gives you a reason to smile",
+        "You smile, I smile",
+        "We smile"
        ]
       },
       {
        "label": "Verse 2",
        "lines": [
-        "Secrets in a small town, they always get around",
-        "But the flame has been put out",
-        "And I am hearing all the small talk",
-        "They whisper as I walk",
-        "In a house that's boarded up",
-        "So good luck"
+        "You wake up to another day",
+        "Another shot at making your vibe change",
+        "And if you didn't smile yesterday",
+        "Here's a chance, here's your moment, yeah"
        ]
       },
       {
        "label": "Pre-Chorus",
        "lines": [
-        "I'm no firefighter",
-        "I just need to breathe tonight",
-        "So sound the alarm, and there goes the night"
+        "You can feel the sun, you can hear the wind blow",
+        "It's right outside of your window",
+        "There's so many reasons for you to be happy",
+        "It's all up to you, so don't be stupid",
+        "It's always worse in your head",
+        "So just take a second"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "(Oh-oh) Our love is running into a burning building",
-        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
-        "Feel the heat, so we started running",
-        "You know you saw it coming",
-        "But the memories are still in my mind",
-        "Burning like smoke and fire"
+        "To breathe",
+        "Take in what you see",
+        "Who knows what you'll find?",
+        "In this beautiful life",
+        "That gives you a reason to smile",
+        "You smile, I smile",
+        "We smile"
        ]
       },
       {
        "label": "Bridge",
        "lines": [
-        "Smoke and fire, smoke and fire",
-        "Don't you know that if there's smoke, there's fire?",
-        "Smoke there's fire, smoke there's fire",
-        "Now, now",
-        "(Oh-oh) And now it's over",
-        "(Oh-oh) I'm getting colder",
-        "(Oh-oh) And it's the feeling",
-        "Of running into a burning building"
-       ]
-      },
-      {
-       "label": "Breakdown",
-       "lines": [
-        "Rumors spread like wildfire",
-        "I held a strong ground",
-        "But I've been burning down"
+        "When you're down (Smile), up (Smile)",
+        "When you're out (Smile)",
+        "When you're on top (Smile), low (Smile)",
+        "Whenever, just (Smile)"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "(Oh-oh) Our love is running into a burning building",
-        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
-        "Feel the heat, so we started running",
-        "You know you saw it coming",
-        "But the memories are still in my mind",
-        "Burning like smoke and fire"
+        "Breathe",
+        "Take in what you see",
+        "Who knows what you'll find?",
+        "In this beautiful life",
+        "That gives you a reason to smile",
+        "You smile, I smile",
+        "We smile"
        ]
       },
       {
        "label": "Outro",
        "lines": [
-        "Smoke and fire, smoke and fire",
-        "Don't you know that if there's smoke, there's fire?",
-        "Smoke there's fire, smoke there's fire",
-        "Now, now",
-        "(Oh-oh) And now it's over",
-        "(Oh-oh) I'm getting colder",
-        "(Oh-oh) I'm so tired",
-        "Burning like smoke and fire"
+        "Breathe",
+        "(You can feel the sun, you can hear the wind blow)",
+        "Take in what you see",
+        "(You can feel the sun, you can hear the wind blow)",
+        "Who knows what you'll find?",
+        "(You can feel the sun, you can hear the wind blow)",
+        "In this beautiful life",
+        "(You can feel the sun, you can hear the wind blow)",
+        "That gives you a reason to smile"
        ]
       }
      ]
     },
     {
-     "title": "Why",
+     "title": "Stand Out",
      "sections": [
       {
        "label": "Verse 1",
        "lines": [
-        "You like New York City in the daytime",
-        "I like New York City in the nighttime",
-        "You say you like sleeping with the air off",
-        "I don't, I need it on",
-        "You like the light coming through the windows",
-        "I sleep late, so I just keep 'em all closed",
-        "You ignore the music on the radio",
-        "I don't, I sing along"
+        "Don't sweat all the little things",
+        "Just keep your eye on the bigger things",
+        "'Cause if you look a little closer",
+        "You're gonna get a better picture",
+        "Your heart beats like a marching drum",
+        "It's telling you to keep walking on",
+        "And you gotta find a little fire",
+        "Shine your light a little brighter"
        ]
       },
       {
        "label": "Pre-Chorus",
        "lines": [
-        "I don't ask for you to change, baby, no, no, no",
-        "And you don't ask for me to change"
+        "You and I were meant to fly",
+        "Like rockets in the night"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "Tell me how we're not alike",
-        "But we work so well and we don't even know why",
-        "Funny how the stars crossed right",
-        "'Cause we work so well and we don't even know why",
-        "You can call it fire and ice",
-        "But we work so well and we don't even know why",
-        "We don't even know why, no, no",
-        "We don't even know why, no, no, no"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "No, no, no, no",
-        "We like it in the daytime",
-        "We like it in the end of time",
-        "No, no, no, no",
-        "We like it in the daytime",
-        "We like it in the end of time"
-       ]
-      },
-      {
-       "label": "Verse 2",
-       "lines": [
-        "Cold outside and you're just in a T-shirt",
-        "I have cold blood even in a sweater",
-        "You start your night sippin' by the Kilo",
-        "I don't, I know you know"
-       ]
-      },
-      {
-       "label": "Pre-Chorus",
-       "lines": [
-        "I don't ask for you to change, baby, no, no, no",
-        "And you don't ask for me to change"
-       ]
-      },
-      {
-       "label": "Chorus",
-       "lines": [
-        "Tell me how we're not alike",
-        "But we work so well and we don't even know why",
-        "Funny how the stars crossed right",
-        "'Cause we work so well and we don't even know why",
-        "You can call it fire and ice",
-        "But we work so well and we don't even know why",
-        "We don't even know why, no, no (No, no, no)",
-        "We don't even know why, no, no, no"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "No, no, no, no",
-        "We like it in the daytime (We don't even know)",
-        "We like it in the end of time (We don't even know)",
-        "No, no, no, no",
-        "We like it in the daytime",
-        "(We don't even know, know, know, know, know, know, know, know, know)",
-        "We like it in the end of time"
-       ]
-      },
-      {
-       "label": "Bridge",
-       "lines": [
-        "Somehow, we end up on the same side",
-        "And you wouldn't think that we'd be alright",
-        "Even our eyes are different colors, but we see fine",
-        "Somehow, we end up on the same side (Up on the same side)",
-        "And you wouldn't think that we'd be alright",
-        "(Think that we'd be alright)",
-        "Even our eyes are different colors, but we see fine"
-       ]
-      },
-      {
-       "label": "Chorus",
-       "lines": [
-        "(Oh) Tell me how we're not alike",
-        "But we work so well and we don't even know why",
-        "('Cause we work so well and we don't even know why, why)",
-        "Funny how the stars crossed right",
-        "'Cause we work so well and we don't even know why",
-        "(But we don't even know why)",
-        "You can call it fire and ice",
-        "But we work so well and we don't even know why",
-        "('Cause we work so well and we don't even know why, why)",
-        "We don't even know why, no, no",
-        "We don't even know why, no, no, no"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "No, no, no, no",
-        "We like it in the daytime (Oh)",
-        "We like it in the end of time (We don't even know why)",
-        "No, no, no, no",
-        "We like it in the daytime",
-        "We like it in the nighttime"
-       ]
-      }
-     ]
-    },
-    {
-     "title": "Honeymoon Fades",
-     "sections": [
-      {
-       "label": "Intro",
-       "lines": [
-        "I hope we stay the same, hey",
-        "Honeymoon"
-       ]
-      },
-      {
-       "label": "Verse 1",
-       "lines": [
-        "Unexpected, this thing that we fell into",
-        "Like, so connected",
-        "You came at a time when my heart was selective",
-        "Didn't have to choose, my love was accepted, yeah"
-       ]
-      },
-      {
-       "label": "Pre-Chorus",
-       "lines": [
-        "Now I'm learning you like 101",
-        "You were sent to me like a one of one",
-        "And now we're going hard, just one on one",
-        "Nobody else"
-       ]
-      },
-      {
-       "label": "Chorus",
-       "lines": [
-        "I hope we never change",
-        "I hope we stay the same",
-        "I hope that we can love through the pain",
-        "After the honeymoon fades",
-        "I hope we never change",
-        "I hope we stay the same",
-        "I hope we can love through the pain",
-        "After the honeymoon fades"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "After the honeymoon fades, yeah"
-       ]
-      },
-      {
-       "label": "Verse 2",
-       "lines": [
-        "Now remember when we met, we was all in each other's bed",
-        "And we were spending every second we had",
-        "And now that it's official, it's hittin' a little different",
-        "What the hell we gonna do with these bags? No, yeah"
-       ]
-      },
-      {
-       "label": "Pre-Chorus",
-       "lines": [
-        "And now I'm learning you like 101",
-        "You were sent to me like a one of one",
-        "And now we're going hard, just one on one",
-        "Nobody else"
-       ]
-      },
-      {
-       "label": "Chorus",
-       "lines": [
-        "I hope we never change",
-        "I hope we stay the same",
-        "I hope that we can love through the pain",
-        "After the honeymoon fades",
-        "I hope we never change",
-        "I hope we stay the same",
-        "I hope we can love through the pain",
-        "After the honeymoon fades (I hope that we)"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "(Can you feel it with me? Can you feel it with me?)",
-        "After the honeymoon fades",
-        "(Can you feel it with me? Can you feel it with me?)",
-        "(Can you feel it with me? Can you feel it with me?)",
-        "(Can you feel it with me? Can you feel it with me?)"
-       ]
-      },
-      {
-       "label": "Bridge",
-       "lines": [
-        "And I hope it tastes the same, mmm",
-        "Even if it's bittersweet"
+        "Keep your head up, shoot the clouds down",
+        "Throw it all in, break your own ground",
+        "And if you're gonna make a mess, make it loud",
+        "And if you're gonna take a stand, stand out",
+        "Life is our game, we can go play",
+        "Shake up the rules, don't be afraid",
+        "And if you're gonna make a mess, make it loud",
+        "And if you're gonna take a stand, stand out"
        ]
       },
       {
        "label": "Refrain",
        "lines": [
-        "Honeymoon fading with you (Fading with you)",
-        "Honeymoon fading with you (Fading with you)",
-        "Honeymoon fading with you (Fading with you)",
-        "Honeymoon fading, fading"
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh)",
+        "Stand out (Oh)",
+        "Stand out"
        ]
       },
       {
-       "label": "Outro",
+       "label": "Verse 2",
        "lines": [
-        "Oh, oh, oh, oh, oh, oh, oh",
-        "Oh, oh, oh, oh, oh, oh",
-        "Oh, oh, oh"
+        "Jump on to the roller coaster",
+        "Up, up, now we're getting closer",
+        "We can be the silver lining",
+        "For every treasure that is hiding",
+        "We're coming on at the speed of light, yeah",
+        "Boom-boom, it's like dynamite",
+        "We're gonna start a revolution",
+        "Don't stop, keep movin'"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "You and I were made to fly",
+        "Like rockets in the night"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Keep your head up, shoot the clouds down",
+        "Throw it all in, break your own ground",
+        "And if you're gonna make a mess, make it loud",
+        "And if you're gonna take a stand, stand out",
+        "Life is our game, we can go play",
+        "Shake up the rules, don't be afraid",
+        "And if you're gonna make a mess, make it loud",
+        "And if you're gonna take a stand, stand out"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh)",
+        "Stand out (Oh)",
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh)",
+        "Stand out (Oh)",
+        "Stand out"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Be the voice, be the cause",
+        "Be the change, be yourself",
+        "That's the best you can be"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "You and I were made to fly",
+        "Like rockets in the night"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Keep your head up, shoot the clouds down",
+        "Throw it all in, break your own ground",
+        "And if you're gonna make a mess, make it loud",
+        "And if you're gonna take a stand, stand out",
+        "Life is our game, we can go play (Yeah)",
+        "Shake up the rules, don't be afraid (Ooh)",
+        "And if you're gonna make a mess, make it loud (Make it loud)",
+        "And if you're gonna take a stand, stand out"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "Stand out (Oh-oh-oh-oh)",
+        "(Yeah)",
+        "Stand out (Oh-oh-oh-oh)",
+        "(Stand out)",
+        "Stand out (Oh)",
+        "Stand out (Oh)",
+        "(Stand out)",
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh-oh-oh-oh)",
+        "Stand out (Oh)",
+        "Stand out (Oh)",
+        "Stand out"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Rescue Me",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "Ooh",
+        "Woah",
+        "Woah-oh"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "If I smile, dancing alone for a while",
+        "Oh-woah, would you rescue me?",
+        "And if I fall, hoping it's in your arms",
+        "I know, know, know you'll rescue me"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Ooh, la-la-la-la-da-da",
+        "Woah-woah-woah, darling, please rescue me",
+        "Ooh, la-la-la-la-da-da",
+        "Woah-woah-woah, won't you please rescue me?"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Give your heart, baby, just ease your mind",
+        "To see that it's meant to be",
+        "'Cause when I'm with you, darling, it's such a breeze",
+        "That I know, know you'll rescue me"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Ooh, la-la-la-la-da-da (Da-da-da)",
+        "Woah-woah-woah, darling, please rescue me (Rescue me)",
+        "Ooh, la-la-la-la-da-da",
+        "Woah-woah-woah, won't you please rescue me?",
+        "Mmm-mmm"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "And honey, if you see me drowning",
+        "Baby, fish me out, I'm falling",
+        "I just need a voice for calling",
+        "And can't you see I trust you always?",
+        "So I will linger 'til you know",
+        "That I will never let you go",
+        "If you rescue me"
+       ]
+      },
+      {
+       "label": "Verse 3",
+       "lines": [
+        "If I smile, dancing alone for a while",
+        "Oh-woah, would you rescue me?",
+        "And if I fall, hoping it's in your arms",
+        "I know, know, know you'll rescue me"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Wildside",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "My heart is racing",
+        "Can't stop this feeling",
+        "My ground is shaking",
+        "I wanna let go, go crazy",
+        "Dance on the ceiling",
+        "My world is waiting, I",
+        "Don't wanna stop, give up",
+        "I want it all 'cause I just ain't had enough",
+        "Keep up, we're gonna show the world",
+        "That there's just no stoppin' us",
+        "No one, can't hold us back, we're gonna break the rules",
+        "Can't hold us back, we're gonna light the fuse in us"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I'm living on the wildside, wildside",
+        "No telling what I might find, might find",
+        "No stopping 'cause it feels right, feels right",
+        "I'm living on the",
+        "Ooh, ooh"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "On the wildside, wildside",
+        "So ready, now it's my time, my time",
+        "No stopping 'cause it feels right, feels right",
+        "I'm living on the",
+        "Ooh, ooh"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "I used to think that",
+        "Good things were so bad",
+        "No need to hold back",
+        "Not me no more",
+        "I'm walking this road",
+        "I'm taking control",
+        "My heart can't say no"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I'm living on the wildside, wildside",
+        "No telling what I might find, might find",
+        "No stopping 'cause it feels right, feels right",
+        "I'm living on the",
+        "Ooh, ooh"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "On the wildside, wildside",
+        "So ready, now it's my time, my time",
+        "No stopping 'cause it feels right, feels right",
+        "I'm living on the",
+        "Ooh, ooh"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Don't wanna live my life by design",
+        "Locked inside, break out",
+        "Break the rules, light the fuse",
+        "Something new, that's right"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I'm living on the wildside",
+        "No telling what I might find",
+        "No stopping 'cause it feels right",
+        "Ooh"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I'm living on the wildside, wildside",
+        "No telling what I might find, might find (What I might find)",
+        "No stopping 'cause it feels right, feels right",
+        "I'm living on the",
+        "Ooh, ooh",
+        "Oh, I'm living on the wildside, wildside",
+        "So ready, now it's my time, my time",
+        "No stopping 'cause it feels right, feels right",
+        "I'm living on the",
+        "Ooh, ooh",
+        "I'm living on the wildside, wildside"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Lie for Love",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I'm played out, it's late out",
+        "I'm really hoping you don't care",
+        "This pent up momentum",
+        "You're starting to become aware"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I had the upper hand",
+        "But I don't, I don't",
+        "I know, I know, I don't",
+        "I had the upper hand",
+        "But I don't, I don't",
+        "I know, I know, I don't"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "We can't get too romantic",
+        "Too busy running high and low",
+        "I just don't understand it",
+        "Why I lie, why I lie for love",
+        "We can't get too romantic",
+        "Too busy running high and low",
+        "I just don't understand it",
+        "Why I lie, why I lie for love"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "It's all there, it's not fair",
+        "Where will our hearts be when it's done?",
+        "When night falls, and you don't call",
+        "I'll stay up waiting for the sun"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I had the upper hand",
+        "But I don't, I don't",
+        "I know, I know, I don't",
+        "I had the upper hand",
+        "But I don't, I don't",
+        "I know, I know, I don't"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "We can't get too romantic",
+        "Too busy running high and low",
+        "I just don't understand it",
+        "Why I lie, why I lie for love",
+        "We can't get too romantic",
+        "Too busy running high and low",
+        "I just don't understand it",
+        "Why I lie, why I lie for love"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "I had the upper hand",
+        "But I, I, I",
+        "I had the upper hand",
+        "But I",
+        "O-oh"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "We can't get too romantic",
+        "Too busy running high and low",
+        "I just don't understand it",
+        "Why I lie, why I lie for love",
+        "We can't get too romantic",
+        "Too busy running high and low",
+        "I just don't understand it",
+        "Why I lie, why I lie for love"
        ]
       }
      ]
@@ -9563,102 +9774,201 @@
        ]
       }
      ]
-    },
+    }
+   ]
+  },
+  {
+   "album": "Collaborations",
+   "songs": [
     {
-     "title": "Skin",
+     "title": "Hands",
      "sections": [
       {
-       "label": "Verse 1",
+       "label": "Chorus",
        "lines": [
-        "Maybe we could've been friends",
-        "If I met you in another life",
-        "Maybe then we could pretend",
-        "There's no gravity in the words we write",
-        "Maybe you didn't mean it",
-        "Maybe \"blonde\" was the only rhyme",
-        "The only rhyme"
+        "Come on, lay your hands, your hands on me",
+        "We don't have to talk 'cause talk is cheap",
+        "In the dark silence so loud",
+        "You only gotta lay your hands on me"
        ]
       },
       {
-       "label": "Pre-Chorus",
+       "label": "Post-Chorus",
        "lines": [
-        "Want my heart to be breakin', breakin', no",
-        "I'm happy and you hate it, hate it, oh",
-        "And I'm not asking you to let it go",
-        "But you been tellin' your side",
-        "So I'll be tellin' mine, oh"
+        "You say you're better with your hands",
+        "Hands",
+        "You say you're better with your hands",
+        "Hands"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I've been thinking about it",
+        "I've been thinking all night",
+        "Every time I try to learn your body language",
+        "Never get it right",
+        "You're so hard to read, baby",
+        "So I turn off the light",
+        "And you just drop that dress to the floor",
+        "We can talk until sunrise",
+        "I've been thinking about it",
+        "The way that you blow my mind",
+        "I've been thinking about it all night"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "You can try",
-        "To get under my, under my, under my skin",
-        "While he's on mine",
-        "Yeah, all on my, all on my, all on my skin",
-        "I wish you knew that even you",
-        "Can't get under my skin if I don't let you in"
+        "Come on, lay your hands, your hands on me",
+        "We don't have to talk 'cause talk is cheap",
+        "In the dark silence so loud",
+        "You only gotta lay your hands on me"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "You say you're better with your hands",
+        "Hands",
+        "You say you're better with your hands",
+        "Hands"
        ]
       },
       {
        "label": "Verse 2",
        "lines": [
-        "You're tellin' it how you see it",
-        "Like truth is whatever you decide",
-        "Some people will believe it",
-        "And some will read in between the lines",
-        "You're putting me in the spotlight",
-        "But I've been under it all my life",
-        "Said all my life"
+        "Don't tell me about it",
+        "Keep on blowing my mind",
+        "'Cause your lips are made for kissing, baby",
+        "So I put them on mine",
+        "No conversation",
+        "I've heard every line",
+        "So leave your shit at the door"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Come on, lay your hands, your hands on me",
+        "We don't have to talk 'cause talk is cheap",
+        "In the dark silence so loud",
+        "You only gotta lay your hands on me"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "You say you're better with your hands",
+        "Hands",
+        "You say you're better with your hands",
+        "Hands"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "First Love",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "I can't really tell why there's hills on my skin",
+        "When you're whisperin' all your intentions",
+        "And I don't really know why my heart skips a beat",
+        "When you get too close, oh, it's almost"
        ]
       },
       {
        "label": "Pre-Chorus",
        "lines": [
-        "Want my heart to be breakin', breakin', no",
-        "I'm happy and you hate it, hate it, oh",
-        "And I'm not asking you to let it go",
-        "But you been tellin' your side",
-        "So I'll be tellin' mine (Mine, oh)"
+        "Just like first love (Hey)",
+        "You give everything and you give too much",
+        "Just like first love (Hey)",
+        "You don't really care if it hurts a lot",
+        "When it's all done",
+        "You look back and know it was worth it all, worth it all",
+        "We'll never forget how we feel now"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "You can try",
-        "To get under my, under my, under my skin",
-        "While he's on mine",
-        "Yeah, all on my, all on my, all on my skin",
-        "I wish you knew that even you",
-        "Can't get under my skin if I don't let you in, oh",
-        "You can try",
-        "To get under my, under my, under my skin",
-        "While he's on mine",
-        "Yeah, all on my, all on my, all on my skin",
-        "I wish you knew that even you",
-        "Can't get under my skin if I don't let you in, oh"
+        "Just like first love",
+        "Just like first love",
+        "When it's all done",
+        "Just like first love"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "We're just making waves, different shades of emotions",
+        "Fast and slow, hot and cold",
+        "We bring out the worst and the best in each other",
+        "But can't let go, oh, it's almost"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Just like first love (Hey)",
+        "You give everything and you give too much",
+        "Just like first love (Hey)",
+        "You don't really care if it hurts a lot",
+        "When it's all done",
+        "You look back and know it was worth it all, worth it all",
+        "We'll never forget how we feel now"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Just like first love",
+        "Just like first love",
+        "When it's all done",
+        "Just like first love",
+        "Just like first love",
+        "(I wanna give it, I wanna give it, I wanna)",
+        "Just like first love",
+        "(I'm gonna give it, I'm gonna give it, I'm gonna)",
+        "When it's all done",
+        "(I wanna give it, I wanna give it, I wanna)",
+        "Just like first love",
+        "(I'm gonna give it, I'm gonna give it, I'm gonna)"
        ]
       },
       {
        "label": "Bridge",
        "lines": [
-        "I just hope that one day",
-        "We both can laugh about it",
-        "When it's not in our face",
-        "Won't have to dance around it",
-        "Don't drive yourself insane",
-        "It won't always be this way"
+        "I can't really tell why there's hills on my skin",
+        "When you get too close, oh, it's almost"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Just like first love",
+        "You give everything and you give too much",
+        "Just like first love",
+        "You don't really care if it hurts a lot",
+        "When it's all done",
+        "You look back and know it was worth it all, worth it all",
+        "We'll never forget how we feel now"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "You can try",
-        "To get under my, under my, under my skin",
-        "While he's on mine",
-        "Yeah, all on my, all on my, all on my skin",
-        "I wish you knew that even you",
-        "Can't get under my skin if I don't let you in"
+        "Just like first love",
+        "(I wanna give it, I wanna give it, I wanna)",
+        "Just like first love",
+        "(I'm gonna give it, I'm gonna give it, I'm gonna)",
+        "When it's all done",
+        "(I wanna give it, I wanna give it, I wanna)",
+        "Just like first love",
+        "(I'm gonna give it, I'm gonna give it, I'm gonna)",
+        "Just like first love"
        ]
       }
      ]
@@ -9882,194 +10192,214 @@
      ]
     },
     {
-     "title": "Hands",
+     "title": "Tricky",
      "sections": [
       {
        "label": "Chorus",
        "lines": [
-        "Come on, lay your hands, your hands on me",
-        "We don't have to talk 'cause talk is cheap",
-        "In the dark silence so loud",
-        "You only gotta lay your hands on me"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "You say you're better with your hands",
-        "Hands",
-        "You say you're better with your hands",
-        "Hands"
+        "Oh, it's tricky 'cause I want her",
+        "But she's always with another",
+        "And I know I should probably let her go",
+        "But I know if I do, she'll be back at my door",
+        "Uh"
        ]
       },
       {
        "label": "Verse 1",
        "lines": [
-        "I've been thinking about it",
-        "I've been thinking all night",
-        "Every time I try to learn your body language",
-        "Never get it right",
-        "You're so hard to read, baby",
-        "So I turn off the light",
-        "And you just drop that dress to the floor",
-        "We can talk until sunrise",
-        "I've been thinking about it",
-        "The way that you blow my mind",
-        "I've been thinking about it all night"
+        "She tricky, she tricky, she knows it, yeah",
+        "Her game lately ain't really fair",
+        "We're up and down like a rollercoaster",
+        "Try to end it, but it's never over",
+        "What do you want from me?",
+        "I'm about to go crazy (Yeah)",
+        "Tiptoeing on a tightrope",
+        "A step away from a wrong note"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "Come on, lay your hands, your hands on me",
-        "We don't have to talk 'cause talk is cheap",
-        "In the dark silence so loud",
-        "You only gotta lay your hands on me"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "You say you're better with your hands",
-        "Hands",
-        "You say you're better with your hands",
-        "Hands"
+        "Oh, it's tricky 'cause I want her",
+        "But she's always with another",
+        "And I know I should probably let her go",
+        "But I know if I do, she'll be back at my door",
+        "Oh, it's tricky (Oh) 'cause I need her",
+        "But the grass is always greener",
+        "And I know I should probably let her go",
+        "But I know if I do, she'll be back at my door"
        ]
       },
       {
        "label": "Verse 2",
        "lines": [
-        "Don't tell me about it",
-        "Keep on blowing my mind",
-        "'Cause your lips are made for kissing, baby",
-        "So I put them on mine",
-        "No conversation",
-        "I've heard every line",
-        "So leave your shit at the door"
+        "He tricky, he tricky, he's hard to read",
+        "Nothing with him's ever concrete",
+        "Mmm, every time I think we got the time",
+        "Is it a sign that we keep missin' the signs?",
+        "Now you got me acting all crazy",
+        "Thinking that you're gonna wait for me",
+        "Tiptoeing on a tightrope",
+        "A step away from a wrong note"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "Come on, lay your hands, your hands on me",
-        "We don't have to talk 'cause talk is cheap",
-        "In the dark silence so loud",
-        "You only gotta lay your hands on me"
-       ]
-      },
-      {
-       "label": "Post-Chorus",
-       "lines": [
-        "You say you're better with your hands",
-        "Hands",
-        "You say you're better with your hands",
-        "Hands"
-       ]
-      }
-     ]
-    },
-    {
-     "title": "First Love",
-     "sections": [
-      {
-       "label": "Verse 1",
-       "lines": [
-        "I can't really tell why there's hills on my skin",
-        "When you're whisperin' all your intentions",
-        "And I don't really know why my heart skips a beat",
-        "When you get too close, oh, it's almost"
-       ]
-      },
-      {
-       "label": "Pre-Chorus",
-       "lines": [
-        "Just like first love (Hey)",
-        "You give everything and you give too much",
-        "Just like first love (Hey)",
-        "You don't really care if it hurts a lot",
-        "When it's all done",
-        "You look back and know it was worth it all, worth it all",
-        "We'll never forget how we feel now"
-       ]
-      },
-      {
-       "label": "Chorus",
-       "lines": [
-        "Just like first love",
-        "Just like first love",
-        "When it's all done",
-        "Just like first love"
-       ]
-      },
-      {
-       "label": "Verse 2",
-       "lines": [
-        "We're just making waves, different shades of emotions",
-        "Fast and slow, hot and cold",
-        "We bring out the worst and the best in each other",
-        "But can't let go, oh, it's almost"
-       ]
-      },
-      {
-       "label": "Pre-Chorus",
-       "lines": [
-        "Just like first love (Hey)",
-        "You give everything and you give too much",
-        "Just like first love (Hey)",
-        "You don't really care if it hurts a lot",
-        "When it's all done",
-        "You look back and know it was worth it all, worth it all",
-        "We'll never forget how we feel now"
-       ]
-      },
-      {
-       "label": "Chorus",
-       "lines": [
-        "Just like first love",
-        "Just like first love",
-        "When it's all done",
-        "Just like first love",
-        "Just like first love",
-        "(I wanna give it, I wanna give it, I wanna)",
-        "Just like first love",
-        "(I'm gonna give it, I'm gonna give it, I'm gonna)",
-        "When it's all done",
-        "(I wanna give it, I wanna give it, I wanna)",
-        "Just like first love",
-        "(I'm gonna give it, I'm gonna give it, I'm gonna)"
+        "Oh, it's tricky 'cause I want her",
+        "But she's always with another",
+        "And I know I should probably let her go",
+        "But I know if I do, she'll be back at my door",
+        "Oh, it's tricky (It's tricky) 'cause I need her ('Cause I need him)",
+        "But the grass is (But the grass is) always greener (Always greener)",
+        "And I know I should probably let her go (Oh)",
+        "But I know if I do, she'll be back at my door"
        ]
       },
       {
        "label": "Bridge",
        "lines": [
-        "I can't really tell why there's hills on my skin",
-        "When you get too close, oh, it's almost"
-       ]
-      },
-      {
-       "label": "Pre-Chorus",
-       "lines": [
-        "Just like first love",
-        "You give everything and you give too much",
-        "Just like first love",
-        "You don't really care if it hurts a lot",
-        "When it's all done",
-        "You look back and know it was worth it all, worth it all",
-        "We'll never forget how we feel now"
+        "I'm hooked on you",
+        "Oh, what to do?",
+        "I know that I am falling",
+        "I'm lost for words",
+        "It's so absurd",
+        "Our kind of situation",
+        "I'm hooked on you",
+        "Oh, what to do?",
+        "I know that I am falling",
+        "I'm lost for words",
+        "It's so absurd",
+        "Our kind of situation"
        ]
       },
       {
        "label": "Chorus",
        "lines": [
-        "Just like first love",
-        "(I wanna give it, I wanna give it, I wanna)",
-        "Just like first love",
-        "(I'm gonna give it, I'm gonna give it, I'm gonna)",
-        "When it's all done",
-        "(I wanna give it, I wanna give it, I wanna)",
-        "Just like first love",
-        "(I'm gonna give it, I'm gonna give it, I'm gonna)",
-        "Just like first love"
+        "Oh, it's tricky (It's tricky) 'cause I want her (I want him)",
+        "But she's always (She's always) with another (With another)",
+        "And I know I should probably let her go (Let her go)",
+        "But I know if I do, she'll be back at my door",
+        "Oh, it's tricky (She tricky) 'cause I need her (I need her)",
+        "But the grass (The grass is) is always greener (Always greener)",
+        "And I know I should probably let her go (Let her go)",
+        "But I know if I do, she'll be back at my door"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "She tricky, I need her",
+        "The grass is always greener",
+        "Always greener, always greener"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "WOW (Remix)",
+     "sections": [
+      {
+       "label": "Chorus",
+       "lines": [
+        "Baby, I'm not even in a gown",
+        "I'm just in a T-shirt on the couch",
+        "The way you want me makes me want you now",
+        "The only thing you have to say is (Wow)"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "And I feel this way with no chemicals",
+        "In my system, babe, it's incredible",
+        "When you're touching me, yeah, that says it all",
+        "You said it all (Yeah)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Baby, I'm not even in a gown",
+        "I'm just in a T-shirt on the couch",
+        "The way you want me makes me want you now",
+        "The only thing you have to say is (Wow)"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Make your jaw drop-drop",
+        "Say, \"Oh my,\" drop-drop-drop",
+        "Make you say, \"Oh my god\"",
+        "My, drop-drop",
+        "Make your jaw drop",
+        "Make you say, \"Oh my god\"",
+        "And you never felt this type of emotion (Oh)",
+        "Make your jaw drop-drop",
+        "Say, \"Oh my,\" drop-drop-drop",
+        "Make you say, \"Oh my god\"",
+        "My, drop-drop",
+        "Make your jaw drop",
+        "Make you say, \"Oh my god\"",
+        "And you never felt this type of emotion",
+        "Make your jaw drop-drop",
+        "Say, \"Oh my,\" drop-drop-drop",
+        "Make you say, \"Oh my god\"",
+        "My, drop-drop",
+        "Make your jaw drop",
+        "Make you say, \"Oh my god\"",
+        "And you never felt this type of emotion (Never, never, never)"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "In a crowded place, can you just imagine?",
+        "It's unparalleled, the way it all just happened",
+        "If you can't have me, you don't want no one",
+        "You don't want no one (Mmm)",
+        "I got all my friends asking what it's like",
+        "To be loved like this, to be recognized",
+        "Behind the scenes, made me vulnerable",
+        "You make me so vulnerable, oh"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Baby, I'm not even in a gown",
+        "I'm just in a T-shirt on the couch",
+        "The way you want me makes me want you now (Want you now)",
+        "The only thing you have to say is (Wow)"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "Make your jaw drop-drop",
+        "Say, \"Oh my,\" drop-drop-drop",
+        "Make you say, \"Oh my god\"",
+        "My, drop-drop",
+        "Make your jaw drop",
+        "Make you say, \"Oh my god\"",
+        "And you never felt this type of emotion, oh",
+        "Make your jaw drop-drop",
+        "Say, \"Oh my,\" drop-drop-drop (Make you say, \"Oh my god\")",
+        "Make you say, \"Oh my god\" (Make you say, \"Oh my god\")",
+        "My, drop-drop (Make you say, \"Oh my god\")",
+        "Make your jaw drop",
+        "Make you say, \"Oh my god\"",
+        "And you never felt this type of emotion"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Never, never, never, oh",
+        "Never, never, never, oh",
+        "Never, never, never, oh",
+        "Never, never, never, oh"
        ]
       }
      ]
@@ -10639,6 +10969,475 @@
      ]
     }
    ]
+  },
+  {
+   "album": "Standalone & Rarities",
+   "songs": [
+    {
+     "title": "Smoke and Fire",
+     "sections": [
+      {
+       "label": "Chorus",
+       "lines": [
+        "(Oh-oh) Our love is running into a burning building",
+        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
+        "Feel the heat, so we started running",
+        "You know you saw it coming",
+        "But the memories are still in my mind",
+        "Burning like smoke and fire"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Rumors spread like wildfire",
+        "I held a strong ground",
+        "But I've been burning down",
+        "'Cause it's like fire is all I hear about",
+        "And we are fading out",
+        "Don't wanna turn out the light",
+        "But it's like..."
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I'm no firefighter",
+        "I just need to breathe tonight",
+        "So sound the alarm, and there goes the night"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "(Oh-oh) Our love is running into a burning building",
+        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
+        "Feel the heat, so we started running",
+        "You know you saw it coming",
+        "But the memories are still in my mind",
+        "Burning like smoke and fire"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Secrets in a small town, they always get around",
+        "But the flame has been put out",
+        "And I am hearing all the small talk",
+        "They whisper as I walk",
+        "In a house that's boarded up",
+        "So good luck"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I'm no firefighter",
+        "I just need to breathe tonight",
+        "So sound the alarm, and there goes the night"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "(Oh-oh) Our love is running into a burning building",
+        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
+        "Feel the heat, so we started running",
+        "You know you saw it coming",
+        "But the memories are still in my mind",
+        "Burning like smoke and fire"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Smoke and fire, smoke and fire",
+        "Don't you know that if there's smoke, there's fire?",
+        "Smoke there's fire, smoke there's fire",
+        "Now, now",
+        "(Oh-oh) And now it's over",
+        "(Oh-oh) I'm getting colder",
+        "(Oh-oh) And it's the feeling",
+        "Of running into a burning building"
+       ]
+      },
+      {
+       "label": "Breakdown",
+       "lines": [
+        "Rumors spread like wildfire",
+        "I held a strong ground",
+        "But I've been burning down"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "(Oh-oh) Our love is running into a burning building",
+        "(Oh-oh) Our love is scattered ash with a burnt up feeling",
+        "Feel the heat, so we started running",
+        "You know you saw it coming",
+        "But the memories are still in my mind",
+        "Burning like smoke and fire"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Smoke and fire, smoke and fire",
+        "Don't you know that if there's smoke, there's fire?",
+        "Smoke there's fire, smoke there's fire",
+        "Now, now",
+        "(Oh-oh) And now it's over",
+        "(Oh-oh) I'm getting colder",
+        "(Oh-oh) I'm so tired",
+        "Burning like smoke and fire"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Why",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "You like New York City in the daytime",
+        "I like New York City in the nighttime",
+        "You say you like sleeping with the air off",
+        "I don't, I need it on",
+        "You like the light coming through the windows",
+        "I sleep late, so I just keep 'em all closed",
+        "You ignore the music on the radio",
+        "I don't, I sing along"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I don't ask for you to change, baby, no, no, no",
+        "And you don't ask for me to change"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Tell me how we're not alike",
+        "But we work so well and we don't even know why",
+        "Funny how the stars crossed right",
+        "'Cause we work so well and we don't even know why",
+        "You can call it fire and ice",
+        "But we work so well and we don't even know why",
+        "We don't even know why, no, no",
+        "We don't even know why, no, no, no"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "No, no, no, no",
+        "We like it in the daytime",
+        "We like it in the end of time",
+        "No, no, no, no",
+        "We like it in the daytime",
+        "We like it in the end of time"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Cold outside and you're just in a T-shirt",
+        "I have cold blood even in a sweater",
+        "You start your night sippin' by the Kilo",
+        "I don't, I know you know"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "I don't ask for you to change, baby, no, no, no",
+        "And you don't ask for me to change"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "Tell me how we're not alike",
+        "But we work so well and we don't even know why",
+        "Funny how the stars crossed right",
+        "'Cause we work so well and we don't even know why",
+        "You can call it fire and ice",
+        "But we work so well and we don't even know why",
+        "We don't even know why, no, no (No, no, no)",
+        "We don't even know why, no, no, no"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "No, no, no, no",
+        "We like it in the daytime (We don't even know)",
+        "We like it in the end of time (We don't even know)",
+        "No, no, no, no",
+        "We like it in the daytime",
+        "(We don't even know, know, know, know, know, know, know, know, know)",
+        "We like it in the end of time"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "Somehow, we end up on the same side",
+        "And you wouldn't think that we'd be alright",
+        "Even our eyes are different colors, but we see fine",
+        "Somehow, we end up on the same side (Up on the same side)",
+        "And you wouldn't think that we'd be alright",
+        "(Think that we'd be alright)",
+        "Even our eyes are different colors, but we see fine"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "(Oh) Tell me how we're not alike",
+        "But we work so well and we don't even know why",
+        "('Cause we work so well and we don't even know why, why)",
+        "Funny how the stars crossed right",
+        "'Cause we work so well and we don't even know why",
+        "(But we don't even know why)",
+        "You can call it fire and ice",
+        "But we work so well and we don't even know why",
+        "('Cause we work so well and we don't even know why, why)",
+        "We don't even know why, no, no",
+        "We don't even know why, no, no, no"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "No, no, no, no",
+        "We like it in the daytime (Oh)",
+        "We like it in the end of time (We don't even know why)",
+        "No, no, no, no",
+        "We like it in the daytime",
+        "We like it in the nighttime"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Honeymoon Fades",
+     "sections": [
+      {
+       "label": "Intro",
+       "lines": [
+        "I hope we stay the same, hey",
+        "Honeymoon"
+       ]
+      },
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Unexpected, this thing that we fell into",
+        "Like, so connected",
+        "You came at a time when my heart was selective",
+        "Didn't have to choose, my love was accepted, yeah"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Now I'm learning you like 101",
+        "You were sent to me like a one of one",
+        "And now we're going hard, just one on one",
+        "Nobody else"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I hope we never change",
+        "I hope we stay the same",
+        "I hope that we can love through the pain",
+        "After the honeymoon fades",
+        "I hope we never change",
+        "I hope we stay the same",
+        "I hope we can love through the pain",
+        "After the honeymoon fades"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "After the honeymoon fades, yeah"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "Now remember when we met, we was all in each other's bed",
+        "And we were spending every second we had",
+        "And now that it's official, it's hittin' a little different",
+        "What the hell we gonna do with these bags? No, yeah"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "And now I'm learning you like 101",
+        "You were sent to me like a one of one",
+        "And now we're going hard, just one on one",
+        "Nobody else"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "I hope we never change",
+        "I hope we stay the same",
+        "I hope that we can love through the pain",
+        "After the honeymoon fades",
+        "I hope we never change",
+        "I hope we stay the same",
+        "I hope we can love through the pain",
+        "After the honeymoon fades (I hope that we)"
+       ]
+      },
+      {
+       "label": "Post-Chorus",
+       "lines": [
+        "(Can you feel it with me? Can you feel it with me?)",
+        "After the honeymoon fades",
+        "(Can you feel it with me? Can you feel it with me?)",
+        "(Can you feel it with me? Can you feel it with me?)",
+        "(Can you feel it with me? Can you feel it with me?)"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "And I hope it tastes the same, mmm",
+        "Even if it's bittersweet"
+       ]
+      },
+      {
+       "label": "Refrain",
+       "lines": [
+        "Honeymoon fading with you (Fading with you)",
+        "Honeymoon fading with you (Fading with you)",
+        "Honeymoon fading with you (Fading with you)",
+        "Honeymoon fading, fading"
+       ]
+      },
+      {
+       "label": "Outro",
+       "lines": [
+        "Oh, oh, oh, oh, oh, oh, oh",
+        "Oh, oh, oh, oh, oh, oh",
+        "Oh, oh, oh"
+       ]
+      }
+     ]
+    },
+    {
+     "title": "Skin",
+     "sections": [
+      {
+       "label": "Verse 1",
+       "lines": [
+        "Maybe we could've been friends",
+        "If I met you in another life",
+        "Maybe then we could pretend",
+        "There's no gravity in the words we write",
+        "Maybe you didn't mean it",
+        "Maybe \"blonde\" was the only rhyme",
+        "The only rhyme"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Want my heart to be breakin', breakin', no",
+        "I'm happy and you hate it, hate it, oh",
+        "And I'm not asking you to let it go",
+        "But you been tellin' your side",
+        "So I'll be tellin' mine, oh"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You can try",
+        "To get under my, under my, under my skin",
+        "While he's on mine",
+        "Yeah, all on my, all on my, all on my skin",
+        "I wish you knew that even you",
+        "Can't get under my skin if I don't let you in"
+       ]
+      },
+      {
+       "label": "Verse 2",
+       "lines": [
+        "You're tellin' it how you see it",
+        "Like truth is whatever you decide",
+        "Some people will believe it",
+        "And some will read in between the lines",
+        "You're putting me in the spotlight",
+        "But I've been under it all my life",
+        "Said all my life"
+       ]
+      },
+      {
+       "label": "Pre-Chorus",
+       "lines": [
+        "Want my heart to be breakin', breakin', no",
+        "I'm happy and you hate it, hate it, oh",
+        "And I'm not asking you to let it go",
+        "But you been tellin' your side",
+        "So I'll be tellin' mine (Mine, oh)"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You can try",
+        "To get under my, under my, under my skin",
+        "While he's on mine",
+        "Yeah, all on my, all on my, all on my skin",
+        "I wish you knew that even you",
+        "Can't get under my skin if I don't let you in, oh",
+        "You can try",
+        "To get under my, under my, under my skin",
+        "While he's on mine",
+        "Yeah, all on my, all on my, all on my skin",
+        "I wish you knew that even you",
+        "Can't get under my skin if I don't let you in, oh"
+       ]
+      },
+      {
+       "label": "Bridge",
+       "lines": [
+        "I just hope that one day",
+        "We both can laugh about it",
+        "When it's not in our face",
+        "Won't have to dance around it",
+        "Don't drive yourself insane",
+        "It won't always be this way"
+       ]
+      },
+      {
+       "label": "Chorus",
+       "lines": [
+        "You can try",
+        "To get under my, under my, under my skin",
+        "While he's on mine",
+        "Yeah, all on my, all on my, all on my skin",
+        "I wish you knew that even you",
+        "Can't get under my skin if I don't let you in"
+       ]
+      }
+     ]
+    }
+   ]
   }
  ],
  "palette": {
@@ -10652,7 +11451,9 @@
    "Short n’ Sweet": "#3a63ae",
    "Man’s Best Friend": "#472e22",
    "fruitcake": "#b1332f",
-   "Singles & Collaborations": "#9c86b0"
+   "Soundtracks": "#d98aa8",
+   "Collaborations": "#9c86b0",
+   "Standalone & Rarities": "#d4a73a"
   }
  }
 }

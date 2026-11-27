@@ -32,16 +32,18 @@ test('Sabrina Carpenter catalogue has the requested release splits', () => {
       ['Singular: Act I', 8],
       ['Singular: Act II', 9],
       ['emails i can’t send fwd:', 17],
-      ['Short n’ Sweet', 16],
+      ['Short n’ Sweet', 17],
       ['Man’s Best Friend', 13],
       ['fruitcake', 6],
-      ['Singles & Collaborations', 14],
+      ['Soundtracks', 6],
+      ['Collaborations', 11],
+      ['Standalone & Rarities', 4],
     ],
   );
 
   const songs = catalogue.albums.flatMap(({ songs }) => songs);
-  assert.equal(songs.length, 105);
-  assert.equal(new Set(songs.map(({ title }) => title.toLocaleLowerCase())).size, 105);
+  assert.equal(songs.length, 113);
+  assert.equal(new Set(songs.map(({ title }) => title.toLocaleLowerCase())).size, 113);
   assert.ok(songs.every(({ sections }) =>
     Array.isArray(sections) && sections.length > 0 &&
     sections.every(({ label, lines }) =>
@@ -57,11 +59,22 @@ test('Sabrina deluxe and bonus tracks are represented once', () => {
   const shortTitles = records['Short n’ Sweet'].map(({ title }) => title);
   assert.ok(shortTitles.includes('Please Please Please'));
   assert.equal(shortTitles.some((title) => title.includes('Dolly Parton')), false);
-  assert.deepEqual(shortTitles.slice(-4), [
+  assert.deepEqual(shortTitles.slice(-5), [
     '15 Minutes',
     "Couldn't Make It Any Harder",
     'Busy Woman',
     'Bad Reviews',
+    'Needless To Say',
   ]);
   assert.equal(records['Man’s Best Friend'].at(-1).title, 'Such a Funny Way');
+});
+
+test('her loose shelves keep to the credit rule', () => {
+  const titles = new Set(catalogue.albums.flatMap(({ songs }) => songs).map(({ title }) => title));
+  for (const title of ['Smile', 'Wildside', 'Let Me Move You', 'WOW (Remix)', 'Skin']) assert.ok(titles.has(title), title);
+  // Covers and the Girl Meets World theme stay out: a word only they hold points elsewhere.
+  for (const title of ['I Knew You Were Trouble', 'Sign of the Times', 'Take on the World', 'Clouds']) {
+    assert.equal(titles.has(title), false, title);
+  }
+  assert.deepEqual(Object.keys(catalogue.palette.colors), catalogue.albums.map(({ album }) => album));
 });

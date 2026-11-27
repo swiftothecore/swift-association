@@ -648,7 +648,7 @@ export const GUESTS = [
     id: "sabrina-carpenter",
     name: "Sabrina Carpenter",
     file: "data/guests/sabrina-carpenter.json",
-    songCount: 105,
+    songCount: 113,
     // Espresso brown, cream and a lipstick accent give the pass its own hardware, and the
     // espresso now answers Man's Best Friend directly. The ticks take the four corners of
     // the nine-record palette: cobalt, burnt orange, pale sky, dark brown.
