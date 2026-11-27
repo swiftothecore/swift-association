@@ -22,7 +22,7 @@ function harness() {
     wordRegexCore: match.wordRegex, strict: false, effectiveStrict: () => context.strict,
     bothRuleActive: () => false, bothWords: [], currentWord: '',
     indexPlayableWords() {}, allSongs: [], titleIndex: new Map(), spacelessIndex: new Map(),
-    playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {},
+    playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {}, rareFindMax: 5,
     lyricVocab: new Set(), lyricApostrophes: new Map(), currentSongs: [],
     noTitle: true, effectiveNoTitle: () => context.noTitle,
     impostor: false, impostorRuleActive: () => context.impostor,

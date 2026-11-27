@@ -533,7 +533,9 @@ export const LINEUP_INKS = {
 // Taylor's ranges untouched because scarcity does NOT — three songs is three songs whether the
 // shelf holds 291 or 749. Do not "fix" this by matching Taylor's bucket shares: that slides
 // ultra out to a window of 18-54 songs, which is not rare, it is just a different word.
-export const BLEND_BUCKETS = { easy: 49, hard: [3, 9], ultra: [1, 3] };
+// `rare` keeps Taylor's 5 for the same reason: the stamp line only comes down for a catalogue
+// too SMALL to have many words below it, and the blend is the biggest one there is.
+export const BLEND_BUCKETS = { easy: 49, hard: [3, 9], ultra: [1, 3], rare: 5 };
 
 // Shelf counts avoid fetching every catalogue. tests/mobile-loading.test.mjs checks these.
 export const GUESTS = [
@@ -725,7 +727,14 @@ export const GUEST_TARGET = TOTAL_ROUNDS;
 // The bucket thresholds Taylor's 291-song corpus is tuned to. A guest carries its own in its
 // file (see loadGuest / indexPlayableWords) because these numbers do not survive the trip: at
 // 42 songs `easy >= 18` matches nine words and `ultra` swallows most of the vocabulary.
-export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3] };
+// `rare` is the stamp's line, not a pool's: a page whose word is in 3 to `rare` songs is
+// stamped "rare find" (see rarityTier in app.js). The two stamps below it stay literal counts
+// in every catalogue ("scarce" is two songs, "one of one" is one), because they are facts and
+// a fact cannot be scaled. "rare find" is the relative one, so it is set per catalogue, by
+// hand like the rest of this line: chosen so it lands on about a third of the pages Normal
+// deals, which is what 3-5 songs gives Taylor (36%). Fixed at 5 everywhere, it stamped 57-64%
+// of a small guest's pages and every page of Wicked's.
+export const TAYLOR_BUCKETS = { easy: 18, hard: [3, 9], ultra: [1, 3], rare: 5 };
 
 /* ---------- Custom mode (player-authored "workshop" modes) ----------
    A sandboxed gameType. The player fills in a MODES-shaped lever object on the Change modal's

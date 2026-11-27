@@ -20,7 +20,7 @@ function harness(albums = grouped, terms = words) {
     wordRegexCore: match.wordRegex, strict: true, effectiveStrict: () => context.strict,
     bothRuleActive: () => context.bothWords.length > 0, bothWords: [], currentWord: '',
     indexPlayableWords() {}, allSongs: [], titleIndex: new Map(), spacelessIndex: new Map(),
-    playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {},
+    playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {}, rareFindMax: 5,
     lyricVocab: new Set(), lyricApostrophes: new Map(), currentSongs: [],
   });
   vm.runInContext(section('const MIN_LYRIC_WORDS =', 'let currentMode =') +

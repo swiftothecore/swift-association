@@ -14,7 +14,7 @@ function harness() {
   const context = vm.createContext({ console, normalizeTitle, normalizeLyric, versionFamilies, stripLyricBrackets, titleAcronym, TITLE_ALIASES, UNRELEASED_ALBUM, buildLyricTokenIndex, indexMatches,
     wordRegexCore: wordRegex, effectiveStrict: () => { throw Error('Pool used live difficulty'); },
     indexPlayableWords() {}, allSongs: [], titleIndex: new Map(), spacelessIndex: new Map(),
-    playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {},
+    playableWords: [], challengeWordPools: null, albumWordMap: {}, albumOrder: [], wordBuckets: {}, rareFindMax: 5,
     lyricVocab: new Set(), lyricApostrophes: new Map(), promptRxCache: new Map(),
   });
   const code = section('function wordRegex(', '// Marginalia warning:') +

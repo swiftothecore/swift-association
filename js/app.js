@@ -244,6 +244,11 @@ const JOIN_MIN_PART = 2;
 
 let currentMode = MODES.medium;
 let wordBuckets = { easy: [], all: [], normal: [], normalTail: [], hard: [], ultra: [], opener: [] };
+// The most songs a word can be in and still be stamped "rare find". Per catalogue, out of its
+// buckets (TAYLOR_BUCKETS.rare, a guest's own `rare`), and part of the corpus swap, because a
+// stamp judged against the wrong catalogue's line is exactly the silent leak that swap exists
+// to prevent. See rarityTier.
+let rareFindMax = 5;
 let recentEras = [];
 
 let allSongs = [];
@@ -16640,13 +16645,14 @@ let activeCorpus = "taylor";          // which catalogue the globals currently h
 
 function snapshotCorpus() {
   return { allSongs, titleIndex, spacelessIndex, playableWords, challengeWordPools,
-           albumWordMap, albumOrder, wordBuckets, lyricVocab, lyricApostrophes, wordSongCache };
+           albumWordMap, albumOrder, wordBuckets, rareFindMax, lyricVocab, lyricApostrophes, wordSongCache };
 }
 function applyCorpus(c) {
   allSongs = c.allSongs; titleIndex = c.titleIndex; spacelessIndex = c.spacelessIndex;
   playableWords = c.playableWords; challengeWordPools = c.challengeWordPools;
   albumWordMap = c.albumWordMap;
-  albumOrder = c.albumOrder; wordBuckets = c.wordBuckets; lyricVocab = c.lyricVocab;
+  albumOrder = c.albumOrder; wordBuckets = c.wordBuckets; rareFindMax = c.rareFindMax;
+  lyricVocab = c.lyricVocab;
   lyricApostrophes = c.lyricApostrophes;
   wordSongCache = c.wordSongCache;
   promptRxCache = new Map();          // built from the index above, so it changes with it
@@ -17919,6 +17925,7 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
   }
   const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
   wordBuckets = { easy: safe(easy), all: playableWords, normal: safe(normal), normalTail, hard: safe(hard), ultra: safe(ultra), opener };
+  rareFindMax = cfg.rare ?? TAYLOR_BUCKETS.rare;   // a file without one stamps on Taylor's line
 }
 
 /* ---------- Difficulty ---------- */
@@ -25499,9 +25506,12 @@ function riskResultLine() {
 // name (for data-rarity) and t in 0..1 (common→scarce) used to scale the
 // highlighter swipe's weight, so rarer words *feel* rarer without touching the
 // era engine's hue.
+// "rare find" runs from three songs up to the catalogue's own rareFindMax (Taylor's is 5, a
+// small guest's 3 or 4: see TAYLOR_BUCKETS). Everything below it is a literal count and the
+// same in every catalogue.
 function rarityTier(n) {
   if (n >= 12) return { name: "common",   t: 0,    stamp: "" };
-  if (n >= 6)  return { name: "uncommon", t: 0.4,  stamp: "uncommon" };
+  if (n > rareFindMax) return { name: "uncommon", t: 0.4, stamp: "uncommon" };
   if (n >= 3)  return { name: "rare",     t: 0.75, stamp: "rare find" };
   if (n >= 2)  return { name: "scarce",   t: 0.9,  stamp: "scarce" };
   // Lives in exactly one song — the rarest a prompt word can be.
