@@ -3189,6 +3189,7 @@
     background: transparent; border: none; cursor: pointer;
   }
   .keep-going.replay-stamp { --stamp-ink: #27406f; }
+  .keep-going.normal-stamp { --stamp-ink: #2f5b3a; }
   .keep-going:focus-visible { outline: 1.5px dashed var(--ink-soft); outline-offset: 5px; border-radius: 4px; }
   .keep-going .kg-narrow { display: none; }
   @media (min-width: 561px) {
@@ -3223,6 +3224,7 @@
      The pad lifts a shade and the ink sits on top instead. */
   :root[data-theme="dark"] .keep-going { --stamp-ink: #e07f74; }
   :root[data-theme="dark"] .keep-going.replay-stamp { --stamp-ink: #8ea6dc; }
+  :root[data-theme="dark"] .keep-going.normal-stamp { --stamp-ink: #8fbf98; }
   :root[data-theme="dark"] .kg-stamp { mix-blend-mode: normal; }
 
 

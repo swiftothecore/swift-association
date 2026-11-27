@@ -3068,6 +3068,9 @@ if (location.pathname.endsWith('/index.html')) {
           <!-- Drawn by paintReplayStamp: the sub-line names the mode just played. -->
           <g id="rpStampArt"></g>
           <g id="rpStampArtNarrow"></g>
+          <!-- Drawn by paintNormalStamp: the one-time step up from Relaxed. -->
+          <g id="nmStampArt"></g>
+          <g id="nmStampArtNarrow"></g>
         </defs>
       </svg>
       <button id="replayBtn" class="keep-going replay-stamp" type="button" style="display:none;" aria-label="Play this mode again">
@@ -3079,6 +3082,18 @@ if (location.pathname.endsWith('/index.html')) {
           <svg class="kg-stamp kg-narrow" viewBox="0 0 276 74" aria-hidden="true" focusable="false">
             <use class="kg-ghost" href="#rpStampArtNarrow" filter="url(#rpStampInk)"/>
             <use class="kg-print" href="#rpStampArtNarrow" filter="url(#rpStampInk)"/>
+          </svg>
+        </span>
+      </button>
+      <button id="normalStampBtn" class="keep-going normal-stamp" type="button" style="display:none;" aria-label="Add a clock: play Normal, 10 seconds a page, no hints">
+        <span class="kg-press">
+          <svg class="kg-stamp kg-wide" viewBox="0 0 560 74" aria-hidden="true" focusable="false">
+            <use class="kg-ghost" href="#nmStampArt" filter="url(#kgStampInk)"/>
+            <use class="kg-print" href="#nmStampArt" filter="url(#kgStampInk)"/>
+          </svg>
+          <svg class="kg-stamp kg-narrow" viewBox="0 0 276 74" aria-hidden="true" focusable="false">
+            <use class="kg-ghost" href="#nmStampArtNarrow" filter="url(#kgStampInk)"/>
+            <use class="kg-print" href="#nmStampArtNarrow" filter="url(#kgStampInk)"/>
           </svg>
         </span>
       </button>

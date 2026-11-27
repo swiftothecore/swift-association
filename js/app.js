@@ -23233,12 +23233,15 @@ function paintPostmark(label) {
   press.innerHTML = postmarkSVG(label, stamp);
 }
 
-// The results page's two stamps, shown and hidden together so neither is left standing from the
-// last run. Side by side when both are up (the CSS stacks them on a phone), full width alone.
-function setResultStamps(replay, encore) {
+// The results page's stamps, shown and hidden together so none is left standing from the last
+// run. Side by side when two are up (the CSS stacks them on a phone), full width alone. The
+// Normal stamp takes ENCORE's place on the one results screen that offers it (see
+// maybeShowReadyForNormal), so the row never holds three.
+function setResultStamps(replay, encore, normal = false) {
   $("replayBtn").style.display = replay ? "" : "none";
-  $("keepGoingBtn").style.display = encore ? "" : "none";
-  $("resultStamps").classList.toggle("is-pair", !!(replay && encore));
+  $("keepGoingBtn").style.display = encore && !normal ? "" : "none";
+  $("normalStampBtn").style.display = normal ? "" : "none";
+  $("resultStamps").classList.toggle("is-pair", !!(replay && (encore || normal)));
 }
 
 // PLAY AGAIN, the replay stamp. Drawn here rather than in index.html because its sub-line
@@ -23246,7 +23249,7 @@ function setResultStamps(replay, encore) {
 // beside ENCORE, where the words drop a size so all three still fit inside the ring. Ten letters
 // leave room to set them larger than ENCORE's, and the baseline sits higher to match, so the
 // caps centre in the band between the inner ring and the sub-line's rules instead of on it.
-function replayStampArt(w, sub) {
+function replayStampArt(w, sub, word0 = "PLAY AGAIN") {
   const narrow = w < 400;
   const text = (x, y, size, ls, txt, rot) =>
     `<text x="${x}" y="${y}"${rot ? ` rotate="${rot}"` : ""} fill="currentColor" text-anchor="middle" ` +
@@ -23254,7 +23257,7 @@ function replayStampArt(w, sub) {
   const word = narrow ? { size: 27, ls: 3, y: 40 } : { size: 36, ls: 7, y: 42.5 };
   return `<rect x="4" y="4" width="${w - 8}" height="66" rx="9" fill="none" stroke="currentColor" stroke-width="2.6"/>` +
     `<rect x="10" y="10" width="${w - 20}" height="54" rx="5" fill="none" stroke="currentColor" stroke-width="1.1"/>` +
-    text(w / 2, word.y, word.size, word.ls, "PLAY AGAIN", "-2 1 -1 2 0 1 -1 2 -1 1") +
+    text(w / 2, word.y, word.size, word.ls, word0, "-2 1 -1 2 0 1 -1 2 -1 1") +
     stampSubLine(w, sub);
 }
 
@@ -23300,6 +23303,20 @@ function paintReplayStamp() {
     ? `Play ${infiniteVariant === "sudden" ? "sudden death" : "Infinite"} on ${label} again`
     : `Play ${label} again`);
   replayRun = { type: infinite ? "infinite" : "classic", mode: currentMode, variant: infiniteVariant };
+}
+
+// ADD A CLOCK, the one-time step up from Relaxed, cut from PLAY AGAIN's stamp so the pair reads
+// as two ways on: the same mode again, or the same game with a clock.
+function paintNormalStamp() {
+  $("nmStampArt").innerHTML = replayStampArt(560, "NORMAL MODE", "ADD A CLOCK");
+  $("nmStampArtNarrow").innerHTML = replayStampArt(276, "NORMAL MODE", "ADD A CLOCK");
+  $("normalStampBtn").querySelectorAll("use").forEach((u) => {
+    const href = u.getAttribute("href");
+    u.setAttribute("href", "");
+    u.setAttribute("href", href);
+  });
+  $("normalStampBtn").setAttribute("aria-label",
+    `Add a clock: play ${MODES.medium.label}, ${MODES.medium.seconds} seconds a page, no hints`);
 }
 
 // The results screen's way home reads differently depending on how we got here:
@@ -34569,8 +34586,10 @@ function maybeShowReadyForNormal() {
   if (gameType !== "classic" || currentMode.id !== "relaxed") return false;
   if (!readyForNormalEarned()) return false;   // not yet — leave it armed for a later game
   markCoachmark("readyForNormal");             // mark on show — a one-time invitation, ignored or not
-  const delay = animInstant() ? 0 : 900 * (animScale() || 1);
-  setTimeout(showReadyForNormal, delay);
+  // The invitation is a stamp in the replay row, in ENCORE's place, rather than a card over
+  // the results: the player reads their score first and reaches it on the way to playing on.
+  paintNormalStamp();
+  setResultStamps(true, false, true);
   return true;
 }
 // The card shows the step rather than describing it: the front page's own difficulty row, with
@@ -35440,7 +35459,7 @@ function buildDevApi() {
       glossary: (slug = "") => openGlossary("start", slug),
       glossaryGates: () => GLOSSARY.map((g) => ({ term: g.term, gate: g.seen, met: glossaryMet(g) })),
       glossaryTerms: () => GLOSSARY.map((g) => g.slug),
-      normalNudge: () => { markCoachmark("readyForNormal"); showReadyForNormal(true); },
+      normalNudge: () => { markCoachmark("readyForNormal"); paintNormalStamp(); setResultStamps(true, false, true); },
       eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
       // Guided first round: clear every beat gate (+ the first-match flag) so they re-arm on the
       // player's next fresh classic game. If a game is already open, force beat A on screen now
@@ -39615,6 +39634,12 @@ async function init() {
     currentMode = replayRun.mode;
     if (replayRun.type === "infinite") startInfinite(replayRun.variant);
     else startGame();
+  });
+  // The one-time step up from Relaxed: Normal, straight from page one.
+  $("normalStampBtn").addEventListener("click", () => {
+    setGameType("classic");
+    setMode("medium");
+    startGame();
   });
   // Quit / give up mid-game — first tap arms, second tap leaves (see armQuit).
   $("quitBtn").addEventListener("click", armQuit);
