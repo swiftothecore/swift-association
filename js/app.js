@@ -34028,10 +34028,9 @@ function openHowTo(from, page = 0) {
    later as a gentle post-game prompt once they've played a few (see maybeAskEra). */
 const FIRST_RUN_STEPS = ["welcome"];   // new steps prepend here
 const ERA_PROMPT_AFTER_GAMES = 3;      // hold the era question until the player is a few games in
-// The "ready for Normal?" nudge waits for one of these — enough right answers to show the game
-// has clicked, or enough games to show they're sticking around. Either earns the invitation.
-const NORMAL_NUDGE_CORRECT = 5;
-const NORMAL_NUDGE_GAMES = 3;
+// The ADD A CLOCK stamp waits for a Relaxed run this strong: a player who has just aced the
+// untimed game is the one it has stopped challenging.
+const NORMAL_NUDGE_SCORE = 10;
 let firstRunIndex = 0;
 let firstRunEra = "";              // the currently-highlighted era, committed to settings on confirm
 let firstRunMode = null;           // the difficulty picked from the welcome step ("relaxed" or null), applied on finish
@@ -34571,23 +34570,20 @@ function wireFirstRun() {
   }, true);
 }
 
-// One-off nudge off the recommended Relaxed path: invites the player to start the clock in
-// Normal. Fires once (tracked as a coachmark), and only once they've shown they can actually
-// play — someone who scored 1/13 on their first game has no business being sold a timer. Held
-// until they've either answered NORMAL_NUDGE_CORRECT rounds right across their whole notebook
-// or simply stuck around for NORMAL_NUDGE_GAMES games, whichever lands first. Also waits for
-// the results to have a beat to land so it never buries the score they just earned.
+// The step up from Relaxed, offered as a stamp in the replay row (ADD A CLOCK, in ENCORE's
+// place) and only to the player Relaxed has stopped challenging: a strong Relaxed run from
+// someone who has never played a timed mode. It is not a one-shot. A stamp in the row
+// interrupts nothing, so it comes back on every qualifying Relaxed result until they try a
+// timed mode, and from then on never again, which is also why a notebook that already plays
+// timed modes never sees it at all. ?intro=0 still silences it through the coachmark.
 function readyForNormalEarned() {
-  return loadMetrics().roundsCorrect >= NORMAL_NUDGE_CORRECT || totalPlayed() >= NORMAL_NUDGE_GAMES;
+  return score >= NORMAL_NUDGE_SCORE && !MODE_ORDER.some((m) => MODES[m].seconds > 0 && loadStats(m).played > 0);
 }
 // True when it claimed this results screen, so the era prompt knows to stand down.
 function maybeShowReadyForNormal() {
   if (coachmarkSeen("readyForNormal")) return false;
   if (gameType !== "classic" || currentMode.id !== "relaxed") return false;
-  if (!readyForNormalEarned()) return false;   // not yet — leave it armed for a later game
-  markCoachmark("readyForNormal");             // mark on show — a one-time invitation, ignored or not
-  // The invitation is a stamp in the replay row, in ENCORE's place, rather than a card over
-  // the results: the player reads their score first and reaches it on the way to playing on.
+  if (!readyForNormalEarned()) return false;
   paintNormalStamp();
   setResultStamps(true, false, true);
   return true;
@@ -35459,7 +35455,7 @@ function buildDevApi() {
       glossary: (slug = "") => openGlossary("start", slug),
       glossaryGates: () => GLOSSARY.map((g) => ({ term: g.term, gate: g.seen, met: glossaryMet(g) })),
       glossaryTerms: () => GLOSSARY.map((g) => g.slug),
-      normalNudge: () => { markCoachmark("readyForNormal"); paintNormalStamp(); setResultStamps(true, false, true); },
+      normalNudge: () => { paintNormalStamp(); setResultStamps(true, false, true); },
       eraPrompt: () => { markCoachmark("askEra"); showAskEra(true); },
       // Guided first round: clear every beat gate (+ the first-match flag) so they re-arm on the
       // player's next fresh classic game. If a game is already open, force beat A on screen now
