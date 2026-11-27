@@ -2,7 +2,7 @@
   "id": "olivia-rodrigo",
   "name": "Olivia Rodrigo",
   "buckets": {
-    "easy": 6,
+    "easy": 8,
     "hard": [
       3,
       8
@@ -3798,6 +3798,955 @@
           ]
         }
       ]
+    },
+    {
+      "album": "Soundtracks",
+      "songs": [
+        {
+          "title": "All I Want",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I found a guy, told me I was a star",
+                "He held the door, held my hand in the dark",
+                "And he's perfect on paper, but he's lying to my face",
+                "Does he think that I'm the kinda girl who needs to be saved?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "And there's one more boy, he's from my past",
+                "We fell in love, but it didn't last",
+                "'Cause the second I figure it out, he pushes me away",
+                "And I won't fight for love if you won't meet me halfway",
+                "And I say that I'm through, but this song's still for you"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "All I want is love that lasts",
+                "Is all I want too much to ask?",
+                "Is it something wrong with me?",
+                "All I want is a good guy",
+                "Are my expectations far too high?",
+                "Try my best, but what can I say?",
+                "All I have is myself at the end of the day",
+                "But shouldn't that be enough for me?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Ooh-ooh-ooh-ooh, ooh-ooh",
+                "And I miss the days when I was young and naive",
+                "I thought the perfect guy would come and find me",
+                "Now happy ever after, it don't come so easily"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "All I want is love that lasts",
+                "Is all I want too much to ask?",
+                "Is it something wrong with me? Oh, ooh",
+                "All I want is a good guy",
+                "Are my expectations far too high?",
+                "Try my best, but what can I say?",
+                "All I have is myself at the end of the day",
+                "And all I want is for that to be okay"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Just for a Moment",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I fell in love",
+                "With the only girl who knows what I'm about",
+                "I fell in love",
+                "With a boy, and I can't tell if I fell out"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "After all is said and done",
+                "I can't just pretend I'm movin' on",
+                "Is it just a part we're playin'?",
+                "'Cause it don't feel like we're fakin'"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When we're underneath the lights",
+                "My heart's no longer broken",
+                "For a moment, just for a moment",
+                "When we're singing side by side",
+                "There's so much left unspoken",
+                "For a moment, just for a moment",
+                "A moment in love (Just for a moment)",
+                "A moment in love (Just for a moment)",
+                "But is a moment enough?"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Way, way back then",
+                "Always dreamed it's you and me 'til the end",
+                "Now, we can't play pretend",
+                "And I'm scared to talk to my best friend"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "Should I stay or let you go?",
+                "Will you love me when the curtains close?",
+                "Is it just a part we're playin'?",
+                "'Cause it don't feel like we're fakin'"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When we're underneath the lights",
+                "My heart's no longer broken",
+                "For a moment, just for a moment",
+                "When we're singing side by side",
+                "There's so much left unspoken",
+                "For a moment (Ooh), just for a moment",
+                "A moment in love (Just for a moment)",
+                "A moment in love (Just for a moment)",
+                "But is a moment enough?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Maybe, your heart still stops when you see me",
+                "Maybe it's worth another try",
+                "Better place, better time"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "When we're underneath the lights (Underneath the lights)",
+                "My heart's no longer broken (My heart's no longer broken)",
+                "For a moment, just for a moment (Just for a moment)",
+                "When we're singing side by side (Side)",
+                "There's so much left unspoken",
+                "For a moment, just for a moment",
+                "A moment in love (Just for a moment)",
+                "A moment in love (Just for a moment; oh)",
+                "But is a moment enough?"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "When we're underneath the lights",
+                "My heart's no longer broken",
+                "For a moment, just for a moment"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Out of the Old",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Feels like I'm not where I'm supposed to be",
+                "I don't fit in with these familiar faces",
+                "And the games they play don't mean a thing to me",
+                "I know there's so much more"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I can't stop dreamin' and thinkin'",
+                "Maybe I could be someone different",
+                "More than a yearbook memory",
+                "If I leave this, I'm riskin' almost everything",
+                "Am I on the right road?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Out of the old, I've gotta find my way",
+                "Into the new, give anything it takes",
+                "I wanna know, if no one knew my name",
+                "Would my wildest dreams feel like home?",
+                "If I go out of the old (Eh-oh, eh-oh) and into the new (Eh-oh, eh-oh)",
+                "Out of the old (Eh-oh, eh-oh) and into the new (Eh-oh, eh-oh)",
+                "Yeah, I wanna know (Eh-oh, eh-oh), if no one knew my name",
+                "Would my wildest dreams feel like home?"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Out of the old"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I wish these streets were still enough for me",
+                "I wish this town could give me everything",
+                "But I still feel stopped while every light turns green",
+                "Why can't I let it go?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I can't stop dreamin' and thinkin'",
+                "Maybe I could be someone different",
+                "More than a yearbook memory",
+                "Leavin' all this, I'm riskin' almost everything",
+                "But there's only one road"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Out of the old, I've gotta find my way",
+                "Into the new, give anything it takes",
+                "I wanna know, if no one knew my name",
+                "Would my wildest dreams feel like home?",
+                "If I go out of the old (Eh-oh, eh-oh) and into the new (Eh-oh, eh-oh)",
+                "Out of the old (Eh-oh, eh-oh) and into the new (Eh-oh, eh-oh)",
+                "Yeah, I wanna know (Eh-oh, eh-oh), if no one knew my name",
+                "Would my wildest dreams feel like home? (Eh-oh, eh-oh)"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Out of the old (Eh-oh, eh-oh) and into the new (Eh-oh, eh-oh)",
+                "Take me out of the old (Eh-oh, eh-oh) and into the new (Eh-oh, eh-oh)",
+                "'Cause I wanna go, I wanna go",
+                "Mm, just take me"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Wondering",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Seems like a part of me will always have to lose",
+                "Every single time I have to choose",
+                "Swore that it felt right, but was I wrong?",
+                "Is this where I'm supposed to be at all?",
+                "I don't have the answers, not today",
+                "It's like nothing makes the questions go away",
+                "What I'd give to see if the grass was greener"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "On the other side of all I've had and lost",
+                "Would it be enough or would I still be wondering?"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If I could go back and change the past",
+                "Be a little braver than I had",
+                "And bet against the odds",
+                "Would I still be lost?",
+                "Even if I woke up in my dreams",
+                "Would there still be something I'm missing?",
+                "If I had everything, would it mean anything to me?",
+                "Ooh"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Feels like I might have broke the best thing that I had",
+                "I said too much to ever take it back",
+                "Scared I'll never find something as good",
+                "And would I even know it if I could?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "On the other side of all I've had and lost",
+                "Would it be enough or would I still be wondering?",
+                "(Or would I still be wondering, oh)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If I could go back and change the past",
+                "Be a little braver than I had",
+                "And bet against the odds",
+                "Would I still be lost?",
+                "Even if I woke up in my dreams",
+                "Would there still be something I'm missing?",
+                "If I had everything, would it mean anything?"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Maybe I should turn around and take the other road",
+                "Or maybe I'm just lookin' for what I already know",
+                "I'm just wondering"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "If I could go back and change the past",
+                "Be a little braver than I had",
+                "And bet against the odds",
+                "Would I still be lost?",
+                "Even if I woke up in my dreams",
+                "Would there still be something I'm missing?",
+                "If I had everything, would it mean anything to me?"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Would it be enough",
+                "Or would I still be wondering?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "The Best Part",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I think of you when the wind blows",
+                "I see your face almost everywhere",
+                "Sure, maybe Salt Lake is not close",
+                "But I'm still breathin' you in the air"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Because the best part is knowin'",
+                "There's somethin' in my dreams that always makes me smile",
+                "It's you",
+                "The best part is knowin'",
+                "There's someone in my life that makes it all worthwhile",
+                "It's you"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "When I don't know what to do",
+                "Know I'm never givin' up, never givin' up on you, baby",
+                "There's no need to be blue"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Because the best part is knowin'",
+                "There's somethin' in my dreams that always makes me smile",
+                "It's you",
+                "The best part is knowin'",
+                "There's someone in my life that makes it all worthwhile",
+                "It's you"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You, you",
+                "You, you, it's you",
+                "It's you"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Granted",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "How can somethin' shake up every dream I hope for?",
+                "Wakin' up to everything around me turned cold (Mm-hmm-mm)",
+                "Don't wanna go back to second-guessin' my world",
+                "But all I've left behind has got me feelin' so torn (Mm-hmm-mm)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Am I takin' it for granted?",
+                "Everything that I've been granted",
+                "I keep lyin' awake with these dreams in the dead of the night",
+                "'Cause somethin' don't feel right",
+                "Will I take it all for granted?",
+                "And be leavin' empty-handed?",
+                "Oh, I feel shaken, everything's changin' within me"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "It feels so dramatic how erratic I think",
+                "Chasin' everything but leave the ones that chase me (Ah-ah-ah)",
+                "So much movin' forward just to take a step back",
+                "When all I ever wanted I already had (Mm-hmm-mm)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Am I takin' it for granted?",
+                "Everything that I've been granted",
+                "I keep lyin' awake with these dreams in the dead of the night",
+                "'Cause somethin' don't feel right",
+                "I won't take it all for granted",
+                "And be leavin' empty-handed",
+                "Oh, I feel shaken, everything's changin' within me"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Let my heart lead me home",
+                "'Cause I can't do this anymore",
+                "Tryin' to be somebody else",
+                "If I never left, I'd never know",
+                "Just how far I didn't have to go",
+                "To finally feel like myself"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Am I takin' it for granted?",
+                "Everything that I've been granted",
+                "I keep lyin' awake with these dreams in the dead of the night",
+                "'Cause somethin' don't feel right",
+                "I won't take it all for granted",
+                "And be leavin' empty-handed",
+                "Oh, I feel shaken, everything's changin' within me"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Am I takin' it for granted?"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "The Rose Song",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "All my life, I've seen myself through your eyes",
+                "Wonderin' if I am good enough for your time",
+                "You love me but for all the wrong reasons",
+                "Am I somethin' to you and not someone?",
+                "'Cause I feel trapped on this pedestal you put me on",
+                "You tell me that I'm beautiful, but I think that's an understatement"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "'Cause I am more than what I am to you",
+                "You say I'm perfect, but I've got thorns with my petals too",
+                "And I won't be confined to your point of view",
+                "I'm breakin' through the glass you put me in",
+                "'Cause my beauty's from within"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Oh",
+                "My beauty's from within",
+                "Oh"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "So I am done livin' my life just for you",
+                "You watched me wither and now you'll watch me bloom",
+                "You're hidin' in the dark, but I'm reachin' for the sun, woo"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "'Cause I am more than what I am to you",
+                "You say I'm pretty, but I've got magic that you never knew",
+                "And I won't be confined to your point of view",
+                "I'm breakin' through the glass you put me in 'cause",
+                "I am more than what I am to you",
+                "You say I'm perfect, but I've got thorns with my petals too",
+                "And I won't be confined to your point of view",
+                "I'm breakin' through the glass you put me in",
+                "'Cause my beauty's from within"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "You Never Know",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "A chapter begins, the pages turn in the wind",
+                "The story's so unpredictable",
+                "But the best is yet to come, woah",
+                "I open my eyes and I can see the horizon",
+                "And the thrill's indescribable",
+                "In the California sun, it shows"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You never know which way the ride could take you",
+                "Or how a breeze can make you start down a brand new road",
+                "You never know what place you're gonna end up",
+                "Even better than you dreamt of, right where you're meant to go",
+                "You never know, know",
+                "You never know, know"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "This summer is mine, I'm gonna give it a try",
+                "Another season of life for me",
+                "And I don't know what happens next, no",
+                "But I'll embrace the mystery, see the forest for the trees",
+                "'Cause branchin' out, there's no tellin' how much I can grow"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You never know which way the ride could take you",
+                "Or how a breeze can make you start down a brand new road",
+                "You never know what place you're gonna end up",
+                "Even better than you dreamt of, right where you're meant to go",
+                "You never know, know",
+                "You never know, know (You never know)"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "So, this is eighteen for me",
+                "There's somethin' waitin' for me",
+                "So, this is eighteen for me"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "You never know which way the ride could take you",
+                "Or how a breeze can make you start down a brand new road",
+                "You never know what place you're gonna end up",
+                "Even better than you dreamt of, right where you're meant to go",
+                "You never know, know",
+                "You never know, know",
+                "You never know, know (So, this is eighteen for me)",
+                "(There's somethin' waitin' for me) You never know, know",
+                "(So, this is eighteen for me) You never know"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Can't Catch Me Now",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "There's blood on the side of the mountain",
+                "There's writing all over the wall",
+                "Shadows of us are still dancin'",
+                "In every room and every hall",
+                "There's snow fallin' over the city",
+                "You thought that it would wash away",
+                "The bitter taste of my fury",
+                "And all of the messes you made",
+                "Yeah, you think that you got away"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But I'm in the trees, I'm in the breeze",
+                "My footsteps on the ground",
+                "You'll see my face in every place",
+                "But you can't catch me now",
+                "Through wading grass, the months will pass",
+                "You'll feel it all around",
+                "I'm here, I'm there, I'm everywhere",
+                "But you can't catch me now",
+                "No, you can't catch me now"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Bet you thought I'd never do it",
+                "Thought it'd go over my head",
+                "I bet you figured I'd pass with the winter",
+                "Be somethin' easy to forget",
+                "Oh, you think I'm gone 'cause I left"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "But I'm in the trees, I'm in the breeze",
+                "My footsteps on the ground",
+                "You'll see my face in every place",
+                "But you can't catch me now",
+                "Through wading grass, the months will pass",
+                "You'll feel it all around",
+                "I'm here, I'm there, I'm everywhere",
+                "But you can't catch me now",
+                "No, you can't catch me now"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Ooh",
+                "Ooh",
+                "Ooh",
+                "Ooh"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "You can't, you can't catch me now",
+                "I'm comin' like a storm into your town",
+                "You can't, you can't catch me now",
+                "I'm higher than the hopes that you brought down",
+                "You can't, you can't catch me now",
+                "I'm comin' like a storm into your town",
+                "You can't, you can't catch me now",
+                "I'm higher than the hopes that you brought down",
+                "You can't, you can't catch me now",
+                "I'm comin' like a storm into your town",
+                "You can't, you can't catch me now",
+                "You can't, you can't, you can't"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "There's blood on the side of the mountain",
+                "It's turning a new shade of red",
+                "Yeah, sometimes the fire you founded",
+                "Don't burn the way you'd expect",
+                "Yeah, you thought that this was the end"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Standalone & Rarities",
+      "songs": [
+        {
+          "title": "serena joy",
+          "sections": [
+            {
+              "label": "Verse 1",
+              "lines": [
+                "Yeah, it's all for the cause",
+                "For the good of us all",
+                "And if you close your eyes",
+                "Then it can't be your fault",
+                "Yeah, it's all for the cause",
+                "For the good of us all",
+                "Here's a tower we built",
+                "Painted gold on the walls",
+                "And we'll never be beat",
+                "No, we never will fall",
+                "While they're out on the streets",
+                "Man, we're having a ball"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Come in close, come in close",
+                "Come a little bit closer",
+                "Sing along, sing along",
+                "What they tell you to do",
+                "Comin' 'round, comin' 'round",
+                "Comin' around the corner",
+                "If they do it to them",
+                "They'll do it to you",
+                "If they do it to them",
+                "They're gonna do it to you"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Have a Coke and a smile",
+                "In the hot summer bliss",
+                "Now go bother your neighbors",
+                "While we do what we wish",
+                "Have a Coke and a smile",
+                "Let me show you a trick",
+                "If you can't throw a punch",
+                "You can learn how to spit",
+                "And we'll never give up",
+                "And we'll never submit",
+                "Look, the life of your dreams",
+                "Is beyond that cliff"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Come in close, come in close",
+                "Come a little bit closer",
+                "Sing along, sing along",
+                "What they tell you to do",
+                "Comin' 'round, comin' 'round",
+                "Comin' around the corner",
+                "If they do it to them",
+                "They'll do it to you",
+                "If they do it to them",
+                "They're gonna do it to you"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "That's what you",
+                "That's what you",
+                "What you get, what you get",
+                "It's automatic",
+                "Go ahead, go ahead",
+                "Don't think about it",
+                "What you get, what you get, what you get",
+                "Rotting in the sunshine",
+                "What you get, what you get",
+                "It's automatic",
+                "Go ahead, go ahead",
+                "Don't think about it",
+                "What you get, what you get, what you get",
+                "Everything is just fine"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Everything is just fine",
+                "Everything is just fine"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "take me home (4 christmas)",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Alright, woo"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "It's the third time this week we've been to this bar",
+                "Playing \"Joy to the World\" on electric guitar",
+                "And we're three beers deep and they're closing in ten",
+                "Oh, boy, don't you know what kind of girl I've been?"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "I've been patient and merry and kind",
+                "And I've been waiting a really long time"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I want you to take me home",
+                "And not so we can make out",
+                "I want you to take me home",
+                "Take me home to your parents' house",
+                "I want you to take me home",
+                "Show me serious commitment",
+                "I want you to take me home",
+                "Yeah, come on, take me home for Christmas"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Come on, take me home for Christmas",
+                "Come on, take me home for Christmas"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Woke up late, but your mama don't care",
+                "And she walked in on me in just my underwear (Ah)",
+                "Now your whole family's peeking under the tree",
+                "Oh, look at that, a bunch of gifts they got from me"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "'Cause I'm so thoughtful and merry and kind",
+                "And I was waiting a really long time"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I want you to take me home",
+                "And not so we can make out",
+                "I want you to take me home",
+                "Take me home to your parents' house",
+                "I want you to take me home",
+                "Show me serious commitment",
+                "I want you to take me home",
+                "Yeah, come on, take me home for Christmas"
+              ]
+            },
+            {
+              "label": "Post-Chorus",
+              "lines": [
+                "Come on, take me home for Christmas",
+                "Come on, take me home for Christmas"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Wanna get drunk with your mother and father",
+                "I'd be the coolest in-law daughter",
+                "Hungover brunch with you and your sister",
+                "Your exes got the summer, but, boy, I get the winter",
+                "Wanna get drunk with your mother and father (Wishing you happy holidays)",
+                "I'd be the coolest in-law daughter (Sent from my boyfriend's parents' place)",
+                "Hungover brunch with you and your sister (I'll trim the tree and bake the yule)",
+                "Your exes got the summer, but, boy, I get the winter (As long as your grandma thinks I'm cool)"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "Feliz Navidad",
+                "And a Happy New Year, woo",
+                "I thought you were coming to my house for Christmas this year"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "miss this christmas",
+          "sections": [
+            {
+              "label": "Chorus",
+              "lines": [
+                "Happy Christmas to the lonely",
+                "Broken hearts that feel just like me",
+                "Six days 'til the ball is droppin'",
+                "But this champagne still needs poppin'"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "I went ahead and changed my flight",
+                "My friends all came and spent the night",
+                "We decked the halls with boughs of holly",
+                "Almost called but someone stopped me"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Gettin' drunk on Miller Lite",
+                "I'll sing along to \"Auld Lang Syne\" 'cause",
+                "Next year's gonna look real different",
+                "Tell your folks I'll miss this Christmas"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "Ooh, ooh",
+                "Ooh, ooh",
+                "Ooh, ooh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Happy Christmas to the lonely",
+                "Broken hearts that feel just like me",
+                "Yeah, next year's gonna look real different",
+                "Tell your folks I'll miss their Christmas"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "I'll miss this Christmas",
+                "The Yuletide cheer",
+                "Wish things were different",
+                "Wish you were here"
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "palette": {
@@ -3805,7 +4754,9 @@
     "colors": {
       "SOUR": "#a888c9",
       "GUTS": "#5e3a80",
-      "you seem pretty sad for a girl so in love": "#7fa8cc"
+      "you seem pretty sad for a girl so in love": "#7fa8cc",
+      "Soundtracks": "#b8403e",
+      "Standalone & Rarities": "#4f7a5a"
     }
   }
 }

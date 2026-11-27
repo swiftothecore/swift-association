@@ -541,7 +541,7 @@ export const GUESTS = [
     id: "olivia-rodrigo",
     name: "Olivia Rodrigo",
     file: "data/guests/olivia-rodrigo.json",
-    songCount: 42,
+    songCount: 54,
     // pass ink: band gradient (deep → accent), the strap, the name, and the three
     // record ticks. Violet, which is SOUR/GUTS as a mood and nothing more.
     ink: { deep: "#2f1c47", accent: "#7a55b0", strap: "#5b3c88", pen: "#4a2f6b",
