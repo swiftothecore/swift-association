@@ -5821,6 +5821,10 @@ export const GLOSSARY = [
     defn: "The five small icons that set out a page's terms before you play: the clock, suggestions, hints, which words can come up, and how you're allowed to answer. A crossed-out mark means that one is off here." },
   { term: "run", slug: "run", seen: "always", also: ["page", "take"],
     defn: "One whole game, from the first page to the results." },
+  { term: "run stamp", slug: "run-stamp", seen: "always", also: ["run"],
+    // The three conditions restate RUN_STORIES in app.js (and STORY_COMEBACK_TAIL /
+    // STORY_MEMORY_LINES); retune one there and this row has to follow.
+    defn: "A word pressed in red on the results when a run had a shape worth noticing. CLEAN COPY: every page named, with no misses and no help. COMEBACK: a miss, then the last five pages right. FROM MEMORY: three or more pages answered by singing a lyric line. Most runs get none." },
   { term: "skill", slug: "skill", seen: "always", also: ["mastery"],
     defn: "One of five kinds of progress that grow from how you play rather than what you score: Instinct, Quick Pen, By Heart, The Long Game and Discography. Together they feed Mastery." },
   { term: "sticker", slug: "sticker", seen: "stickerEarned", also: ["charm", "keepsake"],
@@ -5835,6 +5839,8 @@ export const GLOSSARY = [
     defn: "What unlocks a challenge. You start with one, and beating a challenge for the first time mints another. A challenge you've played seven times without beating can be handed back for its token." },
   { term: "trinket", slug: "trinket", seen: "always", also: ["bracelet", "charm"],
     defn: "The little dangle hung from the bead of every page you name. It starts out as a star, Mastery lets you pick another, and a few pages earn a special one of their own." },
+  { term: "verse bonus", slug: "verse-bonus", seen: "always", also: ["page", "run"],
+    defn: "Extra points for answering with the lyric line instead of the title. The more of the line you write, the bigger it is. It's counted on its own, never in your score, and keeps its own best on the records page." },
   { term: "wax seal", slug: "wax-seal", seen: "always", also: ["challenge"],
     defn: "The wax pressed onto each challenge card. Its colour and its stamp tell you how you've done on that challenge, so you can read the whole shelf at a glance." },
 ];

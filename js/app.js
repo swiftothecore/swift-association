@@ -4462,7 +4462,7 @@ function celebrateMastery(res, host) {
   else {
     const at = issued ? 0 : lvl, cur = masteryXpForLevel(at), nxt = masteryXpForLevel(at + 1);
     const n = (v) => Math.round(v).toLocaleString("en-GB");
-    next = issued ? `${n(m.masteryXp - cur)} / ${n(nxt - cur)} ink to your first stamp`
+    next = issued ? `${n(m.masteryXp - cur)} / ${n(nxt - cur)} to your first stamp`
       : `next: ${escapeHtml(passportCaption(lvl + 1).toLowerCase())} · ${n(m.masteryXp - cur)} / ${n(nxt - cur)}`;
   }
   const rail = Array.from({ length: MASTERY_MAX_LEVEL }, (_, i) => i + 1 === lvl
@@ -29444,7 +29444,7 @@ function showCorrectFeedback(song, lyricMatch) {
   let firstNote = "";
   if (bonus > 0 && !settings.seenVerseBonus) {
     if (!devNoLog) { settings.seenVerseBonus = true; saveSettings(settings); }
-    firstNote = `<p class="verse-firstnote">writing more of the line earns a verse bonus: a prestige tally, kept apart from your score</p>`;
+    firstNote = `<p class="verse-firstnote">the more of the line you write, the bigger your verse bonus. It's counted on its own, never in your score</p>`;
   }
   // Long Story Long: what this page was worth, said at the moment it was earned. Without it
   // the tally in the banner just moves by an amount the player has to work out, and the whole
@@ -33447,7 +33447,7 @@ const GLOSS_PLATES = [
 ];
 // The words with nothing on a plate to point at. "page mark" is defined here but labelled on
 // the page's own header.
-const GLOSS_LOOSE = ["era", "lens", "page-mark", "take"];
+const GLOSS_LOOSE = ["era", "lens", "page-mark", "run-stamp", "take", "verse-bonus"];
 
 function glossDefRow(g) {
   // Cross-links only point at terms the reader can currently see. A "see also: dark side" on a
