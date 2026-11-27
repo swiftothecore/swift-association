@@ -43,7 +43,7 @@ test('Miley Cyrus catalogue has its records, every song once and every line sung
       ['Endless Summer Vacation', 12],
       ['Something Beautiful', 13],
       ['Bass Persuades', 10],
-      ['Soundtracks', 5],
+      ['Soundtracks', 7],
       ['Collaborations', 13],
       ['Standalone & Rarities', 2],
     ],
