@@ -25509,9 +25509,16 @@ function riskResultLine() {
 // "rare find" runs from three songs up to the catalogue's own rareFindMax (Taylor's is 5, a
 // small guest's 3 or 4: see TAYLOR_BUCKETS). Everything below it is a literal count and the
 // same in every catalogue.
+// "uncommon" is a tier but not a stamp. It keeps its lighter swipe and its wording on the
+// Confidence Wager's card, and prints nothing beside the word. As a stamp it was the most
+// frequent thing the stamp ever said: with it, 62% of Taylor's Normal pages and every page
+// Hard deals carried a stamp, so the stamp read as the page's default dress rather than news,
+// and on a small guest's Easy two pages in three said "uncommon". A word in six to eleven
+// songs still has six to eleven right answers, which is not a fact worth announcing. Without
+// it a stamp means three to five songs or fewer, on about a third of Normal's pages.
 function rarityTier(n) {
   if (n >= 12) return { name: "common",   t: 0,    stamp: "" };
-  if (n > rareFindMax) return { name: "uncommon", t: 0.4, stamp: "uncommon" };
+  if (n > rareFindMax) return { name: "uncommon", t: 0.4, stamp: "" };
   if (n >= 3)  return { name: "rare",     t: 0.75, stamp: "rare find" };
   if (n >= 2)  return { name: "scarce",   t: 0.9,  stamp: "scarce" };
   // Lives in exactly one song — the rarest a prompt word can be.
