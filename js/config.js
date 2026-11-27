@@ -664,7 +664,7 @@ export const GUESTS = [
     id: "beyonce",
     name: "Beyoncé",
     file: "data/guests/beyonce.json",
-    songCount: 239,
+    songCount: 219,
     // Honey off the hive, which is where her stamp's ink came from. The ticks are four rungs
     // of the bead palette, each measured off a sleeve: the pink of the self-titled type, the
     // RENAISSANCE chrome, The Gift's amber and the COWBOY CARTER sash.
