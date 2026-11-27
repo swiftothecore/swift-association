@@ -26,7 +26,7 @@ test('Ariana Grande catalogue has its records and three loose shelves, every son
       ['Christmas Songs', 11],
       ['Soundtracks', 3],
       ['Collaborations', 17],
-      ['Standalone & Rarities', 4],
+      ['Singles', 4],
     ],
   );
   // The pass quotes the count, so it has to move with the file.

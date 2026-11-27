@@ -37,7 +37,7 @@ test('Sabrina Carpenter catalogue has the requested release splits', () => {
       ['fruitcake', 6],
       ['Soundtracks', 6],
       ['Collaborations', 11],
-      ['Standalone & Rarities', 4],
+      ['Singles', 4],
     ],
   );
 

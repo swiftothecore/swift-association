@@ -4841,7 +4841,154 @@
       ]
     },
     {
-      "album": "Standalone Singles",
+      "album": "Collaborations",
+      "songs": [
+        {
+          "title": "Guess featuring billie eilish",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Hey, Billie, you there?",
+                "Uh-uh"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "You wanna guess the colour of my underwear?",
+                "You wanna know what I got goin' on down there?",
+                "Is it pretty in pink or all see-through?",
+                "Is it showin' off my brand-new lower-back tattoo?",
+                "You wanna put 'em in your mouth, pull 'em all down south",
+                "You wanna turn this shit out, that's what I'm talkin' about",
+                "Pu-pu-pu-put 'em in your mouth, pull 'em all down south",
+                "You wanna turn this shit out, that's what I'm talkin' about (Yeah)"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "Try it, bite it, lick it, spit it",
+                "Pull it to the side and get all up in it",
+                "Wear 'em, post 'em, might remix it",
+                "Send 'em to The Dare, yeah, I think he's with it",
+                "Try it, bite it, lick it, spit it",
+                "Pull it to the side and get all up in it",
+                "Wear 'em, post 'em, might remix it",
+                "Eat it up for lunch, yeah, it's so delicious",
+                "(Work it out)"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "Don't have to guess the color of your underwear",
+                "Already know what you've got goin' on down there",
+                "It's that lacy black pair with the little bows",
+                "The ones I picked out for you in Tokyo",
+                "I saw them when you sat down, they were peekin' out",
+                "I'm gonna tell you right now, they're all I'm thinkin' about"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "I wanna try it, bite it, lick it, spit it",
+                "Pull it to the side and get all up in it",
+                "Kiss it, ride it, can I fit it?",
+                "Charli likes boys, but she knows I'd hit it",
+                "(Knows I'd hit it)",
+                "Charli, call me if you're with it"
+              ]
+            },
+            {
+              "label": "Bridge",
+              "lines": [
+                "(Yeah) Guess, guess, guess, guess, guess, guess, guess, guess",
+                "Guess, guess, guess, guess, guess, guess, guess, guess",
+                "Guess, guess, guess, guess, guess, guess, guess, guess",
+                "Guess, guess, guess, guess, guess, guess, guess, guess"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "You wanna guess what me and Billie have been textin' about? (We've been disrespectful)",
+                "Still tryin' to guess the password to my Google Drive (Are you obsessed with me?)",
+                "You wanna guess the address of the party we're at (You know you're not invited)",
+                "You wanna guess if we're serious about this song"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Never Felt So Alone",
+          "sections": [
+            {
+              "label": "Intro",
+              "lines": [
+                "Oh-oh, oh-oh",
+                "Oh-oh, oh-oh"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I never felt so alone, felt so alone, na-na",
+                "And I never felt so alone, felt so alone, na-na",
+                "And I never felt so alone, felt so alone, na-na",
+                "And I never felt so alone, felt so alone, na-na"
+              ]
+            },
+            {
+              "label": "Verse 1",
+              "lines": [
+                "In a whip (Woah), thinkin', \"What if (Woah)",
+                "You and this (Woah) never existed?\"",
+                "Hollow kiss (Woah), bottle liquor (Oh)",
+                "Man, I'm sick, man, I'm schizo"
+              ]
+            },
+            {
+              "label": "Pre-Chorus",
+              "lines": [
+                "All white leather",
+                "You know this man ain't shit without you in the interior (I'm dyin' somewhere in the dark)",
+                "All white leather",
+                "And I think, \"What if we weren't ridin' and dyin' together?\"",
+                "The whole world would fall apart"
+              ]
+            },
+            {
+              "label": "Chorus",
+              "lines": [
+                "And I never felt so alone, felt so alone, na-na (Never felt so alone, woo! Alone)",
+                "And I never felt so alone, felt so alone, na-na"
+              ]
+            },
+            {
+              "label": "Verse 2",
+              "lines": [
+                "I thought you were my new best friend (My)",
+                "Wish I knew better then",
+                "Who knew you were just out to get me?",
+                "My whole world just fell apart"
+              ]
+            },
+            {
+              "label": "Outro",
+              "lines": [
+                "'Cause I never felt so alone, felt so alone, na-na",
+                "I could never be more alone than when I ain't got you here"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "album": "Singles",
       "songs": [
         {
           "title": "Six Feet Under",
@@ -5141,153 +5288,6 @@
           ]
         }
       ]
-    },
-    {
-      "album": "Collaborations",
-      "songs": [
-        {
-          "title": "Guess featuring billie eilish",
-          "sections": [
-            {
-              "label": "Intro",
-              "lines": [
-                "Hey, Billie, you there?",
-                "Uh-uh"
-              ]
-            },
-            {
-              "label": "Verse 1",
-              "lines": [
-                "You wanna guess the colour of my underwear?",
-                "You wanna know what I got goin' on down there?",
-                "Is it pretty in pink or all see-through?",
-                "Is it showin' off my brand-new lower-back tattoo?",
-                "You wanna put 'em in your mouth, pull 'em all down south",
-                "You wanna turn this shit out, that's what I'm talkin' about",
-                "Pu-pu-pu-put 'em in your mouth, pull 'em all down south",
-                "You wanna turn this shit out, that's what I'm talkin' about (Yeah)"
-              ]
-            },
-            {
-              "label": "Chorus",
-              "lines": [
-                "Try it, bite it, lick it, spit it",
-                "Pull it to the side and get all up in it",
-                "Wear 'em, post 'em, might remix it",
-                "Send 'em to The Dare, yeah, I think he's with it",
-                "Try it, bite it, lick it, spit it",
-                "Pull it to the side and get all up in it",
-                "Wear 'em, post 'em, might remix it",
-                "Eat it up for lunch, yeah, it's so delicious",
-                "(Work it out)"
-              ]
-            },
-            {
-              "label": "Verse 2",
-              "lines": [
-                "Don't have to guess the color of your underwear",
-                "Already know what you've got goin' on down there",
-                "It's that lacy black pair with the little bows",
-                "The ones I picked out for you in Tokyo",
-                "I saw them when you sat down, they were peekin' out",
-                "I'm gonna tell you right now, they're all I'm thinkin' about"
-              ]
-            },
-            {
-              "label": "Chorus",
-              "lines": [
-                "I wanna try it, bite it, lick it, spit it",
-                "Pull it to the side and get all up in it",
-                "Kiss it, ride it, can I fit it?",
-                "Charli likes boys, but she knows I'd hit it",
-                "(Knows I'd hit it)",
-                "Charli, call me if you're with it"
-              ]
-            },
-            {
-              "label": "Bridge",
-              "lines": [
-                "(Yeah) Guess, guess, guess, guess, guess, guess, guess, guess",
-                "Guess, guess, guess, guess, guess, guess, guess, guess",
-                "Guess, guess, guess, guess, guess, guess, guess, guess",
-                "Guess, guess, guess, guess, guess, guess, guess, guess"
-              ]
-            },
-            {
-              "label": "Outro",
-              "lines": [
-                "You wanna guess what me and Billie have been textin' about? (We've been disrespectful)",
-                "Still tryin' to guess the password to my Google Drive (Are you obsessed with me?)",
-                "You wanna guess the address of the party we're at (You know you're not invited)",
-                "You wanna guess if we're serious about this song"
-              ]
-            }
-          ]
-        },
-        {
-          "title": "Never Felt So Alone",
-          "sections": [
-            {
-              "label": "Intro",
-              "lines": [
-                "Oh-oh, oh-oh",
-                "Oh-oh, oh-oh"
-              ]
-            },
-            {
-              "label": "Chorus",
-              "lines": [
-                "And I never felt so alone, felt so alone, na-na",
-                "And I never felt so alone, felt so alone, na-na",
-                "And I never felt so alone, felt so alone, na-na",
-                "And I never felt so alone, felt so alone, na-na"
-              ]
-            },
-            {
-              "label": "Verse 1",
-              "lines": [
-                "In a whip (Woah), thinkin', \"What if (Woah)",
-                "You and this (Woah) never existed?\"",
-                "Hollow kiss (Woah), bottle liquor (Oh)",
-                "Man, I'm sick, man, I'm schizo"
-              ]
-            },
-            {
-              "label": "Pre-Chorus",
-              "lines": [
-                "All white leather",
-                "You know this man ain't shit without you in the interior (I'm dyin' somewhere in the dark)",
-                "All white leather",
-                "And I think, \"What if we weren't ridin' and dyin' together?\"",
-                "The whole world would fall apart"
-              ]
-            },
-            {
-              "label": "Chorus",
-              "lines": [
-                "And I never felt so alone, felt so alone, na-na (Never felt so alone, woo! Alone)",
-                "And I never felt so alone, felt so alone, na-na"
-              ]
-            },
-            {
-              "label": "Verse 2",
-              "lines": [
-                "I thought you were my new best friend (My)",
-                "Wish I knew better then",
-                "Who knew you were just out to get me?",
-                "My whole world just fell apart"
-              ]
-            },
-            {
-              "label": "Outro",
-              "lines": [
-                "'Cause I never felt so alone, felt so alone, na-na",
-                "I could never be more alone than when I ain't got you here"
-              ]
-            }
-          ]
-        }
-      ]
     }
   ],
   "palette": {
@@ -5299,8 +5299,8 @@
       "Guitar Songs": "#8fa079",
       "HIT ME HARD AND SOFT": "#1e4470",
       "Soundtracks": "#2f6b4f",
-      "Standalone Singles": "#6b4a7a",
-      "Collaborations": "#7a2f4a"
+      "Collaborations": "#7a2f4a",
+      "Singles": "#6b4a7a"
     }
   }
 }

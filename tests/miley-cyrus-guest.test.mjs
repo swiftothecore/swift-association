@@ -45,7 +45,7 @@ test('Miley Cyrus catalogue has its records, every song once and every line sung
       ['Bass Persuades', 10],
       ['Soundtracks', 8],
       ['Collaborations', 13],
-      ['Standalone & Rarities', 2],
+      ['Singles', 2],
     ],
   );
   assert.equal(new Set(songs.map(({ title }) => title.toLocaleLowerCase())).size, songs.length);

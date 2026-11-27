@@ -19,7 +19,7 @@ test('Olivia Rodrigo catalogue has her three records and two loose shelves, ever
       ['GUTS', 17],
       ['you seem pretty sad for a girl so in love', 14],
       ['Soundtracks', 9],
-      ['Standalone & Rarities', 3],
+      ['Singles', 3],
     ],
   );
   // The pass quotes the count, so it has to move with the file.
