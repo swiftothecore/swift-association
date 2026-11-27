@@ -243,7 +243,7 @@ const JOIN_MIN_TOKEN = 5;
 const JOIN_MIN_PART = 2;
 
 let currentMode = MODES.medium;
-let wordBuckets = { easy: [], all: [], normal: [], normalTail: [], hard: [], ultra: [] };
+let wordBuckets = { easy: [], all: [], normal: [], normalTail: [], hard: [], ultra: [], opener: [] };
 let recentEras = [];
 
 let allSongs = [];
@@ -17871,7 +17871,7 @@ function endLineup() {
 
 function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
   const MIN = RECENT_WINDOW + 8;
-  const easy = [], hard = [], ultra = [], normal = [], normalTail = [];
+  const easy = [], hard = [], ultra = [], normal = [], normalTail = [], opener = [];
   albumWordMap = {};
   for (const w of playableWords) {
     const albums = new Set();
@@ -17901,6 +17901,11 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     // (NORMAL_TAIL_CHANCE); a word no page could answer at all goes to neither.
     if (hardN >= cfg.hard[0]) normal.push(w);
     else if (hardN >= 1) normalTail.push(w);
+    // The opener: a word common enough for Easy's pool AND dealable on a Normal page, so
+    // page one of a Relaxed, Easy or Normal run can be one whatever the title rule (see
+    // openerWords). It reuses the catalogue's own easy line rather than a new number, which
+    // is what makes it a no-op on Easy and keeps a 22-song catalogue from having none.
+    if (easyN >= cfg.easy && hardN >= cfg.hard[0]) opener.push(w);
     // Ultra's pool is counted on the EXACT word, but Ultra plays stem-lenient (MODES.ultra has
     // strict: false since ed69bfa, so "cheat" accepts a song that only sings "cheats"). That
     // gap is deliberate, not an oversight: a word counted at three songs may play as four or
@@ -17913,7 +17918,7 @@ function indexPlayableWords(cfg = TAYLOR_BUCKETS) {
     if (ultraN >= cfg.ultra[0] && ultraN <= cfg.ultra[1] && hardN <= cfg.hard[1]) ultra.push(w);
   }
   const safe = (arr) => (arr.length >= MIN ? arr : playableWords);
-  wordBuckets = { easy: safe(easy), all: playableWords, normal: safe(normal), normalTail, hard: safe(hard), ultra: safe(ultra) };
+  wordBuckets = { easy: safe(easy), all: playableWords, normal: safe(normal), normalTail, hard: safe(hard), ultra: safe(ultra), opener };
 }
 
 /* ---------- Difficulty ---------- */
@@ -23675,11 +23680,18 @@ function previewDailyAlbum(dateKey, exp = DAILY_ALBUM_WEIGHT_EXP) {
   const words = [];
   for (let i = 0; i < TOTAL_ROUNDS; i++) {
     const gen = bucket.filter((w) => !wordTaken(used, w));
-    const genChoices = gen.length ? gen : bucket;
-    const albumChoices = pool.filter((s) => !wordTaken(used, s.w));
+    let genChoices = gen.length ? gen : bucket;
+    let albumChoices = pool.filter((s) => !wordTaken(used, s.w));
+    const opening = openerWords(MODES.medium.id, "daily", used);
+    if (opening) {
+      const common = genChoices.filter((w) => opening.has(w));
+      if (common.length) genChoices = common;
+      const commonAlbum = albumChoices.filter((s) => opening.has(s.w));
+      if (commonAlbum.length) albumChoices = commonAlbum;
+    }
     const fromAlbum = albumChoices.length > 0 && rng() < DAILY_ALBUM_SKEW;
     let from = genChoices;
-    if (!fromAlbum && normalTailOpen(MODES.medium.pool, "daily", used) && rng() < NORMAL_TAIL_CHANCE) {
+    if (!fromAlbum && !opening && normalTailOpen(MODES.medium.pool, "daily", used) && rng() < NORMAL_TAIL_CHANCE) {
       const tail = wordBuckets.normalTail.filter((w) => !wordTaken(used, w));
       if (tail.length) from = tail;
     }
@@ -23873,13 +23885,22 @@ function pickWord() {
     if (winnable.length) choices = winnable;
   }
   const rng = dailyRng || Math.random;
+  const opening = openerWords(currentMode.id, gameType, usedWords);
+  if (opening) {
+    const common = choices.filter((w) => opening.has(w));
+    if (common.length) choices = common;
+  }
   // Album-anniversary daily: every round draws from that album's words (weighted toward the ones
   // that define it), since DAILY_ALBUM_SKEW is 1.0 — the roll stays because the skew is
   // the lever, not the behaviour. Rolled on dailyRng so every player gets the same run. The
   // chosen word is still answerable from any song — this constrains which word surfaces, not the
   // valid answers — so winnability matches a normal daily and this is no Album Focus clone.
   if (dailyAlbumPool) {
-    const albumChoices = dailyAlbumPool.filter((s) => !wordSpent(s.w));
+    let albumChoices = dailyAlbumPool.filter((s) => !wordSpent(s.w));
+    if (opening) {
+      const common = albumChoices.filter((s) => opening.has(s.w));
+      if (common.length) albumChoices = common;
+    }
     if (albumChoices.length && rng() < DAILY_ALBUM_SKEW) {
       const word = weightedAlbumWord(albumChoices, rng);
       usedWords.push(word);
@@ -23893,7 +23914,7 @@ function pickWord() {
   // have it, so a run that cannot draw it spends no rng, and it is rolled AFTER the album skew,
   // which previewDailyAlbum mirrors call for call.
   let from = choices;
-  if (normalTailOpen(effectivePool(), gameType, usedWords) && rng() < NORMAL_TAIL_CHANCE) {
+  if (!opening && normalTailOpen(effectivePool(), gameType, usedWords) && rng() < NORMAL_TAIL_CHANCE) {
     const tail = wordBuckets.normalTail.filter((w) => !wordSpent(w));
     if (tail.length) from = tail;
   }
@@ -23912,6 +23933,23 @@ function normalTailOpen(pool, kind, used) {
   if (!tail.length) return false;
   const held = new Set(tail);
   return !used.some((w) => held.has(w));
+}
+
+// Page one of a Relaxed, Easy or Normal run is a common word: one out of wordBuckets.opener,
+// which indexPlayableWords fills with words common enough for Easy's pool and dealable on a
+// Normal page. The first page is where a player finds out what the game is, so it should
+// have plenty of right answers rather than whatever the draw turns up. Returns the set to
+// narrow the draw to, or null when the rule does not apply: past page one, in any other mode
+// or game type, or on a corpus with no opener words (callers then draw as they always have).
+// The Daily is one of these runs, and stays the same for everyone because the set is read
+// off the catalogue and never off the player. Page one never rolls Normal's rare tail page
+// either, so callers skip that roll whenever this returns a set.
+const OPENER_MODES = new Set(["relaxed", "easy", "medium"]);
+const OPENER_KINDS = new Set(["classic", "infinite", "daily", "guest"]);
+function openerWords(modeId, kind, used) {
+  if (used.length || !OPENER_MODES.has(modeId) || !OPENER_KINDS.has(kind)) return null;
+  const opener = wordBuckets.opener || [];
+  return opener.length ? new Set(opener) : null;
 }
 
 // Album Focus: a word whose chosen-album valid set is non-empty under the active difficulty's
