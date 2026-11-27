@@ -12212,8 +12212,8 @@
      of the same family on purpose, and colour plus size are what keep the two apart. Multiply
      lets the paper grain read through the ink on the day page; the night page lays it on
      normally, because multiply against a near-black sheet turns any red to mud. It takes the
-     pointer so its data-tip can say what the run was stamped for; it sits on empty paper, so
-     there is nothing underneath for it to swallow a click from. */
+     pointer because it is a glossary word (a tap writes what the stamps mean); it sits on empty
+     paper, so there is nothing underneath for it to swallow a click from. */
   .run-stamp {
     position: absolute; top: 36px; right: 5%; z-index: 3; cursor: help;
     font-family: var(--type); font-weight: 700; text-transform: uppercase; white-space: nowrap;
@@ -14535,9 +14535,48 @@
   @keyframes pl-sweep { from { background-size: 0 100%; } to { background-size: 100% 100%; } }
   @media (prefers-reduced-motion: reduce) { .gloss-row.is-found .gloss-term-name { animation: none; } }
 
-  /* A term borrowing its definition wherever it is used. No underline: these sit on glyphs and
-     counters all over the notebook, and dotting every one would look like an error state. */
+  /* A term borrowing its definition wherever it is used. A glyph (tapes, the token wallet)
+     carries no mark, since dots under a drawing would look like an error state. */
   .gloss-term { cursor: help; }
+  /* A coined WORD (glossWord in app.js) wears a run of pencil dots, the way you'd mark a word in
+     a book to come back to, and a tap writes its note in place. The dots are one uneven tile so
+     the row never looks ruled, and a mask so they take the page's own soft pencil, day or night.
+     :where() keeps the position at zero weight, so the run stamp stays absolute. */
+  .gloss-word { cursor: pointer; display: inline-block; -webkit-tap-highlight-color: transparent; }
+  :where(.gloss-word) { position: relative; }
+  .gloss-word::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 4px; pointer-events: none;
+    background: var(--ink-soft);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='47' height='4'%3E%3Ccircle cx='1.6' cy='2.2' r='.95'/%3E%3Ccircle cx='6.9' cy='1.7' r='.8' opacity='.75'/%3E%3Ccircle cx='11.6' cy='2.4' r='1'/%3E%3Ccircle cx='17.4' cy='1.9' r='.78' opacity='.65'/%3E%3Ccircle cx='22.1' cy='2.3' r='.9' opacity='.9'/%3E%3Ccircle cx='27.9' cy='1.6' r='.85'/%3E%3Ccircle cx='32.6' cy='2.5' r='.75' opacity='.7'/%3E%3Ccircle cx='38.3' cy='2' r='.95' opacity='.85'/%3E%3Ccircle cx='43.2' cy='2.3' r='.8' opacity='.6'/%3E%3C/svg%3E") repeat-x left center / 47px 4px;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='47' height='4'%3E%3Ccircle cx='1.6' cy='2.2' r='.95'/%3E%3Ccircle cx='6.9' cy='1.7' r='.8' opacity='.75'/%3E%3Ccircle cx='11.6' cy='2.4' r='1'/%3E%3Ccircle cx='17.4' cy='1.9' r='.78' opacity='.65'/%3E%3Ccircle cx='22.1' cy='2.3' r='.9' opacity='.9'/%3E%3Ccircle cx='27.9' cy='1.6' r='.85'/%3E%3Ccircle cx='32.6' cy='2.5' r='.75' opacity='.7'/%3E%3Ccircle cx='38.3' cy='2' r='.95' opacity='.85'/%3E%3Ccircle cx='43.2' cy='2.3' r='.8' opacity='.6'/%3E%3C/svg%3E") repeat-x left center / 47px 4px;
+  }
+  .run-stamp.gloss-word::after { bottom: -9px; background: currentColor; }
+  .gloss-word:focus-visible { outline: 2px dashed var(--ink-soft); outline-offset: 3px; border-radius: 2px; }
+  /* The note: a slip of the page's own paper under the word, pencil-edged, a nib pointing up at
+     what was tapped (down, when it opens above). */
+  .gloss-note {
+    position: fixed; z-index: 400; padding: 10px 14px 8px; text-align: left;
+    background: var(--paper); color: var(--ink);
+    border: 1.4px solid color-mix(in srgb, var(--ink) 55%, transparent); border-radius: 2px 4px 3px 2px;
+    box-shadow: 1px 2px 0 color-mix(in srgb, var(--ink) 12%, transparent);
+    transform: rotate(-1.2deg);
+    font-family: var(--type); font-size: calc(12px + var(--text-size-adjust)); line-height: 1.5;
+  }
+  .gloss-note-term { display: block; font-family: var(--hand); font-weight: 700; font-size: calc(19px + var(--text-size-adjust)); line-height: 1.1; margin-bottom: 3px; }
+  .gloss-note-defn { display: block; }
+  .gloss-note-more {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 2px 0;
+    background: none; border: 0; cursor: pointer; color: var(--ink-soft);
+    font-family: var(--hand); font-size: calc(16px + var(--text-size-adjust));
+  }
+  .gloss-note-more:hover { color: var(--ink); }
+  .gloss-note-more svg { width: 18px; height: 9px; transform: rotate(180deg); }
+  .gloss-note::before {
+    content: ""; position: absolute; top: -7px; left: var(--nib, 24px); width: 11px; height: 11px; background: var(--paper);
+    border-left: 1.4px solid color-mix(in srgb, var(--ink) 55%, transparent);
+    border-top: 1.4px solid color-mix(in srgb, var(--ink) 55%, transparent); transform: rotate(45deg);
+  }
+  .gloss-note.is-above::before { top: auto; bottom: -7px; transform: rotate(225deg); }
   .howto-door { margin: 12px 0 0; font-family: var(--type); font-size: calc(11.5px + var(--text-size-adjust)); }
 
   /* HOW TO PLAY — the leafed card stack. It borrows the charm keepsake's corner arrows wholesale

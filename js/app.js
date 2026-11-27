@@ -1233,6 +1233,7 @@ function activeScreenName() {
   return Object.keys(screens).find((k) => screens[k].classList.contains("active")) || "start";
 }
 function showScreen(name, options = {}) {
+  closeGlossNote();
   explicitScreenReveal = null;
   const deferFocus = !!options.deferFocus;
   const deferPresentation = !!options.deferPresentation;
@@ -15585,14 +15586,14 @@ function cardVars() {
 // The tally shapes every end path can produce, for __dev.results.tally. Kept beside
 // setFinalTally so a new end path's shape gets added here in the same edit.
 const TALLY_PREVIEWS = {
-  classic:  { score: "10", sub: [{ v: "13", l: "pages" }, { v: "1:42", l: "on the clock" }, { v: "+6", l: "verse bonus" }] },
+  classic:  { score: "10", sub: [{ v: "13", l: "pages" }, { v: "1:42", l: "on the clock" }, { v: "+6", l: "verse bonus", gloss: "verse-bonus" }] },
   relaxed:  { score: "9",  sub: [{ v: "13", l: "pages" }] },
   daily:    { score: "?",  sub: null },
-  infinite: { score: "24", sub: [{ v: "21", l: "correct" }, { v: "6:31", l: "on the clock" }, { v: "+11", l: "verse bonus" }], unit: "rounds" },
+  infinite: { score: "24", sub: [{ v: "21", l: "correct" }, { v: "6:31", l: "on the clock" }, { v: "+11", l: "verse bonus", gloss: "verse-bonus" }], unit: "rounds" },
   risk:     { score: "14", sub: [{ v: "12", l: "needed" }, { v: "2:08", l: "on the clock" }], unit: "beads" },
   // A challenge a rule ended early, with the one rule figure a card can add (Insurance's).
-  challenge: { score: "6", sub: [{ v: "7/13", l: "pages" }, { v: "1:04", l: "on the clock" }, { v: "+3", l: "verse bonus" }, { v: "3", l: "shields spent" }] },
-  ink:      { score: "1184", sub: [{ v: "1100", l: "needed" }, { v: "3:51", l: "on the clock" }, { v: "+9", l: "verse bonus" }], unit: "characters" },
+  challenge: { score: "6", sub: [{ v: "7/13", l: "pages" }, { v: "1:04", l: "on the clock" }, { v: "+3", l: "verse bonus", gloss: "verse-bonus" }, { v: "3", l: "shields spent" }] },
+  ink:      { score: "1184", sub: [{ v: "1100", l: "needed" }, { v: "3:51", l: "on the clock" }, { v: "+9", l: "verse bonus", gloss: "verse-bonus" }], unit: "characters" },
 };
 
 /* ---- The run-story stamp ----
@@ -15626,8 +15627,8 @@ function trailingCorrect() {
 }
 
 /* Resolved in order, first match wins. Each `words` array is the press's own lines: one word
-   per line on a phone, where the slab has to stack to clear the label beside it. `tip` is what
-   hovering the stamp says it was pressed for, stated as the test's own condition so the two
+   per line on a phone, where the slab has to stack to clear the label beside it. `tip` is the
+   stamp's spoken label, what it was pressed for, stated as the test's own condition so the two
    cannot drift into describing different feats. */
 const RUN_STORIES = [
   // A full run, every page landed, nothing crossed out and nothing asked for. The page count
@@ -15681,9 +15682,14 @@ function renderRunStamp() {
   const story = runStory();
   if (!story) return null;
   const el = document.createElement("div");
-  el.className = "run-stamp";
+  // A glossary word like any other: dotted, and a tap writes what the three stamps mean.
+  el.className = "run-stamp gloss-term gloss-word";
   el.dataset.story = story.id;
-  el.setAttribute("data-tip", story.tip);
+  el.dataset.gloss = "run-stamp";
+  el.setAttribute("role", "button");
+  el.setAttribute("tabindex", "0");
+  el.setAttribute("aria-haspopup", "dialog");
+  el.setAttribute("aria-expanded", "false");
   el.setAttribute("aria-label", story.words.join(" ") + ": " + story.tip);
   // Each word its own span: inline on paper wide enough for one line, stacked on a phone,
   // where the measured free paper beside the number is 125px and a single line runs through
@@ -15710,7 +15716,7 @@ function setFinalTally(score, sub, unit) {
   led.style.gridTemplateColumns = "repeat(" + Math.max(cells.length, 1) + ", 1fr)";
   led.innerHTML = cells.map((c) =>
     `<div class="cell"><div class="tally-v">${escapeHtml(String(c.v))}</div>` +
-    `<div class="tally-l">${escapeHtml(String(c.l))}</div></div>`).join("");
+    `<div class="tally-l">${c.gloss ? glossWord(c.gloss, escapeHtml(String(c.l))) : escapeHtml(String(c.l))}</div></div>`).join("");
   $("finalSub").textContent = prose;
   $("finalRule").style.display = (cells.length || prose) ? "" : "none";
   centreTallyHead();
@@ -15726,7 +15732,7 @@ function setFinalTally(score, sub, unit) {
 function tallyTail(secs) {
   const cells = [];
   if (secs != null) cells.push({ v: fmtTime(secs), l: "on the clock" });
-  if (verseBonus > 0) cells.push({ v: "+" + verseBonus, l: "verse bonus" });
+  if (verseBonus > 0) cells.push({ v: "+" + verseBonus, l: "verse bonus", gloss: "verse-bonus" });
   return cells;
 }
 // The time a sandboxed run shows: its answer clock where it had one, Relaxed's count-up where
@@ -29444,7 +29450,7 @@ function showCorrectFeedback(song, lyricMatch) {
   let firstNote = "";
   if (bonus > 0 && !settings.seenVerseBonus) {
     if (!devNoLog) { settings.seenVerseBonus = true; saveSettings(settings); }
-    firstNote = `<p class="verse-firstnote">the more of the line you write, the bigger your verse bonus. It's counted on its own, never in your score</p>`;
+    firstNote = `<p class="verse-firstnote">the more of the line you write, the bigger your ${glossWord("verse-bonus", "verse bonus")}. It's counted on its own, never in your score</p>`;
   }
   // Long Story Long: what this page was worth, said at the moment it was earned. Without it
   // the tally in the banner just moves by an amount the player has to work out, and the whole
@@ -33236,6 +33242,61 @@ function glossTip(slug, inner) {
   const g = GLOSSARY_BY_SLUG[slug];
   if (!g) return inner;
   return `<span class="gloss-term" data-gloss="${g.slug}" title="${escapeHtml(g.term)}: ${escapeHtml(glossaryDefn(g.slug))}">${inner}</span>`;
+}
+/* A coined WORD, as opposed to a glyph: the same door, dressed in a run of pencil dots so a
+   newcomer can see it means something they can look up. Words only. The tapes and the token
+   wallet stay undotted, because dots under a drawing read as an error state rather than a cue.
+   No title attribute: the tap writes the note, so a hover tooltip would only say it twice. */
+function glossWord(slug, inner) {
+  const g = GLOSSARY_BY_SLUG[slug];
+  if (!g) return inner;
+  return `<span class="gloss-term gloss-word" data-gloss="${g.slug}" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false">${inner}</span>`;
+}
+
+/* The note in place. Tapping a term writes its definition on a slip under it, with the full
+   glossary one tap further on, so a player on the results learns what COMEBACK means without
+   being taken off the results. Fixed to the viewport and closed by any scroll, screen change,
+   outside tap or Escape: a slip left floating over a page that moved under it is worse than
+   one that has to be tapped open again. */
+let glossNoteFor = null;
+function closeGlossNote(refocus = false) {
+  const n = document.querySelector(".gloss-note");
+  if (n) n.remove();
+  const term = glossNoteFor;
+  glossNoteFor = null;
+  if (term) {
+    term.setAttribute("aria-expanded", "false");
+    if (refocus && document.contains(term)) { try { term.focus({ preventScroll: true }); } catch (_) { /* gone */ } }
+  }
+}
+function openGlossNote(term, viaKey = false) {
+  const slug = term.dataset.gloss, g = GLOSSARY_BY_SLUG[slug];
+  if (!g) return;
+  if (glossNoteFor === term) { closeGlossNote(); return; }
+  closeGlossNote();
+  const n = document.createElement("div");
+  n.className = "gloss-note";
+  n.setAttribute("role", "dialog");
+  n.setAttribute("aria-label", g.term);
+  n.innerHTML = `<b class="gloss-note-term">${escapeHtml(g.term)}</b>` +
+    `<span class="gloss-note-defn">${escapeHtml(glossaryDefn(slug))}</span>` +
+    `<button type="button" class="gloss-note-more" data-gloss-more="${g.slug}">more in the glossary` +
+    `<svg viewBox="0 0 20 10" aria-hidden="true"><use href="#back-arrow"/></svg></button>`;
+  document.body.append(n);
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const w = Math.min(270, vw - 24);
+  n.style.width = w + "px";
+  const b = term.getBoundingClientRect(), h = n.offsetHeight;
+  const left = Math.max(12, Math.min(b.left + b.width / 2 - 30, vw - w - 12));
+  // Under the word, unless the slip would run off the bottom and there is room above it.
+  const above = b.bottom + 14 + h > vh - 8 && b.top - h - 14 >= 8;
+  n.classList.toggle("is-above", above);
+  n.style.left = left + "px";
+  n.style.top = (above ? b.top - h - 14 : b.bottom + 14) + "px";
+  n.style.setProperty("--nib", Math.max(10, Math.min(w - 24, b.left + b.width / 2 - left - 6)) + "px");
+  term.setAttribute("aria-expanded", "true");
+  glossNoteFor = term;
+  if (viaKey) n.querySelector(".gloss-note-more").focus({ preventScroll: true });
 }
 let glossaryBackTarget = "start";
 
@@ -39387,13 +39448,24 @@ async function init() {
   screens.glossary.addEventListener("pointerleave", () => lightGlossWord(null));
   initGlossaryLayout();
   document.addEventListener("click", (e) => {
+    const more = e.target.closest("[data-gloss-more]");
+    if (more) { closeGlossNote(); openGlossary(activeScreenName(), more.dataset.glossMore); return; }
+    if (e.target.closest(".gloss-note")) return;
     const term = e.target.closest("[data-gloss]");
-    if (!term) return;
     // A term sitting inside a real control keeps its tooltip but is NOT a door: hijacking the
-    // click would mean tapping a challenge card's tapes opened the glossary instead of the card.
-    if (term.closest("button, a")) return;
-    openGlossary(activeScreenName(), term.dataset.gloss);
+    // click would mean tapping a challenge card's tapes wrote a note instead of opening the card.
+    if (!term || term.closest("button, a")) { closeGlossNote(); return; }
+    openGlossNote(term);
   });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && glossNoteFor) { closeGlossNote(true); return; }
+    if ((e.key === "Enter" || e.key === " ") && e.target.closest && e.target.closest(".gloss-word")) {
+      e.preventDefault();
+      openGlossNote(e.target.closest(".gloss-word"), true);
+    }
+  });
+  addEventListener("scroll", () => { if (glossNoteFor) closeGlossNote(); }, { capture: true, passive: true });
+  addEventListener("resize", () => { if (glossNoteFor) closeGlossNote(); });
   $("howToBody").addEventListener("click", (e) => {
     if (e.target.closest("[data-howto-prev]")) turnHowTo(-1);
     else if (e.target.closest("[data-howto-next]")) turnHowTo(1);
