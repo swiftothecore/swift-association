@@ -23305,11 +23305,11 @@ function paintReplayStamp() {
   replayRun = { type: infinite ? "infinite" : "classic", mode: currentMode, variant: infiniteVariant };
 }
 
-// ADD A CLOCK, the one-time step up from Relaxed, cut from PLAY AGAIN's stamp so the pair reads
+// ADD A CLOCK over TOO EASY? TRY NORMAL, the step up from Relaxed, cut from PLAY AGAIN's stamp so the pair reads
 // as two ways on: the same mode again, or the same game with a clock.
 function paintNormalStamp() {
-  $("nmStampArt").innerHTML = replayStampArt(560, "NORMAL MODE", "ADD A CLOCK");
-  $("nmStampArtNarrow").innerHTML = replayStampArt(276, "NORMAL MODE", "ADD A CLOCK");
+  $("nmStampArt").innerHTML = replayStampArt(560, "TOO EASY? TRY NORMAL", "ADD A CLOCK");
+  $("nmStampArtNarrow").innerHTML = replayStampArt(276, "TOO EASY? TRY NORMAL", "ADD A CLOCK");
   $("normalStampBtn").querySelectorAll("use").forEach((u) => {
     const href = u.getAttribute("href");
     u.setAttribute("href", "");
