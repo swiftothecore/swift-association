@@ -19197,6 +19197,32 @@ function typeHintSegments(input) {
   return segs;
 }
 
+/* Page 1 of the first game says how to play exactly once. The note goes first, because a boxed
+   note headed "how to play" is the thing a newcomer actually reads, and the typewriter lines
+   under the input, and the hint button with them, stay invisible until it is dismissed ("got
+   it", their first answer, or leaving the board). Invisible, not removed: they keep their room,
+   so the note sits in it right under the input it is about, and nothing below jumps when they
+   write themselves in. From then on the lines are the page's one explanation, on every page. */
+let pageLinesHeld = false;
+function holdPageLines(on) {
+  pageLinesHeld = on;
+  screens.game.classList.toggle("lines-held", on);
+}
+function releasePageLines() {
+  if (!pageLinesHeld) return;
+  holdPageLines(false);
+  if (motionReduced() || animInstant()) return;
+  for (const el of [$("gameHint"), $("hintBtn")]) {
+    if (!el || el.hidden) continue;
+    el.classList.remove("writes-in");
+    void el.offsetWidth;
+    el.classList.add("writes-in");
+    // Off again once it has played: the hint button's idle pulse is an animation too, and a
+    // class left on would hold it still for the rest of the run.
+    el.addEventListener("animationend", () => el.classList.remove("writes-in"), { once: true });
+  }
+}
+
 function applyInputHints() {
   const input = $("songInput");
   const hint = $("gameHint");
@@ -19254,6 +19280,8 @@ function hintsAllowed() {
 function albumHintLadder() { return gameType === "album" && !!focusAlbum; }
 function hintRungs() { return albumHintLadder() ? 2 : 3; }
 
+const HINT_URGE_MS = 6000;    // idle on a clockless page before the hint button pulses
+const HINT_STUCK_MS = 20000;  // idle with nothing typed before the first game's "stuck?" note
 // Reset the hint UI for a fresh round; show the affordance only when hints apply.
 function renderHintAffordance() {
   clearTimeout(hintUrgeTimer);
@@ -19261,6 +19289,7 @@ function renderHintAffordance() {
   const box = $("hintBox");
   box.innerHTML = "";
   hintTier = 0;
+  holdPageLines(false);
   typeHintCountArmed = true;   // one fresh page = one showing banked against the typing hint's fade
   applyInputHints();   // restore the default placeholder/hint (a prior round's tier-3 may have changed it)
   if (!btn) return;
@@ -19269,11 +19298,19 @@ function renderHintAffordance() {
     btn.hidden = false;
     btn.disabled = false;
     paintHintBtn(btn, "need a hint?", hintRungs());
-    // Relaxed has no clock — nudge after a few idle seconds instead of at half-time.
+    // Relaxed has no clock — nudge after a few idle seconds instead of at half-time. The pulse
+    // alone is the nudge: the button already says "need a hint?". The "stuck?" note waits much
+    // longer, for a newcomer who has really stopped, since six seconds is only reading time.
+    // Both ride hintUrgeTimer, so every path that cancels the pulse (typing, a hint, the page
+    // ending) cancels the note with it.
     if (!(currentMode.seconds > 0) && !motionReduced()) {
       hintUrgeTimer = setTimeout(() => {
-        if (hintsAllowed() && hintTier === 0) { btn.classList.add("urge"); maybeGuideHint(); }
-      }, 6000);
+        if (!(hintsAllowed() && hintTier === 0)) return;
+        btn.classList.add("urge");
+        hintUrgeTimer = setTimeout(() => {
+          if (hintsAllowed() && hintTier === 0 && !$("songInput").value.trim()) maybeGuideHint();
+        }, HINT_STUCK_MS - HINT_URGE_MS);
+      }, HINT_URGE_MS);
     }
   } else {
     btn.hidden = true;
@@ -34180,6 +34217,7 @@ function positionCoachmark(el, anchor, prefer, avoid) {
   el.style.top = best.box.top + "px";
 }
 function dismissCoachmark() {
+  releasePageLines();
   const el = $("coachmark");
   if (!el || el.hidden) return;
   if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
@@ -34211,6 +34249,18 @@ function showCoachmark(id, opts) {
     gotBtn;
   el.hidden = false;
   positionCoachmark(el, anchor, opts.place, opts.avoid);
+  // Beat A is shown while page 1 is still turning in, so its anchor is still on the move: placed
+  // once, the note was left about 50px off the input on a phone. Follow the anchor for the length
+  // of a page turn, re-placing only when it has actually moved.
+  let lastTop = anchor.getBoundingClientRect().top;
+  const settleUntil = performance.now() + 1400;
+  const settle = () => {
+    if (shownCoachmarkId !== id || el.hidden || !document.contains(anchor)) return;
+    const top = anchor.getBoundingClientRect().top;
+    if (Math.abs(top - lastTop) > 0.5) { lastTop = top; positionCoachmark(el, anchor, opts.place, opts.avoid); }
+    if (performance.now() < settleUntil) requestAnimationFrame(settle);
+  };
+  requestAnimationFrame(settle);
   const gel = el.querySelector(".coach-got");
   if (gel) gel.addEventListener("click", dismissCoachmark);
   if (coachmarkDismissTimer) { clearTimeout(coachmarkDismissTimer); coachmarkDismissTimer = null; }
@@ -34280,7 +34330,8 @@ function maybeGuideType() {
   if (coachmarkSeen("guideType")) return;
   if (!firstGameGuideEligible()) return;
   if (round !== 1) return;   // only the opening page
-  showGuideBeat("guideType");
+  holdPageLines(true);   // before the note is placed, so it lands in their room
+  if (!showGuideBeat("guideType")) holdPageLines(false);
 }
 // Beat B — the instant the first-ever correct match lands: celebrate near the bracelet.
 function maybeGuideMatch() {
@@ -34288,12 +34339,14 @@ function maybeGuideMatch() {
   if (!firstGameGuideEligible()) return;
   showGuideBeat("guideMatch");
 }
-// Beat C — the first time the player stalls in their guided first game (their real first game is
-// Relaxed, which has no clock, so the hint button starts pulsing after a few idle seconds). Point
-// out the hint ladder right then, anchored to the "need a hint?" button. Self-clears on its own
+// Beat C — the first time the player is properly stuck in their guided first game: HINT_STUCK_MS
+// on a page with nothing typed (their real first game is Relaxed, which has no clock, so a
+// newcomer can sit there forever). Point out the hint ladder right then, anchored to the
+// "need a hint?" button. Self-clears on its own
 // timer, on using a hint, on the next answer, or on leaving the board.
 function maybeGuideHint() {
   if (coachmarkSeen("guideHint")) return;
+  if (shownCoachmarkId === "guideType") return;   // still reading how to play: not stuck
   if (!firstGameGuideEligible()) return;
   showGuideBeat("guideHint");
 }

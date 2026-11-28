@@ -13954,6 +13954,11 @@
     animation: coachIn 0.34s cubic-bezier(.34,1.56,.64,1);
   }
   .coachmark[hidden] { display: none; }
+  /* Page 1 of the first game: the typewriter lines and the hint button wait, keeping their room,
+     while the how-to-play note is up, then write themselves in once it is put away. */
+  #screen-game.lines-held #gameHint, #screen-game.lines-held #hintBtn { visibility: hidden; }
+  #gameHint.writes-in, #hintBtn.writes-in { animation: hint-writes-in 0.5s ease-out both; }
+  @keyframes hint-writes-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
   .coachmark.leaving { animation: coachOut 0.26s ease forwards; }
   .coach-kicker {
     font-family: var(--type); font-size: calc(9.5px + var(--text-size-adjust)); letter-spacing: 1.4px; text-transform: uppercase;
